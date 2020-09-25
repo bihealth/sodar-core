@@ -265,12 +265,6 @@ class ProjectModifyPermissionMixin(
     """Mixin for handling access to project modifying views, denying access even
     for local superusers if the project is remote and thus immutable"""
 
-    def has_permission(self):
-        """Override has_permission() to check remote project status"""
-        perm = super().has_permission()
-        project = self.get_project()
-        return False if project.is_remote() else perm
-
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
         if self.request.user.is_authenticated():
