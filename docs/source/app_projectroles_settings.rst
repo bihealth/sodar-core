@@ -276,52 +276,6 @@ Example:
     experimental. More implementation, testing and documentation is forthcoming.
 
 
-Projectroles App Settings
-=========================
-
-To define individual settings for your in the projectroles app, find the file
-``projectroles/app_settings.py`` and extend the ``PROJECTROLES_APP_SETTINGS`` dictionary as follows ::
-
-         'example_setting': {
-             'scope': 'PROJECT',  # PROJECT/USER
-             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-             'default': 'example',
-             'label': 'Project setting',  # Optional, defaults to name/key
-             'placeholder': 'Enter example setting here',  # Optional
-             'description': 'Example project setting',  # Optional
-             'user_modifiable': True,  # Optional, show/hide in forms
-             'local': False,  # Optional, show/hide in target site forms
-         }
-
-
-For example:
-
-.. code-block:: python
-
-    PROJECTROLES_APP_SETTINGS = {
-        'ip_restrict': {
-            'scope': 'PROJECT',  # PROJECT/USER
-            'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
-            'default': False,
-            'label': 'IP restrict',  # Optional, defaults to name/key
-            'description': 'Activate IP restriction',  # Optional
-            'user_modifiable': True,  # Optional, show/hide in forms
-            'local': False,
-        },
-        'ip_allowlist': {
-            'scope': 'PROJECT',  # PROJECT/USER
-            'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-            'default': '',
-            'label': 'IP allowlist',  # Optional, defaults to name/key
-            'placeholder': '192.168.1.1; 192.168.1.2',  # Optional
-            'description': 'Define list of allowed IPs',  # Optional
-            'user_modifiable': True,  # Optional, show/hide in forms
-            'local': False,
-        },
-    }
-
-
-
 Backend App Settings
 ====================
 

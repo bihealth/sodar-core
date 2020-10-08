@@ -39,22 +39,22 @@ PROJECTROLES_APP_SETTINGS = {
     #:             'local': False,  # Optional, show/hide in target site forms
     #:         }
     'ip_restrict': {
-        'scope': 'PROJECT',  # PROJECT/USER
-        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'scope': 'PROJECT',
+        'type': 'BOOLEAN',
         'default': False,
-        'label': 'IP restrict',  # Optional, defaults to name/key
-        'description': 'Activate IP restriction',  # Optional
-        'user_modifiable': True,  # Optional, show/hide in forms
+        'label': 'IP restrict',
+        'description': 'Enable access restriction by an allowed IP list',
+        'user_modifiable': True,
         'local': False,
     },
     'ip_allowlist': {
-        'scope': 'PROJECT',  # PROJECT/USER
-        'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+        'scope': 'PROJECT',
+        'type': 'STRING',
         'default': '',
-        'label': 'IP allowlist',  # Optional, defaults to name/key
-        'placeholder': '192.168.1.1; 192.168.1.2',  # Optional
-        'description': 'Define list of allowed IPs',  # Optional
-        'user_modifiable': True,  # Optional, show/hide in forms
+        'label': 'IP allowlist',
+        'placeholder': '192.168.1.1; 192.168.1.2',
+        'description': 'Define list of allowed IPs',
+        'user_modifiable': True,
         'local': False,
     },
 }
