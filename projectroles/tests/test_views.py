@@ -1304,7 +1304,7 @@ PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
         'scope': 'PROJECT',  # PROJECT/USER
         'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
         'default': False,
-        'label': 'IP restrict',  # Optional, defaults to name/key
+        'label': 'IP Restrict',  # Optional, defaults to name/key
         'description': 'Activate IP restriction',  # Optional
         'user_modifiable': True,  # Optional, show/hide in forms
         'local': True,
@@ -1313,7 +1313,7 @@ PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
         'scope': 'PROJECT',  # PROJECT/USER
         'type': 'STRING',  # STRING/INTEGER/BOOLEAN
         'default': '',
-        'label': 'IP allowlist',  # Optional, defaults to name/key
+        'label': 'IP Allow List',  # Optional, defaults to name/key
         'placeholder': '192.168.1.1; 192.168.1.2',  # Optional
         'description': 'Define list of allowed IPs',  # Optional
         'user_modifiable': True,  # Optional, show/hide in forms
