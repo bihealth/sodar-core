@@ -32,7 +32,7 @@ class ProjectEventManager(models.Manager):
         """
         Return events which are linked to an object reference.
 
-        :param project: Project object
+        :param project: Project object or None
         :param object_model: Object model (string)
         :param object_uuid: sodar_uuid of the original object
         :param order_by: Ordering (default = pk descending)
@@ -46,14 +46,18 @@ class ProjectEventManager(models.Manager):
 
 
 class ProjectEvent(models.Model):
-    """Class representing a Project event"""
+    """
+    Class representing a Project event. Can also be a site-wide event not linked
+    to a specific project.
+    """
 
-    #: Project in which the event belongs
+    #: Project to which the event belongs
     project = models.ForeignKey(
         Project,
         related_name='events',
-        help_text='Project in which the event belongs',
+        help_text='Project to which the event belongs (null for no project)',
         on_delete=models.CASCADE,
+        null=True,
     )
 
     #: App from which the event was triggered
@@ -100,15 +104,15 @@ class ProjectEvent(models.Model):
     objects = ProjectEventManager()
 
     def __str__(self):
-        return '{}: {}{}'.format(
-            self.project.title,
+        return '{}{}{}'.format(
+            (self.project.title + ': ') if self.project else '',
             self.event_name,
             ('/' + self.user.username) if self.user else '',
         )
 
     def __repr__(self):
         values = (
-            self.project.title,
+            self.project.title if self.project else 'N/A',
             self.event_name,
             self.user.username if self.user else 'N/A',
         )

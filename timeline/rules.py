@@ -30,6 +30,9 @@ rules.add_perm(
     | pr_rules.is_project_guest,
 )
 
+# Allow viewing timeline for site-specific events
+rules.add_perm('timeline.view_site_timeline', rules.is_authenticated)
+
 # Allow viewing classified event
 rules.add_perm(
     'timeline.view_classified_event',
