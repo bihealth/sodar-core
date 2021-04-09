@@ -84,6 +84,8 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
+    # TODO: Test rendering for site-wide list
+
     def test_render_object(self):
         """Test visibility of object related events events in the timeline event list"""
 
@@ -112,6 +114,8 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             },
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
+
+    # TODO: Test rendering for site-wide event object
 
     def test_render_details(self):
         """Test visibility of events on the project details page"""

@@ -38,3 +38,6 @@ rules.add_perm(
     'timeline.view_classified_event',
     pr_rules.is_project_owner | pr_rules.is_project_delegate,
 )
+
+# Allow viewing classified site-wide event
+rules.add_perm('timeline.view_classified_site_event', rules.is_superuser)

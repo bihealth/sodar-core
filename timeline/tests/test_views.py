@@ -123,3 +123,6 @@ class TestObjectListView(TestViewsBase):
                 )
             )
             self.assertEqual(response.status_code, 200)
+
+
+# TODO: Add tests for site-wide views

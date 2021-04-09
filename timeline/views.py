@@ -25,7 +25,11 @@ class EventTimelineMixin:
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        project = self.get_project()
+        project = None
+        if self.kwargs.get('project'):
+            project = Project.objects.filter(
+                sodar_uuid=self.kwargs['project']
+            ).first()
         if project:
             context['timeline_title'] = '{} Timeline'.format(
                 get_display_name(project.type, title=True)
@@ -68,8 +72,6 @@ class ProjectTimelineView(
 class SiteTimelineView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
-    ProjectContextMixin,
-    ProjectPermissionMixin,
     EventTimelineMixin,
     ListView,
 ):
@@ -94,17 +96,19 @@ class ObjectTimelineMixin:
 
     def get_queryset(self):
         project = None
+        classified_perm = 'timeline.view_classified_site_event'
         if self.kwargs.get('project'):
             project = Project.objects.filter(
                 sodar_uuid=self.kwargs['project']
             ).first()
+            classified_perm = 'timeline.view_classified_event'
         queryset = ProjectEvent.objects.get_object_events(
             project=project,
             object_model=self.kwargs['object_model'],
             object_uuid=self.kwargs['object_uuid'],
         )
         if not self.request.user.has_perm(
-            'timeline.view_classified_event', self.get_permission_object()
+            classified_perm, self.get_permission_object()
         ):
             queryset = queryset.filter(classified=False)
         return queryset
