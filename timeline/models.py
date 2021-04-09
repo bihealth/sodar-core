@@ -111,12 +111,16 @@ class ProjectEvent(models.Model):
         )
 
     def __repr__(self):
-        values = (
+        return 'ProjectEvent({})'.format(
+            ', '.join(repr(v) for v in self.get_repr_values())
+        )
+
+    def get_repr_values(self):
+        return [
             self.project.title if self.project else 'N/A',
             self.event_name,
             self.user.username if self.user else 'N/A',
-        )
-        return 'ProjectEvent({})'.format(', '.join(repr(v) for v in values))
+        ]
 
     def get_current_status(self):
         """Return the current event status"""
@@ -231,20 +235,13 @@ class ProjectEventObjectRef(models.Model):
     )
 
     def __str__(self):
-        return '{}: {}/{} ({})'.format(
-            self.event.project.title,
-            self.event.event_name,
-            self.event.user.username,
+        return '{} ({})'.format(
+            self.event.__str__(),
             self.name,
         )
 
     def __repr__(self):
-        values = (
-            self.event.project.title,
-            self.event.event_name,
-            self.event.user.username,
-            self.name,
-        )
+        values = self.event.get_repr_values() + [self.name]
         return 'ProjectEventObjectRef({})'.format(
             ', '.join(repr(v) for v in values)
         )
@@ -285,20 +282,13 @@ class ProjectEventStatus(models.Model):
     )
 
     def __str__(self):
-        return '{}: {}{} ({})'.format(
-            self.event.project.title,
-            self.event.event_name,
-            '/' + self.event.user.username if self.event.user else '',
+        return '{} ({})'.format(
+            self.event.__str__(),
             self.status_type,
         )
 
     def __repr__(self):
-        values = (
-            self.event.project.title,
-            self.event.event_name,
-            self.event.user.username if self.event.user else 'N/A',
-            self.status_type,
-        )
+        values = self.event.get_repr_values() + [self.status_type]
         return 'ProjectEventStatus({})'.format(
             ', '.join(repr(v) for v in values)
         )

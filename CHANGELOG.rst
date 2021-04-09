@@ -26,6 +26,7 @@ Added
     - ``site_app_processor`` in ``context_processors`` (#574)
     - ``get_statistics()`` in ``SiteAppPluginPoint``
     - ``info_settings`` in app plugins (#671)
+    - ``plugin_type`` argument in ``get_app_plugin()`` (#309)
 - **Siteinfo**
     - Display selected Django settings in UI (#671)
 - **Timeline**

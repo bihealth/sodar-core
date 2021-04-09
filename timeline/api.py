@@ -197,13 +197,15 @@ class TimelineAPI:
                 continue
 
             # Get history link
+            url_name = 'timeline:list_object_site'
             url_kwargs = {
                 'object_model': ref_obj.object_model,
                 'object_uuid': ref_obj.object_uuid,
             }
             if event.project:
+                url_name = 'timeline:list_object'
                 url_kwargs['project'] = event.project.sodar_uuid
-            history_url = reverse('timeline:list_object', kwargs=url_kwargs)
+            history_url = reverse(url_name, kwargs=url_kwargs)
             history_link = (
                 '<a href="{}" class="sodar-tl-object-link">'
                 '<i class="iconify" '

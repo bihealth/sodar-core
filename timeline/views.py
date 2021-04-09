@@ -25,9 +25,10 @@ class EventTimelineMixin:
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        if context.get('project'):
+        project = self.get_project()
+        if project:
             context['timeline_title'] = '{} Timeline'.format(
-                get_display_name(context['project'].type, title=True)
+                get_display_name(project.type, title=True)
             )
             context['timeline_mode'] = 'project'
         else:
@@ -92,7 +93,11 @@ class ObjectTimelineMixin:
         return context
 
     def get_queryset(self):
-        project = Project.objects.get(sodar_uuid=self.kwargs['project'])
+        project = None
+        if self.kwargs.get('project'):
+            project = Project.objects.filter(
+                sodar_uuid=self.kwargs['project']
+            ).first()
         queryset = ProjectEvent.objects.get_object_events(
             project=project,
             object_model=self.kwargs['object_model'],

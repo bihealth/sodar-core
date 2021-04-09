@@ -86,12 +86,11 @@
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
   {% if timeline_mode == 'object' %}
-    <div class="input-group sodar-header-input-group ml-auto mt-1">
-      <a href="{% url 'timeline:list_project' project=project.sodar_uuid %}"
-         class="btn btn-secondary ml-auto"
-         role="button">
+    <div class="ml-auto">
+      <a href="{% url 'timeline:list_site' %}"
+         class="btn btn-secondary ml-auto" role="button">
         <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
-        {% get_display_name 'PROJECT' title=True %} Timeline
+        Site-Wide Events
       </a>
     </div>
   {% endif %}
