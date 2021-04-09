@@ -277,13 +277,15 @@ class TimelineAPI:
         :param project: Related Project object or None
         :return: String
         """
+        url_name = 'timeline:list_object_site'
         url_kwargs = {
             'object_model': obj.__class__.__name__,
             'object_uuid': obj.sodar_uuid,
         }
         if project:
+            url_name = 'timeline:list_object'
             url_kwargs['project'] = project.sodar_uuid
-        return reverse('timeline:list_object', kwargs=url_kwargs)
+        return reverse(url_name, kwargs=url_kwargs)
 
     @staticmethod
     def get_object_link(obj, project=None):
@@ -297,7 +299,7 @@ class TimelineAPI:
         return (
             '<a href="{}" class="sodar-tl-object-link">'
             '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i>'
-            '</a>'.format(TimelineAPI.get_object_url(project, obj))
+            '</a>'.format(TimelineAPI.get_object_url(obj, project))
         )
 
     @staticmethod
