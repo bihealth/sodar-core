@@ -124,7 +124,7 @@ class TestTimelinePermissions(TestProjectPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_site_event_object_list_anon(self):
-        """Test site event list with anonynomus access"""
+        """Test site event list with anonymous access"""
         url = reverse(
             'timeline:list_object_site',
             kwargs={

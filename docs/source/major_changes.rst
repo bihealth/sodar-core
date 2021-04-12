@@ -21,7 +21,8 @@ Release Highlights
 - Project upgraded to Django v3.1
 - Site icons access via Iconify
 - Material Design Icons used as default icon set
-- Allow Timeline evens without user or project
+- Site-wide timeline events
+- Timeline evens without user
 - Allow public guest access to projects for authenticated and anonymous users
 - Display Django settings in Site Info app
 

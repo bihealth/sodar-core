@@ -1,6 +1,7 @@
 {% extends 'projectroles/base.html' %}
 
 {% load rules %}
+{% load static %}
 {% load timeline_tags %}
 {% load projectroles_common_tags %}
 
@@ -11,72 +12,8 @@
 
 {% block css %}
   {{ block.super }}
-  {# TODO: Move CSS to common static file and use in both templates #}
-  <style type="text/css">
-
-    /* Main table */
-    table#sodar-tl-table tbody tr td:nth-child(1) {
-      white-space: nowrap;
-    }
-
-    table#sodar-tl-table tbody tr td:nth-child(5) {
-      width: 100%;
-    }
-
-    /* Detail table */
-    table#sodar-tl-table-detail tbody tr td:nth-child(1) {
-      white-space: nowrap;
-    }
-
-    table#sodar-tl-table-detail tbody tr td:nth-child(2) {
-      max-width: 300px;
-      white-space: normal;
-    }
-
-    a.sodar-tl-link-detail:hover {
-        text-decoration: underline;
-    }
-
-    a.sodar-tl-link-extra {
-      cursor: pointer;
-    }
-
-    .popover {
-      font-size: 100%; /* Fix for Bootstrap 4.4 */
-    }
-
-    /* Responsive modifications */
-    @media screen and (max-width: 1200px) {
-      .table#sodar-tl-table thead tr th:nth-child(2),
-      .table#sodar-tl-table tbody tr td:nth-child(2) {
-        display: none;
-      }
-    }
-
-    @media screen and (max-width: 1000px) {
-      .table#sodar-tl-table thead tr th:nth-child(3),
-      .table#sodar-tl-table tbody tr td:nth-child(3) {
-        display: none;
-      }
-    }
-
-    @media screen and (max-width: 800px) {
-      .table#sodar-tl-table tbody tr td:nth-child(1) {
-        white-space: normal;
-      }
-      .table#sodar-tl-table thead tr th:nth-child(4),
-      .table#sodar-tl-table tbody tr td:nth-child(4) {
-        display: none;
-      }
-    }
-
-    @media screen and (max-width: 500px) {
-      .table#sodar-tl-table thead tr th:nth-child(6),
-      .table#sodar-tl-table tbody tr td:nth-child(6) {
-          display: none;
-      }
-    }
-  </style>
+  <!-- Timeline CSS -->
+  <link rel="stylesheet" type="text/css" href="{% static 'timeline/css/timeline.css' %}" />
 {% endblock css %}
 
 {% block projectroles %}
@@ -127,5 +64,38 @@
 
 {% block javascript %}
   {{ block.super }}
-  {# TODO: Copy tour to static file and use in both templates #}
+  {# Tour content #}
+  <script type="text/javascript">
+      tourEnabled = true;
+
+      tour.addStep('event_list', {
+          title: 'Site-Wide Event List',
+          text: 'This is the list of site-wide events not linked to any ' +
+              '{% get_display_name "PROJECT" %}' + ', organized by newest ' +
+              'first.',
+          attachTo: '#sodar-tl-event-list top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+
+      tour.addStep('event_details', {
+          title: 'Event Details',
+          text: 'Click an event timestamp to open a popup with details ' +
+                'regarding each event.',
+          attachTo: '#sodar-tl-header-timestamp right',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+
+      if ($('.sodar-pr-pagination').length) {
+          tour.addStep('timeline_nav', {
+             title: 'Timeline Navigation',
+              text: 'Use these buttons to navigate through site-wide events.',
+              attachTo: '.sodar-pr-pagination top',
+              advanceOn: '.docs-link click',
+              showCancelLink: true,
+              scrollTo: true
+           });
+       }
+    </script>
 {% endblock javascript %}
