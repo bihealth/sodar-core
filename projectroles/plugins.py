@@ -231,6 +231,27 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
+    def get_app_alerts(self, user):
+        """
+        Return app-related alerts to the user.
+
+        The return data is a list of dicts each containing "message", "url" and
+        "level". The "message" can contain HTML. Accepted values for "level" are
+        "INFO", "SUCCESS", "WARNING" and "ERROR".
+
+        Example:
+        {
+            'message': 'There is an open request for you in this project',
+            'url': reverse('yourapp:view', kwargs={'project': p.sodar_uuid},
+            'level': 'INFO',
+        }
+
+        :param user: User object
+        :return: List of dicts
+        """
+        # TODO: Implement this in your app plugin (optional)
+        return None
+
 
 class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""
@@ -485,3 +506,28 @@ class RemoteSiteAppPlugin(SiteAppPluginPoint):
 
     #: Required permission for displaying the app
     app_permission = 'userprofile.update_remote'
+
+
+class AppAlertSiteAppPlugin(SiteAppPluginPoint):
+    """Site plugin for application alerts"""
+
+    #: Name (slug-safe, used in URLs)
+    name = 'appalerts'
+
+    #: Title (used in templates)
+    title = 'App Alerts'
+
+    #: App URLs (will be included in settings by djangoplugins)
+    urls = []
+
+    #: Iconify icon
+    icon = 'mdi:alert-octagram'
+
+    #: Description string
+    description = 'Site-wide alert notifications from apps'
+
+    #: Entry point URL ID
+    entry_point_url_id = 'projectroles:app_alerts'
+
+    #: Required permission for displaying the app
+    app_permission = 'projectroles.view_app_alerts'

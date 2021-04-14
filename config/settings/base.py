@@ -624,5 +624,10 @@ TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
 TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
 
 
+# Example site/app settings
+# Dispaly example app alerts
+EXAMPLE_PROJECT_APP_ALERTS = env.bool('EXAMPLE_PROJECT_APP_ALERTS', True)
+
+
 # SODAR constants
 # SODAR_CONSTANTS = get_sodar_constants(default=True)

@@ -1,0 +1,36 @@
+{% extends 'projectroles/base.html' %}
+
+{% load projectroles_common_tags %}
+
+{% block title %}App Alerts{% endblock title %}
+
+{% block projectroles %}
+
+<div class="row sodar-subtitle-container">
+  <h2><i class="iconify" data-icon="mdi:alert-octagram"></i> App Alerts</h2>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  {% if app_alerts %}
+    {% for a in app_alerts %}
+      <div class="alert alert-{{ a.level | lower }}">
+        <span data-toggle="tooltip" data-placement="top" title="{{ a.app }}">
+          <i class="iconify" data-icon="mdi:alert-octagram"></i>
+        </span>
+        {{ a.message | safe }}
+        {% if a.url %}
+          <a href="{{ a.url }}" class="btn btn-{{ a.level | lower }} sodar-list-btn pull-right"
+             role="button">
+              <i class="iconify" data-icon="mdi:arrow-right-bold"></i>
+          </a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info">
+      There are currently no application alerts for you.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock projectroles %}

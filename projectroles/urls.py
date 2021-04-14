@@ -138,6 +138,12 @@ urls_ui = [
         view=views.RemoteProjectsSyncView.as_view(),
         name='remote_projects_sync',
     ),
+    # App alert views
+    url(
+        regex=r'^alerts$',
+        view=views.AppAlertListView.as_view(),
+        name='app_alerts',
+    ),
 ]
 
 # Ajax API views

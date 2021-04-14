@@ -214,3 +214,6 @@ rules.add_perm('projectroles.update_remote', rules.is_superuser)
 rules.add_perm(
     'projectroles.view_hidden_projects', rules.is_superuser | is_project_owner
 )
+
+# Allow viewing app alerts
+rules.add_perm('projectroles.view_app_alerts', rules.is_authenticated)
