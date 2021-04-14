@@ -25,6 +25,7 @@ Release Highlights
 - Timeline evens without user
 - Allow public guest access to projects for authenticated and anonymous users
 - Display Django settings in Site Info app
+- Site-wide app alerts
 
 Breaking Changes
 ================
@@ -76,11 +77,12 @@ System Prerequisites
 Third party Python package requirements have been upgraded. See the
 ``requirements`` directory for up-to-date package versions.
 
-Context Processor Required for Site Apps
-----------------------------------------
+New Context Processors Required
+-------------------------------
 
-If you intend to include any site apps to your projects, you now need to include
-a context processor to your site set up. Please add the following line to
+The following new context processors are required if you intend to include any
+site apps to your projects, or make use of site-wide app alerts, respectively.
+To make use of these features, please add the following processors in
 ``base.py`` under ``TEMPLATES``:
 
 .. code-block:: python
@@ -89,7 +91,9 @@ a context processor to your site set up. Please add the following line to
         {
             'OPTIONS': {
                 'context_processors': {
-                    'projectroles.context_processors.site_app_processor'
+                    # ...
+                    'projectroles.context_processors.site_app_processor',
+                    'projectroles.context_processors.app_alerts_processor',
                 }
             }
         }

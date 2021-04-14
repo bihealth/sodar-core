@@ -3034,5 +3034,6 @@ class AppAlertListView(
                     app_alerts = [app_alerts]
                 for a in app_alerts:
                     a['app'] = p.name
+                    a['icon'] = p.icon
                 context['app_alerts'] += app_alerts
         return context

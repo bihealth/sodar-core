@@ -203,6 +203,7 @@ TEMPLATES = [
                 # Site context processors
                 'projectroles.context_processors.urls_processor',
                 'projectroles.context_processors.site_app_processor',
+                'projectroles.context_processors.app_alerts_processor',
             ],
         },
     }
@@ -626,7 +627,7 @@ TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
 
 # Example site/app settings
 # Dispaly example app alerts
-EXAMPLE_PROJECT_APP_ALERTS = env.bool('EXAMPLE_PROJECT_APP_ALERTS', True)
+EXAMPLE_PROJECT_APP_ALERTS = env.bool('EXAMPLE_PROJECT_APP_ALERTS', False)
 
 
 # SODAR constants

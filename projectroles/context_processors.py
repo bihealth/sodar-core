@@ -33,3 +33,14 @@ def site_app_processor(request):
             if not a.app_permission or request.user.has_perm(a.app_permission)
         ],
     }
+
+
+def app_alerts_processor(request):
+    """
+    Context processor for checking app alert status.
+    """
+    project_apps = get_active_plugins()
+    for a in project_apps:
+        if a.get_app_alerts(request.user):
+            return {'app_alerts': True}
+    return {'app_alerts': False}

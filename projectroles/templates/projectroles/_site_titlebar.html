@@ -38,6 +38,20 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ml-auto" id="sodar-base-navbar-nav">
 
+        {# App alerts notification #}
+        {% if request.user.is_authenticated and app_alerts %}
+          <li class="nav-item">
+            <div id="sodar-app-alert-badge">
+              <a href="{% url 'projectroles:app_alerts' %}">
+                <div class="badge badge-pill bg-warning mr-4 mt-2">
+                  <i class="iconify" data-icon="mdi:alert-octagram" id="sodar-app-alert-icon"></i>
+                  You have alerts
+                </div>
+              </a>
+            </div>
+          </li>
+        {% endif %}
+
         {# Search #}
         {% if request.user.is_authenticated or allow_anon %}
           {% if enable_search %}

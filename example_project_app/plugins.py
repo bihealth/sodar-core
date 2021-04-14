@@ -255,8 +255,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'level': 'WARNING',
             },
             {
-                'message': 'Finally, a DANGER alert. Hi there '
-                '<a href="mailto:{}">{}</a>!'.format(user.email, user.username),
+                'message': 'Finally, a DANGER alert.',
                 'url': reverse('home'),
                 'level': 'DANGER',
             },

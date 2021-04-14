@@ -83,6 +83,10 @@ PROJECTROLES_SEARCH_PAGINATION = 10
 PROJECTROLES_ALLOW_ANONYMOUS = False
 
 
+# Example site/app settings
+EXAMPLE_PROJECT_APP_ALERTS = False
+
+
 # UI test settings
 PROJECTROLES_TEST_UI_CHROME_OPTIONS = [
     'headless',

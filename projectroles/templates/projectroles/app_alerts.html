@@ -15,7 +15,7 @@
     {% for a in app_alerts %}
       <div class="alert alert-{{ a.level | lower }}">
         <span data-toggle="tooltip" data-placement="top" title="{{ a.app }}">
-          <i class="iconify" data-icon="mdi:alert-octagram"></i>
+          <i class="iconify" data-icon="{{ a.icon }}"></i>
         </span>
         {{ a.message | safe }}
         {% if a.url %}
