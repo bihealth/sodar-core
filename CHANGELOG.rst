@@ -13,10 +13,10 @@ Unreleased
 Added
 -----
 
-- **General**
-    - Example app alerts in ``example_project_app`` (#642)
 - **Adminalerts**
     - ``get_statistics()`` implementation
+- **Appalerts**
+    - Add site app and backend for app alerts (#642)
 - **Projectroles**
     - ``geticons`` management command for retrieving Iconify icons (#54)
     - ``spin`` class in ``projectroles.css`` for spinning icon support (#54)
@@ -29,9 +29,6 @@ Added
     - ``get_statistics()`` in ``SiteAppPluginPoint``
     - ``info_settings`` in app plugins (#671)
     - ``plugin_type`` argument in ``get_app_plugin()`` (#309)
-    - Support for site-wide app alerts (#642)
-    - Site app plugin ``AppAlertSiteAppPlugin`` for app alerts (#642)
-    - ``get_app_alerts()`` in project and site app plugin points (#642)
 - **Siteinfo**
     - Display selected Django settings in UI (#671)
 - **Timeline**

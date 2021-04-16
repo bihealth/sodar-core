@@ -3010,30 +3010,3 @@ class RemoteProjectsSyncView(
             ),
         )
         return super().render_to_response(context)
-
-
-# App alert views --------------------------------------------------------------
-
-
-class AppAlertListView(
-    LoginRequiredMixin, LoggedInPermissionMixin, TemplateView
-):
-    """App alert list view"""
-
-    permission_required = 'projectroles.view_app_alerts'
-    template_name = 'projectroles/app_alerts.html'
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        context['app_alerts'] = []
-        app_plugins = get_active_plugins()
-        for p in app_plugins:
-            app_alerts = p.get_app_alerts(self.request.user)
-            if app_alerts:
-                if not isinstance(app_alerts, list):
-                    app_alerts = [app_alerts]
-                for a in app_alerts:
-                    a['app'] = p.name
-                    a['icon'] = p.icon
-                context['app_alerts'] += app_alerts
-        return context

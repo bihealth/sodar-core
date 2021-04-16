@@ -1,0 +1,53 @@
+{% extends 'projectroles/base.html' %}
+
+{% load projectroles_common_tags %}
+
+{% block title %}App Alerts{% endblock title %}
+
+{% block projectroles %}
+
+<div class="row sodar-subtitle-container">
+  <h2><i class="iconify" data-icon="mdi:alert-octagram"></i> App Alerts</h2>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  {% if object_list %}
+    {% for a in object_list %}
+      <div class="alert alert-{{ a.level | lower }}">
+        <span data-toggle="tooltip" data-placement="top"
+              title="{% if a.app_plugin %}{{ a.app_plugin.title }}{% else %}Projectroles{% endif %}">
+          <i class="iconify"
+             data-icon="{% if a.app_plugin %}{{ a.app_plugin.get_plugin.icon }}{% else %}mdi:cube{% endif %}"></i>
+        </span>
+        {{ a.date_created | date:'Y-m-d H:i' }} |
+        {{ a.message | safe }}
+        <span class="sodar-aa-alert-buttons pull-right">
+          {# TODO: Create redirect view which dismisses alert #}
+          {% if a.url %}
+            <a href="{{ a.url }}"
+               class="btn btn-{{ a.level | lower }} sodar-list-btn"
+               role="button"
+               title="Dismiss and follow link"
+               data-toggle="tooltip" data-placement="top">
+              <i class="iconify" data-icon="mdi:arrow-right-bold"></i>
+            </a>
+          {% endif %}
+          {# TODO: Implement #}
+          <a href="#"
+             class="btn btn-{{ a.level | lower }} sodar-list-btn"
+             role="button"
+             title="Dismiss"
+             data-toggle="tooltip" data-placement="top">
+            <i class="iconify" data-icon="mdi:close-thick"></i>
+          </a>
+        </span>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info">
+      There are currently no application alerts for you.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock projectroles %}

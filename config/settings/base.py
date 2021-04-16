@@ -81,6 +81,8 @@ LOCAL_APPS = [
     'userprofile.apps.UserprofileConfig',
     # Admin Alerts site app
     'adminalerts.apps.AdminalertsConfig',
+    # App Alerts site app
+    'appalerts.apps.AppalertsConfig',
     # Site Info site app
     'siteinfo.apps.SiteinfoConfig',
     # API Tokens site app
@@ -522,7 +524,9 @@ SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'SODAR Core Example')
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = env.list(
-    'ENABLED_BACKEND_PLUGINS', None, ['timeline_backend', 'example_backend_app']
+    'ENABLED_BACKEND_PLUGINS',
+    None,
+    ['appalerts_backend', 'timeline_backend', 'example_backend_app'],
 )
 
 # SODAR API settings
@@ -623,11 +627,6 @@ ADMINALERTS_PAGINATION = 15
 # Taskflow backend settings
 TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
 TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
-
-
-# Example site/app settings
-# Dispaly example app alerts
-EXAMPLE_PROJECT_APP_ALERTS = env.bool('EXAMPLE_PROJECT_APP_ALERTS', False)
 
 
 # SODAR constants

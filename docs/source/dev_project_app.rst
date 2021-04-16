@@ -226,10 +226,6 @@ Implementing the following is **optional**:
 - ``get_project_list_value()``: A function which **must** be implemented if
   ``project_list_columns`` are defined, to retrieve a column cell value for a
   specific project.
-- ``get_app_alerts()``: This will be called on each page load by SODAR Core to
-  return a list of app-specific alerts for the users. If such alerts are
-  returned, a notification in the base template will provide the user a link to
-  the alert list. See the method docstring for more details.
 
 Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create

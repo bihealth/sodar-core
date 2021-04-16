@@ -39,10 +39,11 @@
       <ul class="navbar-nav ml-auto" id="sodar-base-navbar-nav">
 
         {# App alerts notification #}
+        {# TODO: Include this dynamically (see irodsbackend in SODAR for example) #}
         {% if request.user.is_authenticated and app_alerts %}
           <li class="nav-item">
             <div id="sodar-app-alert-badge">
-              <a href="{% url 'projectroles:app_alerts' %}">
+              <a href="{% url 'appalerts:list' %}">
                 <div class="badge badge-pill bg-warning mr-4 mt-2">
                   <i class="iconify" data-icon="mdi:alert-octagram" id="sodar-app-alert-icon"></i>
                   You have alerts

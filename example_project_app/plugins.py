@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.urls import reverse
 
 # Projectroles dependency
@@ -233,30 +232,3 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'url': reverse('home'),
             },
         }
-
-    def get_app_alerts(self, user):
-        if not settings.EXAMPLE_PROJECT_APP_ALERTS:
-            return None
-        return [
-            {
-                'message': 'This is an example app alert with HTML. '
-                '<a href="{}">This is a link</a>.'.format(reverse('home')),
-                'url': reverse('home'),
-                'level': 'INFO',
-            },
-            {
-                'message': 'Another example, this time at the SUCCESS level.',
-                'url': reverse('home'),
-                'level': 'SUCCESS',
-            },
-            {
-                'message': 'An example WARNING alert without an URL.',
-                'url': None,
-                'level': 'WARNING',
-            },
-            {
-                'message': 'Finally, a DANGER alert.',
-                'url': reverse('home'),
-                'level': 'DANGER',
-            },
-        ]
