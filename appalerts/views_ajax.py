@@ -11,15 +11,15 @@ from appalerts.models import AppAlert
 class AppAlertDismissAjaxView(SODARBaseAjaxView):
     """View to handle app alert dismissal in UI"""
 
-    permission_required = 'appalerts.view_list'
+    permission_required = 'appalerts.view_alerts'
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, **kwargs):
         # HACK: Manually refuse access to anonymous as this view is an exception
         if not request.user or request.user.is_anonymous:
             return Response({'detail': 'Anonymous access denied'}, status=401)
 
         alert = AppAlert.objects.filter(
-            sodar_uuid=self.kwargs.get('appalert')
+            sodar_uuid=kwargs.get('appalert')
         ).first()
 
         if not alert:

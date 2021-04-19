@@ -17,5 +17,5 @@ import rules
 
 # Permissions ------------------------------------------------------------
 
-# Allow viewing alert list
-rules.add_perm('appalerts.view_list', rules.is_authenticated)
+# Allow viewing alerts
+rules.add_perm('appalerts.view_alerts', rules.is_authenticated)

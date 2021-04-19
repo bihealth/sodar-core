@@ -29,7 +29,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     entry_point_url_id = 'appalerts:list'
 
     #: Required permission for displaying the app
-    app_permission = 'appalerts.view_list'
+    app_permission = 'appalerts.view_alerts'
 
 
 class BackendPlugin(BackendPluginPoint):

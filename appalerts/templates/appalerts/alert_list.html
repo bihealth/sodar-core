@@ -38,7 +38,7 @@
         <span class="sodar-aa-alert-buttons pull-right">
           {# TODO: Create redirect view which dismisses alert #}
           {% if a.url %}
-            <a href="{{ a.url }}"
+            <a href="{% url 'appalerts:redirect' appalert=a.sodar_uuid %}"
                class="btn btn-{{ a.level | lower }}
                       sodar-list-btn sodar-aa-alert-btn-link"
                role="button"
