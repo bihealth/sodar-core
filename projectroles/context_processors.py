@@ -39,13 +39,12 @@ def app_alerts_processor(request):
     """
     Context processor for checking app alert status.
     """
-    app_alerts = get_backend_api('appalerts_backend')
-    if (
-        app_alerts
-        and app_alerts.get_model()
-        .objects.filter(user=request.user, active=True)
-        .count()
-        > 0
-    ):
-        return {'app_alerts': True}
-    return {'app_alerts': False}
+    if request.user and request.user.is_authenticated:
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            return {
+                'app_alerts': app_alerts.get_model()
+                .objects.filter(user=request.user, active=True)
+                .count()
+            }
+    return {'app_alerts': 0}
