@@ -15,7 +15,7 @@ class AppAlertListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
     """App alert list view"""
 
     permission_required = 'projectroles.view_app_alerts'
-    template_name = 'appalerts/app_alerts.html'
+    template_name = 'appalerts/alert_list.html'
 
     def get_queryset(self):
         return AppAlert.objects.filter(
