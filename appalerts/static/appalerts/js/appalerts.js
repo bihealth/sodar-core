@@ -1,6 +1,6 @@
 // Handle alert dismissal
 $(document).ready(function () {
-    $('.sodar-aa-alert-btn-dismiss').click(function () {
+    $('.sodar-app-alert-btn-dismiss').click(function () {
         var uuid = $(this).attr('data-uuid');
         $.post({
             url: $(this).attr('data-dismiss-url'),
@@ -8,12 +8,12 @@ $(document).ready(function () {
             dataType: 'json'
         }).done(function (data) {
           // Hide alert
-          $(document).find("[data-uuid='" + uuid + "']").fadeOut(250);
+          $(document).find("[data-alert-uuid='" + uuid + "']").fadeOut(250);
           // Update/hide title bar badge
-          var alertCount = $(document).find('.sodar-app-alert-count');
+          var alertCount = $(document).find('#sodar-app-alert-count');
           var alertCountInt = parseInt($(document).find(
-              '.sodar-app-alert-count').html()) - 1;
-          var alertLegend = $(document).find('.sodar-app-alert-legend');
+              '#sodar-app-alert-count').html()) - 1;
+          var alertLegend = $(document).find('#sodar-app-alert-legend');
           if (alertCountInt === 0) {
               $(document).find('#sodar-app-alert-nav').fadeOut(250);
           } else {

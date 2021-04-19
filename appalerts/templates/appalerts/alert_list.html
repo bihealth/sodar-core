@@ -10,7 +10,7 @@
   <style type="text/css">
     /* Responsive modifications */
     @media screen and (max-width: 900px) {
-      .sodar-aa-alert-date {
+      .sodar-app-alert-date {
         display: none;
       }
     }
@@ -26,31 +26,29 @@
 <div class="container-fluid sodar-page-container">
   {% if object_list %}
     {% for a in object_list %}
-      <div class="alert alert-{{ a.level | lower }} sodar-aa-alert"
-           data-uuid="{{ a.sodar_uuid }}">
+      <div class="alert alert-{{ a.level | lower }} sodar-app-alert-item"
+           data-alert-uuid="{{ a.sodar_uuid }}">
         <span data-toggle="tooltip" data-placement="top"
               title="{% if a.app_plugin %}{{ a.app_plugin.title }}{% else %}Projectroles{% endif %}">
           <i class="iconify"
              data-icon="{% if a.app_plugin %}{{ a.app_plugin.get_plugin.icon }}{% else %}mdi:cube{% endif %}"></i>
         </span>
-          <span class="sodar-aa-alert-date">{{ a.date_created | date:'Y-m-d H:i' }} |</span>
+          <span class="sodar-app-alert-date">{{ a.date_created | date:'Y-m-d H:i' }} |</span>
         {{ a.message | safe }}
-        <span class="sodar-aa-alert-buttons pull-right">
-          {# TODO: Create redirect view which dismisses alert #}
+        <span class="sodar-app-alert-buttons pull-right">
           {% if a.url %}
             <a href="{% url 'appalerts:redirect' appalert=a.sodar_uuid %}"
                class="btn btn-{{ a.level | lower }}
-                      sodar-list-btn sodar-aa-alert-btn-link"
+                      sodar-list-btn sodar-app-alert-btn-link"
                role="button"
                title="Follow link and dismiss"
                data-toggle="tooltip" data-placement="top">
               <i class="iconify" data-icon="mdi:arrow-right-bold"></i>
             </a>
           {% endif %}
-          {# TODO: Implement #}
           <a href="#"
              class="btn btn-{{ a.level | lower }}
-                    sodar-list-btn sodar-aa-alert-btn-dismiss"
+                    sodar-list-btn sodar-app-alert-btn-dismiss"
              role="button"
              title="Dismiss"
              data-toggle="tooltip" data-placement="top"

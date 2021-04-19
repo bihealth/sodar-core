@@ -8,7 +8,7 @@ from appalerts.tests.test_models import AppAlertMixin
 
 
 class TestViewsBase(AppAlertMixin, TestCase):
-    """Base class for appalertsview testing"""
+    """Base class for appalerts view testing"""
 
     def setUp(self):
         # Create users

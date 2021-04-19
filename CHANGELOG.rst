@@ -52,6 +52,7 @@ Changed
     - Set parent owner as initial owner in project form (#667)
     - Always show Django admin warning (#677)
     - Modify signature of ``get_history_dropdown()`` template tag (#668)
+    - Add default ``superuser`` value to ``LiveUserMixin._make_user()``
 - **Siteinfo**
     - Tabbed layout in site info view
 - **Timeline**
