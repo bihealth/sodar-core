@@ -24,7 +24,7 @@ class AppAlertDismissAjaxView(SODARBaseAjaxView):
 
         if not alert:
             return Response({'detail': 'Alert not found'}, status=404)
-        if not request.user.is_superuser and request.user != alert.user:
+        if request.user != alert.user:
             return Response(
                 {'detail': 'User lacks permissions to update alert'}, status=403
             )

@@ -45,7 +45,7 @@ class AppAlertLinkRedirectView(
         # Handle errors
         if not alert:
             return self._handle_error('Alert not found')
-        if not request.user.is_superuser and request.user != alert.user:
+        if request.user != alert.user:
             return self._handle_error('Alert assigned to different user')
         if not alert.url:
             return self._handle_error('No URL found for alert')

@@ -2,9 +2,9 @@
 
 import uuid
 
-from django.db import models
+from django.core.exceptions import ValidationError
 from django.conf import settings
-
+from django.db import models
 from djangoplugins.models import Plugin
 
 # Projectroles dependency
@@ -91,4 +91,32 @@ class AppAlert(models.Model):
         default=uuid.uuid4, unique=True, help_text='Alert SODAR UUID'
     )
 
-    # TODO: Add validation!
+    def __str__(self):
+        return '{} / {} / {}'.format(
+            self.app_plugin.name if self.app_plugin else 'projectroles',
+            self.alert_name,
+            self.user.username,
+        )
+
+    def __repr__(self):
+        values = (
+            self.app_plugin.name if self.app_plugin else 'projectroles',
+            self.alert_name,
+            self.user.username,
+            self.project.title,
+        )
+        return 'AppAlert({})'.format(', '.join(repr(v) for v in values))
+
+    def save(self, *args, **kwargs):
+        """Custom validation for AppAlert"""
+        self._validate_level()
+        super().save(*args, **kwargs)
+
+    def _validate_level(self):
+        """Validate level"""
+        if self.level not in ALERT_LEVELS:
+            raise ValidationError(
+                'Invalid level "{}", valid levels: {}'.format(
+                    self.level, ', '.join(ALERT_LEVELS)
+                )
+            )
