@@ -65,7 +65,7 @@ In the Django URL configuration file, add the following line under
 
     urlpatterns = [
         # ...
-        url(r'^alerts/', include('adminalerts.urls')),
+        url(r'^alerts/admin/', include('adminalerts.urls')),
     ]
 
 Migrate Database and Register Plugin
