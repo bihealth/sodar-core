@@ -227,7 +227,7 @@ For your views to properly support anonymous access, please use the override of
 ``LoginRequiredMixin`` provided in ``projectroles.views`` instead of the
 original mixin supplied in Django.
 
-GitHub Repository Renamed
+GitHub Repository Updates
 -------------------------
 
 The GitHub repository for the project has been renamed from ``sodar_core`` to
@@ -236,6 +236,8 @@ The GitHub repository for the project has been renamed from ``sodar_core`` to
 
 GitHub should redirect from the old name indefinitely. However, just to be sure
 it is recommend to update your site's dependencies.
+
+Additionally, the former ``master`` branch has been renamed to ``main``.
 
 
 v0.9.1 (2021-03-05)
