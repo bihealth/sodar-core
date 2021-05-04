@@ -145,6 +145,10 @@
 
       <!-- General project Javascript -->
       <script type="text/javascript" src="{% static 'js/project.js' %}"></script>
+
+      <!-- App alerts Javascript -->
+      {% get_backend_include 'appalerts_backend' 'js' as appalerts_js %}
+      {{ appalerts_js | safe }}
     {% endblock javascript %}
 
   </body>

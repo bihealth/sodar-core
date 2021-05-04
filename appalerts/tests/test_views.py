@@ -108,6 +108,9 @@ class TestAppAlertRedirectView(TestViewsBase):
         self.assertEqual(self.alert.active, True)
 
 
+# TODO: Add tests for alert status ajax view
+
+
 class TestAppAlertDismissAjaxView(TestViewsBase):
     """Tests for the alert dismissal ajax view"""
 

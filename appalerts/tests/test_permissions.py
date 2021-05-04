@@ -54,6 +54,8 @@ class TestAppAlertPermissions(AppAlertMixin, TestPermissionBase):
         )
         self.assert_response(url, bad_users, 302, redirect_user=bad_url)
 
+    # TODO: Add tests for alert status ajax view
+
     def test_ajax_dismiss(self):
         """Test permissions for the alert dismiss ajax view"""
         url = reverse(

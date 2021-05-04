@@ -39,9 +39,13 @@
       <ul class="navbar-nav ml-auto" id="sodar-base-navbar-nav">
 
         {# App alerts notification #}
-        {% if request.user.is_authenticated and app_alerts > 0 %}
-          <li class="nav-item" id="sodar-app-alert-nav">
-            <div id="sodar-app-alert-badge">
+        {% if request.user.is_authenticated %}
+          <li class="nav-item"
+              id="sodar-app-alert-nav"
+              data-status-url="{% url 'appalerts:ajax_status' %}"
+              data-interval="3">
+            <div id="sodar-app-alert-badge"
+                 style="{% if app_alerts == 0 %}display: none{% endif %}">
               <a href="{% url 'appalerts:list' %}">
                 <div class="badge badge-pill bg-danger mr-4 mt-2">
                   <i class="iconify" data-icon="mdi:alert-octagram"

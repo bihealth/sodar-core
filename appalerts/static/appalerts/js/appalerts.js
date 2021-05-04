@@ -1,3 +1,33 @@
+// Update alert status
+var updateAlertStatus = function () {
+  var alertNav = $(document).find('#sodar-app-alert-nav');
+  if (alertNav) {
+    $.ajax({
+        url: alertNav.attr('data-status-url'),
+        method: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+      var alertBadge = alertNav.find('#sodar-app-alert-badge');
+      alertBadge.find('#sodar-app-alert-count').html(data['alerts']);
+      var legend = alertBadge.find('#sodar-app-alert-legend');
+      if (data['alerts'] > 0) {
+          $(document).find('#sodar-app-alert-badge').show();
+          if (data['alerts'] === 1) legend.html('alert');
+          else legend.html('alerts');
+      } else $(document).find('#sodar-app-alert-badge').fadeOut(250);
+    });
+  }
+};
+
+$(document).ready(function() {
+    var statusInterval = $(document).find(
+        '#sodar-app-alert-nav').attr('data-interval');
+    // Update user alerts
+    setInterval(function () {
+      updateAlertStatus();
+    }, statusInterval * 1000);
+});
+
 // Handle alert dismissal
 $(document).ready(function () {
     $('.sodar-app-alert-btn-dismiss').click(function () {
@@ -15,7 +45,7 @@ $(document).ready(function () {
               '#sodar-app-alert-count').html()) - 1;
           var alertLegend = $(document).find('#sodar-app-alert-legend');
           if (alertCountInt === 0) {
-              $(document).find('#sodar-app-alert-nav').fadeOut(250);
+              $(document).find('#sodar-app-alert-badge').fadeOut(250);
           } else {
               alertCount.html(alertCountInt.toString());
               if (alertCountInt === 1) {
