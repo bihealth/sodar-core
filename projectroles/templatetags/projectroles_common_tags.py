@@ -232,9 +232,7 @@ def get_backend_include(backend_name, include_type='js'):
             )
     except AttributeError:
         return ''
-
-    if include and finders.find(include):
-        return include_string.format(static(include))
+    return include_string.format(static(include))
     return ''
 
 
