@@ -7,6 +7,7 @@ from django import template
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
+from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import get_template
 from django.templatetags.static import static
 from django.urls import reverse
@@ -15,7 +16,7 @@ from djangoplugins.models import Plugin
 import projectroles
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import get_backend_api, BackendPluginPoint
 from projectroles.utils import get_display_name as _get_display_name
 
 
@@ -206,10 +207,16 @@ def get_backend_include(backend_name, include_type='js'):
     Return import string for backend app Javascript or CSS.
     Returns empty string if not found.
     """
+    '''
     from projectroles.plugins import get_app_plugin
 
     plugin = get_app_plugin(backend_name, plugin_type='backend')
     if not plugin:
+        return ''
+    '''
+    try:
+        plugin = BackendPluginPoint.get_plugin(backend_name)
+    except ObjectDoesNotExist:
         return ''
 
     include = ''
