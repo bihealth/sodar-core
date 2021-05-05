@@ -20,12 +20,15 @@ var updateAlertStatus = function () {
 };
 
 $(document).ready(function() {
-    var statusInterval = $(document).find(
-        '#sodar-app-alert-nav').attr('data-interval');
-    // Update user alerts
-    setInterval(function () {
-      updateAlertStatus();
-    }, statusInterval * 1000);
+    var alertNav = $(document).find('#sodar-app-alert-nav');
+    if (alertNav) {
+        var alertInterval = $(document).find(
+            '#sodar-app-alert-nav').attr('data-interval');
+        // Update user alerts
+        setInterval(function () {
+            updateAlertStatus();
+        }, alertInterval * 1000);
+    }
 });
 
 // Handle alert dismissal
