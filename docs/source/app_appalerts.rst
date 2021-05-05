@@ -53,6 +53,13 @@ Next, make sure the context processor for app alerts is included in the
             }
         }
 
+To set the interval for JQuery status updates in the title bar, use
+``APPALERTS_STATUS_INTERVAL`` and provide the value in seconds. Example:
+
+.. code-block:: python
+
+    APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
+
 URL Configuration
 -----------------
 
@@ -83,6 +90,23 @@ output:
 
     Registering Plugin for appalerts.plugins.SiteAppPlugin
     Registering Plugin for appalerts.plugins.BackendPlugin
+
+Base Template Include
+---------------------
+
+If your site is overriding the base site template, the following snippet should
+be added in the ``javascript`` block of ``{SITE}/templates/base.html`` to enable
+appalerts JQuery:
+
+.. code-block:: django
+
+    {% block javascript %}
+      {# ... #}
+      {% if request.user.is_authenticated %}
+        {% get_backend_include 'appalerts_backend' 'js' as appalerts_js %}
+        {{ appalerts_js | safe }}
+      {% endif %}
+    {% endblock javascript %}
 
 
 Usage
