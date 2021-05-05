@@ -233,6 +233,8 @@ def get_backend_include(backend_name, include_type='js'):
     except AttributeError:
         pass
     if include:
+        ret = include_string.format(static(include))
+        print('get_backend_include returns: {}'.format(ret))  # DEBUG
         return include_string.format(static(include))
     return ''
 
