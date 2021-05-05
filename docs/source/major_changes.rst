@@ -42,10 +42,8 @@ to use the ``appalerts`` app, please add the following snippet into the
 
     {% block javascript %}
       {# ... #}
-      {% check_backend 'appalerts_backend' as appalerts_active %}
-      {% if appalerts_active and request.user.is_authenticated %}
-        <script type="text/javascript" src="{% static 'appalerts/js/appalerts.js' %}"></script>
-      {% endif %}
+      <!-- App alerts Javascript -->
+      {% include 'projectroles/_appalerts_include.html' %}
     {% endblock javascript %}
 
 
