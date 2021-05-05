@@ -231,8 +231,9 @@ def get_backend_include(backend_name, include_type='js'):
                 '<link rel="stylesheet" type="text/css" href="{}"/>'
             )
     except AttributeError:
-        return ''
-    return include_string.format(static(include))
+        pass
+    if include:
+        return include_string.format(static(include))
     return ''
 
 
