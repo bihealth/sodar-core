@@ -1,11 +1,12 @@
 // Update alert status
 var updateAlertStatus = function () {
   var alertNav = $(document).find('#sodar-app-alert-nav');
-  if (alertNav) {
-    $.ajax({
-        url: alertNav.attr('data-status-url'),
-        method: 'GET',
-        dataType: 'json'
+  var statusUrl = alertNav.attr('data-status-url');
+  if (statusUrl) {
+      $.ajax({
+          url: statusUrl,
+          method: 'GET',
+          dataType: 'json'
     }).done(function (data) {
       var alertBadge = alertNav.find('#sodar-app-alert-badge');
       alertBadge.find('#sodar-app-alert-count').html(data['alerts']);
@@ -19,7 +20,8 @@ var updateAlertStatus = function () {
   }
 };
 
-$(document).ready(function() {
+$(document).ready(function () {
+    // Set up alert updating
     var alertNav = $(document).find('#sodar-app-alert-nav');
     if (alertNav) {
         var alertInterval = $(document).find(
@@ -29,10 +31,8 @@ $(document).ready(function() {
             updateAlertStatus();
         }, alertInterval * 1000);
     }
-});
 
-// Handle alert dismissal
-$(document).ready(function () {
+    // Handle alert dismissal
     $('.sodar-app-alert-btn-dismiss').click(function () {
         var uuid = $(this).attr('data-uuid');
         $.post({
