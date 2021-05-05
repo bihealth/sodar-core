@@ -25,7 +25,6 @@ Changed
     - Upgrade django-debug-toolbar to v3.2.1 (#706)
 - **Projectroles**
     - Enforce 3 character minimum limit for terms in multi-term search (#715)
-    - Refactor ``get_backend_include()`` template tag
 
 Fixed
 -----

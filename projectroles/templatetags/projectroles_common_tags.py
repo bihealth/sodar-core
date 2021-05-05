@@ -203,17 +203,12 @@ def get_user_html(user):
 
 @register.simple_tag
 def get_backend_include(backend_name, include_type='js'):
-    """
-    Return import string for backend app Javascript or CSS.
-    Returns empty string if not found.
-    """
-    '''
-    from projectroles.plugins import get_app_plugin
+    """Returns import string for backend app Javascript or CSS.
+    Returns empty string if not found."""
 
-    plugin = get_app_plugin(backend_name, plugin_type='backend')
-    if not plugin:
-        return ''
-    '''
+    # TODO: Replace with get_app_plugin() and if None check
+    # TODO: once get_app_plugin() can be used for backend plugins
+    # TODO: Don't forget to remove ObjectDoesNotExist import
     try:
         plugin = BackendPluginPoint.get_plugin(backend_name)
     except ObjectDoesNotExist:
@@ -231,11 +226,11 @@ def get_backend_include(backend_name, include_type='js'):
                 '<link rel="stylesheet" type="text/css" href="{}"/>'
             )
     except AttributeError:
-        pass
-    if include:
-        ret = include_string.format(static(include))
-        print('get_backend_include returns: {}'.format(ret))  # DEBUG
+        return ''
+
+    if include and finders.find(include):
         return include_string.format(static(include))
+
     return ''
 
 

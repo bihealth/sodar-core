@@ -42,9 +42,9 @@ to use the ``appalerts`` app, please add the following snippet into the
 
     {% block javascript %}
       {# ... #}
-      {% if request.user.is_authenticated %}
-        {% get_backend_include 'appalerts_backend' 'js' as appalerts_js %}
-        {{ appalerts_js | safe }}
+      {% check_backend 'appalerts_backend' as appalerts_active %}
+      {% if appalerts_active and request.user.is_authenticated %}
+        <script type="text/javascript" src="{% static 'appalerts/js/appalerts.js' %}"></script>
       {% endif %}
     {% endblock javascript %}
 
