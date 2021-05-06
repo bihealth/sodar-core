@@ -25,6 +25,7 @@ Changed
     - Upgrade django-debug-toolbar to v3.2.1 (#706)
 - **Projectroles**
     - Enforce 3 character minimum limit for terms in multi-term search (#715)
+    - Improve remote sync stability
 
 Fixed
 -----
@@ -39,6 +40,7 @@ Fixed
     - Hardcoded optional ``PROJECTROLES_DISABLE_CATEGORIES`` setting in forms (#719)
     - Remote sync objects referred by database ID instead of ``sodar_uuid`` (#720)
     - Uncaught exceptions in app settings remote sync (#720)
+    - Assumed ``sodar_uuid`` match for target app settings in remote sync (#722)
 
 
 v0.10.0 (2021-04-28)

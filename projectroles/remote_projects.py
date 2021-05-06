@@ -994,11 +994,17 @@ class RemoteProjectAPI:
             user = User.objects.get(sodar_uuid=ad['user_uuid'])
 
         try:
-            obj = AppSetting.objects.get(sodar_uuid=a_uuid)
+            obj = AppSetting.objects.get(
+                app_plugin=app_plugin,
+                name=ad['name'],
+                project=project,
+                user=user,
+            )
             # Keep local app setting if available
             if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
                 logger.info('Keeping local setting {}'.format(str(obj)))
                 return
+            # If setting is global, update existing value by recreating object
             action_str = 'Updating'
             obj.delete()
         except ObjectDoesNotExist:
