@@ -147,7 +147,9 @@
       <script type="text/javascript" src="{% static 'js/project.js' %}"></script>
 
       <!-- App alerts Javascript -->
-      {% include 'projectroles/_appalerts_include.html' %}
+      {% if request.user and request.user.is_authenticated %}
+        {% include 'projectroles/_appalerts_include.html' %}
+      {% endif %}
     {% endblock javascript %}
 
   </body>

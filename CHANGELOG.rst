@@ -21,6 +21,7 @@ Changed
     - Rename example ``django-db-file-storage`` URL pattern (#732)
 - **Projectroles**
     - Display anonymous icon in titlebar dropdown if not logged in (#726)
+    - Only include appalerts js for authenticated users (#742)
 
 Fixed
 -----
