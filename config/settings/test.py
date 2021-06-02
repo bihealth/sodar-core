@@ -49,6 +49,7 @@ PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 # TEMPLATE LOADERS
 # ------------------------------------------------------------------------------
 # Keep templates in memory so tests run faster
+'''
 TEMPLATES[0]['OPTIONS']['loaders'] = [
     [
         'django.template.loaders.cached.Loader',
@@ -58,6 +59,7 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
         ],
     ]
 ]
+'''
 
 # Logging
 # ------------------------------------------------------------------------------
