@@ -214,12 +214,15 @@ def get_backend_include(backend_name, include_type='js'):
     except ObjectDoesNotExist:
         print('\nDEBUG: ObjectDoesNotExist reached')
         return ''
+    print('\nDEBUG: plugin={}'.format(plugin))
 
     include = ''
     include_string = ''
     try:
         if include_type == 'js':
+            print('\nDEBUG: Checking javascript url')
             include = plugin.javascript_url
+            print('\nDEBUG: Javascript include = {}'.format(include))
             include_string = '<script type="text/javascript" src="{}"></script>'
         elif include_type == 'css':
             include = plugin.css_url
