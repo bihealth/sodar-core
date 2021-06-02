@@ -212,6 +212,7 @@ def get_backend_include(backend_name, include_type='js'):
     try:
         plugin = BackendPluginPoint.get_plugin(backend_name)
     except ObjectDoesNotExist:
+        print('\nDEBUG: ObjectDoesNotExist reached')
         return ''
 
     include = ''
@@ -226,11 +227,21 @@ def get_backend_include(backend_name, include_type='js'):
                 '<link rel="stylesheet" type="text/css" href="{}"/>'
             )
     except AttributeError:
+        print('\nDEBUG: AttributeError reached')
         return ''
 
     if include:
+        print('\nDEBUG: find={}'.format(finders.find(include)))
+
+    if include and finders.find(include):
+        print(
+            '\nDEBUG: Returning include: {}'.format(
+                include_string.format(static(include))
+            )
+        )
         return include_string.format(static(include))
 
+    print('\nDEBUG: Returning None')
     return ''
 
 
