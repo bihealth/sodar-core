@@ -148,7 +148,7 @@
 
       <!-- App alerts Javascript -->
       {% if request.user and request.user.is_authenticated %}
-        {# get_backend_include 'appalerts_backend' 'js' as appalerts_include #}
+        {% get_backend_include 'appalerts_backend' 'js' as appalerts_include %}
         {{ appalerts_include | safe }}
       {% endif %}
     {% endblock javascript %}

@@ -1,9 +1,6 @@
 """Context processors for the projectroles app"""
 
 from projectroles.plugins import get_active_plugins, get_backend_api
-from projectroles.templatetags.projectroles_common_tags import (
-    get_backend_include,
-)
 from projectroles.urls import urlpatterns
 
 
@@ -49,8 +46,5 @@ def app_alerts_processor(request):
                 'app_alerts': app_alerts.get_model()
                 .objects.filter(user=request.user, active=True)
                 .count(),
-                'appalerts_include': get_backend_include(
-                    'appalerts_backend', 'js'
-                ),
             }
     return {'app_alerts': 0}
