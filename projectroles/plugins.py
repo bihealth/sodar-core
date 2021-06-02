@@ -266,6 +266,16 @@ class BackendPluginPoint(PluginPoint):
     # TODO: Override this in your app plugin if needed
     info_settings = []
 
+    def __init__(self):
+        """
+        Force initialization as this may fail in some cases (see issue #717)
+        """
+        self.icon = self.__class__.icon
+        self.description = self.__class__.description
+        self.javascript_url = self.__class__.javascript_url
+        self.css_url = self.__class__.css_url
+        self.info_settings = self.__class__.info_settings
+
     def get_api(self):
         """Return API entry point object."""
         # TODO: Implement this in your backend plugin

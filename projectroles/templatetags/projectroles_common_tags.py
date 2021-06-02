@@ -229,10 +229,11 @@ def get_backend_include(backend_name, include_type='js'):
             print('DEBUG: Checking javascript url')
             include = plugin.javascript_url
             print('DEBUG: Javascript include = {}'.format(include))
+            '''
             if not include:
                 for a in dir(plugin):
                     print('DEBUG: attr {} = {}'.format(a, getattr(plugin, a)))
-
+            '''
             include_string = '<script type="text/javascript" src="{}"></script>'
         elif include_type == 'css':
             include = plugin.css_url
