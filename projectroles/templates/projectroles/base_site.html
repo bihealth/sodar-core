@@ -147,7 +147,8 @@
       <script type="text/javascript" src="{% static 'js/project.js' %}"></script>
 
       <!-- App alerts Javascript -->
-      {% include 'projectroles/_appalerts_include.html' %}
+      {% get_backend_include 'appalerts_backend' 'js' as appalerts_include %}
+      {{ appalerts_include | safe }}
     {% endblock javascript %}
 
   </body>
