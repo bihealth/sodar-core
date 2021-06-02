@@ -205,6 +205,7 @@ def get_user_html(user):
 def get_backend_include(backend_name, include_type='js'):
     """Returns import string for backend app Javascript or CSS.
     Returns empty string if not found."""
+    print('\nDEBUG: get_backend_include() called')
 
     # TODO: Replace with get_app_plugin() and if None check
     # TODO: once get_app_plugin() can be used for backend plugins
@@ -212,17 +213,21 @@ def get_backend_include(backend_name, include_type='js'):
     try:
         plugin = BackendPluginPoint.get_plugin(backend_name)
     except ObjectDoesNotExist:
-        print('\nDEBUG: ObjectDoesNotExist reached')
+        print('DEBUG: ObjectDoesNotExist reached')
         return ''
-    print('\nDEBUG: plugin={}'.format(plugin))
+    print('DEBUG: plugin={}'.format(plugin))
 
     include = ''
     include_string = ''
     try:
         if include_type == 'js':
-            print('\nDEBUG: Checking javascript url')
+            print('DEBUG: Checking javascript url')
             include = plugin.javascript_url
-            print('\nDEBUG: Javascript include = {}'.format(include))
+            print('DEBUG: Javascript include = {}'.format(include))
+            if not include:
+                for a in dir(plugin):
+                    print('DEBUG: attr {} = {}'.format(a, getattr(plugin, a)))
+
             include_string = '<script type="text/javascript" src="{}"></script>'
         elif include_type == 'css':
             include = plugin.css_url
@@ -230,21 +235,18 @@ def get_backend_include(backend_name, include_type='js'):
                 '<link rel="stylesheet" type="text/css" href="{}"/>'
             )
     except AttributeError:
-        print('\nDEBUG: AttributeError reached')
+        print('DEBUG: AttributeError reached')
         return ''
-
-    if include:
-        print('\nDEBUG: find={}'.format(finders.find(include)))
 
     if include and finders.find(include):
         print(
-            '\nDEBUG: Returning include: {}'.format(
+            'DEBUG: Returning include: {}'.format(
                 include_string.format(static(include))
             )
         )
         return include_string.format(static(include))
 
-    print('\nDEBUG: Returning None')
+    print('DEBUG: Returning None')
     return ''
 
 
