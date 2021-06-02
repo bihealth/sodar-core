@@ -16,7 +16,11 @@ from djangoplugins.models import Plugin
 import projectroles
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api, BackendPluginPoint
+from projectroles.plugins import (
+    get_backend_api,
+    # BackendPluginPoint,
+    get_app_plugin,
+)
 from projectroles.utils import get_display_name as _get_display_name
 
 
@@ -211,7 +215,8 @@ def get_backend_include(backend_name, include_type='js'):
     # TODO: once get_app_plugin() can be used for backend plugins
     # TODO: Don't forget to remove ObjectDoesNotExist import
     try:
-        plugin = BackendPluginPoint.get_plugin(backend_name)
+        # plugin = BackendPluginPoint.get_plugin(backend_name)
+        plugin = get_app_plugin('appalerts_backend', plugin_type='backend')
     except ObjectDoesNotExist:
         print('DEBUG: ObjectDoesNotExist reached')
         return ''
