@@ -216,43 +216,29 @@ def get_backend_include(backend_name, include_type='js'):
     # TODO: Don't forget to remove ObjectDoesNotExist import
     try:
         # plugin = BackendPluginPoint.get_plugin(backend_name)
-        plugin = get_app_plugin('appalerts_backend', plugin_type='backend')
+        plugin = get_app_plugin(backend_name, plugin_type='backend')
     except ObjectDoesNotExist:
-        print('DEBUG: ObjectDoesNotExist reached')
         return ''
-    print('DEBUG: plugin={}'.format(plugin))
 
     include = ''
     include_string = ''
     try:
         if include_type == 'js':
-            print('DEBUG: Checking javascript url')
-            include = plugin.javascript_url
+            # print('DEBUG: Checking javascript url')
+            include = getattr(plugin, 'javascript_url', None)
             print('DEBUG: Javascript include = {}'.format(include))
-            '''
-            if not include:
-                for a in dir(plugin):
-                    print('DEBUG: attr {} = {}'.format(a, getattr(plugin, a)))
-            '''
             include_string = '<script type="text/javascript" src="{}"></script>'
         elif include_type == 'css':
-            include = plugin.css_url
+            include = getattr(plugin, 'css_url', None)
             include_string = (
                 '<link rel="stylesheet" type="text/css" href="{}"/>'
             )
     except AttributeError:
-        print('DEBUG: AttributeError reached')
         return ''
 
     if include and finders.find(include):
-        print(
-            'DEBUG: Returning include: {}'.format(
-                include_string.format(static(include))
-            )
-        )
         return include_string.format(static(include))
 
-    print('DEBUG: Returning None')
     return ''
 
 
