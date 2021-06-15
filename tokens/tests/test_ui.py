@@ -46,8 +46,7 @@ class TestTokenList(TestUIBase):
         expiry_time = timezone.localtime(self.token.expiry).strftime(
             '%Y-%m-%d %H:%M'
         )
+        values = []
         for item in items:
-            self.assertIn(
-                item.find_elements_by_tag_name('td')[2].text,
-                ['Never', expiry_time],
-            )
+            values.append(item.find_elements_by_tag_name('td')[2].text)
+        self.assertEqual(values, ['Never', expiry_time])
