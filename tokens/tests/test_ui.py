@@ -42,10 +42,12 @@ class TestTokenList(TestUIBase):
         url = reverse('tokens:list')
         self.login_and_redirect(self.regular_user, url)
         items = self.selenium.find_elements_by_class_name('sodar-tk-list-item')
-        self.assertEqual(
-            items[0].find_elements_by_tag_name('td')[2].text,
-            timezone.localtime(self.token.expiry).strftime('%Y-%m-%d %H:%M'),
+        self.assertEqual(len(items), 2)
+        expiry_time = timezone.localtime(self.token.expiry).strftime(
+            '%Y-%m-%d %H:%M'
         )
-        self.assertEqual(
-            items[1].find_elements_by_tag_name('td')[2].text, 'Never'
-        )
+        for item in items:
+            self.assertIn(
+                item.find_elements_by_tag_name('td')[2].text,
+                ['Never', expiry_time],
+            )
