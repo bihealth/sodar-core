@@ -49,4 +49,4 @@ class TestTokenList(TestUIBase):
         values = []
         for item in items:
             values.append(item.find_elements_by_tag_name('td')[2].text)
-        self.assertEqual(values, ['Never', expiry_time])
+        self.assertCountEqual(values, ['Never', expiry_time])
