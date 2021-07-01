@@ -410,18 +410,19 @@ if ENABLE_LDAP:
 ENABLE_SAML = env.bool('ENABLE_SAML', False)
 SAML2_AUTH = {
     # Required setting
-    'SAML_CLIENT_SETTINGS': {  # Pysaml2 Saml client settings (https://pysaml2.readthedocs.io/en/latest/howto/config.html)
-        'entityid': env.str(
-            'SAML_CLIENT_ENTITY_ID', 'SODARcore'
-        ),  # The optional entity ID string to be passed in the 'Issuer' element of authn request, if required by the IDP.
+    # Pysaml2 Saml client settings
+    # See: https://pysaml2.readthedocs.io/en/latest/howto/config.html
+    'SAML_CLIENT_SETTINGS': {
+        # Optional entity ID string to be passed in the 'Issuer' element of
+        # authn request, if required by the IDP.
+        'entityid': env.str('SAML_CLIENT_ENTITY_ID', 'SODARcore'),
         'entitybaseurl': env.str(
             'SAML_CLIENT_ENTITY_URL', 'https://localhost:8000'
         ),
+        # The auto(dynamic) metadata configuration URL of SAML2
         'metadata': {
             'local': [
-                env.str(
-                    'SAML_CLIENT_METADATA_FILE', 'metadata.xml'
-                ),  # The auto(dynamic) metadata configuration URL of SAML2
+                env.str('SAML_CLIENT_METADATA_FILE', 'metadata.xml'),
             ],
         },
         'service': {
@@ -446,7 +447,10 @@ SAML2_AUTH = {
             }
         ],
     },
-    'DEFAULT_NEXT_URL': '/',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
+    # Custom target redirect URL after the user get logged in.
+    # Defaults to /admin if not set. This setting will be overwritten if you
+    # have parameter ?next= specificed in the login URL.
+    'DEFAULT_NEXT_URL': '/',
     # # Optional settings below
     # 'NEW_USER_PROFILE': {
     #     'USER_GROUPS': [],  # The default group name when a new user logs in
@@ -454,19 +458,24 @@ SAML2_AUTH = {
     #     'STAFF_STATUS': True,  # The staff status for new users
     #     'SUPERUSER_STATUS': False,  # The superuser status for new users
     # },
-    # 'ATTRIBUTES_MAP': {  # Change Email/UserName/FirstName/LastName to corresponding SAML2 userprofile attributes.
-    #     'email': 'Email',
-    #     'username': 'UserName',
-    #     'first_name': 'FirstName',
-    #     'last_name': 'LastName',
-    # },
+    # 'ATTRIBUTES_MAP': env.dict(
+    #     'SAML_ATTRIBUTES_MAP',
+    #     {
+    #         Change values to corresponding SAML2 userprofile attributes.
+    #         'email': 'Email',
+    #         'username': 'UserName',
+    #         'first_name': 'FirstName',
+    #         'last_name': 'LastName',
+    #     }
+    # ),
     # 'TRIGGER': {
     #     'FIND_USER': 'path.to.your.find.user.hook.method',
     #     'NEW_USER': 'path.to.your.new.user.hook.method',
     #     'CREATE_USER': 'path.to.your.create.user.hook.method',
     #     'BEFORE_LOGIN': 'path.to.your.login.hook.method',
     # },
-    # 'ASSERTION_URL': 'https://your.url.here',  # Custom URL to validate incoming SAML requests against
+    # Custom URL to validate incoming SAML requests against
+    # 'ASSERTION_URL': 'https://your.url.here',
 }
 
 
