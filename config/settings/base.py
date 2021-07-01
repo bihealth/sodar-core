@@ -140,12 +140,12 @@ EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX', default='')
 # ------------------------------------------------------------------------------
 ADMINS = [("""Admin User""", 'admin.user@example.com')]
 
-# See: https://docs.djangoproject.com/en/1.11/ref/settings/#managers
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#managers
 MANAGERS = ADMINS
 
 # DATABASE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 # Uses django-environ to accept uri format
 # See: https://django-environ.readthedocs.io/en/latest/#supported-types
 DATABASES = {
@@ -168,24 +168,24 @@ DEFAULT_FILE_STORAGE = 'db_file_storage.storage.DatabaseFileStorage'
 # In a Windows environment this must be set to your system time zone.
 TIME_ZONE = 'Europe/Berlin'
 
-# See: https://docs.djangoproject.com/en/1.11/ref/settings/#language-code
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
 
-# See: https://docs.djangoproject.com/en/1.11/ref/settings/#site-id
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#site-id
 SITE_ID = 1
 
-# See: https://docs.djangoproject.com/en/1.11/ref/settings/#use-i18n
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#use-i18n
 USE_I18N = False
 
-# See: https://docs.djangoproject.com/en/1.11/ref/settings/#use-l10n
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#use-l10n
 USE_L10N = True
 
-# See: https://docs.djangoproject.com/en/1.11/ref/settings/#use-tz
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#use-tz
 USE_TZ = True
 
 # TEMPLATE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/1.11/ref/settings/#templates
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
