@@ -424,7 +424,7 @@ SAML2_AUTH = {
                 ),  # The auto(dynamic) metadata configuration URL of SAML2
             ],
         },
-        "service": {
+        'service': {
             'sp': {
                 'idp': env.str(
                     'SAML_CLIENT_IPD',
