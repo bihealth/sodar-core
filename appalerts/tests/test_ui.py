@@ -64,7 +64,7 @@ class TestListView(TestAlertUIBase):
         )
 
         button = self.selenium.find_elements_by_class_name(
-            'sodar-app-alert-btn-dismiss'
+            'sodar-app-alert-btn-dismiss-single'
         )[0]
         button.click()
         WebDriverWait(self.selenium, self.wait_time).until(
@@ -80,6 +80,37 @@ class TestListView(TestAlertUIBase):
             'alert',
         )
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 1)
+
+    def test_alert_dismiss_all(self):
+        """Test dismissing all alerts for the user"""
+        self.assertEqual(AppAlert.objects.filter(active=True).count(), 2)
+
+        url = reverse('appalerts:list')
+        self.login_and_redirect(self.regular_user, url)
+        self.assertEqual(
+            self.selenium.find_element_by_id('sodar-app-alert-count').text, '2'
+        )
+        self.assertEqual(
+            self.selenium.find_element_by_id('sodar-app-alert-legend').text,
+            'alerts',
+        )
+
+        self.selenium.find_element_by_id(
+            'sodar-app-alert-btn-dismiss-all'
+        ).click()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.invisibility_of_element_located(
+                (By.CLASS_NAME, 'sodar-app-alert-item')
+            )
+        )
+        self.assertEqual(
+            self.selenium.find_element_by_id('sodar-app-alert-count').text, ''
+        )
+        self.assertEqual(
+            self.selenium.find_element_by_id('sodar-app-alert-legend').text,
+            '',
+        )
+        self.assertEqual(AppAlert.objects.filter(active=True).count(), 0)
 
 
 class TestTitlebarBadge(TestAlertUIBase):

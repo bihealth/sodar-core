@@ -16,6 +16,8 @@ Added
 - **General**
     - ``LOGGING_APPS`` and ``LOGGING_FILE_PATH`` settings in example site (#762)
     - Siteinfo app to logged apps in base config (#767)
+- **Appalerts**
+    - "Dismiss All" button in alert list (#770)
 - **Siteinfo**
     - ``ENABLED_BACKEND_PLUGINS`` in ``CORE_SETTINGS`` (#766)
 

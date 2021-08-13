@@ -16,6 +16,7 @@ v0.10.4 (WIP)
 Release Highlights
 ==================
 
+- Add "Dismiss All" button in Appalerts list view
 - Fix API and UI views to return 404 status code if object is not found
 - Siteinfo app improvements
 - General bug fixes and minor updates
