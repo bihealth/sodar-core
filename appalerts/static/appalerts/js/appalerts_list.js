@@ -17,13 +17,14 @@ $(document).ready(function () {
                   $(this).fadeOut(250);
               });
           }
-          // Update/hide title bar badge
+          // Update/hide title bar badge and no alerts message
           var alertCount = $(document).find('#sodar-app-alert-count');
           var alertCountInt = parseInt($(document).find(
               '#sodar-app-alert-count').html()) - clearCount;
           var alertLegend = $(document).find('#sodar-app-alert-legend');
           if (alertCountInt <= 0) {
               $(document).find('#sodar-app-alert-badge').fadeOut(250);
+              $(document).find('#sodar-app-alert-empty').delay(300).fadeIn(250);
           } else {
               alertCount.html(alertCountInt.toString());
               if (alertCountInt === 1) {

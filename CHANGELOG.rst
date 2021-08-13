@@ -27,6 +27,8 @@ Changed
 - **General**
     - Upgrade to Chromedriver v92 (#772)
     - Upgrade minimum Django version to v3.2.6 (#773)
+- **Appalerts**
+    - Display no alerts element after clearing list (#779)
 
 Fixed
 -----

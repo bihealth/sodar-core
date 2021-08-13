@@ -80,6 +80,7 @@ class TestListView(TestAlertUIBase):
             'alert',
         )
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 1)
+        self.assertFalse(self.selenium.find_element_by_id('sodar-app-alert-empty').is_displayed())
 
     def test_alert_dismiss_all(self):
         """Test dismissing all alerts for the user"""
@@ -111,6 +112,13 @@ class TestListView(TestAlertUIBase):
             '',
         )
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 0)
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.visibility_of_element_located(
+                (By.ID, 'sodar-app-alert-empty')
+            )
+        )
+        self.assertTrue(self.selenium.find_element_by_id(
+            'sodar-app-alert-empty').is_displayed())
 
 
 class TestTitlebarBadge(TestAlertUIBase):
