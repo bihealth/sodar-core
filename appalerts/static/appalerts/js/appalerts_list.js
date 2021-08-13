@@ -35,7 +35,7 @@ $(document).ready(function () {
               console.error('Unable to dismiss alert (UUID=' +
                   $(this).attr('data-uuid') + ')');
             } else {
-              console.error('Unable to dismiss alerts');
+                console.error('Unable to dismiss alerts');
             }
         });
     });
