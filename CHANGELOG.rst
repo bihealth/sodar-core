@@ -36,6 +36,7 @@ Fixed
     - Docs layout broken by ``docutils>=0.17`` (#763)
 - **Projectroles**
     - HTTP 403 raised instead of 404 in API and UI views if object not found (#774)
+    - Incorrect message on ownership transfer email notifications (#778)
 - **Siteinfo**
     - Plugin settings not read if ``get_statistics()`` raises exception (#767)
 
