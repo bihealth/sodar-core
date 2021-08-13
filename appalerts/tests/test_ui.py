@@ -2,6 +2,7 @@
 
 from django.urls import reverse
 
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
@@ -80,7 +81,11 @@ class TestListView(TestAlertUIBase):
             'alert',
         )
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 1)
-        self.assertFalse(self.selenium.find_element_by_id('sodar-app-alert-empty').is_displayed())
+        self.assertFalse(
+            self.selenium.find_element_by_id(
+                'sodar-app-alert-empty'
+            ).is_displayed()
+        )
 
     def test_alert_dismiss_all(self):
         """Test dismissing all alerts for the user"""
@@ -113,12 +118,39 @@ class TestListView(TestAlertUIBase):
         )
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 0)
         WebDriverWait(self.selenium, self.wait_time).until(
-            ec.visibility_of_element_located(
-                (By.ID, 'sodar-app-alert-empty')
-            )
+            ec.visibility_of_element_located((By.ID, 'sodar-app-alert-empty'))
         )
-        self.assertTrue(self.selenium.find_element_by_id(
-            'sodar-app-alert-empty').is_displayed())
+        self.assertTrue(
+            self.selenium.find_element_by_id(
+                'sodar-app-alert-empty'
+            ).is_displayed()
+        )
+
+    def test_alert_reload(self):
+        """Test displaying reload link for new alerts"""
+        AppAlert.objects.filter(active=True).delete()
+        self.assertEqual(AppAlert.objects.filter(active=True).count(), 0)
+
+        url = reverse('appalerts:list')
+        self.login_and_redirect(self.regular_user, url)
+        self.assertTrue(
+            self.selenium.find_element_by_id(
+                'sodar-app-alert-empty'
+            ).is_displayed()
+        )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element_by_id('sodar-app-alert-reload')
+
+        self._make_app_alert(user=self.regular_user, url=reverse('home'))
+
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.visibility_of_element_located((By.ID, 'sodar-app-alert-reload'))
+        )
+        self.assertTrue(
+            self.selenium.find_element_by_id(
+                'sodar-app-alert-reload'
+            ).is_displayed()
+        )
 
 
 class TestTitlebarBadge(TestAlertUIBase):

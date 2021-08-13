@@ -1,3 +1,15 @@
+function updateEmptyAlertsElement () {
+    var alertBadge = $(document).find('#sodar-app-alert-badge');
+    var emptyElem = $(document).find('#sodar-app-alert-empty');
+
+    if (emptyElem && emptyElem.is(':visible') && alertBadge.is(':visible')) {
+        emptyElem.html(
+            '<a href="#" id="sodar-app-alert-reload"' +
+            'onclick="window.location.reload()">' +
+            'Please reload this page to view new alerts.</a>');
+    }
+}
+
 $(document).ready(function () {
     // Handle alert dismissal
     $('.sodar-app-alert-btn-dismiss').click(function () {
@@ -40,4 +52,15 @@ $(document).ready(function () {
             }
         });
     });
+
+    // Update empty alerts element
+    var alertNav = $(document).find('#sodar-app-alert-nav');
+    if (alertNav) {
+        var alertInterval = $(document).find(
+            '#sodar-app-alert-nav').attr('data-interval');
+        // Update user alerts
+        setInterval(function () {
+            updateEmptyAlertsElement();
+        }, alertInterval * 1000);
+    }
 });

@@ -18,6 +18,7 @@ Added
     - Siteinfo app to logged apps in base config (#767)
 - **Appalerts**
     - "Dismiss All" button in alert list (#770)
+    - Update list view with reload link on added alerts (#780)
 - **Siteinfo**
     - ``ENABLED_BACKEND_PLUGINS`` in ``CORE_SETTINGS`` (#766)
 
