@@ -10,15 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.10.4 (WIP)
-*************
+v0.10.4 (2021-08-19)
+********************
 
 Release Highlights
 ==================
 
 - Appalerts list view UI improvements
+- Siteinfo app and UI improvements
 - Fix API and UI views to return 404 status code if object is not found
-- Siteinfo app improvements
 - General bug fixes and minor updates
 - Upgraded dependencies
 
