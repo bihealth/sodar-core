@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Appalerts**
+    - Display project badge in alert (#790)
+
 Changed
 -------
 
@@ -23,7 +29,6 @@ Fixed
 
 - **Appalerts**
     - Redundant HTML anchor in Dismiss All button (#788)
-
 
 
 v0.10.4 (2021-08-19)

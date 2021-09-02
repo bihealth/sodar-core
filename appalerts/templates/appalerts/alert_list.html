@@ -5,6 +5,19 @@
 
 {% block title %}App Alerts{% endblock title %}
 
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    .sodar-app-alert-project-badge {
+        vertical-align: top;
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+    }
+  </style>
+{% endblock css %}
+
 {% block projectroles %}
 
 <div class="row sodar-subtitle-container">
@@ -32,6 +45,16 @@
             title="{{ a.date_created | date:'Y-m-d H:i' }}">
         <i class="iconify" data-icon="mdi:clock"></i>
       </span>
+      {% if a.project %}
+        <span class="badge badge-{{ a.level | lower }} sodar-app-alert-project-badge"
+              title="{% get_display_name a.project.type title=True %}: {{ a.project.title }}"
+              data-toggle="tooltip" data-placement="top">
+          <i class="iconify"
+             data-icon="{% if a.project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
+          </i>
+          {{ a.project.title }}
+        </span>
+      {% endif %}
       {{ a.message | safe }}
       <span class="sodar-app-alert-buttons pull-right">
         {% if a.url %}
