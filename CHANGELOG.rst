@@ -21,6 +21,8 @@ Changed
 
 - **General**
     - Unify app settings label notation (#793)
+- **Appalerts**
+    - Improve alert list layout (#790)
 - **Projectroles**
     - Improve login button locating in ``login_and_redirect_with_ui()`` (#796)
 

@@ -16,7 +16,7 @@
         max-width: 300px;
     }
 
-    .sodar-app-alert-item-row div:nth-child(1) {
+    .sodar-app-alert-row div:nth-child(1) {
         max-width: 40px;
     }
   </style>
@@ -40,7 +40,7 @@
   {% for a in object_list %}
     <div class="alert alert-{{ a.level | lower }} sodar-app-alert-item"
          data-alert-uuid="{{ a.sodar_uuid }}">
-      <div class="row sodar-app-alert-item-row">
+      <div class="row sodar-app-alert-row">
         <div class="col col-sm-1 px-0">
           <span data-toggle="tooltip" data-placement="top"
                 title="{% if a.app_plugin %}{{ a.app_plugin.title }}{% else %}Projectroles{% endif %}">
