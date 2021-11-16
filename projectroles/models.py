@@ -362,8 +362,8 @@ class Project(models.Model):
         """
         if (
             self.public_guest_access
-            or (check_owner and self.is_owner(user))
             or self.roles.filter(user=user).count() > 0
+            or (check_owner and self.is_owner(user))
         ):
             return True
 
