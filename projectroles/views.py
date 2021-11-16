@@ -438,11 +438,10 @@ class ProjectListContextMixin:
         :param user: User for which the projects are visible
         :param parent: Project object or None
         """
-        if user.is_superuser:
-            project_list = Project.objects.filter(
-                parent=parent, submit_status='OK'
-            ).order_by('title')
-        elif user.is_anonymous:
+        project_list = Project.objects.filter(
+            parent=parent, submit_status=SUBMIT_STATUS_OK
+        )
+        if user.is_anonymous:
             allow_anon = getattr(
                 settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
             )
@@ -450,15 +449,13 @@ class ProjectListContextMixin:
                 return None
             project_list = [
                 p
-                for p in Project.objects.filter(parent=parent).order_by('title')
+                for p in project_list
                 if p.public_guest_access or p.has_public_children()
             ]
-        else:
+        elif not user.is_superuser:
             project_list = [
                 p
-                for p in Project.objects.filter(
-                    parent=parent, submit_status='OK'
-                ).order_by('title')
+                for p in project_list
                 if p.has_role(user, include_children=True)
             ]
 
@@ -472,7 +469,7 @@ class ProjectListContextMixin:
                         or c.has_role(user, include_children=True)
                     )
                     or user.is_anonymous
-                    and c.public_guest_access
+                    and (c.public_guest_access or c.has_public_children())
                 ):
                     lst += _append_projects(c)
             return lst

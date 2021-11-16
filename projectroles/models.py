@@ -174,8 +174,9 @@ class Project(models.Model):
         super().save(*args, **kwargs)
 
     def _validate_parent(self):
-        """Validate parent value to ensure project can't be set as its own
-        parent"""
+        """
+        Validate parent value to ensure project can't be set as its own parent.
+        """
         if self.parent == self:
             raise ValidationError('Project can not be set as its own parent')
 
@@ -190,8 +191,9 @@ class Project(models.Model):
             )
 
     def _validate_title(self):
-        """Validate title against parent title to ensure they don't equal
-        parent"""
+        """
+        Validate title against parent title to ensure they don't equal parent.
+        """
         if self.parent and self.title == self.parent.title:
             raise ValidationError('Project and parent titles can not be equal')
 
@@ -240,7 +242,10 @@ class Project(models.Model):
         for child in self.get_children():
             if child.public_guest_access:
                 return True
-            child.has_public_children()
+            ret = child.has_public_children()
+            if ret:
+                return True
+        return False
 
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""
@@ -353,7 +358,7 @@ class Project(models.Model):
         owners = self.get_owners() if inherited else [self.get_owner()]
         return owners + list(self.get_delegates()) + list(self.get_members())
 
-    def has_role(self, user, include_children=False):
+    def has_role(self, user, include_children=False, check_owner=True):
         """
         Return whether user has roles in Project. If include_children is
         True, return True if user has roles in ANY child project. Returns
@@ -362,14 +367,17 @@ class Project(models.Model):
         """
         if (
             self.public_guest_access
-            or self.is_owner(user)
+            or (check_owner and self.is_owner(user))
             or self.roles.filter(user=user).count() > 0
         ):
             return True
 
         if include_children:
             for child in self.children.all():
-                if child.has_role(user, include_children=True):
+                # Inherited ownership check is redundant for children
+                if child.has_role(
+                    user, include_children=True, check_owner=False
+                ):
                     return True
 
         return False
