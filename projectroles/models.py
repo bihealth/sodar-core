@@ -261,12 +261,9 @@ class Project(models.Model):
         Return RoleAssignment for owner (without inherited owners) or None if
         not set.
         """
-        try:
-            return self.roles.get(
-                role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-            )
-        except RoleAssignment.DoesNotExist:
-            return None
+        return self.roles.filter(
+            role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+        ).first()
 
     def get_owners(self, inherited_only=False):
         """
@@ -277,19 +274,17 @@ class Project(models.Model):
         :return: List
         """
         owners = []
-        owner_as = self.get_owner()
-        if owner_as and not inherited_only:
-            owners.append(owner_as)
-        parent = self.parent
-
-        while parent:
-            parent_owner_as = parent.get_owner()
-            if parent_owner_as and parent_owner_as.user not in [
-                a.user for a in owners
-            ]:
-                owners.append(parent_owner_as)
-            parent = parent.parent
-
+        projects = list(self.get_parents())
+        if not inherited_only:
+            projects.append(self)
+        if projects:
+            db_owners = RoleAssignment.objects.filter(
+                role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'],
+                project__in=projects,
+            )
+            for parent_owner_as in db_owners:
+                if parent_owner_as.user not in [a.user for a in owners]:
+                    owners.append(parent_owner_as)
         return owners
 
     def is_owner(self, user):
@@ -385,7 +380,7 @@ class Project(models.Model):
     def get_parents(self):
         """Return an array of parent projects in inheritance order"""
         if not self.parent:
-            return None
+            return []
         ret = []
         parent = self.parent
         while parent:

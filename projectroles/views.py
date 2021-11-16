@@ -442,10 +442,7 @@ class ProjectListContextMixin:
             parent=parent, submit_status=SUBMIT_STATUS_OK
         )
         if user.is_anonymous:
-            allow_anon = getattr(
-                settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
-            )
-            if not allow_anon:
+            if not getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False):
                 return None
             project_list = [
                 p
