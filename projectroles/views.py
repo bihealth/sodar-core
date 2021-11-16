@@ -52,6 +52,7 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
+    ProjectUserTag,
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
 )
@@ -530,6 +531,13 @@ class ProjectListContextMixin:
         context['project_custom_cols'] = self._get_custom_cols(
             self.request.user, context['project_list']
         )
+        if self.request.user.is_authenticated:
+            context['starred_projects'] = [
+                t.project
+                for t in ProjectUserTag.objects.filter(
+                    user=self.request.user, name=PROJECT_TAG_STARRED
+                ).prefetch_related('project')
+            ]
         context['project_col_count'] = PROJECT_COLUMN_COUNT + len(
             context['project_custom_cols']
         )
