@@ -49,7 +49,7 @@ Fixed
 - **Siteinfo**
     - Layout responsivity issues with long labels (#883)
 - **Timeline**
-    - Redundant app plugin queries in event list (#889)
+    - Redundant app plugin queries in event list (#889, #900)
 
 Removed
 -------
