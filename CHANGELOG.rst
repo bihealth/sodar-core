@@ -35,6 +35,8 @@ Changed
     - Replace event list app column with app icon (#888)
     - Set default kwarg values for model test helpers (#890)
     - Move ``get_request()`` to ``TimelineAPIMixin``
+    - Display recent events regardless of status in details card (#899)
+    - Optimize ``get_details_events()`` (#899)
 
 Fixed
 -----
