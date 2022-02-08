@@ -16,7 +16,8 @@
         class="sodar-pr-project-list-custom-header text-nowrap {% if col.align %}text-{{ col.align }}{% endif %}"
         {% if col.width %} style="width: {{ col.width }}px !important"{% endif %}
         data-app-name="{{ col.app_plugin.name }}"
-        data-column-id="{{ col.column_id }}">
+        data-column-id="{{ col.column_id }}"
+        data-align="{{ col.align }}">
       {{ col.title }}
       {% if col.description %}
         {% get_info_link col.description as info_link %}

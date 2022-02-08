@@ -12,7 +12,7 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -20,6 +20,8 @@ from rules.contrib.views import PermissionRequiredMixin
 
 from projectroles.models import (
     Project,
+    RoleAssignment,
+    ProjectUserTag,
     PROJECT_TAG_STARRED,
     SODAR_CONSTANTS,
 )
@@ -77,8 +79,98 @@ class SODARBaseProjectAjaxView(ProjectAccessMixin, SODARBaseAjaxView):
 # Projectroles Ajax Views ------------------------------------------------------
 
 
+# TODO: Add tests
+class ProjectListAjaxView(SODARBaseAjaxView):
+    """View to retrieve project list entries from the client"""
+
+    permission_classes = [AllowAny]
+
+    @classmethod
+    def _get_project_list(cls, user, parent=None):
+        """
+        Return a flat list of categories and projects.
+
+        :param user: User for which the projects are visible
+        :param parent: Project sodar_uuid or None
+        """
+        project_list = Project.objects.filter(
+            submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            parent=Project.objects.get(sodar_uuid=parent) if parent else None,
+        )
+
+        if user.is_anonymous:
+            if not getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False):
+                return None
+            project_list = [
+                p
+                for p in project_list
+                if p.public_guest_access or p.has_public_children
+            ]
+        elif not user.is_superuser:
+            project_list = [
+                p
+                for p in project_list
+                if p.public_guest_access
+                or p.has_public_children
+                or (
+                    user.is_authenticated
+                    and p.has_role(user, include_children=True)
+                )
+            ]
+
+        def _append_projects(project):
+            lst = [project]
+            for c in project.get_children():
+                if (
+                    user.is_superuser
+                    or c.public_guest_access
+                    or c.has_public_children
+                    or (
+                        user.is_authenticated
+                        and c.has_role(user, include_children=True)
+                    )
+                ):
+                    lst += _append_projects(c)
+            return lst
+
+        flat_list = []
+        for p in project_list:
+            flat_list += _append_projects(p)
+        return flat_list
+
+    def get(self, request, *args, **kwargs):
+        project_list = self._get_project_list(
+            request.user, request.GET.get('parent', None)
+        )
+        ret = {
+            'projects': [
+                {
+                    'title': p.title,
+                    'type': p.type,
+                    'full_title': p.full_title,
+                    'public_guest_access': p.public_guest_access,
+                    'remote': p.is_remote(),
+                    'depth': p.get_depth(),
+                    'uuid': str(p.sodar_uuid),
+                }
+                for p in project_list
+            ],
+            'starred_projects': [],
+        }
+        if request.user.is_authenticated:
+            ret['starred_projects'] = [
+                str(t.project.sodar_uuid)
+                for t in ProjectUserTag.objects.filter(
+                    user=self.request.user, name=PROJECT_TAG_STARRED
+                )
+            ]
+        return Response(ret, status=200)
+
+
 class ProjectListColumnAjaxView(SODARBaseAjaxView):
     """View to retrieve project list extra column data from the client"""
+
+    permission_classes = [AllowAny]
 
     @classmethod
     def _get_column_value(cls, app_plugin, column_id, project, user):
@@ -144,6 +236,63 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
                     ret[p_uuid][app_plugin.name][k] = self._get_column_value(
                         app_plugin, k, project, request.user
                     )
+        return Response(ret, status=200)
+
+
+# TODO: Add tests
+class ProjectListRoleAjaxView(SODARBaseAjaxView):
+    """View to retrieve project list role data from the client"""
+
+    permission_classes = [AllowAny]
+
+    @classmethod
+    def _get_user_role(cls, project, user):
+        """Return user role for project"""
+        ret = {'name': None, 'class': None}
+        role_as = None
+        if user.is_superuser:
+            ret['name'] = 'Superuser'
+            ret['class'] = 'text-danger'
+        if user.is_authenticated:
+            role_as = RoleAssignment.objects.filter(
+                project=project, user=user
+            ).first()
+            if project.is_owner(user):
+                ret['name'] = 'Owner'
+                if (
+                    not role_as
+                    or role_as.role.name
+                    != SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+                ):
+                    ret['class'] = 'text-muted'
+                    ret['info'] = 'Ownership inherited from parent category'
+            if role_as:
+                ret['name'] = role_as.role.name.split(' ')[1].capitalize()
+        if project.public_guest_access and not role_as:
+            ret['name'] = 'Guest'
+        return ret
+
+    def post(self, request, *args, **kwargs):
+        ret = {}
+        projects = Project.objects.filter(
+            type=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
+            sodar_uuid__in=request.data.get('projects'),
+        )
+        for project in projects:
+            # Only provide results for projects in which user has access
+            if not request.user.has_perm('projectroles.view_project', project):
+                logger.error(
+                    'ProjectListRoleAjaxView: User {} not authorized to view '
+                    'project "{}" ({})'.format(
+                        request.user.username,
+                        project.title,
+                        project.sodar_uuid,
+                    )
+                )
+                continue
+            ret[str(project.sodar_uuid)] = self._get_user_role(
+                project, request.user
+            )
         return Response(ret, status=200)
 
 

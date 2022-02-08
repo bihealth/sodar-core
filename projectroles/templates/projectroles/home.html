@@ -54,48 +54,7 @@
       </h4>
     </div>
     <div class="card-body p-0">
-     <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
-       <thead id="sodar-pr-project-list-header">
-         {% include 'projectroles/_project_list_header.html' %}
-       </thead>
-       <tbody>
-         {% if project_list|length > 0 %}
-           {% for p in project_list %}
-             {% include 'projectroles/_project_list_item.html' with list_parent=None %}
-           {% endfor %}
-           {# Not found message for filtering #}
-           <tr id="sodar-pr-home-display-notfound">
-             <td class="bg-faded font-italic text-center text-danger"
-                 colspan="{{ project_col_count }}">
-               No {% get_display_name 'PROJECT' title=False plural=True %} found matching current filter
-             </td>
-           </tr>
-           <tr id="sodar-pr-home-display-nostars">
-             <td class="bg-faded font-italic text-center text-danger"
-                 colspan="{{ project_col_count }}">
-               No starred {% get_display_name 'PROJECT' title=False plural=True %} found
-             </td>
-           </tr>
-         {% elif request.user.is_superuser %}
-           <tr>
-             <td class="bg-faded font-italic text-center text-danger"
-                 colspan="{{ project_col_count }}">
-               No {% get_display_name 'PROJECT' title=False plural=True %} created
-              </td>
-           </tr>
-        {% else %}
-          <tr>
-            <td class="bg-faded font-italic text-center text-danger"
-                colspan="{{ project_col_count }}">
-              No {% get_display_name 'PROJECT' title=False plural=True %}
-              available: access must be granted by
-              {% get_display_name 'PROJECT' title=False plural=False %}
-              personnel or a superuser
-            </td>
-          </tr>
-        {% endif %}
-       </tbody>
-     </table>
+      {% include 'projectroles/_project_list.html' %}
     </div>
   </div>
 </div>

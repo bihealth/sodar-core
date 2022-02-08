@@ -98,8 +98,8 @@ $(document).ready(function () {
     });
 });
 
-// Retrieve custom column data
-$(document).ready(function () {
+// Function for updating custom columns
+function updateCustomColumns (projectUuids) {
     // Grab column app names and IDs from header into a list
     var colIds = [];
     $('.sodar-pr-project-list-custom-header').each(function () {
@@ -109,12 +109,6 @@ $(document).ready(function () {
         });
     });
     if (colIds.length === 0) return; // Skip if no columns were found
-
-    // Get UUIDs (skip categories)
-    var projectUuids = [];
-    $('.sodar-pr-project-list-item-project').each(function () {
-        projectUuids.push($(this).attr('data-uuid'));
-    });
     if (projectUuids.length === 0) return; // Skip if there are no projects
 
     // Retrieve column data
@@ -127,12 +121,109 @@ $(document).ready(function () {
     }).done(function (data) {
         // Update columns
         $('.sodar-pr-project-list-item-project').each(function () {
+            console.debug('Found project list item!');
             var projectData = data[$(this).attr('data-uuid')];
             var i = 0;
             $(this).find('.sodar-pr-project-list-custom').each(function () {
+                console.debug('Found custom column!');
                 $(this).html(projectData[colIds[i].app][colIds[i].id].html);
                 i += 1;
             });
         });
+    });
+}
+
+// Function for updating role column
+function updateRoleColumn (projectUuids) {
+    // TODO: Do ajax request, update column
+}
+
+// Retrieve project list data
+$(document).ready(function () {
+    var listUrl = $('#sodar-pr-project-list-table').attr('data-url');
+    var customColAlign = [];
+    $('.sodar-pr-project-list-custom-header').each(function () {
+        customColAlign.push($(this).attr('data-align'));
+    });
+    var colCount = customColAlign.length + 2;
+    $.ajax({
+        url: listUrl,
+        method: 'GET',
+    }).done(function (data) {
+        $('#sodar-pr-project-list-loading').remove();
+        var tableBody = $('#sodar-pr-project-list-table tbody');
+        for (var i = 0; i < data.projects.length; i++) {
+            var p = data.projects[i];
+            var icon;
+            var titleClass = '';
+            if (p.type === 'CATEGORY') {
+                icon = 'rhombus-split';
+                titleClass = 'text-underline';
+            } else icon = 'cube';
+
+            // Row
+            tableBody.append($('<tr>')
+                .attr('class', 'sodar-pr-project-list-item sodar-pr-project-list-item-' + p.type.toLowerCase())
+                .attr('id', 'sodar-pr-project-list-item-' + p.uuid)
+                .attr('data-uuid', p.uuid)
+                .attr('data-title', p.title)
+                .attr('data-full-title', p.full_title)
+                .attr('data-starred', parseInt(p.uuid in data['starred_projects']).toString())
+            );
+            var row = tableBody.find('tr:last');
+
+            // Title column
+            row.append($('<td>')
+                .append($('<div>')
+                .attr('class', 'sodar-overflow-container')
+                    .append($('<span>')
+                        .attr('class', 'sodar-pr-project-indent')
+                        .attr('style', 'padding-left: ' + p.depth * 25 + 'px;')  // TODO: Update for parent
+                        .append($('<i>')
+                            .attr('class', 'iconify mr-1')
+                            .attr('data-icon', 'mdi:' + icon))
+                        .append($('<span>')
+                            .attr('class', 'sodar-pr-project-title ' + titleClass)
+                            .append($('<a>')
+                                .attr('href', '/project/' + p.uuid)
+                                .html(p.title))
+                            // TODO: Append remote icon
+                            // TODO: Append public icon
+                            // TODO: Append star
+                        )
+                    )
+                )
+            );
+
+            // Fill project custom columns with spinners
+            for (var j = 1; j < colCount - 1; j++) {
+                if (p.type === 'PROJECT') {
+                    row.append($('<td>')
+                        .attr('class', 'sodar-pr-project-list-custom text-' + customColAlign[j - 1])
+                        .append($('<i>')
+                            .attr('class', 'iconify spin text-muted')
+                            .attr('data-icon', 'mdi:loading')
+                        )
+                    );
+                } else row.append($('<td>'));
+            }
+            // Add user role column
+            row.append($('<td>')
+                .append($('<i>')
+                    .attr('class', 'iconify spin text-muted')
+                    .attr('data-icon', 'mdi:loading')
+                )
+            );
+        }
+
+        // Get project UUIDs (skip categories)
+        var projectUuids = [];
+        $('.sodar-pr-project-list-item-project').each(function () {
+            projectUuids.push($(this).attr('data-uuid'));
+        });
+        // Update custom columns
+        updateCustomColumns(projectUuids);
+        // Update role column
+        updateRoleColumn(projectUuids);
     });
 });

@@ -1,0 +1,15 @@
+<table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table"
+       id="sodar-pr-project-list-table"
+       data-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}">
+  <thead id="sodar-pr-project-list-header">
+    {% include 'projectroles/_project_list_header.html' %}
+  </thead>
+  <tbody>
+    <tr id="sodar-pr-project-list-loading">
+      <td class="text-center text-muted pt-3"
+          colspan="{{ project_col_count }}">
+        <i class="iconify spin" data-icon="mdi:loading" data-height="48"></i>
+      </td>
+    </tr>
+  </tbody>
+</table>
