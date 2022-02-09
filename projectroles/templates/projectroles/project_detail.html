@@ -99,17 +99,7 @@
     {# Subprojects #}
 
     {% if object.type == 'CATEGORY' %}
-        <div class="card">
-          <div class="card-header">
-            <h4>
-              <i class="iconify" data-icon="mdi:rhombus-split"></i>
-              {% get_display_name 'PROJECT' title=True plural=True %}
-            </h4>
-          </div>
-          <div class="card-body p-0">
-            {% include 'projectroles/_project_list.html' with parent=object %}
-          </div>
-        </div>
+      {% include 'projectroles/_project_list.html' with parent=object %}
     {% endif %}
 
     {# App Plugin Cards #}

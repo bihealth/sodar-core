@@ -27,6 +27,7 @@ from projectroles.models import (
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.project_tags import get_tag_state, set_tag_state
+from projectroles.utils import get_display_name
 from projectroles.views import (
     ProjectAccessMixin,
     APP_NAME,
@@ -39,6 +40,11 @@ logger = logging.getLogger(__name__)
 
 
 # SODAR Consants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
+SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -91,11 +97,11 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         Return a flat list of categories and projects.
 
         :param user: User for which the projects are visible
-        :param parent: Project sodar_uuid or None
+        :param parent: Project object of type CATEGORY or None
         """
         project_list = Project.objects.filter(
-            submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
-            parent=Project.objects.get(sodar_uuid=parent) if parent else None,
+            submit_status=SUBMIT_STATUS_OK,
+            parent=parent,
         )
 
         if user.is_anonymous:
@@ -139,9 +145,21 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         return flat_list
 
     def get(self, request, *args, **kwargs):
-        project_list = self._get_project_list(
-            request.user, request.GET.get('parent', None)
+        parent_uuid = request.GET.get('parent', None)
+        parent = (
+            Project.objects.get(sodar_uuid=parent_uuid) if parent_uuid else None
         )
+        project_list = self._get_project_list(request.user, parent)
+
+        starred_projects = []
+        if request.user.is_authenticated:
+            starred_projects = [
+                t.project
+                for t in ProjectUserTag.objects.filter(
+                    user=request.user, name=PROJECT_TAG_STARRED
+                )
+            ]
+
         ret = {
             'projects': [
                 {
@@ -150,20 +168,36 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     'full_title': p.full_title,
                     'public_guest_access': p.public_guest_access,
                     'remote': p.is_remote(),
+                    'revoked': p.is_revoked(),
+                    'starred': p in starred_projects,
                     'depth': p.get_depth(),
                     'uuid': str(p.sodar_uuid),
                 }
                 for p in project_list
             ],
-            'starred_projects': [],
+            'parent_depth': parent.get_depth() + 1 if parent else 0,
+            'messages': {},
+            'user': {'superuser': request.user.is_superuser},
         }
-        if request.user.is_authenticated:
-            ret['starred_projects'] = [
-                str(t.project.sodar_uuid)
-                for t in ProjectUserTag.objects.filter(
-                    user=self.request.user, name=PROJECT_TAG_STARRED
+
+        if len(ret['projects']) == 0:
+            np_prefix = 'No {} '.format(
+                get_display_name(PROJECT_TYPE_PROJECT, plural=True)
+            )
+            if parent:
+                np_msg = 'or {} available under this {}.'.format(
+                    get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
+                    get_display_name(PROJECT_TYPE_CATEGORY),
                 )
-            ]
+            elif not request.user.is_superuser:
+                np_msg = (
+                    'available: access must be granted by {} personnel or a '
+                    'superuser.'.format(get_display_name(PROJECT_TYPE_PROJECT))
+                )
+            else:
+                np_msg = 'have been created.'
+            ret['messages']['no_projects'] = np_prefix + np_msg
+
         return Response(ret, status=200)
 
 
@@ -204,7 +238,7 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
     def post(self, request, *args, **kwargs):
         ret = {}
         projects = Project.objects.filter(
-            type=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
+            type=PROJECT_TYPE_PROJECT,
             sodar_uuid__in=request.data.get('projects'),
         )
         plugins = [
@@ -259,11 +293,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
             ).first()
             if project.is_owner(user):
                 ret['name'] = 'Owner'
-                if (
-                    not role_as
-                    or role_as.role.name
-                    != SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-                ):
+                if not role_as or role_as.role.name != PROJECT_ROLE_OWNER:
                     ret['class'] = 'text-muted'
                     ret['info'] = 'Ownership inherited from parent category'
             if role_as:
@@ -275,7 +305,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
     def post(self, request, *args, **kwargs):
         ret = {}
         projects = Project.objects.filter(
-            type=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
+            type=PROJECT_TYPE_PROJECT,
             sodar_uuid__in=request.data.get('projects'),
         )
         for project in projects:
@@ -377,9 +407,9 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
         allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
 
         if not allow_local and not current_user.is_superuser:
-            qs = qs.exclude(
-                groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP']
-            ).exclude(groups__isnull=True)
+            qs = qs.exclude(groups__name=SYSTEM_USER_GROUP).exclude(
+                groups__isnull=True
+            )
 
         # Exclude UUIDs explicitly given
         if exclude_uuids:

@@ -30,33 +30,7 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
-
-  <div class="card" id="sodar-pr-project-list">
-    <div class="card-header">
-      <h4>
-        <i class="iconify" data-icon="mdi:earth"></i>
-        Available {% get_display_name 'PROJECT' title=True plural=True %}
-        <div class="input-group sodar-header-input-group pull-right">
-          {% if request.user.is_authenticated %}
-            <div class="input-group-prepend">
-              <button class="btn btn-secondary"
-                      type="submit" id="sodar-pr-project-list-link-star"
-                      data-filter-mode="0">
-                <i class="iconify" data-icon="mdi:star-outline"></i> Starred
-              </button>
-            </div>
-          {% endif %}
-          <input class="form-control"
-                 type="text" placeholder="Filter"
-                 aria-label="Filter {% get_display_name 'PROJECT' title=False plural=True %}"
-                 id="sodar-pr-project-list-filter">
-        </div>
-      </h4>
-    </div>
-    <div class="card-body p-0">
-      {% include 'projectroles/_project_list.html' %}
-    </div>
-  </div>
+  {% include 'projectroles/_project_list.html' with parent=None %}
 </div>
 
 {% endblock projectroles %}
