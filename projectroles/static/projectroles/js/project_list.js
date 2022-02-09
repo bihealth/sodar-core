@@ -234,14 +234,16 @@ $(document).ready(function () {
     $('#sodar-pr-project-list-filter').keyup(function () {
         var v = $(this).val().toLowerCase();
         var valFound = false;
+        var starBtn = $('#sodar-pr-project-list-link-star');
+        if (starBtn.attr('data-star-enabled') === '1') {
+            starBtn.attr('data-star-enabled', '0');
+            starBtn.html(
+                '<i class="iconify" data-icon="mdi:star-outline"></i> Starred');
+        }
 
         if (v.length > 2) {
             $('#sodar-pr-project-list-filter')
                 .removeClass('text-danger').addClass('text-success');
-            // TODO: Make this conditional
-            $('#sodar-pr-project-list-link-star').html(
-                '<i class="iconify" data-icon="mdi:star-outline"></i> Starred');
-
             $('.sodar-pr-project-list-item').each(function () {
                 var fullTitle = $(this).attr('data-full-title');
                 var titleLink = $(this).find(
@@ -284,7 +286,7 @@ $(document).ready(function () {
             });
             $('#sodar-pr-project-list-filter').addClass(
                 'text-danger').removeClass('text-success');
-            $('#sodar-pr-project-list-link-star').attr('data-filter-mode', '0');
+            starBtn.attr('data-star-enabled', '0');
         }
 
         // Update overflow status
@@ -296,7 +298,7 @@ $(document).ready(function () {
         hideMessageRow();
         $('#sodar-pr-project-list-filter').val('');
 
-        if ($(this).attr('data-filter-mode') === '0') {
+        if ($(this).attr('data-star-enabled') === '0') {
             var starCount = 0;
             $('.sodar-pr-project-list-item').each(function () {
                 if ($(this).attr('data-starred') === '1') {
@@ -306,23 +308,21 @@ $(document).ready(function () {
                   starCount += 1;
                 } else $(this).hide();
             });
-            // TODO: Make this more JQueryish
             $('#sodar-pr-project-list-link-star').html(
                 '<i class="iconify" data-icon="mdi:star"></i> Starred');
-            $(this).attr('data-filter-mode', '1');
+            $(this).attr('data-star-enabled', '1');
             if (starCount === 0) {
                 showMessageRow('No starred items found for user.');
             }
-        } else if ($(this).attr('data-filter-mode') === '1') {
+        } else if ($(this).attr('data-star-enabled') === '1') {
             $('.sodar-pr-project-list-item').each(function () {
                 $(this).find('.sodar-pr-project-indent').show();
                 $(this).find('a.sodar-pr-project-link').text($(this).attr('data-title'));
                 $(this).show();
             });
-            // TODO: Make this more JQueryish
             $('#sodar-pr-project-list-link-star').html(
                 '<i class="iconify" data-icon="mdi:star-outline"></i> Starred');
-            $(this).attr('data-filter-mode', '0');
+            $(this).attr('data-star-enabled', '0');
         }
 
         // Update overflow status
