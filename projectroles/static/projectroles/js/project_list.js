@@ -99,7 +99,7 @@ $(document).ready(function () {
 });
 
 // Function for updating custom columns
-function updateCustomColumns (projectUuids) {
+function updateCustomColumns (uuids) {
     // Grab column app names and IDs from header into a list
     var colIds = [];
     $('.sodar-pr-project-list-custom-header').each(function () {
@@ -116,7 +116,7 @@ function updateCustomColumns (projectUuids) {
         method: 'POST',
         dataType: 'json',
         contentType : 'application/json',
-        data: JSON.stringify({'projects': projectUuids})
+        data: JSON.stringify({'projects': uuids})
     }).done(function (data) {
         // Update columns
         $('.sodar-pr-project-list-item-project').each(function () {
@@ -131,8 +131,29 @@ function updateCustomColumns (projectUuids) {
 }
 
 // Function for updating role column
-function updateRoleColumn (projectUuids) {
-    // TODO: Do ajax request, update column
+function updateRoleColumn (uuids) {
+    $.ajax({
+        url: $('.sodar-pr-project-list-table').attr('data-role-url'),
+        method: 'POST',
+        dataType: 'json',
+        contentType : 'application/json',
+        data: JSON.stringify({'projects': uuids})
+    }).done(function (data) {
+        $('.sodar-pr-project-list-item').each(function () {
+            var uuid = $(this).attr('data-uuid');
+            var colData = data[uuid];
+            var roleCol = $(this).find('.sodar-pr-project-list-role');
+            roleCol.attr('class', colData['class'])
+                .text(colData['name']);
+            if (colData['info']) {
+                roleCol.append($('<i>')
+                    .attr('class', 'iconify text-info ml-1')
+                    .attr('data-icon', 'mdi:information')
+                    .attr('title', colData['info'])
+                );
+            }
+        });
+    });
 }
 
 // Retrieve project list data
@@ -254,6 +275,7 @@ $(document).ready(function () {
             }
             // Add user role column
             row.append($('<td>')
+                .attr('class', 'sodar-pr-project-list-role')
                 .append($('<i>')
                     .attr('class', 'iconify spin text-muted')
                     .attr('data-icon', 'mdi:loading')
@@ -265,16 +287,27 @@ $(document).ready(function () {
         $('#sodar-pr-project-list-link-star').prop('disabled', false);
         $('#sodar-pr-project-list-filter').prop('disabled', false);
 
-        // Get project UUIDs (skip categories)
+        // Get UUIDs
+        var allUuids = [];
         var projectUuids = [];
-        $('.sodar-pr-project-list-item-project').each(function () {
-            projectUuids.push($(this).attr('data-uuid'));
+        $('.sodar-pr-project-list-item').each(function () {
+            var uuid = $(this).attr('data-uuid');
+            allUuids.push(uuid);
+            if ($(this).hasClass('sodar-pr-project-list-item-project')) {
+                projectUuids.push($(this).attr('data-uuid'));
+            }
         });
         if (projectUuids.length > 0) {
             // Update custom columns
             updateCustomColumns(projectUuids);
             // Update role column
-            updateRoleColumn(projectUuids);
+            if (!data['user']['superuser']) {
+                updateRoleColumn(allUuids);
+            } else {
+                $('.sodar-pr-project-list-role').each(function () {
+                    $(this).attr('class', 'text-danger').text('Superuser');
+                });
+            }
         }
     });
 });

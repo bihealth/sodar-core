@@ -15,12 +15,19 @@ Added
 
 - **Projectroles**
     - ``req_kwargs`` arg for ``TestPermissionMixin.assert_response()`` (#909)
+    - Starring and filtering controls for category subproject list (#56)
 
 Changed
 -------
 
 - **Projectroles**
-    - Ajax loading of project list custom columns (#825, #908)
+    - Client side loading of project list (#825, #908, #913)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Project list JQuery loaded in project detail view (#914)
 
 
 v0.10.8 (2022-02-02)

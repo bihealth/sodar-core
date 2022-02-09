@@ -42,6 +42,7 @@
     <table class="table sodar-card-table sodar-pr-project-list-table"
            id="sodar-pr-project-list-table"
            data-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
+           data-role-url="{% url 'projectroles:ajax_project_list_roles' %}"
            data-parent="{% if parent %}{{ parent.sodar_uuid }}{% endif %}">
       <thead id="sodar-pr-project-list-header">
         {% include 'projectroles/_project_list_header.html' %}

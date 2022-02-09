@@ -282,7 +282,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
     @classmethod
     def _get_user_role(cls, project, user):
         """Return user role for project"""
-        ret = {'name': None, 'class': None}
+        ret = {'name': None, 'class': None, 'info': None}
         role_as = None
         if user.is_superuser:
             ret['name'] = 'Superuser'
@@ -300,12 +300,14 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
                 ret['name'] = role_as.role.name.split(' ')[1].capitalize()
         if project.public_guest_access and not role_as:
             ret['name'] = 'Guest'
+        if not ret['name']:
+            ret['name'] = 'N/A'
+            ret['class'] = 'text-muted'
         return ret
 
     def post(self, request, *args, **kwargs):
         ret = {}
         projects = Project.objects.filter(
-            type=PROJECT_TYPE_PROJECT,
             sodar_uuid__in=request.data.get('projects'),
         )
         for project in projects:
