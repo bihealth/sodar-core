@@ -29,6 +29,12 @@ Fixed
 - **Projectroles**
     - Project list JQuery loaded in project detail view (#914)
 
+Removed
+-------
+
+- **Projectroles**
+    - Unused project list templates and template tags (#913)
+
 
 v0.10.8 (2022-02-02)
 ====================

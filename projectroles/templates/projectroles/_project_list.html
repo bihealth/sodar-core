@@ -1,4 +1,5 @@
 {% load projectroles_common_tags %}
+{% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 
 <div class="card" id="sodar-pr-project-list">
   <div class="card-header">
@@ -41,11 +42,34 @@
   <div class="card-body p-0">
     <table class="table sodar-card-table sodar-pr-project-list-table"
            id="sodar-pr-project-list-table"
-           data-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
+           data-list-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
+           data-custom-col-url="{% url 'projectroles:ajax_project_list_columns' %}"
            data-role-url="{% url 'projectroles:ajax_project_list_roles' %}"
            data-parent="{% if parent %}{{ parent.sodar_uuid }}{% endif %}">
       <thead id="sodar-pr-project-list-header">
-        {% include 'projectroles/_project_list_header.html' %}
+        <tr class="sodar-pr-project-list-header">
+          <th id="sodar-pr-project-list-header-project">
+            {% get_display_name 'PROJECT' title=True %}
+            {% if not disable_categories %}
+            / {% get_display_name 'CATEGORY' title=True %}
+            {% endif %}
+          </th>
+          {% for col in project_custom_cols %}
+            <th id="sodar-pr-project-list-header-{{ col.app_plugin.name }}-{{ col.column_id }}"
+                class="sodar-pr-project-list-custom-header text-nowrap {% if col.align %}text-{{ col.align }}{% endif %}"
+                {% if col.width %} style="width: {{ col.width }}px !important"{% endif %}
+                data-app-name="{{ col.app_plugin.name }}"
+                data-column-id="{{ col.column_id }}"
+                data-align="{{ col.align }}">
+              {{ col.title }}
+              {% if col.description %}
+                {% get_info_link col.description as info_link %}
+                {{ info_link | safe }}
+              {% endif %}
+            </th>
+          {% endfor %}
+          <th id="sodar-pr-project-list-header-role">Your&nbsp;Role</th>
+        </tr>
       </thead>
       <tbody>
         <tr id="sodar-pr-project-list-loading">

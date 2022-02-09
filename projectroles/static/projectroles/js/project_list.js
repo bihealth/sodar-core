@@ -112,7 +112,7 @@ function updateCustomColumns (uuids) {
 
     // Retrieve column data
     $.ajax({
-        url: $('.sodar-pr-project-list-header').attr('data-custom-col-url'),
+        url: $('.sodar-pr-project-list-table').attr('data-custom-col-url'),
         method: 'POST',
         dataType: 'json',
         contentType : 'application/json',
@@ -159,8 +159,7 @@ function updateRoleColumn (uuids) {
 // Retrieve project list data
 $(document).ready(function () {
     var table = $('#sodar-pr-project-list-table');
-    var listUrl = table.attr('data-url');
-    var parentUuid = table.attr('data-parent');
+    var listUrl = table.attr('data-list-url');
     var customColAlign = [];
     $('.sodar-pr-project-list-custom-header').each(function () {
         customColAlign.push($(this).attr('data-align'));
