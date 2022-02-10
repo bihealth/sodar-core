@@ -16,6 +16,7 @@ Added
 - **Projectroles**
     - ``req_kwargs`` arg for ``TestPermissionMixin.assert_response()`` (#909)
     - Starring and filtering controls for category subproject list (#56)
+    - Enable anonymous access for Ajax views with ``allow_anonymous`` (#916)
 
 Changed
 -------

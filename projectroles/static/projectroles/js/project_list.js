@@ -154,7 +154,9 @@ $(document).ready(function () {
                 if (p['revoked']) textClass = 'text-danger';
                 else textClass = 'text-info';
                 titleSpan.append($('<i>')
-                    .attr('class', 'iconify text-info ml-2 sodar-pr-remote-project-icon ' + textClass)
+                    .attr('class',
+                        'iconify text-info ml-2 sodar-pr-remote-project-icon ' +
+                        textClass)
                     .attr('data-icon', 'mdi:cloud')
                     .attr('title', 'Remote synchronized from source site')
             );
@@ -179,7 +181,9 @@ $(document).ready(function () {
             for (var j = 1; j < colCount - 1; j++) {
                 if (p['type'] === 'PROJECT') {
                     row.append($('<td>')
-                        .attr('class', 'sodar-pr-project-list-custom text-' + customColAlign[j - 1])
+                        .attr('class',
+                            'sodar-pr-project-list-custom text-' +
+                            customColAlign[j - 1])
                         .append($('<i>')
                             .attr('class', 'iconify spin text-muted')
                             .attr('data-icon', 'mdi:loading')
@@ -303,7 +307,8 @@ $(document).ready(function () {
             $('.sodar-pr-project-list-item').each(function () {
                 if ($(this).attr('data-starred') === '1') {
                   $(this).find('.sodar-pr-project-indent').hide();
-                  $(this).find('a.sodar-pr-project-link').text($(this).attr('data-full-title'));
+                  $(this).find('a.sodar-pr-project-link').text(
+                      $(this).attr('data-full-title'));
                   $(this).show();
                   starCount += 1;
                 } else $(this).hide();
@@ -317,7 +322,8 @@ $(document).ready(function () {
         } else if ($(this).attr('data-star-enabled') === '1') {
             $('.sodar-pr-project-list-item').each(function () {
                 $(this).find('.sodar-pr-project-indent').show();
-                $(this).find('a.sodar-pr-project-link').text($(this).attr('data-title'));
+                $(this).find('a.sodar-pr-project-link').text(
+                    $(this).attr('data-title'));
                 $(this).show();
             });
             $('#sodar-pr-project-list-link-star').html(

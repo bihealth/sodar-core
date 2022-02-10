@@ -56,11 +56,24 @@ class SODARBaseAjaxView(APIView):
 
     No permission classes or mixins used, you will have to supply your own if
     using this class directly.
+
+    The allow_anonymous property can be used to control whether anonymous users
+    should access an Ajax view when PROJECTROLES_ALLOW_ANONYMOUS==True.
     """
 
+    allow_anonymous = False
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
+
+    @property
+    def permission_classes(self):
+        if self.allow_anonymous and getattr(
+            settings,
+            'PROJECTROLES_ALLOW_ANONYMOUS',
+            False,
+        ):
+            return [AllowAny]
+        return [IsAuthenticated]
 
 
 class SODARBasePermissionAjaxView(PermissionRequiredMixin, SODARBaseAjaxView):
@@ -89,7 +102,7 @@ class SODARBaseProjectAjaxView(ProjectAccessMixin, SODARBaseAjaxView):
 class ProjectListAjaxView(SODARBaseAjaxView):
     """View to retrieve project list entries from the client"""
 
-    permission_classes = [AllowAny]
+    allow_anonymous = True
 
     @classmethod
     def _get_project_list(cls, user, parent=None):
@@ -204,7 +217,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
 class ProjectListColumnAjaxView(SODARBaseAjaxView):
     """View to retrieve project list extra column data from the client"""
 
-    permission_classes = [AllowAny]
+    allow_anonymous = True
 
     @classmethod
     def _get_column_value(cls, app_plugin, column_id, project, user):
@@ -277,7 +290,7 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
 class ProjectListRoleAjaxView(SODARBaseAjaxView):
     """View to retrieve project list role data from the client"""
 
-    permission_classes = [AllowAny]
+    allow_anonymous = True
 
     @classmethod
     def _get_user_role(cls, project, user):
