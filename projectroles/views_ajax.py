@@ -46,6 +46,9 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
+# Local Constants
+INHERITED_OWNER_INFO = 'Ownership inherited from parent category'
+
 
 # Base Classes and Mixins ------------------------------------------------------
 
@@ -98,7 +101,6 @@ class SODARBaseProjectAjaxView(ProjectAccessMixin, SODARBaseAjaxView):
 # Projectroles Ajax Views ------------------------------------------------------
 
 
-# TODO: Add tests
 class ProjectListAjaxView(SODARBaseAjaxView):
     """View to retrieve project list entries from the client"""
 
@@ -162,6 +164,15 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         parent = (
             Project.objects.get(sodar_uuid=parent_uuid) if parent_uuid else None
         )
+        if parent and parent.type != PROJECT_TYPE_CATEGORY:
+            return Response(
+                {
+                    'detail': 'Querying for a project list under a project is '
+                    'not allowed'
+                },
+                status=400,
+            )
+
         project_list = self._get_project_list(request.user, parent)
 
         starred_projects = []
@@ -286,7 +297,6 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
         return Response(ret, status=200)
 
 
-# TODO: Add tests
 class ProjectListRoleAjaxView(SODARBaseAjaxView):
     """View to retrieve project list role data from the client"""
 
@@ -297,9 +307,6 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
         """Return user role for project"""
         ret = {'name': None, 'class': None, 'info': None}
         role_as = None
-        if user.is_superuser:
-            ret['name'] = 'Superuser'
-            ret['class'] = 'text-danger'
         if user.is_authenticated:
             role_as = RoleAssignment.objects.filter(
                 project=project, user=user
@@ -308,7 +315,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
                 ret['name'] = 'Owner'
                 if not role_as or role_as.role.name != PROJECT_ROLE_OWNER:
                     ret['class'] = 'text-muted'
-                    ret['info'] = 'Ownership inherited from parent category'
+                    ret['info'] = INHERITED_OWNER_INFO
             if role_as:
                 ret['name'] = role_as.role.name.split(' ')[1].capitalize()
         if project.public_guest_access and not role_as:
