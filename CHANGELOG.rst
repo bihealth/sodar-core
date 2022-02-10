@@ -22,7 +22,7 @@ Changed
 -------
 
 - **Projectroles**
-    - Client side loading of project list (#825, #908, #913)
+    - Project list client side loading (#825, #908, #913)
 
 Fixed
 -----
