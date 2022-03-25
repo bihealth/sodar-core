@@ -11,49 +11,68 @@ function updateCustomColumns (uuids) {
     if (colIds.length === 0) return; // Skip if no columns were found
 
     // Retrieve column data
-    $.ajax({
-        url: $('.sodar-pr-project-list-table').attr('data-custom-col-url'),
-        method: 'POST',
-        dataType: 'json',
-        contentType : 'application/json',
-        data: JSON.stringify({'projects': uuids})
-    }).done(function (data) {
-        // Update columns
-        $('.sodar-pr-project-list-item-project').each(function () {
-            var projectData = data[$(this).attr('data-uuid')];
-            var i = 0;
-            $(this).find('.sodar-pr-project-list-custom').each(function () {
-                $(this).html(projectData[colIds[i].app][colIds[i].id].html);
-                i += 1;
+    var count = 0;
+    var start = 0;
+    var interval = 25;
+    var end = interval;
+
+    while (count <= uuids.length) {
+        $.ajax({
+            url: $('.sodar-pr-project-list-table').attr('data-custom-col-url'),
+            method: 'POST',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({'projects': uuids.slice(start, end)})
+        }).done(function (data) {
+            // Update columns
+            $.each(data, function(uuid, projectData) {
+                var item = $('.sodar-pr-project-list-item[data-uuid="' + uuid + '"]');
+                var i = 0;
+                item.find('.sodar-pr-project-list-custom').each(function () {
+                    $(this).html(projectData[colIds[i].app][colIds[i].id].html);
+                    i += 1;
+                });
             });
         });
-    });
+        count += interval;
+        start += interval;
+        end += interval;
+    }
 }
 
 // Function for updating role column
 function updateRoleColumn (uuids) {
-    $.ajax({
-        url: $('.sodar-pr-project-list-table').attr('data-role-url'),
-        method: 'POST',
-        dataType: 'json',
-        contentType : 'application/json',
-        data: JSON.stringify({'projects': uuids})
-    }).done(function (data) {
-        $('.sodar-pr-project-list-item').each(function () {
-            var uuid = $(this).attr('data-uuid');
-            var colData = data[uuid];
-            var roleCol = $(this).find('.sodar-pr-project-list-role');
-            roleCol.attr('class', colData['class'])
-                .text(colData['name']);
-            if (colData['info']) {
-                roleCol.append($('<i>')
-                    .attr('class', 'iconify text-info ml-1')
-                    .attr('data-icon', 'mdi:information')
-                    .attr('title', colData['info'])
-                );
-            }
+    var count = 0;
+    var start = 0;
+    var interval = 25;
+    var end = interval;
+
+    while (count <= uuids.length) {
+        $.ajax({
+            url: $('.sodar-pr-project-list-table').attr('data-role-url'),
+            method: 'POST',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({'projects': uuids.slice(start, end)})
+        }).done(function (data) {
+            $.each(data, function(uuid, colData) {
+                var item = $('.sodar-pr-project-list-item[data-uuid="' + uuid + '"]');
+                var roleCol = item.find('.sodar-pr-project-list-role');
+                roleCol.attr('class', colData['class'])
+                    .text(colData['name']);
+                if (colData['info']) {
+                    roleCol.append($('<i>')
+                        .attr('class', 'iconify text-info ml-1')
+                        .attr('data-icon', 'mdi:information')
+                        .attr('title', colData['info'])
+                    );
+                }
+            });
         });
-    });
+        count += interval;
+        start += interval;
+        end += interval;
+    }
 }
 
 // Function for displaying message row
