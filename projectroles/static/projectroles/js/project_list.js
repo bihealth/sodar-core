@@ -10,27 +10,37 @@ function updateCustomColumns (uuids) {
     });
     if (colIds.length === 0) return; // Skip if no columns were found
 
-    // Retrieve column data
-    var count = 0;
-    var start = 0;
-    var interval = 25;
-    var end = interval;
-
-    while (count <= uuids.length) {
-        $.ajax({
+    var getAjaxRequest = function (start, end) {
+        return $.ajax({
             url: $('.sodar-pr-project-list-table').attr('data-custom-col-url'),
             method: 'POST',
             dataType: 'json',
             contentType: 'application/json',
             data: JSON.stringify({'projects': uuids.slice(start, end)})
-        }).done(function (data) {
-            // Update columns
-            $.each(data, function(uuid, projectData) {
-                var item = $('.sodar-pr-project-list-item[data-uuid="' + uuid + '"]');
-                var i = 0;
-                item.find('.sodar-pr-project-list-custom').each(function () {
-                    $(this).html(projectData[colIds[i].app][colIds[i].id].html);
-                    i += 1;
+        })
+    };
+    var count = 0;
+    var start = 0;
+    var interval = 25;
+    var end = interval;
+    var values = [];
+    var dfd = $.Deferred()
+    var dfdNext = dfd;
+    dfd.resolve();
+
+    // Populate columns with sequential queries
+    while (count <= uuids.length) {
+        values.push([start, end]);
+        dfdNext.pipe(function () {
+            var value = values.shift();
+            return getAjaxRequest(value[0], value[1]).done(function (data) {
+                $.each(data, function (uuid, projectData) {
+                    var item = $('.sodar-pr-project-list-item[data-uuid="' + uuid + '"]');
+                    var i = 0;
+                    item.find('.sodar-pr-project-list-custom').each(function () {
+                        $(this).html(projectData[colIds[i].app][colIds[i].id].html);
+                        i += 1;
+                    });
                 });
             });
         });
