@@ -124,7 +124,6 @@ HTML / Javascript / CSS / Bootstrap 4
     app_filesfolders
     app_siteinfo
     app_sodarcache
-    app_taskflow
     app_timeline
     app_tokens
     app_userprofile
