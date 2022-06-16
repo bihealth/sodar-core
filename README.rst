@@ -4,7 +4,7 @@ SODAR Core
 .. image:: https://badge.fury.io/py/django-sodar-core.svg
     :target: https://badge.fury.io/py/django-sodar-core
 
-.. image:: https://github.com/bihealth/sodar-core/workflows/build/badge.svg
+.. image:: https://github.com/bihealth/sodar-core/actions/workflows/build.yml/badge.svg
     :target: https://github.com/bihealth/sodar-core/actions?query=workflow%3ABuild
 
 .. image:: https://app.codacy.com/project/badge/Grade/6ba6b44ee37642918c7ff7a44d413982
