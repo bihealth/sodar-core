@@ -22,6 +22,7 @@ Changed
 
 - **General**
     - Update development documentation (#988)
+    - Update Codacy badges for new GitHub repository (#990)
 
 Fixed
 -----

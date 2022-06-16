@@ -7,10 +7,10 @@ SODAR Core
 .. image:: https://github.com/bihealth/sodar-core/workflows/build/badge.svg
     :target: https://github.com/bihealth/sodar-core/actions?query=workflow%3ABuild
 
-.. image:: https://app.codacy.com/project/badge/Grade/77c0057a041f4e0c9a0bfc79e9023e04
-    :target: https://www.codacy.com/app/bihealth/sodar-core/dashboard
+.. image:: https://app.codacy.com/project/badge/Grade/6ba6b44ee37642918c7ff7a44d413982
+    :target: https://www.codacy.com/gh/bihealth/sodar-core/dashboard
 
-.. image:: https://app.codacy.com/project/badge/Coverage/77c0057a041f4e0c9a0bfc79e9023e04
+.. image:: https://app.codacy.com/project/badge/Coverage/6ba6b44ee37642918c7ff7a44d413982
     :target: https://www.codacy.com/gh/bihealth/sodar-core/dashboard
 
 .. image:: https://img.shields.io/badge/License-MIT-green.svg
