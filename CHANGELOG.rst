@@ -23,6 +23,7 @@ Changed
 - **General**
     - Update development documentation (#988)
     - Update Actions and Codacy badges for new GitHub repository (#990, #991)
+    - Upgrade minimum Django version to v3.2.14 (#993)
 
 Fixed
 -----
