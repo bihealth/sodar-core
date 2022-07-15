@@ -122,12 +122,12 @@ HTML / Javascript / CSS / Bootstrap 4
     app_appalerts
     app_bgjobs
     app_filesfolders
-    app_userprofile
     app_siteinfo
     app_sodarcache
     app_taskflow
     app_timeline
     app_tokens
+    app_userprofile
 
 .. toctree::
     :maxdepth: 2

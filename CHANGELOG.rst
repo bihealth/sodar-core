@@ -4,11 +4,9 @@ SODAR Core Changelog
 Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
-Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
-
-Unreleased
-==========
+v0.10.13 (2022-07-15)
+=====================
 
 Added
 -----
@@ -17,7 +15,7 @@ Added
     - GitHub issue templates (#995)
 - **Projectoles**
     - Taskflow access from a different host for tests (#986)
-    - ``TASKFLOW_TEST_LIVE_SERVER_HOST`` to set host name for tests (#986)
+    - ``TASKFLOW_TEST_SODAR_HOST`` to set host name for tests (#986)
 
 Changed
 -------
