@@ -349,7 +349,7 @@ This part of the setup is **optional**.
 
     In order to support LDAP, make sure you have installed the dependencies from
     ``utility/install_ldap_dependencies.sh`` and ``requirements/ldap.txt``! For
-    more information see :ref:`dev_sodar_core`.
+    more information see :ref:`dev_core_install`.
 
 .. note::
 

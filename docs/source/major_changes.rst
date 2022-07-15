@@ -10,6 +10,26 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.13 (2022-07-15)
+*********************
+
+Release Highlights
+==================
+
+- Add support for Taskflow testing from a different host or Docker network
+- Update contributing and development documentation
+- Repository updates
+- Bug fixes
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.14.
+
+
 v0.10.12 (2022-04-19)
 *********************
 

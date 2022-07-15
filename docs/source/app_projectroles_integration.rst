@@ -34,7 +34,7 @@ To modify default SODAR Core and projectroles settings, see the
 
 Once you have your site set up, you can look into
 :ref:`customization tips <app_projectroles_custom>` and start
-:ref:`developing your SODAR Core compatible apps <development>`.
+:ref:`developing your SODAR Core compatible apps <dev_site>`.
 
 
 Cookiecutter-Django
@@ -86,7 +86,7 @@ desired release tag or commit ID.
 .. code-block:: console
 
     -e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
-    django-sodar-core==0.10.12
+    django-sodar-core==0.10.13
 
 Install the requirements for development:
 
@@ -347,6 +347,6 @@ when setting up your cookiecutter-django site.
 
 You can now continue on to create apps or modify your existing apps to be
 compatible with the SODAR Core framework. See the
-:ref:`development section <development>` for app development guides. Also see the
+:ref:`development section <dev_site>` for app development guides. Also see the
 :ref:`customization documentation <app_projectroles_custom>` for tips for
 modifying the default appearance of SODAR Core.

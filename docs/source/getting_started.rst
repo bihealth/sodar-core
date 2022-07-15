@@ -17,7 +17,7 @@ the package is under active development and breaking changes are expected.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.12
+    pip install django-sodar-core==0.10.13
 
 Please note that the django-sodar-core package only installs
 :term:`Django apps<Django App>`, which you need to include in a
@@ -68,7 +68,7 @@ your Django site are listed below. For a complete requirement list, see the
 - DataTables
 
 For more details on installation and requirements for local development, see
-:ref:`dev_sodar_core`.
+:ref:`dev_core_install`.
 
 
 Next Steps

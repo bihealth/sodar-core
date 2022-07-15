@@ -4,7 +4,32 @@ SODAR Core Changelog
 Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
-Note that the issue IDs here refer to ones in the private CUBI GitLab.
+
+v0.10.13 (2022-07-15)
+=====================
+
+Added
+-----
+
+- **General**
+    - GitHub issue templates (#995)
+- **Projectoles**
+    - Taskflow access from a different host for tests (#986)
+    - ``TASKFLOW_TEST_SODAR_HOST`` to set host name for tests (#986)
+
+Changed
+-------
+
+- **General**
+    - Update development and contributing documentation (#988, #989, #992, #996)
+    - Update Actions and Codacy badges for new GitHub repository (#990, #991)
+    - Upgrade minimum Django version to v3.2.14 (#993)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Project list role column fails if only categories are visible (#985)
 
 
 v0.10.12 (2022-04-19)

@@ -73,7 +73,7 @@ access control.
 App Development
 ---------------
 
-Next the developer needs to :ref:`develop the Django app(s)<development>` which
+Next the developer needs to :ref:`develop the Django app(s)<dev_site>` which
 contain the actual program logic and user interfaces required for the use case.
 The content or number of these apps are not restricted by SODAR Core. Anything
 which would go to a typical Django app is OK, as long as certain building blocks
