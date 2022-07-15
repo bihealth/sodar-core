@@ -98,23 +98,24 @@ HTML / Javascript / CSS / Bootstrap 4
    If you view these files on GitHub, beware that their renderer does not
    render the ReStructuredText files correctly and content may be missing.
 
+
 .. toctree::
-    :caption: Overview & Getting started
+    :maxdepth: 2
+    :caption: Overview & Getting Started
     :name: overview_getting_started
     :hidden:
-    :titlesonly:
 
     Overview <overview>
     getting_started
     for_the_impatient
     user_stories
+    glossary
 
 .. toctree::
     :maxdepth: 2
     :caption: SODAR Core Apps
     :name: sodar_core_apps
     :hidden:
-    :titlesonly:
 
     app_projectroles
     app_adminalerts
@@ -130,21 +131,37 @@ HTML / Javascript / CSS / Bootstrap 4
 
 .. toctree::
     :maxdepth: 2
+    :caption: Developing Your Site
+    :name: development_site
+    :hidden:
+
+    Overview <dev_site>
+    Project Apps <dev_project_app>
+    Site Apps <dev_site_app>
+    Backend Apps <dev_backend_app>
+    General Resources <dev_resource>
+    General Guidelines <dev_guideline>
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Contribute to SODAR Core
+    :name: development_core
+    :hidden:
+
+    Overview <dev_core_overview>
+    contributing
+    code_of_conduct
+    Installation <dev_core_install>
+    Guidelines <dev_core_guide>
+    Development Resources <dev_core_resource>
+
+.. toctree::
+    :maxdepth: 2
     :caption: Project Information
     :name: project_info
     :hidden:
     :titlesonly:
 
-    contributing
-    code_of_conduct
-    glossary
-    development
+    repository
     major_changes
     Full Changelog <changelog>
-
-Indices and tables
-==================
-
-* :ref:`modindex`
-* :ref:`genindex`
-* :ref:`search`

@@ -6,8 +6,8 @@ General Guidelines
 Below you can find general development guidelines for putting together your
 SODAR Core based site.
 
-- Best practices from `Two Scoops <https://www.twoscoopspress.com/>`_
-  should be followed where applicable.
+- We recommend following best practices from
+  `Two Scoops <https://www.twoscoopspress.com/>`_ where applicable.
 - To maintain consistency, app packages should be named without delimiting
   characters, e.g. ``projectroles`` and ``userprofile``.
 - It is recommended to add a *"Projectroles dependency"* comment when directly

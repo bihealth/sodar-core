@@ -68,7 +68,7 @@ your Django site are listed below. For a complete requirement list, see the
 - DataTables
 
 For more details on installation and requirements for local development, see
-:ref:`dev_sodar_core`.
+:ref:`dev_core_install`.
 
 
 Next Steps

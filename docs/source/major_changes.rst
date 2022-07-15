@@ -17,6 +17,8 @@ Release Highlights
 ==================
 
 - Add support for Taskflow testing from a different host or Docker network
+- Update contributing and development documentation
+- Repository updates
 - Bug fixes
 
 Breaking Changes
