@@ -211,6 +211,7 @@ class FileForm(FilesfoldersItemForm):
         )
         if self.instance.pk:
             self.project = self.instance.project
+        self.fields['public_url'].label = 'Public link'
 
         # Disable public URL creation if setting is false
         if not app_settings.get_app_setting(

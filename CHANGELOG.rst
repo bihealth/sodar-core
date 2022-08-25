@@ -20,6 +20,8 @@ Added
 Changed
 -------
 
+- **Filesfolders**
+    - Change ``public_url`` form label (#1016)
 - **Projectroles**
     - Replace Taskflow specific code with project modifying API calls (#387)
     - Rename ``revoke_failed_invite()`` to ``revoke_invite()``
