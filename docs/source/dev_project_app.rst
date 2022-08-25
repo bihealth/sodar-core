@@ -231,8 +231,6 @@ Implementing the following is **optional**:
 ``info_settings``
     List of names for app-specific Django settings to be displayed for
     administrators in the siteinfo app.
-``get_taskflow_sync_data()``
-    Applicable only if working with ``sodar_taskflow`` and iRODS.
 ``get_object_link()``
     Return object link for a Timeline event.
 ``get_extra_data_link()``

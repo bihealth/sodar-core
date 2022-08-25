@@ -5,6 +5,45 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - Project modifying API in ``ProjectModifyPluginMixin`` (#387)
+    - ``PROJECTROLES_ENABLE_MODIFY_API`` Django setting (#387)
+    - ``PROJECTROLES_MODIFY_API_APPS`` Django setting (#387)
+    - ``syncmodifyapi`` management command (#387)
+
+Changed
+-------
+
+- **Projectroles**
+    - Replace Taskflow specific code with project modifying API calls (#387)
+    - Rename ``revoke_failed_invite()`` to ``revoke_invite()``
+
+Fixed
+-----
+
+- **Projectroles**
+    - Crash at exception handling in ``clean_new_owner()`` (#981)
+- **Timeline**
+    - Uncaught exceptions in ``get_plugin_lookup()`` (#979)
+
+Removed
+-------
+
+- **Projectroles**
+    - Taskflow specific views, tests and API calls (#387)
+    - ``get_taskflow_sync_data()`` method from ``ProjectAppPluginPoint`` (#387)
+- **Taskflowbackend**
+    - Remove app and implement in SODAR (#387)
+- **Timeline**
+    - Taskflow API views (#387)
+
+
 v0.10.13 (2022-07-15)
 =====================
 

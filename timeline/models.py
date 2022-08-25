@@ -16,7 +16,7 @@ EVENT_STATUS_TYPES = ['OK', 'INIT', 'SUBMIT', 'FAILED', 'INFO', 'CANCEL']
 DEFAULT_MESSAGES = {
     'OK': 'All OK',
     'INIT': 'Event initialized',
-    'SUBMIT': 'Job submitted to Taskflow',
+    'SUBMIT': 'Job submitted asynchronously',
     'FAILED': 'Failed (unknown problem)',
     'INFO': 'Info level action',
     'CANCEL': 'Action cancelled',

@@ -98,13 +98,6 @@ If you want to only run a certain subset of tests, use e.g.:
 
     $ make test arg=projectroles.tests.test_views
 
-For running tests with SODAR Taskflow (to be removed in SODAR Core v0.11.0),
-you can use the supplied make command:
-
-.. code-block:: console
-
-    $ make test_taskflow
-
 
 Remote Site Development
 =======================

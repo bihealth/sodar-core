@@ -557,8 +557,7 @@ class RoleAssignmentDestroyAPIView(
 
     def perform_destroy(self, instance):
         """
-        Override perform_destroy() to handle RoleAssignment deletion with or
-        without SODAR Taskflow.
+        Override perform_destroy() to handle RoleAssignment deletion.
         """
         project = self.get_project()
 

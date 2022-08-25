@@ -87,8 +87,6 @@ LOCAL_APPS = [
     'siteinfo.apps.SiteinfoConfig',
     # API Tokens site app
     'tokens.apps.TokensConfig',
-    # SODAR Taskflow backend app
-    'taskflowbackend.apps.TaskflowbackendConfig',
     # Background Jobs app
     'bgjobs.apps.BgjobsConfig',
     # External Data Cache app
@@ -492,7 +490,6 @@ LOGGING_APPS = env.list(
         'projectroles',
         'siteinfo',
         'sodarcache',
-        'taskflowbackend',
         'timeline',
     ],
 )
@@ -591,6 +588,12 @@ PROJECTROLES_ALLOW_LOCAL_USERS = env.bool(
 # Allow unauthenticated users to access public projects if set true
 PROJECTROLES_ALLOW_ANONYMOUS = env.bool('PROJECTROLES_ALLOW_ANONYMOUS', False)
 
+# Enable project modify API
+PROJECTROLES_ENABLE_MODIFY_API = False
+# List of apps for executing project modify API actions in the given order. If
+# not set, backend and project apps will execute in alphabetical order by name.
+PROJECTROLES_MODIFY_API_APPS = []
+
 # General projectroles settings
 PROJECTROLES_DISABLE_CATEGORIES = env.bool(
     'PROJECTROLES_DISABLE_CATEGORIES', False
@@ -678,11 +681,6 @@ ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
 
 # Appalerts app settings
 APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
-
-
-# Taskflow backend settings
-TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
-TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
 
 
 # SODAR constants

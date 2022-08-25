@@ -104,14 +104,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'FILESFOLDERS_SHOW_LIST_COLUMNS',
     ]
 
-    def get_taskflow_sync_data(self):
-        """
-        Return data for synchronizing taskflow operations.
-
-        :return: List of dicts or None.
-        """
-        return None
-
     def get_object_link(self, model_str, uuid):
         """
         Return the URL for referring to a object used by the app, along with a

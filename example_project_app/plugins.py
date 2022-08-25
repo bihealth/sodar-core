@@ -1,13 +1,25 @@
+"""Plugins for the example_project_app Django app"""
+
+from django.contrib import messages
 from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import ProjectAppPluginPoint
+from projectroles.plugins import (
+    ProjectAppPluginPoint,
+    ProjectModifyPluginMixin,
+)
+from projectroles.utils import get_display_name
 
 from example_project_app.urls import urlpatterns
 
 
-class ProjectAppPlugin(ProjectAppPluginPoint):
+EXAMPLE_MODIFY_API_MSG = (
+    'Example project app plugin API called from ' '{project_type} {action}.'
+)
+
+
+class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
     # Properties required by django-plugins ------------------------------
@@ -243,3 +255,22 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'url': reverse('home'),
             },
         }
+
+    def perform_project_modify(
+        self,
+        project,
+        action,
+        project_settings,
+        old_data=None,
+        old_settings=None,
+        request=None,
+    ):
+        """Example implementation for project modifying plugin API"""
+        if request:
+            messages.info(
+                request,
+                EXAMPLE_MODIFY_API_MSG.format(
+                    project_type=get_display_name(project.type),
+                    action=action.lower(),
+                ),
+            )

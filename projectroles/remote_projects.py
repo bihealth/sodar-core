@@ -40,9 +40,6 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
-    'SUBMIT_STATUS_PENDING_TASKFLOW'
-]
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
@@ -701,7 +698,7 @@ class RemoteProjectAPI:
                     r_uuid
                 ]['status'] = 'updated'
 
-                if self.tl_user:  # Taskflow
+                if self.tl_user:
                     tl_desc = (
                         'update role to "{}" for {{{}}} from site '
                         '{{{}}}'.format(role.name, 'user', 'site')
@@ -738,7 +735,7 @@ class RemoteProjectAPI:
                     r_uuid
                 ]['status'] = 'created'
 
-                if self.tl_user:  # Taskflow
+                if self.tl_user:
                     tl_desc = (
                         'add role "{}" for {{{}}} '
                         'from site {{{}}}'.format(role.name, 'user', 'site')

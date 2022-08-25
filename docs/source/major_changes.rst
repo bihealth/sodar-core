@@ -10,6 +10,41 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.11.0 (WIP)
+*************
+
+Release Highlights
+==================
+
+- Remove taskflowbackend app
+- Add project modifying API to replace built-in taskflowbackend
+
+Breaking Changes
+================
+
+Taskflowbackend Removed
+-----------------------
+
+This release of SODAR Core removes the ``taskflowbackend`` app. To our knowledge
+it has not been used in any other projects than SODAR itself. However, it is
+possible for the app to have been inadvertently enabled on your Django site,
+resulting in unexpected server errors once removed.
+
+In case this happens, you need to first edit ``config/settings/base.py`` to
+remove ``taskflowbackend.apps.TaskflowbackendConfig`` from ``LOCAL_APPS``. Also
+make sure ``taskflow`` is not included in the ``ENABLED_BACKEND_PLUGINS``
+setting.
+
+Next, run the Django shell and enter the following:
+
+.. code-block:: python
+
+    from djangoplugins.models import Plugin
+    Plugin.objects.get(name='taskflow').delete()
+
+After this the server should run without issues.
+
+
 v0.10.13 (2022-07-15)
 *********************
 

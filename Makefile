@@ -6,10 +6,8 @@ define USAGE=
 @echo -e "\tmake black [arg=--<arg>]                 -- black formatting"
 @echo -e "\tmake serve                               -- start source server"
 @echo -e "\tmake serve_target                        -- start target server"
-@echo -e "\tmake serve_taskflow [arg=sync]           -- start server with SODAR Taskflow"
 @echo -e "\tmake collectstatic                       -- run collectstatic"
 @echo -e "\tmake test [arg=<test_object>]            -- run all tests or specify module/class/function"
-@echo -e "\tmake test_taskflow [arg=<test_object>]   -- run all tests and taskflow tests or specify module/class/function"
 @echo -e "\tmake manage_target arg=<target_command>  -- run management command on target site, arg is mandatory"
 @echo -e
 endef
@@ -36,15 +34,6 @@ serve_target:
 	$(MANAGE) runserver 0.0.0.0:$(target_port) --settings=config.settings.local_target
 
 
-.PHONY: serve_taskflow
-ifeq ($(arg),sync)
-serve_taskflow: sync_taskflow
-else
-serve_taskflow:
-endif
-	$(MANAGE) runserver --settings=config.settings.local_taskflow
-
-
 .PHONY: collectstatic
 collectstatic:
 	$(MANAGE) collectstatic --no-input
@@ -53,11 +42,6 @@ collectstatic:
 .PHONY: test
 test: collectstatic
 	$(MANAGE) test -v 2 --parallel --settings=config.settings.test $(arg)
-
-
-.PHONY: test_taskflow
-test_taskflow: test
-	$(MANAGE) test -v 2 --tag=Taskflow --settings=config.settings.test_taskflow $(arg)
 
 
 .PHONY: manage_target
@@ -69,11 +53,6 @@ ifeq ($(arg),)
 else
 	$(MANAGE) $(arg) --settings=config.settings.local_target
 endif
-
-
-.PHONY: sync_taskflow
-sync_taskflow:
-	$(MANAGE) synctaskflow --settings=config.settings.local_taskflow
 
 
 .PHONY: usage
