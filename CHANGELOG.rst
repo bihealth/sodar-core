@@ -31,6 +31,7 @@ Fixed
 
 - **Projectroles**
     - Crash at exception handling in ``clean_new_owner()`` (#981)
+    - Incorrect button icon in remote site form (#1001)
 - **Timeline**
     - Uncaught exceptions in ``get_plugin_lookup()`` (#979)
 
