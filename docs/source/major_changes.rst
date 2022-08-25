@@ -53,6 +53,20 @@ used by SODAR Taskflow, but its removal may raise some issues in e.g. unit
 tests. If you encounter errors, refactor your code to remove references to the
 field.
 
+REST API Backwards Compatibility
+--------------------------------
+
+Due to some required changes to the REST API, it is no longer considered
+backwards compatible with older versions. Version ``0.11.0`` or higher must now
+be used. Note that target sites using a SODAR Core v0.11 source site also have
+to be updated for remote project sync to work.
+
+Changes:
+
+- Remove ``owner`` argument requirement from ``ProjectUpdateAPIView``.
+- Do not provide ``submit_status`` in ``ProjectListAPIView`` and
+  ``ProjectRetrieveAPIView``.
+
 
 v0.10.13 (2022-07-15)
 *********************

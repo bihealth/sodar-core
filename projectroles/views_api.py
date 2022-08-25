@@ -483,7 +483,6 @@ class ProjectUpdateAPIView(
     - ``description``: Projcet description (string, optional)
     - ``readme``: Project readme (string, optional, supports markdown)
     - ``public_guest_access``: Guest access for all users (boolean)
-    - ``owner``: User UUID of the project owner (string)
     """
 
     permission_required = 'projectroles.update_project'

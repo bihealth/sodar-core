@@ -800,7 +800,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
-            'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
@@ -857,7 +856,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
-            'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 

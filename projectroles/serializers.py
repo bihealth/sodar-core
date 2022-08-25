@@ -333,7 +333,7 @@ class ProjectInviteSerializer(
 class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     """Serializer for the Project model"""
 
-    owner = serializers.CharField(write_only=True)
+    owner = serializers.CharField(write_only=True, required=False)
     parent = serializers.SlugRelatedField(
         slug_field='sodar_uuid',
         many=False,
@@ -480,6 +480,10 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             if not owner:
                 raise serializers.ValidationError('Owner not found')
             attrs['owner'] = owner
+        elif not self.instance:
+            raise serializers.ValidationError(
+                'The "owner" parameter must be supplied for project creation'
+            )
 
         # Set readme
         if 'readme' in attrs and 'raw' in attrs['readme']:

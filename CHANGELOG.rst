@@ -23,6 +23,8 @@ Changed
 - **Projectroles**
     - Replace Taskflow specific code with project modifying API calls (#387)
     - Rename ``revoke_failed_invite()`` to ``revoke_invite()``
+    - Do not return ``submit_status`` from project API views (#971)
+    - Remove required ``owner`` argument for ``ProjectUpdateAPIView`` (#1007)
 
 Fixed
 -----
