@@ -44,6 +44,15 @@ Next, run the Django shell and enter the following:
 
 After this the server should run without issues.
 
+Project.submit_status Removed
+-----------------------------
+
+The ``submit_status`` field has been removed from the ``Project`` model, along
+with related helper method arguments and constants. This field was primarily
+used by SODAR Taskflow, but its removal may raise some issues in e.g. unit
+tests. If you encounter errors, refactor your code to remove references to the
+field.
+
 
 v0.10.13 (2022-07-15)
 *********************

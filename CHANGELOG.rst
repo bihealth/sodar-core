@@ -38,6 +38,7 @@ Removed
 - **Projectroles**
     - Taskflow specific views, tests and API calls (#387)
     - ``get_taskflow_sync_data()`` method from ``ProjectAppPluginPoint`` (#387)
+    - ``Project.submit_status`` field and usages in code (#971)
 - **Taskflowbackend**
     - Remove app and implement in SODAR (#387)
 - **Timeline**

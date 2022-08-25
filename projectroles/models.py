@@ -126,13 +126,6 @@ class Project(models.Model):
         'unauthenticated users if allowed on the site',
     )
 
-    #: Status of project creation
-    submit_status = models.CharField(
-        max_length=64,
-        default=SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
-        help_text='Status of project creation',
-    )
-
     #: Full project title with parent path (auto-generated)
     full_title = models.CharField(
         max_length=4096,
@@ -274,9 +267,7 @@ class Project(models.Model):
 
         if flat:
             return _get(self)
-        return self.children.filter(
-            submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']
-        ).order_by('title')
+        return self.children.all().order_by('title')
 
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""

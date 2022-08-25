@@ -352,12 +352,10 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'description',
             'readme',
             'public_guest_access',
-            'submit_status',
             'owner',
             'roles',
             'sodar_uuid',
         ]
-        read_only_fields = ['submit_status']
 
     def validate(self, attrs):
         site_mode = getattr(

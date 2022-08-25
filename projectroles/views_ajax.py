@@ -44,7 +44,6 @@ logger = logging.getLogger(__name__)
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
@@ -115,9 +114,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         :param user: User for which the projects are visible
         :param parent: Project object of type CATEGORY or None
         """
-        project_list = Project.objects.filter(
-            submit_status=SUBMIT_STATUS_OK,
-        )
+        project_list = Project.objects.all()
         if user.is_anonymous:
             project_list = project_list.filter(
                 Q(public_guest_access=True) | Q(has_public_children=True)

@@ -42,9 +42,6 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
-SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
@@ -673,7 +670,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'public_guest_access': False,
-            'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
@@ -736,7 +732,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'public_guest_access': False,
-            'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
@@ -994,7 +989,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'public_guest_access': False,
-            'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_CATEGORY_TITLE + ' / ' + new_project_title,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(new_project_uuid),
@@ -1428,7 +1422,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'public_guest_access': False,
-            'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
@@ -1455,7 +1448,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': self.category_obj.pk,
             'public_guest_access': False,
-            'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
@@ -1805,7 +1797,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'public_guest_access': False,
-            'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
@@ -1832,7 +1823,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': self.category_obj.pk,
             'public_guest_access': False,
-            'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),

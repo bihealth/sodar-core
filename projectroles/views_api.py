@@ -398,7 +398,7 @@ class ProjectListAPIView(ListAPIView):
         Override get_queryset() to return projects of type PROJECT for which the
         requesting user has access.
         """
-        qs = Project.objects.filter(submit_status='OK').order_by('pk')
+        qs = Project.objects.all().order_by('pk')
 
         if self.request.user.is_superuser:
             return qs
@@ -426,7 +426,6 @@ class ProjectRetrieveAPIView(
     - ``public_guest_access``: Guest access for all users (boolean)
     - ``roles``: Project role assignments (dict, assignment UUID as key)
     - ``sodar_uuid``: Project UUID (string)
-    - ``submit_status``: Project creation status (string)
     - ``title``: Project title (string)
     - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
     """

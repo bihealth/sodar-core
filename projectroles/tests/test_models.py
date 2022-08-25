@@ -35,9 +35,6 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
-SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
@@ -65,7 +62,6 @@ class ProjectMixin:
         type,
         parent,
         description='',
-        submit_status=SUBMIT_STATUS_OK,
         readme=None,
         public_guest_access=False,
         sodar_uuid=None,
@@ -75,7 +71,6 @@ class ProjectMixin:
             'title': title,
             'type': type,
             'parent': parent,
-            'submit_status': submit_status,
             'description': description,
             'readme': readme,
             'public_guest_access': public_guest_access,
@@ -302,7 +297,6 @@ class TestProject(ProjectMixin, TestCase):
             'title': 'TestProjectSub',
             'type': PROJECT_TYPE_PROJECT,
             'parent': self.category_top.pk,
-            'submit_status': SUBMIT_STATUS_OK,
             'full_title': 'TestCategoryTop / TestProjectSub',
             'sodar_uuid': self.project_sub.sodar_uuid,
             'description': '',
