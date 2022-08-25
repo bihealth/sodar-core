@@ -53,12 +53,10 @@ INHERITED_OWNER_INFO = 'Ownership inherited from parent category'
 # Base Classes and Mixins ------------------------------------------------------
 
 
-class SODARBaseAjaxView(APIView):
+class SODARBaseAjaxMixin:
     """
-    Base Ajax view with Django session authentication.
-
-    No permission classes or mixins used, you will have to supply your own if
-    using this class directly.
+    Base Ajax mixin with permission class retrieval. To be used if another base
+    class instead of SODARBaseAjaxView is needed.
 
     The allow_anonymous property can be used to control whether anonymous users
     should access an Ajax view when PROJECTROLES_ALLOW_ANONYMOUS==True.
@@ -77,6 +75,15 @@ class SODARBaseAjaxView(APIView):
         ):
             return [AllowAny]
         return [IsAuthenticated]
+
+
+class SODARBaseAjaxView(SODARBaseAjaxMixin, APIView):
+    """
+    Base Ajax view with Django session authentication.
+
+    No permission classes or mixins used, you will have to supply your own if
+    using this class directly.
+    """
 
 
 class SODARBasePermissionAjaxView(PermissionRequiredMixin, SODARBaseAjaxView):

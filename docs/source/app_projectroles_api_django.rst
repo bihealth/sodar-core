@@ -119,6 +119,10 @@ Base view classes and mixins for building Ajax API views can be found in
 
 .. currentmodule:: projectroles.views_ajax
 
+.. autoclass:: SODARBaseAjaxMixin
+    :members:
+    :show-inheritance:
+
 .. autoclass:: SODARBaseAjaxView
     :members:
     :show-inheritance:

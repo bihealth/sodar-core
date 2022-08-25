@@ -16,6 +16,7 @@ Added
     - ``PROJECTROLES_ENABLE_MODIFY_API`` Django setting (#387)
     - ``PROJECTROLES_MODIFY_API_APPS`` Django setting (#387)
     - ``syncmodifyapi`` management command (#387)
+    - ``SODARBaseAjaxMixin`` with ``SODARBaseAjaxView`` functionality (#994)
 
 Changed
 -------
