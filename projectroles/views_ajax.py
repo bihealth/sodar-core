@@ -157,7 +157,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                         ret.append(p_parent)
                     p_parent = p_parent.parent
         # Sort by full title
-        return sorted(ret, key=lambda x: x.full_title)
+        return sorted(ret, key=lambda x: x.full_title.lower())
 
     def get(self, request, *args, **kwargs):
         parent_uuid = request.GET.get('parent', None)
