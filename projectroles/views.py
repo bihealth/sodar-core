@@ -868,7 +868,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         return project_settings
 
     @staticmethod
-    def _get_project_update_data(old_data, project, owner, project_settings):
+    def _get_project_update_data(old_data, project, project_settings):
         extra_data = {}
         upd_fields = []
         if old_data['title'] != project.title:
@@ -877,9 +877,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['parent'] != project.parent:
             extra_data['parent'] = project.parent
             upd_fields.append('parent')
-        if old_data['owner'] != owner:
-            extra_data['owner'] = owner.username
-            upd_fields.append('owner')
         if old_data['description'] != project.description:
             extra_data['description'] = project.description
             upd_fields.append('description')
@@ -933,7 +930,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         else:  # Update
             tl_desc = 'update ' + type_str.lower()
             extra_data, upd_fields = cls._get_project_update_data(
-                old_data, project, owner, project_settings
+                old_data, project, project_settings
             )
             if extra_data.get('parent'):  # Convert parent object into UUID
                 extra_data['parent'] = str(extra_data['parent'].sodar_uuid)
@@ -951,24 +948,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if action == PROJECT_ACTION_CREATE:
             tl_event.add_object(owner, 'owner', owner.username)
         return tl_event
-
-    @classmethod
-    def _update_owner(cls, project, owner):
-        """Create or update project owner"""
-        try:
-            role_as = RoleAssignment.objects.get(
-                project=project, role__name=PROJECT_ROLE_OWNER
-            )
-            role_as.user = owner
-            role_as.save()
-        except RoleAssignment.DoesNotExist:
-            role_as = RoleAssignment(
-                project=project,
-                user=owner,
-                role=Role.objects.get(name=PROJECT_ROLE_OWNER),
-            )
-            role_as.save()
-        return role_as
 
     @classmethod
     def _update_settings(cls, project, project_settings):
@@ -994,9 +973,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         # Create alerts and send emails
         owner_as = RoleAssignment.objects.get_assignment(owner, project)
         # Owner change notification
-        if request.user != owner and (
-            action == PROJECT_ACTION_CREATE or old_data['owner'] != owner
-        ):
+        if request.user != owner and action == PROJECT_ACTION_CREATE:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
@@ -1136,9 +1113,14 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         )
 
         # Update owner and settings
-        self._update_owner(project, owner)
+        if action == PROJECT_ACTION_CREATE:
+            RoleAssignment.objects.create(
+                project=project,
+                user=owner,
+                role=Role.objects.get(name=PROJECT_ROLE_OWNER),
+            )
         self._update_settings(project, project_settings)
-        project.save()
+        project.save()  # TODO: Is this required anymore?
 
         # Call for additional actions for project creation/update in plugins
         if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
