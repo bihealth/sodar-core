@@ -26,6 +26,8 @@ Changed
     - Do not return ``submit_status`` from project API views (#971)
     - Remove required ``owner`` argument for ``ProjectUpdateAPIView`` (#1007)
     - Remove unused owner operations from ``ProjectModifyMixin`` (#1008)
+- **Timeline**
+    - Deprecate ``ProjectEvent.get_current_status()``, use ``get_status()`` (#322)
 
 Fixed
 -----
