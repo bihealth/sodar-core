@@ -2,16 +2,16 @@
 wheel==0.37.1
 
 # Setuptools
-setuptools==59.6.0
+setuptools==65.3.0
 
 # Django
-django>=3.2.14, <3.3
+django>=3.2.15, <3.3
 
 # Configuration
-django-environ>=0.8.1, <0.9
+django-environ>=0.9.0, <0.10
 
 # Forms
-django-crispy-forms>=1.13.0, <1.14
+django-crispy-forms>=1.14.0, <1.15
 
 # Models
 django-model-utils>=4.2.0, <4.3
@@ -26,19 +26,19 @@ psycopg2-binary>=2.9.3, <2.10
 awesome-slugify>=1.6.5, <1.7
 
 # Time zones support
-pytz>=2021.3
+pytz>=2022.2.1
 
 # SVG icon support
-django-iconify==0.1.1
+django-iconify==0.1.1  # NOTE: v0.3 crashes, see issue
 
 # Online documentation via django-docs
 docutils==0.17.1
-Sphinx==4.3.2
+Sphinx==5.1.1
 django-docs==0.3.1
 sphinx-rtd-theme==1.0.0
 
 # Versioning
-versioneer==0.21
+versioneer==0.23
 
 ######################
 # Project app imports
@@ -48,7 +48,7 @@ versioneer==0.21
 -e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
 
 # Rules for permissions
-rules>=3.0, <3.1
+rules>=3.3, <3.4
 
 # REST framework
 djangorestframework>=3.13.1, <3.14
@@ -57,22 +57,22 @@ djangorestframework>=3.13.1, <3.14
 -e git+https://github.com/mikkonie/drf-keyed-list.git@b03607b866c5706b0e1ea46a7eeaab6527030734#egg=drf-keyed-list
 
 # Token authentication
-django-rest-knox>=4.1.0, <4.2
+django-rest-knox>=4.2.0, <4.3
 
 # Markdown field support
-markdown==3.3.4  # NOTE: Markdown 3.3.6+ requires Python>=3.10
+markdown==3.4.1
 django-markupfield>=2.0.1, <2.1
 django-pagedown>=2.2.1, <2.3
-mistune>=2.0.1, <2.1
+mistune>=2.0.4, <2.1
 
 # Database file storage for filesfolders
 django-db-file-storage==0.5.5
 
 # Backround Jobs requirements
-celery>=5.2.3, <5.3
+celery>=5.2.7, <5.3
 
 # Django autocomplete light (DAL)
-django-autocomplete-light>=3.8.2, <3.9
+django-autocomplete-light>=3.9.4, <3.10
 
 # SAML2 support for SSO
 django-saml2-auth-ai>=2.1.6, <2.2

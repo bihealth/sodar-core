@@ -21,6 +21,11 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade minimum PostgreSQL version to v11 (#303)
+    - Upgrade minimum Django version to v3.2.15 (#1003)
+    - Upgrade to black v22.6.0 (#1003)
+    - Upgrade general Python dependencies (#1003, #1019)
 - **Filesfolders**
     - Change ``public_url`` form label (#1016)
 - **Projectroles**

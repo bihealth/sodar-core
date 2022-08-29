@@ -20,7 +20,7 @@ system of choice.
 System Dependencies
 ===================
 
-First you need to install OS dependencies, PostgreSQL >=9.6 and Python >=3.8.
+First you need to install OS dependencies, PostgreSQL >=11 and Python >=3.8.
 
 .. code-block:: console
 

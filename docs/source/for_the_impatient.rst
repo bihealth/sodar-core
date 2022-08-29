@@ -55,7 +55,7 @@ Linux / Mac
     your system when needed.
 
 PostgreSQL
-    Please install version 9.6 or above.
+    Please install version 11 or above.
     We assume that you have access to the ``postgres`` user or some other
     administrative user.
 

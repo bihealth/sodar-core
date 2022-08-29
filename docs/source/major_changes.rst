@@ -18,6 +18,7 @@ Release Highlights
 
 - Remove taskflowbackend app
 - Add project modifying API to replace built-in taskflowbackend
+- Upgrade general dependencies
 
 Breaking Changes
 ================
@@ -66,6 +67,28 @@ Changes:
 - Remove ``owner`` argument requirement from ``ProjectUpdateAPIView``.
 - Do not provide ``submit_status`` in ``ProjectListAPIView`` and
   ``ProjectRetrieveAPIView``.
+
+System Prerequisites
+--------------------
+
+Changes in system requirements:
+
+- PostgreSQL v11 is now the minimum recommended version of the database.
+- The minimum Django version has been bumped to v3.2.15.
+- General Python dependencies have been upgraded, see ``requirements/*.txt``
+
+User Autocomplete Fields Updated
+--------------------------------
+
+The ``django-autocomplete-light`` dependency has been upgraded to v3.9, which
+comes with potential incompatibilities. If you include widgets using DAL in your
+site's views, you should upgrade them as follows:
+
+- Remove DAL related JS and CSS includes from your template (not including any
+  possible custom event listeners)
+- Add ``{{ form.media }}`` to your template if not present.
+
+For an example, see the ``roleassignment_form.html`` template.
 
 
 v0.10.13 (2022-07-15)
