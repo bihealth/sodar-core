@@ -17,6 +17,7 @@ Added
     - ``PROJECTROLES_MODIFY_API_APPS`` Django setting (#387)
     - ``syncmodifyapi`` management command (#387)
     - ``SODARBaseAjaxMixin`` with ``SODARBaseAjaxView`` functionality (#994)
+    - Custom login view content via ``include/_login_extend.html`` (#982)
 
 Changed
 -------

@@ -18,6 +18,7 @@ Release Highlights
 
 - Remove taskflowbackend app
 - Add project modifying API to replace built-in taskflowbackend
+- Enable including custom content in the login view
 - Upgrade general dependencies
 
 Breaking Changes
@@ -89,6 +90,14 @@ site's views, you should upgrade them as follows:
 - Add ``{{ form.media }}`` to your template if not present.
 
 For an example, see the ``roleassignment_form.html`` template.
+
+Login Template Updated
+----------------------
+
+The default login template ``login.html`` has been updated for including
+extended content via ``include/_login_extend.html``. If you have overridden the
+login template with your own, ensure to update it accordingly to enable this new
+functionality.
 
 
 v0.10.13 (2022-07-15)
