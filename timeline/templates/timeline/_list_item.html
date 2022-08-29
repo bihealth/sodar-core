@@ -50,8 +50,8 @@
       </span>
     {% endif %}
   </td>
-  <td class="{% get_status_style event.get_current_status %} text-light">
-    {{ event.get_current_status.status_type }}
+  <td class="{% get_status_style event.get_status %} text-light">
+    {{ event.get_status.status_type }}
   </td>
 </tr>
 
