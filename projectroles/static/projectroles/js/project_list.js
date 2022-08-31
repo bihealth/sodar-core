@@ -278,7 +278,7 @@ $(document).ready(function () {
 $(document).ready(function () {
     // Filter input
     $('#sodar-pr-project-list-filter').keyup(function () {
-        var v = $(this).val().toLowerCase();
+        var v = $(this).val().toLowerCase().trim();
         var valFound = false;
         var starBtn = $('#sodar-pr-project-list-link-star');
         if (starBtn.attr('data-star-enabled') === '1') {

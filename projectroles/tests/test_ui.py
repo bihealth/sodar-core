@@ -548,11 +548,21 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         url = reverse('home')
         self.login_and_redirect(self.owner_as.user, url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
-
         f_input = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-filter'
         )
         f_input.send_keys('sub')
+        self.assertEqual(self._get_item_vis_count(), 1)
+
+    def test_project_list_filter_trim(self):
+        """Test filtering project list items with trimming for spaces"""
+        url = reverse('home')
+        self.login_and_redirect(self.owner_as.user, url, **self.wait_kwargs)
+        self.assertEqual(self._get_item_vis_count(), 2)
+        f_input = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-filter'
+        )
+        f_input.send_keys(' sub  ')
         self.assertEqual(self._get_item_vis_count(), 1)
 
     def test_project_list_star(self):
