@@ -19,6 +19,7 @@ A clear and concise description of what you want to happen and how this feature
 should work.
 
 ### Alternative Solutions
+
 A clear and concise description of any alternative solutions or features you've
 considered.
 

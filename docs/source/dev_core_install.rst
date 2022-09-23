@@ -16,11 +16,17 @@ If you need to set up the accompanying example site in Docker, please see online
 for up-to-date Docker setup tutorials for Django related to your operating
 system of choice.
 
+.. note::
+
+    These instructions are also valid for the
+    `sodar-django-site <https://github.com/bihealth/sodar-django-site>`_
+    repository.
+
 
 System Dependencies
 ===================
 
-First you need to install OS dependencies, PostgreSQL >=11 and Python >=3.8.
+To get started, install the OS dependencies, PostgreSQL >=11 and Python >=3.8.
 
 .. code-block:: console
 
@@ -51,19 +57,18 @@ Example of the database URL variable as set within an ``.env`` file:
 
 .. code-block:: console
 
-    DATABASE_URL=postgres://sodar_core:sodar_core@127.0.0.1/sodar_core
+    DATABASE_URL=postgres://your-db:your-db@127.0.0.1/your-db
 
 
 Repository and Environment Setup
 ================================
 
-Clone the repository, setup and activate the virtual environment. Once in
-the environment, install Python requirements for the project:
+Clone the repository, setup and activate the virtual environment. Once within
+the repository and an active virtual environment, install Python requirements
+for the project. Example:
 
 .. code-block:: console
 
-    $ git clone https://github.com/bihealth/sodar-core.git
-    $ cd sodar-core
     $ python3.x -m venv .venv
     $ source .venv/bin/activate
     $ utility/install_python_dependencies.sh

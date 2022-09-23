@@ -145,8 +145,15 @@ accompanying API documentation for details.
 Backend Django API Documentation
 ================================
 
-This is the backend API, retrievable with
-``get_backend_api('appalerts_backend')``.
+The backend API can be retrieved as follows.
+
+.. code-block:: python
+
+    from projectroles.plugins import get_backend_api
+    app_alerts = get_backend_api('appalerts_backend')
+
+Make sure to also enable ``appalerts_backend`` in the
+``ENABLED_BACKEND_PLUGINS`` Django setting.
 
 .. currentmodule:: appalerts.api
 

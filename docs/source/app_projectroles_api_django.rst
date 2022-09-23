@@ -35,7 +35,12 @@ App Settings
 ============
 
 Projectroles provides an API for getting or setting project and user specific
-settings.
+settings. The API can be invoked as follows:
+
+.. code-block:: python
+
+    from projectroles.app_settings import AppSettingAPI
+    app_settings = AppSettingAPI()
 
 .. autoclass:: projectroles.app_settings.AppSettingAPI
     :members:

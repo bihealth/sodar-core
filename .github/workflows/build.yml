@@ -56,8 +56,10 @@ jobs:
           coverage report
       - name: Check linting
         run: flake8 .
+        if: ${{ matrix.python-version == '3.8' }}
       - name: Check formatting
         run: make black arg=--check
+        if: ${{ matrix.python-version == '3.8' }}
       - name: Report coverage with Coveralls
         uses: coverallsapp/github-action@master
         with:

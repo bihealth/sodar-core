@@ -118,31 +118,22 @@ For more examples of usage of this field and its widget, see
 retrieve the related widget to your own field with
 ``projectroles.forms.get_user_widget()``.
 
-The following ``django-autocomplete-light`` and ``select2`` CSS and Javascript
-links have to be added to the HTML template that includes the form with your
-user selection field:
+To provide required Javascript and CSS includes for DAL in your form, make sure
+to include ``form.media`` in your template. Example:
 
 .. code-block:: django
 
-    {% block javascript %}
-      {{ block.super }}
-      <!-- DAL for autocomplete widgets -->
-      <script type="text/javascript" src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/select2.js' %}"></script>
-    {% endblock javascript %}
+    <div class="container-fluid sodar-page-container">
+      <form method="post">
+        {{ form.media }}
+        {{ form | crispy }}
+        {% ... %}
+      </form>
+    </div>
 
-    {% block css %}
-      {{ block.super }}
-      <!-- Select2 theme -->
-      <link href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet" />
-    {% endblock css %}
-
-If using a customized widget with its own Javascript, include the corresponding
-JS file instead of ``autocomplete_light/select2.js``. See the
-``django-autocomplete-light`` documentation for more information on how to
-customize your autocomplete-widget.
+If using customized Javascript for your widget, the corresponding JS file can be
+provided in the ``javascript`` block. See the ``django-autocomplete-light``
+documentation for more information on how to customize your widget.
 
 Markdown
 --------
