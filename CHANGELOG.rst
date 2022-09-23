@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Coverage reporting with Coveralls (#1026)
 - **Projectroles**
     - Project modifying API in ``ProjectModifyPluginMixin`` (#387)
     - ``PROJECTROLES_ENABLE_MODIFY_API`` Django setting (#387)
@@ -53,6 +55,8 @@ Fixed
 Removed
 -------
 
+- **General**
+    - Codacy support (#1022)
 - **Projectroles**
     - Taskflow specific views, tests and API calls (#387)
     - ``get_taskflow_sync_data()`` method from ``ProjectAppPluginPoint`` (#387)
