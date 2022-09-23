@@ -117,17 +117,16 @@ HTML / Javascript / CSS / Bootstrap 4
     :name: sodar_core_apps
     :hidden:
 
-    app_projectroles
-    app_adminalerts
-    app_appalerts
-    app_bgjobs
-    app_filesfolders
-    app_siteinfo
-    app_sodarcache
-    app_taskflow
-    app_timeline
-    app_tokens
-    app_userprofile
+    Projectroles <app_projectroles>
+    Adminalerts <app_adminalerts>
+    Appalerts <app_appalerts>
+    Bgjobs <app_bgjobs>
+    Filesfolders <app_filesfolders>
+    Siteinfo <app_siteinfo>
+    Sodarcache <app_sodarcache>
+    Timeline <app_timeline>
+    Tokens <app_tokens>
+    Userprofile <app_userprofile>
 
 .. toctree::
     :maxdepth: 2

@@ -448,10 +448,9 @@ class TestProjectEventStatus(
         )
         self.assertEqual(repr(self.event_status_ok), expected)
 
-    def test_get_current_status(self):
-        """Test the get_current_status() function of ProjectEvent"""
-        status = self.event.get_current_status()
-
+    def test_get_status(self):
+        """Test the get_status() function of ProjectEvent"""
+        status = self.event.get_status()
         expected = {
             'id': self.event_status_ok.pk,
             'event': self.event.pk,
@@ -459,7 +458,6 @@ class TestProjectEventStatus(
             'description': 'OK',
             'extra_data': {'test_key': 'test_val'},
         }
-
         self.assertEqual(model_to_dict(status), expected)
 
     def test_get_timestamp(self):

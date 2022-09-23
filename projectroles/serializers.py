@@ -246,7 +246,7 @@ class RoleAssignmentSerializer(
         return attrs
 
     def save(self, **kwargs):
-        """Override save() to handle saving locally or through Taskflow"""
+        """Override save() to handle saving with project modify API"""
         # NOTE: Role not updated in response data unless we set self.instance
         # TODO: Figure out a clean fix
         self.instance = self.post_save(
@@ -333,7 +333,7 @@ class ProjectInviteSerializer(
 class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     """Serializer for the Project model"""
 
-    owner = serializers.CharField(write_only=True)
+    owner = serializers.CharField(write_only=True, required=False)
     parent = serializers.SlugRelatedField(
         slug_field='sodar_uuid',
         many=False,
@@ -352,12 +352,10 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'description',
             'readme',
             'public_guest_access',
-            'submit_status',
             'owner',
             'roles',
             'sodar_uuid',
         ]
-        read_only_fields = ['submit_status']
 
     def validate(self, attrs):
         site_mode = getattr(
@@ -482,6 +480,10 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             if not owner:
                 raise serializers.ValidationError('Owner not found')
             attrs['owner'] = owner
+        elif not self.instance:
+            raise serializers.ValidationError(
+                'The "owner" parameter must be supplied for project creation'
+            )
 
         # Set readme
         if 'readme' in attrs and 'raw' in attrs['readme']:
@@ -490,7 +492,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         return attrs
 
     def save(self, **kwargs):
-        """Override save() to handle saving locally or through Taskflow"""
+        """Override save() to handle saving with project modify API"""
         # NOTE: post_save() not needed here since we do an atomic model.save()
         return self.modify_project(
             data=self.validated_data,

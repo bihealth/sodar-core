@@ -17,7 +17,154 @@ DISABLED = 1
 REMOVED = 2
 
 
-# Plugin points ----------------------------------------------------------------
+# Plugin Mixins ----------------------------------------------------------------
+
+
+class ProjectModifyPluginMixin:
+    """
+    Mixin for project plugin API extensions for additional actions to be
+    performed for project and role modifications. Used if e.g. updating external
+    resources based on SODAR Core projects.
+
+    Add this into your project app or backend plugin if you want to implement
+    additional modification features. It is not supported on site app plugins.
+    """
+
+    def perform_project_modify(
+        self,
+        project,
+        action,
+        project_settings,
+        old_data=None,
+        old_settings=None,
+        request=None,
+    ):
+        """
+        Perform additional actions to finalize project creation or update.
+
+        :param project: Current project object (Project)
+        :param action: Action to perform (CREATE or UPDATE)
+        :param project_settings: Project app settings (dict)
+        :param old_data: Old project data in case of an update (dict or None)
+        :param old_settings: Old app settings in case of update (dict or None)
+        :param request: Request object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def revert_project_modify(
+        self,
+        project,
+        action,
+        project_settings,
+        old_data=None,
+        old_settings=None,
+        request=None,
+    ):
+        """
+        Revert project creation or update if errors have occurred in other apps.
+
+        :param project: Current project object (Project)
+        :param action: Action which was performed (CREATE or UPDATE)
+        :param project_settings: Project app settings (dict)
+        :param old_data: Old project data in case of update (dict or None)
+        :param old_settings: Old app settings in case of update (dict or None)
+        :param request: Request object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def perform_role_modify(self, role_as, action, old_role=None, request=None):
+        """
+        Perform additional actions to finalize role assignment creation or
+        update.
+
+        :param role_as: RoleAssignment object
+        :param action: Action to perform (CREATE or UPDATE)
+        :param old_role: Role object for previous role in case of an update
+        :param request: Request object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def revert_role_modify(self, role_as, action, old_role=None, request=None):
+        """
+        Revert role assignment creation or update if errors have occurred in
+        other apps.
+
+        :param role_as: RoleAssignment object
+        :param action: Action which was performed (CREATE or UPDATE)
+        :param old_role: Role object for previous role in case of an update
+        :param request: Request object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def perform_role_delete(self, role_as, request=None):
+        """
+        Perform additional actions to finalize role assignment deletion.
+
+        :param role_as: RoleAssignment object
+        :param request: Request object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def revert_role_delete(self, role_as, request=None):
+        """
+        Revert role assignment deletion deletion if errors have occurred in
+        other apps.
+
+        :param role_as: RoleAssignment object
+        :param request: Request object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def perform_owner_transfer(
+        self, project, new_owner, old_owner, old_owner_role, request=None
+    ):
+        """
+        Perform additional actions to finalize project ownership transfer.
+
+        :param project: Project object
+        :param new_owner: SODARUser object for new owner
+        :param old_owner: SODARUser object for previous owner
+        :param old_owner_role: Role object for new role of previous owner
+        :param request: Request object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def revert_owner_transfer(
+        self, project, new_owner, old_owner, old_owner_role, request=None
+    ):
+        """
+        Revert project ownership transfer if errors have occurred in other apps.
+
+        :param project: Project object
+        :param new_owner: SODARUser object for new owner
+        :param old_owner: SODARUser object for previous owner
+        :param old_owner_role: Role object for new role of previous owner
+        :param request: Request object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def perform_project_sync(self, project):
+        """
+        Synchronize existing projects to ensure related data exists when the
+        syncmodifyapi management comment is called. Should mostly be used in
+        development when the development databases have been e.g. modified or
+        recreated.
+
+        :param project: Current project object (Project)
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+
+# Plugin Points ----------------------------------------------------------------
 
 
 class ProjectAppPluginPoint(PluginPoint):
@@ -116,26 +263,6 @@ class ProjectAppPluginPoint(PluginPoint):
     # TODO: Override this in your app plugin if needed
     info_settings = []
 
-    # NOTE: For projectroles, this is implemented directly in synctaskflow
-    def get_taskflow_sync_data(self):
-        """
-        Return data for synchronizing taskflow operations.
-
-        :return: List of dicts or None.
-        """
-        '''
-        Example of valid return data:
-        [
-            {
-                'flow_name': ''
-                'project_pk: ''
-                'flow_data': {}
-            }
-        ]
-        '''
-        # TODO: Implement this in your app plugin
-        return None
-
     def get_object(self, model, uuid):
         """
         Return object based on a model class and the object's SODAR UUID.
@@ -225,17 +352,6 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         # TODO: Implement this in your app plugin (optional)
         return None
-
-    def handle_project_update(self, project, old_data):
-        """
-        Perform actions to handle project update.
-        # NOTE: This is a WIP feature to be altered/expanded in a later release
-
-        :param project: Current project (Project)
-        :param old_data: Old project data prior to update (dict)
-        """
-        # TODO: Implement this in your app plugin (optional)
-        pass
 
 
 class BackendPluginPoint(PluginPoint):

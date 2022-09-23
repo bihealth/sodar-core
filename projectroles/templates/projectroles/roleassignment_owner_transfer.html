@@ -17,8 +17,9 @@
 <div class="container-fluid sodar-page-container">
   <form method="post">
     {% csrf_token %}
+    {# Add form.media for DAL #}
+    {{ form.media }}
     {{ form | crispy }}
-
     <div class="row">
       <div class="btn-group ml-auto">
         <a role="button" class="btn btn-secondary"
@@ -34,17 +35,3 @@
 </div>
 
 {% endblock projectroles_extend %}
-
-{% block javascript %}
-  {{ block.super }}
-
-  <!-- DAL for autocomplete widgets -->
-  <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-  {{ form.media }}
-{% endblock javascript %}
-
-{% block css %}
-  {{ block.super }}
-  <!-- Select2 theme -->
-  <link href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet" />
-{% endblock css %}

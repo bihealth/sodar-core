@@ -12,8 +12,15 @@ applications.
 Backend API
 ===========
 
-The ``TimelineAPI`` class contains the Timeline backend API. It should be
-initialized using the ``Projectroles.plugins.get_backend_api()`` function.
+The backend API can be retrieved as follows.
+
+.. code-block:: python
+
+    from projectroles.plugins import get_backend_api
+    app_alerts = get_backend_api('timeline_backend')
+
+Make sure to also enable ``timeline_backend`` in the ``ENABLED_BACKEND_PLUGINS``
+Django setting.
 
 .. autoclass:: timeline.api.TimelineAPI
     :members:

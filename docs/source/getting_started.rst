@@ -17,7 +17,7 @@ the package is under active development and breaking changes are expected.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.13
+    pip install django-sodar-core==0.11.0
 
 Please note that the django-sodar-core package only installs
 :term:`Django apps<Django App>`, which you need to include in a
@@ -41,8 +41,6 @@ The following Django apps will be installed when installing the
   administrators.
 - **sodarcache**: Generic caching and aggregation of data referring to external
   services.
-- **taskflowbackend**: Backend app providing an API for the optional
-  ``sodar_taskflow`` transaction service.
 - **timeline**: Project app for logging and viewing project-related activity.
 - **tokens**: Token management for API access.
 - **userprofile**: Site app for viewing user profiles.
@@ -60,7 +58,7 @@ your Django site are listed below. For a complete requirement list, see the
   Django project)
 - Python >=3.8 (**NOTE:** Python 3.7 no longer supported in SODAR Core v0.10.8+)
 - Django 3.2
-- PostgreSQL >=9.6 and psycopg2-binary
+- PostgreSQL >=11 and psycopg2-binary
 - Bootstrap 4.x
 - JQuery 3.3.x
 - Shepherd and Tether

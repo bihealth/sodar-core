@@ -12,7 +12,7 @@ jobs:
           - '3.10'
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:11
         env:
           POSTGRES_DB: sodar_core
           POSTGRES_USER: sodar_core
@@ -52,15 +52,17 @@ jobs:
       - name: Run tests
         run: |
           coverage run --rcfile=.coveragerc manage.py test -v 2 --settings=config.settings.test
-          coverage xml
+          coverage lcov
           coverage report
       - name: Check linting
         run: flake8 .
+        if: ${{ matrix.python-version == '3.8' }}
       - name: Check formatting
         run: make black arg=--check
-      - name: Run Codacy coverage reporter
-        uses: codacy/codacy-coverage-reporter-action@master
+        if: ${{ matrix.python-version == '3.8' }}
+      - name: Report coverage with Coveralls
+        uses: coverallsapp/github-action@master
         with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage.xml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: './coverage.lcov'
         if: ${{ matrix.python-version == '3.8' }}

@@ -47,65 +47,6 @@ in complex web applications.
     instance yet.
 
 
-Prerequisites
-=============
-
-Linux / Mac
-    We use bash syntax on a Unix system and assume that you can adjust this to
-    your system when needed.
-
-PostgreSQL
-    Please install version 9.6 or above.
-    We assume that you have access to the ``postgres`` user or some other
-    administrative user.
-
-Development Essentials
-    We assume that you have ``git``, Python 3.8 or above, and other essential
-    tools installed.
-    If you are using a mainstream Unix-like distribution (Mac qualifies) then
-    you should be good to go.
-
-.. info:
-
-    In the case that you get an error as follows when installing the
-    dependencies, make sure that you have the development libraries of postgres
-    installed. E.g., on Debian-based systems install ``postgresql-dev``, for Red
-    Hat and CentOS install ``postgresql-devel``.
-
-    ::
-
-        Error: pg_config executable not found.
-
-
-Isolate Python Environment
-==========================
-
-If you use `virtualenv <https://docs.python-guide.org/dev/virtualenvs/>`_,
-please create a new virtual environment for the project and activate it.
-Otherwise, follow the previous link and do this now or you can follow along us
-using `conda <https://www.google.com/search?client=ubuntu&channel=fs&q=conda&ie=utf-8&oe=utf-8>`_.
-
-The following creates a new Miniconda installation on 64 bit Linux or Mac.
-The `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ website has
-URLs to more.
-
-.. code-block:: bash
-
-    # Linux
-    $ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    $ bash Miniconda3-latest-Linux-x86_64.sh -b -p ~/miniconda3
-    $ source ~/miniconda3/bin/activate
-    $ conda install -y python=3.8
-
-    # Mac
-    $ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
-    $ bash Miniconda3-latest-MacOSX-x86_64.sh -b -p ~/miniconda3
-    $ source ~/miniconda3/bin/activate
-    $ conda install -y python=3.8
-
-For activating the conda installation, use ``source ~/miniconda3/bin/activate``.
-
-
 Download Example Site
 =====================
 
@@ -114,88 +55,31 @@ example Django site, which installs SODAR Core and also sets up a default web
 site around it.
 
 We maintain a Git repository with a django project using the latest SODAR Core
-version here on GitHub: `sodar-django-site <https://github.com/bihealth/sodar-django-site>`_.
+version here on GitHub:
+`sodar-django-site <https://github.com/bihealth/sodar-django-site>`_.
 See :ref:`app_projectroles_integration` on other ways to get started with SODAR
 Core.
 
+To clone the example site, do the following:
+
 .. code-block:: bash
 
-    $ git clone https://github.com/bihealth/sodar-django-site.git  sodar-django-site
+    $ git clone https://github.com/bihealth/sodar-django-site.git
     $ cd sodar-django-site
 
-From here on, we assume that you are located (a) within the
-``sodar-django-site`` directory and (b) have done
-``source ~/miniconda3/bin/activate`` such that ``which python`` shows
-``~/miniconda3/bin/python``.
 
-To complete this step install the development requirements.
+Example Site Setup
+==================
 
-.. code-block:: bash
+The process of installing required dependencies and setting up your example site
+is the same as for SODAR Core itself. For a step-by-step guide, see
+:ref:`dev_core_install`.
 
-    # you must have your miniconda3 install sourced, skip if done already
-    $ source ~/miniconda3/bin/activate
-    $ pip install -r requirements/local.txt
+.. note::
 
-
-Configure Environment
-=====================
-
-The next step is to perform some configuration.
-SODAR Core is built on the `12 factor app <https://12factor.net/>`_ principles.
-Configuration is done using environment variables.
-For development, they are read from the ``.env`` file in your
-``sodar-django-site`` checkout.
-We are shipping an example setting file that you should copy and then edit.
-
-.. code-block:: bash
-
-    $ cp env.example .env
-    # now edit .env
-
-To start out, it will be sufficient to make sure you can connect to the database.
-The default value for this is shown below.
-
-.. code-block:: bash
-
-    DATABASE_URL="postgres://sodar-django-site:sodar-django-site@127.0.0.1/sodar-django-site"
-
-You can use the following commands to create the correct database, user, and set
-the password. Alternatively, you can run the ``utility/setup_database.sh``
-script and fill out the values as prompted.
-
-.. code-block:: bash
-
-    $ sudo -u postgres createuser -ds sodar-django-site -W
-    [sudo] password for USER: <enter your password>
-    Password: <enter: sodar-django-site>
-    $ sudo -u postgres createdb --owner=sodar-django-site sodar-django-site
-
-Now, we have to make sure that the environment file is read:
-
-.. code-block:: bash
-
-    $ sed -ie "s/^READ_DOT_ENV_FILE.*/READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', default=True)/" config/settings/base.py
-
-
-Database Initialization
-=======================
-
-For the final steps, you will need to initialize the database:
-
-.. code-block:: bash
-
-    $ python manage.py migrate
-
-Finally, create an admin user:
-
-.. code-block:: bash
-
-    $ python manage.py createsuperuser
-    Username: admin
-    Email address: admin@example.com
-    Password:
-    Password (again):
-    Superuser created successfully.
+    This guide and associated helper scripts are targeting Ubuntu 20.04. For
+    other Linux distributions or operating systems, you may have to adjust them
+    as required. This is out of the scope of this documentation.
 
 
 The First Login
@@ -208,12 +92,7 @@ browser to navigate to the following URL: http://127.0.0.1:8000
 
     $ make serve
     python manage.py runserver --settings=config.settings.local
-    Watching for file changes with StatReloader
-    Performing system checks...
-
-    System check identified no issues (0 silenced).
-    July 01, 2021 - 13:06:06
-    Django version 3.2.5, using settings 'config.settings.local'
+    (...)
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
 
@@ -223,12 +102,16 @@ You should see the following:
     :align: center
     :scale: 50%
 
+    Login view
+
 Login with the superuser account you created. Afterwards you are redirected to
 your home view:
 
 .. figure:: _static/for_the_impatient/project_list.png
     :align: center
     :scale: 50%
+
+    Project list
 
 By clicking the user icon on the top right corner you can access the Django
 admin (where you can create more users, for example) but also the preconfigured
@@ -257,6 +140,8 @@ follows.
     :align: center
     :scale: 50%
 
+    Project details view
+
 At this point you can test the search functionality. Typing "example" into the
 text field on the top bar and clicking :guilabel:`Search` will return your
 example project. The project overview shows the *overview card* for installed
@@ -277,6 +162,8 @@ uploading a few files, you will see a trace of actions in the Timeline app:
 .. figure:: _static/for_the_impatient/timeline.png
     :align: center
     :scale: 50%
+
+    Timeline app
 
 .. note::
 

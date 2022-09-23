@@ -10,6 +10,96 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.11.0 (2022-09-23)
+********************
+
+Release Highlights
+==================
+
+- Remove taskflowbackend app
+- Add project modifying API to replace built-in taskflowbackend
+- Enable including custom content in the login view
+- Upgrade general dependencies
+
+Breaking Changes
+================
+
+Taskflowbackend Removed
+-----------------------
+
+This release of SODAR Core removes the ``taskflowbackend`` app. To our knowledge
+it has not been used in any other projects than SODAR itself. However, it is
+possible for the app to have been inadvertently enabled on your Django site,
+resulting in unexpected server errors once removed.
+
+In case this happens, you need to first edit ``config/settings/base.py`` to
+remove ``taskflowbackend.apps.TaskflowbackendConfig`` from ``LOCAL_APPS``. Also
+make sure ``taskflow`` is not included in the ``ENABLED_BACKEND_PLUGINS``
+setting.
+
+Next, run the Django shell and enter the following:
+
+.. code-block:: python
+
+    from djangoplugins.models import Plugin
+    Plugin.objects.get(name='taskflow').delete()
+
+After this the server should run without issues.
+
+Project.submit_status Removed
+-----------------------------
+
+The ``submit_status`` field has been removed from the ``Project`` model, along
+with related helper method arguments and constants. This field was primarily
+used by SODAR Taskflow, but its removal may raise some issues in e.g. unit
+tests. If you encounter errors, refactor your code to remove references to the
+field.
+
+REST API Backwards Compatibility
+--------------------------------
+
+Due to some required changes to the REST API, it is no longer considered
+backwards compatible with older versions. Version ``0.11.0`` or higher must now
+be used. Note that target sites using a SODAR Core v0.11 source site also have
+to be updated for remote project sync to work.
+
+Changes:
+
+- Remove ``owner`` argument requirement from ``ProjectUpdateAPIView``.
+- Do not provide ``submit_status`` in ``ProjectListAPIView`` and
+  ``ProjectRetrieveAPIView``.
+
+System Prerequisites
+--------------------
+
+Changes in system requirements:
+
+- PostgreSQL v11 is now the minimum recommended version of the database.
+- The minimum Django version has been bumped to v3.2.15.
+- General Python dependencies have been upgraded, see ``requirements/*.txt``
+
+User Autocomplete Fields Updated
+--------------------------------
+
+The ``django-autocomplete-light`` dependency has been upgraded to v3.9, which
+comes with potential incompatibilities. If you include widgets using DAL in your
+site's views, you should upgrade them as follows:
+
+- Remove DAL related JS and CSS includes from your template (not including any
+  possible custom event listeners)
+- Add ``{{ form.media }}`` to your template if not present.
+
+For an example, see the ``roleassignment_form.html`` template.
+
+Login Template Updated
+----------------------
+
+The default login template ``login.html`` has been updated for including
+extended content via ``include/_login_extend.html``. If you have overridden the
+login template with your own, ensure to update it accordingly to enable this new
+functionality.
+
+
 v0.10.13 (2022-07-15)
 *********************
 

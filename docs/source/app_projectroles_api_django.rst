@@ -35,7 +35,12 @@ App Settings
 ============
 
 Projectroles provides an API for getting or setting project and user specific
-settings.
+settings. The API can be invoked as follows:
+
+.. code-block:: python
+
+    from projectroles.app_settings import AppSettingAPI
+    app_settings = AppSettingAPI()
 
 .. autoclass:: projectroles.app_settings.AppSettingAPI
     :members:
@@ -118,6 +123,10 @@ Base view classes and mixins for building Ajax API views can be found in
 ``projectroles.views_ajax``.
 
 .. currentmodule:: projectroles.views_ajax
+
+.. autoclass:: SODARBaseAjaxMixin
+    :members:
+    :show-inheritance:
 
 .. autoclass:: SODARBaseAjaxView
     :members:

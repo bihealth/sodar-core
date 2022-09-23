@@ -99,7 +99,7 @@ class TestTimelineAPI(
         }
         self.assertEqual(model_to_dict(event), expected)
 
-        status = event.get_current_status()
+        status = event.get_status()
         expected_status = {
             'id': status.pk,
             'event': event.pk,
@@ -126,7 +126,7 @@ class TestTimelineAPI(
             status_extra_data={},
         )
 
-        status = event.get_current_status()
+        status = event.get_status()
         self.assertEqual(ProjectEvent.objects.all().count(), 1)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 2)
 
@@ -173,7 +173,7 @@ class TestTimelineAPI(
         self.assertEqual(ProjectEvent.objects.all().count(), 1)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 1)  # Init
 
-        status = event.get_current_status()
+        status = event.get_status()
         expected_status = {
             'id': status.pk,
             'event': event.pk,

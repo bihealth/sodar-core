@@ -59,6 +59,8 @@ If you are proposing a feature:
 - Follow the provided template.
 - Explain in detail how it would work.
 - Keep the scope as narrow as possible, to make it easier to implement.
+- Separate multiple suggestions into separate issues, avoiding "umbrella
+  tickets" and ensuring simple assignment and follow-up.
 - Remember that this is a volunteer-driven project, and that contributions are
   welcome :)
 
@@ -102,7 +104,7 @@ Ready to contribute code to SODAR Core? Here are the steps to get started.
 
 7. Submit a pull request through the GitHub website.
 
-For specific requirements and recommendations regarding work branches, commits,
-pull requirements, see :ref:`dev_core_guide`.
+For specific requirements and recommendations on work branches, commits and pull
+requirements, see :ref:`dev_core_guide`.
 
 For guidelines regarding the code itself, see :ref:`dev_core_guide_code`.

@@ -7,11 +7,8 @@ SODAR Core
 .. image:: https://github.com/bihealth/sodar-core/actions/workflows/build.yml/badge.svg
     :target: https://github.com/bihealth/sodar-core/actions?query=workflow%3ABuild
 
-.. image:: https://app.codacy.com/project/badge/Grade/6ba6b44ee37642918c7ff7a44d413982
-    :target: https://www.codacy.com/gh/bihealth/sodar-core/dashboard
-
-.. image:: https://app.codacy.com/project/badge/Coverage/6ba6b44ee37642918c7ff7a44d413982
-    :target: https://www.codacy.com/gh/bihealth/sodar-core/dashboard
+.. image:: https://coveralls.io/repos/github/bihealth/sodar-core/badge.svg?branch=main
+    :target: https://coveralls.io/github/bihealth/sodar-core?branch=update/codacy
 
 .. image:: https://img.shields.io/badge/License-MIT-green.svg
     :target: https://opensource.org/licenses/MIT
@@ -101,8 +98,6 @@ This repository provides the following installable Django apps:
   administrators.
 - **sodarcache**: Generic caching and aggregation of data referring to external
   services.
-- **taskflowbackend**: Backend app providing an API for the optional
-  ``sodar_taskflow`` transaction service.
 - **timeline**: Project app for logging and viewing project-related activity.
 - **tokens**: Token management for API access.
 - **userprofile**: Site app for viewing user profiles.
@@ -120,7 +115,7 @@ and breaking changes are possible.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.13
+    pip install django-sodar-core==0.11.0
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.

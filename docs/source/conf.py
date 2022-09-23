@@ -27,9 +27,9 @@ copyright = '2018-2022, Berlin Institute of Health'
 author = 'BIH Core Unit Bioinformatics'
 
 # The short X.Y version
-version = '0.10'
+version = '0.11'
 # The full version, including alpha/beta/rc tags
-release = '0.10.13'
+release = '0.11.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -60,7 +60,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

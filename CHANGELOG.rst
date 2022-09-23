@@ -5,6 +5,68 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.11.0 (2022-09-23)
+====================
+
+Added
+-----
+
+- **General**
+    - Coverage reporting with Coveralls (#1026)
+- **Projectroles**
+    - Project modifying API in ``ProjectModifyPluginMixin`` (#387)
+    - ``PROJECTROLES_ENABLE_MODIFY_API`` Django setting (#387)
+    - ``PROJECTROLES_MODIFY_API_APPS`` Django setting (#387)
+    - ``syncmodifyapi`` management command (#387)
+    - ``SODARBaseAjaxMixin`` with ``SODARBaseAjaxView`` functionality (#994)
+    - Custom login view content via ``include/_login_extend.html`` (#982)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum PostgreSQL version to v11 (#303)
+    - Upgrade minimum Django version to v3.2.15 (#1003)
+    - Upgrade to black v22.6.0 (#1003)
+    - Upgrade general Python dependencies (#1003, #1019)
+- **Filesfolders**
+    - Change ``public_url`` form label (#1016)
+- **Projectroles**
+    - Replace Taskflow specific code with project modifying API calls (#387)
+    - Rename ``revoke_failed_invite()`` to ``revoke_invite()``
+    - Do not return ``submit_status`` from project API views (#971)
+    - Remove required ``owner`` argument for ``ProjectUpdateAPIView`` (#1007)
+    - Remove unused owner operations from ``ProjectModifyMixin`` (#1008)
+    - Refactor and cleanup ``AppSettingAPI`` (#1024)
+- **Timeline**
+    - Deprecate ``ProjectEvent.get_current_status()``, use ``get_status()`` (#322)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Crash at exception handling in ``clean_new_owner()`` (#981)
+    - Incorrect button icon in remote site form (#1001)
+    - Case-sensitive project list sorting (#1006)
+    - Project list filtering not trimmed (#1021)
+- **Timeline**
+    - Uncaught exceptions in ``get_plugin_lookup()`` (#979)
+
+Removed
+-------
+
+- **General**
+    - Codacy support (#1022)
+- **Projectroles**
+    - Taskflow specific views, tests and API calls (#387)
+    - ``get_taskflow_sync_data()`` method from ``ProjectAppPluginPoint`` (#387)
+    - ``Project.submit_status`` field and usages in code (#971)
+- **Taskflowbackend**
+    - Remove app and implement in SODAR (#387)
+- **Timeline**
+    - Taskflow API views (#387)
+
+
 v0.10.13 (2022-07-15)
 =====================
 

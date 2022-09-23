@@ -11,10 +11,6 @@ SODAR_CONSTANTS = {
     # Project types
     'PROJECT_TYPE_CATEGORY': 'CATEGORY',
     'PROJECT_TYPE_PROJECT': 'PROJECT',
-    # Submission status
-    'SUBMIT_STATUS_OK': 'OK',
-    'SUBMIT_STATUS_PENDING': 'PENDING',
-    'SUBMIT_STATUS_PENDING_TASKFLOW': 'PENDING-TASKFLOW',
     # App Settings
     'APP_SETTING_SCOPE_PROJECT': 'PROJECT',
     'APP_SETTING_SCOPE_USER': 'USER',
@@ -46,6 +42,9 @@ SODAR_CONSTANTS = {
     },
     # System user group
     'SYSTEM_USER_GROUP': 'system',
+    # Project modification
+    'PROJECT_ACTION_CREATE': 'CREATE',
+    'PROJECT_ACTION_UPDATE': 'UPDATE',
 }
 
 

@@ -44,7 +44,6 @@ logger = logging.getLogger(__name__)
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
@@ -54,12 +53,10 @@ INHERITED_OWNER_INFO = 'Ownership inherited from parent category'
 # Base Classes and Mixins ------------------------------------------------------
 
 
-class SODARBaseAjaxView(APIView):
+class SODARBaseAjaxMixin:
     """
-    Base Ajax view with Django session authentication.
-
-    No permission classes or mixins used, you will have to supply your own if
-    using this class directly.
+    Base Ajax mixin with permission class retrieval. To be used if another base
+    class instead of SODARBaseAjaxView is needed.
 
     The allow_anonymous property can be used to control whether anonymous users
     should access an Ajax view when PROJECTROLES_ALLOW_ANONYMOUS==True.
@@ -78,6 +75,15 @@ class SODARBaseAjaxView(APIView):
         ):
             return [AllowAny]
         return [IsAuthenticated]
+
+
+class SODARBaseAjaxView(SODARBaseAjaxMixin, APIView):
+    """
+    Base Ajax view with Django session authentication.
+
+    No permission classes or mixins used, you will have to supply your own if
+    using this class directly.
+    """
 
 
 class SODARBasePermissionAjaxView(PermissionRequiredMixin, SODARBaseAjaxView):
@@ -115,9 +121,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         :param user: User for which the projects are visible
         :param parent: Project object of type CATEGORY or None
         """
-        project_list = Project.objects.filter(
-            submit_status=SUBMIT_STATUS_OK,
-        )
+        project_list = Project.objects.all()
         if user.is_anonymous:
             project_list = project_list.filter(
                 Q(public_guest_access=True) | Q(has_public_children=True)
@@ -160,7 +164,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                         ret.append(p_parent)
                     p_parent = p_parent.parent
         # Sort by full title
-        return sorted(ret, key=lambda x: x.full_title)
+        return sorted(ret, key=lambda x: x.full_title.lower())
 
     def get(self, request, *args, **kwargs):
         parent_uuid = request.GET.get('parent', None)

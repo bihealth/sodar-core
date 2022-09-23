@@ -43,9 +43,6 @@ PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
-SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
@@ -876,8 +873,8 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             not role_as and user not in inh_owners
         ):
             raise forms.ValidationError(
-                'The new owner has no roles in the {}.'.get_display_name(
-                    self.project.type
+                'The new owner has no roles in the {}.'.format(
+                    get_display_name(self.project.type)
                 )
             )
 

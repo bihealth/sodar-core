@@ -42,8 +42,6 @@ Django development site, as well as a CI and issue tracker setup.
     :ref:`app_siteinfo`.
 ``sodarcache``
     :ref:`app_sodarcache`.
-``taskflowbackend``
-    :ref:`app_taskflow`. To be removed in SODAR Core v0.11.
 ``timeline``
     :ref:`app_timeline`.
 ``tokens``

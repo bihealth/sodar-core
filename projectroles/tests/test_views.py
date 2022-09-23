@@ -65,9 +65,6 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
-SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
@@ -530,7 +527,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'type': PROJECT_TYPE_CATEGORY,
             'parent': '',
             'owner': self.user.sodar_uuid,
-            'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
             'public_guest_access': False,
         }
@@ -556,7 +552,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'title': 'TestCategory',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
-            'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
             'public_guest_access': False,
             'full_title': 'TestCategory',
@@ -600,7 +595,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'type': PROJECT_TYPE_CATEGORY,
             'parent': '',
             'owner': self.user.sodar_uuid,
-            'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
             'public_guest_access': False,
         }
@@ -653,7 +647,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
             'parent': category.pk,
-            'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
             'public_guest_access': False,
             'full_title': 'TestCategory / TestProject',
@@ -827,7 +820,6 @@ class TestProjectUpdateView(
             'title': 'updated title',
             'type': PROJECT_TYPE_PROJECT,
             'parent': new_category.pk,
-            'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
             'public_guest_access': False,
             'full_title': new_category.title + ' / ' + 'updated title',
@@ -932,7 +924,6 @@ class TestProjectUpdateView(
             'title': 'updated title',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
-            'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
             'public_guest_access': False,
             'full_title': 'updated title',

@@ -1,3 +1,6 @@
+"""Models for the timeline app"""
+
+import logging
 import uuid
 
 from django.conf import settings
@@ -6,17 +9,16 @@ from django.db import models
 # Projectroles dependency
 from projectroles.models import Project
 
+logger = logging.getLogger(__name__)
+
 # Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-
-
 # Event status types
 EVENT_STATUS_TYPES = ['OK', 'INIT', 'SUBMIT', 'FAILED', 'INFO', 'CANCEL']
-
 DEFAULT_MESSAGES = {
     'OK': 'All OK',
     'INIT': 'Event initialized',
-    'SUBMIT': 'Job submitted to Taskflow',
+    'SUBMIT': 'Job submitted asynchronously',
     'FAILED': 'Failed (unknown problem)',
     'INFO': 'Info level action',
     'CANCEL': 'Action cancelled',
@@ -130,8 +132,16 @@ class ProjectEvent(models.Model):
             self.user.username if self.user else 'N/A',
         ]
 
+    def get_status(self):
+        """Return the current event status"""
+        return self.status_changes.order_by('-timestamp').first()
+
     def get_current_status(self):
         """Return the current event status"""
+        logger.warning(
+            'ProjectEvent.get_current_status() is deprecated and will be '
+            'removed in SODAR Core v0.12: use get_status()'
+        )
         return self.status_changes.order_by('-timestamp').first()
 
     def get_timestamp(self):

@@ -1,4 +1,5 @@
 """Timeline API for adding and updating events"""
+
 import logging
 import re
 

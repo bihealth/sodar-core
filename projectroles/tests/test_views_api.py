@@ -277,7 +277,6 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
                 'description': self.category.description,
                 'readme': '',
                 'public_guest_access': False,
-                'submit_status': self.category.submit_status,
                 'roles': {
                     str(self.cat_owner_as.sodar_uuid): {
                         'user': {
@@ -299,7 +298,6 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
                 'description': self.project.description,
                 'readme': '',
                 'public_guest_access': False,
-                'submit_status': self.project.submit_status,
                 'roles': {
                     str(self.owner_as.sodar_uuid): {
                         'user': {
@@ -361,7 +359,6 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
             'description': self.category.description,
             'readme': '',
             'public_guest_access': False,
-            'submit_status': self.category.submit_status,
             'roles': {
                 str(self.cat_owner_as.sodar_uuid): {
                     'user': {
@@ -395,7 +392,6 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
             'description': self.project.description,
             'readme': '',
             'public_guest_access': False,
-            'submit_status': self.project.submit_status,
             'roles': {
                 str(self.owner_as.sodar_uuid): {
                     'user': {
@@ -458,7 +454,6 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'public_guest_access': False,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': new_category.title,
             'has_public_children': False,
             'sodar_uuid': new_category.sodar_uuid,
@@ -515,7 +510,6 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'public_guest_access': False,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + new_category.title,
             'has_public_children': False,
             'sodar_uuid': new_category.sodar_uuid,
@@ -569,7 +563,6 @@ class TestProjectCreateAPIView(
             'description': new_project.description,
             'readme': new_project.readme.raw,
             'public_guest_access': False,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + new_project.title,
             'has_public_children': False,
             'sodar_uuid': new_project.sodar_uuid,
@@ -807,7 +800,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
-            'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
@@ -825,7 +817,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
@@ -836,7 +827,6 @@ class TestProjectUpdateAPIView(
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
@@ -866,7 +856,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
-            'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
@@ -884,7 +873,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + UPDATED_TITLE,
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
@@ -895,7 +883,6 @@ class TestProjectUpdateAPIView(
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_PROJECT,
             'parent': str(self.category.sodar_uuid),
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
@@ -939,7 +926,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': False,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
@@ -951,7 +937,6 @@ class TestProjectUpdateAPIView(
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': False,
@@ -996,7 +981,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + UPDATED_TITLE,
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
@@ -1008,7 +992,6 @@ class TestProjectUpdateAPIView(
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_PROJECT,
             'parent': str(self.category.sodar_uuid),
-            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
@@ -2616,7 +2599,6 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
                 'description': self.project.description,
                 'readme': '',
                 'public_guest_access': False,
-                'submit_status': self.project.submit_status,
                 'roles': {
                     str(user_as.sodar_uuid): {
                         'user': {

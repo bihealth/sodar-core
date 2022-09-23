@@ -92,6 +92,15 @@ documentation links or linking to external sites. Example:
     </li>
 
 
+Extra Login View Content
+========================
+
+If you want to provide extra content in your site's login view, you can add
+custom HTML into the template file
+``{SITE_NAME}/templates/include/_login_extend.html``. The content will appear
+below the login form and its format is not restricted.
+
+
 Site Logo
 =========
 

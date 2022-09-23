@@ -25,6 +25,8 @@
 <div class="container-fluid sodar-page-container">
   <form method="post">
     {% csrf_token %}
+    {# Add form.media for DAL #}
+    {{ form.media }}
     {{ form | crispy }}
     <div class="row">
       <div class="btn-group ml-auto">
@@ -73,17 +75,8 @@
               $('.modal-body').html(htmlData);
           });
       });
-
   </script>
 
-  <!-- DAL for autocomplete widgets -->
-  <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete_light.js' %}"></script>
-  <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
+  <!-- DAL redirect event listener -->
   <script type="text/javascript" src="{% static 'projectroles/js/autocomplete_redirect.js' %}"></script>
 {% endblock javascript %}
-
-{% block css %}
-  {{ block.super }}
-  <!-- Select2 theme -->
-  <link href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet" />
-{% endblock css %}

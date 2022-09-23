@@ -146,11 +146,6 @@ class TestPlugins(
         self.assertEqual(ret['label'], self.hyperlink.name)
         self.assertEqual(ret['blank'], True)
 
-    def test_get_taskflow_sync_data(self):
-        """Test get_taskflow_sync_data()"""
-        plugin = ProjectAppPluginPoint.get_plugin(PLUGIN_NAME)
-        self.assertEqual(plugin.get_taskflow_sync_data(), None)
-
     def test_get_object_link_fail(self):
         """Test get_object_link() with a non-existent object"""
         plugin = ProjectAppPluginPoint.get_plugin(PLUGIN_NAME)

@@ -118,31 +118,22 @@ For more examples of usage of this field and its widget, see
 retrieve the related widget to your own field with
 ``projectroles.forms.get_user_widget()``.
 
-The following ``django-autocomplete-light`` and ``select2`` CSS and Javascript
-links have to be added to the HTML template that includes the form with your
-user selection field:
+To provide required Javascript and CSS includes for DAL in your form, make sure
+to include ``form.media`` in your template. Example:
 
 .. code-block:: django
 
-    {% block javascript %}
-      {{ block.super }}
-      <!-- DAL for autocomplete widgets -->
-      <script type="text/javascript" src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/select2.js' %}"></script>
-    {% endblock javascript %}
+    <div class="container-fluid sodar-page-container">
+      <form method="post">
+        {{ form.media }}
+        {{ form | crispy }}
+        {% ... %}
+      </form>
+    </div>
 
-    {% block css %}
-      {{ block.super }}
-      <!-- Select2 theme -->
-      <link href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet" />
-    {% endblock css %}
-
-If using a customized widget with its own Javascript, include the corresponding
-JS file instead of ``autocomplete_light/select2.js``. See the
-``django-autocomplete-light`` documentation for more information on how to
-customize your autocomplete-widget.
+If using customized Javascript for your widget, the corresponding JS file can be
+provided in the ``javascript`` block. See the ``django-autocomplete-light``
+documentation for more information on how to customize your widget.
 
 Markdown
 --------
@@ -232,6 +223,60 @@ Example:
     Make sure you call ``{{ block.super }}`` at the start of the declared
     ``javascript`` block or you will overwrite the site's default Javascript
     setup!
+
+
+Project Modifying API
+=====================
+
+If your site needs to perform specific actions when projects are created or
+modified, or when project membership is altered, you can implement the project
+modifying API in your app plugin. This can be useful if your site e.g. maintains
+project data and access in other external databases or needs to set up some
+specific data on project changes.
+
+.. note::
+
+    This API is intended for special cases. If you're unsure why you wouldn't
+    need it on your site, it is possible you don't. Using it unnecessarily might
+    complicate your site implementation.
+
+This API works for :ref:`project apps <dev_project_app>` and
+:ref:`backend apps <dev_backend_app>`. To use it, it is recommend to include the
+``ProjectModifyPluginMixin`` in your plugin class and implement the methods
+relevant to your site's needs. An example of this can be seen below.
+
+.. code-block:: python
+
+    from projectroles.plugins import ProjectModifyPluginMixin
+
+    class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
+        # ...
+        def perform_project_modify(
+            self,
+            project,
+            action,
+            project_settings,
+            old_data=None,
+            old_settings=None,
+            request=None,
+        ):
+            pass  # Your implementation goes here
+
+You will also need to set ``PROJECTROLES_ENABLE_MODIFY_API=True`` in your site's
+Django settings to enable calling this API.
+
+Project modification operations will be cancelled and reverted if errors are
+encountered at any point in the project modify API calls. If your site has
+multiple apps implementing this API, you should also implement reversion methods
+for each operations to assert a clean rollback. These methods are also included
+in the class.
+
+You can control the order of the apps in which this API is called by listing
+your plugins in the ``PROJECTROLES_MODIFY_API_APPS`` Django setting. This will
+also affect the order of reversing.
+
+To synchronize data for existing projects in development, you can implement the
+``perform_project_sync()`` method.
 
 
 Management Command Logger
