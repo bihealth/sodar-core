@@ -12,9 +12,14 @@ Fixed
 -----
 
 - **General**
-    - URL config entrypoint for nonexistent ``about.html`` (#1029)
     - Use ``apt-get`` instead of ``apt`` in CI (#1030)
     - Incorrect branch in ``README.rst`` Coveralls link (#1031)
+
+Removed
+-------
+
+- **General**
+    - Unused ``about.html`` template (#1029)
 
 
 v0.11.0 (2022-09-23)
