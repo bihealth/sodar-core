@@ -18,7 +18,7 @@ jobs:
           POSTGRES_USER: sodar_core
           POSTGRES_PASSWORD: sodar_core
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U sodar_core"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10

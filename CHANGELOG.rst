@@ -14,6 +14,7 @@ Fixed
 - **General**
     - Use ``apt-get`` instead of ``apt`` in CI (#1030)
     - Incorrect branch in ``README.rst`` Coveralls link (#1031)
+    - Postgres role errors in GitHub Actions CI (#1033)
 
 Removed
 -------
