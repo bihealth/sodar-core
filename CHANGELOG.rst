@@ -5,6 +5,18 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **General**
+    - URL config entrypoint for nonexistent ``about.html`` (#1029)
+    - Use ``apt-get`` instead of ``apt`` in CI (#1030)
+    - Incorrect branch in ``README.rst`` Coveralls link (#1031)
+
+
 v0.11.0 (2022-09-23)
 ====================
 
