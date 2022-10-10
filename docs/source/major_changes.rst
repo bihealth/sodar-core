@@ -13,7 +13,18 @@ releases, see the :ref:`full changelog<changelog>`.
 v0.11.1 (WIP)
 *************
 
-TODO
+Release Highlights
+==================
+
+- Fix repository and environment issues
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.16.
 
 
 v0.11.0 (2022-09-23)

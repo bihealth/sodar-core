@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.16 (#1035)
+
 Fixed
 -----
 
