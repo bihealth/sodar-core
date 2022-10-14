@@ -10,12 +10,13 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.11.1 (WIP)
+v0.12.0 (WIP)
 *************
 
 Release Highlights
 ==================
 
+- Allow enabling project breadcrumb scrolling
 - Fix repository and environment issues
 
 Breaking Changes

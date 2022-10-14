@@ -8,6 +8,13 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - Allow enabling project breadcrumb scrolling (#1037)
+    - ``PROJECTROLES_BREADCRUMB_STICKY`` Django setting (#1037)
+
 Changed
 -------
 
