@@ -95,10 +95,10 @@ class TestTemplateTagsBase(
         )
 
         # Init app_setting
-        app_settings.set_app_setting(
+        app_settings.set(
             'filesfolders', 'allow_public_links', True, project=self.project
         )
-        app_settings.set_app_setting(
+        app_settings.set(
             'projectroles', 'ip_restrict', True, project=self.project
         )
         self.setting_filesfolders = AppSetting.objects.get(

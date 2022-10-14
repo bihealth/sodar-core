@@ -150,37 +150,37 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
     def test_post(self):
         """Test POST request on settings update form"""
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
             ),
             'test',
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_int_setting', user=self.user
             ),
             170,
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_str_setting_options', user=self.user
             ),
             'string1',
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_int_setting_options', user=self.user
             ),
             0,
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_bool_setting', user=self.user
             ),
             True,
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_json_setting', user=self.user
             ),
             {'Test': 'More'},
@@ -212,37 +212,37 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
 
         # Assert settings state after update
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
             ),
             'another-text',
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_int_setting', user=self.user
             ),
             123,
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_str_setting_options', user=self.user
             ),
             'string2',
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_int_setting_options', user=self.user
             ),
             1,
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_bool_setting', user=self.user
             ),
             False,
         )
         self.assertEqual(
-            app_settings.get_app_setting(
+            app_settings.get(
                 EXAMPLE_APP_NAME, 'user_json_setting', user=self.user
             ),
             {'Test': 'Less'},

@@ -331,13 +331,13 @@ class ProjectForm(SODARModelForm):
                 widget=forms.Textarea(attrs=s_widget_attrs), **setting_kwargs
             )
             if self.instance.pk:
-                json_data = self.app_settings.get_app_setting(
+                json_data = self.app_settings.get(
                     app_name=app_name,
                     setting_name=s_key,
                     project=self.instance,
                 )
             else:
-                json_data = self.app_settings.get_default_setting(
+                json_data = self.app_settings.get_default(
                     app_name=app_name, setting_name=s_key
                 )
             self.initial[s_field] = json.dumps(json_data)
@@ -372,13 +372,13 @@ class ProjectForm(SODARModelForm):
 
             # Set initial value
             if self.instance.pk:
-                self.initial[s_field] = self.app_settings.get_app_setting(
+                self.initial[s_field] = self.app_settings.get(
                     app_name=app_name,
                     setting_name=s_key,
                     project=self.instance,
                 )
             else:
-                self.initial[s_field] = self.app_settings.get_default_setting(
+                self.initial[s_field] = self.app_settings.get_default(
                     app_name=app_name, setting_name=s_key
                 )
 
@@ -412,12 +412,12 @@ class ProjectForm(SODARModelForm):
             # Show non-modifiable settings to superusers
             if plugin:
                 app_name = plugin.name
-                p_settings = self.app_settings.get_setting_defs(
+                p_settings = self.app_settings.get_defs(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
                 )
             else:
                 app_name = APP_NAME
-                p_settings = self.app_settings.get_setting_defs(
+                p_settings = self.app_settings.get_defs(
                     APP_SETTING_SCOPE_PROJECT,
                     app_name=app_name,
                     **self.p_kwargs
@@ -610,12 +610,12 @@ class ProjectForm(SODARModelForm):
         for plugin in self.app_plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = self.app_settings.get_setting_defs(
+                p_settings = self.app_settings.get_defs(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
                 )
             else:
                 name = 'projectroles'
-                p_settings = self.app_settings.get_setting_defs(
+                p_settings = self.app_settings.get_defs(
                     APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
                 )
 
@@ -644,7 +644,7 @@ class ProjectForm(SODARModelForm):
                     # otherwise subsequent checks will fail.
                     self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
 
-                if not self.app_settings.validate_setting(
+                if not self.app_settings.validate(
                     setting_type=s_val['type'],
                     setting_value=self.cleaned_data.get(s_field),
                     setting_options=s_val.get('options'),

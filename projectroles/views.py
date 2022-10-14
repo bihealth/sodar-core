@@ -254,7 +254,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             self.request.user.is_superuser
             or project.is_owner_or_delegate(self.request.user)
         )
-        if not perm_override and app_settings.get_app_setting(
+        if not perm_override and app_settings.get(
             'projectroles', 'ip_restrict', project
         ):
             for k in (
@@ -270,7 +270,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             else:  # Can't fetch client ip address
                 return False
 
-            for record in app_settings.get_app_setting(
+            for record in app_settings.get(
                 'projectroles', 'ip_allowlist', project
             ):
                 if '/' in record:
@@ -846,12 +846,12 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         for plugin in app_plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_defs(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_defs(
                     APP_SETTING_SCOPE_PROJECT, app_name=name
                 )
 
@@ -859,7 +859,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 s_name = 'settings.{}.{}'.format(name, s_key)
                 s_data = data.get(s_name)
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default_setting(name, s_key)
+                    s_data = app_settings.get_default(name, s_key)
 
                 if s_val['type'] == 'JSON':
                     if s_data is None:
@@ -894,8 +894,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         for k, v in project_settings.items():
             a_name = k.split('.')[1]
             s_name = k.split('.')[2]
-            s_def = app_settings.get_setting_def(s_name, app_name=a_name)
-            old_v = app_settings.get_app_setting(a_name, s_name, project)
+            s_def = app_settings.get_def(s_name, app_name=a_name)
+            old_v = app_settings.get(a_name, s_name, project)
             if s_def['type'] == 'JSON':
                 v = json.loads(v)
             if old_v != v:
@@ -925,7 +925,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             for k, v in project_settings.items():
                 a_name = k.split('.')[1]
                 s_name = k.split('.')[2]
-                s_def = app_settings.get_setting_def(s_name, app_name=a_name)
+                s_def = app_settings.get_def(s_name, app_name=a_name)
                 if s_def['type'] == 'JSON':
                     v = json.loads(v)
                 extra_data[k] = v
@@ -956,7 +956,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
     def _update_settings(cls, project, project_settings):
         """Update project settings"""
         for k, v in project_settings.items():
-            app_settings.set_app_setting(
+            app_settings.set(
                 app_name=k.split('.')[1],
                 setting_name=k.split('.')[2],
                 value=v,

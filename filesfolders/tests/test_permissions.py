@@ -189,7 +189,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
     def setUp(self):
         super().setUp()
 
-        app_settings.set_app_setting(
+        app_settings.set(
             APP_NAME, 'allow_public_links', True, project=self.project
         )
 
@@ -377,7 +377,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
 
     def test_file_serve_public_disabled(self):
         """Test public file serving if not allowed in project, should fail"""
-        app_settings.set_app_setting(
+        app_settings.set(
             APP_NAME, 'allow_public_links', False, project=self.project
         )
         url = reverse(

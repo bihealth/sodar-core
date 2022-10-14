@@ -35,7 +35,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
     def setUp(self):
         super().setUp()
 
-        app_settings.set_app_setting(
+        app_settings.set(
             APP_NAME, 'allow_public_links', True, project=self.project
         )
 

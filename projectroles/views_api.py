@@ -140,9 +140,7 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         owner_or_delegate = project.is_owner_or_delegate(request.user)
         if not (
             request.user.is_superuser or owner_or_delegate
-        ) and app_settings.get_app_setting(
-            'projectroles', 'ip_restrict', project
-        ):
+        ) and app_settings.get('projectroles', 'ip_restrict', project):
             for k in (
                 'HTTP_X_FORWARDED_FOR',
                 'X_FORWARDED_FOR',
@@ -155,7 +153,8 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
                     break
             else:  # Can't fetch client ip address
                 return False
-            for record in app_settings.get_app_setting(
+
+            for record in app_settings.get(
                 'projectroles', 'ip_allowlist', project
             ):
                 if '/' in record:

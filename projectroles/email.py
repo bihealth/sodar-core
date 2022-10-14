@@ -364,7 +364,7 @@ def get_user_addr(user):
     ret = []
     if user.email and _validate(user, user.email):
         ret.append(user.email)
-    add_email = app_settings.get_app_setting(
+    add_email = app_settings.get(
         'projectroles', 'user_email_additional', user=user
     )
     if add_email:

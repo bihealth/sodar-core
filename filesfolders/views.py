@@ -638,7 +638,7 @@ class FileServePublicView(FileServeMixin, View):
         try:
             file = File.objects.get(secret=kwargs['secret'])
             # Check if sharing public files is not allowed in project settings
-            if not app_settings.get_app_setting(
+            if not app_settings.get(
                 APP_NAME, 'allow_public_links', file.project
             ):
                 return HttpResponseBadRequest(LINK_BAD_REQUEST_MSG)
@@ -677,9 +677,7 @@ class FilePublicLinkView(
             messages.error(self.request, 'File not found.')
             return redirect(reverse('home'))
 
-        if not app_settings.get_app_setting(
-            APP_NAME, 'allow_public_links', file.project
-        ):
+        if not app_settings.get(APP_NAME, 'allow_public_links', file.project):
             messages.error(
                 self.request,
                 'Sharing public links not allowed for this {}.'.format(

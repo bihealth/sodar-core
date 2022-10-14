@@ -74,7 +74,7 @@ class TestViewsBaseMixin(
         )
 
         # Change public link setting from default
-        app_settings.set_app_setting(
+        app_settings.set(
             APP_NAME, 'allow_public_links', True, project=self.project
         )
 
@@ -803,7 +803,7 @@ class TestFileServePublicView(TestViewsBase):
 
     def test_bad_request_setting(self):
         """Test bad request response if public linking is disabled"""
-        app_settings.set_app_setting(
+        app_settings.set(
             APP_NAME, 'allow_public_links', False, project=self.project
         )
         with self.login(self.user):
@@ -879,7 +879,7 @@ class TestFilePublicLinkView(TestViewsBase):
 
     def test_redirect_setting(self):
         """Test redirecting if public linking is disabled via settings"""
-        app_settings.set_app_setting(
+        app_settings.set(
             APP_NAME, 'allow_public_links', False, project=self.project
         )
         with self.login(self.user):

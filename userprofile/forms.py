@@ -37,12 +37,12 @@ class UserSettingsForm(SODARForm):
         for plugin in self.app_plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_defs(
                     APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_defs(
                     APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
                 )
 
@@ -110,13 +110,13 @@ class UserSettingsForm(SODARForm):
                     # NOTE: Experimental! Use at your own risk!
                     self.fields[s_field].widget.attrs.update(s_widget_attrs)
 
-                    self.initial[s_field] = app_settings.get_app_setting(
+                    self.initial[s_field] = app_settings.get(
                         app_name=name, setting_name=s_key, user=self.user
                     )
 
                 else:
                     self.initial[s_field] = json.dumps(
-                        app_settings.get_app_setting(
+                        app_settings.get(
                             app_name=name,
                             setting_name=s_key,
                             user=self.user,
@@ -129,12 +129,12 @@ class UserSettingsForm(SODARForm):
         for plugin in self.app_plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_defs(
                     APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_defs(
                     APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
                 )
 
@@ -152,11 +152,12 @@ class UserSettingsForm(SODARForm):
                         )
 
                 elif s_val['type'] == 'INTEGER':
-                    # when field is a select/dropdown, the information of the datatype gets lost.
-                    # we need to convert that here, otherwise subsequent checks will fail.
+                    # When field is a select/dropdown, the information of the
+                    # data type gets lost. We need to convert that here,
+                    # otherwise subsequent checks will fail.
                     self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
 
-                if not app_settings.validate_setting(
+                if not app_settings.validate(
                     setting_type=s_val['type'],
                     setting_value=self.cleaned_data.get(s_field),
                     setting_options=s_val.get('options'),
