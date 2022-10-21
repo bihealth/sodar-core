@@ -508,7 +508,7 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             tags.is_app_visible(app_plugin, self.project, self.user), False
         )
         self.assertEqual(
-            tags.is_app_visible(app_plugin, self.project, superuser), True
+            tags.is_app_visible(app_plugin, self.project, superuser), False
         )
 
     def test_is_inherited_owner(self):

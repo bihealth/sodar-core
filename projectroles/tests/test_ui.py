@@ -1336,7 +1336,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
         expected = [
-            (self.superuser, len(get_active_plugins())),
+            (self.superuser, len(get_active_plugins()) - 1),
             (self.user_owner, len(get_active_plugins()) - 1),
         ]
         self.assert_element_count(expected, url, 'sodar-pr-nav-app-plugin')

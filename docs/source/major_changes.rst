@@ -34,6 +34,14 @@ The following minimum versions have been bumped:
 - ``setuptools>=65.6.3, <65.7``
 - ``wheel>=0.38.4, <0.39``
 
+Hiding Project App Links Affects Superusers
+-------------------------------------------
+
+Hiding project app links from the project sidebar and project dropdown with
+``PROJECTROLES_HIDE_APP_LINKS`` now also affects superusers. Note that the apps
+themselves can still be accessed if relevant URL are known or links provided to
+them elsewhere on the site.
+
 
 v0.11.0 (2022-09-23)
 ********************
