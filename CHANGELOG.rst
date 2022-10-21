@@ -44,6 +44,8 @@ Removed
 
 - **General**
     - Unused ``about.html`` template (#1029)
+- **Projectroles**
+    - Unused ``taskflow_testcase`` module (#1041)
 
 
 v0.11.0 (2022-09-23)
