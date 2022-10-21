@@ -412,12 +412,12 @@ class ProjectForm(SODARModelForm):
             # Show non-modifiable settings to superusers
             if plugin:
                 app_name = plugin.name
-                p_settings = self.app_settings.get_defs(
+                p_settings = self.app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
                 )
             else:
                 app_name = APP_NAME
-                p_settings = self.app_settings.get_defs(
+                p_settings = self.app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT,
                     app_name=app_name,
                     **self.p_kwargs
@@ -610,12 +610,12 @@ class ProjectForm(SODARModelForm):
         for plugin in self.app_plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = self.app_settings.get_defs(
+                p_settings = self.app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
                 )
             else:
                 name = 'projectroles'
-                p_settings = self.app_settings.get_defs(
+                p_settings = self.app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
                 )
 

@@ -41,12 +41,12 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         for plugin in plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_defs(
+                p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_defs(
+                p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
                 )
             for s_key, s_val in p_settings.items():

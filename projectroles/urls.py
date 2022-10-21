@@ -239,6 +239,26 @@ urls_api = [
         name='api_invite_resend',
     ),
     url(
+        regex=r'^api/settings/retrieve/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectSettingRetrieveAPIView.as_view(),
+        name='api_project_setting_retrieve',
+    ),
+    url(
+        regex=r'^api/settings/set/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectSettingSetAPIView.as_view(),
+        name='api_project_setting_set',
+    ),
+    url(
+        regex=r'^api/settings/retrieve/user$',
+        view=views_api.UserSettingRetrieveAPIView.as_view(),
+        name='api_user_setting_retrieve',
+    ),
+    url(
+        regex=r'^api/settings/set/user$',
+        view=views_api.UserSettingSetAPIView.as_view(),
+        name='api_user_setting_set',
+    ),
+    url(
         regex=r'^api/users/list$',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',

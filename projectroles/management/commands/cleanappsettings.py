@@ -42,7 +42,7 @@ class Command(BaseCommand):
             else:
                 def_kwargs['app_name'] = 'projectroles'
             try:
-                app_settings.get_def(**def_kwargs)
+                app_settings.get_definition(**def_kwargs)
             except ValueError:
                 logger.info(
                     'Deleting "{}" from project "{}"'.format(

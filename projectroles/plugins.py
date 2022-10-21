@@ -163,6 +163,54 @@ class ProjectModifyPluginMixin:
         # TODO: Implement this in your app plugin
         pass
 
+    def perform_project_setting_update(
+        self,
+        app_name,
+        setting_name,
+        value,
+        old_value,
+        project=None,
+        user=None,
+    ):
+        """
+        Perform additional actions when updating a single app setting with
+        PROJECT scope.
+
+        :param app_name: Name of app plugin for the setting, "projectroles" is
+                         used for projectroles settings (string)
+        :param setting_name: Setting name (string)
+        :param value: New value for setting
+        :param old_value: Previous value for setting
+        :param project: Project object or None
+        :param user: User object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def revert_project_setting_update(
+        self,
+        app_name,
+        setting_name,
+        value,
+        old_value,
+        project=None,
+        user=None,
+    ):
+        """
+        Revert updating a single app setting with PROJECT scope if errors have
+        occurred in other apps.
+
+        :param app_name: Name of app plugin for the setting, "projectroles" is
+                         used for projectroles settings (string)
+        :param setting_name: Setting name (string)
+        :param value: New value for setting
+        :param old_value: Previous value for setting
+        :param project: Project object or None
+        :param user: User object or None
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
 
 # Plugin Points ----------------------------------------------------------------
 

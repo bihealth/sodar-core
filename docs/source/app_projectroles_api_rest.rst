@@ -137,6 +137,14 @@ API Views
 
 .. autoclass:: ProjectInviteResendAPIView
 
+.. autoclass:: ProjectSettingRetrieveAPIView
+
+.. autoclass:: ProjectSettingSetAPIView
+
+.. autoclass:: UserSettingRetrieveAPIView
+
+.. autoclass:: UserSettingSetAPIView
+
 .. autoclass:: UserListAPIView
 
 .. autoclass:: CurrentUserRetrieveAPIView

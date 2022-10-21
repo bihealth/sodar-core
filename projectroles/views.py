@@ -846,12 +846,12 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         for plugin in app_plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_defs(
+                p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_defs(
+                p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, app_name=name
                 )
 
@@ -894,7 +894,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         for k, v in project_settings.items():
             a_name = k.split('.')[1]
             s_name = k.split('.')[2]
-            s_def = app_settings.get_def(s_name, app_name=a_name)
+            s_def = app_settings.get_definition(s_name, app_name=a_name)
             old_v = app_settings.get(a_name, s_name, project)
             if s_def['type'] == 'JSON':
                 v = json.loads(v)
@@ -925,7 +925,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             for k, v in project_settings.items():
                 a_name = k.split('.')[1]
                 s_name = k.split('.')[2]
-                s_def = app_settings.get_def(s_name, app_name=a_name)
+                s_def = app_settings.get_definition(s_name, app_name=a_name)
                 if s_def['type'] == 'JSON':
                     v = json.loads(v)
                 extra_data[k] = v

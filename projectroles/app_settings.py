@@ -167,6 +167,22 @@ class AppSettingAPI:
             )
 
     @classmethod
+    def _get_app_plugin(cls, app_name):
+        """
+        Return app plugin by name.
+
+        :param app_name: Name of the app plugin (string or None)
+        :return: App plugin object
+        :raise: ValueError if plugin is not found with the name
+        """
+        plugin = get_app_plugin(app_name)
+        if not plugin:
+            raise ValueError(
+                'Plugin not found with app name "{}"'.format(app_name)
+            )
+        return plugin
+
+    @classmethod
     def _get_defs(cls, plugin=None, app_name=None):
         """
         Ensure valid argument values for a settings def query.
@@ -181,11 +197,7 @@ class AppSettingAPI:
         if app_name == 'projectroles':
             return cls.get_projectroles_defs()
         if not plugin:
-            plugin = get_app_plugin(app_name)
-            if not plugin:
-                raise ValueError(
-                    'Plugin not found with app name "{}"'.format(app_name)
-                )
+            plugin = cls._get_app_plugin(app_name)
         return plugin.app_settings
 
     @classmethod
@@ -352,13 +364,15 @@ class AppSettingAPI:
         ret = {}
         app_plugins = get_active_plugins()
         for plugin in app_plugins:
-            p_settings = cls.get_defs(APP_SETTING_SCOPE_PROJECT, plugin=plugin)
+            p_settings = cls.get_definitions(
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin
+            )
             for s_key in p_settings:
                 ret['settings.{}.{}'.format(plugin.name, s_key)] = cls.get(
                     plugin.name, s_key, project, user, post_safe
                 )
 
-        p_settings = cls.get_defs(
+        p_settings = cls.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name='projectroles'
         )
         for s_key in p_settings:
@@ -399,13 +413,13 @@ class AppSettingAPI:
         app_plugins = get_active_plugins()
 
         for plugin in app_plugins:
-            p_settings = cls.get_defs(scope, plugin=plugin)
+            p_settings = cls.get_definitions(scope, plugin=plugin)
             for s_key in p_settings:
                 ret[
                     'settings.{}.{}'.format(plugin.name, s_key)
                 ] = cls.get_default(plugin.name, s_key, post_safe)
 
-        p_settings = cls.get_defs(scope, app_name='projectroles')
+        p_settings = cls.get_definitions(scope, app_name='projectroles')
         for s_key in p_settings:
             ret[
                 'settings.{}.{}'.format('projectroles', s_key)
@@ -488,7 +502,9 @@ class AppSettingAPI:
                 return False
 
             if validate:
-                setting_def = cls.get_def(name=setting_name, app_name=app_name)
+                setting_def = cls.get_definition(
+                    name=setting_name, app_name=app_name
+                )
                 cls.validate(setting.type, value, setting_def.get('options'))
 
             if setting.type == 'JSON':
@@ -525,7 +541,9 @@ class AppSettingAPI:
             cls._check_project_and_user(s_def['scope'], project, user)
             if validate:
                 v = cls._get_json_value(value) if s_type == 'JSON' else value
-                setting_def = cls.get_def(name=setting_name, app_name=app_name)
+                setting_def = cls.get_definition(
+                    name=setting_name, app_name=app_name
+                )
                 cls.validate(s_type, v, setting_def.get('options'))
 
             s_vals = {
@@ -578,7 +596,7 @@ class AppSettingAPI:
         :param project: Project object to delete setting from (optional)
         :param user: User object to delete setting from (optional)
         """
-        setting_def = cls.get_def(setting_name, app_name=app_name)
+        setting_def = cls.get_definition(setting_name, app_name=app_name)
         scope = setting_def.get('scope')
         if scope == 'USER' and project:
             raise ValueError('App setting scope is USER but project is set.')
@@ -676,7 +694,7 @@ class AppSettingAPI:
         return cls.validate(*args, **kwargs)
 
     @classmethod
-    def get_def(cls, name, plugin=None, app_name=None):
+    def get_definition(cls, name, plugin=None, app_name=None):
         """
         Return definition for a single app setting, either based on an app name
         or the plugin object.
@@ -706,7 +724,8 @@ class AppSettingAPI:
         Return definition for a single app setting, either based on an app name
         or the plugin object.
 
-        DEPRECATED: Use get_def() instead. Will be removed in SODAR Core v0.13.
+        DEPRECATED: Use get_definition() instead. Will be removed in SODAR Core
+        v0.13.
 
         :param name: Setting name
         :param plugin: Plugin object extending ProjectAppPluginPoint or None
@@ -716,10 +735,10 @@ class AppSettingAPI:
                 is not found in plugin
         """
         logger.warning(DEPRECATION_MSG.format('get_setting_def', 'get_def'))
-        return cls.get_def(*args, **kwargs)
+        return cls.get_definition(*args, **kwargs)
 
     @classmethod
-    def get_defs(
+    def get_definitions(
         cls,
         scope,
         plugin=None,
@@ -766,7 +785,8 @@ class AppSettingAPI:
         """
         Return app setting definitions of a specific scope from a plugin.
 
-        DEPRECATED: Use get_defs() instead. Will be removed in SODAR Core v0.13.
+        DEPRECATED: Use get_definitions() instead. Will be removed in SODAR Core
+        v0.13.
 
         :param scope: PROJECT, USER or PROJECT_USER
         :param plugin: Plugin object extending ProjectAppPluginPoint or None
@@ -778,7 +798,7 @@ class AppSettingAPI:
                 plugin are set
         """
         logger.warning(DEPRECATION_MSG.format('get_setting_defs', 'get_defs'))
-        return cls.get_defs(*args, **kwargs)
+        return cls.get_definitions(*args, **kwargs)
 
     @classmethod
     def get_projectroles_defs(cls):

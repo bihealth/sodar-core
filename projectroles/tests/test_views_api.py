@@ -13,15 +13,21 @@ from django.utils import timezone
 from knox.models import AuthToken
 from test_plus.test import APITestCase
 
+# Timeline dependency
+from timeline.models import ProjectEvent
+
 from projectroles import views_api
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
     ProjectInvite,
+    AppSetting,
     SODAR_CONSTANTS,
 )
 from projectroles.remote_projects import RemoteProjectAPI
+from projectroles.tests.test_app_settings import AppSettingInitMixin
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -48,6 +54,9 @@ from projectroles.tests.test_views import (
 from projectroles.utils import build_secret
 
 
+app_settings = AppSettingAPI()
+
+
 CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
 CORE_API_VERSION_INVALID = '9.9.9'
 
@@ -64,6 +73,8 @@ INVITE_MESSAGE = 'Message'
 
 # Special value to use for empty knox token
 EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
+
+EX_APP_NAME = 'example_project_app'
 
 
 # Base Classes -----------------------------------------------------------------
@@ -2306,6 +2317,609 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         )
         response = self.request_knox(url, method='POST')
         self.assertEqual(response.status_code, 404)
+
+
+class TestProjectSettingRetrievePIView(
+    AppSettingMixin, AppSettingInitMixin, TestCoreAPIViewsBase
+):
+    """Tests for ProjectSettingRetrieveAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        self.settings = self.init_app_settings()
+
+    def test_retrieve_project(self):
+        """Test retrieving app setting with PROJECT scope"""
+        setting_name = 'project_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': str(self.project.sodar_uuid),
+            'user': None,
+            'name': setting_name,
+            'type': 'STRING',
+            'value': self.project_str_setting['value'],
+            'user_modifiable': True,
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_retrieve_project_unset(self):
+        """Test retrieving unset PROJECT setting (should return default)"""
+        setting_name = 'project_str_setting'
+        default_value = app_settings.get_default(EX_APP_NAME, setting_name)
+        q_kwargs = {
+            'app_plugin__name': EX_APP_NAME,
+            'name': setting_name,
+            'project': self.project,
+        }
+        AppSetting.objects.get(**q_kwargs).delete()
+
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': str(self.project.sodar_uuid),
+            'user': None,
+            'name': setting_name,
+            'type': 'STRING',
+            'value': default_value,
+            'user_modifiable': True,
+        }
+        self.assertEqual(response_data, expected)
+        self.assertIsInstance(AppSetting.objects.get(**q_kwargs), AppSetting)
+
+    def test_retrieve_project_user(self):
+        """Test retrieving app setting with PROJECT_USER scope"""
+        setting_name = 'project_user_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'user': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': str(self.project.sodar_uuid),
+            'user': self.get_serialized_user(self.user),
+            'name': setting_name,
+            'type': 'STRING',
+            'value': self.project_user_str_setting['value'],
+            'user_modifiable': True,
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_retrieve_project_user_unset(self):
+        """Test retrieving unset PROJECT_USER setting"""
+        setting_name = 'project_user_str_setting'
+        default_value = app_settings.get_default(EX_APP_NAME, setting_name)
+        q_kwargs = {
+            'app_plugin__name': EX_APP_NAME,
+            'name': setting_name,
+            'project': self.project,
+            'user': self.user,
+        }
+        AppSetting.objects.get(**q_kwargs).delete()
+
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'user': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': str(self.project.sodar_uuid),
+            'user': self.get_serialized_user(self.user),
+            'name': setting_name,
+            'type': 'STRING',
+            'value': default_value,
+            'user_modifiable': True,
+        }
+        self.assertEqual(response_data, expected)
+        self.assertIsInstance(AppSetting.objects.get(**q_kwargs), AppSetting)
+
+    def test_retrieve_project_user_no_user(self):
+        """Test retrieving PROJECT_USER setting without user (should fail)"""
+        setting_name = 'project_user_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        response = self.request_knox(url, data=get_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_retrieve_json(self):
+        """Test retrieving a JSON app setting"""
+        setting_name = 'project_json_setting'
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': str(self.project.sodar_uuid),
+            'user': None,
+            'name': setting_name,
+            'type': 'JSON',
+            'value': self.project_json_setting['value'],
+            'user_modifiable': True,
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_retrieve_non_modifiable(self):
+        """Test retrieving a non-modifiable app setting"""
+        setting_name = 'project_hidden_setting'
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': str(self.project.sodar_uuid),
+            'user': None,
+            'name': setting_name,
+            'type': 'STRING',
+            'value': '',
+            'user_modifiable': False,
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_retrieve_invalid_app_name(self):
+        """Test setting app setting with invalid app name (should fail)"""
+        setting_name = 'project_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {
+            'app_name': 'NON-EXISTING-APP',
+            'setting_name': setting_name,
+        }
+        response = self.request_knox(url, data=get_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_retrieve_invalid_scope(self):
+        """Test setting app setting with invalid scope (should fail)"""
+        setting_name = 'user_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {
+            'setting_name': setting_name,
+            'user': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, data=get_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+
+class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
+    """Tests for ProjectSettingSetAPIView"""
+
+    def test_set_project(self):
+        """Test setting app setting value with PROJECT scope"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+        self.assertIsNone(
+            ProjectEvent.objects.filter(
+                event_name='app_setting_set_api'
+            ).first()
+        )
+
+        setting_name = 'project_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 1)
+        obj = AppSetting.objects.get(name=setting_name, project=self.project)
+        self.assertEqual(obj.get_value(), 'value')
+        tl_event = ProjectEvent.objects.filter(
+            event_name='app_setting_set_api'
+        ).first()
+        self.assertIsNotNone(tl_event)
+        self.assertEqual(tl_event.classified, True)
+        self.assertEqual(tl_event.extra_data, {'value': 'value'})
+
+    def test_set_project_user(self):
+        """Test setting app setting value with PROJECT_USER scope"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+        setting_name = 'project_user_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+            'user': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 1)
+        obj = AppSetting.objects.get(name=setting_name, project=self.project)
+        self.assertEqual(obj.get_value(), 'value')
+
+    def test_set_project_no_user(self):
+        """Test setting PROJECT_USER setting with no user (should fail)"""
+        setting_name = 'project_user_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_set_non_modifiable(self):
+        """Test setting non-modifiable app setting (should fail)"""
+        setting_name = 'project_hidden_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 403, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_set_invalid_app_name(self):
+        """Test setting app setting with invalid app name (should fail)"""
+        setting_name = 'project_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': 'NON-EXISTING-APP',
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_set_invalid_scope(self):
+        """Test setting app setting with invalid scope (should fail)"""
+        setting_name = 'user_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_set_no_value(self):
+        """Test setting without a value (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+        setting_name = 'project_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_set_integer(self):
+        """Test setting an integer value"""
+        setting_name = 'project_int_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': '170',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        obj = AppSetting.objects.get(name=setting_name, project=self.project)
+        self.assertEqual(obj.get_value(), 170)
+
+    def test_set_boolean(self):
+        """Test setting a boolean value"""
+        setting_name = 'project_bool_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': True,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        obj = AppSetting.objects.get(name=setting_name, project=self.project)
+        self.assertEqual(obj.get_value(), True)
+
+    def test_set_json(self):
+        """Test setting a JSON value"""
+        setting_name = 'project_json_setting'
+        value = {'key': 'value'}
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': value,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        obj = AppSetting.objects.get(name=setting_name, project=self.project)
+        self.assertEqual(obj.get_value(), value)
+
+
+class TestUserSettingRetrievePIView(
+    AppSettingMixin, AppSettingInitMixin, TestCoreAPIViewsBase
+):
+    """Tests for UserSettingRetrieveAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        self.settings = self.init_app_settings()
+
+    def test_retrieve(self):
+        """Test retrieving app setting with USER scope"""
+        setting_name = 'user_str_setting'
+        url = reverse('projectroles:api_user_setting_retrieve')
+        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': None,
+            'user': self.get_serialized_user(self.user),
+            'name': setting_name,
+            'type': 'STRING',
+            'value': self.user_str_setting['value'],
+            'user_modifiable': True,
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_retrieve_unset(self):
+        """Test retrieving unset USER setting (should return default)"""
+        setting_name = 'user_str_setting'
+        default_value = app_settings.get_default(EX_APP_NAME, setting_name)
+        q_kwargs = {
+            'app_plugin__name': EX_APP_NAME,
+            'name': setting_name,
+            'user': self.user,
+        }
+        AppSetting.objects.get(**q_kwargs).delete()
+
+        url = reverse('projectroles:api_user_setting_retrieve')
+        get_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+        }
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': None,
+            'user': self.get_serialized_user(self.user),
+            'name': setting_name,
+            'type': 'STRING',
+            'value': default_value,
+            'user_modifiable': True,
+        }
+        self.assertEqual(response_data, expected)
+        self.assertIsInstance(AppSetting.objects.get(**q_kwargs), AppSetting)
+
+    def test_retrieve_non_modifiable(self):
+        """Test retrieving a non-modifiable USER app setting"""
+        setting_name = 'user_hidden_setting'
+        url = reverse('projectroles:api_user_setting_retrieve')
+        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        response = self.request_knox(url, data=get_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        response_data = json.loads(response.content)
+        expected = {
+            'app_name': EX_APP_NAME,
+            'project': None,
+            'user': self.get_serialized_user(self.user),
+            'name': setting_name,
+            'type': 'STRING',
+            'value': '',
+            'user_modifiable': False,
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_retrieve_invalid_app_name(self):
+        """Test retrieving USER setting with invalid app name (should fail)"""
+        setting_name = 'user_str_setting'
+        url = reverse('projectroles:api_user_setting_retrieve')
+        get_data = {
+            'app_name': 'NON-EXISTING-APP',
+            'setting_name': setting_name,
+        }
+        response = self.request_knox(url, data=get_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_retrieve_invalid_scope(self):
+        """Test retrieving USER setting with invalid scope (should fail)"""
+        setting_name = 'project_str_setting'
+        url = reverse('projectroles:api_user_setting_retrieve')
+        get_data = {
+            'setting_name': setting_name,
+            'project': str(self.project.sodar_uuid),
+        }
+        response = self.request_knox(url, data=get_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+
+class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
+    """Tests for UserSettingSetAPIView"""
+
+    def test_set(self):
+        """Test setting app setting value"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+        self.assertIsNone(
+            ProjectEvent.objects.filter(
+                event_name='app_setting_set_api'
+            ).first()
+        )
+
+        setting_name = 'user_str_setting'
+        url = reverse('projectroles:api_user_setting_set')
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 1)
+        obj = AppSetting.objects.get(name=setting_name, user=self.user)
+        self.assertEqual(obj.get_value(), 'value')
+        self.assertIsNone(
+            ProjectEvent.objects.filter(
+                event_name='app_setting_set_api'
+            ).first()
+        )
+
+    def test_set_invalid_app_name(self):
+        """Test setting with invalid app name (should fail)"""
+        setting_name = 'NON-EXISTING-APP'
+        url = reverse('projectroles:api_user_setting_set')
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_set_invalid_scope_project(self):
+        """Test setting with PROJECT scope (should fail)"""
+        setting_name = 'project_str_setting'
+        url = reverse('projectroles:api_user_setting_set')
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_set_invalid_scope_project_user(self):
+        """Test setting with PROJECT_USER scope (should fail)"""
+        setting_name = 'project_user_str_setting'
+        url = reverse('projectroles:api_user_setting_set')
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_set_no_value(self):
+        """Test setting without a value (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+        setting_name = 'user_str_setting'
+        url = reverse('projectroles:api_user_setting_set')
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
 
 
 class TestUserListAPIView(TestCoreAPIViewsBase):

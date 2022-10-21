@@ -758,10 +758,8 @@ class AppSetting(models.Model):
         """Version of save() to convert 'value' data according to 'type'"""
         if self.type == 'BOOLEAN':
             self.value = str(int(self.value))
-
         elif self.type == 'INTEGER':
             self.value = str(self.value)
-
         super().save(*args, **kwargs)
 
     # Custom row-level functions
@@ -770,13 +768,10 @@ class AppSetting(models.Model):
         """Return value of the setting in the format specified in 'type'"""
         if self.type == 'INTEGER':
             return int(self.value)
-
         elif self.type == 'BOOLEAN':
             return bool(int(self.value))
-
         elif self.type == 'JSON':
             return self.value_json
-
         return self.value
 
 
