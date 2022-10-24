@@ -52,6 +52,12 @@ undefined methods, rename your calls from ``_method()`` into ``method()``. See
 `the complete list of renamed methods <https://github.com/bihealth/sodar-core/issues/1020#issuecomment-1286961805>`_
 for more details.
 
+Timeline get_current_status() Method Removed
+--------------------------------------------
+
+The deprecated ``ProjectEvent.get_current_status()`` method in the Timeline app
+has been removed. Please use ``get_status()`` instead.
+
 
 v0.11.0 (2022-09-23)
 ********************

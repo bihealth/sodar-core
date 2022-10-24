@@ -136,14 +136,6 @@ class ProjectEvent(models.Model):
         """Return the current event status"""
         return self.status_changes.order_by('-timestamp').first()
 
-    def get_current_status(self):
-        """Return the current event status"""
-        logger.warning(
-            'ProjectEvent.get_current_status() is deprecated and will be '
-            'removed in SODAR Core v0.12: use get_status()'
-        )
-        return self.status_changes.order_by('-timestamp').first()
-
     def get_timestamp(self):
         """Return the timestamp of current status"""
         return self.status_changes.order_by('-timestamp').first().timestamp

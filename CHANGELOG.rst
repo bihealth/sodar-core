@@ -46,6 +46,8 @@ Removed
     - Unused ``about.html`` template (#1029)
 - **Projectroles**
     - Unused ``taskflow_testcase`` module (#1041)
+- **Timeline**
+    - Deprecated ``get_current_status()`` method (#1015)
 
 
 v0.11.0 (2022-09-23)
