@@ -24,31 +24,46 @@ roles as described in the next section.
 User Roles in Projects
 ======================
 
-A **role** is a data type that has a string identifier in it score (e.g.,
-"project guest"). Roles are assigned to individual users in the context of
-individual projects (a n:m relation from user to project with the string
-identifier). For example, user "paul" might be assigned the "project guest" role
-in one project and another (or no) role in a second project. Users can only have
-one role in a given project at any given time. New types of roles can be defined
-by extending the default model's database table of the projectroles app.
+A **role** is a model defined by a string identifier (e.g., "project guest").
+Roles are assigned to individual users in the context of individual projects
+in a n:m relation. For example, user "alice" might be assigned the
+"project guest" role in one project and another role (or no role at all) in a
+second project. Users can only have one role in a given project at any given
+time.
 
-The default setup of role types used in SODAR sites:
+Owner roles are inherited, so an owner of a category will always have ownership
+to subcategories and projects below it.
+
+New types of roles can be defined for third party by extending the default
+model's database table in the projectroles app. Existing SODAR Core apps do not
+fully support custom roles at the moment, but extended support is planned in a
+future release.
+
+The roles also specify a numeric rank for determining their level of priority in
+e.g. cases of promoting inherited roles or defining custom roles when that
+feature is included in the future.
+
+The built-in roles in SODAR Core are as follows:
 
 - **Project Owner**
     - Full read/write access to project data and roles
     - Can create sub-projects under owned categories
     - One per project
     - Must be specified upon project creation
+    - Rank = 10
 - **Project Delegate**
     - Full read/write access to project data
     - Can modify roles except for owner and delegate
     - One per project (by default, the limit can be increased in site settings)
     - Assigned by owner
+    - Rank = 20
 - **Project Contributor**
     - Can read and write project data
     - Can modify and delete own data
+    - Rank = 30
 - **Project Guest**
     - Read only access to project data
+    - Rank = 40
 
 .. note::
 

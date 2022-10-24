@@ -19,12 +19,12 @@ from markupfield.fields import MarkupField
 
 from projectroles.constants import get_sodar_constants
 
+
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 logger = logging.getLogger(__name__)
 
-# Access Django user model
-AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
-# Global SODAR constants
+# SODAR constants
 SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
@@ -76,7 +76,7 @@ class Project(models.Model):
     A SODAR project. Can have one parent category in case of nested
     projects. The project must be of a specific type, of which "CATEGORY" and
     "PROJECT" are currently implemented. "CATEGORY" projects are used as
-    containers for other projects
+    containers for other projects.
     """
 
     #: Project title
@@ -396,7 +396,6 @@ class Project(models.Model):
                     user, include_children=True, check_owner=False
                 ):
                     return True
-
         return False
 
     def get_parents(self):
@@ -426,7 +425,6 @@ class Project(models.Model):
             ).site
         except RemoteProject.DoesNotExist:
             pass
-
         return None
 
     def is_remote(self):
@@ -448,7 +446,6 @@ class Project(models.Model):
             remote_project = RemoteProject.objects.filter(
                 project=self, site=self.get_source_site()
             ).first()
-
             if (
                 remote_project
                 and remote_project.level
@@ -480,6 +477,12 @@ class Role(models.Model):
         max_length=64, unique=True, help_text='Name of role'
     )
 
+    #: Role rank for determining role hierarchy
+    rank = models.IntegerField(
+        default=0,  # 0 = No rank
+        help_text='Role rank for determining role hierarchy',
+    )
+
     #: Role description
     description = models.TextField(help_text='Role description')
 
@@ -500,10 +503,8 @@ class RoleAssignmentManager(models.Manager):
         """Return assignment of user to project, or None if not found"""
         if not user.is_authenticated:  # Anonymous users can't have roles
             return None
-
         try:
             return super().get_queryset().get(user=user, project=project)
-
         except RoleAssignment.DoesNotExist:
             return None
 
@@ -570,8 +571,9 @@ class RoleAssignment(models.Model):
         super().save(*args, **kwargs)
 
     def _validate_user(self):
-        """Validate fields to ensure user has only one role set for the
-        project"""
+        """
+        Validate fields to ensure user has only one role set for the project.
+        """
         assignment = RoleAssignment.objects.get_assignment(
             self.user, self.project
         )
@@ -584,11 +586,12 @@ class RoleAssignment(models.Model):
             )
 
     def _validate_owner(self):
-        """Validate role to ensure no more than one project owner is assigned
-        to a project"""
+        """
+        Validate role to ensure no more than one project owner is assigned to a
+        project.
+        """
         if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_OWNER']:
             owner = self.project.get_owner()
-
             if owner and (not self.pk or owner.pk != self.pk):
                 raise ValidationError(
                     'User {} already set as owner of {}'.format(
@@ -597,9 +600,10 @@ class RoleAssignment(models.Model):
                 )
 
     def _validate_delegate(self):
-        """Validate role to ensure no more than project delegate is
-        assigned to a project"""
-
+        """
+        Validate role to ensure no more than project delegate is assigned to a
+        project.
+        """
         # No validation if the project is a remote one
         if not (self.project.is_remote()):
             # Get project delegate limit
@@ -1010,7 +1014,6 @@ class RemoteSite(models.Model):
         projects = RemoteProject.objects.filter(site=self).order_by(
             '-date_access'
         )
-
         if projects.count() > 0:
             return projects.first().date_access
 
@@ -1156,7 +1159,6 @@ def handle_ldap_login(sender, user, **kwargs):
     """Signal for LDAP login handling"""
 
     if hasattr(user, 'ldap_username'):
-
         # Make domain in username uppercase
         if (
             user.username.find('@') != -1
@@ -1165,7 +1167,6 @@ def handle_ldap_login(sender, user, **kwargs):
             u_split = user.username.split('@')
             user.username = u_split[0] + '@' + u_split[1].upper()
             user.save()
-
         # Save user name from first_name and last_name into name
         if user.name in ['', None]:
             if user.first_name != '':

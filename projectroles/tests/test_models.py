@@ -405,6 +405,7 @@ class TestRole(TestCase):
         expected = {
             'id': self.role.pk,
             'name': PROJECT_ROLE_OWNER,
+            'rank': 10,
             'description': self.role.description,
         }
         self.assertEqual(model_to_dict(self.role), expected)
