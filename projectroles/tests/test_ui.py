@@ -69,7 +69,7 @@ class LiveUserMixin:
     """Mixin for creating users to work with LiveServerTestCase"""
 
     @classmethod
-    def _make_user(cls, user_name, superuser=False):
+    def make_user(cls, user_name, superuser=False):
         """Make user, superuser if superuser=True"""
         kwargs = {
             'username': user_name,
@@ -132,18 +132,18 @@ class TestUIBase(
         self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
         # Init users
-        self.superuser = self._make_user('admin', True)
-        self.user_owner = self._make_user('user_owner', False)
-        self.user_delegate = self._make_user('user_delegate', False)
-        self.user_contributor = self._make_user('user_contributor', False)
-        self.user_guest = self._make_user('user_guest', False)
-        self.user_no_roles = self._make_user('user_no_roles', False)
+        self.superuser = self.make_user('admin', True)
+        self.user_owner = self.make_user('user_owner', False)
+        self.user_delegate = self.make_user('user_delegate', False)
+        self.user_contributor = self.make_user('user_contributor', False)
+        self.user_guest = self.make_user('user_guest', False)
+        self.user_no_roles = self.make_user('user_no_roles', False)
 
         # Init category and project
-        self.category = self._make_project(
+        self.category = self.make_project(
             title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -151,18 +151,18 @@ class TestUIBase(
 
         # Init role assignments
         # Category
-        self._make_assignment(self.category, self.user_owner, self.role_owner)
+        self.make_assignment(self.category, self.user_owner, self.role_owner)
         # Sub level project
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-        self.delegate_as = self._make_assignment(
+        self.delegate_as = self.make_assignment(
             self.project, self.user_delegate, self.role_delegate
         )
-        self.contributor_as = self._make_assignment(
+        self.contributor_as = self.make_assignment(
             self.project, self.user_contributor, self.role_contributor
         )
-        self.guest_as = self._make_assignment(
+        self.guest_as = self.make_assignment(
             self.project, self.user_guest, self.role_guest
         )
 
@@ -567,7 +567,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
 
     def test_project_list_star(self):
         """Test project list star filter"""
-        self._make_tag(
+        self.make_tag(
             self.project, self.owner_as.user, name=PROJECT_TAG_STARRED
         )
         url = reverse('home')
@@ -641,7 +641,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         self, site_mode=SITE_MODE_TARGET, user_visibility=True
     ):
         """Create remote site and project with given user_visibility setting"""
-        self.remote_site = self._make_site(
+        self.remote_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=site_mode,
@@ -651,7 +651,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         )
 
         # Setup remote project pointing to local object
-        self.remote_project = self._make_remote_project(
+        self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.remote_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
@@ -702,8 +702,8 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
     def test_project_links_category(self):
         """Test visibility of top level category links"""
         # Add user with rights only for the subproject
-        sub_user = self._make_user('sub_user', False)
-        self._make_assignment(self.project, sub_user, self.role_contributor)
+        sub_user = self.make_user('sub_user', False)
+        self.make_assignment(self.project, sub_user, self.role_contributor)
 
         expected = [
             (
@@ -857,7 +857,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         """Test visibility of peer projects on TARGET site (user_display=False)"""
         # There needs to be a source mode remote project as master project,
         # otherwise peer project logic wont be reached
-        source_site = self._make_site(
+        source_site = self.make_site(
             name='Second Remote Site',
             url='second_remote.site',
             mode=SITE_MODE_SOURCE,
@@ -865,7 +865,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
             secret=build_secret(),
             user_display=True,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
@@ -904,7 +904,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         """Test invisibility of peer projects on TARGET site for users (user_display=False)"""
         # There needs to be a source mode remote project as master project,
         # otherwise peer project logic wont be reached
-        source_site = self._make_site(
+        source_site = self.make_site(
             name='Second Remote Site',
             url='second_remote.site',
             mode=SITE_MODE_SOURCE,
@@ -912,7 +912,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
             secret=build_secret(),
             user_display=False,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
@@ -980,7 +980,7 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
     def test_list_buttons_target(self):
         """Test visibility of role list button group as target"""
         # Set up site as target
-        self._set_up_as_target(projects=[self.category, self.project])
+        self.set_up_as_target(projects=[self.category, self.project])
 
         non_superusers = [
             self.owner_as.user,
@@ -1164,7 +1164,7 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
 
     def test_invite_buttons(self):
         """Test visibility of invite management buttons"""
-        self._make_invite(
+        self.make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -1193,8 +1193,8 @@ class TestProjectCreateView(TestUIBase):
     def test_owner_widget_sub(self):
         """Test rendering the owner widget under a category"""
         # Add new user, make them a contributor in category
-        new_user = self._make_user('new_user')
-        self._make_assignment(self.category, new_user, self.role_contributor)
+        new_user = self.make_user('new_user')
+        self.make_assignment(self.category, new_user, self.role_contributor)
         url = reverse(
             'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
@@ -1229,7 +1229,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestUIBase):
 
     def test_source_user_display(self):
         """Test site list user display elements on source site"""
-        self._make_site(
+        self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
@@ -1266,7 +1266,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestUIBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_target_list_user_display(self):
         """Test site list user display elements on target site"""
-        self._make_site(
+        self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
@@ -1369,7 +1369,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     def test_update_link_target(self):
         """Test visibility of update link as target"""
         # Set up site as target
-        self._set_up_as_target(projects=[self.category, self.project])
+        self.set_up_as_target(projects=[self.category, self.project])
 
         expected_true = [
             self.superuser,
@@ -1450,7 +1450,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     def test_create_link_target_remote(self):
         """Test visibility of create link as target under a remote category"""
         # Set up site as target
-        self._set_up_as_target(projects=[self.category, self.project])
+        self.set_up_as_target(projects=[self.category, self.project])
 
         expected_false = [
             self.superuser,
@@ -1502,7 +1502,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     )
     def test_create_link_target_disable(self):
         """Test visibility of create link as target with creation not allowed"""
-        self._set_up_as_target(projects=[self.category, self.project])
+        self.set_up_as_target(projects=[self.category, self.project])
         expected_false = [
             self.superuser,
             self.owner_as.user,
@@ -1603,7 +1603,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
 
     def test_link_active_role_invite_resend(self):
         """Test active status of link on the invite resend page"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -1622,7 +1622,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
 
     def test_link_active_role_invite_revoke(self):
         """Test active status of link on the invite revoke page"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,

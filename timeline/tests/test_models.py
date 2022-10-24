@@ -28,7 +28,7 @@ class ProjectEventMixin:
     """Helper mixin for ProjectEvent creation"""
 
     @classmethod
-    def _make_event(
+    def make_event(
         cls,
         project,
         app,
@@ -58,7 +58,7 @@ class ProjectEventObjectRefMixin:
     """Helper mixin for ProjectEventObjectRef creation"""
 
     @classmethod
-    def _make_object_ref(cls, event, obj, label, name, uuid, extra_data=None):
+    def make_object_ref(cls, event, obj, label, name, uuid, extra_data=None):
         values = {
             'event': event,
             'label': label,
@@ -76,7 +76,7 @@ class ProjectEventStatusMixin:
     """Helper mixin for ProjectEventStatus creation"""
 
     @classmethod
-    def _make_event_status(
+    def make_event_status(
         cls, event, status_type, description='', extra_data=None
     ):
         values = {
@@ -96,14 +96,14 @@ class TestProjectEventBase(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.user_owner = self.make_user('owner')
 
         # Init project, role and assignment
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
             name=PROJECT_ROLE_DELEGATE
         )[0]
-        self.assignment_owner = self._make_assignment(
+        self.assignment_owner = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
 
@@ -113,7 +113,7 @@ class TestProjectEvent(
 ):
     def setUp(self):
         super().setUp()
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
@@ -141,7 +141,7 @@ class TestProjectEvent(
 
     def test_initialization_no_project(self):
         """Test ProjectEvent initialization with no project"""
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=None,
             app='projectroles',
             user=self.user_owner,
@@ -166,7 +166,7 @@ class TestProjectEvent(
 
     def test_initialization_no_user(self):
         """Test ProjectEvent initialization with no user"""
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=None,
@@ -191,7 +191,7 @@ class TestProjectEvent(
 
     def test_initialization_plugin(self):
         """Test ProjectEvent initialization with specific plugin name"""
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=None,
             app='projectroles',
             plugin='plugin_name',
@@ -276,7 +276,7 @@ class TestProjectEventObjectRef(
     def setUp(self):
         super().setUp()
 
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
@@ -286,7 +286,7 @@ class TestProjectEventObjectRef(
             extra_data={'test_key': 'test_val'},
         )
 
-        self.obj_ref = self._make_object_ref(
+        self.obj_ref = self.make_object_ref(
             event=self.event,
             obj=self.assignment_owner,
             label='test_label',
@@ -327,7 +327,7 @@ class TestProjectEventObjectRef(
 
         # Init new user and role
         new_user = self.make_user('new_user')
-        new_as = self._make_assignment(
+        new_as = self.make_assignment(
             self.project, new_user, self.role_delegate
         )
 
@@ -365,7 +365,7 @@ class TestProjectEventStatus(
     def setUp(self):
         super().setUp()
 
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
@@ -375,14 +375,14 @@ class TestProjectEventStatus(
             extra_data={'test_key': 'test_val'},
         )
 
-        self.event_status_submit = self._make_event_status(
+        self.event_status_submit = self.make_event_status(
             event=self.event,
             status_type='SUBMIT',
             description='SUBMIT',
             extra_data={'test_key': 'test_val'},
         )
 
-        self.event_status_ok = self._make_event_status(
+        self.event_status_ok = self.make_event_status(
             event=self.event,
             status_type='OK',
             description='OK',
@@ -409,7 +409,7 @@ class TestProjectEventStatus(
             'description': 'OK',
             'extra_data': {'test_key': 'test_val'},
         }
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=None,

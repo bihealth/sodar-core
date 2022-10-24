@@ -239,7 +239,7 @@ class AppSettingInitMixin:
                 kwargs['project'] = s['project']
             if 'user' in s:
                 kwargs['user'] = s['user']
-            self._make_setting(**kwargs)
+            self.make_setting(**kwargs)
         return self.settings
 
 
@@ -256,14 +256,14 @@ class TestAppSettingAPI(
 
     def setUp(self):
         # Init project
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
         # Init role
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
         # Init user & role
         self.user = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
         # Init test data

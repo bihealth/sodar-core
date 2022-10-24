@@ -41,7 +41,7 @@ class ListCreateAPITimelineMixin(FilesfoldersTimelineMixin):
         # Actually perform the creation
         super().perform_create(serializer)
         # Register creation with timeline
-        self._add_item_modify_event(
+        self.add_item_modify_event(
             obj=serializer.instance, request=self.request, view_action='create'
         )
 
@@ -70,7 +70,7 @@ class RetrieveUpdateDestroyAPITimelineMixin(FilesfoldersTimelineMixin):
         super().perform_update(serializer)
 
         # Register update with timeline
-        self._add_item_modify_event(
+        self.add_item_modify_event(
             obj=serializer.instance,
             request=self.request,
             view_action='update',

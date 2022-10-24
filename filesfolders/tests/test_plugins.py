@@ -57,17 +57,17 @@ class TestPlugins(
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
 
         # Init project and owner role
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Init file
         self.file_content = bytes('content'.encode('utf-8'))
 
-        self.file = self._make_file(
+        self.file = self.make_file(
             name='file.txt',
             file_name='file.txt',
             file_content=self.file_content,
@@ -80,7 +80,7 @@ class TestPlugins(
         )
 
         # Init folder
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -89,7 +89,7 @@ class TestPlugins(
         )
 
         # Init link
-        self.hyperlink = self._make_hyperlink(
+        self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
             project=self.project,

@@ -134,10 +134,10 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
 
     def test_create_in_category(self):
         """Test creation of new folder in a category (should fail)"""
-        category = self._make_project(
+        category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(category, self.user, self.role_owner)
+        self.make_assignment(category, self.user, self.role_owner)
         response = self.request_knox(
             reverse(
                 'filesfolders:api_folder_list_create',
@@ -349,10 +349,10 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
 
     def test_create_in_category(self):
         """Test creation of new file in a category (should fail)"""
-        category = self._make_project(
+        category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(category, self.user, self.role_owner)
+        self.make_assignment(category, self.user, self.role_owner)
         response = self.request_knox(
             reverse(
                 'filesfolders:api_file_list_create',
@@ -604,10 +604,10 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
 
     def test_create_in_category(self):
         """Test creation of new hyperlink in a category (should fail)"""
-        category = self._make_project(
+        category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(category, self.user, self.role_owner)
+        self.make_assignment(category, self.user, self.role_owner)
         response = self.request_knox(
             reverse(
                 'filesfolders:api_hyperlink_list_create',

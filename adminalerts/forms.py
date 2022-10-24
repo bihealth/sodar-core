@@ -1,3 +1,5 @@
+"""Forms for the adminalerts app"""
+
 from django import forms
 from django.utils import timezone
 
@@ -23,7 +25,6 @@ class AdminAlertForm(SODARModelForm):
     def __init__(self, current_user=None, *args, **kwargs):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
-
         self.current_user = current_user
 
         # Set date_expire properties
@@ -32,7 +33,6 @@ class AdminAlertForm(SODARModelForm):
         self.fields['date_expire'].widget = forms.widgets.DateInput(
             attrs={'type': 'date'}, format='%Y-%m-%d'
         )
-
         # Set description widget with preview
         self.fields['description'].widget = SODARPagedownWidget(
             attrs={'show_preview': True}
@@ -43,7 +43,6 @@ class AdminAlertForm(SODARModelForm):
             self.fields[
                 'date_expire'
             ].initial = timezone.now() + timezone.timedelta(days=1)
-
         # Updating
         else:  # self.instance.pk
             # Set description value as raw markdown
@@ -51,13 +50,11 @@ class AdminAlertForm(SODARModelForm):
 
     def clean(self):
         """Custom form validation and cleanup"""
-
         # Don't allow alerts to expire in the past :)
         if self.cleaned_data.get('date_expire') <= timezone.now():
             self.add_error(
                 'date_expire', 'Expiry date must be set in the future'
             )
-
         return self.cleaned_data
 
     def save(self, *args, **kwargs):

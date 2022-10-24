@@ -19,14 +19,14 @@ class TestTimelineAjaxPermissions(
 
     def setUp(self):
         super().setUp()
-        self.event = self._make_event(
+        self.event = self.make_event(
             self.project, 'projectroles', self.user_owner, 'project_create'
         )
-        self._make_event_status(self.event, 'OK')
-        self.site_event = self._make_event(
+        self.make_event_status(self.event, 'OK')
+        self.site_event = self.make_event(
             None, 'projectroles', self.user_owner, 'test_event'
         )
-        self._make_event_status(self.site_event, 'OK')
+        self.make_event_status(self.site_event, 'OK')
         self.regular_user = self.make_user('regular_user')
 
     def test_detail_project(self):

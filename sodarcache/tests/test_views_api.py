@@ -52,10 +52,10 @@ class TestViewsBase(JsonCacheItemMixin, TestJsonCacheItemBase):
         self.user.save()
 
         # Init project
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -74,7 +74,6 @@ class TestSodarCacheGetAPIView(TestViewsBase):
 
     def test_get_wrong_item(self):
         values = {'app_name': TEST_APP_NAME, 'name': 'not_test_item'}
-
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -104,7 +103,6 @@ class TestSodarCacheGetAPIView(TestViewsBase):
             'data': {'test_key': 'test_val'},
             'sodar_uuid': str(self.item.sodar_uuid),
         }
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected)
 
@@ -119,8 +117,6 @@ class TestSodarCacheSetAPIView(TestViewsBase):
             'name': 'new_test_item',
             'data': json.dumps({'test_key': 'test_val'}),
         }
-
-        # Assert precondition
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
 
         with self.login(self.user):
@@ -134,10 +130,8 @@ class TestSodarCacheSetAPIView(TestViewsBase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(JSONCacheItem.objects.all().count(), 2)
-
         item = JSONCacheItem.objects.get(name='new_test_item')
         self.assertIsNotNone(item)
-
         expected = {
             'id': item.pk,
             'project': self.project.pk,
@@ -147,7 +141,6 @@ class TestSodarCacheSetAPIView(TestViewsBase):
             'data': json.dumps({'test_key': 'test_val'}),
             'sodar_uuid': item.sodar_uuid,
         }
-
         model_dict = model_to_dict(item)
         self.assertEqual(model_dict, expected)
 
@@ -158,8 +151,6 @@ class TestSodarCacheSetAPIView(TestViewsBase):
             'name': 'test_item',
             'data': json.dumps({'test_key': 'test_val_updated'}),
         }
-
-        # Assert precondition
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
 
         with self.login(self.user):
@@ -173,10 +164,8 @@ class TestSodarCacheSetAPIView(TestViewsBase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
-
         item = JSONCacheItem.objects.get(name='test_item')
         self.assertIsNotNone(item)
-
         expected = {
             'id': item.pk,
             'project': self.project.pk,
@@ -186,7 +175,6 @@ class TestSodarCacheSetAPIView(TestViewsBase):
             'data': json.dumps({'test_key': 'test_val_updated'}),
             'sodar_uuid': item.sodar_uuid,
         }
-
         model_dict = model_to_dict(item)
         self.assertEqual(model_dict, expected)
 
@@ -195,9 +183,8 @@ class TestSodarCacheGetDateAPIView(TestViewsBase):
     """Tests for the sodarcache item update time getting API view"""
 
     def test_get_time(self):
-        # Assert precondition
+        """Test retrieving cache item update time"""
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
-
         values = {'app_name': TEST_APP_NAME, 'name': 'test_item'}
 
         with self.login(self.user):
@@ -212,6 +199,5 @@ class TestSodarCacheGetDateAPIView(TestViewsBase):
         expected = self.cache_backend.get_update_time(
             app_name=TEST_APP_NAME, name='test_item'
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['update_time'], expected)

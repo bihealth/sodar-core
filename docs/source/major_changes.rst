@@ -42,6 +42,16 @@ Hiding project app links from the project sidebar and project dropdown with
 themselves can still be accessed if relevant URL are known or links provided to
 them elsewhere on the site.
 
+Incorrectly Protected Mixin Methods Renamed
+-------------------------------------------
+
+This release renames a large number of mixin methods in SODAR Core which had
+incorrectly set as protected by the ``_method_name()`` syntax. This affects many
+commonly used helpers in unit tests. If your tests fail with errors regarding
+undefined methods, rename your calls from ``_method()`` into ``method()``. See
+`the complete list of renamed methods <https://github.com/bihealth/sodar-core/issues/1020#issuecomment-1286961805>`_
+for more details.
+
 
 v0.11.0 (2022-09-23)
 ********************

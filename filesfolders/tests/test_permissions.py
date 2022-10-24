@@ -70,7 +70,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
     def setUp(self):
         super().setUp()
 
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -196,7 +196,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         self.file_content = bytes('content'.encode('utf-8'))
 
         # Init file
-        self.file = self._make_file(
+        self.file = self.make_file(
             name='file.txt',
             file_name='file.txt',
             file_content=self.file_content,
@@ -410,7 +410,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         super().setUp()
 
         # Init link
-        self.hyperlink = self._make_hyperlink(
+        self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
             project=self.project,
@@ -530,7 +530,7 @@ class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
     def setUp(self):
         super().setUp()
 
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,

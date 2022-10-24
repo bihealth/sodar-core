@@ -17,21 +17,17 @@ class TestViewsBase(AdminAlertMixin, TestCase):
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
-
         self.regular_user = self.make_user('regular_user')
-
         # No user
         self.anonymous = None
-
         # Create alert
-        self.alert = self._make_alert(
+        self.alert = self.make_alert(
             message='alert',
             user=self.superuser,
             description='description',
             active=True,
             require_auth=True,
         )
-
         self.expiry_str = (
             timezone.now() + timezone.timedelta(days=1)
         ).strftime('%Y-%m-%d')
@@ -44,11 +40,9 @@ class TestAdminAlertListView(TestViewsBase):
         """Test rendering of the alert list view"""
         with self.login(self.superuser):
             response = self.client.get(reverse('adminalerts:list'))
-            self.assertEqual(response.status_code, 200)
-            self.assertIsNotNone(response.context['object_list'])
-            self.assertEqual(
-                response.context['object_list'][0].pk, self.alert.pk
-            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['object_list'])
+        self.assertEqual(response.context['object_list'][0].pk, self.alert.pk)
 
 
 class TestAdminAlertDetailView(TestViewsBase):
@@ -63,8 +57,8 @@ class TestAdminAlertDetailView(TestViewsBase):
                     kwargs={'adminalert': self.alert.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object'], self.alert)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'], self.alert)
 
 
 class TestAdminAlertCreateView(TestViewsBase):
@@ -74,14 +68,11 @@ class TestAdminAlertCreateView(TestViewsBase):
         """Test rendering of the alert creation view"""
         with self.login(self.superuser):
             response = self.client.get(reverse('adminalerts:create'))
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_create(self):
         """Test creating an admin alert"""
-
-        # Assert precondition
         self.assertEqual(AdminAlert.objects.all().count(), 1)
-
         post_data = {
             'message': 'new alert',
             'description': 'description',
@@ -89,27 +80,20 @@ class TestAdminAlertCreateView(TestViewsBase):
             'active': 1,
             'require_auth': 1,
         }
-
         with self.login(self.superuser):
             response = self.client.post(
                 reverse('adminalerts:create'), post_data
             )
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(response.url, reverse('adminalerts:list'))
-
-        # Assert postcondition
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('adminalerts:list'))
         self.assertEqual(AdminAlert.objects.all().count(), 2)
 
     def test_create_expired(self):
         """Test creating an admin alert with and old date_expiry (should fail)"""
-
-        # Assert precondition
         self.assertEqual(AdminAlert.objects.all().count(), 1)
-
         expiry_fail = (timezone.now() + timezone.timedelta(days=-1)).strftime(
             '%Y-%m-%d'
         )
-
         post_data = {
             'message': 'new alert',
             'description': 'description',
@@ -117,14 +101,11 @@ class TestAdminAlertCreateView(TestViewsBase):
             'active': 1,
             'require_auth': 1,
         }
-
         with self.login(self.superuser):
             response = self.client.post(
                 reverse('adminalerts:create'), post_data
             )
-            self.assertEqual(response.status_code, 200)
-
-        # Assert postcondition
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(AdminAlert.objects.all().count(), 1)
 
 
@@ -140,12 +121,10 @@ class TestAdminAlertUpdateView(TestViewsBase):
                     kwargs={'adminalert': self.alert.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_update(self):
         """Test updating an admin alert"""
-
-        # Assert precondition
         self.assertEqual(AdminAlert.objects.all().count(), 1)
 
         post_data = {
@@ -154,7 +133,6 @@ class TestAdminAlertUpdateView(TestViewsBase):
             'date_expire': self.expiry_str,
             'active': '',
         }
-
         with self.login(self.superuser):
             response = self.client.post(
                 reverse(
@@ -163,10 +141,9 @@ class TestAdminAlertUpdateView(TestViewsBase):
                 ),
                 post_data,
             )
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(response.url, reverse('adminalerts:list'))
 
-        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('adminalerts:list'))
         self.assertEqual(AdminAlert.objects.all().count(), 1)
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.message, 'updated alert')
@@ -185,7 +162,6 @@ class TestAdminAlertUpdateView(TestViewsBase):
             'date_expire': self.expiry_str,
             'active': '',
         }
-
         with self.login(superuser2):
             response = self.client.post(
                 reverse(
@@ -194,9 +170,9 @@ class TestAdminAlertUpdateView(TestViewsBase):
                 ),
                 post_data,
             )
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(response.url, reverse('adminalerts:list'))
 
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('adminalerts:list'))
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.user, superuser2)
 
@@ -213,14 +189,11 @@ class TestAdminAlertDeleteView(TestViewsBase):
                     kwargs={'adminalert': self.alert.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_delete(self):
         """Test deleting an admin alert"""
-
-        # Assert precondition
         self.assertEqual(AdminAlert.objects.all().count(), 1)
-
         with self.login(self.superuser):
             response = self.client.post(
                 reverse(
@@ -228,8 +201,6 @@ class TestAdminAlertDeleteView(TestViewsBase):
                     kwargs={'adminalert': self.alert.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(response.url, reverse('adminalerts:list'))
-
-        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('adminalerts:list'))
         self.assertEqual(AdminAlert.objects.all().count(), 0)

@@ -31,7 +31,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
 
     def setUp(self):
         super().setUp()
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -284,7 +284,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         )
 
         def _make_folder():
-            folder = self._make_folder(
+            folder = self.make_folder(
                 name='folder',
                 project=self.project,
                 folder=None,
@@ -325,7 +325,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_folder_destroy_anon(self):
         """Test permissions for folder destroying with anonymous access"""
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -346,7 +346,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
     def setUp(self):
         super().setUp()
         self.file_content = bytes('content'.encode('utf-8'))
-        self.file = self._make_file(
+        self.file = self.make_file(
             name='file.txt',
             file_name='file.txt',
             file_content=self.file_content,
@@ -720,7 +720,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
 
         def _make_file():
-            file = self._make_file(
+            file = self.make_file(
                 name='file2.txt',
                 file_name='file2.txt',
                 file_content=self.file_content,
@@ -770,7 +770,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_file_destroy_anon(self):
         """Test permissions for file destroying with anonymous access"""
-        file = self._make_file(
+        file = self.make_file(
             name='file2.txt',
             file_name='file2.txt',
             file_content=self.file_content,
@@ -831,7 +831,7 @@ class TestHyperLinkAPIPermissions(
 
     def setUp(self):
         super().setUp()
-        self.hyperlink = self._make_hyperlink(
+        self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
             project=self.project,
@@ -1089,7 +1089,7 @@ class TestHyperLinkAPIPermissions(
         )
 
         def _make_hyperlink():
-            link = self._make_hyperlink(
+            link = self.make_hyperlink(
                 name='New Link',
                 url='http://www.duckduckgo.com/',
                 project=self.project,
@@ -1140,7 +1140,7 @@ class TestHyperLinkAPIPermissions(
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_hyperlink_destroy_anon(self):
         """Test permissions for hyperlink destroying with anonymous access"""
-        link = self._make_hyperlink(
+        link = self.make_hyperlink(
             name='New Link',
             url='http://www.duckduckgo.com/',
             project=self.project,

@@ -136,13 +136,13 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -168,13 +168,13 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
         self.plugins = get_active_plugins(plugin_type='project_app')
@@ -232,13 +232,13 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_advanced(self):
         """Test input from advanced search"""
-        new_project = self._make_project(
+        new_project = self.make_project(
             'AnotherProject',
             PROJECT_TYPE_PROJECT,
             self.category,
             description='xxx',
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             new_project, self.user, self.role_owner
         )
 
@@ -258,13 +258,13 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_advanced_short_input(self):
         """Test input from advanced search with a short term (< 3 characters)"""
-        new_project = self._make_project(
+        new_project = self.make_project(
             'AnotherProject',
             PROJECT_TYPE_PROJECT,
             self.category,
             description='xxx',
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             new_project, self.user, self.role_owner
         )
 
@@ -280,13 +280,13 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_advanced_empty_input(self):
         """Test input from advanced search with empty term (should be ignored)"""
-        new_project = self._make_project(
+        new_project = self.make_project(
             'AnotherProject',
             PROJECT_TYPE_PROJECT,
             self.category,
             description='xxx',
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             new_project, self.user, self.role_owner
         )
 
@@ -347,10 +347,10 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -416,10 +416,10 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_sub(self):
         """Test rendering if creating a subproject"""
-        category = self._make_project(
+        category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(category, self.user, self.role_owner)
+        self.make_assignment(category, self.user, self.role_owner)
         # Create another user to enable checking for owner selection
         self.make_user('new_user')
 
@@ -453,12 +453,12 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_sub_cat_member(self):
         """Test rendering under a category as a category non-owner"""
-        category = self._make_project(
+        category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(category, self.user, self.role_owner)
+        self.make_assignment(category, self.user, self.role_owner)
         new_user = self.make_user('new_user')
-        self._make_assignment(category, new_user, self.role_contributor)
+        self.make_assignment(category, new_user, self.role_contributor)
 
         with self.login(new_user):
             response = self.client.get(
@@ -474,8 +474,8 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_sub_project(self):
         """Test rendering if creating under a project (should fail)"""
-        project = self._make_project('TestProject', PROJECT_TYPE_PROJECT, None)
-        self._make_assignment(project, self.user, self.role_owner)
+        project = self.make_project('TestProject', PROJECT_TYPE_PROJECT, None)
+        self.make_assignment(project, self.user, self.role_owner)
         # Create another user to enable checking for owner selection
         self.make_user('new_user')
 
@@ -501,11 +501,11 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_parent_owner(self):
         """Test rendering with parent owner as initial value"""
-        category = self._make_project(
+        category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         user_new = self.make_user('new_user')
-        self._make_assignment(category, user_new, self.role_owner)
+        self.make_assignment(category, user_new, self.role_owner)
 
         with self.login(self.user):
             response = self.client.get(
@@ -666,12 +666,12 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     def test_create_project_cat_member(self):
         """Test Project creation as category member"""
         # Create category and add new user as member
-        category = self._make_project(
+        category = self.make_project(
             title='TestCategory', type=PROJECT_TYPE_CATEGORY, parent=None
         )
-        self._make_assignment(category, self.user, self.role_owner)
+        self.make_assignment(category, self.user, self.role_owner)
         new_user = self.make_user('new_user')
-        self._make_assignment(category, new_user, self.role_contributor)
+        self.make_assignment(category, new_user, self.role_contributor)
 
         values = {
             'title': 'TestProject',
@@ -709,16 +709,16 @@ class TestProjectUpdateView(
 
     def setUp(self):
         super().setUp()
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
         app_alerts = get_backend_api('appalerts_backend')
@@ -748,10 +748,10 @@ class TestProjectUpdateView(
         self.owner_as.user = user_new
         self.owner_as.save()
         # Create another category with new user as owner
-        category2 = self._make_project(
+        category2 = self.make_project(
             'TestCategory2', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(category2, user_new, self.role_owner)
+        self.make_assignment(category2, user_new, self.role_owner)
 
         with self.login(user_new):
             response = self.client.get(
@@ -770,8 +770,8 @@ class TestProjectUpdateView(
     def test_update_project(self):
         """Test Project updating"""
         timeline = get_backend_api('timeline_backend')
-        new_category = self._make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
-        self._make_assignment(new_category, self.user, self.role_owner)
+        new_category = self.make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
+        self.make_assignment(new_category, self.user, self.role_owner)
 
         self.assertEqual(Project.objects.all().count(), 3)
 
@@ -940,10 +940,10 @@ class TestProjectUpdateView(
 
     def test_update_category_parent(self):
         """Test category parent updating to ensure titles are changed"""
-        new_category = self._make_project(
+        new_category = self.make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(new_category, self.user, self.role_owner)
+        self.make_assignment(new_category, self.user, self.role_owner)
 
         self.assertEqual(
             self.category.full_title,
@@ -1023,7 +1023,7 @@ class TestProjectUpdateView(
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_render_remote(self):
         """Test rendering form for remote site as target"""
-        self._set_up_as_target(projects=[self.category, self.project])
+        self.set_up_as_target(projects=[self.category, self.project])
 
         with self.login(self.user):
             response = self.client.get(
@@ -1069,7 +1069,7 @@ class TestProjectUpdateView(
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_update_remote(self):
         """Test updating remote project as target"""
-        self._set_up_as_target(projects=[self.category, self.project])
+        self.set_up_as_target(projects=[self.category, self.project])
 
         values = model_to_dict(self.project)
         values['owner'] = self.user.sodar_uuid
@@ -1118,15 +1118,15 @@ class TestProjectSettingsForm(
     def setUp(self):
         super().setUp()
         # Init user & role
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Init string setting
-        self.setting_str = self._make_setting(
+        self.setting_str = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting',
             setting_type='STRING',
@@ -1135,7 +1135,7 @@ class TestProjectSettingsForm(
         )
 
         # Init string setting with options
-        self.setting_str_options = self._make_setting(
+        self.setting_str_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting_options',
             setting_type='STRING',
@@ -1144,7 +1144,7 @@ class TestProjectSettingsForm(
         )
 
         # Init integer setting
-        self.setting_int = self._make_setting(
+        self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting',
             setting_type='INTEGER',
@@ -1153,7 +1153,7 @@ class TestProjectSettingsForm(
         )
 
         # Init integer setting with options
-        self.setting_int_options = self._make_setting(
+        self.setting_int_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting_options',
             setting_type='INTEGER',
@@ -1162,7 +1162,7 @@ class TestProjectSettingsForm(
         )
 
         # Init boolean setting
-        self.setting_bool = self._make_setting(
+        self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_bool_setting',
             setting_type='BOOLEAN',
@@ -1171,7 +1171,7 @@ class TestProjectSettingsForm(
         )
 
         # Init json setting
-        self.setting_json = self._make_setting(
+        self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_json_setting',
             setting_type='JSON',
@@ -1185,7 +1185,7 @@ class TestProjectSettingsForm(
         )
 
         # Init IP restrict setting
-        self.setting_ip_restrict = self._make_setting(
+        self.setting_ip_restrict = self.make_setting(
             app_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
@@ -1194,7 +1194,7 @@ class TestProjectSettingsForm(
         )
 
         # Init IP allowlist setting
-        self.setting_ip_allowlist = self._make_setting(
+        self.setting_ip_allowlist = self.make_setting(
             app_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
@@ -1417,15 +1417,15 @@ class TestProjectSettingsFormTarget(
     def setUp(self):
         super().setUp()
         # Init user & role
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Create site
-        self.site = self._make_site(
+        self.site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
@@ -1433,7 +1433,7 @@ class TestProjectSettingsFormTarget(
             secret=REMOTE_SITE_SECRET,
         )
 
-        self.remote_project = self._make_remote_project(
+        self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=self.site,
@@ -1441,7 +1441,7 @@ class TestProjectSettingsFormTarget(
         )
 
         # Init string setting
-        self.setting_str = self._make_setting(
+        self.setting_str = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting',
             setting_type='STRING',
@@ -1450,7 +1450,7 @@ class TestProjectSettingsFormTarget(
         )
 
         # Init string setting with options
-        self.setting_str_options = self._make_setting(
+        self.setting_str_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting_options',
             setting_type='STRING',
@@ -1459,7 +1459,7 @@ class TestProjectSettingsFormTarget(
         )
 
         # Init integer setting
-        self.setting_int = self._make_setting(
+        self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting',
             setting_type='INTEGER',
@@ -1468,7 +1468,7 @@ class TestProjectSettingsFormTarget(
         )
 
         # Init integer setting with options
-        self.setting_int_options = self._make_setting(
+        self.setting_int_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting_options',
             setting_type='INTEGER',
@@ -1477,7 +1477,7 @@ class TestProjectSettingsFormTarget(
         )
 
         # Init boolean setting
-        self.setting_bool = self._make_setting(
+        self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_bool_setting',
             setting_type='BOOLEAN',
@@ -1486,7 +1486,7 @@ class TestProjectSettingsFormTarget(
         )
 
         # Init json setting
-        self.setting_json = self._make_setting(
+        self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_json_setting',
             setting_type='JSON',
@@ -1700,15 +1700,15 @@ class TestProjectSettingsFormTargetLocal(
     def setUp(self):
         super().setUp()
         # Init user & role
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Create site
-        self.site = self._make_site(
+        self.site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
@@ -1716,7 +1716,7 @@ class TestProjectSettingsFormTargetLocal(
             secret=REMOTE_SITE_SECRET,
         )
 
-        self.remote_project = self._make_remote_project(
+        self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=self.site,
@@ -1724,7 +1724,7 @@ class TestProjectSettingsFormTargetLocal(
         )
 
         # Init string setting
-        self.setting_str = self._make_setting(
+        self.setting_str = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting',
             setting_type='STRING',
@@ -1733,7 +1733,7 @@ class TestProjectSettingsFormTargetLocal(
         )
 
         # Init string setting with options
-        self.setting_str_options = self._make_setting(
+        self.setting_str_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting_options',
             setting_type='STRING',
@@ -1742,7 +1742,7 @@ class TestProjectSettingsFormTargetLocal(
         )
 
         # Init integer setting
-        self.setting_int = self._make_setting(
+        self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting',
             setting_type='INTEGER',
@@ -1751,7 +1751,7 @@ class TestProjectSettingsFormTargetLocal(
         )
 
         # Init integer setting with options
-        self.setting_int_options = self._make_setting(
+        self.setting_int_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting_options',
             setting_type='INTEGER',
@@ -1760,7 +1760,7 @@ class TestProjectSettingsFormTargetLocal(
         )
 
         # Init boolean setting
-        self.setting_bool = self._make_setting(
+        self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_bool_setting',
             setting_type='BOOLEAN',
@@ -1769,7 +1769,7 @@ class TestProjectSettingsFormTargetLocal(
         )
 
         # Init json setting
-        self.setting_json = self._make_setting(
+        self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_json_setting',
             setting_type='JSON',
@@ -1987,24 +1987,24 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
 
         # Set superuser as owner
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Set new user as delegate
         self.user_delegate = self.make_user('delegate')
-        self.delegate_as = self._make_assignment(
+        self.delegate_as = self.make_assignment(
             self.project, self.user_delegate, self.role_delegate
         )
 
         # Set another new user as guest (= one of the member roles)
         self.user_new = self.make_user('guest')
-        self.guest_as = self._make_assignment(
+        self.guest_as = self.make_assignment(
             self.project, self.user_new, self.role_guest
         )
 
@@ -2069,18 +2069,18 @@ class TestRoleAssignmentCreateView(
         super().setUp()
 
         # Set up category and project
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.user_owner_cat = self.make_user('owner_cat')
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user_owner_cat, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.user_owner = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
         self.user_new = self.make_user('guest')
@@ -2223,7 +2223,7 @@ class TestRoleAssignmentCreateView(
     def test_create_delegate_limit_reached(self):
         """Test RoleAssignment creation with exceeded delegate limit"""
         del_user = self.make_user('new_del_user')
-        self._make_assignment(self.project, del_user, self.role_delegate)
+        self.make_assignment(self.project, del_user, self.role_delegate)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
 
         values = {
@@ -2252,7 +2252,7 @@ class TestRoleAssignmentCreateView(
     def test_create_delegate_limit_increased(self):
         """Test RoleAssignment creation with delegate limit > 1"""
         del_user = self.make_user('new_del_user')
-        self._make_assignment(self.project, del_user, self.role_delegate)
+        self.make_assignment(self.project, del_user, self.role_delegate)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
 
         values = {
@@ -2279,7 +2279,7 @@ class TestRoleAssignmentCreateView(
 
     def test_create_delegate_limit_inherited(self):
         """Test creation with existing delegate role for inherited owner"""
-        self._make_assignment(
+        self.make_assignment(
             self.project, self.user_owner_cat, self.role_delegate
         )
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
@@ -2380,24 +2380,24 @@ class TestRoleAssignmentUpdateView(
         super().setUp()
 
         # Set up category and project
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.user_owner_cat = self.make_user('owner_cat')
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user_owner_cat, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.user_owner = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
 
         # Create guest user and role
         self.user_new = self.make_user('new_user')
-        self.role_as = self._make_assignment(
+        self.role_as = self.make_assignment(
             self.project, self.user_new, self.role_guest
         )
 
@@ -2531,7 +2531,7 @@ class TestRoleAssignmentUpdateView(
     def test_update_delegate_limit_reached(self):
         """Test RoleAssignment updating with exceeded delegate limit"""
         del_user = self.make_user('new_del_user')
-        self._make_assignment(self.project, del_user, self.role_delegate)
+        self.make_assignment(self.project, del_user, self.role_delegate)
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
 
         values = {
@@ -2563,7 +2563,7 @@ class TestRoleAssignmentUpdateView(
     def test_update_delegate_limit_increased(self):
         """Test RoleAssignment updating with delegate limit > 1"""
         del_user = self.make_user('new_del_user')
-        self._make_assignment(self.project, del_user, self.role_delegate)
+        self.make_assignment(self.project, del_user, self.role_delegate)
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project, role=self.role_delegate
@@ -2595,7 +2595,7 @@ class TestRoleAssignmentUpdateView(
 
     def test_update_delegate_limit_inherited(self):
         """Test updating with existing delegate role for inherited owner"""
-        self._make_assignment(
+        self.make_assignment(
             self.project, self.user_owner_cat, self.role_delegate
         )
         self.assertEqual(
@@ -2637,15 +2637,15 @@ class TestRoleAssignmentDeleteView(
     def setUp(self):
         super().setUp()
 
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
         # Create guest user and role
         self.user_new = self.make_user('guest')
-        self.role_as = self._make_assignment(
+        self.role_as = self.make_assignment(
             self.project, self.user_new, self.role_guest
         )
 
@@ -2729,7 +2729,7 @@ class TestRoleAssignmentDeleteView(
     def test_delete_delegate(self):
         """Test RoleAssignment delegate deleting by contributor (should fail)"""
         contrib_user = self.make_user('contrib_user')
-        self._make_assignment(self.project, contrib_user, self.role_contributor)
+        self.make_assignment(self.project, contrib_user, self.role_contributor)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
 
         with self.login(contrib_user):
@@ -2750,23 +2750,23 @@ class TestRoleAssignmentOwnerTransferView(
         super().setUp()
 
         # Set up category and project
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.user_owner_cat = self.make_user('owner_cat')
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user_owner_cat, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.user_owner = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
         # Create guest user and role
         self.user_new = self.make_user('guest')
-        self.role_as = self._make_assignment(
+        self.role_as = self.make_assignment(
             self.project, self.user_new, self.role_guest
         )
 
@@ -2860,10 +2860,10 @@ class TestProjectInviteCreateView(
 
     def setUp(self):
         super().setUp()
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
         self.new_user = self.make_user('new_user')
@@ -2995,7 +2995,7 @@ class TestProjectInviteAcceptView(
     @override_settings(ENABLE_LDAP=True)
     def test_accept_ldap(self):
         """Test accepting an LDAP invite"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3054,7 +3054,7 @@ class TestProjectInviteAcceptView(
     @override_settings(ENABLE_LDAP=True)
     def test_accept_ldap_expired(self):
         """Test accepting an expired LDAP invite"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3111,7 +3111,7 @@ class TestProjectInviteAcceptView(
     def test_accept_local(self):
         """Test accepting local invite (user doesn't exist and no user is logged in)"""
         # Init invite
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3206,7 +3206,7 @@ class TestProjectInviteAcceptView(
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_accept_expired_local(self):
         """Test user accepting an expired local invite"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3264,7 +3264,7 @@ class TestProjectInviteAcceptView(
     @override_settings(ENABLE_LDAP=True)
     def test_accept_wrong_type_local(self):
         """Test accepting a local invite in the view processing LDAP invites"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email='test@different.com',
             project=self.project,
             role=self.role_contributor,
@@ -3296,7 +3296,7 @@ class TestProjectInviteAcceptView(
     @override_settings(ENABLE_LDAP=True)
     def test_accept_wrong_type_ldap(self):
         """Test accepting a LDAP invite in the view processing local invites"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3323,7 +3323,7 @@ class TestProjectInviteAcceptView(
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
     def test_accept_local_user_not_allowed(self):
         """Test accepting a local invite while local users are disabled"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3356,7 +3356,7 @@ class TestProjectInviteAcceptView(
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
     def test_process_local_user_not_allowed(self):
         """Test processing local invite while local users are disabled"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3383,7 +3383,7 @@ class TestProjectInviteAcceptView(
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_accept_no_local_user_different_user_logged_in(self):
         """Test processing local invite while invited user doesn't exist and different user is logged in"""
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3412,7 +3412,7 @@ class TestProjectInviteAcceptView(
         invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
         invited_user.email = INVITE_EMAIL
         invited_user.save()
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3441,7 +3441,7 @@ class TestProjectInviteAcceptView(
         invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
         invited_user.email = INVITE_EMAIL
         invited_user.save()
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3480,7 +3480,7 @@ class TestProjectInviteAcceptView(
         invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
         invited_user.email = INVITE_EMAIL
         invited_user.save()
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -3517,14 +3517,14 @@ class TestProjectInviteAcceptView(
         invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
         invited_user.email = INVITE_EMAIL
         invited_user.save()
-        invite = self._make_invite(
+        invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
             issuer=self.user,
             message='',
         )
-        self._make_assignment(self.project, invited_user, self.role_guest)
+        self.make_assignment(self.project, invited_user, self.role_guest)
         self.assertTrue(invite.active)
 
         with self.login(invited_user):
@@ -3550,13 +3550,13 @@ class TestProjectInviteListView(
 
     def setUp(self):
         super().setUp()
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -3594,13 +3594,13 @@ class TestProjectInviteRevokeView(
 
     def setUp(self):
         super().setUp()
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -3665,7 +3665,7 @@ class TestProjectInviteRevokeView(
         self.invite.role = self.role_delegate
         self.invite.save()
         delegate = self.make_user('delegate')
-        self._make_assignment(self.project, delegate, self.role_delegate)
+        self.make_assignment(self.project, delegate, self.role_delegate)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
 
         with self.login(delegate):
@@ -3687,7 +3687,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
     def setUp(self):
         super().setUp()
         # Create target site
-        self.target_site = self._make_site(
+        self.target_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
@@ -3754,7 +3754,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     def test_render_as_target_existing(self):
         """Test rendering as target with existing source (should fail)"""
         # Create source site
-        self.source_site = self._make_site(
+        self.source_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
@@ -3837,7 +3837,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
 
     def test_create_target_existing_name(self):
         """Test creating a target site with an existing name"""
-        self.target_site = self._make_site(
+        self.target_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
@@ -3867,7 +3867,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
     def setUp(self):
         super().setUp()
         # Set up target site
-        self.target_site = self._make_site(
+        self.target_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
@@ -3944,7 +3944,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
 
     def test_update_existing_name(self):
         """Test creating target site with an existing name as source (should fail)"""
-        new_target_site = self._make_site(
+        new_target_site = self.make_site(
             name=REMOTE_SITE_NEW_NAME,
             url=REMOTE_SITE_NEW_URL,
             mode=SITE_MODE_TARGET,
@@ -3978,7 +3978,7 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
     def setUp(self):
         super().setUp()
         # Set up target site
-        self.target_site = self._make_site(
+        self.target_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
@@ -4035,18 +4035,18 @@ class TestRemoteProjectBatchUpdateView(
         super().setUp()
 
         # Set up project
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Set up target site
-        self.target_site = self._make_site(
+        self.target_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
@@ -4122,7 +4122,7 @@ class TestRemoteProjectBatchUpdateView(
 
     def test_post_update(self):
         """Test updating by modifying an existing RemoteProject"""
-        rp = self._make_remote_project(
+        rp = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],

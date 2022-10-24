@@ -46,7 +46,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         # Init folders
 
         # Folder created by project owner
-        self.folder_owner = self._make_folder(
+        self.folder_owner = self.make_folder(
             name='folder_owner',
             project=self.project,
             folder=None,
@@ -55,7 +55,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
 
         # File created by project contributor
-        self.folder_contributor = self._make_folder(
+        self.folder_contributor = self.make_folder(
             name='folder_contributor',
             project=self.project,
             folder=None,
@@ -66,7 +66,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         # Init files
 
         # File uploaded by project owner
-        self.file_owner = self._make_file(
+        self.file_owner = self.make_file(
             name='file_owner.txt',
             file_name='file_owner.txt',
             file_content=self.file_content,
@@ -79,7 +79,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
 
         # File uploaded by project contributor
-        self.file_contributor = self._make_file(
+        self.file_contributor = self.make_file(
             name='file_contributor.txt',
             file_name='file_contributor.txt',
             file_content=self.file_content,
@@ -94,7 +94,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         # Init hyperlinks
 
         # HyperLink added by project owner
-        self.hyperlink_owner = self._make_hyperlink(
+        self.hyperlink_owner = self.make_hyperlink(
             name='Owner link',
             url='https://www.bihealth.org/',
             project=self.project,
@@ -104,7 +104,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
 
         # HyperLink added by project contributor
-        self.hyperlink_contrib = self._make_hyperlink(
+        self.hyperlink_contrib = self.make_hyperlink(
             name='Contributor link',
             url='http://www.google.com/',
             project=self.project,
@@ -117,7 +117,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         """Test rendering readme if it has been uploaded to the folder"""
 
         # Init readme file
-        self.readme_file = self._make_file(
+        self.readme_file = self.make_file(
             name='readme.txt',
             file_name='readme.txt',
             file_content=self.file_content,
@@ -299,7 +299,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         # Init folders
 
         # Folder created by project owner
-        self.folder_owner = self._make_folder(
+        self.folder_owner = self.make_folder(
             name='folder_owner',
             project=self.project,
             folder=None,
@@ -308,7 +308,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
 
         # File created by project contributor
-        self.folder_contributor = self._make_folder(
+        self.folder_contributor = self.make_folder(
             name='folder_contributor',
             project=self.project,
             folder=None,
@@ -319,7 +319,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         # Init files
 
         # File uploaded by project owner
-        self.file_owner = self._make_file(
+        self.file_owner = self.make_file(
             name='file_owner.txt',
             file_name='file_owner.txt',
             file_content=self.file_content,
@@ -332,7 +332,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
 
         # File uploaded by project contributor
-        self.file_contributor = self._make_file(
+        self.file_contributor = self.make_file(
             name='file_contributor.txt',
             file_name='file_contributor.txt',
             file_content=self.file_content,
@@ -347,7 +347,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         # Init hyperlinks
 
         # HyperLink added by project owner
-        self.hyperlink_owner = self._make_hyperlink(
+        self.hyperlink_owner = self.make_hyperlink(
             name='Owner link',
             url='https://www.bihealth.org/',
             project=self.project,
@@ -357,7 +357,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
 
         # HyperLink added by project contributor
-        self.hyperlink_contrib = self._make_hyperlink(
+        self.hyperlink_contrib = self.make_hyperlink(
             name='Contributor link',
             url='http://www.google.com/',
             project=self.project,

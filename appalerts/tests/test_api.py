@@ -30,7 +30,7 @@ class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
     def setUp(self):
         # Create user
         self.user = self.make_user('user')
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
         self.project_url = reverse(

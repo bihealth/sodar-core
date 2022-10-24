@@ -443,7 +443,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        site = self._make_site(name=REMOTE_SITE_NAME, url=REMOTE_SITE_URL)
+        site = self.make_site(name=REMOTE_SITE_NAME, url=REMOTE_SITE_URL)
         event.add_object(
             obj=site,
             label='obj',
@@ -464,7 +464,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -491,7 +491,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -543,7 +543,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -571,7 +571,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,

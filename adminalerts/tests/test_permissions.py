@@ -22,7 +22,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         # No user
         self.anonymous = None
         # Create alert
-        self.alert = self._make_alert(
+        self.alert = self.make_alert(
             message='alert',
             user=self.superuser,
             description='description',

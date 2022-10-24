@@ -18,13 +18,10 @@ class AdminAlertActiveToggleAjaxView(SODARBasePermissionAjaxView):
 
     def post(self, request, **kwargs):
         alert_uuid = kwargs.get('adminalert', None)
-
         try:
             alert = AdminAlert.objects.get(sodar_uuid__exact=alert_uuid)
-
         except AdminAlert.DoesNotExist:
             return HttpResponseBadRequest()
-
         alert.active = not alert.active
         alert.save()
         return Response({'is_active': alert.active}, status=200)

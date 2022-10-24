@@ -93,7 +93,7 @@ class SODARAPIViewTestMixin:
 
     # Copied from Knox tests
     @classmethod
-    def _get_basic_auth_header(cls, username, password):
+    def get_basic_auth_header(cls, username, password):
         return (
             'Basic %s'
             % base64.b64encode(
@@ -241,16 +241,16 @@ class TestAPIViewsBase(
         self.user.save()
 
         # Set up category and project with owner role assignments
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -339,9 +339,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
     def test_get_limited_roles(self):
         """Test ProjectListAPIView get() with only one role"""
         user_no_roles = self.make_user('user_no_roles')
-        self._make_assignment(
-            self.project, user_no_roles, self.role_contributor
-        )
+        self.make_assignment(self.project, user_no_roles, self.role_contributor)
         url = reverse('projectroles:api_project_list')
         response = self.request_knox(url, token=self.get_token(user_no_roles))
 
@@ -736,7 +734,7 @@ class TestProjectCreateAPIView(
     def test_create_project_target_remote(self):
         """Test creating a project as TARGET under a remote category (should fail)"""
         # Create source site
-        source_site = self._make_site(
+        source_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
@@ -744,7 +742,7 @@ class TestProjectCreateAPIView(
             secret=REMOTE_SITE_SECRET,
         )
         # Make category remote
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.category.sodar_uuid,
             project=self.category,
             site=source_site,
@@ -1037,10 +1035,10 @@ class TestProjectUpdateAPIView(
             self.category.title + ' / ' + self.project.title,
         )
 
-        new_category = self._make_project(
+        new_category = self.make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(new_category, self.user, self.role_owner)
+        self.make_assignment(new_category, self.user, self.role_owner)
         url = reverse(
             'projectroles:api_project_update',
             kwargs={'project': self.project.sodar_uuid},
@@ -1065,11 +1063,11 @@ class TestProjectUpdateAPIView(
 
     def test_patch_project_move_unallowed(self):
         """Test patch() for moving project without permissions (should fail)"""
-        new_category = self._make_project(
+        new_category = self.make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
         new_owner = self.make_user('new_owner')
-        self._make_assignment(new_category, new_owner, self.role_owner)
+        self.make_assignment(new_category, new_owner, self.role_owner)
         url = reverse(
             'projectroles:api_project_update',
             kwargs={'project': self.project.sodar_uuid},
@@ -1084,11 +1082,11 @@ class TestProjectUpdateAPIView(
 
     def test_patch_project_move_root(self):
         """Test patch() for moving project without permissions (should fail)"""
-        new_category = self._make_project(
+        new_category = self.make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
         new_owner = self.make_user('new_owner')
-        self._make_assignment(new_category, new_owner, self.role_owner)
+        self.make_assignment(new_category, new_owner, self.role_owner)
         url = reverse(
             'projectroles:api_project_update',
             kwargs={'project': self.project.sodar_uuid},
@@ -1100,11 +1098,11 @@ class TestProjectUpdateAPIView(
 
     def test_patch_project_move_root_unallowed(self):
         """Test patch() for moving project to root without permissions (should fail)"""
-        new_category = self._make_project(
+        new_category = self.make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
         new_owner = self.make_user('new_owner')
-        self._make_assignment(new_category, new_owner, self.role_owner)
+        self.make_assignment(new_category, new_owner, self.role_owner)
         url = reverse(
             'projectroles:api_project_update',
             kwargs={'project': self.project.sodar_uuid},
@@ -1119,10 +1117,10 @@ class TestProjectUpdateAPIView(
 
     def test_patch_project_move_child(self):
         """Test patch() for moving a category inside its child (should fail)"""
-        new_category = self._make_project(
+        new_category = self.make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, self.category
         )
-        self._make_assignment(new_category, self.user, self.role_owner)
+        self.make_assignment(new_category, self.user, self.role_owner)
         url = reverse(
             'projectroles:api_project_update',
             kwargs={'project': self.category.sodar_uuid},
@@ -1166,14 +1164,14 @@ class TestProjectUpdateAPIView(
     def test_patch_project_remote(self):
         """Test patch() for updating remote project metadata (should fail)"""
         # Create source site and remote project
-        source_site = self._make_site(
+        source_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
             description=REMOTE_SITE_DESC,
             secret=REMOTE_SITE_SECRET,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=source_site,
@@ -1284,7 +1282,7 @@ class TestRoleAssignmentCreateAPIView(
         """Test creating a delegate role without authorization (should fail)"""
         # Create new user and grant delegate role
         new_user = self.make_user('new_user')
-        self._make_assignment(self.project, new_user, self.role_contributor)
+        self.make_assignment(self.project, new_user, self.role_contributor)
         new_user_token = self.get_token(new_user)
 
         url = reverse(
@@ -1305,7 +1303,7 @@ class TestRoleAssignmentCreateAPIView(
         """Test creating a delegate role with limit reached (should fail)"""
         # Create new user and grant delegate role
         new_user = self.make_user('new_user')
-        self._make_assignment(self.project, new_user, self.role_delegate)
+        self.make_assignment(self.project, new_user, self.role_delegate)
 
         url = reverse(
             'projectroles:api_role_create',
@@ -1395,14 +1393,14 @@ class TestRoleAssignmentCreateAPIView(
     def test_create_remote(self):
         """Test creating a role for a remote project (should fail)"""
         # Create source site and remote project
-        source_site = self._make_site(
+        source_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
             description=REMOTE_SITE_DESC,
             secret=REMOTE_SITE_SECRET,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=source_site,
@@ -1436,7 +1434,7 @@ class TestRoleAssignmentUpdateAPIView(
     def setUp(self):
         super().setUp()
         self.assign_user = self.make_user('assign_user')
-        self.update_as = self._make_assignment(
+        self.update_as = self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
 
@@ -1586,14 +1584,14 @@ class TestRoleAssignmentUpdateAPIView(
     def test_patch_role_remote(self):
         """Test patch() for updating a role in a remote project (should fail)"""
         # Create source site and remote project
-        source_site = self._make_site(
+        source_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
             description=REMOTE_SITE_DESC,
             secret=REMOTE_SITE_SECRET,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=source_site,
@@ -1619,7 +1617,7 @@ class TestRoleAssignmentDestroyAPIView(
         super().setUp()
         self.assign_user = self.make_user('assign_user')
 
-        self.update_as = self._make_assignment(
+        self.update_as = self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
 
@@ -1645,7 +1643,7 @@ class TestRoleAssignmentDestroyAPIView(
     def test_delete_delegate_unauthorized(self):
         """Test delete for delegate deletion without perms (should fail)"""
         new_user = self.make_user('new_user')
-        delegate_as = self._make_assignment(
+        delegate_as = self.make_assignment(
             self.project, new_user, self.role_delegate
         )
         self.assertEqual(RoleAssignment.objects.count(), 4)
@@ -1678,14 +1676,14 @@ class TestRoleAssignmentDestroyAPIView(
     def test_delete_remote(self):
         """Test delete for a remote project (should fail)"""
         # Create source site and remote project
-        source_site = self._make_site(
+        source_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
             description=REMOTE_SITE_DESC,
             secret=REMOTE_SITE_SECRET,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=source_site,
@@ -1715,7 +1713,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
     def test_transfer_owner(self):
         """Test transferring ownership for a project"""
         # Assign role to new user
-        self._make_assignment(
+        self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
         self.assertEqual(self.project.get_owner().user, self.user)
@@ -1735,7 +1733,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
 
     def test_transfer_owner_category(self):
         """Test transferring ownership for a category"""
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.assign_user, self.role_contributor
         )
         self.assertEqual(self.category.get_owner().user, self.user)
@@ -1756,7 +1754,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
     def test_transfer_owner_inherit(self):
         """Test transferring ownership to an inherited owner"""
         # Assign role to new user
-        self._make_assignment(
+        self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
         # Set alt owner to current project, make self.user inherited owner
@@ -1804,21 +1802,21 @@ class TestRoleAssignmentOwnerTransferAPIView(
     def test_transfer_remote(self):
         """Test transferring ownership for a remote project (should fail)"""
         # Create source site and remote project
-        source_site = self._make_site(
+        source_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
             description=REMOTE_SITE_DESC,
             secret=REMOTE_SITE_SECRET,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
         # Assign role to new user
-        self._make_assignment(
+        self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
         self.assertEqual(self.project.get_owner().user, self.user)
@@ -1843,7 +1841,7 @@ class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
     def setUp(self):
         super().setUp()
         # Create invites
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email=INVITE_USER_EMAIL,
             project=self.project,
             role=self.role_guest,
@@ -1851,7 +1849,7 @@ class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
             message='',
             secret=build_secret(),
         )
-        self.invite2 = self._make_invite(
+        self.invite2 = self.make_invite(
             email=INVITE_USER2_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -2026,7 +2024,7 @@ class TestProjectInviteCreateAPIView(
     def test_create_delegate_no_perms(self):
         """Test creating an delegate invite without perms (should fail)"""
         del_user = self.make_user('delegate')
-        self._make_assignment(self.project, del_user, self.role_delegate)
+        self.make_assignment(self.project, del_user, self.role_delegate)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2053,7 +2051,7 @@ class TestProjectInviteCreateAPIView(
     def test_create_delegate_limit(self):
         """Test creating an delegate invite with exceeded limit (should fail)"""
         del_user = self.make_user('delegate')
-        self._make_assignment(self.project, del_user, self.role_delegate)
+        self.make_assignment(self.project, del_user, self.role_delegate)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2128,14 +2126,14 @@ class TestProjectInviteCreateAPIView(
     def test_create_remote(self):
         """Test creating an invite for a remote project (should fail)"""
         # Set up remote site and project
-        source_site = self._make_site(
+        source_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
             description=REMOTE_SITE_DESC,
             secret=REMOTE_SITE_SECRET,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=source_site,
@@ -2170,7 +2168,7 @@ class TestProjectInviteRevokeAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         super().setUp()
 
         # Create invite
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email=INVITE_USER_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -2218,7 +2216,7 @@ class TestProjectInviteRevokeAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         self.invite.role = self.role_delegate
         self.invite.save()
         delegate = self.make_user('delegate')
-        self._make_assignment(self.project, delegate, self.role_delegate)
+        self.make_assignment(self.project, delegate, self.role_delegate)
 
         url = reverse(
             'projectroles:api_invite_revoke',
@@ -2249,7 +2247,7 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         super().setUp()
 
         # Create invite
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email=INVITE_USER_EMAIL,
             project=self.project,
             role=self.role_contributor,
@@ -2296,7 +2294,7 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         self.invite.role = self.role_delegate
         self.invite.save()
         delegate = self.make_user('delegate')
-        self._make_assignment(self.project, delegate, self.role_delegate)
+        self.make_assignment(self.project, delegate, self.role_delegate)
 
         url = reverse(
             'projectroles:api_invite_resend',
@@ -3072,21 +3070,21 @@ class TestRemoteProjectGetAPIView(
         super().setUp()
 
         # Set up projects
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.project_owner_as = self._make_assignment(
+        self.project_owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Create target site
-        self.target_site = self._make_site(
+        self.target_site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
@@ -3095,7 +3093,7 @@ class TestRemoteProjectGetAPIView(
         )
 
         # Create remote project
-        self.remote_project = self._make_remote_project(
+        self.remote_project = self.make_remote_project(
             site=self.target_site,
             project_uuid=self.project.sodar_uuid,
             project=self.project,
@@ -3143,7 +3141,7 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
         )
         superuser_as_owner_role.delete()
         # Assign requested role to user
-        user_as = self._make_assignment(
+        user_as = self.make_assignment(
             self.project, user, getattr(self, 'role_' + role_suffix)
         )
 
@@ -3152,12 +3150,12 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
         )
         if role_suffix == 'owner':
             user_cat_as.delete()
-            user_cat_as = self._make_assignment(
+            user_cat_as = self.make_assignment(
                 self.category, user, getattr(self, 'role_' + role_suffix)
             )
 
         # Init IP restrict setting
-        self._make_setting(
+        self.make_setting(
             app_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
@@ -3166,7 +3164,7 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
         )
 
         # Init IP allowlist setting
-        self._make_setting(
+        self.make_setting(
             app_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',

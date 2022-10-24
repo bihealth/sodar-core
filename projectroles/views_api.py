@@ -639,7 +639,7 @@ class RoleAssignmentOwnerTransferAPIView(
 class ProjectInviteAPIMixin:
     """Validation helpers for project invite modification via API"""
 
-    def _validate(self, invite, request, **kwargs):
+    def validate(self, invite, request, **kwargs):
         if not invite:
             raise NotFound(
                 'Invite not found (uuid={})'.format(kwargs['projectinvite'])
@@ -715,7 +715,7 @@ class ProjectInviteRevokeAPIView(
         invite = ProjectInvite.objects.filter(
             sodar_uuid=kwargs['projectinvite']
         ).first()
-        self._validate(invite, request, **kwargs)
+        self.validate(invite, request, **kwargs)
         invite = self.revoke_invite(invite, invite.project, request)
         return Response(
             {
@@ -746,7 +746,7 @@ class ProjectInviteResendAPIView(
         invite = ProjectInvite.objects.filter(
             sodar_uuid=kwargs['projectinvite']
         ).first()
-        self._validate(invite, request, **kwargs)
+        self.validate(invite, request, **kwargs)
         self.handle_invite(invite, request, resend=True, add_message=False)
         return Response(
             {

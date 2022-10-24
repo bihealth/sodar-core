@@ -66,10 +66,10 @@ class TestViewsBaseMixin(
         self.user.save()
 
         # Init project and owner role
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -84,7 +84,7 @@ class TestViewsBaseMixin(
         self.file_content_empty = bytes(''.encode('utf-8'))
 
         # Init file
-        self.file = self._make_file(
+        self.file = self.make_file(
             name='file.txt',
             file_name='file.txt',
             file_content=self.file_content,
@@ -97,7 +97,7 @@ class TestViewsBaseMixin(
         )
 
         # Init folder
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -106,7 +106,7 @@ class TestViewsBaseMixin(
         )
 
         # Init link
-        self.hyperlink = self._make_hyperlink(
+        self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
             project=self.project,
@@ -169,7 +169,7 @@ class TestListView(TestViewsBase):
 
     def test_render_with_readme_txt(self):
         """Test rendering with a plaintext readme file"""
-        self.readme_file = self._make_file(
+        self.readme_file = self.make_file(
             name='readme.txt',
             file_name='readme.txt',
             file_content=self.file_content,
@@ -398,14 +398,14 @@ class TestFileCreateView(TestViewsBase):
 
     def test_unpack_archive_overwrite(self):
         """Test unpacking a zip file with existing file (should fail)"""
-        ow_folder = self._make_folder(
+        ow_folder = self.make_folder(
             name='dir1',
             project=self.project,
             folder=None,
             owner=self.user,
             description='',
         )
-        self._make_file(
+        self.make_file(
             name='zip_test1.txt',
             file_name='zip_test1.txt',
             file_content=self.file_content,
@@ -466,14 +466,14 @@ class TestFileCreateView(TestViewsBase):
 
     def test_upload_archive_existing(self):
         """Test uploading a zip file with existing file (no unpack)"""
-        ow_folder = self._make_folder(
+        ow_folder = self.make_folder(
             name='dir1',
             project=self.project,
             folder=None,
             owner=self.user,
             description='',
         )
-        self._make_file(
+        self.make_file(
             name='zip_test1.txt',
             file_name='zip_test1.txt',
             file_content=self.file_content,
@@ -607,7 +607,7 @@ class TestFileUpdateView(TestViewsBase):
 
     def test_update_existing(self):
         """Test file update with file name that already exists (should fail)"""
-        self._make_file(
+        self.make_file(
             name='file2.txt',
             file_name='file2.txt',
             file_content=self.file_content,
@@ -674,7 +674,7 @@ class TestFileUpdateView(TestViewsBase):
     def test_update_folder_existing(self):
         """Test overwriting file in a different folder (should fail)"""
         # Create file with same name in the target folder
-        self._make_file(
+        self.make_file(
             name='file.txt',
             file_name='file.txt',
             file_content=self.file_content_alt,
@@ -1085,7 +1085,7 @@ class TestFolderUpdateView(TestViewsBase):
 
     def test_update_existing(self):
         """Test folder update with name that already exists (should fail)"""
-        self._make_folder(
+        self.make_folder(
             name='folder2',
             project=self.project,
             folder=None,
@@ -1342,7 +1342,7 @@ class TestHyperLinkUpdateView(TestViewsBase):
 
     def test_update_existing(self):
         """Test hyperlink update with a name that already exists (should fail)"""
-        self._make_hyperlink(
+        self.make_hyperlink(
             name='Link2',
             url='http://url2.com',
             project=self.project,
@@ -1491,10 +1491,10 @@ class TestBatchEditView(TestViewsBase):
 
     def test_deletion_non_empty_folder(self):
         """Test batch object deletion with a non-empty folder (should not be deleted)"""
-        new_folder = self._make_folder(
+        new_folder = self.make_folder(
             'new_folder', self.project, None, self.user, ''
         )
-        self._make_file(
+        self.make_file(
             name='new_file.txt',
             file_name='new_file.txt',
             file_content=self.file_content,
@@ -1529,7 +1529,7 @@ class TestBatchEditView(TestViewsBase):
 
     def test_moving(self):
         """Test batch object moving"""
-        target_folder = self._make_folder(
+        target_folder = self.make_folder(
             'target_folder', self.project, None, self.user, ''
         )
         post_data = {
@@ -1567,10 +1567,10 @@ class TestBatchEditView(TestViewsBase):
 
     def test_moving_name_exists(self):
         """Test batch object moving with name existing in target (should not be moved)"""
-        target_folder = self._make_folder(
+        target_folder = self.make_folder(
             'target_folder', self.project, None, self.user, ''
         )
-        self._make_file(
+        self.make_file(
             name='file.txt',  # Same name as self.file
             file_name='file.txt',
             file_content=self.file_content,

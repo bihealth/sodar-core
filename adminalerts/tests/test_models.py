@@ -5,14 +5,14 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
-from ..models import AdminAlert
+from adminalerts.models import AdminAlert
 
 
 class AdminAlertMixin:
     """Helper mixin for AdminAlert creation"""
 
     @classmethod
-    def _make_alert(
+    def make_alert(
         cls,
         message,
         user,
@@ -21,7 +21,7 @@ class AdminAlertMixin:
         require_auth=True,
         date_expire_days=1,
     ):
-        """Make and save n AdminAlert"""
+        """Make and save an AdminAlert"""
         values = {
             'message': message,
             'user': user,
@@ -43,9 +43,8 @@ class TestAdminAlert(AdminAlertMixin, TestCase):
         # Create superuser
         self.superuser = self.make_user('superuser')
         self.superuser.is_superuser = True
-
         # Create alert
-        self.alert = self._make_alert(
+        self.alert = self.make_alert(
             message='alert',
             user=self.superuser,
             description='description',

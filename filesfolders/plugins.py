@@ -5,8 +5,8 @@ from django.urls import reverse
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import ProjectAppPluginPoint
 
-from .models import File, Folder, HyperLink
-from .urls import urlpatterns
+from filesfolders.models import File, Folder, HyperLink
+from filesfolders.urls import urlpatterns
 
 
 # SODAR Constants

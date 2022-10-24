@@ -18,14 +18,11 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
-
         self.regular_user = self.make_user('regular_user')
-
         # No user
         self.anonymous = None
-
         # Create alert
-        self.alert = self._make_alert(
+        self.alert = self.make_alert(
             message='alert',
             user=self.superuser,
             description='description',

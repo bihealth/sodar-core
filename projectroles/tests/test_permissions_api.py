@@ -475,7 +475,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         """Test permissions for RoleAssignmentUpdateAPIView"""
         # Create user and assignment
         assign_user = self.make_user('assign_user')
-        update_as = self._make_assignment(
+        update_as = self.make_assignment(
             self.project, assign_user, self.role_contributor
         )
         url = reverse(
@@ -523,7 +523,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         """Test permissions for RoleAssignmentUpdateAPIView with anonymous access"""
         # Create user and assignment
         assign_user = self.make_user('assign_user')
-        update_as = self._make_assignment(
+        update_as = self.make_assignment(
             self.project, assign_user, self.role_contributor
         )
         url = reverse(
@@ -546,7 +546,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         role_uuid = uuid.uuid4()  # Ensure fixed uuid
 
         def _cleanup():
-            update_as = self._make_assignment(
+            update_as = self.make_assignment(
                 self.project, assign_user, self.role_contributor
             )
             update_as.sodar_uuid = role_uuid
@@ -594,7 +594,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         # Create user and assignment
         assign_user = self.make_user('assign_user')
         role_uuid = uuid.uuid4()  # Ensure fixed uuid
-        update_as = self._make_assignment(
+        update_as = self.make_assignment(
             self.project, assign_user, self.role_contributor
         )
         update_as.sodar_uuid = role_uuid
@@ -610,7 +610,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         """Test permissions for RoleAssignmentOwnerTransferAPIView"""
         # Create user for assignments
         self.new_owner = self.make_user('new_owner')
-        self.new_owner_as = self._make_assignment(
+        self.new_owner_as = self.make_assignment(
             self.project, self.new_owner, self.role_contributor
         )
         url = reverse(
@@ -679,7 +679,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         """Test permissions for RoleAssignmentOwnerTransferAPIView with anonymous access"""
         # Create user for assignments
         self.new_owner = self.make_user('new_owner')
-        self.new_owner_as = self._make_assignment(
+        self.new_owner_as = self.make_assignment(
             self.project, self.new_owner, self.role_contributor
         )
         url = reverse(
@@ -811,7 +811,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     def test_invite_revoke(self):
         """Test permissions for ProjectInviteRevokeAPIView"""
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -872,7 +872,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_invite_revoke_anon(self):
         """Test permissions for ProjectInviteRevokeAPIView with anonymous access"""
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -887,7 +887,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     def test_invite_resend(self):
         """Test permissions for ProjectInviteResendAPIView"""
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -941,7 +941,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_invite_resend_anon(self):
         """Test permissions for ProjectInviteResendAPIView with anonymous access"""
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
             role=self.role_contributor,

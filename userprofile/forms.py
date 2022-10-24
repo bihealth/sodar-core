@@ -24,9 +24,7 @@ class UserSettingsForm(SODARForm):
     """The form for configuring user settings."""
 
     def __init__(self, *args, **kwargs):
-        #: The user to display the settings for.
         self.user = kwargs.pop('current_user')
-
         super().__init__(*args, **kwargs)
 
         # Add settings fields
@@ -95,10 +93,8 @@ class UserSettingsForm(SODARForm):
                     # NOTE: Attrs MUST be supplied here (#404)
                     if 'class' in s_widget_attrs:
                         s_widget_attrs['class'] += ' sodar-json-input'
-
                     else:
                         s_widget_attrs['class'] = 'sodar-json-input'
-
                     self.fields[s_field] = forms.CharField(
                         widget=forms.Textarea(attrs=s_widget_attrs),
                         **setting_kwargs,
@@ -125,7 +121,6 @@ class UserSettingsForm(SODARForm):
 
     def clean(self):
         """Function for custom form validation and cleanup"""
-
         for plugin in self.app_plugins + [None]:
             if plugin:
                 name = plugin.name
@@ -150,7 +145,6 @@ class UserSettingsForm(SODARForm):
                         raise forms.ValidationError(
                             'Couldn\'t encode JSON\n' + str(err)
                         )
-
                 elif s_val['type'] == 'INTEGER':
                     # When field is a select/dropdown, the information of the
                     # data type gets lost. We need to convert that here,

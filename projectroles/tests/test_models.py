@@ -56,7 +56,7 @@ class ProjectMixin:
     """Helper mixin for Project creation"""
 
     @classmethod
-    def _make_project(
+    def make_project(
         cls,
         title,
         type,
@@ -86,7 +86,7 @@ class ProjectInviteMixin:
     """Helper mixin for ProjectInvite creation"""
 
     @classmethod
-    def _make_invite(
+    def make_invite(
         cls,
         email,
         project,
@@ -118,7 +118,7 @@ class AppSettingMixin:
     """Helper mixin for AppSetting creation"""
 
     @classmethod
-    def _make_setting(
+    def make_setting(
         cls,
         app_name,
         name,
@@ -154,7 +154,7 @@ class ProjectUserTagMixin:
     """Helper mixin for ProjectUserTag creation"""
 
     @classmethod
-    def _make_tag(cls, project, user, name):
+    def make_tag(cls, project, user, name):
         """Make and save a ProjectUserTag"""
         values = {'project': project, 'user': user, 'name': name}
         tag = ProjectUserTag(**values)
@@ -166,7 +166,7 @@ class RemoteSiteMixin:
     """Helper mixin for RemoteSite creation"""
 
     @classmethod
-    def _make_site(
+    def make_site(
         cls,
         name,
         url,
@@ -193,13 +193,12 @@ class RemoteProjectMixin:
     """Helper mixin for RemoteProject creation"""
 
     @classmethod
-    def _make_remote_project(
+    def make_remote_project(
         cls, project_uuid, site, level, date_access=None, project=None
     ):
         """Make and save a RemoteProject"""
         if isinstance(project_uuid, str):
             project_uuid = uuid.UUID(project_uuid)
-
         values = {
             'project_uuid': project_uuid,
             'site': site,
@@ -218,35 +217,32 @@ class RemoteTargetMixin(RemoteSiteMixin, RemoteProjectMixin):
     """Helper mixin for setting up the site as TARGET for testing"""
 
     @classmethod
-    def _set_up_as_target(cls, projects):
+    def set_up_as_target(cls, projects):
         """Set up current site as a target site"""
-        source_site = cls._make_site(
+        source_site = cls.make_site(
             name='Test Source',
             url='http://0.0.0.0',
             mode=SITE_MODE_SOURCE,
             description='',
             secret=build_secret(),
         )
-
         remote_projects = []
-
         for project in projects:
             remote_projects.append(
-                cls._make_remote_project(
+                cls.make_remote_project(
                     project_uuid=project.sodar_uuid,
                     project=project,
                     site=source_site,
                     level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
                 )
             )
-
         return source_site, remote_projects
 
 
-class SodarUserMixin:
+class SODARUserMixin:
     """Helper mixin for LDAP SodarUser creation"""
 
-    def _make_sodar_user(
+    def make_sodar_user(
         self,
         username,
         name,
@@ -276,17 +272,17 @@ class TestProject(ProjectMixin, TestCase):
 
     def setUp(self):
         # Top level category
-        self.category_top = self._make_project(
+        self.category_top = self.make_project(
             title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
         )
         # Subproject under category_top
-        self.project_sub = self._make_project(
+        self.project_sub = self.make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category_top,
         )
         # Top level project
-        self.project_top = self._make_project(
+        self.project_top = self.make_project(
             title='TestProjectTop', type=PROJECT_TYPE_PROJECT, parent=None
         )
 
@@ -330,7 +326,7 @@ class TestProject(ProjectMixin, TestCase):
         """Test title validation: title can't be equal between subproject and
         parent"""
         with self.assertRaises(ValidationError):
-            self._make_project(
+            self.make_project(
                 title='TestCategoryTop',
                 type=PROJECT_TYPE_PROJECT,
                 parent=self.category_top,
@@ -339,7 +335,7 @@ class TestProject(ProjectMixin, TestCase):
     def test_validate_parent_type(self):
         """Test parent type validation"""
         with self.assertRaises(ValidationError):
-            self._make_project(
+            self.make_project(
                 title='FailProject',
                 type=PROJECT_TYPE_PROJECT,
                 parent=self.project_top,
@@ -428,7 +424,7 @@ class RoleAssignmentMixin:
     """Helper mixin for RoleAssignment creation"""
 
     @classmethod
-    def _make_assignment(cls, project, user, role):
+    def make_assignment(cls, project, user, role):
         """Make and save a RoleAssignment"""
         values = {'project': project, 'user': user, 'role': role}
         result = RoleAssignment(**values)
@@ -442,17 +438,17 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def setUp(self):
         # Init projects/categories
         # Top level category
-        self.category_top = self._make_project(
+        self.category_top = self.make_project(
             title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
         )
         # Subproject under category_top
-        self.project_sub = self._make_project(
+        self.project_sub = self.make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category_top,
         )
         # Top level project
-        self.project_top = self._make_project(
+        self.project_top = self.make_project(
             title='TestProjectTop', type=PROJECT_TYPE_PROJECT, parent=None
         )
 
@@ -475,7 +471,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.user_frank = self.make_user('frank')
 
         # Init assignment
-        self.assignment_owner = self._make_assignment(
+        self.assignment_owner = self.make_assignment(
             self.category_top, self.user_alice, self.role_owner
         )
 
@@ -509,7 +505,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         """Test user role uniqueness validation: can't add more than one
         role for user in project at once"""
         with self.assertRaises(ValidationError):
-            self._make_assignment(
+            self.make_assignment(
                 self.category_top, self.user_alice, self.role_contributor
             )
 
@@ -517,7 +513,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         """Test owner uniqueness validation: can't add owner for project if
         one already exists"""
         with self.assertRaises(ValidationError):
-            self._make_assignment(
+            self.make_assignment(
                 self.category_top, self.user_bob, self.role_owner
             )
 
@@ -525,12 +521,12 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test_validate_one_delegate(self):
         """Test delegate validation: can't add delegate for project if limit (1)
         of delegates is reached"""
-        self._make_assignment(
+        self.make_assignment(
             self.project_sub, self.user_bob, self.role_delegate
         )
 
         with self.assertRaises(ValidationError):
-            self._make_assignment(
+            self.make_assignment(
                 self.project_sub, self.user_carol, self.role_delegate
             )
 
@@ -538,12 +534,12 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test_validate_several_delegates(self):
         """Test delegate validation: can add delegate for project if no limit
         of delegates is set"""
-        self._make_assignment(
+        self.make_assignment(
             self.project_sub, self.user_bob, self.role_delegate
         )
 
         try:
-            self._make_assignment(
+            self.make_assignment(
                 self.project_sub, self.user_carol, self.role_delegate
             )
         except ValidationError as e:
@@ -577,7 +573,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         """Test project.get_owners() results"""
 
         # Set bob as project owner
-        self._make_assignment(self.project_sub, self.user_bob, self.role_owner)
+        self.make_assignment(self.project_sub, self.user_bob, self.role_owner)
 
         self.assertEqual(len(self.project_sub.get_owners()), 2)
         self.assertEqual(
@@ -588,7 +584,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         """Test project.is_owner() reuslts"""
 
         # Set bob as project owner
-        self._make_assignment(self.project_sub, self.user_bob, self.role_owner)
+        self.make_assignment(self.project_sub, self.user_bob, self.role_owner)
 
         self.assertTrue(self.project_sub.is_owner(self.user_bob))
         self.assertTrue(self.project_sub.is_owner(self.user_alice))
@@ -596,7 +592,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_get_project_delegates(self):
         """Test get_project_delegates() results"""
-        assignment_d0 = self._make_assignment(
+        assignment_d0 = self.make_assignment(
             self.project_top, self.user_carol, self.role_delegate
         )
 
@@ -611,7 +607,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         ]
 
         if getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1) != 1:
-            assignment_d1 = self._make_assignment(
+            assignment_d1 = self.make_assignment(
                 self.project_top, self.user_dan, self.role_delegate
             )
             expected.append(
@@ -631,10 +627,10 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_get_project_members(self):
         """Test project.get_members() results"""
-        assignment_c0 = self._make_assignment(
+        assignment_c0 = self.make_assignment(
             self.project_top, self.user_erin, self.role_contributor
         )
-        assignment_c1 = self._make_assignment(
+        assignment_c1 = self.make_assignment(
             self.project_top, self.user_frank, self.role_contributor
         )
 
@@ -664,7 +660,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         """Test project.get_all_roles() results"""
 
         # Set bob as project owner
-        self._make_assignment(self.project_sub, self.user_bob, self.role_owner)
+        self.make_assignment(self.project_sub, self.user_bob, self.role_owner)
         self.assertEqual(len(self.project_sub.get_all_roles()), 2)
 
     def test_has_role(self):
@@ -675,7 +671,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test_has_role_norole(self):
         """Test the has_role() function for a non-existing role without
         recursion"""
-        self._make_assignment(
+        self.make_assignment(
             self.project_sub, self.user_bob, self.role_contributor
         )
         self.assertEqual(self.category_top.has_role(self.user_bob), False)
@@ -683,7 +679,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test_has_role_norole_children(self):
         """Test the has_role() function for a non-existing role with
         recursion using include_children"""
-        self._make_assignment(
+        self.make_assignment(
             self.project_sub, self.user_bob, self.role_contributor
         )
         self.assertEqual(
@@ -699,7 +695,7 @@ class TestProjectInvite(
 
     def setUp(self):
         # Init project
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
 
@@ -710,12 +706,12 @@ class TestProjectInvite(
 
         # Init user & role
         self.user = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Init invite
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -768,14 +764,14 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
     def setUp(self):
         # Init projects/categories
         # Top level category
-        self.category_top = self._make_project(
+        self.category_top = self.make_project(
             title='TestCategoryTop',
             type=PROJECT_TYPE_CATEGORY,
             parent=None,
             description='XXX',
         )
         # Subproject under category_top
-        self.project_sub = self._make_project(
+        self.project_sub = self.make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category_top,
@@ -847,7 +843,7 @@ class TestProjectSetting(
     # NOTE: This assumes an example app is available
     def setUp(self):
         # Init project
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
 
@@ -856,12 +852,12 @@ class TestProjectSetting(
 
         # Init user & role
         self.user = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Init test setting
-        self.setting_str = self._make_setting(
+        self.setting_str = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='str_setting',
             setting_type='STRING',
@@ -870,7 +866,7 @@ class TestProjectSetting(
         )
 
         # Init integer setting
-        self.setting_int = self._make_setting(
+        self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='int_setting',
             setting_type='INTEGER',
@@ -879,7 +875,7 @@ class TestProjectSetting(
         )
 
         # Init boolean setting
-        self.setting_bool = self._make_setting(
+        self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='bool_setting',
             setting_type='BOOLEAN',
@@ -888,7 +884,7 @@ class TestProjectSetting(
         )
 
         # Init JSON setting
-        self.setting_json = self._make_setting(
+        self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='json_setting',
             setting_type='JSON',
@@ -994,7 +990,7 @@ class TestUserSetting(
         self.user = self.make_user('owner')
 
         # Init test setting
-        self.setting_str = self._make_setting(
+        self.setting_str = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='str_setting',
             setting_type='STRING',
@@ -1003,7 +999,7 @@ class TestUserSetting(
         )
 
         # Init integer setting
-        self.setting_int = self._make_setting(
+        self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='int_setting',
             setting_type='INTEGER',
@@ -1012,7 +1008,7 @@ class TestUserSetting(
         )
 
         # Init boolean setting
-        self.setting_bool = self._make_setting(
+        self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='bool_setting',
             setting_type='BOOLEAN',
@@ -1021,7 +1017,7 @@ class TestUserSetting(
         )
 
         # Init json setting
-        self.setting_json = self._make_setting(
+        self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='json_setting',
             setting_type='JSON',
@@ -1124,7 +1120,7 @@ class TestProjectUserTag(
 
     def setUp(self):
         # Init project
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
 
@@ -1133,12 +1129,12 @@ class TestProjectUserTag(
 
         # Init user & role
         self.user = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Init tag
-        self.tag = self._make_tag(self.project, self.user, PROJECT_TAG_STARRED)
+        self.tag = self.make_tag(self.project, self.user, PROJECT_TAG_STARRED)
 
     def test_initialization(self):
         """Test ProjectUserTag initialization"""
@@ -1169,7 +1165,7 @@ class TestRemoteSite(
 
     def setUp(self):
         # Init project
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
 
@@ -1178,12 +1174,12 @@ class TestRemoteSite(
 
         # Init user & role
         self.user = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
         # Init remote site
-        self.site = self._make_site(
+        self.site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
@@ -1226,7 +1222,7 @@ class TestRemoteSite(
         """Test _validate_mode() with an invalid mode (should fail)"""
 
         with self.assertRaises(ValidationError):
-            self._make_site(
+            self.make_site(
                 name='New site',
                 url='http://example.com',
                 mode='uGaj9eicQueib1th',
@@ -1244,7 +1240,7 @@ class TestRemoteProject(
 
     def setUp(self):
         # Init project
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
 
@@ -1256,14 +1252,14 @@ class TestRemoteProject(
 
         # Init user & role
         self.user = self.make_user('owner')
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
         self.user_alice = self.make_user('alice')
         self.user_bob = self.make_user('bob')
 
         # Init remote site
-        self.site = self._make_site(
+        self.site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
@@ -1271,7 +1267,7 @@ class TestRemoteProject(
             secret=REMOTE_SITE_SECRET,
         )
 
-        self.remote_project = self._make_remote_project(
+        self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
@@ -1345,10 +1341,10 @@ class TestRemoteProject(
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
 
-        self._make_assignment(self.project, self.user_bob, self.role_delegate)
+        self.make_assignment(self.project, self.user_bob, self.role_delegate)
 
         try:
-            self._make_assignment(
+            self.make_assignment(
                 self.project, self.user_alice, self.role_delegate
             )
         except ValidationError as e:

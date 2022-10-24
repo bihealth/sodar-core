@@ -7,7 +7,7 @@ from django.forms.models import model_to_dict
 from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 
-from ..models import JSONCacheItem
+from sodarcache.models import JSONCacheItem
 
 
 # Global constants from settings
@@ -26,7 +26,7 @@ class JsonCacheItemMixin:
     """Helper mixin for JSONCacheItem creation"""
 
     @classmethod
-    def _make_item(cls, project, app_name, name, user, data):
+    def make_item(cls, project, app_name, name, user, data):
         values = {
             'project': project,
             'app_name': app_name,
@@ -43,16 +43,15 @@ class TestJsonCacheItemBase(ProjectMixin, RoleAssignmentMixin, TestCase):
     def setUp(self):
         # Make owner user
         self.user_owner = self.make_user('owner')
-
         # Init project, role and assignment
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
             name=PROJECT_ROLE_DELEGATE
         )[0]
-        self.assignment_owner = self._make_assignment(
+        self.assignment_owner = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
 
@@ -61,7 +60,7 @@ class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
     def setUp(self):
         super().setUp()
 
-        self.item = self._make_item(
+        self.item = self.make_item(
             project=self.project,
             app_name=TEST_APP_NAME,
             user=self.user_owner,
@@ -79,7 +78,6 @@ class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
             'sodar_uuid': self.item.sodar_uuid,
             'data': {'test_key': 'test_val'},
         }
-
         self.assertEqual(model_to_dict(self.item), expected)
 
     def test__str__(self):
@@ -92,14 +90,12 @@ class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
 
     def test__repr__no_project(self):
         """Test __repr__() with no project"""
-
-        new_item = self._make_item(
+        new_item = self.make_item(
             project=None,
             app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item2',
             data={'test_key': 'test_val'},
         )
-
         expected = "JSONCacheItem('N/A', 'sodarcache', 'test_item2')"
         self.assertEqual(repr(new_item), expected)

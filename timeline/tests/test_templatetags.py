@@ -36,14 +36,14 @@ class TestTemplateTags(
         super().setUp()
 
         # Initialize project event
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
             event_name='project_create',
             description='create project with {owner} as owner',
         )
-        self.event_status = self._make_event_status(
+        self.event_status = self.make_event_status(
             event=self.event,
             status_type='OK',
             description=DEFAULT_MESSAGES['OK'],
@@ -75,14 +75,14 @@ class TestTemplateTags(
         self.assertEqual(len(tags.get_details_events(self.project)), 1)
         # Create 5 additional events for a total of 6
         for _ in range(5):
-            event = self._make_event(
+            event = self.make_event(
                 project=self.project,
                 app='projectroles',
                 user=self.user_owner,
                 event_name=TEST_EVENT_NAME,
                 description=TEST_EVENT_DESC,
             )
-            self._make_event_status(
+            self.make_event_status(
                 event=event,
                 status_type='OK',
                 description=DEFAULT_MESSAGES['OK'],
@@ -93,7 +93,7 @@ class TestTemplateTags(
     def test_get_details_events_classified_disabled(self):
         """Test get_details_events() with disabled classified event display"""
         self.assertEqual(len(tags.get_details_events(self.project)), 1)
-        event = self._make_event(
+        event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
@@ -101,7 +101,7 @@ class TestTemplateTags(
             description=TEST_EVENT_DESC,
             classified=True,
         )
-        self._make_event_status(
+        self.make_event_status(
             event=event,
             status_type='OK',
             description=DEFAULT_MESSAGES['OK'],
@@ -112,7 +112,7 @@ class TestTemplateTags(
     def test_get_details_events_classified_enabled(self):
         """Test get_details_events() with enabled classified event display"""
         self.assertEqual(len(tags.get_details_events(self.project)), 1)
-        event = self._make_event(
+        event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
@@ -120,7 +120,7 @@ class TestTemplateTags(
             description=TEST_EVENT_DESC,
             classified=True,
         )
-        self._make_event_status(
+        self.make_event_status(
             event=event,
             status_type='OK',
             description=DEFAULT_MESSAGES['OK'],
@@ -149,7 +149,7 @@ class TestTemplateTags(
 
     def test_get_app_icon_html_no_project(self):
         """Test get_app_icon_html() on event without project"""
-        event = self._make_event(
+        event = self.make_event(
             project=None,
             app='projectroles',
             user=self.user_owner,
@@ -168,7 +168,7 @@ class TestTemplateTags(
             plugin.entry_point_url_id,
             kwargs={'project': self.project.sodar_uuid},
         )
-        event = self._make_event(
+        event = self.make_event(
             project=self.project,
             app='filesfolders',
             user=self.user_owner,
@@ -238,7 +238,7 @@ class TestTemplateTags(
 
     def test_get_app_icon_html_invalid_plugin(self):
         """Test get_app_icon_html() on event from an invalid plugin"""
-        event = self._make_event(
+        event = self.make_event(
             project=self.project,
             app=INVALID_APP_NAME,
             user=self.user_owner,

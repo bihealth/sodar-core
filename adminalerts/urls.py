@@ -1,7 +1,9 @@
+"""URL configuration for the adminalerts app"""
+
 from django.conf.urls import url
 
 import adminalerts.views_ajax
-from . import views
+from adminalerts import views
 
 app_name = 'adminalerts'
 

@@ -31,16 +31,16 @@ class TestEventAjaxViewsBase(
 
     def setUp(self):
         super().setUp()
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -50,7 +50,7 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.event = self._make_event(
+        self.event = self.make_event(
             self.project, 'projectroles', self.user, 'project_create'
         )
         self.event_status_init = self.event.set_status(
@@ -169,7 +169,7 @@ class TestsiteEventDetailAjaxView(TestEventAjaxViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.event = self._make_event(
+        self.event = self.make_event(
             None, 'projectroles', self.user, 'test_event'
         )
         self.event_status_init = self.event.set_status(

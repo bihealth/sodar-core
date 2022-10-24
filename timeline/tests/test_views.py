@@ -48,16 +48,16 @@ class TestViewsBase(
         self.user.save()
 
         # Init category and project
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 

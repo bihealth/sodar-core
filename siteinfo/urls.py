@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from . import views
+from siteinfo import views
 
 app_name = 'siteinfo'
 

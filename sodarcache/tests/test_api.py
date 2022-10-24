@@ -304,7 +304,7 @@ class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
 
     def test_delete_project_empty(self):
         """Test delete_cache() on a project without created items"""
-        new_project = self._make_project(
+        new_project = self.make_project(
             'NewProject', PROJECT_TYPE_PROJECT, None
         )
         self.cache_backend.set_cache_item(
