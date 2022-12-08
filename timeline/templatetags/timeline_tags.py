@@ -86,8 +86,15 @@ def get_app_icon_html(event, plugin_lookup):
         if plugin_name in plugin_lookup.keys():
             plugin = plugin_lookup[plugin_name]
             entry_point = getattr(plugin, 'entry_point_url_id', None)
-            if entry_point:
-                url = reverse(entry_point, kwargs=url_kwargs)
+            if entry_point in plugin_lookup.items:
+                try:
+                    url = reverse(entry_point, kwargs=url_kwargs)
+                except Exception as ex:
+                    logger.error(
+                        'Unable to get URL for plugin "{}": {}'.format(
+                            entry_point, ex
+                        )
+                    )
             title = plugin.title
             if getattr(plugin, 'icon', None):
                 icon = plugin.icon
