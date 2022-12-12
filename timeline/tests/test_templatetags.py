@@ -198,20 +198,7 @@ class TestTemplateTags(
         self.assertIn(plugin.icon, ret)
         self.assertIn(plugin.title, ret)
         self.assertIn(url, ret)
-
-    def test_get_app_icon_html_timeline(self):
-        """Test get_app_icon_html() on event from the timeline app"""
-        event = self._make_event(
-            project=self.project,
-            app='timeline',
-            user=self.user_owner,
-            event_name=TEST_EVENT_NAME,
-            description=TEST_EVENT_DESC,
-        )
-        ret = tags.get_app_icon_html(event, self.plugin_lookup)
-        self.assertIn(tags.ICON_TIMELINE, ret)
-        self.assertIn('Timeline', ret)
-        self.assertIn('href=', ret)
+        self.assertIn(plugin.entry_point_url_id, ret)
 
     def test_get_app_icon_html_invalid_plugin(self):
         """Test get_app_icon_html() on event from an invalid plugin"""

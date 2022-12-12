@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.timezone import localtime
 
 from djangoplugins.models import Plugin
+from projectroles.plugins import ProjectAppPluginPoint
 
 from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
@@ -83,6 +84,10 @@ def get_app_icon_html(event, plugin_lookup):
         icon = ICON_PROJECTROLES
     else:
         plugin_name = event.plugin if event.plugin else event.app
+        if plugin_name in plugin_lookup.keys():
+            plugin = plugin_lookup[plugin_name]
+            if not isinstance(plugin, ProjectAppPluginPoint):
+                url_kwargs['project'] = None
         if plugin_name in plugin_lookup.keys():
             plugin = plugin_lookup[plugin_name]
             entry_point = getattr(plugin, 'entry_point_url_id', None)
