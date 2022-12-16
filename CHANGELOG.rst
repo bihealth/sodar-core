@@ -14,6 +14,7 @@ Added
 - **Projectroles**
     - Allow enabling project breadcrumb scrolling (#1037)
     - ``PROJECTROLES_BREADCRUMB_STICKY`` Django setting (#1037)
+    - ``ProjectAccessMixin`` external app model support (#1067)
 
 Changed
 -------

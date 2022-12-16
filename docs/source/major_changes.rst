@@ -10,12 +10,13 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.12.0 (WIP)
+v0.11.1 (WIP)
 *************
 
 Release Highlights
 ==================
 
+- Add support for models from other apps in project access URL kwargs
 - Allow enabling project breadcrumb scrolling
 - Fix repository and environment issues
 

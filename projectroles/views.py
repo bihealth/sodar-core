@@ -187,7 +187,6 @@ class ProjectAccessMixin:
         """
         request = request or getattr(self, 'request')
         kwargs = kwargs or getattr(self, 'kwargs')
-        # Ensure kwargs can be accessed
         if kwargs is None:
             raise ImproperlyConfigured('View kwargs are not accessible')
 
@@ -200,26 +199,29 @@ class ProjectAccessMixin:
         # Other object types
         if not request:
             raise ImproperlyConfigured('Current HTTP request is not accessible')
-
         model = None
-        uuid_kwarg = None
-
+        uuid_val = None
         for k, v in kwargs.items():
-            if re.match(r'[0-9a-f-]+', v):
-                try:
+            if not re.match(r'^[0-9a-f-]+$', v):
+                continue
+            try:
+                if '__' in k:  # Model from another app
+                    ks = k.split('__')
+                    model = apps.get_model(ks[0], ks[1])
+                else:  # Model from the same app
                     app_name = resolve(request.path).app_name
                     if app_name.find('.') != -1:
                         app_name = app_name.split('.')[0]
                     model = apps.get_model(app_name, k)
-                    uuid_kwarg = k
-                    break
-                except LookupError:
-                    pass
+                uuid_val = k
+                break
+            except LookupError:
+                pass
         if not model:
             return None
 
         try:
-            obj = model.objects.get(sodar_uuid=kwargs[uuid_kwarg])
+            obj = model.objects.get(sodar_uuid=kwargs[uuid_val])
             if hasattr(obj, 'project'):
                 return obj.project
             # Some objects may have a get_project() func instead of foreignkey
