@@ -48,6 +48,23 @@ class EventDetailMixin:
         return ret
 
 
+class EventExtraMixin:
+    """Mixin for event extra data retrieval helpers"""
+
+    def get_event_extra(self, event):
+        """
+        Return event extra data.
+        :param event: ProjectEvent object
+        :return: JSON-serializable dict
+        """
+        ret = {
+            'app': event.app,
+            'user': event.user.username if event.user else 'N/A',
+            'extra': event.get_status_changes_json(),
+        }
+        return ret
+
+
 class ProjectEventDetailAjaxView(EventDetailMixin, SODARBaseProjectAjaxView):
     """Ajax view for retrieving event details for projects"""
 
@@ -65,6 +82,27 @@ class ProjectEventDetailAjaxView(EventDetailMixin, SODARBaseProjectAjaxView):
         return Response(self.get_event_details(event), status=200)
 
 
+class ProjectEventExtraAjaxView(EventExtraMixin, SODARBaseProjectAjaxView):
+    """Ajax view for retrieving event extra data for projects"""
+
+    permission_required = 'timeline.view_timeline'
+    allow_anonymous = True
+
+    def get(self, request, *args, **kwargs):
+        event = ProjectEvent.objects.filter(
+            sodar_uuid=self.kwargs['projectevent']
+        ).first()
+        if (
+            not bool(event.extra_data)
+            or event.classified
+            and not request.user.has_perm(
+                'timeline.view_classified_event', event.project
+            )
+        ):
+            return Response(status=403)
+        return Response(self.get_event_extra(event), status=200)
+
+
 class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):
     """Ajax view for retrieving event details for site-wide events"""
 
@@ -80,3 +118,22 @@ class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):
         ):
             return Response(status=403)
         return Response(self.get_event_details(event), status=200)
+
+
+class SiteEventExtraAjaxView(EventExtraMixin, SODARBasePermissionAjaxView):
+    """Ajax view for retrieving event extra data for site-wide events"""
+
+    permission_required = 'timeline.view_site_timeline'
+    allow_anonymous = True
+
+    def get(self, request, *args, **kwargs):
+        event = ProjectEvent.objects.filter(
+            sodar_uuid=self.kwargs['projectevent']
+        ).first()
+        if (
+            not bool(event.extra_data)
+            or event.classified
+            and not request.user.has_perm('timeline.view_classified_site_event')
+        ):
+            return Response(status=403)
+        return Response(self.get_event_extra(event), status=200)

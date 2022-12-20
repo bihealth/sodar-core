@@ -19,8 +19,18 @@ table#sodar-tl-table-detail tbody tr td:nth-child(2) {
   width: 100%;
 }
 
+table#sodar-tl-table-extra-data tbody tr td:nth-child(1) {
+  white-space: nowrap;
+  width: 100%;
+}
+
 a.sodar-tl-link-detail:hover {
   text-decoration: underline;
+}
+
+a.sodar-tl-link-extra-data:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 a.sodar-tl-link-extra {

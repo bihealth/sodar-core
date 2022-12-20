@@ -180,6 +180,21 @@ class TestTemplateTags(
         self.assertIn(plugin.title, ret)
         self.assertIn(url, ret)
 
+    def test_get_app_icon_html_example_site_app(self):
+        """Test get_app_icon_html() on event from an app plugin"""
+        plugin = get_app_plugin('example_site_app')
+        event = self._make_event(
+            project=self.project,
+            app='example_site_app',
+            user=self.user_owner,
+            event_name=TEST_EVENT_NAME,
+            description=TEST_EVENT_DESC,
+        )
+        ret = tags.get_app_icon_html(event, self.plugin_lookup)
+        self.assertIn(plugin.icon, ret)
+        self.assertIn(plugin.title, ret)
+        self.assertIn('', ret)
+
     def test_get_app_icon_html_invalid_plugin(self):
         """Test get_app_icon_html() on event from an invalid plugin"""
         event = self._make_event(

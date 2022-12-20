@@ -44,6 +44,16 @@ urls_ajax = [
         view=views_ajax.SiteEventDetailAjaxView.as_view(),
         name='ajax_detail_site',
     ),
+    url(
+        regex=r'^ajax/extra/(?P<projectevent>[0-9a-f-]+)$',
+        view=views_ajax.ProjectEventExtraAjaxView.as_view(),
+        name='ajax_extra_project',
+    ),
+    url(
+        regex=r'^ajax/extra/site/(?P<projectevent>[0-9a-f-]+)$',
+        view=views_ajax.SiteEventExtraAjaxView.as_view(),
+        name='ajax_extra_site',
+    ),
 ]
 
 urlpatterns = urls_ui + urls_ajax
