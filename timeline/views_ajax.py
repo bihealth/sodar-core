@@ -4,6 +4,8 @@ from django.utils.timezone import localtime
 
 from rest_framework.response import Response
 
+from json2html import *
+
 # Projectroles dependency
 from projectroles.views_ajax import (
     SODARBaseProjectAjaxView,
@@ -57,10 +59,11 @@ class EventExtraMixin:
         :param event: ProjectEvent object
         :return: JSON-serializable dict
         """
+        extra_data_html = json2html.convert(json=event.get_status_changes_json())
         ret = {
             'app': event.app,
             'user': event.user.username if event.user else 'N/A',
-            'extra': event.get_status_changes_json(),
+            'extra': extra_data_html,
         }
         return ret
 
