@@ -59,7 +59,7 @@ class EventExtraMixin:
         :param event: ProjectEvent object
         :return: JSON-serializable dict
         """
-        extra_data_html = json2html.convert(json=event.get_status_changes_json())
+        extra_data_html = json2html.convert(json=event.extra_data)
         ret = {
             'app': event.app,
             'user': event.user.username if event.user else 'N/A',
