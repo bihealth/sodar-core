@@ -71,27 +71,22 @@ def get_plugin_lookup():
 def get_app_icon_html(event, plugin_lookup):
     """Return icon link HTML for app by plugin lookup"""
     url = None
-    url_kwargs = {}
-    if event.project:
-        url_kwargs['project'] = event.project.sodar_uuid
     title = event.app
     icon = ICON_UNKNOWN_APP  # Default in case the plugin is not found
 
     if event.app == 'projectroles':
         if event.project:
-            url = reverse('projectroles:detail', kwargs=url_kwargs)
+            url = reverse('projectroles:detail', kwargs={'project':event.project.sodar_uuid})
         title = 'Projectroles'
         icon = ICON_PROJECTROLES
     else:
         plugin_name = event.plugin if event.plugin else event.app
         if plugin_name in plugin_lookup.keys():
             plugin = plugin_lookup[plugin_name]
-            if not isinstance(plugin, ProjectAppPluginPoint):
-                url_kwargs['project'] = None
             entry_point = getattr(plugin, 'entry_point_url_id', None)
             if entry_point:
                 try:
-                    url = reverse(entry_point, kwargs=url_kwargs)
+                    url = reverse(entry_point, kwargs={'project':None})
                 except Exception as ex:
                     url = None
                     logger.error(
