@@ -5,6 +5,7 @@ from django.utils.timezone import localtime
 from rest_framework.response import Response
 
 from json2html import *
+from jinja2 import *
 
 # Projectroles dependency
 from projectroles.views_ajax import (
@@ -14,6 +15,7 @@ from projectroles.views_ajax import (
 
 from timeline.models import ProjectEvent
 from timeline.templatetags.timeline_tags import get_status_style
+from timeline.templatetags.timeline_tags import get_event_extra_data, collect_extra_data
 
 
 class EventDetailMixin:
@@ -53,17 +55,48 @@ class EventDetailMixin:
 class EventExtraMixin:
     """Mixin for event extra data retrieval helpers"""
 
+    def form_html(self, event):
+        """
+        Return event extra data as html suitable exactly for jquery.
+        :param event: ProjectEvent object
+        :return: HTML string
+        """
+        extra_list = []
+        event_extra_data_list = collect_extra_data(event)
+        for data in event_extra_data_list:
+            data0 = data[0]
+            data2pk = data[2].pk
+            extra = get_event_extra_data(data[2])
+            extra_list.append((data0, data2pk, extra))
+
+        template = Template("""
+        <div class="modal-body tab-content">
+        {% for data in extra_list %}
+          <div class="tab-pane" role="tabpanel" id="{{ data.0 }}-{{ data.1 }}">
+            <pre id="{{ data.0 }}-pre-{{ data.1 }}">{% autoescape off %}{{ data.2 }}{% endautoescape %}</pre>
+            <button class="btn btn-secondary sodar-list-btn sodar-copy-btn sodar-tl-copy-btn"
+                    data-clipboard-target="#{{ data.0 }}-pre-{{ data.1 }}"
+                    title="Copy to clipboard" data-toggle="tooltip">
+              <i class="iconify" data-icon="mdi:clipboard-multiple-outline"></i>
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+        """)
+        html_doc = template.render(extra_list=extra_list)
+        return html_doc
+
     def get_event_extra(self, event):
         """
         Return event extra data.
         :param event: ProjectEvent object
         :return: JSON-serializable dict
         """
-        extra_data_html = json2html.convert(json=event.extra_data)
+        extra_data_html = self.form_html(event)
         ret = {
             'app': event.app,
             'user': event.user.username if event.user else 'N/A',
-            'extra': extra_data_html,
+            'extra': " ".join(extra_data_html.split())
         }
         return ret
 
