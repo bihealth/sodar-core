@@ -96,7 +96,7 @@ class EventExtraMixin:
         ret = {
             'app': event.app,
             'user': event.user.username if event.user else 'N/A',
-            'extra': " ".join(extra_data_html.split())
+            'extra': " ".join(extra_data_html.split()),
         }
         return ret
 
