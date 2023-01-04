@@ -21,6 +21,7 @@ Changed
 
 - **General**
     - Upgrade minimum Django version to v3.2.16 (#1035)
+    - Upgrade Python dependencies (#1073)
 
 Fixed
 -----
