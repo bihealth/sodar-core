@@ -76,7 +76,10 @@ def get_app_icon_html(event, plugin_lookup):
 
     if event.app == 'projectroles':
         if event.project:
-            url = reverse('projectroles:detail', kwargs={'project':event.project.sodar_uuid})
+            url = reverse(
+                'projectroles:detail',
+                kwargs={'project': event.project.sodar_uuid},
+            )
         title = 'Projectroles'
         icon = ICON_PROJECTROLES
     else:
@@ -86,7 +89,7 @@ def get_app_icon_html(event, plugin_lookup):
             entry_point = getattr(plugin, 'entry_point_url_id', None)
             if entry_point:
                 try:
-                    url = reverse(entry_point, kwargs={'project':None})
+                    url = reverse(entry_point, kwargs={'project': None})
                 except Exception as ex:
                     url = None
                     logger.error(
