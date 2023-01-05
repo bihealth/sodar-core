@@ -156,19 +156,6 @@ class ProjectEvent(models.Model):
             '{}pk'.format('-' if reverse else '')
         )
 
-    def get_status_changes_json(self):
-        """Return all status changes for the event as JSON"""
-
-        def json_default(value):
-            if isinstance(value, datetime.date):
-                return dict(year=value.year, month=value.month, day=value.day)
-            if isinstance(value, uuid.UUID):
-                return str(value)
-            else:
-                return value.__dict__
-
-        return json.dumps(self, default=json_default, sort_keys=True, indent=4)
-
     def add_object(self, obj, label, name, extra_data=None):
         """
         Add object reference to an event.
