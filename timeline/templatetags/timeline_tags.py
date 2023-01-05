@@ -1,4 +1,3 @@
-import html
 import logging
 
 from django import template
@@ -7,7 +6,6 @@ from django.utils.timezone import localtime
 
 from djangoplugins.models import Plugin
 
-from projectroles.plugins import ProjectAppPluginPoint
 from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
 
@@ -123,87 +121,6 @@ def get_status_style(status):
         if status.status_type in STATUS_STYLES
         else 'bg-light'
     )
-
-
-@register.simple_tag
-def get_event_extra_data(event):
-    return json_to_html(event.extra_data)
-
-
-def json_to_html(obj):
-    str_list = []
-    html_print_obj(obj, str_list, 0)
-    return ''.join(str_list)
-
-
-def html_print_obj(obj, str_list: list, indent):
-    if isinstance(obj, dict):
-        html_print_dict(obj, str_list, indent)
-    elif isinstance(obj, list):
-        html_print_array(obj, str_list, indent)
-    elif isinstance(obj, str):
-        str_list.append('&quot;')
-        str_list.append(html.escape(obj))
-        str_list.append('&quot;')
-    elif isinstance(obj, int):
-        str_list.append(str(obj))
-    elif isinstance(obj, bool):
-        str_list.append(str(obj))
-    elif obj is None:
-        str_list.append('null')
-
-
-def html_print_dict(dct: dict, str_list, indent):
-    str_list.append('<span class="json-open-bracket">{</span>\n')
-    str_list.append('<span class="json-collapse-1" style="display: inline;">')
-
-    indent += 1
-    for key, value in dct.items():
-        str_list.append('<span class="json-indent">')
-        str_list.append('  ' * indent)
-        str_list.append('</span>')
-        str_list.append('<span class="json-property">')
-
-        str_list.append(html.escape(str(key)))
-
-        str_list.append('</span>')
-        str_list.append('<span class="json-semi-colon">: </span>')
-
-        str_list.append('<span class="json-value">')
-        html_print_obj(value, str_list, indent)
-
-        str_list.append('</span>')
-        str_list.append('<span class="json-comma">,</span>\n')
-
-    if len(dct) > 0:
-        del str_list[-1]
-        str_list.append('\n')
-
-    str_list.append('</span>')
-    str_list.append('  ' * (indent - 1))
-    str_list.append('<span class="json-close-bracket">}</span>')
-
-
-def html_print_array(array, str_list, indent):
-    str_list.append('<span class="json-open-bracket">[</span>\n')
-    str_list.append('<span class="json-collapse-1" style="display: inline;">')
-
-    indent += 1
-    for value in array:
-        str_list.append('<span class="json-indent">')
-        str_list.append('  ' * indent)
-        str_list.append('</span>')
-        str_list.append('<span class="json-value">')
-        html_print_obj(value, str_list, indent)
-        str_list.append('</span>')
-        str_list.append('<span class="json-comma">,</span>\n')
-    if len(array) > 0:
-        del str_list[-1]
-        str_list.append('\n')
-
-    str_list.append('</span>')
-    str_list.append('  ' * (indent - 1))
-    str_list.append('<span class="json-close-bracket">]</span>')
 
 
 # Filters ----------------------------------------------------------------------
