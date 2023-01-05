@@ -143,7 +143,7 @@ class TestProjectEventExtraAjaxView(TestEventDetailAjaxViewBase):
         expected = {
             'app': self.event.app,
             'user': self.user.username,
-            'extra': self.event.get_status_changes_json(),
+            'extra': self.event.extra_data,
         }
         self.assertIn(expected['app'], str(response.data))
         self.assertIn(expected['user'], str(response.data))
@@ -247,7 +247,7 @@ class TestsiteEventExtraAjaxView(TestEventDetailAjaxViewBase):
         expected = {
             'app': self.event.app,
             'user': self.user.username,
-            'extra': self.event.get_status_changes_json(),
+            'extra': self.event.extra_data,
         }
         self.assertIn(expected['app'], str(response.data))
         self.assertIn(expected['user'], str(response.data))
