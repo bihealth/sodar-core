@@ -13,7 +13,10 @@ from projectroles.views_ajax import (
 
 from timeline.models import ProjectEvent
 from timeline.templatetags.timeline_tags import get_status_style
-from timeline.templatetags.timeline_tags import get_event_extra_data, collect_extra_data
+from timeline.templatetags.timeline_tags import (
+    get_event_extra_data,
+    collect_extra_data,
+)
 
 
 class EventDetailMixin:
@@ -56,7 +59,6 @@ class ExtraDataHTMLMixin:
         cls.html_print_obj(obj_json, str_list, 0)
         return ''.join(str_list)
 
-
     def html_print_obj(cls, obj_json, str_list: list, indent):
         if isinstance(obj_json, dict):
             cls.html_print_dict(obj_json, str_list, indent)
@@ -73,10 +75,11 @@ class ExtraDataHTMLMixin:
         elif obj_json is None:
             str_list.append('null')
 
-
     def html_print_dict(cls, dct: dict, str_list, indent):
         str_list.append('<span class="json-open-bracket">{</span><br>')
-        str_list.append('<span class="json-collapse-1" style="display: inline;">')
+        str_list.append(
+            '<span class="json-collapse-1" style="display: inline;">'
+        )
 
         indent += 1
         for key, value in dct.items():
@@ -104,10 +107,11 @@ class ExtraDataHTMLMixin:
         str_list.append('  ' * (indent - 1))
         str_list.append('<span class="json-close-bracket">}</span>')
 
-
     def html_print_array(cls, array, str_list, indent):
         str_list.append('<span class="json-open-bracket">[</span><br>')
-        str_list.append('<span class="json-collapse-1" style="display: inline;">')
+        str_list.append(
+            '<span class="json-collapse-1" style="display: inline;">'
+        )
 
         indent += 1
         for value in array:
@@ -125,6 +129,7 @@ class ExtraDataHTMLMixin:
         str_list.append('</span>')
         str_list.append('  ' * (indent - 1))
         str_list.append('<span class="json-close-bracket">]</span>')
+
 
 class EventExtraMixin(ExtraDataHTMLMixin):
     """Mixin for event extra data retrieval helpers"""
