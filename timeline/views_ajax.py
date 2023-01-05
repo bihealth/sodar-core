@@ -1,11 +1,9 @@
 """Ajax API views for the timeline app"""
+import html
 
 from django.utils.timezone import localtime
 
 from rest_framework.response import Response
-
-from json2html import *
-from jinja2 import *
 
 # Projectroles dependency
 from projectroles.views_ajax import (
@@ -52,7 +50,83 @@ class EventDetailMixin:
         return ret
 
 
-class EventExtraMixin:
+class ExtraDataHTMLMixin:
+    def json_to_html(cls, obj_json):
+        str_list = []
+        cls.html_print_obj(obj_json, str_list, 0)
+        return ''.join(str_list)
+
+
+    def html_print_obj(cls, obj_json, str_list: list, indent):
+        if isinstance(obj_json, dict):
+            cls.html_print_dict(obj_json, str_list, indent)
+        elif isinstance(obj_json, list):
+            cls.html_print_array(obj_json, str_list, indent)
+        elif isinstance(obj_json, str):
+            str_list.append('&quot;')
+            str_list.append(html.escape(obj_json))
+            str_list.append('&quot;')
+        elif isinstance(obj_json, int):
+            str_list.append(str(obj_json))
+        elif isinstance(obj_json, bool):
+            str_list.append(str(obj_json))
+        elif obj_json is None:
+            str_list.append('null')
+
+
+    def html_print_dict(cls, dct: dict, str_list, indent):
+        str_list.append('<span class="json-open-bracket">{</span>\n')
+        str_list.append('<span class="json-collapse-1" style="display: inline;">')
+
+        indent += 1
+        for key, value in dct.items():
+            str_list.append('<span class="json-indent">')
+            str_list.append('  ' * indent)
+            str_list.append('</span>')
+            str_list.append('<span class="json-property">')
+
+            str_list.append(html.escape(str(key)))
+
+            str_list.append('</span>')
+            str_list.append('<span class="json-semi-colon">: </span>')
+
+            str_list.append('<span class="json-value">')
+            cls.html_print_obj(value, str_list, indent)
+
+            str_list.append('</span>')
+            str_list.append('<span class="json-comma">,</span>\n')
+
+        if len(dct) > 0:
+            del str_list[-1]
+            str_list.append('\n')
+
+        str_list.append('</span>')
+        str_list.append('  ' * (indent - 1))
+        str_list.append('<span class="json-close-bracket">}</span>')
+
+
+    def html_print_array(cls, array, str_list, indent):
+        str_list.append('<span class="json-open-bracket">[</span>\n')
+        str_list.append('<span class="json-collapse-1" style="display: inline;">')
+
+        indent += 1
+        for value in array:
+            str_list.append('<span class="json-indent">')
+            str_list.append('  ' * indent)
+            str_list.append('</span>')
+            str_list.append('<span class="json-value">')
+            cls.html_print_obj(value, str_list, indent)
+            str_list.append('</span>')
+            str_list.append('<span class="json-comma">,</span>\n')
+        if len(array) > 0:
+            del str_list[-1]
+            str_list.append('\n')
+
+        str_list.append('</span>')
+        str_list.append('  ' * (indent - 1))
+        str_list.append('<span class="json-close-bracket">]</span>')
+
+class EventExtraMixin(ExtraDataHTMLMixin):
     """Mixin for event extra data retrieval helpers"""
 
     def form_html(self, event):
@@ -68,23 +142,8 @@ class EventExtraMixin:
             data2pk = data[2].pk
             extra = get_event_extra_data(data[2])
             extra_list.append((data0, data2pk, extra))
-
-        template = Template("""
-        <div class="modal-body tab-content">
-        {% for data in extra_list %}
-          <div class="tab-pane" role="tabpanel" id="{{ data.0 }}-{{ data.1 }}">
-            <pre id="{{ data.0 }}-pre-{{ data.1 }}">{% autoescape off %}{{ data.2 }}{% endautoescape %}</pre>
-            <button class="btn btn-secondary sodar-list-btn sodar-copy-btn sodar-tl-copy-btn"
-                    data-clipboard-target="#{{ data.0 }}-pre-{{ data.1 }}"
-                    title="Copy to clipboard" data-toggle="tooltip">
-              <i class="iconify" data-icon="mdi:clipboard-multiple-outline"></i>
-            </button>
-          </div>
-        {% endfor %}
-      </div>
-        """)
-        html_doc = template.render(extra_list=extra_list)
-        return html_doc
+        html_piece = self.json_to_html(event.extra_data)
+        return html_piece
 
     def get_event_extra(self, event):
         """
@@ -96,7 +155,7 @@ class EventExtraMixin:
         ret = {
             'app': event.app,
             'user': event.user.username if event.user else 'N/A',
-            'extra': " ".join(extra_data_html.split()),
+            'extra': extra_data_html,
         }
         return ret
 

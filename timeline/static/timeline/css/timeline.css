@@ -66,3 +66,37 @@ a.sodar-tl-link-extra {
       display: none;
   }
 }
+
+.sodar-tl-modal-dialog {
+  max-width: 75% !important;
+}
+
+.json-open-bracket, .json-close-bracket {
+  color: #CC0011;
+}
+
+.json-property {
+  color: #1A5988;
+}
+
+.json-semi-colon {
+  color: #14171A;
+}
+
+.json-value {
+  color: #222222;
+}
+
+.sodar-tl-modal-tabs {
+  flex: 1;
+  flex-direction: row;
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.sodar-tl-copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
