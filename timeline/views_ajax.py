@@ -49,16 +49,18 @@ class EventDetailMixin:
         return ret
 
 
-class EventExtraMixin():
+class EventExtraMixin:
     """Mixin for event extra data retrieval helpers"""
 
     def _json_to_html(self, obj_json):
         """Return HTML representation of JSON object"""
-        str_list = ['<button class="btn btn-secondary sodar-list-btn sodar-copy-btn sodar-tl-copy-btn"'\
-                    'data-clipboard-target="#{{ data.0 }}-pre-{{ data.2.pk }}"'\
-                    'title="Copy to clipboard" data-toggle="tooltip">'\
-                    '<i class="iconify" data-icon="mdi:clipboard-multiple-outline"></i>'\
-                    '</button>']
+        str_list = [
+            '<button class="btn btn-secondary sodar-list-btn sodar-copy-btn sodar-tl-copy-btn"'
+            'data-clipboard-target="#{{ data.0 }}-pre-{{ data.2.pk }}"'
+            'title="Copy to clipboard" data-toggle="tooltip">'
+            '<i class="iconify" data-icon="mdi:clipboard-multiple-outline"></i>'
+            '</button>'
+        ]
         self._html_print_obj(obj_json, str_list, 0)
         return ''.join(str_list)
 
@@ -89,7 +91,7 @@ class EventExtraMixin():
         indent += 1
         for key, value in dct.items():
             str_list.append('<span class="json-indent">')
-            str_list.append('  ' * indent)
+            str_list.append('&nbsp;&nbsp;' * indent)
             str_list.append('</span>')
             str_list.append('<span class="json-property">')
 
@@ -109,7 +111,7 @@ class EventExtraMixin():
             str_list.append('<br>')
 
         str_list.append('</span>')
-        str_list.append('  ' * (indent - 1))
+        str_list.append('&nbsp;&nbsp;' * (indent - 1))
         str_list.append('<span class="json-close-bracket">}</span>')
 
     def _html_print_array(self, array, str_list, indent):
@@ -122,7 +124,7 @@ class EventExtraMixin():
         indent += 1
         for value in array:
             str_list.append('<span class="json-indent">')
-            str_list.append('  ' * indent)
+            str_list.append('&nbsp;&nbsp;' * indent)
             str_list.append('</span>')
             str_list.append('<span class="json-value">')
             self._html_print_obj(value, str_list, indent)
@@ -133,7 +135,7 @@ class EventExtraMixin():
             str_list.append('<br>')
 
         str_list.append('</span>')
-        str_list.append('  ' * (indent - 1))
+        str_list.append('&nbsp;&nbsp;' * (indent - 1))
         str_list.append('<span class="json-close-bracket">]</span>')
 
     def get_event_extra(self, event):
