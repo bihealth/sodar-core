@@ -75,7 +75,7 @@ class ExtraDataHTMLMixin:
 
 
     def html_print_dict(cls, dct: dict, str_list, indent):
-        str_list.append('<span class="json-open-bracket">{</span>\n')
+        str_list.append('<span class="json-open-bracket">{</span><br>')
         str_list.append('<span class="json-collapse-1" style="display: inline;">')
 
         indent += 1
@@ -94,11 +94,11 @@ class ExtraDataHTMLMixin:
             cls.html_print_obj(value, str_list, indent)
 
             str_list.append('</span>')
-            str_list.append('<span class="json-comma">,</span>\n')
+            str_list.append('<span class="json-comma">,</span><br>')
 
         if len(dct) > 0:
             del str_list[-1]
-            str_list.append('\n')
+            str_list.append('<br>')
 
         str_list.append('</span>')
         str_list.append('  ' * (indent - 1))
@@ -106,7 +106,7 @@ class ExtraDataHTMLMixin:
 
 
     def html_print_array(cls, array, str_list, indent):
-        str_list.append('<span class="json-open-bracket">[</span>\n')
+        str_list.append('<span class="json-open-bracket">[</span><br>')
         str_list.append('<span class="json-collapse-1" style="display: inline;">')
 
         indent += 1
@@ -117,10 +117,10 @@ class ExtraDataHTMLMixin:
             str_list.append('<span class="json-value">')
             cls.html_print_obj(value, str_list, indent)
             str_list.append('</span>')
-            str_list.append('<span class="json-comma">,</span>\n')
+            str_list.append('<span class="json-comma">,</span><br>')
         if len(array) > 0:
             del str_list[-1]
-            str_list.append('\n')
+            str_list.append('<br>')
 
         str_list.append('</span>')
         str_list.append('  ' * (indent - 1))
