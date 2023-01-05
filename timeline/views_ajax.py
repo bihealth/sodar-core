@@ -13,10 +13,6 @@ from projectroles.views_ajax import (
 
 from timeline.models import ProjectEvent
 from timeline.templatetags.timeline_tags import get_status_style
-from timeline.templatetags.timeline_tags import (
-    get_event_extra_data,
-    collect_extra_data,
-)
 
 
 class EventDetailMixin:
@@ -53,17 +49,25 @@ class EventDetailMixin:
         return ret
 
 
-class ExtraDataHTMLMixin:
-    def json_to_html(cls, obj_json):
-        str_list = []
-        cls.html_print_obj(obj_json, str_list, 0)
+class EventExtraMixin():
+    """Mixin for event extra data retrieval helpers"""
+
+    def _json_to_html(self, obj_json):
+        """Return HTML representation of JSON object"""
+        str_list = ['<button class="btn btn-secondary sodar-list-btn sodar-copy-btn sodar-tl-copy-btn"'\
+                    'data-clipboard-target="#{{ data.0 }}-pre-{{ data.2.pk }}"'\
+                    'title="Copy to clipboard" data-toggle="tooltip">'\
+                    '<i class="iconify" data-icon="mdi:clipboard-multiple-outline"></i>'\
+                    '</button>']
+        self._html_print_obj(obj_json, str_list, 0)
         return ''.join(str_list)
 
-    def html_print_obj(cls, obj_json, str_list: list, indent):
+    def _html_print_obj(self, obj_json, str_list: list, indent):
+        """Print JSON object to HTML string list"""
         if isinstance(obj_json, dict):
-            cls.html_print_dict(obj_json, str_list, indent)
+            self._html_print_dict(obj_json, str_list, indent)
         elif isinstance(obj_json, list):
-            cls.html_print_array(obj_json, str_list, indent)
+            self._html_print_array(obj_json, str_list, indent)
         elif isinstance(obj_json, str):
             str_list.append('&quot;')
             str_list.append(html.escape(obj_json))
@@ -75,7 +79,8 @@ class ExtraDataHTMLMixin:
         elif obj_json is None:
             str_list.append('null')
 
-    def html_print_dict(cls, dct: dict, str_list, indent):
+    def _html_print_dict(self, dct: dict, str_list, indent):
+        """Print JSON dict to HTML string list"""
         str_list.append('<span class="json-open-bracket">{</span><br>')
         str_list.append(
             '<span class="json-collapse-1" style="display: inline;">'
@@ -94,7 +99,7 @@ class ExtraDataHTMLMixin:
             str_list.append('<span class="json-semi-colon">: </span>')
 
             str_list.append('<span class="json-value">')
-            cls.html_print_obj(value, str_list, indent)
+            self._html_print_obj(value, str_list, indent)
 
             str_list.append('</span>')
             str_list.append('<span class="json-comma">,</span><br>')
@@ -107,7 +112,8 @@ class ExtraDataHTMLMixin:
         str_list.append('  ' * (indent - 1))
         str_list.append('<span class="json-close-bracket">}</span>')
 
-    def html_print_array(cls, array, str_list, indent):
+    def _html_print_array(self, array, str_list, indent):
+        """Print JSON array to HTML string list"""
         str_list.append('<span class="json-open-bracket">[</span><br>')
         str_list.append(
             '<span class="json-collapse-1" style="display: inline;">'
@@ -119,7 +125,7 @@ class ExtraDataHTMLMixin:
             str_list.append('  ' * indent)
             str_list.append('</span>')
             str_list.append('<span class="json-value">')
-            cls.html_print_obj(value, str_list, indent)
+            self._html_print_obj(value, str_list, indent)
             str_list.append('</span>')
             str_list.append('<span class="json-comma">,</span><br>')
         if len(array) > 0:
@@ -130,37 +136,16 @@ class ExtraDataHTMLMixin:
         str_list.append('  ' * (indent - 1))
         str_list.append('<span class="json-close-bracket">]</span>')
 
-
-class EventExtraMixin(ExtraDataHTMLMixin):
-    """Mixin for event extra data retrieval helpers"""
-
-    def form_html(self, event):
-        """
-        Return event extra data as html suitable exactly for jquery.
-        :param event: ProjectEvent object
-        :return: HTML string
-        """
-        extra_list = []
-        event_extra_data_list = collect_extra_data(event)
-        for data in event_extra_data_list:
-            data0 = data[0]
-            data2pk = data[2].pk
-            extra = get_event_extra_data(data[2])
-            extra_list.append((data0, data2pk, extra))
-        html_piece = self.json_to_html(event.extra_data)
-        return html_piece
-
     def get_event_extra(self, event):
         """
         Return event extra data.
         :param event: ProjectEvent object
         :return: JSON-serializable dict
         """
-        extra_data_html = self.form_html(event)
         ret = {
             'app': event.app,
             'user': event.user.username if event.user else 'N/A',
-            'extra': extra_data_html,
+            'extra': self._json_to_html(event.extra_data),
         }
         return ret
 
