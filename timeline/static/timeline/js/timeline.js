@@ -59,7 +59,7 @@ $(document).ready(function() {
             );
             var tableBody = $('.modal-body').find('tbody');
             tableBody.append($('<tr>')
-                .append($('<td>').html(data['extra']))
+                .append($('<td>').html('<pre id=data-to-clipboard>' + data['extra'] + '</pre>'))
             );
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
