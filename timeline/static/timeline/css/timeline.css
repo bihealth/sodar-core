@@ -19,8 +19,18 @@ table#sodar-tl-table-detail tbody tr td:nth-child(2) {
   width: 100%;
 }
 
+table#sodar-tl-table-extra-data tbody tr td:nth-child(1) {
+  white-space: nowrap;
+  width: 100%;
+}
+
 a.sodar-tl-link-detail:hover {
   text-decoration: underline;
+}
+
+a.sodar-tl-link-extra-data:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 a.sodar-tl-link-extra {
@@ -55,4 +65,45 @@ a.sodar-tl-link-extra {
   .table#sodar-tl-table tbody tr td:nth-child(5) {
       display: none;
   }
+}
+
+.sodar-tl-modal-dialog {
+  max-width: 75% !important;
+  font-family: monospace;
+}
+
+.json-open-bracket, .json-close-bracket {
+  color: #CC0011;
+  font-family: monospace;
+}
+
+.json-property {
+  color: #1A5988;
+  font-family: monospace;
+}
+
+.json-semi-colon {
+  color: #14171A;
+  font-family: monospace;
+}
+
+.json-value {
+  color: #222222;
+  font-family: monospace;
+}
+
+.sodar-tl-modal-tabs {
+  flex: 1;
+  flex-direction: row;
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #dee2e6;
+  font-family: monospace;
+}
+
+.sodar-tl-copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: monospace;
 }
