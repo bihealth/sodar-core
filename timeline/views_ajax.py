@@ -156,7 +156,6 @@ class ProjectEventDetailAjaxView(EventDetailMixin, SODARBaseProjectAjaxView):
     """Ajax view for retrieving event details for projects"""
 
     permission_required = 'timeline.view_timeline'
-    allow_anonymous = True
 
     def get(self, request, *args, **kwargs):
         event = ProjectEvent.objects.filter(
@@ -193,7 +192,6 @@ class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):
     """Ajax view for retrieving event details for site-wide events"""
 
     permission_required = 'timeline.view_site_timeline'
-    allow_anonymous = True
 
     def get(self, request, *args, **kwargs):
         event = ProjectEvent.objects.filter(
@@ -210,7 +208,6 @@ class SiteEventExtraAjaxView(EventExtraMixin, SODARBasePermissionAjaxView):
     """Ajax view for retrieving event extra data for site-wide events"""
 
     permission_required = 'timeline.view_site_timeline'
-    allow_anonymous = True
 
     def get(self, request, *args, **kwargs):
         event = ProjectEvent.objects.filter(

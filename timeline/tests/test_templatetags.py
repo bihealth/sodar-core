@@ -234,7 +234,7 @@ class TestTemplateTags(
         ret = tags.get_app_icon_html(event, self.plugin_lookup)
         self.assertIn(plugin.icon, ret)
         self.assertIn(plugin.title, ret)
-        self.assertIn(url, ret)  #'href="/examples/site/example"'
+        self.assertIn(url, ret)
 
     def test_get_app_icon_html_invalid_plugin(self):
         """Test get_app_icon_html() on event from an invalid plugin"""

@@ -36,7 +36,7 @@ class ProjectEventMixin:
         event_name,
         description='',
         classified=False,
-        extra_data=None,
+        extra_data={'test': 'test'},
         plugin=None,
     ):
         values = {
@@ -83,7 +83,7 @@ class ProjectEventStatusMixin:
             'event': event,
             'status_type': status_type,
             'description': description,
-            'extra_data': extra_data or {},
+            'extra_data': extra_data or {'test': 'test'},
         }
         result = ProjectEventStatus(**values)
         result.save()
