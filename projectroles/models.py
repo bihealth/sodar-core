@@ -464,6 +464,10 @@ class Project(models.Model):
             self.save()
             self._update_public_children()  # Update for parents
 
+    def get_log_title(self):
+        """Return a log title for the project"""
+        return '"{}" ({})'.format(self.title, self.sodar_uuid)
+
 
 # Role -------------------------------------------------------------------------
 

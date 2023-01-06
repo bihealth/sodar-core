@@ -286,10 +286,9 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
             if not request.user.has_perm('projectroles.view_project', project):
                 logger.error(
                     'ProjectListColumnAjaxView: User {} not authorized to view '
-                    'project "{}" ({})'.format(
+                    'project {}'.format(
                         request.user.username,
-                        project.title,
-                        project.sodar_uuid,
+                        project.get_log_title(),
                     )
                 )
                 continue
@@ -342,10 +341,9 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
             if not request.user.has_perm('projectroles.view_project', project):
                 logger.error(
                     'ProjectListRoleAjaxView: User {} not authorized to view '
-                    'project "{}" ({})'.format(
+                    'project {}'.format(
                         request.user.username,
-                        project.title,
-                        project.sodar_uuid,
+                        project.get_log_title(),
                     )
                 )
                 continue
