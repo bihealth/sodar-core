@@ -11,15 +11,14 @@ from projectroles.utils import get_app_names
 from sodarcache.models import JSONCacheItem
 
 
+logger = logging.getLogger(__name__)
+User = get_user_model()
+
+
 # Local variables
 APP_NAMES = get_app_names()
 LABEL_MAX_WIDTH = 32
 CACHE_TYPES = ['json']
-
-# Access Django user model
-User = get_user_model()
-
-logger = logging.getLogger(__name__)
 
 
 class SodarCacheAPI:
@@ -76,7 +75,6 @@ class SodarCacheAPI:
         :param user: User object to denote user triggering the update (optional)
         """
         plugins = get_active_plugins(plugin_type='project_app')
-
         for plugin in plugins:
             plugin.update_cache(name, project, user)
 
@@ -92,19 +90,14 @@ class SodarCacheAPI:
         """
         if app_name:
             cls._check_app_name(app_name)
-
         if not app_name and not project:
             items = JSONCacheItem.objects.all()
-
         else:
             query_params = {}
-
             if app_name:
                 query_params['app_name'] = app_name
-
             if project:
                 query_params['project'] = project
-
             items = JSONCacheItem.objects.filter(**query_params)
 
         if items:
@@ -140,12 +133,9 @@ class SodarCacheAPI:
         :raise: ValueError if app_name is invalid
         """
         cls._check_app_name(app_name)
-
         query_string = {'app_name': app_name, 'name': name}
-
         if project:
             query_string['project'] = project
-
         return JSONCacheItem.objects.filter(**query_string).first()
 
     @classmethod
@@ -169,25 +159,20 @@ class SodarCacheAPI:
         cls._check_data_type(data_type)
         item = cls.get_cache_item(app_name, name, project)
         log_msg = 'Updated item "{}:{}"'.format(app_name, name)
-
         if not item:
             if data_type == 'json':
                 item = JSONCacheItem()
                 item.name = name
                 item.app_name = app_name
-
         item.data = data
-
         if project:
             item.project = project
             log_msg += ' in project "{}" ({})'.format(
                 project.title, project.sodar_uuid
             )
-
         if user:
             item.user = user
             log_msg += ' by user "{}"'.format(user.username)
-
         item.save()
         logger.info(log_msg)
         return item

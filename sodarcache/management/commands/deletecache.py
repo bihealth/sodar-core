@@ -32,7 +32,6 @@ class Command(BaseCommand):
             sys.exit(1)
 
         project = None
-
         if options.get('project'):
             try:
                 project = Project.objects.get(sodar_uuid=options['project'])
