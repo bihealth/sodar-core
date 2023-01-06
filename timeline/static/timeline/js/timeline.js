@@ -46,25 +46,14 @@ $(document).ready(function() {
             method: 'GET',
         }).done(function (data) {
             $('.modal-title').text(
-                'Event extra data: ' + 'Application "' + data['app'] + '" made by ' + data['user']);
-            $('.modal-body').html('').append($('<table>')
-                .attr('class', 'table table-striped sodar-extra-card-table')
-                .attr('id', 'sodar-tl-table-extra-data')
-                .append($('<thead>')
-                    .append($('<tr>')
-                        .append($('<th>').html('Extra data'))
-                    )
-                )
-                .append($('<tbody>'))
-            );
-            var tableBody = $('.modal-body').find('tbody');
-            tableBody.append($('<tr>')
-                .append($('<td>').html('<pre id=data-to-clipboard>' + data['extra'] + '</pre>'))
-            );
+                'Event Extra Data: ' + data['app'] + '.' + data['name'] + ' (' +
+                data['user'] + ' @ ' + data['timestamp'] + ')');
+            $('.modal-body').html('').append($('<p>').html(
+                '<pre class="sodar-tl-json" id=data-to-clipboard>' + data['extra'] + '</pre>'));
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
         }).fail(function (data) {
-            $('.modal-body').html('Error in extra: ' + data);
+            $('.modal-body').html('Error: ' + data);
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
         });

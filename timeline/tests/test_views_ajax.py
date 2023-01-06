@@ -19,10 +19,10 @@ from timeline.templatetags.timeline_tags import get_status_style
 from timeline.tests.test_models import ProjectEventMixin
 
 
-class TestEventDetailAjaxViewBase(
+class TestEventAjaxViewsBase(
     ProjectMixin, RoleAssignmentMixin, ProjectEventMixin, TestViewsBase
 ):
-    """Base class for timeline Ajax API view test"""
+    """Base class for timeline Ajax API view tests"""
 
     @classmethod
     def _format_ts(cls, timestamp):
@@ -45,7 +45,7 @@ class TestEventDetailAjaxViewBase(
         )
 
 
-class TestProjectEventDetailAjaxView(TestEventDetailAjaxViewBase):
+class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
     """Tests for ProjectEventDetailAjaxView"""
 
     def setUp(self):
@@ -111,7 +111,7 @@ class TestProjectEventDetailAjaxView(TestEventDetailAjaxViewBase):
         self.assertEqual(response.data['user'], 'N/A')
 
 
-class TestProjectEventExtraAjaxView(TestEventDetailAjaxViewBase):
+class TestProjectEventExtraAjaxView(TestEventAjaxViewsBase):
     """Tests for ProjectEventExtraAjaxView"""
 
     def setUp(self):
@@ -163,7 +163,7 @@ class TestProjectEventExtraAjaxView(TestEventDetailAjaxViewBase):
         self.assertEqual(response.data['user'], 'N/A')
 
 
-class TestsiteEventDetailAjaxView(TestEventDetailAjaxViewBase):
+class TestsiteEventDetailAjaxView(TestEventAjaxViewsBase):
     """Tests for SiteEventDetailAjaxView"""
 
     def setUp(self):
@@ -215,7 +215,7 @@ class TestsiteEventDetailAjaxView(TestEventDetailAjaxViewBase):
         self.assertEqual(response.data, expected)
 
 
-class TestsiteEventExtraAjaxView(TestEventDetailAjaxViewBase):
+class TestSiteEventExtraAjaxView(TestEventAjaxViewsBase):
     """Tests for SiteEventExtraAjaxView"""
 
     def setUp(self):
@@ -246,7 +246,9 @@ class TestsiteEventExtraAjaxView(TestEventDetailAjaxViewBase):
         self.assertEqual(response.status_code, 200)
         expected = {
             'app': self.event.app,
+            'name': self.event.event_name,
             'user': self.user.username,
+            'timestamp': self._format_ts(self.event.get_timestamp()),
             'extra': self.event.extra_data,
         }
         self.assertIn(expected['app'], str(response.data))

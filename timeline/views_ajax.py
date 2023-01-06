@@ -49,7 +49,7 @@ class EventDetailMixin:
         return ret
 
 
-class EventExtraMixin:
+class EventExtraDataMixin:
     """Mixin for event extra data retrieval helpers"""
 
     def _json_to_html(self, obj_json):
@@ -57,8 +57,9 @@ class EventExtraMixin:
         str_list = []
         self._html_print_obj(obj_json, str_list, 0)
         str_list.append(
-            '<button class="btn btn-secondary sodar-list-btn sodar-copy-btn sodar-tl-copy-btn"'
-            'data-clipboard-target="#data-to-clipboard"'
+            '<button class="btn btn-secondary sodar-list-btn sodar-copy-btn '
+            'sodar-tl-copy-btn" '
+            'data-clipboard-target="#data-to-clipboard" '
             'title="Copy to clipboard" data-toggle="tooltip">'
             '<i class="iconify" data-icon="mdi:clipboard-multiple-outline"></i>'
             '</button>'
@@ -88,29 +89,22 @@ class EventExtraMixin:
         str_list.append(
             '<span class="json-collapse-1" style="display: inline;">'
         )
-
         indent += 1
         for key, value in dct.items():
             str_list.append('<span class="json-indent">')
             str_list.append('&nbsp;&nbsp;' * indent)
             str_list.append('</span>')
             str_list.append('<span class="json-property">')
-
             str_list.append(html.escape(str(key)))
-
             str_list.append('</span>')
             str_list.append('<span class="json-semi-colon">: </span>')
-
             str_list.append('<span class="json-value">')
             self._html_print_obj(value, str_list, indent)
-
             str_list.append('</span>')
             str_list.append('<span class="json-comma">,</span><br>')
-
         if len(dct) > 0:
             del str_list[-1]
             str_list.append('<br>')
-
         str_list.append('</span>')
         str_list.append('&nbsp;&nbsp;' * (indent - 1))
         str_list.append('<span class="json-close-bracket">}</span>')
@@ -121,7 +115,6 @@ class EventExtraMixin:
         str_list.append(
             '<span class="json-collapse-1" style="display: inline;">'
         )
-
         indent += 1
         for value in array:
             str_list.append('<span class="json-indent">')
@@ -134,7 +127,6 @@ class EventExtraMixin:
         if len(array) > 0:
             del str_list[-1]
             str_list.append('<br>')
-
         str_list.append('</span>')
         str_list.append('&nbsp;&nbsp;' * (indent - 1))
         str_list.append('<span class="json-close-bracket">]</span>')
@@ -147,7 +139,11 @@ class EventExtraMixin:
         """
         ret = {
             'app': event.app,
+            'name': event.event_name,
             'user': event.user.username if event.user else 'N/A',
+            'timestamp': localtime(event.get_timestamp()).strftime(
+                '%Y-%m-%d %H:%M:%S'
+            ),
             'extra': self._json_to_html(event.extra_data),
         }
         return ret
@@ -169,7 +165,7 @@ class ProjectEventDetailAjaxView(EventDetailMixin, SODARBaseProjectAjaxView):
         return Response(self.get_event_details(event), status=200)
 
 
-class ProjectEventExtraAjaxView(EventExtraMixin, SODARBaseProjectAjaxView):
+class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
     """Ajax view for retrieving event extra data for projects"""
 
     permission_required = 'timeline.view_timeline'
@@ -205,7 +201,7 @@ class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):
         return Response(self.get_event_details(event), status=200)
 
 
-class SiteEventExtraAjaxView(EventExtraMixin, SODARBasePermissionAjaxView):
+class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
     """Ajax view for retrieving event extra data for site-wide events"""
 
     permission_required = 'timeline.view_site_timeline'

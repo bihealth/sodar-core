@@ -72,24 +72,25 @@ a.sodar-tl-link-extra {
   font-family: monospace;
 }
 
+pre.sodar-tl-json {
+  font-family: monospace;
+  font-size: 85%;
+}
+
 .json-open-bracket, .json-close-bracket {
   color: #CC0011;
-  font-family: monospace;
 }
 
 .json-property {
   color: #1A5988;
-  font-family: monospace;
 }
 
 .json-semi-colon {
   color: #14171A;
-  font-family: monospace;
 }
 
 .json-value {
   color: #222222;
-  font-family: monospace;
 }
 
 .sodar-tl-modal-tabs {
@@ -98,12 +99,10 @@ a.sodar-tl-link-extra {
   display: flex;
   flex-wrap: wrap;
   border-bottom: 1px solid #dee2e6;
-  font-family: monospace;
 }
 
 .sodar-tl-copy-btn {
   position: absolute;
   top: 10px;
   right: 10px;
-  font-family: monospace;
 }
