@@ -6,7 +6,6 @@ from django.urls import reverse
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.tests.test_ui import TestUIBase
-from timeline.templatetags.timeline_tags import collect_extra_data
 
 from timeline.tests.test_models import (
     ProjectEventMixin,
