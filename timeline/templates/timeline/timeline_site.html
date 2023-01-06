@@ -19,6 +19,7 @@
 {% block projectroles %}
 
 {% has_perm 'timeline.view_site_timeline' request.user project as can_view_timeline %}
+{% get_plugin_lookup as plugin_lookup %}
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
