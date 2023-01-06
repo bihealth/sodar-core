@@ -54,14 +54,15 @@ class EventExtraMixin:
 
     def _json_to_html(self, obj_json):
         """Return HTML representation of JSON object"""
-        str_list = [
+        str_list = []
+        self._html_print_obj(obj_json, str_list, 0)
+        str_list.append(
             '<button class="btn btn-secondary sodar-list-btn sodar-copy-btn sodar-tl-copy-btn"'
-            'data-clipboard-target="#{{ data.0 }}-pre-{{ data.2.pk }}"'
+            'data-clipboard-target="#data-to-clipboard"'
             'title="Copy to clipboard" data-toggle="tooltip">'
             '<i class="iconify" data-icon="mdi:clipboard-multiple-outline"></i>'
             '</button>'
-        ]
-        self._html_print_obj(obj_json, str_list, 0)
+        )
         return ''.join(str_list)
 
     def _html_print_obj(self, obj_json, str_list: list, indent):
