@@ -180,9 +180,7 @@ class SodarCacheAPI:
 
         if project:
             item.project = project
-            log_msg += ' in project "{}" ({})'.format(
-                project.title, project.sodar_uuid
-            )
+            log_msg += ' in project {}'.format(project.get_log_title())
 
         if user:
             item.user = user
