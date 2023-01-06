@@ -173,7 +173,6 @@ class ProjectEventExtraAjaxView(EventExtraMixin, SODARBaseProjectAjaxView):
     """Ajax view for retrieving event extra data for projects"""
 
     permission_required = 'timeline.view_timeline'
-    allow_anonymous = True
 
     def get(self, request, *args, **kwargs):
         event = ProjectEvent.objects.filter(
