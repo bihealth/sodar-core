@@ -26,27 +26,24 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
         if 'sodar_cache' not in settings.ENABLED_BACKEND_PLUGINS:
             logger.error(
                 'SodarCache backend not enabled in settings, cancelled'
             )
             sys.exit(1)
-
         cache_backend = get_backend_api('sodar_cache')
         if not cache_backend:
             logger.error('SodarCache backend plugin not available, cancelled')
             sys.exit(1)
 
         update_kwargs = {}
-
         if options.get('project'):
             try:
                 project = Project.objects.get(sodar_uuid=options['project'])
                 update_kwargs['project'] = project
                 logger.info(
-                    'Limiting sync to project "{}" ({})"'.format(
-                        project.title, project.sodar_uuid
+                    'Limiting sync to project {}'.format(
+                        project.get_log_title()
                     )
                 )
             except Project.DoesNotExist:
@@ -57,13 +54,11 @@ class Command(BaseCommand):
             except ValidationError:
                 logger.error('Not a valid UUID: {}'.format(options['project']))
                 sys.exit(1)
-
         if not update_kwargs:
             logger.info('Synchronizing cache for all projects')
 
         plugins = get_active_plugins(plugin_type='project_app')
         errors = False
-
         for plugin in plugins:
             try:
                 plugin.update_cache(**update_kwargs)
@@ -74,7 +69,6 @@ class Command(BaseCommand):
                     )
                 )
                 errors = True
-
         logger.info(
             'Cache synchronization {}'.format(
                 'finished with errors (see logs)' if errors else 'OK'

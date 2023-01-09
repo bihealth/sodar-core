@@ -10,9 +10,7 @@ from projectroles.tests.test_models import AppSettingMixin
 from filesfolders.tests.test_models import FolderMixin
 
 
-class TestExampletViews(
-    FolderMixin, AppSettingMixin, TestProjectPermissionBase
-):
+class TestExampleViews(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
     """Permission tests for example UI views"""
 
     def test_example_project(self):
