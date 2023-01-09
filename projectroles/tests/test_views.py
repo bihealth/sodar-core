@@ -2983,10 +2983,10 @@ class TestProjectInviteAcceptView(
 
     def setUp(self):
         super().setUp()
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
         self.new_user = self.make_user('new_user')

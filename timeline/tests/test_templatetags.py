@@ -182,7 +182,7 @@ class TestTemplateTags(
 
     def test_get_app_icon_html_projectroles(self):
         """Test get_app_icon_html() on event without project"""
-        event = self._make_event(
+        event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
@@ -205,7 +205,7 @@ class TestTemplateTags(
             plugin.entry_point_url_id,
             kwargs={'project': self.project.sodar_uuid},
         )
-        event = self._make_event(
+        event = self.make_event(
             project=self.project,
             app='example_project_app',
             user=self.user_owner,
@@ -224,7 +224,7 @@ class TestTemplateTags(
             plugin.entry_point_url_id,
             kwargs={},
         )
-        event = self._make_event(
+        event = self.make_event(
             project=self.project,
             app='example_site_app',
             user=self.user_owner,

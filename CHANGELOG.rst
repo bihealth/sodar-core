@@ -5,6 +5,36 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - App settings management via REST API (#521)
+    - App setting update methods in ``ProjectModifyPluginMixin`` (#521)
+    - Role ranking (#666)
+
+Changed
+-------
+
+- **General**
+    - Rename incorrectly protected mixin methods (#1020)
+- **Projectroles**
+    - Rename ``AppSettingAPI`` methods (#539, #1040)
+    - Deprecate old ``AppSettingAPI`` method names (#539, #1039)
+    - Hide apps in ``PROJECTROLES_HIDE_APP_LINKS`` from superusers (#1042)
+
+Removed
+-------
+
+- **Projectroles**
+    - Unused ``taskflow_testcase`` module (#1041)
+- **Timeline**
+    - Deprecated get_current_status() method (#1015)
+
+
 v0.11.1 (2023-01-09)
 ====================
 

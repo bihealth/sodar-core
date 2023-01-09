@@ -116,7 +116,7 @@ class TestProjectEventExtraAjaxView(TestEventAjaxViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.event = self._make_event(
+        self.event = self.make_event(
             self.project,
             'projectroles',
             self.user,
@@ -221,7 +221,7 @@ class TestSiteEventExtraAjaxView(TestEventAjaxViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.event = self._make_event(
+        self.event = self.make_event(
             None,
             'projectroles',
             self.user,

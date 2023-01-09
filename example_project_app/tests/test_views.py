@@ -22,10 +22,10 @@ class TestExampleView(
 
     def setUp(self):
         super().setUp()
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -43,7 +43,7 @@ class TestExampleView(
     def test_render_ext_model(self):
         """Test rendering of example view with model from another app"""
         # Create object from filesfolders app model
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='TestFolder',
             project=self.project,
             folder=None,

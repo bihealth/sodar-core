@@ -10,6 +10,62 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.12.0 (WIP)
+*************
+
+Release Highlights
+==================
+
+- Add role ranking
+- Add app settings retrieve/set REST API views
+- Rename app settings API methods
+
+Breaking Changes
+================
+
+App Settings API Methods Renamed
+--------------------------------
+
+Several methods in :ref:`AppSettingAPI <app_projectroles_api_django_settings>`
+have been renamed. The old named functions are deprecated and will be removed in
+SODAR Core v0.13. Please rename your method calls. The complete list of changed
+method names is as follows:
+
+- ``get_default_setting()`` -> ``get_default()``
+- ``get_app_setting()`` -> ``get()``
+- ``get_all_settings()`` -> ``get_all()``
+- ``get_all_defaults()`` -> ``get_defaults()``
+- ``set_app_setting()`` -> ``set()``
+- ``delete_setting()`` -> ``delete()``
+- ``validate_setting()`` -> ``validate()``
+- ``get_setting_def()`` -> ``get_definition()``
+- ``get_setting_defs()`` -> ``get_definitions()``
+
+Hiding Project App Links Affects Superusers
+-------------------------------------------
+
+Hiding project app links from the project sidebar and project dropdown with
+``PROJECTROLES_HIDE_APP_LINKS`` now also affects superusers. Note that the apps
+themselves can still be accessed if relevant URL are known or links provided to
+them elsewhere on the site.
+
+Incorrectly Protected Mixin Methods Renamed
+-------------------------------------------
+
+This release renames a large number of mixin methods in SODAR Core which had
+incorrectly set as protected by the ``_method_name()`` syntax. This affects many
+commonly used helpers in unit tests. If your tests fail with errors regarding
+undefined methods, rename your calls from ``_method()`` into ``method()``. See
+`the complete list of renamed methods <https://github.com/bihealth/sodar-core/issues/1020#issuecomment-1286961805>`_
+for more details.
+
+Timeline get_current_status() Method Removed
+--------------------------------------------
+
+The deprecated ``ProjectEvent.get_current_status()`` method in the Timeline app
+has been removed. Please use ``get_status()`` instead.
+
+
 v0.11.1 (2023-01-09)
 ********************
 
