@@ -2983,6 +2983,22 @@ class TestProjectInviteCreateView(
                 ),
             )
 
+
+class TestProjectInviteAcceptView(
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
+):
+    """Tests for ProjectInvite accept view"""
+
+    def setUp(self):
+        super().setUp()
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+        self.new_user = self.make_user('new_user')
+
     @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
     @override_settings(ENABLE_LDAP=True)
     def test_accept_ldap(self):
@@ -3468,7 +3484,7 @@ class TestProjectInviteCreateView(
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_accept_local_user_exists_not_logged_in(self):
-        """Test processing local invite while invited user exists but not user is logged in"""
+        """Test processing local invite while invited user exists but no user is logged in"""
         invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
         invited_user.email = INVITE_EMAIL
         invited_user.save()

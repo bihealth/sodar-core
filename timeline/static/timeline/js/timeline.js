@@ -34,7 +34,28 @@ $(document).ready(function() {
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
         }).fail(function (data) {
-            $('.modal-body').html('Error: ' + data);
+            console.dir(data);
+            $('.modal-body').html('Error: ' + data.statusText);
+            $('#sodar-modal-wait').modal('hide');
+            $('#sodar-modal').modal('show');
+        });
+    });
+    $('.sodar-tl-link-extra-data').click(function () {
+        $('#sodar-modal-wait').modal('show');
+        $.ajax({
+            url: $(this).attr('data-url'),
+            method: 'GET',
+        }).done(function (data) {
+            $('.modal-title').text(
+                'Event Extra Data: ' + data['app'] + '.' + data['name'] + ' (' +
+                data['user'] + ' @ ' + data['timestamp'] + ')');
+            $('.modal-body').html('').append($('<p>').html(
+                '<pre class="sodar-tl-json" id=data-to-clipboard>' + data['extra'] + '</pre>'));
+            $('#sodar-modal-wait').modal('hide');
+            $('#sodar-modal').modal('show');
+        }).fail(function (data) {
+            console.dir(data);
+            $('.modal-body').html('Error: ' + data.statusText);
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
         });

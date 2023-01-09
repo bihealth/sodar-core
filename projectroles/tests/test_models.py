@@ -746,6 +746,13 @@ class TestProjectInvite(
         )
         self.assertEqual(str(self.invite), expected)
 
+    def test_get_log_title(self):
+        """Test get_log_title() results"""
+        expected = '"{}" ({})'.format(
+            self.project.title, self.project.sodar_uuid
+        )
+        self.assertEqual(str(self.project.get_log_title()), expected)
+
     def test__repr__(self):
         """Test ProjectInvite __repr__()"""
         expected = (

@@ -21,7 +21,6 @@ class SodarCacheSetAPIView(CoreAPIBaseProjectMixin, APIView):
     def post(self, request, *args, **kwargs):
         cache_backend = get_backend_api('sodar_cache')
         project = self.get_project()
-
         try:
             cache_backend.set_cache_item(
                 name=request.data['name'],
@@ -31,10 +30,8 @@ class SodarCacheSetAPIView(CoreAPIBaseProjectMixin, APIView):
                 data_type='json',
                 project=project,
             )
-
         except Exception as ex:
             return Response({'message': str(ex)}, status=500)
-
         return Response({'message': 'ok'}, status=200)
 
 
@@ -46,17 +43,14 @@ class SodarCacheGetAPIView(CoreAPIBaseProjectMixin, APIView):
     def get(self, request, *args, **kwargs):
         cache_backend = get_backend_api('sodar_cache')
         project = self.get_project()
-
         try:
             item = cache_backend.get_cache_item(
                 app_name=request.GET.get('app_name'),
                 name=request.GET.get('name'),
                 project=project,
             )
-
             if not item:
                 return Response({'message': 'Not found'}, status=404)
-
             ret_data = {
                 'sodar_uuid': str(item.sodar_uuid),
                 'project_uuid': str(item.project.sodar_uuid),
@@ -65,7 +59,6 @@ class SodarCacheGetAPIView(CoreAPIBaseProjectMixin, APIView):
                 'data': item.data,
             }
             return Response(ret_data, status=200)
-
         except Exception as ex:
             return Response({'message': str(ex)}, status=500)
 
@@ -78,14 +71,11 @@ class SodarCacheGetDateAPIView(CoreAPIBaseProjectMixin, APIView):
     def get(self, request, *args, **kwargs):
         cache_backend = get_backend_api('sodar_cache')
         project = self.get_project()
-
         update_time = cache_backend.get_update_time(
             request.GET.get('app_name'),
             request.GET.get('name'),
             project=project,
         )
-
         if update_time:
             return Response({'update_time': update_time}, status=200)
-
         return Response({'message': 'Not found'}, status=404)

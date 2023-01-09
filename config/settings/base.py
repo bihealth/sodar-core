@@ -617,6 +617,8 @@ PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 # PROJECTROLES_SEARCH_PAGINATION = 5
 # Support for viewing the site in "kiosk mode" (under work, experimental)
 # PROJECTROLES_KIOSK_MODE = env.bool('PROJECTROLES_KIOSK_MODE', False)
+# Scroll project navigation with page content if set False
+# PROJECTROLES_BREADCRUMB_STICKY = True
 
 PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 
@@ -630,12 +632,10 @@ PROJECTROLES_BROWSER_WARNING = env.bool('PROJECTROLES_BROWSER_WARNING', True)
 PROJECTROLES_DISABLE_CDN_INCLUDES = env.bool(
     'PROJECTROLES_DISABLE_CDN_INCLUDES', False
 )
-
 # Inline HTML include to the head element of the base site template
 PROJECTROLES_INLINE_HEAD_INCLUDE = env.str(
     'PROJECTROLES_INLINE_HEAD_INCLUDE', None
 )
-
 # Paths/URLs to optional global includes to supplement/replace default ones
 PROJECTROLES_CUSTOM_JS_INCLUDES = env.list(
     'PROJECTROLES_CUSTOM_JS_INCLUDES', None, []

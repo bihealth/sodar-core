@@ -1,6 +1,7 @@
 """REST API views for the projectroles app"""
 
 import re
+
 from ipaddress import ip_address, ip_network
 
 from django.conf import settings
@@ -84,7 +85,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.11.0']
+CORE_API_ALLOWED_VERSIONS = ['0.11.0', '0.11.1']
 
 # Local constants
 INVALID_PROJECT_TYPE_MSG = (
@@ -119,7 +120,6 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
             settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
         ):
             return False
-
         project = self.get_project(request=request, kwargs=view.kwargs)
         if not project:
             raise NotFound()
@@ -138,7 +138,6 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
             )
 
         owner_or_delegate = project.is_owner_or_delegate(request.user)
-
         if not (
             request.user.is_superuser or owner_or_delegate
         ) and app_settings.get_app_setting(
@@ -156,7 +155,6 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
                     break
             else:  # Can't fetch client ip address
                 return False
-
             for record in app_settings.get_app_setting(
                 'projectroles', 'ip_allowlist', project
             ):
@@ -178,10 +176,8 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
                 'Define {0}.permission_required, or override '
                 '{0}.get_permission_required().'.format(view.__class__.__name__)
             )
-
         elif hasattr(view, 'permission_required'):
             perm = view.permission_required
-
         else:
             perm = view.get_permission_required()
 
@@ -189,7 +185,6 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         if isinstance(perm, (list, tuple)) and len(perm) > 0:
             # TODO: TBD: Raise exception / log warning if given multiple perms?
             perm = perm[0]
-
         return request.user.has_perm(perm, project)
 
 
@@ -337,17 +332,14 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
             if parent_uuid
             else None
         )
-
         if (
             parent
             and settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
             and (not settings.PROJECTROLES_TARGET_CREATE or parent.is_remote())
         ):
             return False
-
         if not parent and not request.user.is_superuser:
             return False
-
         return request.user.has_perm('projectroles.create_project', parent)
 
 
@@ -376,10 +368,8 @@ class ProjectListAPIView(ListAPIView):
         requesting user has access.
         """
         qs = Project.objects.all().order_by('pk')
-
         if self.request.user.is_superuser:
             return qs
-
         return qs.filter(
             roles__in=RoleAssignment.objects.filter(user=self.request.user)
         )
@@ -535,17 +525,14 @@ class RoleAssignmentDestroyAPIView(
         Override perform_destroy() to handle RoleAssignment deletion.
         """
         project = self.get_project()
-
         # Validation for remote sites and projects
         if project.is_remote():
             raise serializers.ValidationError(REMOTE_MODIFY_MSG)
-
         # Do not allow editing owner here
         if instance.role.name == PROJECT_ROLE_OWNER:
             raise serializers.ValidationError(
                 'Use project updating API to update owner'
             )
-
         # Check delegate perms
         if (
             instance.role.name == PROJECT_ROLE_DELEGATE
@@ -554,7 +541,6 @@ class RoleAssignmentDestroyAPIView(
             )
         ):
             raise PermissionDenied('User lacks permission to assign delegates')
-
         self.delete_assignment(request=self.request, instance=instance)
 
 
@@ -582,7 +568,6 @@ class RoleAssignmentOwnerTransferAPIView(
     def post(self, request, *args, **kwargs):
         """Handle ownership transfer in a POST request"""
         project = self.get_project()
-
         # Validation for remote sites and projects
         if project.is_remote():
             raise serializers.ValidationError(REMOTE_MODIFY_MSG)
@@ -600,23 +585,18 @@ class RoleAssignmentOwnerTransferAPIView(
             raise serializers.ValidationError(
                 'Fields "new_owner" and "old_owner_role" must be present'
             )
-
         if not old_owner_role:
             raise serializers.ValidationError(
                 'Unknown role "{}"'.format(request.data.get('old_owner_role'))
             )
-
         if not old_owner_as:
             raise serializers.ValidationError('Existing owner role not found')
-
         if not new_owner:
             raise serializers.ValidationError(
                 'User "{}" not found'.format(request.data.get('new_owner'))
             )
-
         if new_owner == old_owner_as.user:
             raise serializers.ValidationError('Owner role already set for user')
-
         if not project.has_role(new_owner):
             raise serializers.ValidationError(
                 'User {} is not a member of the project'.format(
@@ -629,10 +609,8 @@ class RoleAssignmentOwnerTransferAPIView(
             self.transfer_owner(
                 project, new_owner, old_owner_as, old_owner_role
             )
-
         except Exception as ex:
             raise APIException('Unable to transfer owner: {}'.format(ex))
-
         return Response(
             {
                 'detail': 'Ownership transferred from {} to {} in '
@@ -797,10 +775,8 @@ class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
         access.
         """
         qs = User.objects.all().order_by('pk')
-
         if self.request.user.is_superuser:
             return qs
-
         return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
 
 
@@ -838,18 +814,13 @@ class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
     def get(self, request, *args, **kwargs):
         remote_api = RemoteProjectAPI()
         secret = kwargs['secret']
-
         try:
             target_site = RemoteSite.objects.get(
                 mode=SITE_MODE_TARGET, secret=secret
             )
-
         except RemoteSite.DoesNotExist:
             return Response('Remote site not found, unauthorized', status=401)
-
         sync_data = remote_api.get_source_data(target_site)
-
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())
-
         return Response(sync_data, status=200)

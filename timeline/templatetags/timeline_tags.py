@@ -1,4 +1,3 @@
-import html
 import logging
 
 from django import template
@@ -7,6 +6,7 @@ from django.utils.timezone import localtime
 
 from djangoplugins.models import Plugin
 
+from projectroles.plugins import ProjectAppPluginPoint
 from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
 
@@ -70,24 +70,35 @@ def get_plugin_lookup():
 def get_app_icon_html(event, plugin_lookup):
     """Return icon link HTML for app by plugin lookup"""
     url = None
-    url_kwargs = {}
-    if event.project:
-        url_kwargs['project'] = event.project.sodar_uuid
     title = event.app
     icon = ICON_UNKNOWN_APP  # Default in case the plugin is not found
 
     if event.app == 'projectroles':
         if event.project:
-            url = reverse('projectroles:detail', kwargs=url_kwargs)
+            url = reverse(
+                'projectroles:detail',
+                kwargs={'project': event.project.sodar_uuid},
+            )
         title = 'Projectroles'
         icon = ICON_PROJECTROLES
     else:
         plugin_name = event.plugin if event.plugin else event.app
         if plugin_name in plugin_lookup.keys():
+            url_kwargs = {}
             plugin = plugin_lookup[plugin_name]
+            if isinstance(plugin, ProjectAppPluginPoint):
+                url_kwargs['project'] = event.project.sodar_uuid
             entry_point = getattr(plugin, 'entry_point_url_id', None)
             if entry_point:
-                url = reverse(entry_point, kwargs=url_kwargs)
+                try:
+                    url = reverse(entry_point, kwargs=url_kwargs)
+                except Exception as ex:
+                    url = None
+                    logger.error(
+                        'Unable to get URL for entry point "{}": {}'.format(
+                            entry_point, ex
+                        )
+                    )
             title = plugin.title
             if getattr(plugin, 'icon', None):
                 icon = plugin.icon
@@ -113,87 +124,6 @@ def get_status_style(status):
     )
 
 
-@register.simple_tag
-def get_event_extra_data(event):
-    return json_to_html(event.extra_data)
-
-
-def json_to_html(obj):
-    str_list = []
-    html_print_obj(obj, str_list, 0)
-    return ''.join(str_list)
-
-
-def html_print_obj(obj, str_list: list, indent):
-    if isinstance(obj, dict):
-        html_print_dict(obj, str_list, indent)
-    elif isinstance(obj, list):
-        html_print_array(obj, str_list, indent)
-    elif isinstance(obj, str):
-        str_list.append('&quot;')
-        str_list.append(html.escape(obj))
-        str_list.append('&quot;')
-    elif isinstance(obj, int):
-        str_list.append(str(obj))
-    elif isinstance(obj, bool):
-        str_list.append(str(obj))
-    elif obj is None:
-        str_list.append('null')
-
-
-def html_print_dict(dct: dict, str_list, indent):
-    str_list.append('<span class="json-open-bracket">{</span>\n')
-    str_list.append('<span class="json-collapse-1" style="display: inline;">')
-
-    indent += 1
-    for key, value in dct.items():
-        str_list.append('<span class="json-indent">')
-        str_list.append('  ' * indent)
-        str_list.append('</span>')
-        str_list.append('<span class="json-property">')
-
-        str_list.append(html.escape(str(key)))
-
-        str_list.append('</span>')
-        str_list.append('<span class="json-semi-colon">: </span>')
-
-        str_list.append('<span class="json-value">')
-        html_print_obj(value, str_list, indent)
-
-        str_list.append('</span>')
-        str_list.append('<span class="json-comma">,</span>\n')
-
-    if len(dct) > 0:
-        del str_list[-1]
-        str_list.append('\n')
-
-    str_list.append('</span>')
-    str_list.append('  ' * (indent - 1))
-    str_list.append('<span class="json-close-bracket">}</span>')
-
-
-def html_print_array(array, str_list, indent):
-    str_list.append('<span class="json-open-bracket">[</span>\n')
-    str_list.append('<span class="json-collapse-1" style="display: inline;">')
-
-    indent += 1
-    for value in array:
-        str_list.append('<span class="json-indent">')
-        str_list.append('  ' * indent)
-        str_list.append('</span>')
-        str_list.append('<span class="json-value">')
-        html_print_obj(value, str_list, indent)
-        str_list.append('</span>')
-        str_list.append('<span class="json-comma">,</span>\n')
-    if len(array) > 0:
-        del str_list[-1]
-        str_list.append('\n')
-
-    str_list.append('</span>')
-    str_list.append('  ' * (indent - 1))
-    str_list.append('<span class="json-close-bracket">]</span>')
-
-
 # Filters ----------------------------------------------------------------------
 
 
@@ -208,13 +138,3 @@ def collect_extra_data(event):
                 ('status-extra-data', 'Status: ' + status.status_type, status)
             )
     return ls
-
-
-@register.filter
-def has_extra_data(event):
-    if event.extra_data is not None and len(event.extra_data) > 0:
-        return True
-    for status in event.get_status_changes():
-        if status.extra_data is not None and len(status.extra_data) > 0:
-            return True
-    return False

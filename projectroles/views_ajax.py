@@ -1,6 +1,7 @@
 """Ajax API views for the projectroles app"""
 
 import logging
+
 from dal import autocomplete
 
 from django.conf import settings
@@ -228,7 +229,6 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             else:
                 np_msg = 'have been created.'
             ret['messages']['no_projects'] = np_prefix + np_msg
-
         return Response(ret, status=200)
 
 
@@ -286,10 +286,8 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
             if not request.user.has_perm('projectroles.view_project', project):
                 logger.error(
                     'ProjectListColumnAjaxView: User {} not authorized to view '
-                    'project "{}" ({})'.format(
-                        request.user.username,
-                        project.title,
-                        project.sodar_uuid,
+                    'project {}'.format(
+                        request.user.username, project.get_log_title()
                     )
                 )
                 continue
@@ -342,10 +340,8 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
             if not request.user.has_perm('projectroles.view_project', project):
                 logger.error(
                     'ProjectListRoleAjaxView: User {} not authorized to view '
-                    'project "{}" ({})'.format(
-                        request.user.username,
-                        project.title,
-                        project.sodar_uuid,
+                    'project {}'.format(
+                        request.user.username, project.get_log_title()
                     )
                 )
                 continue
@@ -368,10 +364,8 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         user = request.user
         timeline = get_backend_api('timeline_backend')
-
         tag_state = get_tag_state(project, user)
         action_str = '{}star'.format('un' if tag_state else '')
-
         set_tag_state(project, user, PROJECT_TAG_STARRED)
 
         # Add event in Timeline
@@ -385,7 +379,6 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
                 classified=True,
                 status_type='INFO',
             )
-
         return Response(0 if tag_state else 1, status=200)
 
 
@@ -413,37 +406,29 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
             None,
         ]:
             project = Project.objects.filter(sodar_uuid=project_uuid).first()
-
             # If user has no permission for the project, return None
             if not self.request.user.has_perm(
                 'projectroles.view_project', project
             ):
                 return User.objects.none()
-
             project_users = [a.user.pk for a in project.get_all_roles()]
-
             if scope == 'project':  # Limit choices to current project users
                 qs = User.objects.filter(pk__in=project_users)
-
             elif scope == 'project_exclude':  # Exclude project users
                 qs = User.objects.exclude(pk__in=project_users)
-
         # Else include all users
         else:
             qs = User.objects.all()
 
         # Exclude users in the system group unless local users are allowed
         allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
-
         if not allow_local and not current_user.is_superuser:
             qs = qs.exclude(groups__name=SYSTEM_USER_GROUP).exclude(
                 groups__isnull=True
             )
-
         # Exclude UUIDs explicitly given
         if exclude_uuids:
             qs = qs.exclude(sodar_uuid__in=exclude_uuids)
-
         # Finally, filter by query
         if self.q:
             qs = qs.filter(
@@ -453,7 +438,6 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
                 | Q(name__icontains=self.q)
                 | Q(email__icontains=self.q)
             )
-
         return qs.order_by('name')
 
     def get_result_label(self, user):
@@ -490,23 +474,18 @@ class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
 
         if self.create_field and q:
             page_obj = context.get('page_obj', None)
-
             if page_obj is None or page_obj.number == 1:
-
                 # Only create invite if the email address is valid
                 try:
                     validator(q)
                     display_create_option = True
-
                 except ValidationError:
                     display_create_option = False
-
                 # Prevent sending a duplicate invite
                 existing_options = (
                     self.get_result_label(result).lower()
                     for result in context['object_list']
                 )
-
                 if q.lower() in existing_options:
                     display_create_option = False
 

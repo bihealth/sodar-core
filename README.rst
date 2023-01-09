@@ -8,7 +8,7 @@ SODAR Core
     :target: https://github.com/bihealth/sodar-core/actions?query=workflow%3ABuild
 
 .. image:: https://coveralls.io/repos/github/bihealth/sodar-core/badge.svg?branch=main
-    :target: https://coveralls.io/github/bihealth/sodar-core?branch=update/codacy
+    :target: https://coveralls.io/github/bihealth/sodar-core?branch=main
 
 .. image:: https://img.shields.io/badge/License-MIT-green.svg
     :target: https://opensource.org/licenses/MIT
@@ -115,7 +115,7 @@ and breaking changes are possible.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.11.0
+    pip install django-sodar-core==0.11.1
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.

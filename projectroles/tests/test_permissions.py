@@ -316,20 +316,6 @@ class TestBaseViews(TestProjectPermissionBase):
             redirect_anon='/login/',
         )
 
-    def test_about(self):
-        """Test permissions for the about view"""
-        url = reverse('about')
-        good_users = [
-            self.anonymous,
-            self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
-            self.user_no_roles,
-        ]
-        self.assert_response(url, good_users, 200)
-
     def test_admin(self):
         """Test permissions for the admin view"""
         url = '/admin/'

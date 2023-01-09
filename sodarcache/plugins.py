@@ -3,7 +3,7 @@
 # Projectroles dependency
 from projectroles.plugins import BackendPluginPoint
 
-from .api import SodarCacheAPI
+from sodarcache.api import SodarCacheAPI
 
 
 class BackendPlugin(BackendPluginPoint):

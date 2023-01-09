@@ -246,6 +246,9 @@ The following projectroles settings are **optional**:
   *without* user authentication in order to e.g. demonstrate features in a
   kiosk-style deployment. Also hides and/or disables views not intended to be
   used in this mode (bool)
+* ``PROJECTROLES_BREADCRUMB_STICKY``: Set this false to make project breadcrumb
+  navigation scroll along page content. If true, maintain a sticky breadcrumb
+  below the titlebar instead. Assumed true if not set (bool)
 * ``PROJECTROLES_ALLOW_ANONYMOUS``: If true, allow anonymous users to access the
   site and all projects where ``public_guest_access`` is set true (bool)
 * ``PROJECTROLES_SIDEBAR_ICON_SIZE``: Set the icon size for the project sidebar.

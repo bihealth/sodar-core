@@ -290,6 +290,8 @@ the following conditions*:
 - Same as above, but the Django model provides a
   ``get_project()`` function which returns a ``Projectroles.models.Project``
   object.
+- Contains a kwarg corresponding to a model in another app. The app must be
+  specified in the URL kwarg as ``app__model``.
 
 Examples:
 
@@ -307,6 +309,12 @@ Examples:
            regex=r'^members/update/(?P<roleassignment>[0-9a-f-]+)$',
            view=views.RoleAssignmentUpdateView.as_view(),
            name='role_update',
+       ),
+       # Reference to a model in another app
+       url(
+           regex=r'^example/path/(?P<filesfolders__folder>[0-9a-f-]+)$',
+           view=views.ExampleView.as_view(),
+           name='example_ext_model',
        ),
    ]
 

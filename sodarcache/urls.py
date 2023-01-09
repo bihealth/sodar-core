@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from . import views_api
+from sodarcache import views_api
 
 
 app_name = 'sodarcache'

@@ -6,13 +6,20 @@ app_name = 'example_project_app'
 
 # NOTE: Name of object in kwarg which is a Project or has "project" as a member
 #       is expected to correspond 1:1 to the model in question (lowercase ok)!
+# NOTE: If referring to a model from another app, notation is "app__model"
 
 urls = [
     url(
         regex=r'^(?P<project>[0-9a-f-]+)$',
         view=views.ExampleView.as_view(),
         name='example',
-    )
+    ),
+    # Example view with model from an external app
+    url(
+        regex=r'^ext/(?P<filesfolders__folder>[0-9a-f-]+)$',
+        view=views.ExampleView.as_view(),
+        name='example_ext_model',
+    ),
 ]
 
 urls_api = [

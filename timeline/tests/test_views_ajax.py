@@ -19,10 +19,10 @@ from timeline.templatetags.timeline_tags import get_status_style
 from timeline.tests.test_models import ProjectEventMixin
 
 
-class TestEventDetailAjaxViewBase(
+class TestEventAjaxViewsBase(
     ProjectMixin, RoleAssignmentMixin, ProjectEventMixin, TestViewsBase
 ):
-    """Base class for timeline Ajax API view test"""
+    """Base class for timeline Ajax API view tests"""
 
     @classmethod
     def _format_ts(cls, timestamp):
@@ -45,7 +45,7 @@ class TestEventDetailAjaxViewBase(
         )
 
 
-class TestProjectEventDetailAjaxView(TestEventDetailAjaxViewBase):
+class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
     """Tests for ProjectEventDetailAjaxView"""
 
     def setUp(self):
@@ -111,7 +111,60 @@ class TestProjectEventDetailAjaxView(TestEventDetailAjaxViewBase):
         self.assertEqual(response.data['user'], 'N/A')
 
 
-class TestsiteEventDetailAjaxView(TestEventDetailAjaxViewBase):
+class TestProjectEventExtraAjaxView(TestEventAjaxViewsBase):
+    """Tests for ProjectEventExtraAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.event = self._make_event(
+            self.project,
+            'projectroles',
+            self.user,
+            'project_create',
+            extra_data={'example_data': 'example_extra_data'},
+        )
+        self.event_status_init = self.event.set_status(
+            'INIT', DEFAULT_MESSAGES['INIT']
+        )
+        self.event_status_ok = self.event.set_status(
+            'OK', DEFAULT_MESSAGES['OK']
+        )
+
+    def test_get(self):
+        """Test project event detail retrieval"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:ajax_extra_project',
+                    kwargs={'projectevent': self.event.sodar_uuid},
+                ),
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'app': self.event.app,
+            'user': self.user.username,
+            'extra': self.event.extra_data,
+        }
+        self.assertIn(expected['app'], str(response.data))
+        self.assertIn(expected['user'], str(response.data))
+        self.assertIn(expected['extra']['example_data'], str(response.data))
+
+    def test_get_no_user(self):
+        """Test project event detail retrieval with no user for event"""
+        self.event.user = None
+        self.event.save()
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:ajax_extra_project',
+                    kwargs={'projectevent': self.event.sodar_uuid},
+                ),
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['user'], 'N/A')
+
+
+class TestsiteEventDetailAjaxView(TestEventAjaxViewsBase):
     """Tests for SiteEventDetailAjaxView"""
 
     def setUp(self):
@@ -161,3 +214,43 @@ class TestsiteEventDetailAjaxView(TestEventDetailAjaxViewBase):
             ],
         }
         self.assertEqual(response.data, expected)
+
+
+class TestSiteEventExtraAjaxView(TestEventAjaxViewsBase):
+    """Tests for SiteEventExtraAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.event = self._make_event(
+            None,
+            'projectroles',
+            self.user,
+            'test_event',
+            extra_data={'example_data': 'example_extra_data'},
+        )
+        self.event_status_init = self.event.set_status(
+            'INIT', DEFAULT_MESSAGES['INIT']
+        )
+        self.event_status_ok = self.event.set_status(
+            'OK', DEFAULT_MESSAGES['OK']
+        )
+
+    def test_get(self):
+        """Test site event detail retrieval"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:ajax_extra_site',
+                    kwargs={'projectevent': self.event.sodar_uuid},
+                ),
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'app': self.event.app,
+            'name': self.event.event_name,
+            'user': self.user.username,
+            'timestamp': self._format_ts(self.event.get_timestamp()),
+            'extra': self.event.extra_data,
+        }
+        self.assertIn(expected['app'], str(response.data))
+        self.assertIn(expected['user'], str(response.data))

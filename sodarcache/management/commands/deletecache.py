@@ -32,13 +32,12 @@ class Command(BaseCommand):
             sys.exit(1)
 
         project = None
-
         if options.get('project'):
             try:
                 project = Project.objects.get(sodar_uuid=options['project'])
                 logger.info(
-                    'Limiting deletion to project "{}" ({})"'.format(
-                        project.title, project.sodar_uuid
+                    'Limiting deletion to project {}"'.format(
+                        project.get_log_title()
                     )
                 )
                 items = JSONCacheItem.objects.filter(project=project)
@@ -60,9 +59,7 @@ class Command(BaseCommand):
             'Deleted {} cached data item{} from {}'.format(
                 item_count,
                 's' if item_count != 1 else '',
-                'project "{}" ({})'.format(
-                    project.full_title, project.sodar_uuid
-                )
+                'project {}'.format(project.get_log_title())
                 if project
                 else 'all projects',
             )

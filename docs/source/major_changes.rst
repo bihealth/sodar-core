@@ -10,6 +10,31 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.11.1 (2023-01-09)
+********************
+
+Release Highlights
+==================
+
+- Add support for models from other apps in project access URL kwargs
+- Allow enabling project breadcrumb scrolling
+- Fix timeline app issues
+- Fix repository and environment issues
+- General bug fixes and minor updates
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The following minimum versions have been bumped:
+
+- ``django>=3.2.16``
+- ``setuptools>=65.6.3, <65.7``
+- ``wheel>=0.38.4, <0.39``
+
+
 v0.11.0 (2022-09-23)
 ********************
 

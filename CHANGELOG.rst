@@ -5,6 +5,47 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.11.1 (2023-01-09)
+====================
+
+Added
+-----
+
+- **Projectroles**
+    - Allow enabling project breadcrumb scrolling (#1037)
+    - ``PROJECTROLES_BREADCRUMB_STICKY`` Django setting (#1037)
+    - ``ProjectAccessMixin`` external app model support (#1067)
+    - ``Project.get_log_title()`` helper (#1071)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.16 (#1035)
+    - Upgrade Python dependencies (#1073)
+- **Timeline**
+    - Extra data loading using Ajax view (#1055)
+
+Fixed
+-----
+
+- **General**
+    - Use ``apt-get`` instead of ``apt`` in CI (#1030)
+    - Incorrect branch in ``README.rst`` Coveralls link (#1031)
+    - Postgres role errors in GitHub Actions CI (#1033)
+    - ``install_postgres.sh`` breaking with unsupported Ubuntu versions (#1061)
+- **Timeline**
+    - Extra data not displayed after viewing event details (#1055)
+    - Crash in ``get_app_icon_html()`` with project event from site app (#1057)
+    - Crash from missing ``plugin_lookup`` in ``timeline_site.html`` (#1076)
+
+Removed
+-------
+
+- **General**
+    - Unused ``about.html`` template (#1029)
+
+
 v0.11.0 (2022-09-23)
 ====================
 

@@ -94,11 +94,19 @@ Initialize the database (this will also synchronize django-plugins):
 
     $ ./manage.py migrate
 
-Create a Django superuser for the example_site:
+Create a Django superuser for the example site:
 
 .. code-block:: console
 
     $ ./manage.py createsuperuser --skip-checks --username admin
+
+Run the ``geticons`` and ``collectstatic`` commands to download and enable
+Iconify icons:
+
+.. code-block:: console
+
+    $ ./manage.py geticons
+    $ ./manage.py collectstatic
 
 You are now able to run the server:
 

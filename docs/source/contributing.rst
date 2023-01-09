@@ -86,17 +86,13 @@ Ready to contribute code to SODAR Core? Here are the steps to get started.
     $ git checkout -b 123-branch-name dev
 
 5. When you're done making changes, make sure to apply proper formatting using
-   Black and the settings specified in the accompanying ``black.sh`` script.
-   Next, check that your changes pass flake8. Finally, run the tests. It is
-   recommended to use the ``Makefile`` to ensure the correct Django
-   configuration for testing is selected. ::
+   Black. Next, check linting with flake8. Finally, run the tests.::
 
-    $ ./black.sh
+    $ make black
     $ flake8 .
     $ make test
 
-6. Once the tests and flake8 pass, commit your changes and push your branch to
-   GitHub. ::
+6. Once flake8 and tests, commit your changes and push your branch to GitHub. ::
 
     $ git add .
     $ git commit -m "add/update/fix issue-description-here (#issue-id)"
