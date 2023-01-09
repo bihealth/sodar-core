@@ -147,6 +147,7 @@ class TestProjectEventExtraAjaxView(TestEventAjaxViewsBase):
         }
         self.assertIn(expected['app'], str(response.data))
         self.assertIn(expected['user'], str(response.data))
+        self.assertIn(expected['extra']['example_data'], str(response.data))
 
     def test_get_no_user(self):
         """Test project event detail retrieval with no user for event"""
