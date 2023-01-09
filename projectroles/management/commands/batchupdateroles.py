@@ -261,8 +261,8 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
                 continue
             if project.is_remote():
                 logger.error(
-                    'Skipping remote {} "{}" ({})'.format(
-                        project.type.lower(), project.title, project.sodar_uuid
+                    'Skipping remote {} {}'.format(
+                        project.type.lower(), project.get_log_title()
                     )
                 )
                 continue
@@ -277,8 +277,8 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
                 continue
 
             logger.info(
-                'Updating roles in {} "{}" ({})..'.format(
-                    project.type.lower(), project.title, project.sodar_uuid
+                'Updating roles in {} {}..'.format(
+                    project.type.lower(), project.get_log_title()
                 )
             )
 

@@ -42,8 +42,8 @@ class Command(BaseCommand):
                 project = Project.objects.get(sodar_uuid=options['project'])
                 update_kwargs['project'] = project
                 logger.info(
-                    'Limiting sync to project "{}" ({})"'.format(
-                        project.title, project.sodar_uuid
+                    'Limiting sync to project {}'.format(
+                        project.get_log_title()
                     )
                 )
             except Project.DoesNotExist:
