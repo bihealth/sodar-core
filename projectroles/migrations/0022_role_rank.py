@@ -32,5 +32,5 @@ class Migration(migrations.Migration):
             name='rank',
             field=models.IntegerField(default=0, help_text='Role rank for determining role hierarchy'),
         ),
-        migrations.RunPython(set_ranks)
+        migrations.RunPython(set_ranks, reverse_code=migrations.RunPython.noop)
     ]
