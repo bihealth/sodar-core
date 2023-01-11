@@ -222,6 +222,26 @@ management command:
 
     $ ./manage.py cleanappsettings
 
+Project Archiving
+-----------------
+
+From the project update menu, it is possible to archive a project. This will set
+data modification from project access to read-only. User roles can still be
+granted, but contributors can no longer edit data in project apps.
+
+The project update menu will still be available for owners and delegates for
+updating basic project metadata. Superusers will be able to edit project data
+regardless of its archiving status.
+
+To undo archiving, the project can be unarchived from the same button on top of
+the project update form.
+
+.. figure:: _static/app_projectroles/sodar_archive.png
+    :align: center
+    :scale: 65%
+
+    Archived project and unarchive button in project update view
+
 
 Member Management
 =================

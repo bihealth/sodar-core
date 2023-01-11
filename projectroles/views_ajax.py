@@ -199,6 +199,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     'type': p.type,
                     'full_title': p.full_title[full_title_idx:],
                     'public_guest_access': p.public_guest_access,
+                    'archive': p.archive,
                     'remote': p.is_remote(),
                     'revoked': p.is_revoked(),
                     'starred': p in starred_projects,

@@ -14,6 +14,9 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
+# Timeline dependency
+from timeline.models import ProjectEvent
+
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import EMPTY_CHOICE_LABEL
 from projectroles.models import (
@@ -552,6 +555,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': None,
             'description': 'description',
             'public_guest_access': False,
+            'archive': False,
             'full_title': 'TestCategory',
             'has_public_children': False,
             'sodar_uuid': project.sodar_uuid,
@@ -643,6 +647,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': category.pk,
             'description': 'description',
             'public_guest_access': False,
+            'archive': False,
             'full_title': 'TestCategory / TestProject',
             'has_public_children': False,
             'sodar_uuid': project.sodar_uuid,
@@ -814,6 +819,7 @@ class TestProjectUpdateView(
             'parent': new_category.pk,
             'description': 'updated description',
             'public_guest_access': False,
+            'archive': False,
             'full_title': new_category.title + ' / ' + 'updated title',
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
@@ -835,13 +841,7 @@ class TestProjectUpdateView(
                 project=self.project,
                 post_safe=True,
             )
-            if isinstance(
-                v_json,
-                (
-                    dict,
-                    list,
-                ),
-            ):
+            if isinstance(v_json, (dict, list)):
                 self.assertEqual(json.loads(s), v_json)
             else:
                 self.assertEqual(s, v)
@@ -918,6 +918,7 @@ class TestProjectUpdateView(
             'parent': None,
             'description': 'updated description',
             'public_guest_access': False,
+            'archive': False,
             'full_title': 'updated title',
             'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
@@ -1070,7 +1071,6 @@ class TestProjectUpdateView(
     def test_update_remote(self):
         """Test updating remote project as target"""
         self.set_up_as_target(projects=[self.category, self.project])
-
         values = model_to_dict(self.project)
         values['owner'] = self.user.sodar_uuid
         values['parent'] = self.category.sodar_uuid
@@ -1083,7 +1083,6 @@ class TestProjectUpdateView(
         values['settings.example_project_app.project_bool_setting'] = True
         values['settings.projectroles.ip_restrict'] = True
         values['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
-
         self.assertEqual(Project.objects.all().count(), 2)
 
         with self.login(self.user):
@@ -1107,6 +1106,185 @@ class TestProjectUpdateView(
                 )
             )
         self.assertEqual(response.status_code, 404)
+
+
+class TestProjectArchiveView(
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, TestViewsBase
+):
+    """Tests for ProjectArchiveView"""
+
+    def setUp(self):
+        super().setUp()
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+    def test_render(self):
+        """Test rendering ProjectArchiveView with a project"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:archive',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+
+    def test_render_category(self):
+        """Test rendering ProjectArchiveView with a category (should fail)"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:archive',
+                    kwargs={'project': self.category.sodar_uuid},
+                )
+            )
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+            )
+
+    def test_archive(self):
+        """Test archiving project"""
+        self.assertEqual(self.project.archive, False)
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
+        )
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
+            0,
+        )
+        values = {'status': True}
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:archive',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, True)
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_archive').count(), 1
+        )
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
+            0,
+        )
+
+    def test_unarchive(self):
+        """Test unarchiving project"""
+        self.project.set_archive()
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
+        )
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
+            0,
+        )
+        values = {'status': False}
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:archive',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, False)
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
+        )
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
+            1,
+        )
+
+    def test_archive_project_archived(self):
+        """Test archiving an already archived project"""
+        self.project.set_archive()
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
+        )
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
+            0,
+        )
+        values = {'status': True}
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:archive',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, True)
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
+        )
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
+            0,
+        )
+
+    def test_archive_category(self):
+        """Test archiving category (should fail)"""
+        self.assertEqual(self.category.archive, False)
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
+        )
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
+            0,
+        )
+        values = {'status': True}
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:archive',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+                values,
+            )
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+            )
+        self.category.refresh_from_db()
+        self.assertEqual(self.category.archive, False)
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
+        )
+        self.assertEqual(
+            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
+            0,
+        )
 
 
 class TestProjectSettingsForm(

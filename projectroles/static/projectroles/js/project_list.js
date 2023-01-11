@@ -205,6 +205,14 @@ $(document).ready(function () {
                     .attr('title', 'Public guest access')
                 );
             }
+            // Archived icon
+            if (p['type'] === 'PROJECT' && p['archive']) {
+                titleSpan.append($('<i>')
+                    .attr('class', 'iconify text-info ml-2 sodar-pr-project-archive')
+                    .attr('data-icon', 'mdi:archive')
+                    .attr('title', 'Archived')
+                );
+            }
             // Starred icon
             if (p['starred']) {
                 titleSpan.append($('<i>')

@@ -37,7 +37,21 @@
 
   <div class="row sodar-subtitle-container">
     {% if object.pk %}
+      {# NOTE: h3 is correct here, as we also have the project header #}
       <h3>Update {% get_display_name object.type title=True %}</h3>
+      {% if object.type == 'PROJECT' %}
+        <div class="ml-auto">
+          <a role="button" class="btn btn-warning"
+             href="{% url 'projectroles:archive' project=object.sodar_uuid %}"
+             id="sodar-pr-btn-archive">
+            {% if not object.archive %}
+              <i class="iconify" data-icon="mdi:archive-arrow-up"></i> Archive
+            {% else %}
+              <i class="iconify" data-icon="mdi:archive-arrow-down"></i> Unarchive
+            {% endif %}
+          </a>
+        </div>
+      {% endif %}
     {% elif parent.pk %}
       <h2>Create {{ project_display }} or {{ category_display }} Under {{ parent.title }}</h2>
     {% elif disable_categories %}

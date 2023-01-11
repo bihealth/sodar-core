@@ -333,6 +333,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         queryset=Project.objects.filter(type=PROJECT_TYPE_CATEGORY),
     )
     readme = serializers.CharField(required=False, allow_blank=True)
+    archive = serializers.BooleanField(read_only=True)
     roles = RoleAssignmentNestedListSerializer(read_only=True, many=True)
 
     class Meta:
@@ -344,6 +345,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'description',
             'readme',
             'public_guest_access',
+            'archive',
             'owner',
             'roles',
             'sodar_uuid',

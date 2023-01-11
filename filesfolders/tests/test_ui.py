@@ -10,7 +10,14 @@ from projectroles.models import AppSetting, SODAR_CONSTANTS
 from projectroles.tests.test_ui import TestUIBase
 from projectroles.utils import build_secret
 
-from .test_models import FolderMixin, FileMixin, HyperLinkMixin
+from filesfolders.tests.test_models import (
+    FolderMixin,
+    FileMixin,
+    HyperLinkMixin,
+)
+
+
+app_settings = AppSettingAPI()
 
 
 # SODAR constants
@@ -25,26 +32,17 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 APP_NAME = 'filesfolders'
 
 
-# App settings API
-app_settings = AppSettingAPI()
-
-
 class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
     """Tests for filesfolders main file list view UI"""
 
     def setUp(self):
         super().setUp()
-
         app_settings.set(
             APP_NAME, 'allow_public_links', True, project=self.project
         )
-
         self.file_content = bytes('content'.encode('utf-8'))
         self.secret_file_owner = build_secret()
         self.secret_file_contributor = build_secret()
-
-        # Init folders
-
         # Folder created by project owner
         self.folder_owner = self.make_folder(
             name='folder_owner',
@@ -53,8 +51,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             owner=self.user_owner,
             description='',
         )
-
-        # File created by project contributor
+        # Folder created by project contributor
         self.folder_contributor = self.make_folder(
             name='folder_contributor',
             project=self.project,
@@ -62,9 +59,6 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             owner=self.user_contributor,
             description='',
         )
-
-        # Init files
-
         # File uploaded by project owner
         self.file_owner = self.make_file(
             name='file_owner.txt',
@@ -77,7 +71,6 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             public_url=True,  # NOTE: Public URL OK
             secret=self.secret_file_owner,
         )
-
         # File uploaded by project contributor
         self.file_contributor = self.make_file(
             name='file_contributor.txt',
@@ -90,9 +83,6 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             public_url=False,  # NOTE: No public URL
             secret=self.secret_file_contributor,
         )
-
-        # Init hyperlinks
-
         # HyperLink added by project owner
         self.hyperlink_owner = self.make_hyperlink(
             name='Owner link',
@@ -102,7 +92,6 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             owner=self.user_owner,
             description='',
         )
-
         # HyperLink added by project contributor
         self.hyperlink_contrib = self.make_hyperlink(
             name='Contributor link',
@@ -115,7 +104,6 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
 
     def test_readme(self):
         """Test rendering readme if it has been uploaded to the folder"""
-
         # Init readme file
         self.readme_file = self.make_file(
             name='readme.txt',
@@ -128,7 +116,6 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             public_url=False,
             secret='xxxxxxxxx',
         )
-
         expected_true = [
             self.superuser,
             self.owner_as.user,
@@ -139,14 +126,12 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-ff-readme-card', True
         )
 
     def test_buttons_list(self):
-        """Test file/folder list-wide button visibility according to user
-        permissions"""
+        """Test file/folder list-wide button visibility"""
         expected_true = [
             self.superuser,
             self.owner_as.user,
@@ -157,17 +142,35 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-ff-buttons-list', True
         )
+        self.assert_element_exists(
+            expected_false, url, 'sodar-ff-buttons-list', False
+        )
 
+    def test_buttons_list_archive(self):
+        """Test file/folder list-wide button visibility for archived project"""
+        self.project.set_archive()
+        expected_true = [self.superuser]
+        expected_false = [
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_exists(
+            expected_true, url, 'sodar-ff-buttons-list', True
+        )
         self.assert_element_exists(
             expected_false, url, 'sodar-ff-buttons-list', False
         )
 
     def test_buttons_file(self):
-        """Test file action buttons visibility according to user permissions"""
+        """Test file action buttons visibility"""
         expected = [
             (self.superuser, 2),
             (self.owner_as.user, 2),
@@ -180,9 +183,23 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
         self.assert_element_count(expected, url, 'sodar-ff-file-buttons')
 
+    def test_buttons_file_archive(self):
+        """Test file action buttons visibility for archived project"""
+        self.project.set_archive()
+        expected = [
+            (self.superuser, 2),
+            (self.owner_as.user, 0),
+            (self.delegate_as.user, 0),
+            (self.contributor_as.user, 0),
+            (self.guest_as.user, 0),
+        ]
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(expected, url, 'sodar-ff-file-buttons')
+
     def test_buttons_folder(self):
-        """Test folder action buttons visibility according to user
-        permissions"""
+        """Test folder action buttons visibility"""
         expected = [
             (self.superuser, 2),
             (self.owner_as.user, 2),
@@ -195,9 +212,23 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
         self.assert_element_count(expected, url, 'sodar-ff-folder-buttons')
 
+    def test_buttons_folder_archive(self):
+        """Test folder action buttons visibility for archived project"""
+        self.project.set_archive()
+        expected = [
+            (self.superuser, 2),
+            (self.owner_as.user, 0),
+            (self.delegate_as.user, 0),
+            (self.contributor_as.user, 0),
+            (self.guest_as.user, 0),
+        ]
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(expected, url, 'sodar-ff-folder-buttons')
+
     def test_buttons_hyperlink(self):
-        """Test hyperlink action buttons visibility according to user
-        permissions"""
+        """Test hyperlink action buttons visibility"""
         expected = [
             (self.superuser, 2),
             (self.owner_as.user, 2),
@@ -210,9 +241,23 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
         self.assert_element_count(expected, url, 'sodar-ff-hyperlink-buttons')
 
+    def test_buttons_hyperlink_archive(self):
+        """Test hyperlink action buttons visibility for archived project"""
+        self.project.set_archive()
+        expected = [
+            (self.superuser, 2),
+            (self.owner_as.user, 0),
+            (self.delegate_as.user, 0),
+            (self.contributor_as.user, 0),
+            (self.guest_as.user, 0),
+        ]
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(expected, url, 'sodar-ff-hyperlink-buttons')
+
     def test_file_checkboxes(self):
-        """Test batch file editing checkbox visibility according to user
-        permissions"""
+        """Test batch file editing checkbox visibility"""
         expected = [
             (self.superuser, 6),
             (self.owner_as.user, 6),
@@ -225,9 +270,23 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
         self.assert_element_count(expected, url, 'sodar-ff-checkbox')
 
+    def test_file_checkboxes_archive(self):
+        """Test batch file editing checkbox visibility for archived project"""
+        self.project.set_archive()
+        expected = [
+            (self.superuser, 6),
+            (self.owner_as.user, 0),
+            (self.delegate_as.user, 0),
+            (self.contributor_as.user, 0),
+            (self.guest_as.user, 0),
+        ]
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(expected, url, 'sodar-ff-checkbox')
+
     def test_public_link(self):
-        """Test public link visibility according to user
-        permissions"""
+        """Test public link visibility"""
         expected = [
             (self.superuser, 1),
             (self.owner_as.user, 1),
@@ -249,7 +308,6 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
         setting.value = 0
         setting.save()
-
         expected = [
             (self.superuser, 0),
             (self.owner_as.user, 0),
@@ -262,9 +320,23 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
         self.assert_element_count(expected, url, 'sodar-ff-link-public')
 
+    def test_public_link_archive(self):
+        """Test public link visibility for archived project"""
+        self.project.set_archive()
+        expected = [
+            (self.superuser, 1),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 0),
+        ]
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(expected, url, 'sodar-ff-link-public')
+
     def test_item_flags(self):
         """Test item flagging"""
-
         # Set up flags
         self.file_owner.flag = 'IMPORTANT'
         self.file_owner.save()
@@ -272,7 +344,6 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         self.folder_contributor.save()
         self.hyperlink_contrib.flag = 'REVOKED'
         self.hyperlink_contrib.save()
-
         expected = [
             (self.superuser, 3),
             (self.owner_as.user, 3),
@@ -291,13 +362,9 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
 
     def setUp(self):
         super().setUp()
-
         self.file_content = bytes('content'.encode('utf-8'))
         self.secret_file_owner = build_secret()
         self.secret_file_contributor = build_secret()
-
-        # Init folders
-
         # Folder created by project owner
         self.folder_owner = self.make_folder(
             name='folder_owner',
@@ -306,7 +373,6 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             owner=self.user_owner,
             description='description',
         )
-
         # File created by project contributor
         self.folder_contributor = self.make_folder(
             name='folder_contributor',
@@ -315,9 +381,6 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             owner=self.user_contributor,
             description='description',
         )
-
-        # Init files
-
         # File uploaded by project owner
         self.file_owner = self.make_file(
             name='file_owner.txt',
@@ -330,7 +393,6 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             public_url=True,  # NOTE: Public URL OK
             secret=self.secret_file_owner,
         )
-
         # File uploaded by project contributor
         self.file_contributor = self.make_file(
             name='file_contributor.txt',
@@ -343,9 +405,6 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             public_url=False,  # NOTE: No public URL
             secret=self.secret_file_contributor,
         )
-
-        # Init hyperlinks
-
         # HyperLink added by project owner
         self.hyperlink_owner = self.make_hyperlink(
             name='Owner link',
@@ -355,7 +414,6 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             owner=self.user_owner,
             description='description',
         )
-
         # HyperLink added by project contributor
         self.hyperlink_contrib = self.make_hyperlink(
             name='Contributor link',
@@ -457,7 +515,6 @@ class TestHomeView(TestUIBase):
 
     def test_project_list(self):
         """Test custom filesfolders project list column visibility"""
-
         users = [
             self.superuser,
             self.owner_as.user,
@@ -467,7 +524,6 @@ class TestHomeView(TestUIBase):
             self.user_no_roles,
         ]
         url = reverse('home')
-
         self.assert_element_exists(
             users, url, 'sodar-pr-project-list-header-filesfolders-files', True
         )

@@ -288,6 +288,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
                 'description': self.category.description,
                 'readme': '',
                 'public_guest_access': False,
+                'archive': False,
                 'roles': {
                     str(self.cat_owner_as.sodar_uuid): {
                         'user': {
@@ -309,6 +310,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
                 'description': self.project.description,
                 'readme': '',
                 'public_guest_access': False,
+                'archive': False,
                 'roles': {
                     str(self.owner_as.sodar_uuid): {
                         'user': {
@@ -368,6 +370,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
             'description': self.category.description,
             'readme': '',
             'public_guest_access': False,
+            'archive': False,
             'roles': {
                 str(self.cat_owner_as.sodar_uuid): {
                     'user': {
@@ -401,6 +404,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
             'description': self.project.description,
             'readme': '',
             'public_guest_access': False,
+            'archive': False,
             'roles': {
                 str(self.owner_as.sodar_uuid): {
                     'user': {
@@ -463,12 +467,12 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'public_guest_access': False,
+            'archive': False,
             'full_title': new_category.title,
             'has_public_children': False,
             'sodar_uuid': new_category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
-
         # Assert role assignment
         self.assertEqual(
             RoleAssignment.objects.filter(
@@ -476,7 +480,6 @@ class TestProjectCreateAPIView(
             ).count(),
             1,
         )
-
         # Assert API response
         expected = {
             'title': NEW_CATEGORY_TITLE,
@@ -519,6 +522,7 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'public_guest_access': False,
+            'archive': False,
             'full_title': self.category.title + ' / ' + new_category.title,
             'has_public_children': False,
             'sodar_uuid': new_category.sodar_uuid,
@@ -572,6 +576,7 @@ class TestProjectCreateAPIView(
             'description': new_project.description,
             'readme': new_project.readme.raw,
             'public_guest_access': False,
+            'archive': False,
             'full_title': self.category.title + ' / ' + new_project.title,
             'has_public_children': False,
             'sodar_uuid': new_project.sodar_uuid,
@@ -826,6 +831,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
+            'archive': False,
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
@@ -839,6 +845,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
+            'archive': False,
             'roles': {
                 str(self.category.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
@@ -882,6 +889,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
+            'archive': False,
             'full_title': self.category.title + ' / ' + UPDATED_TITLE,
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
@@ -895,6 +903,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
+            'archive': False,
             'roles': {
                 str(self.project.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
@@ -935,6 +944,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': False,
+            'archive': False,
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
@@ -949,6 +959,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': False,
+            'archive': False,
             'roles': {
                 str(self.category.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
@@ -990,6 +1001,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
+            'archive': False,
             'full_title': self.category.title + ' / ' + UPDATED_TITLE,
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
@@ -1004,6 +1016,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_guest_access': True,
+            'archive': False,
             'roles': {
                 str(self.project.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
@@ -1018,14 +1031,12 @@ class TestProjectUpdateAPIView(
     def test_patch_project_owner(self):
         """Test patch() for updating project owner (should fail)"""
         new_owner = self.make_user('new_owner')
-
         url = reverse(
             'projectroles:api_project_update',
             kwargs={'project': self.project.sodar_uuid},
         )
         patch_data = {'owner': str(new_owner.sodar_uuid)}
         response = self.request_knox(url, method='PATCH', data=patch_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_patch_project_move(self):
@@ -1188,7 +1199,6 @@ class TestProjectUpdateAPIView(
             'readme': UPDATED_README,
         }
         response = self.request_knox(url, method='PATCH', data=patch_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
@@ -1221,14 +1231,12 @@ class TestRoleAssignmentCreateAPIView(
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
         )
-
         role_as = RoleAssignment.objects.filter(
             project=self.project,
             role=self.role_contributor,
             user=self.assign_user,
         ).first()
         self.assertIsNotNone(role_as)
-
         expected = {
             'project': str(self.project.sodar_uuid),
             'role': PROJECT_ROLE_CONTRIBUTOR,
@@ -1296,7 +1304,6 @@ class TestRoleAssignmentCreateAPIView(
         response = self.request_knox(
             url, method='POST', data=post_data, token=new_user_token
         )
-
         self.assertEqual(response.status_code, 403, msg=response.content)
 
     def test_create_delegate_limit(self):
@@ -1315,7 +1322,6 @@ class TestRoleAssignmentCreateAPIView(
         }
         # NOTE: Post as owner
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_create_delegate_limit_inherit(self):
@@ -1523,7 +1529,6 @@ class TestRoleAssignmentUpdateAPIView(
     def test_put_change_user(self):
         """Test put() with a different user (should fail)"""
         new_user = self.make_user('new_user')
-
         url = reverse(
             'projectroles:api_role_update',
             kwargs={'roleassignment': self.update_as.sodar_uuid},
@@ -1533,7 +1538,6 @@ class TestRoleAssignmentUpdateAPIView(
             'user': str(new_user.sodar_uuid),
         }
         response = self.request_knox(url, method='PUT', data=put_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_patch_role(self):
@@ -1549,7 +1553,6 @@ class TestRoleAssignmentUpdateAPIView(
 
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
-
         self.update_as.refresh_from_db()
         model_dict = model_to_dict(self.update_as)
         expected = {
@@ -1560,7 +1563,6 @@ class TestRoleAssignmentUpdateAPIView(
             'sodar_uuid': self.update_as.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
-
         expected = {
             'project': str(self.project.sodar_uuid),
             'role': PROJECT_ROLE_GUEST,
@@ -1604,7 +1606,6 @@ class TestRoleAssignmentUpdateAPIView(
         )
         patch_data = {'role': PROJECT_ROLE_GUEST}
         response = self.request_knox(url, method='PATCH', data=patch_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
@@ -1616,7 +1617,6 @@ class TestRoleAssignmentDestroyAPIView(
     def setUp(self):
         super().setUp()
         self.assign_user = self.make_user('assign_user')
-
         self.update_as = self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
@@ -1624,13 +1624,11 @@ class TestRoleAssignmentDestroyAPIView(
     def test_delete_role(self):
         """Test delete for role assignment deletion"""
         self.assertEqual(RoleAssignment.objects.count(), 3)
-
         url = reverse(
             'projectroles:api_role_destroy',
             kwargs={'roleassignment': self.update_as.sodar_uuid},
         )
         response = self.request_knox(url, method='DELETE')
-
         self.assertEqual(response.status_code, 204, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 2)
         self.assertEqual(
@@ -1647,7 +1645,6 @@ class TestRoleAssignmentDestroyAPIView(
             self.project, new_user, self.role_delegate
         )
         self.assertEqual(RoleAssignment.objects.count(), 4)
-
         url = reverse(
             'projectroles:api_role_destroy',
             kwargs={'roleassignment': delegate_as.sodar_uuid},
@@ -1655,20 +1652,17 @@ class TestRoleAssignmentDestroyAPIView(
         # NOTE: Perform record as contributor user
         token = self.get_token(self.assign_user)
         response = self.request_knox(url, method='DELETE', token=token)
-
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 4)
 
     def test_delete_owner(self):
         """Test delete for owner deletion (should fail)"""
         self.assertEqual(RoleAssignment.objects.count(), 3)
-
         url = reverse(
             'projectroles:api_role_destroy',
             kwargs={'roleassignment': self.owner_as.sodar_uuid},
         )
         response = self.request_knox(url, method='DELETE')
-
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
@@ -1690,13 +1684,11 @@ class TestRoleAssignmentDestroyAPIView(
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
         self.assertEqual(RoleAssignment.objects.count(), 3)
-
         url = reverse(
             'projectroles:api_role_destroy',
             kwargs={'roleassignment': self.update_as.sodar_uuid},
         )
         response = self.request_knox(url, method='DELETE')
-
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
@@ -1717,7 +1709,6 @@ class TestRoleAssignmentOwnerTransferAPIView(
             self.project, self.assign_user, self.role_contributor
         )
         self.assertEqual(self.project.get_owner().user, self.user)
-
         url = reverse(
             'projectroles:api_role_owner_transfer',
             kwargs={'project': self.project.sodar_uuid},
@@ -1727,7 +1718,6 @@ class TestRoleAssignmentOwnerTransferAPIView(
             'old_owner_role': self.role_contributor.name,
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.assign_user)
 
@@ -1737,7 +1727,6 @@ class TestRoleAssignmentOwnerTransferAPIView(
             self.category, self.assign_user, self.role_contributor
         )
         self.assertEqual(self.category.get_owner().user, self.user)
-
         url = reverse(
             'projectroles:api_role_owner_transfer',
             kwargs={'project': self.category.sodar_uuid},
@@ -1747,13 +1736,11 @@ class TestRoleAssignmentOwnerTransferAPIView(
             'old_owner_role': self.role_contributor.name,
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.category.get_owner().user, self.assign_user)
 
     def test_transfer_owner_inherit(self):
         """Test transferring ownership to an inherited owner"""
-        # Assign role to new user
         self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
@@ -1761,7 +1748,6 @@ class TestRoleAssignmentOwnerTransferAPIView(
         alt_owner = self.make_user('alt_owner')
         self.owner_as.user = alt_owner
         self.owner_as.save()
-
         self.assertEqual(self.project.get_owner().user, alt_owner)
         self.assertEqual(
             self.project.get_owners(inherited_only=True)[0].user, self.user
@@ -1830,7 +1816,6 @@ class TestRoleAssignmentOwnerTransferAPIView(
             'old_owner_role': self.role_contributor.name,
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.user)
 
@@ -1952,7 +1937,6 @@ class TestProjectInviteCreateAPIView(
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 1
         )
-
         invite = ProjectInvite.objects.first()
         self.assertEqual(invite.email, INVITE_USER_EMAIL)
         self.assertEqual(invite.role, self.role_contributor)
@@ -2245,7 +2229,6 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
 
     def setUp(self):
         super().setUp()
-
         # Create invite
         self.invite = self.make_invite(
             email=INVITE_USER_EMAIL,
@@ -2303,7 +2286,6 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         response = self.request_knox(
             url, method='POST', token=self.get_token(delegate)
         )
-
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -2569,7 +2551,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
     def test_set_project_user(self):
         """Test setting app setting value with PROJECT_USER scope"""
         self.assertEqual(AppSetting.objects.count(), 0)
-
         setting_name = 'project_user_str_setting'
         url = reverse(
             'projectroles:api_project_setting_set',
@@ -2582,7 +2563,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'user': str(self.user.sodar_uuid),
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 1)
         obj = AppSetting.objects.get(name=setting_name, project=self.project)
@@ -2601,7 +2581,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'value': 'value',
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
 
@@ -2618,7 +2597,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'value': 'value',
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
 
@@ -2635,7 +2613,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'value': 'value',
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
 
@@ -2652,14 +2629,12 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'value': 'value',
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
 
     def test_set_no_value(self):
         """Test setting without a value (should fail)"""
         self.assertEqual(AppSetting.objects.count(), 0)
-
         setting_name = 'project_str_setting'
         url = reverse(
             'projectroles:api_project_setting_set',
@@ -2670,7 +2645,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'setting_name': setting_name,
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
 
@@ -2687,7 +2661,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'value': '170',
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 200, msg=response.content)
         obj = AppSetting.objects.get(name=setting_name, project=self.project)
         self.assertEqual(obj.get_value(), 170)
@@ -2705,7 +2678,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'value': True,
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 200, msg=response.content)
         obj = AppSetting.objects.get(name=setting_name, project=self.project)
         self.assertEqual(obj.get_value(), True)
@@ -2724,7 +2696,6 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
             'value': value,
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 200, msg=response.content)
         obj = AppSetting.objects.get(name=setting_name, project=self.project)
         self.assertEqual(obj.get_value(), value)
@@ -2907,7 +2878,6 @@ class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
     def test_set_no_value(self):
         """Test setting without a value (should fail)"""
         self.assertEqual(AppSetting.objects.count(), 0)
-
         setting_name = 'user_str_setting'
         url = reverse('projectroles:api_user_setting_set')
         post_data = {
@@ -2915,7 +2885,6 @@ class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
             'setting_name': setting_name,
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
 
@@ -2934,8 +2903,6 @@ class TestUserListAPIView(TestCoreAPIViewsBase):
         response = self.request_knox(
             url, token=self.get_token(self.domain_user)
         )
-
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)  # System users not returned
@@ -2953,7 +2920,6 @@ class TestUserListAPIView(TestCoreAPIViewsBase):
         """Test UserListAPIView get() as a superuser"""
         url = reverse('projectroles:api_user_list')
         response = self.request_knox(url)  # Default token is for superuser
-
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
@@ -3018,7 +2984,6 @@ class TestAPIVersioning(TestCoreAPIViewsBase):
 
     def setUp(self):
         super().setUp()
-
         self.url = reverse(
             'projectroles:api_project_retrieve',
             kwargs={'project': self.project.sodar_uuid},
@@ -3068,7 +3033,6 @@ class TestRemoteProjectGetAPIView(
 
     def setUp(self):
         super().setUp()
-
         # Set up projects
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
@@ -3091,7 +3055,6 @@ class TestRemoteProjectGetAPIView(
             description=REMOTE_SITE_DESC,
             secret=REMOTE_SITE_SECRET,
         )
-
         # Create remote project
         self.remote_project = self.make_remote_project(
             site=self.target_site,
@@ -3099,7 +3062,6 @@ class TestRemoteProjectGetAPIView(
             project=self.project,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
         )
-
         self.remote_api = RemoteProjectAPI()
 
     def test_get(self):
@@ -3162,7 +3124,6 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
             value=True,
             project=self.project,
         )
-
         # Init IP allowlist setting
         self.make_setting(
             app_name='projectroles',
@@ -3172,7 +3133,6 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
             value_json=ip_list,
             project=self.project,
         )
-
         return user, user_as, user_cat_as
 
     def _get_project_ip_allowing(
@@ -3211,6 +3171,7 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
                 'description': self.project.description,
                 'readme': '',
                 'public_guest_access': False,
+                'archive': False,
                 'roles': {
                     str(user_as.sodar_uuid): {
                         'user': {
@@ -3225,7 +3186,6 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
                 },
                 'sodar_uuid': str(self.project.sodar_uuid),
             }
-
             # Assert response
             self.assertEqual(response.status_code, 200)
             response_data = json.loads(response.content)
@@ -3396,9 +3356,7 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
             'guest', 'REMOTE_ADDR', ['192.168.1.2'], blocked=True
         )
 
-    def test_remote_addr_block_not_in_allowlist_network_guest(
-        self,
-    ):
+    def test_remote_addr_block_not_in_allowlist_network_guest(self):
         self._get_project_ip_allowing(
             'guest', 'REMOTE_ADDR', ['192.168.2.0/24'], blocked=True
         )

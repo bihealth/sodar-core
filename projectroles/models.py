@@ -126,6 +126,12 @@ class Project(models.Model):
         'unauthenticated users if allowed on the site',
     )
 
+    #: Project is archived (read-only)
+    archive = models.BooleanField(
+        default=False,
+        help_text='Project is archived (read-only)',
+    )
+
     #: Full project title with parent path (auto-generated)
     full_title = models.CharField(
         max_length=4096,
@@ -168,16 +174,14 @@ class Project(models.Model):
         self._validate_parent()
         self._validate_title()
         self._validate_parent_type()
-
+        self._validate_archive()
         # Update full title of self and children
         self.full_title = self._get_full_title()
         for child in self.get_children():
             child.save()
-
         # Update public children
         # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
         self.has_public_children = self._has_public_children()
-
         super().save(*args, **kwargs)
 
     def _validate_parent(self):
@@ -203,6 +207,19 @@ class Project(models.Model):
         """
         if self.parent and self.title == self.parent.title:
             raise ValidationError('Project and parent titles can not be equal')
+
+    def _validate_archive(self):
+        """
+        Validate archive status against project type to ensure archiving is only
+        applied to projects.
+        """
+        if (
+            self.archive
+            and self.type != SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+        ):
+            raise ValidationError(
+                'Archiving a category is not currently supported'
+            )
 
     def get_absolute_url(self):
         return reverse(
@@ -417,7 +434,6 @@ class Project(models.Model):
         ):
             return None
         RemoteProject = apps.get_model('projectroles', 'RemoteProject')
-
         try:
             return RemoteProject.objects.get(
                 project_uuid=self.sodar_uuid,
@@ -460,6 +476,14 @@ class Project(models.Model):
             self.public_guest_access = public
             self.save()
             self._update_public_children()  # Update for parents
+
+    def set_archive(self, status=True):
+        """
+        Helper for setting archive value. Raises ValidationError for categories.
+        """
+        if status != self.archive:
+            self.archive = status
+            self.save()
 
     def get_log_title(self):
         """Return a log title for the project"""

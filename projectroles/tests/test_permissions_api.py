@@ -39,6 +39,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         version=None,
         knox=False,
         cleanup_method=None,
+        cleanup_kwargs=None,
         req_kwargs=None,
     ):
         """
@@ -57,6 +58,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         :param knox: Use Knox token auth instead of Django login (boolean)
         :param cleanup_method: Callable method to clean up data after a
                successful request
+        :param cleanup_kwargs: Optional cleanup method kwargs (dict or None)
         :param req_kwargs: Optional request kwargs override (dict or None)
         """
         if cleanup_method and not callable(cleanup_method):
@@ -96,7 +98,9 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
             self.assertEqual(response.status_code, status_code, msg=msg)
 
             if cleanup_method:
-                cleanup_method()
+                if cleanup_kwargs is None:
+                    cleanup_kwargs = {}
+                cleanup_method(**cleanup_kwargs)
 
 
 class TestProjectAPIPermissionBase(

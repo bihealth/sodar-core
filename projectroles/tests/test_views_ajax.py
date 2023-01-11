@@ -52,6 +52,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'type': self.category.type,
                     'full_title': self.category.full_title,
                     'public_guest_access': self.category.public_guest_access,
+                    'archive': False,
                     'remote': False,
                     'revoked': False,
                     'starred': False,
@@ -63,6 +64,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'type': self.project.type,
                     'full_title': self.project.full_title,
                     'public_guest_access': self.project.public_guest_access,
+                    'archive': False,
                     'remote': False,
                     'revoked': False,
                     'starred': False,
@@ -92,6 +94,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'type': self.project.type,
                     'full_title': self.project.title,  # Not full_title
                     'public_guest_access': self.project.public_guest_access,
+                    'archive': False,
                     'remote': False,
                     'revoked': False,
                     'starred': False,

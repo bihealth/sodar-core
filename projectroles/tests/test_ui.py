@@ -111,13 +111,11 @@ class TestUIBase(
 
     def setUp(self):
         socket.setdefaulttimeout(60)  # To get around Selenium hangups
-
         # Init Chrome
         options = webdriver.ChromeOptions()
         for arg in self.chrome_options:
             options.add_argument(arg)
         self.selenium = webdriver.Chrome(chrome_options=options)
-
         # Prevent ElementNotVisibleException
         self.selenium.set_window_size(self.window_size[0], self.window_size[1])
 
@@ -166,8 +164,6 @@ class TestUIBase(
             self.project, self.user_guest, self.role_guest
         )
 
-        super().setUp()
-
     def tearDown(self):
         # Shut down Selenium
         self.selenium.quit()
@@ -196,7 +192,6 @@ class TestUIBase(
             return self.login_and_redirect_with_ui(
                 user, url, wait_elem, wait_loc
             )
-
         # Cookie login mode
         self.selenium.get(self.build_selenium_url('/blank/'))
 
@@ -243,10 +238,7 @@ class TestUIBase(
         """
         self.selenium.get(self.build_selenium_url('/'))
 
-        ########################
         # Logout (if logged in)
-        ########################
-
         try:
             user_button = self.selenium.find_element(
                 By.ID, 'sodar-navbar-user-dropdown'
@@ -272,10 +264,7 @@ class TestUIBase(
         except NoSuchElementException:
             pass
 
-        ########
         # Login
-        ########
-
         self.selenium.get(self.build_selenium_url(url))
         # Submit user data into form
         field_user = self.selenium.find_element(By.ID, 'sodar-login-username')
@@ -356,10 +345,8 @@ class TestUIBase(
         for e in expected:
             expected_user = e[0]  # Just to clarify code
             self.login_and_redirect(expected_user, url, wait_elem, wait_loc)
-
             xpath = '{}*[@{}="{}"]' if exact else '{}*[contains(@{}, "{}")]'
             expected_count = e[1]
-
             if expected_count > 0:
                 self.assertEqual(
                     len(
@@ -430,7 +417,6 @@ class TestUIBase(
                          to selenium "By" class members)
         """
         self.login_and_redirect(user, url, wait_elem, wait_loc)
-
         # Wait for element to be present (sometimes this is too slow)
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, element_id))
@@ -439,7 +425,6 @@ class TestUIBase(
         element = self.selenium.find_element(By.ID, element_id)
         self.assertIsNotNone(element)
         self.assertIn('active', element.get_attribute('class'))
-
         not_expected = [e for e in all_elements if e != element_id]
         for n in not_expected:
             element = self.selenium.find_element(By.ID, n)
@@ -958,6 +943,51 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
                 remote_links[0].get_attribute('class'),
             )
 
+    def test_archive_visibility_default(self):
+        """Test archive icon and alert visibility (should not be visible)"""
+        users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        for user in users:
+            self.login_and_redirect(user, url)
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element(
+                    By.ID, 'sodar-pr-header-icon-archive'
+                )
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element(By.ID, 'sodar-pr-alert-archive')
+
+    def test_archive_visibility_archived(self):
+        """Test archive icon and alert visibility for archived project"""
+        self.project.set_archive()
+        users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        for user in users:
+            self.login_and_redirect(user, url)
+            self.assertIsNotNone(
+                self.selenium.find_element(By.ID, 'sodar-pr-alert-archive')
+            )
+            self.assertIsNotNone(
+                self.selenium.find_element(
+                    By.ID, 'sodar-pr-header-icon-archive'
+                )
+            )
+
 
 class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
     """Tests for ProjectRoleView UI"""
@@ -1201,6 +1231,63 @@ class TestProjectCreateView(TestUIBase):
         self.assert_element_exists([self.superuser], url, 'div_id_owner', True)
         self.assert_element_exists(
             [self.user_owner, new_user], url, 'div_id_owner', False
+        )
+
+    def test_archive_button(self):
+        """Test rendering form without archive button"""
+        url = reverse('projectroles:create')
+        self.assert_element_exists(
+            [self.superuser], url, 'sodar-pr-btn-archive', False
+        )
+
+
+class TestProjectUpdateView(TestUIBase):
+    """Tests for ProjectUpdateView UI"""
+
+    def test_archive_button(self):
+        """Test rendering of archive button"""
+        url = reverse(
+            'projectroles:update', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_exists(
+            [self.superuser], url, 'sodar-pr-btn-archive', True
+        )
+        element = self.selenium.find_element(By.ID, 'sodar-pr-btn-archive')
+        self.assertEqual(element.text, 'Archive')
+
+    def test_archive_button_archived(self):
+        """Test rendering of archive button with archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'projectroles:update', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_exists(
+            [self.superuser], url, 'sodar-pr-btn-archive', True
+        )
+        element = self.selenium.find_element(By.ID, 'sodar-pr-btn-archive')
+        self.assertEqual(element.text, 'Unarchive')
+
+
+class TestProjectArchiveView(TestUIBase):
+    """Tests for ProjectArchiveView UI"""
+
+    def test_archive_button(self):
+        """Test rendering of archive button"""
+        url = reverse(
+            'projectroles:archive', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_exists(
+            [self.superuser], url, 'sodar-pr-btn-confirm-archive', True
+        )
+
+    def test_archive_button_archived(self):
+        """Test rendering of archive button with archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'projectroles:archive', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_exists(
+            [self.superuser], url, 'sodar-pr-btn-confirm-unarchive', True
         )
 
 

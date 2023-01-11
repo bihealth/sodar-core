@@ -11,10 +11,16 @@ Unreleased
 Added
 -----
 
+- **Filesfolders**
+    - Project archiving support (#1086)
 - **Projectroles**
     - App settings management via REST API (#521)
     - App setting update methods in ``ProjectModifyPluginMixin`` (#521)
     - Role ranking (#666)
+    - Project archiving (#369)
+    - ``Project.set_archive()`` helper (#369)
+    - ``can_modify_project_data`` predicate in rules (#369)
+    - ``cleanup_kwargs`` in ``assert_response_api()`` API test helper (#1088)
 
 Changed
 -------

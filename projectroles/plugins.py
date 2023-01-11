@@ -211,6 +211,33 @@ class ProjectModifyPluginMixin:
         # TODO: Implement this in your app plugin
         pass
 
+    def perform_project_archive(
+        self,
+        project,
+    ):
+        """
+        Perform additional actions to finalize project archiving or unarchiving.
+        The state being applied can be derived from the project.archive attr.
+
+        :param project: Project object (Project)
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def revert_project_archive(
+        self,
+        project,
+    ):
+        """
+        Revert project archiving or unarchiving if errors have occurred in other
+        apps. The state being originally set can be derived from the
+        project.archive attr.
+
+        :param project: Project object (Project)
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
 
 # Plugin Points ----------------------------------------------------------------
 

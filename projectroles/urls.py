@@ -24,6 +24,11 @@ urls_ui = [
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
+    url(
+        regex=r'^archive/(?P<project>[0-9a-f-]+)$',
+        view=views.ProjectArchiveView.as_view(),
+        name='archive',
+    ),
     # Search views
     url(
         regex=r'^search/results/$',

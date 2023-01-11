@@ -16,12 +16,22 @@ v0.12.0 (WIP)
 Release Highlights
 ==================
 
+- Add project archiving
 - Add role ranking
 - Add app settings retrieve/set REST API views
 - Rename app settings API methods
 
 Breaking Changes
 ================
+
+Project Archiving Added
+-----------------------
+
+This release of SODAR Core adds the functionality to archive projects to make
+their data read-only for all users. You should update your project apps to
+support this behaviour.
+
+For more information, see :ref:`dev_project_app`.
 
 App Settings API Methods Renamed
 --------------------------------
