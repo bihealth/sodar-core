@@ -507,14 +507,11 @@ class ProjectForm(SODARModelForm):
             # Set owner
             if self.current_user.is_superuser and parent_project:
                 self.initial['owner'] = parent_project.get_owner().user
-                self.fields[
-                    'owner'
-                ].label_from_instance = lambda x: x.get_form_label()
             else:
                 self.initial['owner'] = self.current_user
-                self.fields[
-                    'owner'
-                ].label_from_instance = lambda x: x.get_form_label()
+            self.fields[
+                'owner'
+            ].label_from_instance = lambda x: x.get_form_label()
             # Hide owner select widget for regular users
             if not self.current_user.is_superuser:
                 self.fields['owner'].widget = forms.HiddenInput()

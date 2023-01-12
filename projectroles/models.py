@@ -1131,12 +1131,11 @@ class SODARUser(AbstractUser):
 
     def get_form_label(self):
         """Return options with name, username and email"""
-        display = '{}{}{}'.format(
+        return '{}{}{}'.format(
             self.name if self.name else '',
             ' ({})'.format(self.username) if self.username else '',
             ' <{}>'.format(self.email) if self.email else '',
         )
-        return display
 
     def get_full_name(self):
         """Return full name or username if not set"""
