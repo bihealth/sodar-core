@@ -120,22 +120,22 @@ class AdminSiteAppPlugin(SiteAppPluginPoint):
     """Projectroles plugin for registering the app"""
 
     #: Name (slug-safe, used in URLs)
-    name = 'admin_site'
+    name = 'timeline_site_admin'
 
     #: Title (used in templates)
-    title = 'Admin Site Events'
+    title = 'All Timeline Events'
 
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
 
     #: Iconify icon
-    icon = 'mdi:clock-time-eight'
+    icon = 'mdi:cog-counterclockwise'
 
     #: Description string
-    description = 'Timeline of Admin Site Events'
+    description = 'Admin view for all site events'
 
     #: Entry point URL ID
-    entry_point_url_id = 'timeline:list_admin'
+    entry_point_url_id = 'timeline:timeline_site_admin'
 
     #: Required permission for displaying the app
-    app_permission = 'timeline.view_admin_site'
+    app_permission = 'timeline.view_site_admin'

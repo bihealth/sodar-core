@@ -34,7 +34,7 @@ rules.add_perm(
 rules.add_perm('timeline.view_site_timeline', rules.is_authenticated)
 
 # Allow viewing timeline for admin site
-rules.add_perm('timeline.view_admin_site', rules.is_superuser)
+rules.add_perm('timeline.view_site_admin', rules.is_superuser)
 
 # Allow viewing classified event
 rules.add_perm(
