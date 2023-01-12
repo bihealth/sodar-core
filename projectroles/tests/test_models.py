@@ -267,6 +267,26 @@ class SODARUserMixin:
         return user
 
 
+class TestSODARUser(SODARUserMixin):
+    """Tests for model.SODARUser"""
+
+    def setUp(self):
+        self.user = self.make_sodar_user(
+            username='test_username',
+            name='test_name',
+            first_name='First_test_name',
+            last_name='Last_test_name',
+            email='example@mail.com',
+        )
+
+    def test_get_form_label(self):
+        expected = '{}{}{}'.format(
+            self.name, ' ({})'.format(self.username), ' <{}>'.format(self.email)
+        )
+        label = self.user.get_form_label()
+        self.assertEqual(label, expected)
+
+
 class TestProject(ProjectMixin, TestCase):
     """Tests for model.Project"""
 
