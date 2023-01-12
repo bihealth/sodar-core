@@ -45,7 +45,7 @@
           </thead>
           <tbody>
             {% for event in object_list %}
-              {% include 'timeline/_list_item.html' %}
+              {% include 'timeline/_list_item.html' with site_admin=True %}
             {% endfor %}
           </tbody>
         </table>

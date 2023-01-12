@@ -38,6 +38,13 @@ def get_timestamp(event):
 
 
 @register.simple_tag
+def check_superuser(user):
+    if user.is_superuser:
+        return True
+    return False
+
+
+@register.simple_tag
 def get_event_description(event, plugin_lookup, request=None):
     """Return printable version of event description"""
     return timeline.get_event_description(event, plugin_lookup, request)
