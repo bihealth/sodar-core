@@ -53,6 +53,19 @@ class EventTimelineMixin:
         return ProjectEvent.objects.filter(**set_kwargs).order_by('-pk')
 
 
+class EventAdminTimelineMixin:
+    """Mixin for common event timeline operations"""
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['timeline_title'] = 'Admin site Events'
+        context['timeline_mode'] = 'admin'
+        return context
+
+    def get_queryset(self):
+        return ProjectEvent.objects.order_by('-pk')
+
+
 class ProjectTimelineView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
@@ -79,6 +92,20 @@ class SiteTimelineView(
 
     permission_required = 'timeline.view_site_timeline'
     template_name = 'timeline/timeline_site.html'
+    model = ProjectEvent
+    paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
+
+
+class AdminTimelineView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    EventAdminTimelineMixin,
+    ListView,
+):
+    """View for displaying timeline events for admin site view"""
+
+    permission_required = 'timeline.view_admin_site'
+    template_name = 'timeline/admin_site.html'
     model = ProjectEvent
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 

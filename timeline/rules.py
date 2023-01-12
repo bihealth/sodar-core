@@ -33,6 +33,9 @@ rules.add_perm(
 # Allow viewing timeline for site-specific events
 rules.add_perm('timeline.view_site_timeline', rules.is_authenticated)
 
+# Allow viewing timeline for admin site
+rules.add_perm('timeline.view_admin_site', rules.is_superuser)
+
 # Allow viewing classified event
 rules.add_perm(
     'timeline.view_classified_event',

@@ -20,6 +20,11 @@ urls_ui = [
         name='list_site',
     ),
     url(
+        regex=r'^admin_site$',
+        view=views.AdminTimelineView.as_view(),
+        name='list_admin',
+    ),
+    url(
         regex=r'^(?P<project>[0-9a-f-]+)/(?P<object_model>[\w-]+)/'
         r'(?P<object_uuid>[0-9a-f-]+)$',
         view=views.ProjectObjectTimelineView.as_view(),
