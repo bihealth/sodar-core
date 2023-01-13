@@ -443,7 +443,12 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
 
     def get_result_label(self, user):
         """Display options with name, username and email address"""
-        return user.get_form_label()
+        display = '{}{}{}'.format(
+            user.name if user.name else '',
+            ' ({})'.format(user.username) if user.name else user.username,
+            ' <{}>'.format(user.email) if user.email else '',
+        )
+        return display
 
     def get_result_value(self, user):
         """Use sodar_uuid in the User model instead of pk"""
