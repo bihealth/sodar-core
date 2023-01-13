@@ -1,8 +1,9 @@
-{% extends 'projectroles/project_base.html' %}
+{% extends 'projectroles/base.html' %}
 
 {% load rules %}
 {% load static %}
 {% load timeline_tags %}
+{% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
 {% block title %}
@@ -16,55 +17,102 @@
   <link rel="stylesheet" type="text/css" href="{% static 'timeline/css/timeline.css' %}" />
 {% endblock css %}
 
-{% block projectroles_extend %}
+{% block projectroles %}
+  {% if event_type == 'site' %}
+    {% has_perm 'timeline.view_site_timeline' request.user project as can_view_timeline %}
+  {% endif %}
+  {% if event_type == 'project' %}
+    {% has_perm 'projectroles.view_project' request.user project as can_view_project %}
+      {% if can_view_project %}
+        {% include 'projectroles/_project_header.html' %}
+        {% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
+      {% else %}
+        <div class="alert alert-danger" role="alert">
+          Insufficient permissions for viewing {% get_display_name 'PROJECT' %}!
+        </div>
+      {% endif %}
+  {% endif %}
+  {% if event_type == 'admin' %}
+    {% has_perm 'timeline.view_site_admin' request.user project as can_view_timeline %}
+  {% endif %}
 
-  {% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
-  {% get_plugin_lookup as plugin_lookup %}
+{% get_plugin_lookup as plugin_lookup %}
 
-  <div class="row sodar-subtitle-container bg-white sticky-top">
-    <h3><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h3>
-    {% if timeline_mode == 'object' %}
-      <div class="ml-auto">
+<div class="row sodar-subtitle-container bg-white sticky-top">
+  <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
+  {% if timeline_mode == 'object' %}
+    <div class="ml-auto">
+      {% if event_type == 'site' %}
+        <a href="{% url 'timeline:list_site' %}"
+          class="btn btn-secondary ml-auto" role="button">
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
+          Site-Wide Events
+        </a>
+      {% endif %}
+      {% if event_type == 'project' %}
         <a href="{% url 'timeline:list_project' project=project.sodar_uuid %}"
-           class="btn btn-secondary ml-auto"
-           role="button">
+          class="btn btn-secondary ml-auto"
+          role="button">
           <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
           {% get_display_name 'PROJECT' title=True %} Timeline
         </a>
+      {% endif %}
+      {% if event_type == 'admin' %}
+        <a href="{% url 'timeline:timeline_site_admin' %}"
+          class="btn btn-secondary ml-auto" role="button">
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
+          Admin Site Events
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<div class="container-fluid sodar-page-container">
+
+  {% if object_list.count > 0 %}
+    <div class="card mb-3" id="sodar-tl-event-list">
+      <div class="card-body p-0">
+        <table class="table table-striped sodar-card-table" id="sodar-tl-table">
+          <thead>
+            {% include 'timeline/_list_header.html' %}
+          </thead>
+          <tbody>
+            {% for event in object_list %}
+              {% if event_type == 'admin' %}
+                {% include 'timeline/_list_item.html' with site_admin=True %}
+              {% else %}
+                {% include 'timeline/_list_item.html' %}
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% if is_paginated %}
+      {% include 'projectroles/_pagination.html' with pg_small=False %}
+    {% endif %}
+   {% else %}
+    {% if event_type == 'site' %}
+      <div class="alert alert-info" role="alert">
+        No site-wide timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
       </div>
     {% endif %}
-  </div>
-
-  <div class="container-fluid sodar-page-container">
-
-    {% if object_list.count > 0 %}
-      <div class="card mb-3" id="sodar-tl-event-list">
-        <div class="card-body p-0">
-          <table class="table table-striped sodar-card-table" id="sodar-tl-table">
-            <thead>
-              {% include 'timeline/_list_header.html' %}
-            </thead>
-            <tbody>
-              {% for event in object_list %}
-                {% include 'timeline/_list_item.html' %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      {% if is_paginated %}
-        {% include 'projectroles/_pagination.html' with pg_small=False %}
-      {% endif %}
-
-    {% else %}
+    {% if event_type == 'project' %}
       <div class="alert alert-info" role="alert">
         No timeline events found for this
         {% if timeline_mode == 'project' %}{% get_display_name 'PROJECT' %}{% else %}object{% endif %}.
       </div>
     {% endif %}
-  </div> <!-- sodar-page-container -->
+    {% if event_type == 'admin' %}
+      <div class="alert alert-info" role="alert">
+        No timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
+      </div>
+    {% endif %}
+  {% endif %}
+</div> <!-- sodar-page-container -->
 
-{% endblock projectroles_extend %}
+{% endblock projectroles %}
 
 {% block javascript %}
   {{ block.super }}
@@ -72,15 +120,18 @@
   <!-- Event list -->
   <script type="text/javascript" src="{% static 'timeline/js/timeline.js' %}"></script>
 
+  <!-- Project starring -->
+  <script type="text/javascript" src="{% static 'projectroles/js/project_star.js' %}"></script>
+
   <!-- Tour content -->
   <script type="text/javascript">
       tourEnabled = true;
 
       tour.addStep('event_list', {
-          title: 'Project Event List',
-          text: 'This is the list of events for the ' +
-              '{% get_display_name "PROJECT" %}' + ' or object, organized by ' +
-              'newest first.',
+          title: 'Site-Wide Event List',
+          text: 'This is the list of site-wide events not linked to any ' +
+              '{% get_display_name "PROJECT" %}' + ', organized by newest ' +
+              'first.',
           attachTo: '#sodar-tl-event-list top',
           advanceOn: '.docs-link click',
           showCancelLink: true
@@ -98,7 +149,7 @@
       if ($('.sodar-pr-pagination').length) {
           tour.addStep('timeline_nav', {
              title: 'Timeline Navigation',
-              text: 'Use these buttons to navigate through project events.',
+              text: 'Use these buttons to navigate through site-wide events.',
               attachTo: '.sodar-pr-pagination top',
               advanceOn: '.docs-link click',
               showCancelLink: true,
