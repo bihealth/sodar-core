@@ -1,6 +1,8 @@
 """UI tests for the timeline app"""
+import json
 
 from django.urls import reverse
+from selenium.webdriver.common.by import By
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -188,3 +190,137 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             },
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
+
+
+class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+    """Test for the timeline view of all events in UI"""
+
+    def setUp(self):
+        super().setUp()
+        self.timeline = get_backend_api('timeline_backend')
+
+        # Init default event
+        self.event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            status_type='OK',
+        )
+
+        # Init default site event
+        self.site_event = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='test_site_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            status_type='OK',
+        )
+
+        # Init classified event
+        self.classified_event = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='classified_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            classified=True,
+        )
+
+    def test_render(self):
+        """Test visibility of events in the admin event list"""
+        expected = [
+            (self.superuser, 3),
+        ]
+        url = reverse('timeline:timeline_site_admin')
+        self.assert_element_count(expected, url, 'sodar-tl-list-event')
+
+    def test_badge(self):
+        """Test visibility of badges in description of event"""
+        url = reverse('timeline:timeline_site_admin')
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        self.assertIsNotNone(self.selenium.find_element(By.CLASS_NAME, 'badge'))
+
+
+class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+    """Test UI of modals in timeline event list"""
+
+    def setUp(self):
+        super().setUp()
+        self.timeline = get_backend_api('timeline_backend')
+
+        # Init default event
+        self.event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='test_event',
+            description='description',
+            extra_data=json.dumps({'test_key': 'test_val'}),
+            status_type='OK',
+        )
+
+    def test_details_modal(self):
+        """Test details modal"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.CLASS_NAME, 'sodar-tl-link-detail')
+        )
+
+    def test_extra_modal(self):
+        """Test details modal"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(
+                By.CLASS_NAME, 'sodar-tl-link-extra-data'
+            )
+        )
+
+    def test_details_content(self):
+        """Test details modal's content"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        button = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-tl-link-detail'
+        )
+        button.click()
+        self.assertIsNotNone(
+            self.selenium.find_element(By.CLASS_NAME, 'sodar-card-table')
+        )
+
+    def test_extra_content(self):
+        """Test extra data modal's content"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        button = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-tl-link-extra-data'
+        )
+        button.click()
+        self.assertIsNotNone(
+            self.selenium.find_element(By.CLASS_NAME, 'modal-title')
+        )

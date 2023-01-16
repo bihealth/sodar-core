@@ -16,10 +16,10 @@
 {% endblock css %}
 
 {% block projectroles %}
-  {% if event_type == 'site' %}
+  {% if timeline_mode == 'site' %}
     {% has_perm 'timeline.view_site_timeline' request.user project as can_view_timeline %}
   {% endif %}
-  {% if event_type == 'admin' %}
+  {% if timeline_mode == 'admin' %}
     {% has_perm 'timeline.view_site_admin' request.user project as can_view_timeline %}
   {% endif %}
 
@@ -29,14 +29,14 @@
   <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
   {% if timeline_mode == 'object' %}
     <div class="ml-auto">
-      {% if event_type == 'site' %}
+      {% if timeline_modef == 'site' %}
         <a href="{% url 'timeline:list_site' %}"
           class="btn btn-secondary ml-auto" role="button">
           <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
           Site-Wide Events
         </a>
       {% endif %}
-      {% if event_type == 'admin' %}
+      {% if timeline_mode == 'admin' %}
         <a href="{% url 'timeline:timeline_site_admin' %}"
           class="btn btn-secondary ml-auto" role="button">
           <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
@@ -72,12 +72,12 @@
       {% include 'projectroles/_pagination.html' with pg_small=False %}
     {% endif %}
    {% else %}
-    {% if event_type == 'site' %}
+    {% if timeline_mode == 'site' %}
       <div class="alert alert-info" role="alert">
         No site-wide timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
       </div>
     {% endif %}
-    {% if event_type == 'admin' %}
+    {% if timeline_mode == 'admin' %}
       <div class="alert alert-info" role="alert">
         No timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
       </div>

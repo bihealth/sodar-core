@@ -38,7 +38,6 @@ class EventTimelineMixin:
         else:
             context['timeline_title'] = 'Site-Wide Timeline Events'
             context['timeline_mode'] = 'site'
-            context['event_type'] = 'site'
         return context
 
     def get_queryset(self):
@@ -95,7 +94,6 @@ class AdminTimelineView(
         context = super().get_context_data(*args, **kwargs)
         context['timeline_title'] = 'All Timeline Events'
         context['timeline_mode'] = 'admin'
-        context['event_type'] = 'admin'
         return context
 
     def get_queryset(self):
