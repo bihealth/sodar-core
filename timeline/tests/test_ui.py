@@ -2,7 +2,10 @@
 import json
 
 from django.urls import reverse
+
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -305,6 +308,9 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             By.CLASS_NAME, 'sodar-tl-link-detail'
         )
         button.click()
+        WebDriverWait(self.selenium, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'modal-title'))
+        )
         self.assertIsNotNone(
             self.selenium.find_element(By.CLASS_NAME, 'sodar-card-table')
         )
@@ -327,6 +333,9 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             By.CLASS_NAME, 'sodar-tl-link-extra-data'
         )
         button.click()
+        WebDriverWait(self.selenium, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'modal-title'))
+        )
         title = self.selenium.find_element(By.CLASS_NAME, 'modal-title')
         self.assertIn('Extra', title.text)
         body = self.selenium.find_element(By.CLASS_NAME, 'modal-body')
