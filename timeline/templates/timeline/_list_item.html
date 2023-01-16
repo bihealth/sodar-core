@@ -31,12 +31,12 @@
     {% endif %}
   </td>
   <td>
-    {% if event.project and user.is_superuser and site_admin %}
+    {% if event.project and user.is_superuser and timeline_mode == 'admin' %}
       <span class="badge badge-info mr-1" title="{{ event.project }}" data-toggle="tooltip" data-placement="top">
         <i class="iconify"
            data-icon="{% if event.project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
         </i>
-        <a href="{% url 'projectroles:detail' project=event.project.sodar_uuid %}">
+        <a class="text-white" href="{% url 'projectroles:detail' project=event.project.sodar_uuid %}">
           {{ event.project.title }}
         </a>
       </span>

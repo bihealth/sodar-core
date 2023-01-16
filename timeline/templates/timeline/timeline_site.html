@@ -6,7 +6,7 @@
 {% load projectroles_common_tags %}
 
 {% block title %}
-  {{ timeline_title }} in {{ project.title }}
+  {{ timeline_title }}
 {% endblock title %}
 
 {% block css %}
@@ -29,7 +29,7 @@
   <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
   {% if timeline_mode == 'object' %}
     <div class="ml-auto">
-      {% if timeline_modef == 'site' %}
+      {% if timeline_mode == 'site' %}
         <a href="{% url 'timeline:list_site' %}"
           class="btn btn-secondary ml-auto" role="button">
           <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
@@ -58,11 +58,7 @@
           </thead>
           <tbody>
             {% for event in object_list %}
-              {% if timeline_mode == 'admin' %}
-                {% include 'timeline/_list_item.html' with site_admin=True %}
-              {% else %}
-                {% include 'timeline/_list_item.html' %}
-              {% endif %}
+              {% include 'timeline/_list_item.html' %}
             {% endfor %}
           </tbody>
         </table>
@@ -71,17 +67,10 @@
     {% if is_paginated %}
       {% include 'projectroles/_pagination.html' with pg_small=False %}
     {% endif %}
-   {% else %}
-    {% if timeline_mode == 'site' %}
-      <div class="alert alert-info" role="alert">
-        No site-wide timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
-      </div>
-    {% endif %}
-    {% if timeline_mode == 'admin' %}
-      <div class="alert alert-info" role="alert">
-        No timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
-      </div>
-    {% endif %}
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      No {% if timeline_mode == 'site' %} site-wide {% endif %}timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
+    </div>
   {% endif %}
 </div> <!-- sodar-page-container -->
 

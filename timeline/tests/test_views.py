@@ -217,9 +217,9 @@ class TestAdminEventListView(TestViewsBase):
                     'timeline:timeline_site_admin',
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context['object_list']), 2)
-            self.assertEqual(
-                response.context['object_list'].first(), self.event_site
-            )
-            self.assertEqual(response.context['object_list'][1], self.event)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['object_list']), 2)
+        self.assertEqual(
+            response.context['object_list'].first(), self.event_site
+        )
+        self.assertEqual(response.context['object_list'][1], self.event)

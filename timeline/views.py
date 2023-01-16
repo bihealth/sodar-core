@@ -78,7 +78,7 @@ class SiteTimelineView(
     """View for displaying timeline events for site-wide events"""
 
     permission_required = 'timeline.view_site_timeline'
-    template_name = 'timeline/side_timeline.html'
+    template_name = 'timeline/timeline_site.html'
     model = ProjectEvent
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
@@ -100,7 +100,7 @@ class AdminTimelineView(
         return ProjectEvent.objects.order_by('-pk')
 
     permission_required = 'timeline.view_site_admin'
-    template_name = 'timeline/side_timeline.html'
+    template_name = 'timeline/timeline_site.html'
     model = ProjectEvent
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 

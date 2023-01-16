@@ -308,6 +308,12 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         self.assertIsNotNone(
             self.selenium.find_element(By.CLASS_NAME, 'sodar-card-table')
         )
+        title = self.selenium.find_element(By.CLASS_NAME, 'modal-title')
+        self.assertIn('Event Details: ', title.text)
+        table = self.selenium.find_element(By.CLASS_NAME, 'table')
+        check_list = ['Timestamp', 'Event', 'Description', 'Status', 'OK']
+        for check in check_list:
+            self.assertIn(check, table.text)
 
     def test_extra_content(self):
         """Test extra data modal's content"""
@@ -324,3 +330,5 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         self.assertIsNotNone(
             self.selenium.find_element(By.CLASS_NAME, 'modal-title')
         )
+        body = self.selenium.find_element(By.CLASS_NAME, 'modal-body')
+        self.assertIn('"{"test_key": "test_val"}"', body.text)
