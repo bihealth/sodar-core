@@ -283,7 +283,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
 
     def test_extra_modal(self):
-        """Test details modal"""
+        """Test extra data modal"""
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
@@ -309,7 +309,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
         button.click()
         WebDriverWait(self.selenium, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'modal-title'))
+            EC.presence_of_element_located((By.CLASS_NAME, 'table'))
         )
         self.assertIsNotNone(
             self.selenium.find_element(By.CLASS_NAME, 'sodar-card-table')
@@ -334,7 +334,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
         button.click()
         WebDriverWait(self.selenium, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'modal-title'))
+            EC.presence_of_element_located((By.CLASS_NAME, 'sodar-tl-json'))
         )
         title = self.selenium.find_element(By.CLASS_NAME, 'modal-title')
         self.assertIn('Extra', title.text)
