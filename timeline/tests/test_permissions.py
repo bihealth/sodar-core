@@ -65,12 +65,20 @@ class TestTimelinePermissions(TestProjectPermissionBase):
         good_users = [
             self.superuser,
         ]
+        bad_users = [
+            self.anonymous,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
         self.assert_response(url, good_users, 200)
-        self.assert_response(url, self.anonymous, 302)
+        self.assert_response(url, bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_admin_list_anon(self):
-        """Test admin list with anonymous assess"""
+        """Test admin list with anonymous access"""
         url = reverse('timeline:timeline_site_admin')
         self.assert_response(url, self.anonymous, 302)
 

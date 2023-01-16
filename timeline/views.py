@@ -35,7 +35,6 @@ class EventTimelineMixin:
                 get_display_name(project.type, title=True)
             )
             context['timeline_mode'] = 'project'
-            context['event_type'] = 'project'
         else:
             context['timeline_title'] = 'Site-Wide Timeline Events'
             context['timeline_mode'] = 'site'
@@ -80,7 +79,7 @@ class SiteTimelineView(
     """View for displaying timeline events for site-wide events"""
 
     permission_required = 'timeline.view_site_timeline'
-    template_name = 'timeline/timeline.html'
+    template_name = 'timeline/side_timeline.html'
     model = ProjectEvent
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
@@ -94,7 +93,7 @@ class AdminTimelineView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['timeline_title'] = 'Admin site Events'
+        context['timeline_title'] = 'All Timeline Events'
         context['timeline_mode'] = 'admin'
         context['event_type'] = 'admin'
         return context
@@ -103,7 +102,7 @@ class AdminTimelineView(
         return ProjectEvent.objects.order_by('-pk')
 
     permission_required = 'timeline.view_site_admin'
-    template_name = 'timeline/timeline.html'
+    template_name = 'timeline/side_timeline.html'
     model = ProjectEvent
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
