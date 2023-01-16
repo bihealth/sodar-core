@@ -340,3 +340,21 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         self.assertIn('Extra', title.text)
         body = self.selenium.find_element(By.CLASS_NAME, 'modal-body')
         self.assertIn('"{"test_key": "test_val"}"', body.text)
+
+    def test_copy_button(self):
+        """Test for copy button"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        button = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-tl-link-extra-data'
+        )
+        button.click()
+        WebDriverWait(self.selenium, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'sodar-tl-copy-btn'))
+        )
+        btn = self.selenium.find_element(By.CLASS_NAME, 'sodar-tl-copy-btn')
+        btn.click()
