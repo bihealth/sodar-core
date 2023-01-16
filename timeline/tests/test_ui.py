@@ -327,8 +327,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             By.CLASS_NAME, 'sodar-tl-link-extra-data'
         )
         button.click()
-        self.assertIsNotNone(
-            self.selenium.find_element(By.CLASS_NAME, 'modal-title')
-        )
+        title = self.selenium.find_element(By.CLASS_NAME, 'modal-title')
+        self.assertIn('Extra', title.text)
         body = self.selenium.find_element(By.CLASS_NAME, 'modal-body')
         self.assertIn('"{"test_key": "test_val"}"', body.text)
