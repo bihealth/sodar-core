@@ -59,6 +59,29 @@ class TestTimelinePermissions(TestProjectPermissionBase):
         url = reverse('timeline:list_site')
         self.assert_response(url, self.anonymous, 302)
 
+    def test_admin_list(self):
+        """Test admin event list"""
+        url = reverse('timeline:timeline_site_admin')
+        good_users = [
+            self.superuser,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_admin_list_anon(self):
+        """Test admin list with anonymous access"""
+        url = reverse('timeline:timeline_site_admin')
+        self.assert_response(url, self.anonymous, 302)
+
     def test_project_event_object_list(self):
         """Test project event object list"""
         url = reverse(

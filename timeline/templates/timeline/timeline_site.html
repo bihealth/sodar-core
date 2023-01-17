@@ -6,8 +6,7 @@
 {% load projectroles_common_tags %}
 
 {% block title %}
-  {{ timeline_title }} {% if timeline_mode == 'project' %}for{% else %}in{% endif %}
-  {{ project.title }}
+  {{ timeline_title }}
 {% endblock title %}
 
 {% block css %}
@@ -17,19 +16,33 @@
 {% endblock css %}
 
 {% block projectroles %}
+  {% if timeline_mode == 'site' %}
+    {% has_perm 'timeline.view_site_timeline' request.user project as can_view_timeline %}
+  {% endif %}
+  {% if timeline_mode == 'admin' %}
+    {% has_perm 'timeline.view_site_admin' request.user project as can_view_timeline %}
+  {% endif %}
 
-{% has_perm 'timeline.view_site_timeline' request.user project as can_view_timeline %}
 {% get_plugin_lookup as plugin_lookup %}
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
   {% if timeline_mode == 'object' %}
     <div class="ml-auto">
-      <a href="{% url 'timeline:list_site' %}"
-         class="btn btn-secondary ml-auto" role="button">
-        <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
-        Site-Wide Events
-      </a>
+      {% if timeline_mode == 'site' %}
+        <a href="{% url 'timeline:list_site' %}"
+          class="btn btn-secondary ml-auto" role="button">
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
+          Site-Wide Events
+        </a>
+      {% endif %}
+      {% if timeline_mode == 'admin' %}
+        <a href="{% url 'timeline:timeline_site_admin' %}"
+          class="btn btn-secondary ml-auto" role="button">
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
+          Admin Site Events
+        </a>
+      {% endif %}
     </div>
   {% endif %}
 </div>
@@ -54,9 +67,9 @@
     {% if is_paginated %}
       {% include 'projectroles/_pagination.html' with pg_small=False %}
     {% endif %}
-   {% else %}
+  {% else %}
     <div class="alert alert-info" role="alert">
-      No site-wide timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
+      No {% if timeline_mode == 'site' %} site-wide {% endif %}timeline events found{% if timeline_mode == 'object' %} for this object{% endif %}.
     </div>
   {% endif %}
 </div> <!-- sodar-page-container -->

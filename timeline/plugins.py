@@ -114,3 +114,28 @@ class SiteAppPlugin(SiteAppPluginPoint):
 
     #: Required permission for displaying the app
     app_permission = 'timeline.view_site_timeline'
+
+
+class AdminSiteAppPlugin(SiteAppPluginPoint):
+    """Projectroles plugin for registering the app"""
+
+    #: Name (slug-safe, used in URLs)
+    name = 'timeline_site_admin'
+
+    #: Title (used in templates)
+    title = 'All Timeline Events'
+
+    #: App URLs (will be included in settings by djangoplugins)
+    urls = urlpatterns
+
+    #: Iconify icon
+    icon = 'mdi:cog-counterclockwise'
+
+    #: Description string
+    description = 'Admin view for all site events'
+
+    #: Entry point URL ID
+    entry_point_url_id = 'timeline:timeline_site_admin'
+
+    #: Required permission for displaying the app
+    app_permission = 'timeline.view_site_admin'
