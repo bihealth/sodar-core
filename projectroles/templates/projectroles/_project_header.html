@@ -86,14 +86,14 @@
 {% get_display_name project.type as project_display %}
 
 {% if project.type == 'PROJECT' and project.archive %}
-  <div class="alert alert-info mt-3" id="sodar-pr-alert-archive">
+  <div class="alert alert-info mt-3 mb-0" id="sodar-pr-alert-archive">
     <i class="iconify" data-icon="mdi:archive"></i> This {{ project_display }}
     has been archived. Access to data in {{ project_display }} apps has been set
     to read-only for all users.
   </div>
 {% endif %}
 {% if project.is_revoked %}
-  <div class="alert alert-danger mt-3" id="sodar-pr-alert-remote-revoked">
+  <div class="alert alert-danger mt-3 mb-0" id="sodar-pr-alert-remote-revoked">
     <i class="iconify" data-icon="mdi:cloud"></i> The source site has revoked
     access to this remotely synchronized {{ project_display }}. Only a
     superuser, an owner or a delegate can currently access the
