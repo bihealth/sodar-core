@@ -58,3 +58,32 @@ class TestExampleView(
                 )
             )
         self.assertEqual(response.status_code, 200)
+
+    def test_render_path(self):
+        """Test rendering of example view with a path URL"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'example_project_app:example_path_url',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+
+    def test_render_path_ext_model(self):
+        """Test rendering with path URL and model from another app"""
+        folder = self.make_folder(
+            name='TestFolder',
+            project=self.project,
+            folder=None,
+            owner=self.user,
+            description='',
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'example_project_app:example_path_ext',
+                    kwargs={'filesfolders__folder': folder.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)

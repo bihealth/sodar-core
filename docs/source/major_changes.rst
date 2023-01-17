@@ -20,6 +20,7 @@ Release Highlights
 - Add role ranking
 - Add app settings retrieve/set REST API views
 - Rename app settings API methods
+- Fix path URL support
 
 Breaking Changes
 ================

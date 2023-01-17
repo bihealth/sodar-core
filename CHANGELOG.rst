@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Path URL examples and tests in ``example_project_app`` (#1047)
 - **Filesfolders**
     - Project archiving support (#1086)
 - **Projectroles**
@@ -31,6 +33,12 @@ Changed
     - Rename ``AppSettingAPI`` methods (#539, #1040)
     - Deprecate old ``AppSettingAPI`` method names (#539, #1039)
     - Hide apps in ``PROJECTROLES_HIDE_APP_LINKS`` from superusers (#1042)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Crash from path URLs in ``get_project()`` (#1047)
 
 Removed
 -------

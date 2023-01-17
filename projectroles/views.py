@@ -206,7 +206,7 @@ class ProjectAccessMixin:
         model = None
         uuid_val = None
         for k, v in kwargs.items():
-            if not re.match(r'^[0-9a-f-]+$', v):
+            if not re.match(r'^[0-9a-f-]+$', str(v)):
                 continue
             try:
                 if '__' in k:  # Model from another app

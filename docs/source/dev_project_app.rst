@@ -325,6 +325,25 @@ Examples:
        ),
    ]
 
+Path URL syntax from Django v2+ is also supported. Examples:
+
+.. code-block:: python
+
+    urlpatterns = [
+        # Direct reference to the Project model
+        path(
+            route='path-url/<uuid:project>',
+            view=views.ExampleView.as_view(),
+            name='example_path_url',
+        ),
+        # Reference to a model in another app
+        path(
+            route='path-ext/<uuid:filesfolders__folder>',
+            view=views.ExampleView.as_view(),
+            name='example_path_ext',
+        ),
+    ]
+
 Mixins
 ------
 
