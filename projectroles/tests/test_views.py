@@ -14,6 +14,9 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
+# Appalerts dependency
+from appalerts.models import AppAlert
+
 # Timeline dependency
 from timeline.models import ProjectEvent
 
@@ -1113,6 +1116,22 @@ class TestProjectArchiveView(
 ):
     """Tests for ProjectArchiveView"""
 
+    @classmethod
+    def _get_tl(cls):
+        return ProjectEvent.objects.filter(event_name='project_archive')
+
+    @classmethod
+    def _get_tl_un(cls):
+        return ProjectEvent.objects.filter(event_name='project_unarchive')
+
+    @classmethod
+    def _get_alerts(cls):
+        return AppAlert.objects.filter(alert_name='project_archive')
+
+    @classmethod
+    def _get_alerts_un(cls):
+        return AppAlert.objects.filter(alert_name='project_unarchive')
+
     def setUp(self):
         super().setUp()
         self.category = self.make_project(
@@ -1126,6 +1145,11 @@ class TestProjectArchiveView(
         )
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
+        )
+        # Add contributor user to project
+        self.user_contributor = self.make_user('user_contributor')
+        self.contributor_as = self.make_assignment(
+            self.project, self.user_contributor, self.role_contributor
         )
 
     def test_render(self):
@@ -1159,13 +1183,12 @@ class TestProjectArchiveView(
     def test_archive(self):
         """Test archiving project"""
         self.assertEqual(self.project.archive, False)
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
-        )
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
-            0,
-        )
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_tl_un().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(self._get_alerts_un().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
         values = {'status': True}
         with self.login(self.user):
             response = self.client.post(
@@ -1182,26 +1205,26 @@ class TestProjectArchiveView(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+
         self.project.refresh_from_db()
         self.assertEqual(self.project.archive, True)
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_archive').count(), 1
-        )
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
-            0,
-        )
+        self.assertEqual(self._get_tl().count(), 1)
+        self.assertEqual(self._get_tl_un().count(), 0)
+        # Only the contributor should receive an alert
+        self.assertEqual(self._get_alerts().count(), 1)
+        self.assertEqual(self._get_alerts_un().count(), 0)
+        self.assertEqual(self._get_alerts().first().user, self.user_contributor)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_unarchive(self):
         """Test unarchiving project"""
         self.project.set_archive()
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
-        )
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
-            0,
-        )
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_tl_un().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(self._get_alerts_un().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
         values = {'status': False}
         with self.login(self.user):
             self.client.post(
@@ -1211,26 +1234,24 @@ class TestProjectArchiveView(
                 ),
                 values,
             )
+
         self.project.refresh_from_db()
         self.assertEqual(self.project.archive, False)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_tl_un().count(), 1)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(self._get_alerts_un().count(), 1)
         self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
+            self._get_alerts_un().first().user, self.user_contributor
         )
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
-            1,
-        )
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_archive_project_archived(self):
         """Test archiving an already archived project"""
         self.project.set_archive()
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
-        )
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
-            0,
-        )
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_tl_un().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
         values = {'status': True}
         with self.login(self.user):
             self.client.post(
@@ -1242,24 +1263,15 @@ class TestProjectArchiveView(
             )
         self.project.refresh_from_db()
         self.assertEqual(self.project.archive, True)
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
-        )
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
-            0,
-        )
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_archive_category(self):
         """Test archiving category (should fail)"""
         self.assertEqual(self.category.archive, False)
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
-        )
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
-            0,
-        )
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
         values = {'status': True}
         with self.login(self.user):
             response = self.client.post(
@@ -1278,13 +1290,9 @@ class TestProjectArchiveView(
             )
         self.category.refresh_from_db()
         self.assertEqual(self.category.archive, False)
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_archive').count(), 0
-        )
-        self.assertEqual(
-            ProjectEvent.objects.filter(event_name='project_unarchive').count(),
-            0,
-        )
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class TestProjectSettingsForm(

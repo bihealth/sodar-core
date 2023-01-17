@@ -180,6 +180,39 @@ You can access the project at the following link:
 '''.lstrip()
 
 
+# Project Archiving Template ---------------------------------------------------
+
+
+SUBJECT_PROJECT_ARCHIVE = '{project_label_title} "{project}" archived by {user}'
+
+MESSAGE_PROJECT_ARCHIVE = r'''
+{user} has archived "{project}".
+The {project_label} is now read-only. Modifying data in
+{project_label} apps has been disabled. Existing project data
+can still be accessed and user roles can be modified.
+
+You can access the archived {project_label} at the following link:
+{project_url}
+'''.lstrip()
+
+
+# Project Unarchiving Template -------------------------------------------------
+
+
+SUBJECT_PROJECT_UNARCHIVE = (
+    '{project_label_title} "{project}" unarchived ' 'by {user}'
+)
+
+MESSAGE_PROJECT_UNARCHIVE = r'''
+{user} has unarchived "{project}".
+{project_label_title} data can now be modified and write
+access for users has been restored.
+
+You can access the {project_label} at the following link:
+{project_url}
+'''.lstrip()
+
+
 # Email composing helpers ------------------------------------------------------
 
 
@@ -310,7 +343,6 @@ def get_role_change_body(
     body = get_email_header(
         MESSAGE_HEADER.format(recipient=user_name, site_title=SITE_TITLE)
     )
-
     if change_type == 'create':
         body += MESSAGE_ROLE_CREATE.format(
             issuer=get_email_user(issuer),
@@ -337,7 +369,6 @@ def get_role_change_body(
             project=project.title,
             project_label=get_display_name(project.type),
         )
-
     if not issuer.email and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         body += NO_REPLY_NOTE
     body += get_email_footer()
@@ -475,6 +506,7 @@ def send_accept_note(invite, request, user):
 
     :param invite: ProjectInvite object
     :param request: HTTP request
+    :param user: User invited
     :return: Amount of sent email (int)
     """
     subject = SUBJECT_PREFIX + SUBJECT_ACCEPT.format(
@@ -629,6 +661,59 @@ def send_project_move_mail(project, request):
     )
 
 
+def send_project_archive_mail(project, action, request):
+    """
+    Send a notification email on project archiving or unarchiving.
+
+    :param project: Project object
+    :param action: String ("archive" or "unarchive")
+    :param request: HTTP request
+    :return: Amount of sent email (int)
+    """
+    user = request.user
+    project_users = [a.user for a in project.get_all_roles() if a.user != user]
+    project_users = list(set(project_users))  # Remove possible dupes (see #710)
+    if not project_users:
+        return 0
+    mail_count = 0
+
+    if action == 'archive':
+        subject = SUBJECT_PROJECT_ARCHIVE
+        body = MESSAGE_PROJECT_ARCHIVE
+    else:
+        subject = SUBJECT_PROJECT_UNARCHIVE
+        body = MESSAGE_PROJECT_UNARCHIVE
+    subject = SUBJECT_PREFIX + subject.format(
+        project_label_title=get_display_name(project.type, title=True),
+        project=project.title,
+        user=user.get_full_name(),
+    )
+    body_final = body.format(
+        project_label_title=get_display_name(project.type, title=True),
+        project_label=get_display_name(project.type),
+        project=project.title,
+        user=user.get_full_name(),
+        project_url=request.build_absolute_uri(
+            reverse(
+                'projectroles:detail', kwargs={'project': project.sodar_uuid}
+            )
+        ),
+    )
+
+    for recipient in project_users:
+        message = get_email_header(
+            MESSAGE_HEADER.format(
+                recipient=recipient.get_full_name(), site_title=SITE_TITLE
+            )
+        )
+        message += body_final
+        if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
+            message += NO_REPLY_NOTE
+        message += get_email_footer()
+        mail_count += send_mail(subject, message, get_user_addr(user), request)
+    return mail_count
+
+
 def send_generic_mail(
     subject_body, message_body, recipient_list, request=None, reply_to=None
 ):
@@ -645,7 +730,6 @@ def send_generic_mail(
     """
     subject = SUBJECT_PREFIX + subject_body
     ret = 0
-
     for recipient in recipient_list:
         if isinstance(recipient, User):
             recp_name = recipient.get_full_name()
@@ -653,7 +737,6 @@ def send_generic_mail(
         else:
             recp_name = 'recipient'
             recp_addr = [recipient]
-
         message = get_email_header(
             MESSAGE_HEADER.format(recipient=recp_name, site_title=SITE_TITLE)
         )
@@ -662,5 +745,4 @@ def send_generic_mail(
             message += NO_REPLY_NOTE
         message += get_email_footer()
         ret += send_mail(subject, message, recp_addr, request, reply_to)
-
     return ret

@@ -1311,6 +1311,41 @@ class ProjectArchiveView(
     template_name = 'projectroles/project_archive_confirm.html'
     permission_required = 'projectroles.update_project'
 
+    def _alert_users(self, project, action, user):
+        """
+        Alert users on project archiving/unarchiving.
+
+        :param project: Project object
+        :param action: String ("archive" or "unarchive")
+        :param user: User initiating project archiving/unarchiving
+        """
+        app_alerts = get_backend_api('appalerts_backend')
+        if not app_alerts:
+            return
+        alert_p = get_display_name(PROJECT_TYPE_PROJECT, title=True)
+        if action == 'archive':
+            alert_msg = '{} data is now read-only.'.format(alert_p)
+        else:
+            alert_msg = '{} data can be modified.'.format(alert_p)
+        users = [a.user for a in project.get_all_roles() if a.user != user]
+        users = list(set(users))  # Remove possible dupes (see issue #710)
+        if not users:
+            return
+        for u in users:
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='project_{}'.format(action),
+                user=u,
+                message='{} {}d by {}. {}'.format(
+                    alert_p, action, user.get_full_name(), alert_msg
+                ),
+                url=reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.sodar_uuid},
+                ),
+                project=project,
+            )
+
     def get(self, request, *args, **kwargs):
         """Override get() to check project type"""
         project = self.get_project()
@@ -1326,7 +1361,6 @@ class ProjectArchiveView(
             self.get_context_data(*args, **kwargs)
         )
 
-    @transaction.atomic
     def post(self, request, **kwargs):
         """Override post() to handle POST from confirmation template"""
         timeline = get_backend_api('timeline_backend')
@@ -1337,6 +1371,7 @@ class ProjectArchiveView(
         if project.type == PROJECT_TYPE_CATEGORY:
             messages.error(request, MSG_ARCHIVE_ERR_CAT)
             return redirect(redirect_url)
+
         status = request.POST.get('status')
         if status is None:
             messages.error(request, 'Status not set, unable to set archival.')
@@ -1354,7 +1389,7 @@ class ProjectArchiveView(
 
         try:
             project.set_archive(status)
-            # Call for additional actions for role creation/update in plugins
+            # Call for additional actions for archive/unarchive in plugins
             if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
                 self.call_project_modify_api(
                     'perform_project_archive',
@@ -1367,6 +1402,16 @@ class ProjectArchiveView(
                     get_display_name(project.type, title=True), action
                 ),
             )
+        except Exception as ex:
+            messages.error(
+                request,
+                'Failed to {} {}: {}'.format(
+                    action, get_display_name(project.type), ex
+                ),
+            )
+            return redirect(redirect_url)
+
+        try:
             if timeline:
                 timeline.add_event(
                     project=project,
@@ -1376,13 +1421,12 @@ class ProjectArchiveView(
                     description='{} project'.format(action),
                     status_type='OK',
                 )
+            # Alert users and send email
+            self._alert_users(project, action, request.user)
+            if SEND_EMAIL:
+                email.send_project_archive_mail(project, action, request)
         except Exception as ex:
-            messages.error(
-                request,
-                'Failed to {} {}: {}'.format(
-                    action, get_display_name(project.type), ex
-                ),
-            )
+            messages.error(request, 'Failed to alert users: {}'.format(ex))
         return redirect(redirect_url)
 
 
