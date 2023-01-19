@@ -28,23 +28,21 @@
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
   {% if timeline_mode == 'object' %}
-    <div class="ml-auto">
-      {% if timeline_mode == 'site' %}
-        <a href="{% url 'timeline:list_site' %}"
-          class="btn btn-secondary ml-auto" role="button">
-          <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
-          Site-Wide Events
+      <div class="ml-auto">
+        {% if timeline_mode == 'site' %}
+          <a href="{% url 'timeline:list_site' %}"
+           class="btn btn-secondary ml-auto"
+           role="button">
+        {% else %}
+          <a href="{% url 'timeline:timeline_site_admin' %}"
+           class="btn btn-secondary ml-auto"
+           role="button">
+        {% endif %}
+        <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
+        {% if timeline_mode == 'site' %}Site-Wide Events{% else %}All Events{% endif %}
         </a>
-      {% endif %}
-      {% if timeline_mode == 'admin' %}
-        <a href="{% url 'timeline:timeline_site_admin' %}"
-          class="btn btn-secondary ml-auto" role="button">
-          <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
-          Admin Site Events
-        </a>
-      {% endif %}
-    </div>
-  {% endif %}
+      </div>
+    {% endif %}
 </div>
 
 <div class="container-fluid sodar-page-container">

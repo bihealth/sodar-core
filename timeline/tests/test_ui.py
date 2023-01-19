@@ -194,6 +194,26 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
+    def test_object_button(self):
+        """Test visibility of object related events in site-wide event list"""
+        # Add user as an object reference
+        self.ref_obj = self.event.add_object(
+            obj=self.superuser, label='user', name=self.superuser.username
+        )
+        url = reverse(
+            'timeline:list_object_site',
+            kwargs={
+                'object_model': self.ref_obj.object_model,
+                'object_uuid': self.ref_obj.object_uuid,
+            },
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        button = self.selenium.find_element(By.CLASS_NAME, 'btn-secondary')
+        url_check = reverse('timeline:timeline_site_admin')
+        self.assertIn(url_check, button.get_attribute('href'))
+
 
 class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
     """Test for the timeline view of all events in UI"""
