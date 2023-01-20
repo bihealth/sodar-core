@@ -40,11 +40,11 @@ $(document).ready(function() {
             $('#sodar-modal').modal('show');
         });
     });
-    $('.modal-body').click(function () {
+    $('.sodar-tl-link-extra-data-status').click(function () {
         $('#sodar-modal').modal('hide');
         $('#sodar-modal-wait').modal('show');
         $.ajax({
-            url: $('.sodar-tl-link-extra-data').attr('data-url'),
+            url: $('.sodar-tl-link-extra-data-status').attr('data-url'),
             method: 'GET',
         }).done(function (data) {
             $('.modal-title').text(
@@ -54,7 +54,12 @@ $(document).ready(function() {
                 '<pre class="sodar-tl-json" id=data-to-clipboard>' + data['extra'] + '</pre>'));
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
-        })
+        }).fail(function (data) {
+            console.dir(data);
+            $('.modal-body').html('Error: ' + data.statusText);
+            $('#sodar-modal-wait').modal('hide');
+            $('#sodar-modal').modal('show');
+        });
     })
     $('.sodar-tl-link-extra-data').click(function () {
         $('#sodar-modal-wait').modal('show');
