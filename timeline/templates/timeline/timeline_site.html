@@ -29,10 +29,10 @@
   <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
   {% if timeline_mode == 'object' %}
       <div class="ml-auto">
-        <div class="btn btn-secondary ml-auto" role="button">
+        <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary ml-auto" role="button">
         <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
         Back to Events
-        </div>
+        </a>
       </div>
     {% endif %}
 </div>
@@ -68,13 +68,6 @@
 
 {% block javascript %}
   {{ block.super }}
-
-  <!-- Previous page -->
-  <script type="text/javascript">
-  $('.btn-secondary').click(function () {
-      history.go(-1);
-  });
-  </script>
 
   <!-- Event list -->
   <script type="text/javascript" src="{% static 'timeline/js/timeline.js' %}"></script>
