@@ -40,6 +40,22 @@ $(document).ready(function() {
             $('#sodar-modal').modal('show');
         });
     });
+    $('.modal-body').click(function () {
+        $('#sodar-modal').modal('hide');
+        $('#sodar-modal-wait').modal('show');
+        $.ajax({
+            url: $('.sodar-tl-link-extra-data').attr('data-url'),
+            method: 'GET',
+        }).done(function (data) {
+            $('.modal-title').text(
+                'Event Extra Data: ' + data['app'] + '.' + data['name'] + ' (' +
+                data['user'] + ' @ ' + data['timestamp'] + ')');
+            $('.modal-body').html('').append($('<p>').html(
+                '<pre class="sodar-tl-json" id=data-to-clipboard>' + data['extra'] + '</pre>'));
+            $('#sodar-modal-wait').modal('hide');
+            $('#sodar-modal').modal('show');
+        })
+    })
     $('.sodar-tl-link-extra-data').click(function () {
         $('#sodar-modal-wait').modal('show');
         $.ajax({
