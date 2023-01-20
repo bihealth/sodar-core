@@ -6,6 +6,7 @@ from django.urls import reverse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -194,25 +195,26 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
-    # def test_object_button(self):
-    #     """Test visibility of object related events in site-wide event list"""
-    #     # Add user as an object reference
-    #     self.ref_obj = self.event.add_object(
-    #         obj=self.superuser, label='user', name=self.superuser.username
-    #     )
-    #     url = reverse(
-    #         'timeline:list_object_site',
-    #         kwargs={
-    #             'object_model': self.ref_obj.object_model,
-    #             'object_uuid': self.ref_obj.object_uuid,
-    #         },
-    #     )
-    #     self.login_and_redirect(
-    #         self.superuser, url, wait_elem=None, wait_loc='ID'
-    #     )
-    #     button = self.selenium.find_element(By.CLASS_NAME, 'btn-secondary')
-    #     url_check = reverse('timeline:list_site')
-    #     self.assertIn(url_check, button.get_attribute('href'))
+    def test_object_button(self):
+        """Test visibility of object related events in site-wide event list"""
+        # Add user as an object reference
+        self.ref_obj = self.event.add_object(
+            obj=self.superuser, label='user', name=self.superuser.username
+        )
+        url = reverse(
+            'timeline:list_object_site',
+            kwargs={
+                'object_model': self.ref_obj.object_model,
+                'object_uuid': self.ref_obj.object_uuid,
+            },
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        try:
+            self.selenium.find_element(By.CLASS_NAME, 'btn-secondary')
+        except NoSuchElementException:
+            self.fail('The button could not be found')
 
 
 class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
