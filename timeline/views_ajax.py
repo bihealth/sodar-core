@@ -146,12 +146,16 @@ class EventExtraDataMixin:
         str_list.append('&nbsp;&nbsp;' * (indent - 1))
         str_list.append('<span class="json-close-bracket">]</span>')
 
-    def get_event_extra(self, event):
+    def get_event_extra(self, event, status=None):
         """
         Return event extra data.
         :param event: ProjectEvent object
         :return: JSON-serializable dict
         """
+        if status:
+            extra = self._json_to_html(status.extra_data)
+        else:
+            extra = self._json_to_html(event.extra_data)
         ret = {
             'app': event.app,
             'name': event.event_name,
@@ -159,24 +163,7 @@ class EventExtraDataMixin:
             'timestamp': localtime(event.get_timestamp()).strftime(
                 '%Y-%m-%d %H:%M:%S'
             ),
-            'extra': self._json_to_html(event.extra_data),
-        }
-        return ret
-
-    def get_status_extra(self, event, status):
-        """
-        Return status extra data.
-        :param event: ProjectEventStatus object
-        :return: JSON-serializable dict
-        """
-        ret = {
-            'app': event.app,
-            'name': event.event_name,
-            'user': event.user.username if event.user else 'N/A',
-            'timestamp': localtime(event.get_timestamp()).strftime(
-                '%Y-%m-%d %H:%M:%S'
-            ),
-            'extra': self._json_to_html(status.extra_data),
+            'extra': extra,
         }
         return ret
 
@@ -215,7 +202,7 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
             if self.kwargs['idx']:
                 status = event.get_status_changes()
                 return Response(
-                    self.get_status_extra(
+                    self.get_event_extra(
                         event, status[int(self.kwargs['idx'])]
                     ),
                     status=200,
