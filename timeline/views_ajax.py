@@ -36,13 +36,28 @@ class EventDetailMixin:
             'status': [],
         }
         status_changes = event.get_status_changes(reverse=True)
-        for s in status_changes:
+        for idx, s in enumerate(status_changes):
+            desc = ''
+            if s.extra_data:
+                desc = (
+                    '<a class="sodar-tl-link-extra-data text-primary pull-right" data-url="{}">'
+                    '<i class="iconify" data-icon="mdi:text-box" title="Status Extra Data" '
+                    'data-toggle="tooltip" data-placement="right">'
+                    '</i>'
+                    '</a>'.format(
+                        '/timeline/ajax/extra/{}/{}'.format(
+                            event.sodar_uuid, idx
+                        )
+                    )
+                )
+
+                print(desc)
             ret['status'].append(
                 {
                     'timestamp': localtime(s.timestamp).strftime(
                         '%Y-%m-%d %H:%M:%S'
                     ),
-                    'description': s.description,
+                    'description': s.description + desc,
                     'type': s.status_type,
                     'class': get_status_style(s),
                 }
@@ -149,6 +164,21 @@ class EventExtraDataMixin:
         }
         return ret
 
+    def get_status_extra(self, status):
+        """
+        Return status extra data.
+        :param event: ProjectEventStatus object
+        :return: JSON-serializable dict
+        """
+        ret = {
+            'app': 'App',
+            'name': 'Name',
+            'user': 'N/A',
+            'timestamp': 'time',
+            'extra': self._json_to_html(status.extra_data),
+        }
+        return ret
+
 
 class ProjectEventDetailAjaxView(EventDetailMixin, SODARBaseProjectAjaxView):
     """Ajax view for retrieving event details for projects"""
@@ -179,7 +209,16 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
             'timeline.view_classified_event', event.project
         ):
             return HttpResponseForbidden()
-        return Response(self.get_event_extra(event), status=200)
+
+        try:
+            if self.kwargs['idx']:
+                status = event.get_status_changes()
+                return Response(
+                    self.get_status_extra(status[int(self.kwargs['idx'])]),
+                    status=200,
+                )
+        except KeyError:
+            return Response(self.get_event_extra(event), status=200)
 
 
 class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):

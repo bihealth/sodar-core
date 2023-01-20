@@ -55,6 +55,11 @@ urls_ajax = [
         name='ajax_extra_project',
     ),
     url(
+        regex=r'^ajax/extra/(?P<projectevent>[0-9a-f-]+)/(?P<idx>[0-9])$',
+        view=views_ajax.ProjectEventExtraAjaxView.as_view(),
+        name='ajax_extra_status',
+    ),
+    url(
         regex=r'^ajax/extra/site/(?P<projectevent>[0-9a-f-]+)$',
         view=views_ajax.SiteEventExtraAjaxView.as_view(),
         name='ajax_extra_site',
