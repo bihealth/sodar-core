@@ -40,7 +40,7 @@ class EventDetailMixin:
             desc = ''
             if s.extra_data:
                 desc = (
-                    '<a class="sodar-tl-link-extra-data-status text-primary pull-right" data-url="{}">'
+                    '<a class="sodar-tl-link-status-extra-data text-primary pull-right" data-url="{}">'
                     '<i class="iconify" data-icon="mdi:text-box" title="Status Extra Data" '
                     'data-toggle="tooltip" data-placement="right">'
                     '</i>'

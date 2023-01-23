@@ -40,11 +40,14 @@ $(document).ready(function() {
             $('#sodar-modal').modal('show');
         });
     });
-    $('.sodar-tl-link-extra-data-status').click(function () {
+    $('.sodar-tl-link-status-extra-data').click(function () {
+        console.log('click');
+        var dataUrl = $(this).attr('data-url');
+        console.log(dataUrl);
         $('#sodar-modal').modal('hide');
         $('#sodar-modal-wait').modal('show');
         $.ajax({
-            url: $('.sodar-tl-link-extra-data-status').attr('data-url'),
+            url: dataUrl,
             method: 'GET',
         }).done(function (data) {
             $('.modal-title').text(
@@ -60,7 +63,7 @@ $(document).ready(function() {
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
         });
-    })
+    });
     $('.sodar-tl-link-extra-data').click(function () {
         $('#sodar-modal-wait').modal('show');
         $.ajax({
