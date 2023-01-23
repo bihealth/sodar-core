@@ -46,7 +46,10 @@ class EventDetailMixin:
                     '</i>'
                     '</a>'.format(
                         '/timeline/ajax/extra/{}/{}'.format(
-                            event.sodar_uuid, idx
+                            event.sodar_uuid
+                            if event.project
+                            else f'site/{event.sodar_uuid}',
+                            idx,
                         )
                     )
                 )
@@ -240,4 +243,15 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
             'timeline.view_classified_site_event'
         ):
             return HttpResponseForbidden()
-        return Response(self.get_event_extra(event), status=200)
+
+        try:
+            if self.kwargs['idx']:
+                status = event.get_status_changes()
+                return Response(
+                    self.get_event_extra(
+                        event, status[int(self.kwargs['idx'])]
+                    ),
+                    status=200,
+                )
+        except KeyError:
+            return Response(self.get_event_extra(event), status=200)

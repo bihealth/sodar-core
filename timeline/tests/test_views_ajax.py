@@ -164,7 +164,7 @@ class TestProjectEventExtraAjaxView(TestEventAjaxViewsBase):
         self.assertEqual(response.data['user'], 'N/A')
 
 
-class TestsiteEventDetailAjaxView(TestEventAjaxViewsBase):
+class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
     """Tests for SiteEventDetailAjaxView"""
 
     def setUp(self):
@@ -254,3 +254,88 @@ class TestSiteEventExtraAjaxView(TestEventAjaxViewsBase):
         }
         self.assertIn(expected['app'], str(response.data))
         self.assertIn(expected['user'], str(response.data))
+
+
+class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase):
+    """Tests for EventStatusExtraAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.event = self.make_event(
+            self.project, 'projectroles', self.user, 'test_event'
+        )
+        self.event_status_init = self.event.set_status(
+            'INIT',
+            DEFAULT_MESSAGES['INIT'],
+            extra_data={'example_data': 'example_extra_data'},
+        )
+        self.event_site = self.make_event(
+            None, 'projectroles', self.user, 'test_event_site'
+        )
+        self.event_site_status_init = self.event_site.set_status(
+            'INIT',
+            DEFAULT_MESSAGES['INIT'],
+            extra_data={'example_data': 'example_extra_data'},
+        )
+
+    def test_get(self):
+        """Test event status extra data retrieval"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:ajax_extra_status_project',
+                    kwargs={'projectevent': self.event.sodar_uuid, 'idx': 0},
+                ),
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'app': self.event.app,
+            'name': self.event.event_name,
+            'user': self.user.username,
+            'timestamp': self._format_ts(self.event.get_timestamp()),
+            'extra': '<span class="json-open-bracket">{</span><br><span '
+            'class="json-collapse-1" style="display: inline;"><span '
+            'class="json-indent">&nbsp;&nbsp;</span><span '
+            'class="json-property">example_data</span><span '
+            'class="json-semi-colon">: </span><span '
+            'class="json-value">&quot;example_extra_data&quot;</span><br></span><span '
+            'class="json-close-bracket">}</span><button class="btn btn-secondary '
+            'sodar-list-btn sodar-copy-btn sodar-tl-copy-btn" '
+            'data-clipboard-target="#data-to-clipboard" title="Copy to '
+            'clipboard" data-toggle="tooltip"><i class="iconify" '
+            'data-icon="mdi:clipboard-multiple-outline"></i></button>',
+        }
+        self.assertEqual(response.data, expected)
+
+    def test_get_site(self):
+        """Test site event status extra data retrieval"""
+        self.maxDiff = None
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:ajax_extra_status_site',
+                    kwargs={
+                        'projectevent': self.event_site.sodar_uuid,
+                        'idx': 0,
+                    },
+                ),
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'app': self.event_site.app,
+            'name': self.event_site.event_name,
+            'user': self.user.username,
+            'timestamp': self._format_ts(self.event_site.get_timestamp()),
+            'extra': '<span class="json-open-bracket">{</span><br><span '
+            'class="json-collapse-1" style="display: inline;"><span '
+            'class="json-indent">&nbsp;&nbsp;</span><span '
+            'class="json-property">example_data</span><span '
+            'class="json-semi-colon">: </span><span '
+            'class="json-value">&quot;example_extra_data&quot;</span><br></span><span '
+            'class="json-close-bracket">}</span><button class="btn btn-secondary '
+            'sodar-list-btn sodar-copy-btn sodar-tl-copy-btn" '
+            'data-clipboard-target="#data-to-clipboard" title="Copy to '
+            'clipboard" data-toggle="tooltip"><i class="iconify" '
+            'data-icon="mdi:clipboard-multiple-outline"></i></button>',
+        }
+        self.assertEqual(response.data, expected)

@@ -40,30 +40,6 @@ $(document).ready(function() {
             $('#sodar-modal').modal('show');
         });
     });
-    $('.sodar-tl-link-status-extra-data').click(function () {
-        console.log('click');
-        var dataUrl = $(this).attr('data-url');
-        console.log(dataUrl);
-        $('#sodar-modal').modal('hide');
-        $('#sodar-modal-wait').modal('show');
-        $.ajax({
-            url: dataUrl,
-            method: 'GET',
-        }).done(function (data) {
-            $('.modal-title').text(
-                'Event Extra Data: ' + data['app'] + '.' + data['name'] + ' (' +
-                data['user'] + ' @ ' + data['timestamp'] + ')');
-            $('.modal-body').html('').append($('<p>').html(
-                '<pre class="sodar-tl-json" id=data-to-clipboard>' + data['extra'] + '</pre>'));
-            $('#sodar-modal-wait').modal('hide');
-            $('#sodar-modal').modal('show');
-        }).fail(function (data) {
-            console.dir(data);
-            $('.modal-body').html('Error: ' + data.statusText);
-            $('#sodar-modal-wait').modal('hide');
-            $('#sodar-modal').modal('show');
-        });
-    });
     $('.sodar-tl-link-extra-data').click(function () {
         $('#sodar-modal-wait').modal('show');
         $.ajax({
@@ -83,5 +59,27 @@ $(document).ready(function() {
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
         });
+    });
+});
+$('body').on('click', '.sodar-tl-link-status-extra-data', function () {
+    var dataUrl = $(this).attr('data-url');
+    $('#sodar-modal').modal('hide');
+    $('#sodar-modal-wait').modal('show');
+    $.ajax({
+        url: dataUrl,
+        method: 'GET',
+    }).done(function (data) {
+        $('.modal-title').text(
+            'Event Extra Data: ' + data['app'] + '.' + data['name'] + ' (' +
+            data['user'] + ' @ ' + data['timestamp'] + ')');
+        $('.modal-body').html('').append($('<p>').html(
+            '<pre class="sodar-tl-json" id=data-to-clipboard>' + data['extra'] + '</pre>'));
+        $('#sodar-modal-wait').modal('hide');
+        $('#sodar-modal').modal('show');
+    }).fail(function (data) {
+        console.dir(data);
+        $('.modal-body').html('Error: ' + data.statusText);
+        $('#sodar-modal-wait').modal('hide');
+        $('#sodar-modal').modal('show');
     });
 });
