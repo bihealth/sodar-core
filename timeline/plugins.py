@@ -106,7 +106,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 key=lambda x: localtime(x.get_timestamp()).strftime(
                     '%Y-%m-%d %H:%M:%S'
                 ),
-                reverse=True,
+                reverse=False,
             )
         elif search_type == 'timeline':
             events = ProjectEvent.objects.find(search_terms, keywords)
@@ -115,7 +115,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 key=lambda x: localtime(x.get_timestamp()).strftime(
                     '%Y-%m-%d %H:%M:%S'
                 ),
-                reverse=True,
+                reverse=False,
             )
         if items:
             items = [
