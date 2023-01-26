@@ -269,6 +269,29 @@ class TestProjectEvent(
         expected = "ProjectEvent('N/A', 'test_event', 'N/A')"
         self.assertEqual(repr(self.event), expected)
 
+    def test_find_name(self):
+        """Test ProjectEvent.find() with event name"""
+        objects = ProjectEvent.objects.find(['test_event'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_description(self):
+        """Test ProjectEvent.find() with event description"""
+        objects = ProjectEvent.objects.find(['description'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_project_title(self):
+        """Test ProjectEvent.find() with project full title"""
+        objects = ProjectEvent.objects.find(['TestProject'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_fail(self):
+        """Test ProjectEvent.find() with no matches"""
+        objects = ProjectEvent.objects.find(['asdfasdfafasdf'])
+        self.assertEqual(len(objects), 0)
+
 
 class TestProjectEventObjectRef(
     ProjectEventMixin, ProjectEventObjectRefMixin, TestProjectEventBase
