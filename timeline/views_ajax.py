@@ -37,31 +37,21 @@ class EventDetailMixin:
         }
         status_changes = event.get_status_changes(reverse=True)
         for idx, s in enumerate(status_changes):
-            desc = ''
-            if s.extra_data:
-                desc = (
-                    '<a class="sodar-tl-link-status-extra-data text-primary pull-right" data-url="{}">'
-                    '<i class="iconify" data-icon="mdi:text-box" title="Status Extra Data" '
-                    'data-toggle="tooltip" data-placement="right">'
-                    '</i>'
-                    '</a>'.format(
-                        '/timeline/ajax/extra/{}/{}'.format(
-                            event.sodar_uuid
-                            if event.project
-                            else f'site/{event.sodar_uuid}',
-                            idx,
-                        )
-                    )
-                )
-
             ret['status'].append(
                 {
                     'timestamp': localtime(s.timestamp).strftime(
                         '%Y-%m-%d %H:%M:%S'
                     ),
-                    'description': s.description + desc,
+                    'description': s.description,
                     'type': s.status_type,
                     'class': get_status_style(s),
+                    'extra_status_link': '/timeline/ajax/extra/{}/{}'.format(
+                        event.sodar_uuid
+                        if event.project
+                        else f'site/{event.sodar_uuid}',
+                        idx,
+                    ),
+                    'no_extra_status': s.extra_data == {},
                 }
             )
         return ret
@@ -200,17 +190,13 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
             'timeline.view_classified_event', event.project
         ):
             return HttpResponseForbidden()
-
-        try:
-            if self.kwargs['idx']:
-                status = event.get_status_changes()
-                return Response(
-                    self.get_event_extra(
-                        event, status[int(self.kwargs['idx'])]
-                    ),
-                    status=200,
-                )
-        except KeyError:
+        if 'idx' in self.kwargs:
+            status = event.get_status_changes()
+            return Response(
+                self.get_event_extra(event, status[int(self.kwargs['idx'])]),
+                status=200,
+            )
+        else:
             return Response(self.get_event_extra(event), status=200)
 
 
@@ -244,14 +230,11 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
         ):
             return HttpResponseForbidden()
 
-        try:
-            if self.kwargs['idx']:
-                status = event.get_status_changes()
-                return Response(
-                    self.get_event_extra(
-                        event, status[int(self.kwargs['idx'])]
-                    ),
-                    status=200,
-                )
-        except KeyError:
+        if 'idx' in self.kwargs:
+            status = event.get_status_changes()
+            return Response(
+                self.get_event_extra(event, status[int(self.kwargs['idx'])]),
+                status=200,
+            )
+        else:
             return Response(self.get_event_extra(event), status=200)

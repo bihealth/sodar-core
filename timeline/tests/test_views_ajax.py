@@ -83,6 +83,10 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
                     'timestamp': self._format_ts(
                         self.event_status_ok.timestamp
                     ),
+                    'extra_status_link': '/timeline/ajax/extra/{}/{}'.format(
+                        self.event.sodar_uuid, 0
+                    ),
+                    'no_extra_status': True,
                 },
                 {
                     'type': 'INIT',
@@ -91,6 +95,10 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
                     'timestamp': self._format_ts(
                         self.event_status_init.timestamp
                     ),
+                    'extra_status_link': '/timeline/ajax/extra/{}/{}'.format(
+                        self.event.sodar_uuid, 1
+                    ),
+                    'no_extra_status': True,
                 },
             ],
         }
@@ -202,6 +210,10 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
                     'timestamp': self._format_ts(
                         self.event_status_ok.timestamp
                     ),
+                    'extra_status_link': '/timeline/ajax/extra/site/{}/{}'.format(
+                        self.event.sodar_uuid, 0
+                    ),
+                    'no_extra_status': True,
                 },
                 {
                     'type': 'INIT',
@@ -210,6 +222,10 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
                     'timestamp': self._format_ts(
                         self.event_status_init.timestamp
                     ),
+                    'extra_status_link': '/timeline/ajax/extra/site/{}/{}'.format(
+                        self.event.sodar_uuid, 1
+                    ),
+                    'no_extra_status': True,
                 },
             ],
         }
