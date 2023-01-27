@@ -53,12 +53,12 @@ $(document).ready(function() {
                 }
                 tableBody.append($('<tr>')
                     .append($('<td>').html(data['status'][i]['timestamp']))
-                    .append($('<td>').html(data['status'][i]['description'] + editionalDescription)
+                    .append($('<td>').html(data['status'][i]['description'] + editionalDescription))
                     .append($('<td>')
                         .attr('class', data['status'][i]['class'])
                         .html(data['status'][i]['type'])
                     )
-                ));
+                );
             }
             $('#sodar-modal-wait').modal('hide');
             $('#sodar-modal').modal('show');
