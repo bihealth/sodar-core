@@ -40,9 +40,6 @@ $(document).ready(function() {
         $(this).closest('div.sodar-sort-card').show();
     });
 
-    // // Display not found once all DataTables have been initialized
-    // $('div#sodar-search-not-found-alert').removeClass('d-none');
-
     // Update overflow status
     modifyCellOverflow();
 
