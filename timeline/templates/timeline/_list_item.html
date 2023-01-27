@@ -4,63 +4,73 @@
 
 <tr id="sodar-tl-list-event-{{ event.sodar_uuid }}">
   <td>
-    {% get_timestamp event as event_time %}
-    {% if event.project %}
-      <a class="sodar-tl-link-detail text-primary"
-         data-url="{% url 'timeline:ajax_detail_project' projectevent=event.sodar_uuid %}">
-        {{ event_time }}
-      </a>
-    {% else %}
-      <a class="sodar-tl-link-detail text-primary"
-         data-url="{% url 'timeline:ajax_detail_site' projectevent=event.sodar_uuid %}">
-        {{ event_time }}
-      </a>
-    {% endif %}
+    <div class="sodar-overflow-container">
+      {% get_timestamp event as event_time %}
+      {% if event.project %}
+        <a class="sodar-tl-link-detail text-primary"
+           data-url="{% url 'timeline:ajax_detail_project' projectevent=event.sodar_uuid %}">
+          {{ event_time }}
+        </a>
+      {% else %}
+        <a class="sodar-tl-link-detail text-primary"
+           data-url="{% url 'timeline:ajax_detail_site' projectevent=event.sodar_uuid %}">
+          {{ event_time }}
+        </a>
+      {% endif %}
+    </div>
   </td>
   <td>
-    {% get_app_icon_html event plugin_lookup as event_icon %}
-    {{ event_icon|safe }}
-    {{ event.event_name }}
+    <div class="sodar-overflow-container">
+      {% get_app_icon_html event plugin_lookup as event_icon %}
+      {{ event_icon|safe }}
+      {{ event.event_name }}
+    </div>
   </td>
   <td {% if not event.user %}class="text-muted"{% endif %}>
-    {% if event.user %}
-      {% get_user_html event.user as user_html %}
-      {{ user_html|safe }}
-    {% else %}
-      N/A
-    {% endif %}
+    <div class="sodar-overflow-container">
+      {% if event.user %}
+        {% get_user_html event.user as user_html %}
+        {{ user_html|safe }}
+      {% else %}
+        N/A
+      {% endif %}
+    </div>
   </td>
   <td>
-    {% if event.project and user.is_superuser and timeline_mode == 'admin' %}
-      <span class="badge badge-info mr-1" title="{{ event.project }}" data-toggle="tooltip" data-placement="top">
-        <i class="iconify"
-           data-icon="{% if event.project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
-        </i>
-        <a class="text-white" href="{% url 'projectroles:detail' project=event.project.sodar_uuid %}">
-          {{ event.project.title }}
+    <div class="sodar-overflow-container">
+      {% if event.project and user.is_superuser and timeline_mode == 'admin' %}
+        <span class="badge badge-info mr-1" title="{{ event.project }}" data-toggle="tooltip" data-placement="top">
+          <i class="iconify"
+             data-icon="{% if event.project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
+          </i>
+          <a class="text-white" href="{% url 'projectroles:detail' project=event.project.sodar_uuid %}">
+            {{ event.project.title }}
+          </a>
+        </span>
+      {% endif %}
+      {% get_event_description event plugin_lookup request as event_desc %}
+      {{ event_desc|safe }}
+      {% if not details_card_mode and event.extra_data %}
+        <a class="sodar-tl-link-extra-data text-primary pull-right"
+           data-url="{% url 'timeline:ajax_extra_project' projectevent=event.sodar_uuid %}">
+          <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
+             data-toggle="tooltip" data-placement="right">
+          </i>
         </a>
-      </span>
-    {% endif %}
-    {% get_event_description event plugin_lookup request as event_desc %}
-    {{ event_desc|safe }}
-    {% if not details_card_mode and event.extra_data %}
-      <a class="sodar-tl-link-extra-data text-primary pull-right"
-         data-url="{% url 'timeline:ajax_extra_project' projectevent=event.sodar_uuid %}">
-        <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
-           data-toggle="tooltip" data-placement="right">
-        </i>
-      </a>
-    {% endif %}
-    {% if event.classified %}
-      <span class="pull-right text-muted">
-        <i class="iconify" data-icon="mdi:lock" title="Classified"
-           data-toggle="tooltip" data-placement="left">
-        </i>
-      </span>
-    {% endif %}
+      {% endif %}
+      {% if event.classified %}
+        <span class="pull-right text-muted">
+          <i class="iconify" data-icon="mdi:lock" title="Classified"
+             data-toggle="tooltip" data-placement="left">
+          </i>
+        </span>
+      {% endif %}
+    </div>
   </td>
   <td class="{% get_status_style event.get_status %} text-light">
-    {{ event.get_status.status_type }}
+    <div class="sodar-overflow-container">
+      {{ event.get_status.status_type }}
+    </div>
   </td>
 </tr>
 

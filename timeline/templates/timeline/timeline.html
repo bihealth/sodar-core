@@ -14,11 +14,15 @@
   {{ block.super }}
   <!-- Timeline CSS -->
   <link rel="stylesheet" type="text/css" href="{% static 'timeline/css/timeline.css' %}" />
+
+  <!-- DataTables -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.css" />
 {% endblock css %}
 
 {% block projectroles_extend %}
 
   {% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
+  {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' default=10 as search_pagination %}
   {% get_plugin_lookup as plugin_lookup %}
 
   <div class="row sodar-subtitle-container bg-white sticky-top">
@@ -39,8 +43,9 @@
 
     {% if object_list.count > 0 %}
       <div class="card mb-3" id="sodar-tl-event-list">
-        <div class="card-body p-0">
-          <table class="table table-striped sodar-card-table" id="sodar-tl-table">
+        {% include 'timeline/_sort_header.html' with search_title=timeline_title %}
+        <div class="card-body p-0 sodar-sort-card-body">
+          <table class="table table-striped sodar-card-table sodar-timeline-table" id="sodar-tl-table">
             <thead>
               {% include 'timeline/_list_header.html' %}
             </thead>
@@ -50,6 +55,7 @@
               {% endfor %}
             </tbody>
           </table>
+        </div>
         </div>
       </div>
       {% if is_paginated %}
@@ -69,8 +75,21 @@
 {% block javascript %}
   {{ block.super }}
 
+  <!-- Settings for Javascript -->
+  <script type="text/javascript">
+    {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' default=5 as search_pagination %}
+    window.searchPagination = {{ search_pagination }};
+    window.refreshCellOverflow = true;
+  </script>
+
+  <!-- DataTables -->
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
+
   <!-- Event list -->
   <script type="text/javascript" src="{% static 'timeline/js/timeline.js' %}"></script>
+
+  <!-- Sort ajax -->
+  <script type="text/javascript" src="{% static 'timeline/js/sort.js' %}"></script>
 
   <!-- Tour content -->
   <script type="text/javascript">
@@ -105,5 +124,26 @@
               scrollTo: true
            });
        }
+
+      if ($('.sodar-sort-card').length) {
+          tour.addStep('sort_card', {
+              title: 'Matching Items',
+              text: 'Matching {% get_display_name "PROJECT" plural=True %} ' +
+                    'and items are listed in cards separated by data type.',
+              advanceOn: '.docs-link click',
+              showCancelLink: true
+          });
+      }
+
+      if ($('.sodar-paginate-button').length) {
+          tour.addStep('sort_paginate', {
+              title: 'Sort Pagination',
+              text: 'In case of a large number of results, they can be browsed ' +
+                    'using this sub-page navigation.',
+              attachTo: '.sodar-paginate-button left',
+              advanceOn: '.docs-link click',
+              showCancelLink: true
+          });
+      }
     </script>
 {% endblock javascript %}

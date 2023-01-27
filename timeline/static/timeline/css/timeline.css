@@ -24,6 +24,63 @@ table#sodar-tl-table-extra-data tbody tr td:nth-child(1) {
   width: 100%;
 }
 
+table.sodar-timeline-table {
+  display: inline-table;
+  min-width: 100%;
+  max-width: 100%;
+  width: 100%;
+  border-bottom: 0 !important;
+  margin: 0 !important;
+}
+
+table.sodar-timeline-table thead tr th {
+  padding: 12px !important;
+  padding-right: 22px !important; /* Avoid covering sort icons */
+  max-width: 250px !important;
+}
+
+table.sodar-timeline-table tbody tr td {
+  padding: 12px !important;
+  max-width: 250px !important;
+}
+
+.sodar-header-input-group-search {
+    max-width: 250px;
+}
+
+@media screen and (max-width: 1000px) {
+  .sodar-header-input-group-search {
+    display: none;
+  }
+}
+
+select.sodar-sort-page-length {
+    height: 32px;
+    padding-top: 5px;
+}
+
+th.sorting {
+  padding-left: 10px !important;
+  border-bottom: 0 !important;
+}
+
+th.sorting::after {
+  padding-top: 7px !important;
+}
+
+.dataTables_paginate {
+  width: 100%;
+  padding: 12px !important;
+  margin-bottom: 12px !important;
+  text-align: right;
+  border-top: 1px solid #dfdfdf !important;
+}
+
+.dataTables_paginate .pagination .active .page-link {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
 a.sodar-tl-link-detail:hover {
   text-decoration: underline;
 }
