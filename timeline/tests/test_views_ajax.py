@@ -58,11 +58,12 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
             'INIT', DEFAULT_MESSAGES['INIT']
         )
         self.event_status_ok = self.event.set_status(
-            'OK', DEFAULT_MESSAGES['OK']
+            'OK', DEFAULT_MESSAGES['OK'], extra_data={'test': 'test'}
         )
 
     def test_get(self):
         """Test project event detail retrieval"""
+        self.maxDiff = None
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -84,10 +85,13 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
                     'timestamp': self._format_ts(
                         self.event_status_ok.timestamp
                     ),
-                    'extra_status_link': '/timeline/ajax/extra/{}/{}'.format(
-                        self.event.sodar_uuid, 0
+                    'extra_status_link': reverse(
+                        'timeline:ajax_extra_status_project',
+                        kwargs={
+                            'projectevent': self.event.sodar_uuid,
+                            'idx': 0,
+                        },
                     ),
-                    'no_extra_status': True,
                 },
                 {
                     'type': 'INIT',
@@ -96,10 +100,7 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
                     'timestamp': self._format_ts(
                         self.event_status_init.timestamp
                     ),
-                    'extra_status_link': '/timeline/ajax/extra/{}/{}'.format(
-                        self.event.sodar_uuid, 1
-                    ),
-                    'no_extra_status': True,
+                    'extra_status_link': None,
                 },
             ],
         }
@@ -185,11 +186,12 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
             'INIT', DEFAULT_MESSAGES['INIT']
         )
         self.event_status_ok = self.event.set_status(
-            'OK', DEFAULT_MESSAGES['OK']
+            'OK', DEFAULT_MESSAGES['OK'], extra_data={'test': 'test'}
         )
 
     def test_get(self):
         """Test site event detail retrieval"""
+        self.maxDiff = None
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -211,10 +213,13 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
                     'timestamp': self._format_ts(
                         self.event_status_ok.timestamp
                     ),
-                    'extra_status_link': '/timeline/ajax/extra/site/{}/{}'.format(
-                        self.event.sodar_uuid, 0
+                    'extra_status_link': reverse(
+                        'timeline:ajax_extra_status_site',
+                        kwargs={
+                            'projectevent': self.event.sodar_uuid,
+                            'idx': 0,
+                        },
                     ),
-                    'no_extra_status': True,
                 },
                 {
                     'type': 'INIT',
@@ -223,10 +228,7 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
                     'timestamp': self._format_ts(
                         self.event_status_init.timestamp
                     ),
-                    'extra_status_link': '/timeline/ajax/extra/site/{}/{}'.format(
-                        self.event.sodar_uuid, 1
-                    ),
-                    'no_extra_status': True,
+                    'extra_status_link': None,
                 },
             ],
         }
