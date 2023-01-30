@@ -144,7 +144,7 @@ class SODARUserSerializer(SODARModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'name', 'email', 'sodar_uuid']
+        fields = ['username', 'name', 'email', 'is_superuser', 'sodar_uuid']
 
 
 # Projectroles Serializers -----------------------------------------------------

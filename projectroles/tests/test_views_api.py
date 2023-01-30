@@ -80,7 +80,29 @@ EX_APP_NAME = 'example_project_app'
 # Base Classes -----------------------------------------------------------------
 
 
-class SODARAPIViewTestMixin:
+class SerializedObjectMixin:
+    """
+    Mixin for helpers with serialized objects.
+    """
+
+    @classmethod
+    def get_serialized_user(cls, user):
+        """
+        Return serialization for a user.
+
+        :param user: User object
+        :return: Dict
+        """
+        return {
+            'email': user.email,
+            'is_superuser': user.is_superuser,
+            'name': user.name,
+            'sodar_uuid': str(user.sodar_uuid),
+            'username': user.username,
+        }
+
+
+class SODARAPIViewTestMixin(SerializedObjectMixin):
     """
     Mixin for SODAR and SODAR Core API views with accept headers, knox token
     authorization and general helper methods.
@@ -115,21 +137,6 @@ class SODARAPIViewTestMixin:
             return EMPTY_KNOX_TOKEN
         result = AuthToken.objects.create(user=user)
         return result if full_result else result[1]
-
-    @classmethod
-    def get_serialized_user(cls, user):
-        """
-        Return serialization for a user.
-
-        :param user: User object
-        :return: Dict
-        """
-        return {
-            'email': user.email,
-            'name': user.name,
-            'sodar_uuid': str(user.sodar_uuid),
-            'username': user.username,
-        }
 
     @classmethod
     def get_drf_datetime(cls, obj_dt):
@@ -295,6 +302,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
                             'username': self.user.username,
                             'name': self.user.name,
                             'email': self.user.email,
+                            'is_superuser': True,
                             'sodar_uuid': str(self.user.sodar_uuid),
                         },
                         'role': PROJECT_ROLE_OWNER,
@@ -317,6 +325,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
                             'username': self.user.username,
                             'name': self.user.name,
                             'email': self.user.email,
+                            'is_superuser': True,
                             'sodar_uuid': str(self.user.sodar_uuid),
                         },
                         'role': PROJECT_ROLE_OWNER,
@@ -373,12 +382,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
             'archive': False,
             'roles': {
                 str(self.cat_owner_as.sodar_uuid): {
-                    'user': {
-                        'username': self.user.username,
-                        'name': self.user.name,
-                        'email': self.user.email,
-                        'sodar_uuid': str(self.user.sodar_uuid),
-                    },
+                    'user': self.get_serialized_user(self.user),
                     'role': PROJECT_ROLE_OWNER,
                     'sodar_uuid': str(self.cat_owner_as.sodar_uuid),
                 }
@@ -407,12 +411,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
             'archive': False,
             'roles': {
                 str(self.owner_as.sodar_uuid): {
-                    'user': {
-                        'username': self.user.username,
-                        'name': self.user.name,
-                        'email': self.user.email,
-                        'sodar_uuid': str(self.user.sodar_uuid),
-                    },
+                    'user': self.get_serialized_user(self.user),
                     'role': PROJECT_ROLE_OWNER,
                     'sodar_uuid': str(self.owner_as.sodar_uuid),
                 }
@@ -2906,14 +2905,7 @@ class TestUserListAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)  # System users not returned
-        expected = [
-            {
-                'username': self.domain_user.username,
-                'name': self.domain_user.name,
-                'email': self.domain_user.email,
-                'sodar_uuid': str(self.domain_user.sodar_uuid),
-            }
-        ]
+        expected = [self.get_serialized_user(self.domain_user)]
         self.assertEqual(response_data, expected)
 
     def test_get_superuser(self):
@@ -2924,18 +2916,8 @@ class TestUserListAPIView(TestCoreAPIViewsBase):
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
         expected = [
-            {
-                'username': self.user.username,
-                'name': self.user.name,
-                'email': self.user.email,
-                'sodar_uuid': str(self.user.sodar_uuid),
-            },
-            {
-                'username': self.domain_user.username,
-                'name': self.domain_user.name,
-                'email': self.domain_user.email,
-                'sodar_uuid': str(self.domain_user.sodar_uuid),
-            },
+            self.get_serialized_user(self.user),
+            self.get_serialized_user(self.domain_user),
         ]
         self.assertEqual(response_data, expected)
 
@@ -2960,6 +2942,7 @@ class TestCurrentUserRetrieveAPIView(TestCoreAPIViewsBase):
             'username': self.domain_user.username,
             'name': self.domain_user.name,
             'email': self.domain_user.email,
+            'is_superuser': False,
             'sodar_uuid': str(self.domain_user.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
@@ -2974,6 +2957,7 @@ class TestCurrentUserRetrieveAPIView(TestCoreAPIViewsBase):
             'username': self.user.username,
             'name': self.user.name,
             'email': self.user.email,
+            'is_superuser': True,
             'sodar_uuid': str(self.user.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
@@ -3174,12 +3158,7 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
                 'archive': False,
                 'roles': {
                     str(user_as.sodar_uuid): {
-                        'user': {
-                            'username': user.username,
-                            'name': user.name,
-                            'email': user.email,
-                            'sodar_uuid': str(user.sodar_uuid),
-                        },
+                        'user': self.get_serialized_user(user),
                         'role': role,
                         'sodar_uuid': str(user_as.sodar_uuid),
                     }

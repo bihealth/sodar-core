@@ -19,6 +19,8 @@ Release Highlights
 - Add project archiving
 - Add role ranking
 - Add app settings retrieve/set REST API views
+- Add current user info Ajax API view
+- Add superuser info to REST API views
 - Rename app settings API methods
 - Fix path URL support
 

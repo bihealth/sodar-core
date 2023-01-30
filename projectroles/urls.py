@@ -168,6 +168,11 @@ urls_ajax = [
         name='ajax_star',
     ),
     url(
+        regex=r'^ajax/user/current',
+        view=views_ajax.CurrentUserRetrieveAjaxView.as_view(),
+        name='ajax_user_current',
+    ),
+    url(
         r'^ajax/autocomplete/user$',
         view=views_ajax.UserAutocompleteAjaxView.as_view(),
         name='ajax_autocomplete_user',

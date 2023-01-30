@@ -35,7 +35,10 @@ from projectroles.views import (
     APP_NAME,
     User,
 )
-from projectroles.views_api import SODARAPIProjectPermission
+from projectroles.views_api import (
+    SODARAPIProjectPermission,
+    CurrentUserRetrieveAPIView,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -383,6 +386,14 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         return Response(0 if tag_state else 1, status=200)
 
 
+class CurrentUserRetrieveAjaxView(
+    SODARBaseAjaxMixin, CurrentUserRetrieveAPIView
+):
+    """
+    Return information of the requesting user for Ajax requests.
+    """
+
+
 class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
     """User autocompletion widget view"""
 
@@ -394,7 +405,6 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
         - "project": project UUID
         - "scope": string for expected scope (all/project/project_exclude)
         - "exclude": list of explicit User.sodar_uuid to exclude from queryset
-
         """
         current_user = self.request.user
         project_uuid = self.forwarded.get('project', None)

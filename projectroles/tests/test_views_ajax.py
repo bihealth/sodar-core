@@ -6,6 +6,8 @@ from django.forms import model_to_dict
 from django.test import override_settings
 from django.urls import reverse
 
+from test_plus.test import TestCase
+
 from projectroles.models import ProjectUserTag, PROJECT_TAG_STARRED
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -17,6 +19,7 @@ from projectroles.tests.test_views import (
     PROJECT_TYPE_CATEGORY,
     PROJECT_TYPE_PROJECT,
 )
+from projectroles.tests.test_views_api import SerializedObjectMixin
 from projectroles.views_ajax import INHERITED_OWNER_INFO
 
 
@@ -382,3 +385,31 @@ class TestProjectStarringAjaxView(
 
         self.assertEqual(ProjectUserTag.objects.all().count(), 0)
         self.assertEqual(response.status_code, 200)
+
+
+class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):
+    """Tests for CurrentUserRetrieveAjaxView"""
+
+    def setUp(self):
+        self.user = self.make_user('user')
+        self.user.is_superuser = True
+        self.user.save()
+        self.reg_user = self.make_user('reg_user')
+
+    def test_regular_user(self):
+        """Test CurrentUserRetrieveAjaxView with regular user"""
+        with self.login(self.reg_user):
+            response = self.client.get(
+                reverse('projectroles:ajax_user_current')
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, self.get_serialized_user(self.reg_user))
+
+    def test_superuser(self):
+        """Test CurrentUserRetrieveAjaxView with superuser"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:ajax_user_current')
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, self.get_serialized_user(self.user))

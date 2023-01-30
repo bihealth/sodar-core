@@ -1149,6 +1149,7 @@ class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
     For each user:
 
     - ``email``: Email address of the user (string)
+    - ``is_superuser``: Superuser status (boolean)
     - ``name``: Full name of the user (string)
     - ``sodar_uuid``: User UUID (string)
     - ``username``: Username of the user (string)
@@ -1182,6 +1183,7 @@ class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
     For current user:
 
     - ``email``: Email address of the user (string)
+    - ``is_superuser``: Superuser status (boolean)
     - ``name``: Full name of the user (string)
     - ``sodar_uuid``: User UUID (string)
     - ``username``: Username of the user (string)

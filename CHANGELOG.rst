@@ -23,6 +23,8 @@ Added
     - ``Project.set_archive()`` helper (#369)
     - ``can_modify_project_data`` predicate in rules (#369)
     - ``cleanup_kwargs`` in ``assert_response_api()`` API test helper (#1088)
+    - ``is_superuser`` in ``SODARUserSerializer`` (#1052)
+    - Ajax view ``CurrentUserRetrieveAjaxView`` (#1053)
 
 Changed
 -------

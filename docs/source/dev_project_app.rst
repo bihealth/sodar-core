@@ -747,7 +747,7 @@ Example:
 
 .. code-block:: python
 
-    from projectroles.views_api import SODARBaseProjectAjaxView
+    from projectroles.views_ajax import SODARBaseProjectAjaxView
 
     class ExampleAjaxAPIView(SODARBaseProjectAjaxView):
 
@@ -756,6 +756,9 @@ Example:
     def get(self, request):
         # ...
 
+If you want to wrap a REST API view into an Ajax API view, you can use
+``SODARBaseAjaxMixin`` and your original view as base to ensure appropriate
+access control.
 
 Serializers
 -----------
