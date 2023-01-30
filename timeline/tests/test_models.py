@@ -281,12 +281,6 @@ class TestProjectEvent(
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
-    def test_find_project_title(self):
-        """Test ProjectEvent.find() with project full title"""
-        objects = ProjectEvent.objects.find(['TestProject'])
-        self.assertEqual(len(objects), 1)
-        self.assertEqual(objects[0], self.event)
-
     def test_find_fail(self):
         """Test ProjectEvent.find() with no matches"""
         objects = ProjectEvent.objects.find(['asdfasdfafasdf'])

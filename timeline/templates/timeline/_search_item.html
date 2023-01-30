@@ -29,7 +29,7 @@
   {% if event.description %}
     <td>
       <div class="sodar-overflow-container">
-        {% if event.project and user.is_superuser %}
+        {% if event.project %}
           {% include 'timeline/_project_badge.html' %}
         {% endif %}
         {% get_event_description t plugin_lookup request as event_desc %}

@@ -60,7 +60,6 @@ class ProjectEventManager(models.Manager):
         for t in search_terms:
             term_query.add(Q(event_name__icontains=t), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
-            term_query.add(Q(project__full_title__icontains=t), Q.OR)
         return objects.filter(term_query)
 
 
