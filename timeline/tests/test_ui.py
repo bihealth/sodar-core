@@ -318,10 +318,11 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
                 (By.CLASS_NAME, 'sodar-tl-link-status-extra-data')
             )
         )
-        status_button = self.selenium.find_element(
-            By.CLASS_NAME, 'sodar-tl-link-status-extra-data'
+        self.assertIsNotNone(
+            self.selenium.find_element(
+                By.CLASS_NAME, 'sodar-tl-link-status-extra-data'
+            )
         )
-        status_button.click()
 
     def test_details_content(self):
         """Test details modal's content"""

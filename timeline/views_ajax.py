@@ -3,6 +3,7 @@ import html
 
 from django.http import HttpResponseForbidden
 from django.utils.timezone import localtime
+from django.urls import reverse
 
 from rest_framework.response import Response
 
@@ -18,6 +19,21 @@ from timeline.templatetags.timeline_tags import get_status_style
 
 class EventDetailMixin:
     """Mixin for event detail retrieval helpers"""
+
+    def form_status_extra_url(self, event, status, idx):
+        """Return URL for extra status data"""
+        if status.extra_data == {}:
+            return None
+        if event.project:
+            return reverse(
+                'timeline:ajax_extra_status_project',
+                kwargs={'projectevent': event.sodar_uuid, 'idx': idx},
+            )
+        else:
+            return reverse(
+                'timeline:ajax_extra_status_site',
+                kwargs={'projectevent': event.sodar_uuid, 'idx': idx},
+            )
 
     def get_event_details(self, event):
         """
@@ -45,13 +61,9 @@ class EventDetailMixin:
                     'description': s.description,
                     'type': s.status_type,
                     'class': get_status_style(s),
-                    'extra_status_link': '/timeline/ajax/extra/{}/{}'.format(
-                        event.sodar_uuid
-                        if event.project
-                        else f'site/{event.sodar_uuid}',
-                        idx,
+                    'extra_status_link': self.form_status_extra_url(
+                        event, s, idx
                     ),
-                    'no_extra_status': s.extra_data == {},
                 }
             )
         return ret
@@ -145,10 +157,8 @@ class EventExtraDataMixin:
         :param event: ProjectEvent object
         :return: JSON-serializable dict
         """
-        if status:
-            extra = self._json_to_html(status.extra_data)
-        else:
-            extra = self._json_to_html(event.extra_data)
+        extra = status.extra_data if status else event.extra_data
+        extra_data = self._json_to_html(extra)
         ret = {
             'app': event.app,
             'name': event.event_name,
@@ -156,7 +166,7 @@ class EventExtraDataMixin:
             'timestamp': localtime(event.get_timestamp()).strftime(
                 '%Y-%m-%d %H:%M:%S'
             ),
-            'extra': extra,
+            'extra': extra_data,
         }
         return ret
 
@@ -191,7 +201,7 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
         ):
             return HttpResponseForbidden()
         if 'idx' in self.kwargs:
-            status = event.get_status_changes()
+            status = event.get_status_changes().reverse()
             return Response(
                 self.get_event_extra(event, status[int(self.kwargs['idx'])]),
                 status=200,
@@ -231,7 +241,7 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
             return HttpResponseForbidden()
 
         if 'idx' in self.kwargs:
-            status = event.get_status_changes()
+            status = event.get_status_changes().reverse()
             return Response(
                 self.get_event_extra(event, status[int(self.kwargs['idx'])]),
                 status=200,

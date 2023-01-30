@@ -44,16 +44,16 @@ $(document).ready(function() {
             );
             var tableBody = $('.modal-body').find('tbody');
             for (var i = 0; i < data['status'].length; i++) {
-                let editionalDescription = '<a class="sodar-tl-link-status-extra-data text-primary pull-right" ' +
+                let extraData = '<a class="sodar-tl-link-status-extra-data text-primary pull-right" ' +
                     'data-url="' + data['status'][i]['extra_status_link'] + '"><i class="iconify" ' +
                     'data-icon="mdi:text-box" title="Status Extra Data" data-toggle="tooltip" data-placement="right">' +
                     '</i></a>';
-                if (data['status'][i]['no_extra_status'] === true) {
-                    editionalDescription = '';
+                if (data['status'][i]['extra_status_link'] === null) {
+                    extraData = '';
                 }
                 tableBody.append($('<tr>')
                     .append($('<td>').html(data['status'][i]['timestamp']))
-                    .append($('<td>').html(data['status'][i]['description'] + editionalDescription))
+                    .append($('<td>').html(data['status'][i]['description'] + extraData))
                     .append($('<td>')
                         .attr('class', data['status'][i]['class'])
                         .html(data['status'][i]['type'])

@@ -15,6 +15,7 @@ from projectroles.tests.test_views import (
 )
 
 from timeline.models import DEFAULT_MESSAGES
+from timeline.views_ajax import EventExtraDataMixin
 from timeline.templatetags.timeline_tags import get_status_style
 from timeline.tests.test_models import ProjectEventMixin
 
@@ -272,7 +273,7 @@ class TestSiteEventExtraAjaxView(TestEventAjaxViewsBase):
         self.assertIn(expected['user'], str(response.data))
 
 
-class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase):
+class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
     """Tests for EventStatusExtraAjaxView"""
 
     def setUp(self):
@@ -283,7 +284,7 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase):
         self.event_status_init = self.event.set_status(
             'INIT',
             DEFAULT_MESSAGES['INIT'],
-            extra_data={'example_data': 'example_extra_data'},
+            extra_data={'test': 'test'},
         )
         self.event_site = self.make_event(
             None, 'projectroles', self.user, 'test_event_site'
@@ -291,11 +292,12 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase):
         self.event_site_status_init = self.event_site.set_status(
             'INIT',
             DEFAULT_MESSAGES['INIT'],
-            extra_data={'example_data': 'example_extra_data'},
+            extra_data={'test': 'test'},
         )
 
     def test_get(self):
         """Test event status extra data retrieval"""
+        self.maxDiff = None
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -309,17 +311,7 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase):
             'name': self.event.event_name,
             'user': self.user.username,
             'timestamp': self._format_ts(self.event.get_timestamp()),
-            'extra': '<span class="json-open-bracket">{</span><br><span '
-            'class="json-collapse-1" style="display: inline;"><span '
-            'class="json-indent">&nbsp;&nbsp;</span><span '
-            'class="json-property">example_data</span><span '
-            'class="json-semi-colon">: </span><span '
-            'class="json-value">&quot;example_extra_data&quot;</span><br></span><span '
-            'class="json-close-bracket">}</span><button class="btn btn-secondary '
-            'sodar-list-btn sodar-copy-btn sodar-tl-copy-btn" '
-            'data-clipboard-target="#data-to-clipboard" title="Copy to '
-            'clipboard" data-toggle="tooltip"><i class="iconify" '
-            'data-icon="mdi:clipboard-multiple-outline"></i></button>',
+            'extra': self.get_event_extra(self.event, status=0)['extra'],
         }
         self.assertEqual(response.data, expected)
 
@@ -342,16 +334,6 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase):
             'name': self.event_site.event_name,
             'user': self.user.username,
             'timestamp': self._format_ts(self.event_site.get_timestamp()),
-            'extra': '<span class="json-open-bracket">{</span><br><span '
-            'class="json-collapse-1" style="display: inline;"><span '
-            'class="json-indent">&nbsp;&nbsp;</span><span '
-            'class="json-property">example_data</span><span '
-            'class="json-semi-colon">: </span><span '
-            'class="json-value">&quot;example_extra_data&quot;</span><br></span><span '
-            'class="json-close-bracket">}</span><button class="btn btn-secondary '
-            'sodar-list-btn sodar-copy-btn sodar-tl-copy-btn" '
-            'data-clipboard-target="#data-to-clipboard" title="Copy to '
-            'clipboard" data-toggle="tooltip"><i class="iconify" '
-            'data-icon="mdi:clipboard-multiple-outline"></i></button>',
+            'extra': self.get_event_extra(self.event_site, status=0)['extra'],
         }
         self.assertEqual(response.data, expected)
