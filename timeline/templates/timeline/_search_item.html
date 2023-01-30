@@ -16,9 +16,22 @@
       {{ event.event_name }}
     </div>
   </td>
+  <td {% if not event.user %}class="text-muted"{% endif %}>
+    <div class="sodar-overflow-container">
+      {% if event.user %}
+        {% get_user_html event.user as user_html %}
+        {{ user_html|safe }}
+      {% else %}
+        N/A
+      {% endif %}
+    </div>
+  </td>
   {% if event.description %}
     <td>
       <div class="sodar-overflow-container">
+        {% if event.project and user.is_superuser %}
+          {% include 'timeline/_project_badge.html' %}
+        {% endif %}
         {% get_event_description t plugin_lookup request as event_desc %}
           {{ event_desc|safe }}
       </div>

@@ -422,32 +422,34 @@ class TestSearch(ProjectEventMixin, TestUIBase):
             classified=True,
         )
 
+        self.classified_site_event = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='classified_site_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            classified=True,
+        )
+
     def test_search_results(self):
         """Test search results"""
+        expected = [
+            (self.superuser, 4),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
+            (self.user_no_roles, 1),
+        ]
         url = (
             reverse('projectroles:search')
             + '?'
             + urlencode({'s': 'description'})
         )
-        self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
-        )
-        elements = self.selenium.find_elements(
-            By.CLASS_NAME, 'sodar-pr-project-list-item'
-        )
-        self.assertEqual(len(elements), 3)
-
-    def test_search_results_owner(self):
-        """Test search results"""
-        url = (
-            reverse('projectroles:search')
-            + '?'
-            + urlencode({'s': 'description'})
-        )
-        self.login_and_redirect(
-            self.owner_as.user, url, wait_elem=None, wait_loc='ID'
-        )
-        elements = self.selenium.find_elements(
-            By.CLASS_NAME, 'sodar-pr-project-list-item'
-        )
-        self.assertEqual(len(elements), 3)
+        for user, count in expected:
+            self.login_and_redirect(user, url, wait_elem=None, wait_loc='ID')
+            elements = self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-project-list-item'
+            )
+            self.assertEqual(len(elements), count)

@@ -79,12 +79,18 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     def check_permission(self, user, event):
         """Check if user has permission to view event"""
-        if event.classified:
-            return user.has_perm(
-                'timeline.view_classified_event', event.project
-            )
+        if event.project is not None:
+            if event.classified:
+                return user.has_perm(
+                    'timeline.view_classified_event', event.project
+                )
+            else:
+                return user.has_perm('timeline.view_timeline', event.project)
         else:
-            return user.has_perm('timeline.view_timeline', event.project)
+            if event.classified:
+                return user.has_perm('timeline.view_classified_site_event')
+            else:
+                return user.has_perm('timeline.view_site_timeline')
 
     def search(self, search_terms, user, search_type=None, keywords=None):
         """
