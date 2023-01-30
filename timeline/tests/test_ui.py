@@ -424,18 +424,30 @@ class TestSearch(ProjectEventMixin, TestUIBase):
 
     def test_search_results(self):
         """Test search results"""
-        expected = [
-            (self.superuser, 3),
-            (self.owner_as.user, 3),
-            (self.delegate_as.user, 3),
-            (self.contributor_as.user, 3),
-            (self.guest_as.user, 1),
-            (self.user_no_roles, 0),
-        ]
         url = (
             reverse('projectroles:search')
             + '?'
             + urlencode({'s': 'description'})
         )
-        self.assertEqual(expected, expected)
-        self.assertEqual(url, url)
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        elements = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(elements), 3)
+
+    def test_search_results_owner(self):
+        """Test search results"""
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
+        self.login_and_redirect(
+            self.owner_as.user, url, wait_elem=None, wait_loc='ID'
+        )
+        elements = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(elements), 3)

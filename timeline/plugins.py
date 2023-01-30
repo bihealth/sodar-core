@@ -123,7 +123,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             ]
         return {
             'all': {
-                'title': 'Event names, descriptions and Project Titles',
+                'title': 'Timeline Events',
                 'search_types': ['timeline'],
                 'items': items,
             }
