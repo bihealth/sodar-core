@@ -54,16 +54,16 @@
         <div class="card-header">
           <h4>
             <i class="iconify" data-icon="mdi:rhombus-split"></i>
-            Project Statistics
+            {% get_display_name 'PROJECT' title=True %} Statistics
           </h4>
         </div>
         <div class="card-body">
           <dl class="row">
-            <dt class="col-md-3">Projects</dt>
+            <dt class="col-md-3">{% get_display_name 'PROJECT' title=True plural=True %}</dt>
             <dd class="col-md-9">{{ project_count }}</dd>
-            <dt class="col-md-3">Categories</dt>
+            <dt class="col-md-3">{% get_display_name 'CATEGORY' title=True plural=True %}</dt>
             <dd class="col-md-9">{{ category_count }}</dd>
-            <dt class="col-md-3">Archived Projects</dt>
+            <dt class="col-md-3">Archived {% get_display_name 'PROJECT' title=True plural=True %}</dt>
             <dd class="col-md-9">{{ project_archive_count }}</dd>
           </dl>
         </div>

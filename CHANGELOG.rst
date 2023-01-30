@@ -35,6 +35,8 @@ Changed
     - Rename ``AppSettingAPI`` methods (#539, #1040)
     - Deprecate old ``AppSettingAPI`` method names (#539, #1039)
     - Hide apps in ``PROJECTROLES_HIDE_APP_LINKS`` from superusers (#1042)
+- **Siteinfo**
+    - Use project type display names in stats view (#1107)
 
 Fixed
 -----
