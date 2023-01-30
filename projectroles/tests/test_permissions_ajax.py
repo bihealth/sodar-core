@@ -228,7 +228,6 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 403)
 
-
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_user_autocomplete_ajax(self):
         """Test UserAutocompleteAjaxView access"""
