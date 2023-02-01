@@ -27,6 +27,11 @@ Release Highlights
 Breaking Changes
 ================
 
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.17.
+
 Project Archiving Added
 -----------------------
 

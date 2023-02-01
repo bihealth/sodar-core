@@ -32,6 +32,7 @@ Changed
 - **General**
     - Rename incorrectly protected mixin methods (#1020)
     - Upgrade ``checkout`` and ``setup-python`` GitHub actions (#1091)
+    - Upgrade minimum Django version to v3.2.17 (#1113)
 - **Projectroles**
     - Rename ``AppSettingAPI`` methods (#539, #1040)
     - Deprecate old ``AppSettingAPI`` method names (#539, #1039)
