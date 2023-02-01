@@ -37,6 +37,7 @@ Changed
     - Rename ``AppSettingAPI`` methods (#539, #1040)
     - Deprecate old ``AppSettingAPI`` method names (#539, #1039)
     - Hide apps in ``PROJECTROLES_HIDE_APP_LINKS`` from superusers (#1042)
+    - Close Django admin warning modal on continue (#1114)
 - **Siteinfo**
     - Use project type display names in stats view (#1107)
 

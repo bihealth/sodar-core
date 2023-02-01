@@ -326,7 +326,7 @@ def get_admin_warning():
     )
     ret += (
         '<p><a class="btn btn-danger pull-right" role="button" '
-        'target="_blank" href="{}">'
+        'target="_blank" href="{}" id="sodar-pr-btn-admin-continue">'
         '<i class="iconify" data-icon="mdi:cogs"></i> Continue to Django Admin'
         '</a></p>'.format(reverse('admin:index'))
     )
