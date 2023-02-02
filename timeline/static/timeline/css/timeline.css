@@ -37,6 +37,10 @@ a.sodar-tl-link-extra {
   cursor: pointer;
 }
 
+a.sodar-tl-link-status-extra-data:hover {
+  cursor: pointer;
+}
+
 .popover {
   font-size: 100%; /* Fix for Bootstrap 4.4 */
 }

@@ -290,6 +290,11 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             extra_data=json.dumps({'test_key': 'test_val'}),
             status_type='OK',
         )
+        self.event_status_init = self.event.set_status(
+            'INIT',
+            'Event initialized',
+            extra_data={'example_data': 'example_extra_data'},
+        )
 
     def test_details_modal(self):
         """Test details modal"""
@@ -317,6 +322,29 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             )
         )
 
+    def test_status_extra_modal(self):
+        """Test status extra data modal"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        button = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-tl-link-detail'
+        )
+        button.click()
+        WebDriverWait(self.selenium, 10).until(
+            EC.presence_of_element_located(
+                (By.CLASS_NAME, 'sodar-tl-link-status-extra-data')
+            )
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(
+                By.CLASS_NAME, 'sodar-tl-link-status-extra-data'
+            )
+        )
+
     def test_details_content(self):
         """Test details modal's content"""
         url = reverse(
@@ -338,7 +366,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         title = self.selenium.find_element(By.CLASS_NAME, 'modal-title')
         self.assertIn('Event Details: ', title.text)
         table = self.selenium.find_element(By.CLASS_NAME, 'table')
-        check_list = ['Timestamp', 'Event', 'Description', 'Status', 'OK']
+        check_list = ['Timestamp', 'Event', 'Description', 'Status', 'INIT']
         for check in check_list:
             self.assertIn(check, table.text)
 
