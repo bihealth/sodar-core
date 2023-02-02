@@ -13,30 +13,21 @@ from projectroles.views_ajax import (
     SODARBasePermissionAjaxView,
 )
 
-from timeline.models import ProjectEvent
+from timeline.models import ProjectEvent, ProjectEventStatus
 from timeline.templatetags.timeline_tags import get_status_style
 
 
 class EventDetailMixin:
     """Mixin for event detail retrieval helpers"""
 
-    def form_status_extra_url(self, event, status, idx):
+    def form_status_extra_url(self, status):
         """Return URL for extra status data"""
         if status.extra_data == {}:
             return None
-        if event.project:
-            return reverse(
-                'timeline:ajax_extra_status_project',
-                kwargs={
-                    'projectevent': event.sodar_uuid,
-                    'eventstatus': status.sodar_uuid,
-                },
-            )
         else:
             return reverse(
-                'timeline:ajax_extra_status_site',
+                'timeline:ajax_extra_status',
                 kwargs={
-                    'projectevent': event.sodar_uuid,
                     'eventstatus': status.sodar_uuid,
                 },
             )
@@ -67,9 +58,7 @@ class EventDetailMixin:
                     'description': s.description,
                     'type': s.status_type,
                     'class': get_status_style(s),
-                    'extra_status_link': self.form_status_extra_url(
-                        event, s, idx
-                    ),
+                    'extra_status_link': self.form_status_extra_url(s),
                 }
             )
         return ret
@@ -206,18 +195,8 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
             'timeline.view_classified_event', event.project
         ):
             return HttpResponseForbidden()
-        if 'eventstatus' in self.kwargs:
-            status = (
-                event.get_status_changes()
-                .filter(sodar_uuid=self.kwargs['eventstatus'])
-                .first()
-            )
-            return Response(
-                self.get_event_extra(event, status),
-                status=200,
-            )
-        else:
-            return Response(self.get_event_extra(event), status=200)
+
+        return Response(self.get_event_extra(event), status=200)
 
 
 class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):
@@ -249,16 +228,21 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
             'timeline.view_classified_site_event'
         ):
             return HttpResponseForbidden()
+        return Response(self.get_event_extra(event), status=200)
 
-        if 'eventstatus' in self.kwargs:
-            status = (
-                event.get_status_changes()
-                .filter(sodar_uuid=self.kwargs['eventstatus'])
-                .first()
-            )
-            return Response(
-                self.get_event_extra(event, status),
-                status=200,
-            )
-        else:
-            return Response(self.get_event_extra(event), status=200)
+
+class EventStatusExtraAjaxView(
+    EventExtraDataMixin, SODARBasePermissionAjaxView
+):
+    """Ajax view for retrieving event status extra data for events"""
+
+    permission_required = 'timeline.view_status_extra'
+
+    def get(self, request, *args, **kwargs):
+        status = ProjectEventStatus.objects.filter(
+            sodar_uuid=self.kwargs['eventstatus']
+        ).first()
+        return Response(
+            self.get_event_extra(status.event, status),
+            status=200,
+        )

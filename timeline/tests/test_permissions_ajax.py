@@ -271,92 +271,11 @@ class TestTimelineAjaxPermissions(
         )
         self.assert_response(url, self.anonymous, 403)
 
-    def test_status_extra_data_project(self):
-        """Test ProjectEventExtraDataAjaxView permissions"""
-        url = reverse(
-            'timeline:ajax_extra_status_project',
-            kwargs={
-                'projectevent': self.event.sodar_uuid,
-                'eventstatus': self.event_status.sodar_uuid,
-            },
-        )
-        good_users = [
-            self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
-        ]
-        bad_users = [
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 403)
-        self.project.set_public()
-        self.assert_response(url, self.anonymous, 403)
-
-    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_status_extra_data_project_anon(self):
-        """Test SiteEventDetailAjaxView permissions with anonymous access"""
-        url = reverse(
-            'timeline:ajax_extra_status_site',
-            kwargs={
-                'projectevent': self.site_event.sodar_uuid,
-                'eventstatus': self.site_event_status.sodar_uuid,
-            },
-        )
-        self.assert_response(url, self.anonymous, 403)
-
-    def test_status_extra_data_project_classified(self):
-        """Test ProjectEventExtraDataAjaxView permissions with classified event"""
-        self.event.classified = True
-        self.event.save()
-        url = reverse(
-            'timeline:ajax_extra_status_project',
-            kwargs={
-                'projectevent': self.event.sodar_uuid,
-                'eventstatus': self.event_status.sodar_uuid,
-            },
-        )
-        good_users = [
-            self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-        ]
-        bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 403)
-        self.project.set_public()
-        self.assert_response(url, self.anonymous, 403)
-
-    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_status_extra_data_project_classified_anon(self):
-        """Test ProjectEventExtraDataAjaxView permissions with classified event and anonymous access"""
-        self.event.classified = True
-        self.event.save()
-        url = reverse(
-            'timeline:ajax_extra_status_project',
-            kwargs={
-                'projectevent': self.event.sodar_uuid,
-                'eventstatus': self.event_status.sodar_uuid,
-            },
-        )
-        self.assert_response(url, self.anonymous, 403)
-        self.project.set_public()
-        self.assert_response(url, self.anonymous, 403)
-
-    def test_status_extra_data_site(self):
+    def test_status_extra_data(self):
         """Test SiteEventExtraDataAjaxView permissions"""
         url = reverse(
-            'timeline:ajax_extra_status_site',
+            'timeline:ajax_extra_status',
             kwargs={
-                'projectevent': self.site_event.sodar_uuid,
                 'eventstatus': self.site_event_status.sodar_uuid,
             },
         )
@@ -368,25 +287,23 @@ class TestTimelineAjaxPermissions(
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_status_extra_data_site_anon(self):
+    def test_status_extra_data_anon(self):
         """Test SiteEventDetailAjaxView permissions with anonymous access"""
         url = reverse(
-            'timeline:ajax_extra_status_site',
+            'timeline:ajax_extra_status',
             kwargs={
-                'projectevent': self.site_event.sodar_uuid,
                 'eventstatus': self.site_event_status.sodar_uuid,
             },
         )
         self.assert_response(url, self.anonymous, 403)
 
-    def test_status_extra_data_site_classified(self):
+    def test_status_extra_data_classified(self):
         """Test SiteEventExtraDataAjaxView permissions with classified event"""
         self.event.classified = True
         self.event.save()
         url = reverse(
-            'timeline:ajax_extra_status_site',
+            'timeline:ajax_extra_status',
             kwargs={
-                'projectevent': self.site_event.sodar_uuid,
                 'eventstatus': self.site_event_status.sodar_uuid,
             },
         )
@@ -398,14 +315,13 @@ class TestTimelineAjaxPermissions(
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_status_extra_data_site_classified_anon(self):
+    def test_status_extra_data_classified_anon(self):
         """Test SiteEventExtraDataAjaxView permissions with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
         url = reverse(
-            'timeline:ajax_extra_status_site',
+            'timeline:ajax_extra_status',
             kwargs={
-                'projectevent': self.site_event.sodar_uuid,
                 'eventstatus': self.site_event_status.sodar_uuid,
             },
         )
