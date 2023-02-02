@@ -63,7 +63,7 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
 
     def test_get(self):
         """Test project event detail retrieval"""
-        self.maxDiff = None
+
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -191,7 +191,7 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
 
     def test_get(self):
         """Test site event detail retrieval"""
-        self.maxDiff = None
+
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -299,7 +299,7 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
 
     def test_get(self):
         """Test event status extra data retrieval"""
-        self.maxDiff = None
+
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -319,7 +319,7 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
 
     def test_get_site(self):
         """Test site event status extra data retrieval"""
-        self.maxDiff = None
+
         with self.login(self.user):
             response = self.client.get(
                 reverse(
