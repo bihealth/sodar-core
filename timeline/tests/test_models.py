@@ -428,6 +428,7 @@ class TestProjectEventStatus(
         """Test ProjectEventStatus init"""
         expected = {
             'id': self.event_status_ok.pk,
+            'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
@@ -439,6 +440,7 @@ class TestProjectEventStatus(
         """Test ProjectEventStatus without user"""
         expected = {
             'id': self.event_status_ok.pk,
+            'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
@@ -487,7 +489,8 @@ class TestProjectEventStatus(
         """Test the get_status() function of ProjectEvent"""
         status = self.event.get_status()
         expected = {
-            'id': self.event_status_ok.pk,
+            'id': status.pk,
+            'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
@@ -521,6 +524,7 @@ class TestProjectEventStatus(
 
         expected = {
             'id': new_status.pk,
+            'sodar_uuid': new_status.sodar_uuid,
             'event': self.event.pk,
             'status_type': 'FAILED',
             'description': 'FAILED',

@@ -27,12 +27,18 @@ class EventDetailMixin:
         if event.project:
             return reverse(
                 'timeline:ajax_extra_status_project',
-                kwargs={'projectevent': event.sodar_uuid, 'idx': idx},
+                kwargs={
+                    'projectevent': event.sodar_uuid,
+                    'eventstatus': status.sodar_uuid,
+                },
             )
         else:
             return reverse(
                 'timeline:ajax_extra_status_site',
-                kwargs={'projectevent': event.sodar_uuid, 'idx': idx},
+                kwargs={
+                    'projectevent': event.sodar_uuid,
+                    'eventstatus': status.sodar_uuid,
+                },
             )
 
     def get_event_details(self, event):
@@ -200,10 +206,14 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
             'timeline.view_classified_event', event.project
         ):
             return HttpResponseForbidden()
-        if 'idx' in self.kwargs:
-            status = event.get_status_changes().reverse()
+        if 'eventstatus' in self.kwargs:
+            status = (
+                event.get_status_changes()
+                .filter(sodar_uuid=self.kwargs['eventstatus'])
+                .first()
+            )
             return Response(
-                self.get_event_extra(event, status[int(self.kwargs['idx'])]),
+                self.get_event_extra(event, status),
                 status=200,
             )
         else:
@@ -240,10 +250,14 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
         ):
             return HttpResponseForbidden()
 
-        if 'idx' in self.kwargs:
-            status = event.get_status_changes().reverse()
+        if 'eventstatus' in self.kwargs:
+            status = (
+                event.get_status_changes()
+                .filter(sodar_uuid=self.kwargs['eventstatus'])
+                .first()
+            )
             return Response(
-                self.get_event_extra(event, status[int(self.kwargs['idx'])]),
+                self.get_event_extra(event, status),
                 status=200,
             )
         else:

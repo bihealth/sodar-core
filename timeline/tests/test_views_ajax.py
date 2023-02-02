@@ -89,7 +89,7 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
                         'timeline:ajax_extra_status_project',
                         kwargs={
                             'projectevent': self.event.sodar_uuid,
-                            'idx': 0,
+                            'eventstatus': self.event_status_ok.sodar_uuid,
                         },
                     ),
                 },
@@ -217,7 +217,7 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
                         'timeline:ajax_extra_status_site',
                         kwargs={
                             'projectevent': self.event.sodar_uuid,
-                            'idx': 0,
+                            'eventstatus': self.event_status_ok.sodar_uuid,
                         },
                     ),
                 },
@@ -304,7 +304,10 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
             response = self.client.get(
                 reverse(
                     'timeline:ajax_extra_status_project',
-                    kwargs={'projectevent': self.event.sodar_uuid, 'idx': 0},
+                    kwargs={
+                        'projectevent': self.event.sodar_uuid,
+                        'eventstatus': self.event_status_init.sodar_uuid,
+                    },
                 ),
             )
         self.assertEqual(response.status_code, 200)
@@ -326,7 +329,7 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
                     'timeline:ajax_extra_status_site',
                     kwargs={
                         'projectevent': self.event_site.sodar_uuid,
-                        'idx': 0,
+                        'eventstatus': self.event_site_status_init.sodar_uuid,
                     },
                 ),
             )

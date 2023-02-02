@@ -106,6 +106,7 @@ class TestTimelineAPI(
             'status_type': 'INIT',
             'description': DEFAULT_MESSAGES['INIT'],
             'extra_data': {},
+            'sodar_uuid': status.sodar_uuid,
         }
         self.assertEqual(model_to_dict(status), expected_status)
 
@@ -150,6 +151,7 @@ class TestTimelineAPI(
             'status_type': 'OK',
             'description': 'OK',
             'extra_data': {},
+            'sodar_uuid': status.sodar_uuid,
         }
         self.assertEqual(model_to_dict(status), expected_status)
 
@@ -180,6 +182,7 @@ class TestTimelineAPI(
             'status_type': 'INIT',
             'description': custom_init_desc,
             'extra_data': {},
+            'sodar_uuid': status.sodar_uuid,
         }
         self.assertEqual(model_to_dict(status), expected_status)
 
