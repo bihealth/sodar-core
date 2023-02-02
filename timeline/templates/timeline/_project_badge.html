@@ -1,0 +1,8 @@
+<span class="badge badge-info mr-1" title="{{ event.project }}" data-toggle="tooltip" data-placement="top">
+  <i class="iconify"
+     data-icon="{% if event.project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
+  </i>
+  <a class="text-white" href="{% url 'projectroles:detail' project=event.project.sodar_uuid %}">
+    {{ event.project.title }}
+  </a>
+</span>

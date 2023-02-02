@@ -109,7 +109,10 @@ class TestProjectEventBase(ProjectMixin, RoleAssignmentMixin, TestCase):
 
 
 class TestProjectEvent(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase
+    ProjectEventMixin,
+    ProjectEventStatusMixin,
+    TestProjectEventBase,
+    ProjectEventObjectRefMixin,
 ):
     def setUp(self):
         super().setUp()
@@ -120,6 +123,15 @@ class TestProjectEvent(
             event_name='test_event',
             description='description',
             classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
+
+        self.obj_ref = self.make_object_ref(
+            event=self.event,
+            obj=self.assignment_owner,
+            label='test_label',
+            name='test_object_name',
+            uuid=self.assignment_owner.sodar_uuid,
             extra_data={'test_key': 'test_val'},
         )
 
@@ -268,6 +280,29 @@ class TestProjectEvent(
         self.event.save()
         expected = "ProjectEvent('N/A', 'test_event', 'N/A')"
         self.assertEqual(repr(self.event), expected)
+
+    def test_find_name(self):
+        """Test ProjectEvent.find() with event name"""
+        objects = ProjectEvent.objects.find(['test_event'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_description(self):
+        """Test ProjectEvent.find() with event description"""
+        objects = ProjectEvent.objects.find(['description'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_object(self):
+        """Test ProjectEvent.find() with object reference"""
+        objects = ProjectEvent.objects.find(['test_object_name'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_fail(self):
+        """Test ProjectEvent.find() with no matches"""
+        objects = ProjectEvent.objects.find(['asdfasdfafasdf'])
+        self.assertEqual(len(objects), 0)
 
 
 class TestProjectEventObjectRef(

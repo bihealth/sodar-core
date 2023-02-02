@@ -137,8 +137,8 @@ class ObjectTimelineMixin:
 
 
 class ProjectObjectTimelineView(ObjectTimelineMixin, ProjectTimelineView):
-    """View for displaying files and folders for a project"""
+    """View for displaying object timeline for a project"""
 
 
 class SiteObjectTimelineView(ObjectTimelineMixin, SiteTimelineView):
-    """View for displaying files and folders for a project"""
+    """View for displaying object timeline for site-wide events"""

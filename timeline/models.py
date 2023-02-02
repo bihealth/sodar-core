@@ -5,6 +5,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 # Projectroles dependency
 from projectroles.models import Project
@@ -45,6 +46,22 @@ class ProjectEventManager(models.Manager):
             event_objects__object_model=object_model,
             event_objects__object_uuid=object_uuid,
         ).order_by(order_by)
+
+    def find(self, search_terms, keywords=None):
+        """
+        Return events matching the query.
+
+        :param search_terms: Search terms (list of strings)
+        :param keywords: Optional search keywords as key/value pairs (dict)
+        :return: QuerySet of ProjectEvent objects
+        """
+        objects = super().get_queryset().order_by('event_name')
+        term_query = Q()
+        for t in search_terms:
+            term_query.add(Q(event_name__icontains=t), Q.OR)
+            term_query.add(Q(description__icontains=t), Q.OR)
+            term_query.add(Q(event_objects__name__icontains=t), Q.OR)
+        return objects.filter(term_query)
 
 
 class ProjectEvent(models.Model):

@@ -1,4 +1,5 @@
 """Plugins for the Timeline app"""
+from django.utils.timezone import localtime
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -45,7 +46,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     app_permission = 'timeline.view_timeline'
 
     #: Enable or disable general search from project title bar
-    search_enable = False  # Not allowed for timeline
+    search_enable = True
+
+    #: List of search object types for the app
+    search_types = ['timeline']
+
+    #: Search results template
+    search_template = 'timeline/_search_results.html'
 
     #: App card template for the project details page
     details_template = 'timeline/_details_card.html'
@@ -67,6 +74,64 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'event_count': {
                 'label': 'Events',
                 'value': ProjectEvent.objects.all().count(),
+            }
+        }
+
+    def check_permission(self, user, event):
+        """Check if user has permission to view event"""
+        if event.project is not None:
+            if event.classified:
+                return user.has_perm(
+                    'timeline.view_classified_event', event.project
+                )
+            else:
+                return user.has_perm('timeline.view_timeline', event.project)
+        else:
+            if event.classified:
+                return user.has_perm('timeline.view_classified_site_event')
+            else:
+                return user.has_perm('timeline.view_site_timeline')
+
+    def search(self, search_terms, user, search_type=None, keywords=None):
+        """
+        Return app items based on one or more search terms, user, optional type
+        and optional keywords.
+
+        :param search_terms: Search terms to be joined with the OR operator
+                             (list of strings)
+        :param user: User object for user initiating the search
+        :param search_type: String
+        :param keywords: List (optional)
+        :return: Dict
+        """
+        items = []
+        if not search_type:
+            events = ProjectEvent.objects.find(search_terms, keywords)
+            items = list(events)
+            items.sort(
+                key=lambda x: localtime(x.get_timestamp()).strftime(
+                    '%Y-%m-%d %H:%M:%S'
+                ),
+                reverse=False,
+            )
+        elif search_type == 'timeline':
+            events = ProjectEvent.objects.find(search_terms, keywords)
+            items = list(events)
+            items.sort(
+                key=lambda x: localtime(x.get_timestamp()).strftime(
+                    '%Y-%m-%d %H:%M:%S'
+                ),
+                reverse=False,
+            )
+        if items:
+            items = [
+                event for event in items if self.check_permission(user, event)
+            ]
+        return {
+            'all': {
+                'title': 'Timeline Events',
+                'search_types': ['timeline'],
+                'items': items,
             }
         }
 

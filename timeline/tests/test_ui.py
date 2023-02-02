@@ -2,6 +2,7 @@
 import json
 
 from django.urls import reverse
+from urllib.parse import urlencode
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -407,3 +408,76 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
         btn = self.selenium.find_element(By.CLASS_NAME, 'sodar-tl-copy-btn')
         btn.click()
+
+
+class TestSearch(ProjectEventMixin, TestUIBase):
+    """Tests for the project search UI functionalities"""
+
+    def setUp(self):
+        super().setUp()
+        self.timeline = get_backend_api('timeline_backend')
+
+        # Init default event
+        self.event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            status_type='OK',
+        )
+
+        # Init default site event
+        self.site_event = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='test_site_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            status_type='OK',
+        )
+
+        # Init classified event
+        self.classified_event = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='classified_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            classified=True,
+        )
+
+        self.classified_site_event = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='classified_site_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            classified=True,
+        )
+
+    def test_search_results(self):
+        """Test search results"""
+        expected = [
+            (self.superuser, 4),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
+            (self.user_no_roles, 1),
+        ]
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
+        for user, count in expected:
+            self.login_and_redirect(user, url, wait_elem=None, wait_loc='ID')
+            elements = self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-project-list-item'
+            )
+            self.assertEqual(len(elements), count)
