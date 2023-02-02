@@ -242,6 +242,29 @@ class EventStatusExtraAjaxView(
         status = ProjectEventStatus.objects.filter(
             sodar_uuid=self.kwargs['eventstatus']
         ).first()
+        event = status.event
+        if event.project:
+            if (
+                not event.classified
+                and not request.user.has_perm(
+                    'timeline.view_timeline', event.project
+                )
+                or event.classified
+                and not request.user.has_perm(
+                    'timeline.view_classified_event', event.project
+                )
+            ):
+                return HttpResponseForbidden()
+        else:
+            if (
+                not event.classified
+                and not request.user.has_perm('timeline.view_site_timeline')
+                or event.classified
+                and not request.user.has_perm(
+                    'timeline.view_classified_site_event'
+                )
+            ):
+                return HttpResponseForbidden()
         return Response(
             self.get_event_extra(status.event, status),
             status=200,
