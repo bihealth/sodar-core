@@ -10,7 +10,7 @@ from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 from sodarcache.models import JSONCacheItem
 
 
-# Global constants from settings
+# SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
@@ -59,7 +59,6 @@ class TestJsonCacheItemBase(ProjectMixin, RoleAssignmentMixin, TestCase):
 class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
     def setUp(self):
         super().setUp()
-
         self.item = self.make_item(
             project=self.project,
             app_name=TEST_APP_NAME,

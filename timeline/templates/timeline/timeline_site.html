@@ -16,29 +16,34 @@
 {% endblock css %}
 
 {% block projectroles %}
-  {% if timeline_mode == 'site' %}
-    {% has_perm 'timeline.view_site_timeline' request.user project as can_view_timeline %}
-  {% endif %}
-  {% if timeline_mode == 'admin' %}
-    {% has_perm 'timeline.view_site_admin' request.user project as can_view_timeline %}
-  {% endif %}
 
+{% if timeline_mode == 'site' %}
+  {% has_perm 'timeline.view_site_timeline' request.user project as can_view_timeline %}
+{% elif timeline_mode == 'admin' %}
+  {% has_perm 'timeline.view_site_admin' request.user project as can_view_timeline %}
+{% endif %}
 {% get_plugin_lookup as plugin_lookup %}
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
-  <h2><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h2>
-  {% if timeline_mode == 'object' %}
-      <div class="ml-auto">
-        <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary ml-auto" role="button">
-        <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
-        Back to Events
-        </a>
-      </div>
+  <h2>
+    {% if timeline_mode == 'site' %}
+      <i class="iconify" data-icon="mdi:clock-time-eight"></i>
+    {% else %}
+      <i class="iconify" data-icon="mdi:cog-counterclockwise"></i>
     {% endif %}
+    {{ timeline_title }}
+  </h2>
+  {% if timeline_mode == 'object' %}
+    <div class="ml-auto">
+      <a href="{{ request.META.HTTP_REFERER }}"
+         class="btn btn-secondary ml-auto" role="button">
+        <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back
+      </a>
+    </div>
+  {% endif %}
 </div>
 
 <div class="container-fluid sodar-page-container">
-
   {% if object_list.count > 0 %}
     <div class="card mb-3" id="sodar-tl-event-list">
       <div class="card-body p-0">
@@ -76,15 +81,26 @@
   <script type="text/javascript">
       tourEnabled = true;
 
-      tour.addStep('event_list', {
-          title: 'Site-Wide Event List',
-          text: 'This is the list of site-wide events not linked to any ' +
-              '{% get_display_name "PROJECT" %}' + ', organized by newest ' +
-              'first.',
-          attachTo: '#sodar-tl-event-list top',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
+      {% if timeline_mode == 'site' %}
+        tour.addStep('event_list', {
+            title: 'Site-Wide Event List',
+            text: 'This is the list of site-wide events not linked to any ' +
+                '{% get_display_name "PROJECT" %}' + ', sorted by newest ' +
+                'first.',
+            attachTo: '#sodar-tl-event-list top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+      {% elif timeline_mode == 'admin' %}
+        tour.addStep('event_list', {
+            title: 'All Timeline Events',
+            text: 'This view lists all timeline events on the site for ' +
+                  'administration purposes, sorted by newest first.',
+            attachTo: '#sodar-tl-event-list top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+      {% endif %}
 
       tour.addStep('event_details', {
           title: 'Event Details',

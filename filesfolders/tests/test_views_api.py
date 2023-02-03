@@ -3,6 +3,7 @@
 import json
 
 from django.urls import reverse
+
 from test_plus.test import APITestCase
 
 # Projectroles dependency
@@ -164,7 +165,6 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
                 kwargs={'folder': self.folder.sodar_uuid},
             )
         )
-
         self.assertEqual(response.status_code, 200, msg=response.data)
         expected = {
             'name': self.folder.name,
@@ -190,7 +190,6 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
 
     def test_update(self):
         """Test update of Folder model through API"""
-
         folder_data = {
             'name': 'UPDATED Folder',
             'flag': 'FLAG',
@@ -204,9 +203,7 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             method='PUT',
             data=folder_data,
         )
-
         self.assertEqual(response.status_code, 200, msg=response.data)
-
         self.folder.refresh_from_db()
         expected = {
             **folder_data,
@@ -227,10 +224,8 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             ),
             method='DELETE',
         )
-
         self.assertEqual(response.status_code, 204, msg=response.data)
         self.assertIsNone(response.data)
-
         with self.assertRaises(Folder.DoesNotExist):
             Folder.objects.get(
                 project=self.project, sodar_uuid=self.folder.sodar_uuid
@@ -263,9 +258,7 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
                 kwargs={'project': self.project.sodar_uuid},
             )
         )
-
         self.assertEqual(response.status_code, 200, msg=response.data)
-
         expected = [
             {
                 'name': self.file.name,
@@ -317,7 +310,6 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
     def test_create_in_folder(self):
         """Test creation of a file inside a folder"""
         file_data = {**self.file_data, 'folder': str(self.folder.sodar_uuid)}
-
         response = self.request_knox(
             reverse(
                 'filesfolders:api_file_list_create',
@@ -327,14 +319,12 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
             format='multipart',
             data=file_data,
         )
-
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_file = File.objects.filter(
             sodar_uuid=response.data['sodar_uuid']
         ).first()
         self.assertIsNotNone(new_file)
         self.assertNotEqual(new_file.file.file.size, 0)
-
         expected = {
             **file_data,
             'owner': self.get_serialized_user(self.user),
@@ -395,9 +385,7 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
                 kwargs={'file': self.file.sodar_uuid},
             )
         )
-
         self.assertEqual(response.status_code, 200, msg=response.data)
-
         expected = {
             'name': self.file.name,
             'folder': None,
@@ -468,10 +456,8 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             ),
             method='DELETE',
         )
-
         self.assertEqual(response.status_code, 204, msg=response.data)
         self.assertIsNone(response.data)
-
         with self.assertRaises(File.DoesNotExist):
             File.objects.get(
                 project=self.project, sodar_uuid=self.file.sodar_uuid
@@ -524,9 +510,7 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
                 kwargs={'project': self.project.sodar_uuid},
             )
         )
-
         self.assertEqual(response.status_code, 200, msg=response.data)
-
         expected = [
             {
                 'name': self.hyperlink.name,
@@ -577,7 +561,6 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
             **self.hyperlink_data,
             'folder': str(self.folder.sodar_uuid),
         }
-
         response = self.request_knox(
             reverse(
                 'filesfolders:api_hyperlink_list_create',
@@ -586,13 +569,11 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
             method='POST',
             data=hyperlink_data,
         )
-
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_link = HyperLink.objects.filter(
             sodar_uuid=response.data['sodar_uuid']
         ).first()
         self.assertIsNotNone(new_link)
-
         expected = {
             **hyperlink_data,
             'owner': self.get_serialized_user(self.user),
@@ -628,16 +609,13 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
 
     def test_retrieve(self):
         """Test retrieval of HyperLink model through API"""
-
         response = self.request_knox(
             reverse(
                 'filesfolders:api_hyperlink_retrieve_update_destroy',
                 kwargs={'hyperlink': self.hyperlink.sodar_uuid},
             )
         )
-
         self.assertEqual(response.status_code, 200, msg=response.data)
-
         expected = {
             'name': self.hyperlink.name,
             'folder': None,
@@ -671,7 +649,6 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             'description': 'UPDATED Description',
             'url': 'http://www.bihealth.org',
         }
-
         response = self.request_knox(
             reverse(
                 'filesfolders:api_hyperlink_retrieve_update_destroy',
@@ -680,7 +657,6 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             method='PUT',
             data=hyperlink_data,
         )
-
         self.assertEqual(response.status_code, 200, msg=response.data)
         self.hyperlink.refresh_from_db()
         self.assertEqual(self.hyperlink.name, hyperlink_data['name'])
@@ -688,7 +664,6 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         self.assertEqual(
             self.hyperlink.description, hyperlink_data['description']
         )
-
         expected = {
             **hyperlink_data,
             'folder': None,
@@ -710,6 +685,5 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             ),
             method='DELETE',
         )
-
         self.assertEqual(response.status_code, 204, msg=response.data)
         self.assertIsNone(response.data)

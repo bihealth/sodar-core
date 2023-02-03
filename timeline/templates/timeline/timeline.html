@@ -18,51 +18,47 @@
 
 {% block projectroles_extend %}
 
-  {% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
-  {% get_plugin_lookup as plugin_lookup %}
+{% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
+{% get_plugin_lookup as plugin_lookup %}
 
-  <div class="row sodar-subtitle-container bg-white sticky-top">
-    <h3><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h3>
-    {% if timeline_mode == 'object' %}
-      <div class="ml-auto">
-        <a href="{% url 'timeline:list_project' project=project.sodar_uuid %}"
-           class="btn btn-secondary ml-auto"
-           role="button">
-          <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
-          {% get_display_name 'PROJECT' title=True %} Timeline
-        </a>
+<div class="row sodar-subtitle-container bg-white sticky-top">
+  <h3><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h3>
+  {% if timeline_mode == 'object' %}
+    <div class="ml-auto">
+      <a href="{{ request.META.HTTP_REFERER }}"
+         class="btn btn-secondary ml-auto" role="button">
+        <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<div class="container-fluid sodar-page-container">
+  {% if object_list.count > 0 %}
+    <div class="card mb-3" id="sodar-tl-event-list">
+      <div class="card-body p-0">
+        <table class="table table-striped sodar-card-table" id="sodar-tl-table">
+          <thead>
+            {% include 'timeline/_list_header.html' %}
+          </thead>
+          <tbody>
+            {% for event in object_list %}
+              {% include 'timeline/_list_item.html' %}
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
+    </div>
+    {% if is_paginated %}
+      {% include 'projectroles/_pagination.html' with pg_small=False %}
     {% endif %}
-  </div>
-
-  <div class="container-fluid sodar-page-container">
-
-    {% if object_list.count > 0 %}
-      <div class="card mb-3" id="sodar-tl-event-list">
-        <div class="card-body p-0">
-          <table class="table table-striped sodar-card-table" id="sodar-tl-table">
-            <thead>
-              {% include 'timeline/_list_header.html' %}
-            </thead>
-            <tbody>
-              {% for event in object_list %}
-                {% include 'timeline/_list_item.html' %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      {% if is_paginated %}
-        {% include 'projectroles/_pagination.html' with pg_small=False %}
-      {% endif %}
-
-    {% else %}
-      <div class="alert alert-info" role="alert">
-        No timeline events found for this
-        {% if timeline_mode == 'project' %}{% get_display_name 'PROJECT' %}{% else %}object{% endif %}.
-      </div>
-    {% endif %}
-  </div> <!-- sodar-page-container -->
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      No timeline events found for this
+      {% if timeline_mode == 'project' %}{% get_display_name 'PROJECT' %}{% else %}object{% endif %}.
+    </div>
+  {% endif %}
+</div> <!-- sodar-page-container -->
 
 {% endblock projectroles_extend %}
 
@@ -79,7 +75,7 @@
       tour.addStep('event_list', {
           title: 'Project Event List',
           text: 'This is the list of events for the ' +
-              '{% get_display_name "PROJECT" %}' + ' or object, organized by ' +
+              '{% get_display_name "PROJECT" %}' + ' or object, sorted by ' +
               'newest first.',
           attachTo: '#sodar-tl-event-list top',
           advanceOn: '.docs-link click',

@@ -1,7 +1,7 @@
 """Functions for project tagging/starring in the projectroles app"""
 # NOTE: This can be expanded to include other types of tags later on
 
-from .models import ProjectUserTag, PROJECT_TAG_STARRED
+from projectroles.models import ProjectUserTag, PROJECT_TAG_STARRED
 
 
 def get_tag_state(project, user, name=PROJECT_TAG_STARRED):

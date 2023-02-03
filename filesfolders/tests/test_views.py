@@ -22,6 +22,9 @@ from filesfolders.tests.test_models import (
 from filesfolders.utils import build_public_url
 
 
+app_settings = AppSettingAPI()
+
+
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
@@ -39,16 +42,11 @@ ZIP_PATH_NO_FILES = TEST_DATA_PATH + 'no_files.zip'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
-# App settings API
-app_settings = AppSettingAPI()
-
-
 class TestViewsBaseMixin(
     ProjectMixin, RoleAssignmentMixin, FileMixin, FolderMixin, HyperLinkMixin
 ):
     def setUp(self):
         self.req_factory = RequestFactory()
-
         # Init roles
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
@@ -58,7 +56,6 @@ class TestViewsBaseMixin(
             name=PROJECT_ROLE_CONTRIBUTOR
         )[0]
         self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
-
         # Init superuser
         self.user = self.make_user('superuser')
         self.user.is_staff = True
@@ -72,12 +69,10 @@ class TestViewsBaseMixin(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Change public link setting from default
         app_settings.set(
             APP_NAME, 'allow_public_links', True, project=self.project
         )
-
         # Init file content
         self.file_content = bytes('content'.encode('utf-8'))
         self.file_content_alt = bytes('alt content'.encode('utf-8'))
@@ -95,7 +90,6 @@ class TestViewsBaseMixin(
             public_url=True,
             secret=SECRET,
         )
-
         # Init folder
         self.folder = self.make_folder(
             name='folder',
@@ -104,7 +98,6 @@ class TestViewsBaseMixin(
             owner=self.user,
             description='',
         )
-
         # Init link
         self.hyperlink = self.make_hyperlink(
             name='Link',
@@ -1490,7 +1483,7 @@ class TestBatchEditView(TestViewsBase):
         self.assertEqual(HyperLink.objects.all().count(), 0)
 
     def test_deletion_non_empty_folder(self):
-        """Test batch object deletion with a non-empty folder (should not be deleted)"""
+        """Test batch deletion with non-empty folder (should not be deleted)"""
         new_folder = self.make_folder(
             'new_folder', self.project, None, self.user, ''
         )
@@ -1566,7 +1559,7 @@ class TestBatchEditView(TestViewsBase):
         )
 
     def test_moving_name_exists(self):
-        """Test batch object moving with name existing in target (should not be moved)"""
+        """Test batch moving with name existing in target (should not be moved)"""
         target_folder = self.make_folder(
             'target_folder', self.project, None, self.user, ''
         )

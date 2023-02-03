@@ -51,7 +51,7 @@ PROJECTROLES_APP_SETTINGS = {
     #:         'local': False,  # Allow editing in target site forms if True
     #:     }
     'ip_restrict': {
-        'scope': 'PROJECT',
+        'scope': APP_SETTING_SCOPE_PROJECT,
         'type': 'BOOLEAN',
         'default': False,
         'label': 'IP restrict',
@@ -60,7 +60,7 @@ PROJECTROLES_APP_SETTINGS = {
         'local': False,
     },
     'ip_allowlist': {
-        'scope': 'PROJECT',
+        'scope': APP_SETTING_SCOPE_PROJECT,
         'type': 'JSON',
         'default': [],
         'label': 'IP allow list',
@@ -69,7 +69,7 @@ PROJECTROLES_APP_SETTINGS = {
         'local': False,
     },
     'user_email_additional': {
-        'scope': 'USER',
+        'scope': APP_SETTING_SCOPE_USER,
         'type': 'STRING',
         'default': '',
         'placeholder': 'email1@example.com;email2@example.com',

@@ -86,7 +86,7 @@ desired release tag or commit ID.
 .. code-block:: console
 
     -e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
-    django-sodar-core==0.11.1
+    django-sodar-core==0.12.0
 
 Install the requirements for development:
 

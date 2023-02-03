@@ -5,7 +5,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
-from .constants import get_sodar_constants
+from projectroles.constants import get_sodar_constants
 
 
 # Settings
@@ -44,7 +44,6 @@ def get_user_display_name(user, inc_user=False):
     """
     if user.name != '':
         return user.name + (' (' + user.username + ')' if inc_user else '')
-
     # If full name can't be found, return username
     return user.username
 
@@ -57,7 +56,6 @@ def build_secret(length=SECRET_LENGTH):
     :return: Randomized secret (string)
     """
     length = int(length) if int(length) <= 255 else 255
-
     return ''.join(
         random.SystemRandom().choice(string.ascii_lowercase + string.digits)
         for _ in range(length)
@@ -89,14 +87,11 @@ def get_expiry_date():
 def get_app_names():
     """Return list of names for locally installed non-django apps"""
     ret = []
-
     for a in settings.INSTALLED_APPS:
         s = a.split('.')
-
         if s[0] not in ['django', settings.SITE_PACKAGE]:
             if len(s) > 1 and 'apps' in s:
                 ret.append('.'.join(s[0 : s.index('apps')]))
             else:
                 ret.append(s[0])
-
     return sorted(ret)

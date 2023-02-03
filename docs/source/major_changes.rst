@@ -10,14 +10,16 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.12.0 (WIP)
-*************
+v0.12.0 (2023-02-03)
+********************
 
 Release Highlights
 ==================
 
 - Add project archiving
 - Add role ranking
+- Add timeline admin view for all events
+- Add timeline search
 - Add app settings retrieve/set REST API views
 - Add current user info Ajax API view
 - Add superuser info to REST API views
@@ -31,15 +33,6 @@ System Prerequisites
 --------------------
 
 The minimum Django version has been bumped to v3.2.17.
-
-Project Archiving Added
------------------------
-
-This release of SODAR Core adds the functionality to archive projects to make
-their data read-only for all users. You should update your project apps to
-support this behaviour.
-
-For more information, see :ref:`dev_project_app`.
 
 App Settings API Methods Renamed
 --------------------------------
@@ -82,6 +75,15 @@ Timeline get_current_status() Method Removed
 
 The deprecated ``ProjectEvent.get_current_status()`` method in the Timeline app
 has been removed. Please use ``get_status()`` instead.
+
+Project Archiving Added
+-----------------------
+
+This release of SODAR Core adds the functionality to archive projects to make
+their data read-only for all users. You should update your project apps to
+support this behaviour.
+
+For more information, see :ref:`dev_project_app`.
 
 
 v0.11.1 (2023-01-09)

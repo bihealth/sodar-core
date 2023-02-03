@@ -7,11 +7,11 @@ from django.forms.models import model_to_dict
 
 from test_plus.test import TestCase
 
-from filesfolders.models import File, FileData, Folder, HyperLink
-
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin
+
+from filesfolders.models import File, FileData, Folder, HyperLink
 
 
 # SODAR constants
@@ -180,13 +180,11 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(model_to_dict(subfolder), expected)
 
     def test_get_path(self):
-        """Test the get_irods_path() function in Folder"""
+        """Test get_irods_path() in Folder"""
         self.assertEqual(self.folder.get_path(), 'root/folder/')
 
     def test_get_path_subfolder(self):
-        """Test the get_irods_path() function in Folder for a subfolder"""
-
-        # Make subfolder
+        """Test get_irods_path() in Folder for a subfolder"""
         subfolder = self.make_folder(
             name='subfolder',
             project=self.project,
@@ -197,13 +195,11 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(subfolder.get_path(), 'root/folder/subfolder/')
 
     def test_is_empty(self):
-        """Test the is_empty() function in Folder for an empty folder"""
+        """Test is_empty() in Folder for an empty folder"""
         self.assertEqual(self.folder.is_empty(), True)
 
     def test_is_empty_nonempty(self):
-        """Test the is_empty() function in Folder for a non-empty folder"""
-
-        # Make hyperlink
+        """Test is_empty() in Folder for a non-empty folder"""
         self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
@@ -212,13 +208,10 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             owner=self.user_owner,
             description='',
         )
-
         self.assertEqual(self.folder.is_empty(), False)
 
     def test_has_in_path(self):
-        """Test the has_in_path() function in Folder"""
-
-        # Make subfolder
+        """Test has_in_path() in Folder"""
         subfolder = self.make_folder(
             name='subfolder',
             project=self.project,
@@ -226,14 +219,10 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             owner=self.user_owner,
             description='',
         )
-
         self.assertEqual(subfolder.has_in_path(self.folder), True)
 
     def test_has_in_path_false(self):
-        """Test the has_in_path() function in Folder with expected false
-        result"""
-
-        # Make subfolder
+        """Test has_in_path() in Folder with expected false result"""
         subfolder = self.make_folder(
             name='subfolder',
             project=self.project,
@@ -241,7 +230,6 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             owner=self.user_owner,
             description='',
         )
-
         self.assertEqual(self.folder.has_in_path(subfolder), False)
 
 

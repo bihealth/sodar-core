@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v0.12.0 (2023-02-03)
+====================
 
 Added
 -----
@@ -25,6 +25,11 @@ Added
     - ``cleanup_kwargs`` in ``assert_response_api()`` API test helper (#1088)
     - ``is_superuser`` in ``SODARUserSerializer`` (#1052)
     - Ajax view ``CurrentUserRetrieveAjaxView`` (#1053)
+- **Timeline**
+    - Admin view for all timeline events (#873)
+    - Search functionality (#1095)
+    - Back button in site event list object view (#1097)
+    - ``sodar_uuid`` field in ``ProjectEventStatus`` (#1112)
 
 Changed
 -------
@@ -40,12 +45,17 @@ Changed
     - Close Django admin warning modal on continue (#1114)
 - **Siteinfo**
     - Use project type display names in stats view (#1107)
+- **Timeline**
+    - Display status extra data in event details modal (#1096)
 
 Fixed
 -----
 
 - **Projectroles**
     - Crash from path URLs in ``get_project()`` (#1047)
+    - Initial owner user name in project create form not following convention (#1059)
+- **Timeline**
+    - Project references in ``timeline_site.html`` (#1058)
 
 Removed
 -------

@@ -1,7 +1,7 @@
 # Projectroles dependency
 from projectroles.plugins import BackendPluginPoint
 
-from .api import ExampleAPI
+from example_backend_app.api import ExampleAPI
 
 
 class BackendPlugin(BackendPluginPoint):
