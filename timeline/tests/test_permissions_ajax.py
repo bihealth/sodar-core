@@ -22,13 +22,13 @@ class TestTimelineAjaxPermissions(
         self.event = self.make_event(
             self.project, 'projectroles', self.user_owner, 'project_create'
         )
-        self.make_event_status(
+        self.event_status = self.make_event_status(
             self.event, 'OK', extra_data={'example_data': 'example_extra_data'}
         )
         self.site_event = self.make_event(
             None, 'projectroles', self.user_owner, 'test_event'
         )
-        self.make_event_status(
+        self.site_event_status = self.make_event_status(
             self.site_event,
             'OK',
             extra_data={'example_data': 'example_extra_data'},
@@ -37,9 +37,12 @@ class TestTimelineAjaxPermissions(
 
     def test_detail_project(self):
         """Test ProjectEventDetailAjaxView permissions"""
+        """Test ProjectEventDetailAjaxView permissions"""
         url = reverse(
             'timeline:ajax_detail_project',
-            kwargs={'projectevent': self.event.sodar_uuid},
+            kwargs={
+                'projectevent': self.event.sodar_uuid,
+            },
         )
         good_users = [
             self.superuser,
@@ -272,8 +275,10 @@ class TestTimelineAjaxPermissions(
     def test_status_extra_data_project(self):
         """Test ProjectEventExtraDataAjaxView permissions"""
         url = reverse(
-            'timeline:ajax_extra_status_project',
-            kwargs={'projectevent': self.event.sodar_uuid, 'idx': 0},
+            'timeline:ajax_extra_status',
+            kwargs={
+                'eventstatus': self.event_status.sodar_uuid,
+            },
         )
         good_users = [
             self.superuser,
@@ -295,8 +300,10 @@ class TestTimelineAjaxPermissions(
     def test_status_extra_data_project_anon(self):
         """Test SiteEventDetailAjaxView permissions with anonymous access"""
         url = reverse(
-            'timeline:ajax_extra_status_site',
-            kwargs={'projectevent': self.site_event.sodar_uuid, 'idx': 0},
+            'timeline:ajax_extra_status',
+            kwargs={
+                'eventstatus': self.site_event_status.sodar_uuid,
+            },
         )
         self.assert_response(url, self.anonymous, 403)
 
@@ -305,8 +312,10 @@ class TestTimelineAjaxPermissions(
         self.event.classified = True
         self.event.save()
         url = reverse(
-            'timeline:ajax_extra_status_project',
-            kwargs={'projectevent': self.event.sodar_uuid, 'idx': 0},
+            'timeline:ajax_extra_status',
+            kwargs={
+                'eventstatus': self.event_status.sodar_uuid,
+            },
         )
         good_users = [
             self.superuser,
@@ -330,8 +339,10 @@ class TestTimelineAjaxPermissions(
         self.event.classified = True
         self.event.save()
         url = reverse(
-            'timeline:ajax_extra_status_project',
-            kwargs={'projectevent': self.event.sodar_uuid, 'idx': 0},
+            'timeline:ajax_extra_status',
+            kwargs={
+                'eventstatus': self.event_status.sodar_uuid,
+            },
         )
         self.assert_response(url, self.anonymous, 403)
         self.project.set_public()
@@ -340,8 +351,10 @@ class TestTimelineAjaxPermissions(
     def test_status_extra_data_site(self):
         """Test SiteEventExtraDataAjaxView permissions"""
         url = reverse(
-            'timeline:ajax_extra_status_site',
-            kwargs={'projectevent': self.site_event.sodar_uuid, 'idx': 0},
+            'timeline:ajax_extra_status',
+            kwargs={
+                'eventstatus': self.site_event_status.sodar_uuid,
+            },
         )
         good_users = [
             self.superuser,
@@ -354,8 +367,10 @@ class TestTimelineAjaxPermissions(
     def test_status_extra_data_site_anon(self):
         """Test SiteEventDetailAjaxView permissions with anonymous access"""
         url = reverse(
-            'timeline:ajax_extra_status_site',
-            kwargs={'projectevent': self.site_event.sodar_uuid, 'idx': 0},
+            'timeline:ajax_extra_status',
+            kwargs={
+                'eventstatus': self.site_event_status.sodar_uuid,
+            },
         )
         self.assert_response(url, self.anonymous, 403)
 
@@ -364,8 +379,10 @@ class TestTimelineAjaxPermissions(
         self.event.classified = True
         self.event.save()
         url = reverse(
-            'timeline:ajax_extra_status_site',
-            kwargs={'projectevent': self.site_event.sodar_uuid, 'idx': 0},
+            'timeline:ajax_extra_status',
+            kwargs={
+                'eventstatus': self.site_event_status.sodar_uuid,
+            },
         )
         good_users = [
             self.superuser,
@@ -380,7 +397,9 @@ class TestTimelineAjaxPermissions(
         self.event.classified = True
         self.event.save()
         url = reverse(
-            'timeline:ajax_extra_status_site',
-            kwargs={'projectevent': self.site_event.sodar_uuid, 'idx': 0},
+            'timeline:ajax_extra_status',
+            kwargs={
+                'eventstatus': self.site_event_status.sodar_uuid,
+            },
         )
         self.assert_response(url, self.anonymous, 403)

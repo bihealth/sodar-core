@@ -308,6 +308,11 @@ class ProjectEventStatus(models.Model):
         default=dict, help_text='Additional status data as JSON'
     )
 
+    #: UUID for the status
+    sodar_uuid = models.UUIDField(
+        default=uuid.uuid4, unique=True, help_text='Status SODAR UUID'
+    )
+
     def __str__(self):
         return '{} ({})'.format(
             self.event.__str__(),
@@ -319,3 +324,7 @@ class ProjectEventStatus(models.Model):
         return 'ProjectEventStatus({})'.format(
             ', '.join(repr(v) for v in values)
         )
+
+    def get_project(self):
+        """Return the project for the event"""
+        return self.event.project

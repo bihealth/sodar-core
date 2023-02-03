@@ -86,10 +86,9 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
                         self.event_status_ok.timestamp
                     ),
                     'extra_status_link': reverse(
-                        'timeline:ajax_extra_status_project',
+                        'timeline:ajax_extra_status',
                         kwargs={
-                            'projectevent': self.event.sodar_uuid,
-                            'idx': 0,
+                            'eventstatus': self.event_status_ok.sodar_uuid,
                         },
                     ),
                 },
@@ -214,10 +213,9 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
                         self.event_status_ok.timestamp
                     ),
                     'extra_status_link': reverse(
-                        'timeline:ajax_extra_status_site',
+                        'timeline:ajax_extra_status',
                         kwargs={
-                            'projectevent': self.event.sodar_uuid,
-                            'idx': 0,
+                            'eventstatus': self.event_status_ok.sodar_uuid,
                         },
                     ),
                 },
@@ -303,8 +301,10 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
         with self.login(self.user):
             response = self.client.get(
                 reverse(
-                    'timeline:ajax_extra_status_project',
-                    kwargs={'projectevent': self.event.sodar_uuid, 'idx': 0},
+                    'timeline:ajax_extra_status',
+                    kwargs={
+                        'eventstatus': self.event_status_init.sodar_uuid,
+                    },
                 ),
             )
         self.assertEqual(response.status_code, 200)
@@ -323,10 +323,9 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
         with self.login(self.user):
             response = self.client.get(
                 reverse(
-                    'timeline:ajax_extra_status_site',
+                    'timeline:ajax_extra_status',
                     kwargs={
-                        'projectevent': self.event_site.sodar_uuid,
-                        'idx': 0,
+                        'eventstatus': self.event_site_status_init.sodar_uuid,
                     },
                 ),
             )
