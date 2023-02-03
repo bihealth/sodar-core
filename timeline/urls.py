@@ -20,6 +20,11 @@ urls_ui = [
         name='list_site',
     ),
     url(
+        regex=r'^site/all$',
+        view=views.AdminTimelineView.as_view(),
+        name='timeline_site_admin',
+    ),
+    url(
         regex=r'^(?P<project>[0-9a-f-]+)/(?P<object_model>[\w-]+)/'
         r'(?P<object_uuid>[0-9a-f-]+)$',
         view=views.ProjectObjectTimelineView.as_view(),
@@ -53,6 +58,11 @@ urls_ajax = [
         regex=r'^ajax/extra/site/(?P<projectevent>[0-9a-f-]+)$',
         view=views_ajax.SiteEventExtraAjaxView.as_view(),
         name='ajax_extra_site',
+    ),
+    url(
+        regex=r'^ajax/extra/status/(?P<eventstatus>[0-9-a-f-]+)$',
+        view=views_ajax.EventStatusExtraAjaxView.as_view(),
+        name='ajax_extra_status',
     ),
 ]
 

@@ -1,7 +1,8 @@
 """Tests for the remote projects API in the projectroles app"""
 
-from copy import deepcopy
 import uuid
+
+from copy import deepcopy
 
 from django.conf import settings
 from django.contrib import auth
@@ -19,17 +20,16 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     AppSetting,
 )
-
 from projectroles.remote_projects import RemoteProjectAPI
-from projectroles.utils import build_secret
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
-    SodarUserMixin,
+    SODARUserMixin,
     AppSettingMixin,
 )
+from projectroles.utils import build_secret
 
 
 User = auth.get_user_model()
@@ -133,7 +133,7 @@ class TestGetSourceData(
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
-    SodarUserMixin,
+    SODARUserMixin,
     TestCase,
 ):
     """Tests for the get_source_data() API function"""
@@ -148,9 +148,8 @@ class TestGetSourceData(
             name=PROJECT_ROLE_CONTRIBUTOR
         )[0]
         self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
-
         # Init an LDAP user on the source site
-        self.user_source = self._make_sodar_user(
+        self.user_source = self.make_sodar_user(
             username=SOURCE_USER_USERNAME,
             name=SOURCE_USER_NAME,
             first_name=SOURCE_USER_FIRST_NAME,
@@ -159,49 +158,46 @@ class TestGetSourceData(
         )
 
         # Init local category and project
-        self.category = self._make_project(
+        self.category = self.make_project(
             SOURCE_CATEGORY_TITLE, PROJECT_TYPE_CATEGORY, None
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             SOURCE_PROJECT_TITLE, PROJECT_TYPE_PROJECT, self.category
         )
-
         # Init role assignments
-        self.category_owner_as = self._make_assignment(
+        self.category_owner_as = self.make_assignment(
             self.category, self.user_source, self.role_owner
         )
-        self.project_owner_as = self._make_assignment(
+        self.project_owner_as = self.make_assignment(
             self.project, self.user_source, self.role_owner
         )
 
         # Init target site
-        self.target_site = self._make_site(
+        self.target_site = self.make_site(
             name=TARGET_SITE_NAME,
             url=TARGET_SITE_URL,
             mode=SITE_MODE_TARGET,
             description=TARGET_SITE_DESC,
             secret=TARGET_SITE_SECRET,
         )
-
         # Init peer site
-        self.peer_site = self._make_site(
+        self.peer_site = self.make_site(
             name=PEER_SITE_NAME,
             url=PEER_SITE_URL,
             mode=SITE_MODE_PEER,
             description=PEER_SITE_DESC,
             secret=PEER_SITE_SECRET,
         )
-
         self.remote_api = RemoteProjectAPI()
 
     def test_view_avail(self):
         """Test get data with project level of VIEW_AVAIL (view availability)"""
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_VIEW_AVAIL,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.peer_site,
             level=REMOTE_LEVEL_VIEW_AVAIL,
@@ -225,12 +221,12 @@ class TestGetSourceData(
 
     def test_read_info(self):
         """Test get data with project level of READ_INFO (read information)"""
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_READ_INFO,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.peer_site,
             level=REMOTE_LEVEL_READ_INFO,
@@ -271,13 +267,13 @@ class TestGetSourceData(
 
     def test_read_info_nested(self):
         """Test get data with READ_INFO and nested categories"""
-        sub_category = self._make_project(
+        sub_category = self.make_project(
             'SubCategory', PROJECT_TYPE_CATEGORY, parent=self.category
         )
-        self._make_assignment(sub_category, self.user_source, self.role_owner)
+        self.make_assignment(sub_category, self.user_source, self.role_owner)
         self.project.parent = sub_category
         self.project.save()
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_READ_INFO,
@@ -319,12 +315,12 @@ class TestGetSourceData(
 
     def test_read_roles(self):
         """Test get data with project level of READ_ROLES (read roles)"""
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.peer_site,
             level=REMOTE_LEVEL_READ_ROLES,
@@ -387,13 +383,13 @@ class TestGetSourceData(
     def test_revoked(self):
         """Test get data with project level of REVOKED"""
         user_source_new = self.make_user('new_source_user')
-        self._make_assignment(self.project, user_source_new, self.role_guest)
-        self._make_remote_project(
+        self.make_assignment(self.project, user_source_new, self.role_guest)
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_REVOKED,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.peer_site,
             level=REMOTE_LEVEL_REVOKED,
@@ -458,7 +454,7 @@ class TestSyncRemoteDataBase(
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
-    SodarUserMixin,
+    SODARUserMixin,
     AppSettingMixin,
     TestCase,
 ):
@@ -470,7 +466,6 @@ class TestSyncRemoteDataBase(
         self.admin_user.is_staff = True
         self.admin_user.is_superuser = True
         self.maxDiff = None
-
         # Init roles
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
@@ -482,14 +477,13 @@ class TestSyncRemoteDataBase(
         self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
         # Init source site
-        self.source_site = self._make_site(
+        self.source_site = self.make_site(
             name=SOURCE_SITE_NAME,
             url=SOURCE_SITE_URL,
             mode=SITE_MODE_SOURCE,
             description=SOURCE_SITE_DESC,
             secret=SOURCE_SITE_SECRET,
         )
-
         self.remote_api = RemoteProjectAPI()
 
         # Default data to receive from source when testing site in target mode
@@ -645,7 +639,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             }
         )
         original_data = deepcopy(self.default_data)
-
         # Do sync
         self.remote_api.sync_remote_data(self.source_site, self.default_data)
 
@@ -661,7 +654,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
         new_user2 = User.objects.get(username=SOURCE_USER2_USERNAME)
         new_user3 = User.objects.get(username=SOURCE_USER3_USERNAME)
         new_user4 = User.objects.get(username=SOURCE_USER4_USERNAME)
-
         category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
         expected = {
             'id': category_obj.pk,
@@ -670,6 +662,7 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'public_guest_access': False,
+            'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
@@ -732,6 +725,7 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'public_guest_access': False,
+            'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
@@ -926,7 +920,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
         remote_data['app_settings'][PR_IP_RESTRICT_UUID]['local'] = True
         remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['local'] = True
         original_data = deepcopy(remote_data)
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         expected = original_data
@@ -970,7 +963,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             },
         }
         original_data = deepcopy(remote_data)
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 3)
@@ -989,6 +981,7 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'public_guest_access': False,
+            'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE + ' / ' + new_project_title,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(new_project_uuid),
@@ -1041,7 +1034,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
         remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE_UUID
         ]['user'] = 'source_admin'
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1056,7 +1048,7 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
 
     def test_create_category_conflict(self):
         """Test sync with conflict in local categories (should fail)"""
-        self._make_project(
+        self.make_project(
             title=SOURCE_CATEGORY_TITLE,
             type=PROJECT_TYPE_CATEGORY,
             parent=None,
@@ -1067,7 +1059,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         remote_data = self.default_data
-
         # Do sync, assert an exception is raised
         with self.assertRaises(ValueError):
             self.remote_api.sync_remote_data(self.source_site, remote_data)
@@ -1088,7 +1079,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'level'
         ] = REMOTE_LEVEL_READ_INFO
         original_data = deepcopy(remote_data)
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 0)
@@ -1118,7 +1108,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'user': local_user_username,
             'role': self.role_contributor.name,
         }
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         # Assert database status (the new user and role should not be created)
@@ -1151,7 +1140,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'user': local_user_username,
             'role': self.role_contributor.name,
         }
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1180,7 +1168,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'user': local_user_username,
             'role': self.role_contributor.name,
         }
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1213,7 +1200,6 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
                 'role': self.role_owner.name,
             }
         }
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1242,14 +1228,12 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'email': SOURCE_USER_EMAIL,
             'groups': ['system'],
         }
-
         remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
             role_uuid: {
                 'user': local_user_username,
                 'role': self.role_owner.name,
             }
         }
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1270,7 +1254,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         super().setUp()
 
         # Set up target category and project
-        self.category_obj = self._make_project(
+        self.category_obj = self.make_project(
             title='NewCategoryTitle',
             type=PROJECT_TYPE_CATEGORY,
             parent=None,
@@ -1278,7 +1262,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             readme='New readme',
             sodar_uuid=SOURCE_CATEGORY_UUID,
         )
-        self.project_obj = self._make_project(
+        self.project_obj = self.make_project(
             title='NewProjectTitle',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category_obj,
@@ -1288,28 +1272,28 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         )
 
         # Set up user and roles
-        self.target_user = self._make_sodar_user(
+        self.target_user = self.make_sodar_user(
             username=SOURCE_USER_USERNAME,
             name='NewFirstName NewLastName',
             first_name='NewFirstName',
             last_name='NewLastName',
             email='newemail@example.com',
         )
-        self.c_owner_obj = self._make_assignment(
+        self.c_owner_obj = self.make_assignment(
             self.category_obj, self.target_user, self.role_owner
         )
-        self.p_owner_obj = self._make_assignment(
+        self.p_owner_obj = self.make_assignment(
             self.project_obj, self.target_user, self.role_owner
         )
 
         # Set up RemoteProject objects
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.category_obj.sodar_uuid,
             project=self.category_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project_obj.sodar_uuid,
             project=self.project_obj,
             site=self.source_site,
@@ -1328,8 +1312,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
                 'user_display': PEER_SITE_USER_DISPLAY,
             }
         )
-
-        self._make_remote_project(
+        self.make_remote_project(
             project_uuid=self.project_obj.sodar_uuid,
             project=self.project_obj,
             site=self.peer_site,
@@ -1337,7 +1320,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         )
 
         # Init IP restrict setting
-        self._make_setting(
+        self.make_setting(
             app_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
@@ -1346,7 +1329,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             sodar_uuid=PR_IP_RESTRICT_UUID,
         )
         # Init IP allowlist setting
-        self._make_setting(
+        self.make_setting(
             app_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
@@ -1402,7 +1385,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['value_json'] = [
             '192.168.1.1'
         ]
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1413,7 +1395,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         self.assertEqual(AppSetting.objects.count(), 2)
 
         new_user = User.objects.get(username=new_user_username)
-
         self.category_obj.refresh_from_db()
         expected = {
             'id': self.category_obj.pk,
@@ -1422,6 +1403,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'public_guest_access': False,
+            'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
@@ -1448,6 +1430,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': self.category_obj.pk,
             'public_guest_access': False,
+            'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
@@ -1604,7 +1587,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             '192.168.1.1'
         ]
         original_data = deepcopy(remote_data)
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         app_setting_ip_restrict_obj = AppSetting.objects.get(
@@ -1643,7 +1625,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         )
         app_setting_ip_restrict_dict.pop('id')
         app_setting_ip_allowlist_dict.pop('id')
-
         self.assertEqual(app_setting_ip_allowlist_dict, expected_ip_allowlist)
         self.assertEqual(app_setting_ip_restrict_dict, expected_ip_restrict)
 
@@ -1657,7 +1638,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
     def test_update_app_setting_no_app(self):
         """Test update with app setting for app not present on target site"""
         self.assertEqual(AppSetting.objects.count(), 2)
-
         remote_data = self.default_data
         setting_uuid = str(uuid.uuid4())
         setting_name = 'NOT_A_VALID_SETTING'
@@ -1672,23 +1652,21 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'user_uuid': None,
             'local': False,
         }
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
-
         # Make sure setting was not set
         self.assertIsNone(AppSetting.objects.filter(name=setting_name).first())
 
     def test_update_revoke(self):
         """Test sync with existing project data and REVOKED access"""
         new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
-        target_user2 = self._make_sodar_user(
+        target_user2 = self.make_sodar_user(
             username=new_user_username,
             name='Some OtherName',
             first_name='Some',
             last_name='OtherName',
             email='othername@example.com',
         )
-        self._make_assignment(
+        self.make_assignment(
             self.project_obj, target_user2, self.role_contributor
         )
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1703,7 +1681,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'level'
         ] = REMOTE_LEVEL_REVOKED
         remote_data['projects'][SOURCE_PROJECT_UUID]['remote_sites'] = []
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1713,7 +1690,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         new_user = User.objects.get(username=new_user_username)
-
         # Assert removal of role assignment
         with self.assertRaises(RoleAssignment.DoesNotExist):
             RoleAssignment.objects.get(
@@ -1733,7 +1709,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         # Add new user and contributor role in target site
         new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
         new_user = self.make_user(new_user_username)
-        new_role_obj = self._make_assignment(
+        new_role_obj = self.make_assignment(
             self.project_obj, new_user, self.role_contributor
         )
         new_role_uuid = str(new_role_obj.sodar_uuid)
@@ -1746,7 +1722,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
 
         remote_data = self.default_data
         original_data = deepcopy(remote_data)
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1780,7 +1755,6 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
 
         remote_data = self.default_data
         original_data = deepcopy(remote_data)
-
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1797,6 +1771,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'public_guest_access': False,
+            'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
@@ -1823,6 +1798,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': self.category_obj.pk,
             'public_guest_access': False,
+            'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),

@@ -28,7 +28,7 @@ class ProjectEventMixin:
     """Helper mixin for ProjectEvent creation"""
 
     @classmethod
-    def _make_event(
+    def make_event(
         cls,
         project,
         app,
@@ -58,7 +58,7 @@ class ProjectEventObjectRefMixin:
     """Helper mixin for ProjectEventObjectRef creation"""
 
     @classmethod
-    def _make_object_ref(cls, event, obj, label, name, uuid, extra_data=None):
+    def make_object_ref(cls, event, obj, label, name, uuid, extra_data=None):
         values = {
             'event': event,
             'label': label,
@@ -76,7 +76,7 @@ class ProjectEventStatusMixin:
     """Helper mixin for ProjectEventStatus creation"""
 
     @classmethod
-    def _make_event_status(
+    def make_event_status(
         cls, event, status_type, description='', extra_data=None
     ):
         values = {
@@ -96,30 +96,42 @@ class TestProjectEventBase(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.user_owner = self.make_user('owner')
 
         # Init project, role and assignment
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
             name=PROJECT_ROLE_DELEGATE
         )[0]
-        self.assignment_owner = self._make_assignment(
+        self.assignment_owner = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
 
 
 class TestProjectEvent(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase
+    ProjectEventMixin,
+    ProjectEventStatusMixin,
+    TestProjectEventBase,
+    ProjectEventObjectRefMixin,
 ):
     def setUp(self):
         super().setUp()
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
             event_name='test_event',
             description='description',
             classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
+
+        self.obj_ref = self.make_object_ref(
+            event=self.event,
+            obj=self.assignment_owner,
+            label='test_label',
+            name='test_object_name',
+            uuid=self.assignment_owner.sodar_uuid,
             extra_data={'test_key': 'test_val'},
         )
 
@@ -141,7 +153,7 @@ class TestProjectEvent(
 
     def test_initialization_no_project(self):
         """Test ProjectEvent initialization with no project"""
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=None,
             app='projectroles',
             user=self.user_owner,
@@ -166,7 +178,7 @@ class TestProjectEvent(
 
     def test_initialization_no_user(self):
         """Test ProjectEvent initialization with no user"""
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=None,
@@ -191,7 +203,7 @@ class TestProjectEvent(
 
     def test_initialization_plugin(self):
         """Test ProjectEvent initialization with specific plugin name"""
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=None,
             app='projectroles',
             plugin='plugin_name',
@@ -269,6 +281,29 @@ class TestProjectEvent(
         expected = "ProjectEvent('N/A', 'test_event', 'N/A')"
         self.assertEqual(repr(self.event), expected)
 
+    def test_find_name(self):
+        """Test ProjectEvent.find() with event name"""
+        objects = ProjectEvent.objects.find(['test_event'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_description(self):
+        """Test ProjectEvent.find() with event description"""
+        objects = ProjectEvent.objects.find(['description'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_object(self):
+        """Test ProjectEvent.find() with object reference"""
+        objects = ProjectEvent.objects.find(['test_object_name'])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_fail(self):
+        """Test ProjectEvent.find() with no matches"""
+        objects = ProjectEvent.objects.find(['asdfasdfafasdf'])
+        self.assertEqual(len(objects), 0)
+
 
 class TestProjectEventObjectRef(
     ProjectEventMixin, ProjectEventObjectRefMixin, TestProjectEventBase
@@ -276,7 +311,7 @@ class TestProjectEventObjectRef(
     def setUp(self):
         super().setUp()
 
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
@@ -286,7 +321,7 @@ class TestProjectEventObjectRef(
             extra_data={'test_key': 'test_val'},
         )
 
-        self.obj_ref = self._make_object_ref(
+        self.obj_ref = self.make_object_ref(
             event=self.event,
             obj=self.assignment_owner,
             label='test_label',
@@ -327,7 +362,7 @@ class TestProjectEventObjectRef(
 
         # Init new user and role
         new_user = self.make_user('new_user')
-        new_as = self._make_assignment(
+        new_as = self.make_assignment(
             self.project, new_user, self.role_delegate
         )
 
@@ -365,7 +400,7 @@ class TestProjectEventStatus(
     def setUp(self):
         super().setUp()
 
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=self.user_owner,
@@ -375,14 +410,14 @@ class TestProjectEventStatus(
             extra_data={'test_key': 'test_val'},
         )
 
-        self.event_status_submit = self._make_event_status(
+        self.event_status_submit = self.make_event_status(
             event=self.event,
             status_type='SUBMIT',
             description='SUBMIT',
             extra_data={'test_key': 'test_val'},
         )
 
-        self.event_status_ok = self._make_event_status(
+        self.event_status_ok = self.make_event_status(
             event=self.event,
             status_type='OK',
             description='OK',
@@ -393,6 +428,7 @@ class TestProjectEventStatus(
         """Test ProjectEventStatus init"""
         expected = {
             'id': self.event_status_ok.pk,
+            'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
@@ -404,12 +440,13 @@ class TestProjectEventStatus(
         """Test ProjectEventStatus without user"""
         expected = {
             'id': self.event_status_ok.pk,
+            'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
             'extra_data': {'test_key': 'test_val'},
         }
-        self.event = self._make_event(
+        self.event = self.make_event(
             project=self.project,
             app='projectroles',
             user=None,
@@ -452,7 +489,8 @@ class TestProjectEventStatus(
         """Test the get_status() function of ProjectEvent"""
         status = self.event.get_status()
         expected = {
-            'id': self.event_status_ok.pk,
+            'id': status.pk,
+            'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
@@ -486,6 +524,7 @@ class TestProjectEventStatus(
 
         expected = {
             'id': new_status.pk,
+            'sodar_uuid': new_status.sodar_uuid,
             'event': self.event.pk,
             'status_type': 'FAILED',
             'description': 'FAILED',

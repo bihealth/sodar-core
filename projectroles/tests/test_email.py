@@ -63,20 +63,20 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.user.save()
 
         # Init projects
-        self.category = self._make_project(
+        self.category = self.make_project(
             'top_category', PROJECT_TYPE_CATEGORY, None
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             self.category, self.user_owner, self.role_owner
         )
 
-        self.project = self._make_project(
+        self.project = self.make_project(
             'sub_project', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-        self.user_as = self._make_assignment(
+        self.user_as = self.make_assignment(
             self.project, self.user, self.role_contributor
         )
 
@@ -101,7 +101,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_role_create_mail_additional(self):
         """Test role creation with additional sender emails"""
-        app_settings.set_app_setting(
+        app_settings.set(
             'projectroles',
             'user_email_additional',
             '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
@@ -129,7 +129,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_role_create_mail_additional_no_default(self):
         """Test role creation with additional sender emails but no default email"""
-        app_settings.set_app_setting(
+        app_settings.set(
             'projectroles',
             'user_email_additional',
             '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
@@ -159,7 +159,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_role_create_mail_additional_reply(self):
         """Test role creation with additional reply-to emails"""
-        app_settings.set_app_setting(
+        app_settings.set(
             'projectroles',
             'user_email_additional',
             '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
@@ -228,10 +228,10 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_project_create_mail(self):
         """Test project creation mail sending"""
-        new_project = self._make_project(
+        new_project = self.make_project(
             'New Project', PROJECT_TYPE_PROJECT, self.category
         )
-        self._make_assignment(new_project, self.user, self.role_owner)
+        self.make_assignment(new_project, self.user, self.role_owner)
 
         with self.login(self.user):
             request = self.factory.get(reverse('home'))
@@ -268,7 +268,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_generic_mail_user_additional(self):
         """Test send_generic_mail() with a User and additional emails"""
-        app_settings.set_app_setting(
+        app_settings.set(
             'projectroles',
             'user_email_additional',
             '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
@@ -397,7 +397,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_get_user_addr_additional(self):
         """Test get_user_addr() with additional user emails"""
-        app_settings.set_app_setting(
+        app_settings.set(
             'projectroles',
             'user_email_additional',
             '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
@@ -410,7 +410,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_get_user_addr_additional_no_default(self):
         """Test get_user_addr() with additional user emails and no default"""
-        app_settings.set_app_setting(
+        app_settings.set(
             'projectroles',
             'user_email_additional',
             '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
@@ -428,7 +428,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_get_user_addr_additional_invalid(self):
         """Test get_user_addr() with invalid additional email"""
-        app_settings.set_app_setting(
+        app_settings.set(
             'projectroles',
             'user_email_additional',
             '{};{}'.format(USER_ADD_EMAIL, INVALID_EMAIL),

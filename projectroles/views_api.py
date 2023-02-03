@@ -7,6 +7,7 @@ from ipaddress import ip_address, ip_network
 from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
+from django.db import transaction
 from django.utils import timezone
 
 from rest_framework import serializers
@@ -40,13 +41,16 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     RemoteSite,
+    AppSetting,
     SODAR_CONSTANTS,
 )
+from projectroles.plugins import get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.serializers import (
     ProjectSerializer,
     RoleAssignmentSerializer,
     ProjectInviteSerializer,
+    AppSettingSerializer,
     SODARUserSerializer,
     REMOTE_MODIFY_MSG,
 )
@@ -55,6 +59,7 @@ from projectroles.views import (
     RoleAssignmentDeleteMixin,
     RoleAssignmentOwnerTransferMixin,
     ProjectInviteMixin,
+    ProjectModifyPluginViewMixin,
     SITE_MODE_TARGET,
 )
 
@@ -70,6 +75,11 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
 
 # API constants for external SODAR Core sites
 SODAR_API_MEDIA_TYPE = getattr(
@@ -85,12 +95,15 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.11.0', '0.11.1']
+CORE_API_ALLOWED_VERSIONS = ['0.11.0', '0.11.1', '0.12.0']
 
 # Local constants
 INVALID_PROJECT_TYPE_MSG = (
     'Project type "{project_type}" not allowed for this API view'
 )
+USER_MODIFIABLE_MSG = 'Updating non-user modifiable settings is not allowed'
+ANON_ACCESS_MSG = 'Anonymous access not allowed'
+NO_VALUE_MSG = 'Value not set in request data'
 
 
 # Permission / Versioning / Renderer Classes -----------------------------------
@@ -140,9 +153,7 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         owner_or_delegate = project.is_owner_or_delegate(request.user)
         if not (
             request.user.is_superuser or owner_or_delegate
-        ) and app_settings.get_app_setting(
-            'projectroles', 'ip_restrict', project
-        ):
+        ) and app_settings.get('projectroles', 'ip_restrict', project):
             for k in (
                 'HTTP_X_FORWARDED_FOR',
                 'X_FORWARDED_FOR',
@@ -155,7 +166,8 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
                     break
             else:  # Can't fetch client ip address
                 return False
-            for record in app_settings.get_app_setting(
+
+            for record in app_settings.get(
                 'projectroles', 'ip_allowlist', project
             ):
                 if '/' in record:
@@ -627,7 +639,7 @@ class RoleAssignmentOwnerTransferAPIView(
 class ProjectInviteAPIMixin:
     """Validation helpers for project invite modification via API"""
 
-    def _validate(self, invite, request, **kwargs):
+    def validate(self, invite, request, **kwargs):
         if not invite:
             raise NotFound(
                 'Invite not found (uuid={})'.format(kwargs['projectinvite'])
@@ -703,7 +715,7 @@ class ProjectInviteRevokeAPIView(
         invite = ProjectInvite.objects.filter(
             sodar_uuid=kwargs['projectinvite']
         ).first()
-        self._validate(invite, request, **kwargs)
+        self.validate(invite, request, **kwargs)
         invite = self.revoke_invite(invite, invite.project, request)
         return Response(
             {
@@ -734,13 +746,390 @@ class ProjectInviteResendAPIView(
         invite = ProjectInvite.objects.filter(
             sodar_uuid=kwargs['projectinvite']
         ).first()
-        self._validate(invite, request, **kwargs)
+        self.validate(invite, request, **kwargs)
         self.handle_invite(invite, request, resend=True, add_message=False)
         return Response(
             {
                 'detail': 'Invite resent from email {} in project "{}"'.format(
                     invite.email,
                     invite.project.title,
+                )
+            },
+            status=200,
+        )
+
+
+class AppSettingMixin:
+    """Helpers for app setting API views"""
+
+    @classmethod
+    def get_and_validate_def(cls, app_name, setting_name, allowed_scopes):
+        """
+        Return settings definition or raise a validation error.
+
+        :param app_name: Name of app plugin for the setting (string)
+        :param setting_name: Setting name (string)
+        :param allowed_scopes: Allowed scopes for the setting (list)
+        """
+        try:
+            s_def = app_settings.get_definition(
+                name=setting_name, app_name=app_name
+            )
+        except Exception as ex:
+            raise serializers.ValidationError(ex)
+        if s_def['scope'] not in allowed_scopes:
+            raise serializers.ValidationError('Invalid setting scope')
+        return s_def
+
+    @classmethod
+    def get_request_value(cls, request):
+        """
+        Return setting value from request.
+
+        :param request: HTTPRequest object
+        :return: String or None
+        :raise: ValidationError if value is not set
+        """
+        if 'value' not in request.data:
+            raise serializers.ValidationError(NO_VALUE_MSG)
+        return request.data['value']
+
+    @classmethod
+    def check_project_perms(
+        cls, setting_def, project, request_user, setting_user
+    ):
+        """
+        Check permissions for project settings.
+
+        :param setting_def: Dict
+        :param project: Project object
+        :param request_user: User object for requesting user
+        :param setting_user: User object for the setting user or None
+        """
+        if setting_def['scope'] == APP_SETTING_SCOPE_PROJECT:
+            if not request_user.has_perm(
+                'projectroles.update_project_settings', project
+            ):
+                raise PermissionDenied(
+                    'User lacks permission to access PROJECT scope app '
+                    'settings in this project'
+                )
+        elif setting_def['scope'] == APP_SETTING_SCOPE_PROJECT_USER:
+            if not setting_user:
+                raise serializers.ValidationError(
+                    'No user given for PROJECT_USER setting'
+                )
+            if request_user != setting_user and not request_user.is_superuser:
+                raise PermissionDenied(
+                    'User is not allowed to update settings for other users'
+                )
+
+    @classmethod
+    def _get_setting_obj(cls, app_name, setting_name, project=None, user=None):
+        """
+        Return the database object for a setting. Returns None if not available.
+
+        :param app_name: Name of the app plugin (string or None)
+        :param setting_name: Setting name (string)
+        :param project: Project object or None
+        :param user: User object or None
+        :return: AppSetting object
+        :raise: AppSetting.DoesNotExist if not found
+        :raise: AppSetting.MultipleObjectsReturned if the arguments are invalid
+        """
+        q_kwargs = {
+            'name': setting_name,
+            'project': project,
+            'user': user,
+        }
+        if app_name == 'projectroles':
+            q_kwargs['app_plugin'] = None
+        else:
+            q_kwargs['app_plugin__name'] = app_name
+        return AppSetting.objects.get(**q_kwargs)
+
+    @classmethod
+    def get_setting_for_api(
+        cls, app_name, setting_name, project=None, user=None
+    ):
+        """
+        Return the database object for a setting for API serving. Will create
+        the object if not yet created.
+
+        :param app_name: Name of the app plugin (string or None)
+        :param setting_name: Setting name (string)
+        :param project: Project object or None
+        :param user: User object or None
+        :return: AppSetting object
+        """
+        try:
+            return cls._get_setting_obj(app_name, setting_name, project, user)
+        except AppSetting.DoesNotExist:
+            try:
+                app_settings.set(
+                    app_name=app_name,
+                    setting_name=setting_name,
+                    value=app_settings.get_default(app_name, setting_name),
+                    project=project,
+                    user=user,
+                )
+                return cls._get_setting_obj(
+                    app_name, setting_name, project, user
+                )
+            except Exception as ex:
+                raise serializers.ValidationError(ex)
+
+
+class ProjectSettingRetrieveAPIView(
+    CoreAPIBaseProjectMixin, AppSettingMixin, RetrieveAPIView
+):
+    """
+    API view for retrieving an app setting with the PROJECT or PROJECT_USER
+    scope.
+
+    **URL:** ``project/api/settings/retrieve/{Project.sodar_uuid}``
+
+    **Methods:** ``GET``
+
+    **Parameters:**
+
+    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``setting_name``: Setting name (string)
+    - ``user``: User UUID for a PROJECT_USER setting (string or None, optional)
+    """
+
+    # NOTE: Update project settings perm is checked manually
+    permission_required = 'projectroles.view_project'
+    serializer_class = AppSettingSerializer
+
+    def get_object(self):
+        app_name = self.request.GET.get('app_name')
+        setting_name = self.request.GET.get('setting_name')
+
+        # Get and validate definition
+        s_def = self.get_and_validate_def(
+            app_name,
+            setting_name,
+            [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER],
+        )
+
+        # Get project and user, check perms
+        project = self.get_project()
+        setting_user = None
+        if self.request.GET.get('user'):
+            setting_user = User.objects.filter(
+                sodar_uuid=self.request.GET['user']
+            ).first()
+        self.check_project_perms(
+            s_def, project, self.request.user, setting_user
+        )
+
+        # Return new object with default setting if not set
+        return self.get_setting_for_api(
+            app_name, setting_name, project, setting_user
+        )
+
+
+class ProjectSettingSetAPIView(
+    CoreAPIBaseProjectMixin,
+    AppSettingMixin,
+    ProjectModifyPluginViewMixin,
+    APIView,
+):
+    """
+    API view for setting the value of an app setting with the PROJECT or
+    PROJECT_USER scope.
+
+    **URL:** ``project/api/settings/set/{Project.sodar_uuid}``
+
+    **Methods:** ``POST``
+
+    **Parameters:**
+
+    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``setting_name``: Setting name (string)
+    - ``value``: Setting value (string, may contain JSON for JSON settings)
+    - ``user``: User UUID for a PROJECT_USER setting (string or None, optional)
+    """
+
+    http_method_names = ['post']
+    # NOTE: Update project settings perm is checked manually
+    permission_required = 'projectroles.view_project'
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        timeline = get_backend_api('timeline_backend')
+        app_name = request.data.get('app_name')
+        setting_name = request.data.get('setting_name')
+
+        # Get and validate definition
+        s_def = self.get_and_validate_def(
+            app_name,
+            setting_name,
+            [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER],
+        )
+        if s_def.get('user_modifiable') is False:
+            raise PermissionDenied(USER_MODIFIABLE_MSG)
+        # Get value
+        value = self.get_request_value(request)
+
+        # Get project and user, check perms
+        project = self.get_project()
+        setting_user = None
+        if request.data.get('user'):
+            setting_user = User.objects.filter(
+                sodar_uuid=request.data['user']
+            ).first()
+        self.check_project_perms(s_def, project, request.user, setting_user)
+
+        # Set setting value with validation, return possible errors
+        try:
+            old_value = app_settings.get(
+                app_name, setting_name, project=project, user=setting_user
+            )
+            app_settings.set(
+                app_name=app_name,
+                setting_name=setting_name,
+                value=value,
+                project=project,
+                user=setting_user,
+            )
+            # Call for additional actions for project creation/update in plugins
+            if s_def['scope'] == APP_SETTING_SCOPE_PROJECT and (
+                settings,
+                'PROJECTROLES_ENABLE_MODIFY_API',
+                False,
+            ):
+                args = [
+                    app_name,
+                    setting_name,
+                    value,
+                    old_value,
+                    project,
+                    setting_user,
+                ]
+                self.call_project_modify_api(
+                    'perform_project_setting_update',
+                    'revert_project_setting_update',
+                    args,
+                )
+        except Exception as ex:
+            raise serializers.ValidationError(ex)
+
+        if timeline:
+            tl_desc = 'set value of {}.settings.{}'.format(
+                app_name, setting_name
+            )
+            if setting_user:
+                tl_desc += ' for user {{{}}}'.format('user')
+            setting_obj = self._get_setting_obj(
+                app_name, setting_name, project, setting_user
+            )
+            tl_extra_data = {'value': setting_obj.get_value()}
+            tl_event = timeline.add_event(
+                project=project,
+                app_name='projectroles',
+                user=request.user,
+                event_name='app_setting_set_api',
+                description=tl_desc,
+                classified=True,
+                extra_data=tl_extra_data,
+                status_type='OK',
+            )
+            if setting_user:
+                tl_event.add_object(setting_user, 'user', setting_user.username)
+        return Response(
+            {
+                'detail': 'Set value of {}.settings.{} '
+                '(project={}; user={})'.format(
+                    app_name,
+                    setting_name,
+                    project.sodar_uuid,
+                    setting_user.sodar_uuid if setting_user else None,
+                )
+            },
+            status=200,
+        )
+
+
+class UserSettingRetrieveAPIView(
+    CoreAPIBaseMixin, AppSettingMixin, RetrieveAPIView
+):
+    """
+    API view for retrieving an app setting with the USER scope.
+
+    **URL:** ``project/api/settings/retrieve/user``
+
+    **Methods:** ``GET``
+
+    **Parameters:**
+
+    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``setting_name``: Setting name (string)
+    """
+
+    # NOTE: Update project settings perm is checked manually
+    permission_required = 'projectroles.view_project'
+    serializer_class = AppSettingSerializer
+
+    def get_object(self):
+        if not self.request.user.is_authenticated:
+            raise PermissionDenied(ANON_ACCESS_MSG)
+        app_name = self.request.GET.get('app_name')
+        setting_name = self.request.GET.get('setting_name')
+        # Get and validate definition
+        self.get_and_validate_def(
+            app_name, setting_name, [APP_SETTING_SCOPE_USER]
+        )
+        # Return new object with default setting if not set
+        return self.get_setting_for_api(
+            app_name, setting_name, user=self.request.user
+        )
+
+
+class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
+    """
+    API view for setting the value of an app setting with the USER scope. Only
+    allows the user to set the value of their own settings.
+
+    **URL:** ``project/api/settings/set/user``
+
+    **Methods:** ``POST``
+
+    **Parameters:**
+
+    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``setting_name``: Setting name (string)
+    - ``value``: Setting value (string, may contain JSON for JSON settings)
+    """
+
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            raise PermissionDenied(ANON_ACCESS_MSG)
+        app_name = request.data.get('app_name')
+        setting_name = request.data.get('setting_name')
+        s_def = self.get_and_validate_def(
+            app_name, setting_name, [APP_SETTING_SCOPE_USER]
+        )
+        if s_def.get('user_modifiable') is False:
+            raise PermissionDenied(USER_MODIFIABLE_MSG)
+        value = self.get_request_value(request)
+
+        try:
+            app_settings.set(
+                app_name=app_name,
+                setting_name=setting_name,
+                value=value,
+                user=request.user,
+            )
+        except Exception as ex:
+            raise serializers.ValidationError(ex)
+        return Response(
+            {
+                'detail': 'Set value of {}.settings.{}'.format(
+                    app_name, setting_name
                 )
             },
             status=200,
@@ -760,6 +1149,7 @@ class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
     For each user:
 
     - ``email``: Email address of the user (string)
+    - ``is_superuser``: Superuser status (boolean)
     - ``name``: Full name of the user (string)
     - ``sodar_uuid``: User UUID (string)
     - ``username``: Username of the user (string)
@@ -793,6 +1183,7 @@ class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
     For current user:
 
     - ``email``: Email address of the user (string)
+    - ``is_superuser``: Superuser status (boolean)
     - ``name``: Full name of the user (string)
     - ``sodar_uuid``: User UUID (string)
     - ``username``: Username of the user (string)

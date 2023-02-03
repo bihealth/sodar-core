@@ -23,7 +23,7 @@ class TestAppAlertPermissions(AppAlertMixin, TestPermissionBase):
         # No user
         self.anonymous = None
         # Create alert
-        self.alert = self._make_app_alert(
+        self.alert = self.make_app_alert(
             user=self.regular_user, url=reverse('home')
         )
 

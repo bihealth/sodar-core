@@ -6,6 +6,8 @@ from django.forms import model_to_dict
 from django.test import override_settings
 from django.urls import reverse
 
+from test_plus.test import TestCase
+
 from projectroles.models import ProjectUserTag, PROJECT_TAG_STARRED
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -17,6 +19,7 @@ from projectroles.tests.test_views import (
     PROJECT_TYPE_CATEGORY,
     PROJECT_TYPE_PROJECT,
 )
+from projectroles.tests.test_views_api import SerializedObjectMixin
 from projectroles.views_ajax import INHERITED_OWNER_INFO
 
 
@@ -25,16 +28,16 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def setUp(self):
         super().setUp()
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -52,6 +55,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'type': self.category.type,
                     'full_title': self.category.full_title,
                     'public_guest_access': self.category.public_guest_access,
+                    'archive': False,
                     'remote': False,
                     'revoked': False,
                     'starred': False,
@@ -63,6 +67,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'type': self.project.type,
                     'full_title': self.project.full_title,
                     'public_guest_access': self.project.public_guest_access,
+                    'archive': False,
                     'remote': False,
                     'revoked': False,
                     'starred': False,
@@ -92,6 +97,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'type': self.project.type,
                     'full_title': self.project.title,  # Not full_title
                     'public_guest_access': self.project.public_guest_access,
+                    'archive': False,
                     'remote': False,
                     'revoked': False,
                     'starred': False,
@@ -149,16 +155,16 @@ class TestProjectListColumnAjaxView(
 
     def setUp(self):
         super().setUp()
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -193,11 +199,11 @@ class TestProjectListColumnAjaxView(
 
     def test_post_no_permission(self):
         """Test POST with no user permission on a project"""
-        new_project = self._make_project(
+        new_project = self.make_project(
             'NewProject', PROJECT_TYPE_PROJECT, None
         )
         new_user = self.make_user('new_user')
-        self._make_assignment(new_project, new_user, self.role_owner)
+        self.make_assignment(new_project, new_user, self.role_owner)
 
         with self.login(new_user):
             response = self.client.post(
@@ -230,16 +236,16 @@ class TestProjectListRoleAjaxView(
         super().setUp()
         self.user_cat_owner = self.make_user('cat_owner')
         self.user_pro_owner = self.make_user('pro_owner')
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user_cat_owner, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_pro_owner, self.role_owner
         )
 
@@ -330,10 +336,10 @@ class TestProjectStarringAjaxView(
 
     def setUp(self):
         super().setUp()
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -366,7 +372,7 @@ class TestProjectStarringAjaxView(
 
     def test_unstar_project(self):
         """Test project unstarring"""
-        self._make_tag(self.project, self.user, name=PROJECT_TAG_STARRED)
+        self.make_tag(self.project, self.user, name=PROJECT_TAG_STARRED)
         self.assertEqual(ProjectUserTag.objects.all().count(), 1)
 
         with self.login(self.user):
@@ -379,3 +385,31 @@ class TestProjectStarringAjaxView(
 
         self.assertEqual(ProjectUserTag.objects.all().count(), 0)
         self.assertEqual(response.status_code, 200)
+
+
+class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):
+    """Tests for CurrentUserRetrieveAjaxView"""
+
+    def setUp(self):
+        self.user = self.make_user('user')
+        self.user.is_superuser = True
+        self.user.save()
+        self.reg_user = self.make_user('reg_user')
+
+    def test_regular_user(self):
+        """Test CurrentUserRetrieveAjaxView with regular user"""
+        with self.login(self.reg_user):
+            response = self.client.get(
+                reverse('projectroles:ajax_user_current')
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, self.get_serialized_user(self.reg_user))
+
+    def test_superuser(self):
+        """Test CurrentUserRetrieveAjaxView with superuser"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:ajax_user_current')
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, self.get_serialized_user(self.user))

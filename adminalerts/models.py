@@ -1,3 +1,5 @@
+"""Models for the adminalerts app"""
+
 import uuid
 
 from django.conf import settings
@@ -6,13 +8,16 @@ from django.utils import timezone
 
 from markupfield.fields import MarkupField
 
+
 # Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 
 class AdminAlert(models.Model):
-    """An un-dismissable alert from a superuser to site users. Not dependent on
-    project. Will expire after a set time."""
+    """
+    An un-dismissable alert from a superuser to site users. Not dependent on
+    project. Will expire after a set time.
+    """
 
     #: Alert message to be shown for users
     message = models.CharField(

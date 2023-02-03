@@ -9,6 +9,7 @@ from projectroles.models import (
     Project,
     RoleAssignment,
     ProjectInvite,
+    AppSetting,
     SODAR_CONSTANTS,
 )
 from projectroles.tests.test_permissions import TestProjectPermissionBase
@@ -38,6 +39,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         version=None,
         knox=False,
         cleanup_method=None,
+        cleanup_kwargs=None,
         req_kwargs=None,
     ):
         """
@@ -56,6 +58,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         :param knox: Use Knox token auth instead of Django login (boolean)
         :param cleanup_method: Callable method to clean up data after a
                successful request
+        :param cleanup_kwargs: Optional cleanup method kwargs (dict or None)
         :param req_kwargs: Optional request kwargs override (dict or None)
         """
         if cleanup_method and not callable(cleanup_method):
@@ -95,7 +98,9 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
             self.assertEqual(response.status_code, status_code, msg=msg)
 
             if cleanup_method:
-                cleanup_method()
+                if cleanup_kwargs is None:
+                    cleanup_kwargs = {}
+                cleanup_method(**cleanup_kwargs)
 
 
 class TestProjectAPIPermissionBase(
@@ -474,7 +479,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         """Test permissions for RoleAssignmentUpdateAPIView"""
         # Create user and assignment
         assign_user = self.make_user('assign_user')
-        update_as = self._make_assignment(
+        update_as = self.make_assignment(
             self.project, assign_user, self.role_contributor
         )
         url = reverse(
@@ -522,7 +527,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         """Test permissions for RoleAssignmentUpdateAPIView with anonymous access"""
         # Create user and assignment
         assign_user = self.make_user('assign_user')
-        update_as = self._make_assignment(
+        update_as = self.make_assignment(
             self.project, assign_user, self.role_contributor
         )
         url = reverse(
@@ -545,7 +550,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         role_uuid = uuid.uuid4()  # Ensure fixed uuid
 
         def _cleanup():
-            update_as = self._make_assignment(
+            update_as = self.make_assignment(
                 self.project, assign_user, self.role_contributor
             )
             update_as.sodar_uuid = role_uuid
@@ -593,7 +598,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         # Create user and assignment
         assign_user = self.make_user('assign_user')
         role_uuid = uuid.uuid4()  # Ensure fixed uuid
-        update_as = self._make_assignment(
+        update_as = self.make_assignment(
             self.project, assign_user, self.role_contributor
         )
         update_as.sodar_uuid = role_uuid
@@ -609,7 +614,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         """Test permissions for RoleAssignmentOwnerTransferAPIView"""
         # Create user for assignments
         self.new_owner = self.make_user('new_owner')
-        self.new_owner_as = self._make_assignment(
+        self.new_owner_as = self.make_assignment(
             self.project, self.new_owner, self.role_contributor
         )
         url = reverse(
@@ -678,7 +683,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         """Test permissions for RoleAssignmentOwnerTransferAPIView with anonymous access"""
         # Create user for assignments
         self.new_owner = self.make_user('new_owner')
-        self.new_owner_as = self._make_assignment(
+        self.new_owner_as = self.make_assignment(
             self.project, self.new_owner, self.role_contributor
         )
         url = reverse(
@@ -810,7 +815,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     def test_invite_revoke(self):
         """Test permissions for ProjectInviteRevokeAPIView"""
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -871,7 +876,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_invite_revoke_anon(self):
         """Test permissions for ProjectInviteRevokeAPIView with anonymous access"""
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -886,7 +891,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     def test_invite_resend(self):
         """Test permissions for ProjectInviteResendAPIView"""
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -940,7 +945,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_invite_resend_anon(self):
         """Test permissions for ProjectInviteResendAPIView with anonymous access"""
-        self.invite = self._make_invite(
+        self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -952,6 +957,369 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         )
         self.project.set_public()
         self.assert_response_api(url, self.anonymous, 401, method='POST')
+
+    def test_project_setting_retrieve(self):
+        """Test ProjectSettingRetrieveAPIView permissions"""
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'project_str_setting',
+        }
+        good_users = [
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        def _cleanup():
+            AppSetting.objects.all().delete()
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            data=get_data,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(url, bad_users, 403, data=get_data)
+        self.assert_response_api(url, self.anonymous, 401, data=get_data)
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            data=get_data,
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(url, bad_users, 403, data=get_data, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 403, data=get_data)
+
+    def test_project_setting_retrieve_user(self):
+        """Test ProjectSettingRetrieveAPIView permissions with PROJECT_USER setting"""
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'project_user_str_setting',
+            'user': str(self.owner_as.user.sodar_uuid),
+        }
+        good_users = [
+            self.superuser,
+            self.owner_as.user,
+        ]
+        bad_users = [
+            self.owner_as_cat.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        def _cleanup():
+            AppSetting.objects.all().delete()
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            data=get_data,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(url, bad_users, 403, data=get_data)
+        self.assert_response_api(url, self.anonymous, 401, data=get_data)
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            data=get_data,
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(url, bad_users, 403, data=get_data, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 403, data=get_data)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_project_setting_retrieve_anon(self):
+        """Test ProjectSettingRetrieveAPIView permissions with anonymous access"""
+        url = reverse(
+            'projectroles:api_project_setting_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        get_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'project_str_setting',
+        }
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            [self.user_no_roles, self.anonymous],
+            403,
+            data=get_data,
+        )
+
+    def test_project_setting_set(self):
+        """Test ProjectSettingSetAPIView permissions"""
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'project_str_setting',
+            'value': 'value',
+        }
+        good_users = [
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        def _cleanup():
+            AppSetting.objects.all().delete()
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=post_data,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data
+        )
+        self.assert_response_api(
+            url, self.anonymous, 401, method='POST', data=post_data
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=post_data,
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data, knox=True
+        )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.user_no_roles, 403, method='POST', data=post_data
+        )
+
+    def test_project_setting_set_user(self):
+        """Test ProjectSettingSetAPIView permissions with PROJECT_USER scope"""
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'project_user_str_setting',
+            'value': 'value',
+            'user': str(self.owner_as.user.sodar_uuid),
+        }
+        good_users = [self.superuser, self.owner_as.user]
+        bad_users = [
+            self.owner_as_cat.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        def _cleanup():
+            AppSetting.objects.all().delete()
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=post_data,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data
+        )
+        self.assert_response_api(
+            url, self.anonymous, 401, method='POST', data=post_data
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=post_data,
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data, knox=True
+        )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.user_no_roles, 403, method='POST', data=post_data
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_project_setting_set_anon(self):
+        """Test ProjectSettingSetAPIView permissions with anonymous access"""
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'project_str_setting',
+            'value': 'value',
+        }
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            [self.user_no_roles, self.anonymous],
+            403,
+            method='POST',
+            data=post_data,
+        )
+
+    def test_user_setting_retrieve(self):
+        """Test UserSettingRetrieveAPIView permissions"""
+        url = reverse('projectroles:api_user_setting_retrieve')
+        get_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'user_str_setting',
+        }
+        good_users = [
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        def _cleanup():
+            AppSetting.objects.all().delete()
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            data=get_data,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(url, self.anonymous, 403, data=get_data)
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            data=get_data,
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_user_setting_retrieve_anon(self):
+        """Test UserSettingRetrieveAPIView permissions with anonymous access"""
+        url = reverse('projectroles:api_user_setting_retrieve')
+        get_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'user_str_setting',
+        }
+        self.assert_response_api(
+            url,
+            [self.anonymous],
+            403,
+            data=get_data,
+        )
+
+    def test_user_setting_set(self):
+        """Test UserSettingSetAPIView permissions"""
+        url = reverse('projectroles:api_user_setting_set')
+        post_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'user_str_setting',
+            'value': 'value',
+        }
+        good_users = [
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        def _cleanup():
+            AppSetting.objects.all().delete()
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=post_data,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, self.anonymous, 403, method='POST', data=post_data
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=post_data,
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_user_setting_set_anon(self):
+        """Test UserSettingSetAPIView permissions with anonymous access"""
+        url = reverse('projectroles:api_user_setting_set')
+        post_data = {
+            'app_name': 'example_project_app',
+            'setting_name': 'user_str_setting',
+            'value': 'value',
+        }
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            [self.anonymous],
+            403,
+            method='POST',
+            data=post_data,
+        )
 
     def test_user_list(self):
         """Test permissions for UserListAPIView"""

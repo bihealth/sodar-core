@@ -83,6 +83,28 @@ class SiteTimelineView(
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
 
+class AdminTimelineView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ListView,
+):
+    """View for displaying timeline events for admin site view"""
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['timeline_title'] = 'All Timeline Events'
+        context['timeline_mode'] = 'admin'
+        return context
+
+    def get_queryset(self):
+        return ProjectEvent.objects.order_by('-pk')
+
+    permission_required = 'timeline.view_site_admin'
+    template_name = 'timeline/timeline_site.html'
+    model = ProjectEvent
+    paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
+
+
 class ObjectTimelineMixin:
     """Mixin for common object timeline operations"""
 
@@ -115,8 +137,8 @@ class ObjectTimelineMixin:
 
 
 class ProjectObjectTimelineView(ObjectTimelineMixin, ProjectTimelineView):
-    """View for displaying files and folders for a project"""
+    """View for displaying object timeline for a project"""
 
 
 class SiteObjectTimelineView(ObjectTimelineMixin, SiteTimelineView):
-    """View for displaying files and folders for a project"""
+    """View for displaying object timeline for site-wide events"""

@@ -101,6 +101,15 @@ def is_modifiable_project(user, obj):
 
 
 @rules.predicate
+def can_modify_project_data(user, obj):
+    """
+    Whether or not project app data can be modified, due to e.g. project
+    archiving status.
+    """
+    return not obj.archive
+
+
+@rules.predicate
 def can_create_projects(user, obj):
     """Whether or not new projects can be generated on the site"""
     if settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and (

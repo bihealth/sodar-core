@@ -1,3 +1,5 @@
+"""Permissions for the adminalerts app"""
+
 import rules
 
 

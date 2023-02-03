@@ -18,11 +18,11 @@ class TestTokenList(TestUIBase):
     def setUp(self):
         super().setUp()
         # Create users
-        self.superuser = self._make_user('superuser', True)
+        self.superuser = self.make_user('superuser', True)
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
-        self.regular_user = self._make_user('regular_user', False)
+        self.regular_user = self.make_user('regular_user', False)
 
         # Create tokens
         self.token = AuthToken.objects.create(

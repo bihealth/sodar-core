@@ -25,6 +25,7 @@ Project App Basics
 - Provides a dynamically included element (e.g. content overview) for the
   project details page.
 - Appears in the project menu sidebar in the default projectroles templates.
+- Can be archived or unarchived to enable/disable read-only mode.
 
 **Requirements** for setting up a project app:
 
@@ -33,7 +34,7 @@ Project App Basics
 - Extend projectroles base templates in your templates.
 - Implement specific templates for dynamic inclusion by Projectroles.
 - Implement ``plugins.py`` with definitions and function implementations.
-- Implement ``rules.py`` with access rules.
+- Implement ``rules.py`` with access permissions.
 
 Fulfilling these requirements is detailed further in this document.
 
@@ -160,6 +161,12 @@ app if needed.
     checks are skipped for Django superusers. However, it can be handy if you
     e.g. want to define a rule allowing only superuser access for now, with the
     potential for adding other predicates later.
+
+.. hint::
+
+    For permissions dealing with modifying data, you are strongly recommend to
+    use the ``can_modify_project_data`` predicate. For more, see
+    :ref:`dev_project_app_archiving`.
 
 
 ProjectAppPlugin
@@ -317,6 +324,25 @@ Examples:
            name='example_ext_model',
        ),
    ]
+
+Path URL syntax from Django v2+ is also supported. Examples:
+
+.. code-block:: python
+
+    urlpatterns = [
+        # Direct reference to the Project model
+        path(
+            route='path-url/<uuid:project>',
+            view=views.ExampleView.as_view(),
+            name='example_path_url',
+        ),
+        # Reference to a model in another app
+        path(
+            route='path-ext/<uuid:filesfolders__folder>',
+            view=views.ExampleView.as_view(),
+            name='example_path_ext',
+        ),
+    ]
 
 Mixins
 ------
@@ -721,7 +747,7 @@ Example:
 
 .. code-block:: python
 
-    from projectroles.views_api import SODARBaseProjectAjaxView
+    from projectroles.views_ajax import SODARBaseProjectAjaxView
 
     class ExampleAjaxAPIView(SODARBaseProjectAjaxView):
 
@@ -730,6 +756,9 @@ Example:
     def get(self, request):
         # ...
 
+If you want to wrap a REST API view into an Ajax API view, you can use
+``SODARBaseAjaxMixin`` and your original view as base to ensure appropriate
+access control.
 
 Serializers
 -----------
@@ -741,6 +770,60 @@ used in place of ``pk``.
 
 See the :ref:`serializer API documentation <app_projectroles_api_django_serial>`
 for details on using base serializer classes.
+
+
+.. _dev_project_app_archiving:
+
+Project Archiving
+=================
+
+Projects can be set to *archived* mode. If a project is archived, it is expected
+for apps to disable their data modifying functionality and prevent access to
+views used to alter app data. There may of course be some exceptions in your use
+case.
+
+For most cases, your app should already be controlling user access to data
+modifying views and UI elements by checking permissions set in the ``rules.py``
+module within the app. In these cases, you can simply add the
+``can_modify_project_data`` predicate into any permission dealing with modifying
+project app data. An example from the filesfolders app:
+
+.. code-block:: python
+
+    from projectroles import rules as pr_rules  # To access common predicates
+
+    # Allow adding data to project
+    rules.add_perm(
+        'filesfolders.add_data',
+        pr_rules.can_modify_project_data
+        & (
+            pr_rules.is_project_owner
+            | pr_rules.is_project_delegate
+            | pr_rules.is_project_contributor
+        ),
+    )
+
+In cases not covered by the permissions, you can check a project's archive
+status via the ``Project.archive`` field.
+
+For an example how to implement and test archiving support in your project app,
+see the code and unit tests in :ref:`app_filesfolders`.
+
+The archiving and unarchiving functionality will also call
+``ProjectModifyPluginMixin.perform_project_archive()`` and its corresponding
+revert method when the archival status for a project is changed. If your site
+e.g. manages data in an external database, you may implement these methods for
+additional actions to be taken.
+
+.. note::
+
+    In the current implementation, categories can not be archived. This may be
+    implemented later.
+
+.. note::
+
+    The usage of backend apps like sodarcache and timeline are not limited by
+    the project archive status, your app logic should handle it instead.
 
 
 Removing a Project App

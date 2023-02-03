@@ -1,0 +1,42 @@
+{% load rules %}
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+{% load timeline_tags %}
+{% get_plugin_lookup as plugin_lookup %}
+
+<tr class="sodar-pr-project-list-item" id="sodar-pr-project-search-item-{{ event.sodar_uuid }}">
+  <td>
+    {% get_timestamp event as event_time %}
+    {{ event_time }}
+  </td>
+  <td>
+    <div class="sodar-overflow-container">
+      {% get_app_icon_html event plugin_lookup as event_icon %}
+      {{ event_icon|safe }}
+      {{ event.event_name }}
+    </div>
+  </td>
+  <td {% if not event.user %}class="text-muted"{% endif %}>
+    <div class="sodar-overflow-container">
+      {% if event.user %}
+        {% get_user_html event.user as user_html %}
+        {{ user_html|safe }}
+      {% else %}
+        N/A
+      {% endif %}
+    </div>
+  </td>
+  {% if event.description %}
+    <td>
+      <div class="sodar-overflow-container">
+        {% if event.project %}
+          {% include 'timeline/_project_badge.html' %}
+        {% endif %}
+        {% get_event_description t plugin_lookup request as event_desc %}
+          {{ event_desc|safe }}
+      </div>
+    </td>
+  {% else %}
+    <td class="text-muted">N/A</td>
+  {% endif %}
+</tr>

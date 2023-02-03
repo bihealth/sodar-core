@@ -138,54 +138,47 @@ class TestProjectPermissionBase(
         self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
         # Init users
-
         # Superuser
         self.superuser = self.make_user('superuser')
         self.superuser.is_staff = True
         self.superuser.is_superuser = True
         self.superuser.save()
-
         # No user
         self.anonymous = None
-
         # Users with role assignments
         self.user_owner_cat = self.make_user('user_owner_cat')
         self.user_owner = self.make_user('user_owner')
         self.user_delegate = self.make_user('user_delegate')
         self.user_contributor = self.make_user('user_contributor')
         self.user_guest = self.make_user('user_guest')
-
         # User without role assignments
         self.user_no_roles = self.make_user('user_no_roles')
 
         # Init projects
-
         # Top level category
-        self.category = self._make_project(
+        self.category = self.make_project(
             title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
         )
-
         # Subproject under category
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category,
         )
-
         # Init role assignments
-        self.owner_as_cat = self._make_assignment(
+        self.owner_as_cat = self.make_assignment(
             self.category, self.user_owner_cat, self.role_owner
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-        self.delegate_as = self._make_assignment(
+        self.delegate_as = self.make_assignment(
             self.project, self.user_delegate, self.role_delegate
         )
-        self.contributor_as = self._make_assignment(
+        self.contributor_as = self.make_assignment(
             self.project, self.user_contributor, self.role_contributor
         )
-        self.guest_as = self._make_assignment(
+        self.guest_as = self.make_assignment(
             self.project, self.user_guest, self.role_guest
         )
 
@@ -365,7 +358,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def _setup_ip_allowing(self, ip_list):
         # Init IP restrict setting
-        self._make_setting(
+        self.make_setting(
             app_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
@@ -373,7 +366,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             project=self.project,
         )
         # Init IP allowlist setting
-        self._make_setting(
+        self.make_setting(
             app_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
@@ -390,7 +383,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         # Add user with access to project below category: should still be able
         # to view the category
         new_user = self.make_user('new_user')
-        self._make_assignment(self.project, new_user, self.role_contributor)
+        self.make_assignment(self.project, new_user, self.role_contributor)
         good_users = [
             self.superuser,
             self.owner_as_cat.user,
@@ -470,7 +463,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     def test_project_details_ip_allowing_http_x_forwarded_for_block_all(self):
         """Test permissions for project details"""
         self._setup_ip_allowing([])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -520,7 +512,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     def test_project_details_ip_allowing_forwarded_block_all(self):
         """Test permissions for project details"""
         self._setup_ip_allowing([])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -545,7 +536,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     def test_project_details_ip_allowing_remote_addr_block_all(self):
         """Test permissions for project details"""
         self._setup_ip_allowing([])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -570,7 +560,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     def test_project_details_ip_allowing_http_x_forwarded_for_allow_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.1'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -595,7 +584,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     def test_project_details_ip_allowing_x_forwarded_for_allow_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.1'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -645,7 +633,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     def test_project_details_ip_allowing_remote_addr_allow_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.1'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -695,7 +682,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     def test_project_details_ip_allowing_remote_addr_not_in_allowlist_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.2'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -722,7 +708,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     ):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.2.0/24'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -743,6 +728,58 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         self.assert_response(url, bad_users, 302, header=header)
         self.project.set_public()
         self.assert_response(url, self.user_no_roles, 302, header=header)
+
+    def test_create_top(self):
+        """Test permissions for top level project creation"""
+        url = reverse('projectroles:create')
+        good_users = [self.superuser]
+        bad_users = [
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_create_top_anon(self):
+        """Test permissions for top level project creation with anonymous access"""
+        url = reverse('projectroles:create')
+        self.project.set_public()
+        self.assert_response(url, [self.user_no_roles, self.anonymous], 302)
+
+    def test_create_sub(self):
+        """Test permissions for subproject creation"""
+        url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        good_users = [self.superuser, self.owner_as_cat.user]
+        bad_users = [
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_create_sub_anon(self):
+        """Test permissions for subproject creation with anonymous access"""
+        url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.project.set_public()
+        self.assert_response(url, [self.user_no_roles, self.anonymous], 302)
 
     def test_update(self):
         """Test permissions for project updating"""
@@ -803,13 +840,18 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, [self.user_no_roles, self.anonymous], 302)
 
-    def test_create_top(self):
-        """Test permissions for top level project creation"""
-        url = reverse('projectroles:create')
-        good_users = [self.superuser]
-        bad_users = [
+    def test_archive(self):
+        """Test ProjectArchiveView permissions for project archiving"""
+        url = reverse(
+            'projectroles:archive', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,
             self.owner_as.user,
             self.delegate_as.user,
+        ]
+        bad_users = [
             self.contributor_as.user,
             self.guest_as.user,
             self.user_no_roles,
@@ -820,20 +862,16 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.user_no_roles, 302)
 
-    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_create_top_anon(self):
-        """Test permissions for top level project creation with anonymous access"""
-        url = reverse('projectroles:create')
-        self.project.set_public()
-        self.assert_response(url, [self.user_no_roles, self.anonymous], 302)
-
-    def test_create_sub(self):
-        """Test permissions for subproject creation"""
+    def test_archive_category(self):
+        """Test ProjectArchiveView permissions for category archiving"""
         url = reverse(
-            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+            'projectroles:archive', kwargs={'project': self.category.sodar_uuid}
         )
-        good_users = [self.superuser, self.owner_as_cat.user]
-        bad_users = [
+        bad_users_cat = [
+            self.superuser,
+            self.owner_as_cat.user,
+        ]
+        bad_users_other = [
             self.owner_as.user,
             self.delegate_as.user,
             self.contributor_as.user,
@@ -841,19 +879,22 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_no_roles,
             self.anonymous,
         ]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
-        self.project.set_public()
-        self.assert_response(url, self.user_no_roles, 302)
-
-    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_create_sub_anon(self):
-        """Test permissions for subproject creation with anonymous access"""
-        url = reverse(
-            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        self.assert_response(
+            url,
+            bad_users_cat,
+            302,
+            redirect_user=reverse(
+                'projectroles:detail',
+                kwargs={'project': self.category.sodar_uuid},
+            ),
+        )
+        self.assert_response(
+            url,
+            bad_users_other,
+            302,  # Non-category users get redirected to home
         )
         self.project.set_public()
-        self.assert_response(url, [self.user_no_roles, self.anonymous], 302)
+        self.assert_response(url, self.user_no_roles, 302)
 
     def test_roles(self):
         """Test permissions for role list"""
@@ -885,17 +926,14 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_roles_category(self):
         """Test permissions for role list under category"""
-
         # Set up category roles
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.delegate_as.user, self.role_delegate
         )
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.contributor_as.user, self.role_contributor
         )
-        self._make_assignment(
-            self.category, self.guest_as.user, self.role_guest
-        )
+        self.make_assignment(self.category, self.guest_as.user, self.role_guest)
 
         url = reverse(
             'projectroles:roles', kwargs={'project': self.category.sodar_uuid}
@@ -947,17 +985,14 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_role_create_category(self):
         """Test permissions for role creation under category"""
-
         # Set up category roles
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.delegate_as.user, self.role_delegate
         )
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.contributor_as.user, self.role_contributor
         )
-        self._make_assignment(
-            self.category, self.guest_as.user, self.role_guest
-        )
+        self.make_assignment(self.category, self.guest_as.user, self.role_guest)
 
         url = reverse(
             'projectroles:role_create',
@@ -978,6 +1013,29 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         self.category.set_public()
+        self.assert_response(url, self.user_no_roles, 302)
+
+    def test_role_create_archive(self):
+        """Test permissions for role creation in archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'projectroles:role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.guest_as.user,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(url, good_users, 200)  # Should be allowed
+        self.assert_response(url, bad_users, 302)
+        self.project.set_public()
         self.assert_response(url, self.user_no_roles, 302)
 
     def test_role_update(self):
@@ -1075,6 +1133,30 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         )
         self.project.set_public()
         self.assert_response(url, [self.user_no_roles, self.anonymous], 302)
+
+    def test_role_update_archive(self):
+        """Test permissions for role updating for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'projectroles:role_update',
+            kwargs={'roleassignment': self.contributor_as.sodar_uuid},
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(url, good_users, 200)  # Should be allowed
+        self.assert_response(url, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 302)
 
     def test_role_delete_owner(self):
         """Test permissions for owner role deletion (should fail)"""
@@ -1220,17 +1302,14 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_role_invite_create_category(self):
         """Test permissions for role invite creation under category"""
-
         # Set up category roles
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.delegate_as.user, self.role_delegate
         )
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.contributor_as.user, self.role_contributor
         )
-        self._make_assignment(
-            self.category, self.guest_as.user, self.role_guest
-        )
+        self.make_assignment(self.category, self.guest_as.user, self.role_guest)
 
         url = reverse(
             'projectroles:invite_create',
@@ -1286,17 +1365,14 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_role_invite_list_category(self):
         """Test permissions for role invite list under category"""
-
         # Set up category roles
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.delegate_as.user, self.role_delegate
         )
-        self._make_assignment(
+        self.make_assignment(
             self.category, self.contributor_as.user, self.role_contributor
         )
-        self._make_assignment(
-            self.category, self.guest_as.user, self.role_guest
-        )
+        self.make_assignment(self.category, self.guest_as.user, self.role_guest)
 
         url = reverse(
             'projectroles:invites', kwargs={'project': self.category.sodar_uuid}
@@ -1320,9 +1396,8 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_role_invite_resend(self):
         """Test permissions for role invite resending"""
-
         # Init invite
-        invite = self._make_invite(
+        invite = self.make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -1361,9 +1436,8 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_role_invite_revoke(self):
         """Test permissions for role invite revoking"""
-
         # Init invite
-        invite = self._make_invite(
+        invite = self.make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
@@ -1404,24 +1478,22 @@ class TestTargetProjectViews(
 
     def setUp(self):
         super().setUp()
-
         # Create site
-        self.site = self._make_site(
+        self.site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
             description='',
             secret=REMOTE_SITE_SECRET,
         )
-
         # Create RemoteProject objects
-        self.remote_category = self._make_remote_project(
+        self.remote_category = self.make_remote_project(
             project_uuid=self.category.sodar_uuid,
             project=self.category,
             site=self.site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
-        self.remote_project = self._make_remote_project(
+        self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=self.site,
@@ -1447,7 +1519,7 @@ class TestTargetProjectViews(
 
     def _setup_ip_allowing(self, ip_list):
         # Init IP restrict setting
-        self._make_setting(
+        self.make_setting(
             app_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
@@ -1456,7 +1528,7 @@ class TestTargetProjectViews(
         )
 
         # Init IP allowlist setting
-        self._make_setting(
+        self.make_setting(
             app_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
@@ -1468,7 +1540,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_http_x_forwarded_for_block_all(self):
         """Test permissions for project details"""
         self._setup_ip_allowing([])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1491,7 +1562,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_x_forwarded_for_block_all(self):
         """Test permissions for project details"""
         self._setup_ip_allowing([])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1514,7 +1584,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_forwarded_block_all(self):
         """Test permissions for project details"""
         self._setup_ip_allowing([])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1537,7 +1606,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_remote_addr_block_all(self):
         """Test permissions for project details"""
         self._setup_ip_allowing([])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1560,7 +1628,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_http_x_forwarded_for_allow_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.1'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1583,7 +1650,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_x_forwarded_for_allow_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.1'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1606,7 +1672,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_forwarded_allow_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.1'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1629,7 +1694,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_remote_addr_allow_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.1'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1652,7 +1716,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_remote_addr_allow_network(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.0/24'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1675,7 +1738,6 @@ class TestTargetProjectViews(
     def test_project_details_ip_allowing_remote_addr_not_in_allowlist_ip(self):
         """Test permissions for project details"""
         self._setup_ip_allowing(['192.168.1.2'])
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1760,10 +1822,8 @@ class TestTargetProjectViews(
     # TODO: Remote creation should fail
     def test_create_sub_local(self):
         """Test permissions for subproject creation as target under a local category"""
-
         # Make category local
         self.remote_category.delete()
-
         url = reverse(
             'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
@@ -1948,24 +2008,22 @@ class TestRevokedRemoteProject(
 
     def setUp(self):
         super().setUp()
-
         # Create site
-        self.site = self._make_site(
+        self.site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
             description='',
             secret=REMOTE_SITE_SECRET,
         )
-
         # Create RemoteProject objects
-        self.remote_category = self._make_remote_project(
+        self.remote_category = self.make_remote_project(
             project_uuid=self.category.sodar_uuid,
             project=self.category,
             site=self.site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
         )
-        self.remote_project = self._make_remote_project(
+        self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=self.site,
@@ -2012,14 +2070,11 @@ class TestRemoteSiteApp(RemoteSiteMixin, TestPermissionBase):
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
-
         self.regular_user = self.make_user('regular_user')
-
         # No user
         self.anonymous = None
-
         # Create site
-        self.site = self._make_site(
+        self.site = self.make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],

@@ -31,23 +31,30 @@ rules.add_perm(
 # Allow adding data to project
 rules.add_perm(
     'filesfolders.add_data',
-    pr_rules.is_project_owner
-    | pr_rules.is_project_delegate
-    | pr_rules.is_project_contributor,
+    pr_rules.can_modify_project_data
+    & (
+        pr_rules.is_project_owner
+        | pr_rules.is_project_delegate
+        | pr_rules.is_project_contributor
+    ),
 )
 
 # Allow updating own data in project
 rules.add_perm(
     'filesfolders.update_data_own',
-    pr_rules.is_project_owner
-    | pr_rules.is_project_delegate
-    | pr_rules.is_project_contributor,
+    pr_rules.can_modify_project_data
+    & (
+        pr_rules.is_project_owner
+        | pr_rules.is_project_delegate
+        | pr_rules.is_project_contributor
+    ),
 )
 
 # Allow updating all data in project
 rules.add_perm(
     'filesfolders.update_data_all',
-    pr_rules.is_project_owner | pr_rules.is_project_delegate,
+    pr_rules.can_modify_project_data
+    & (pr_rules.is_project_owner | pr_rules.is_project_delegate),
 )
 
 # Allow sharing public temporary URLs

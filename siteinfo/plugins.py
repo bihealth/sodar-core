@@ -1,7 +1,7 @@
 # Projectroles dependency
 from projectroles.plugins import SiteAppPluginPoint
 
-from .urls import urlpatterns
+from siteinfo.urls import urlpatterns
 
 
 class SiteAppPlugin(SiteAppPluginPoint):

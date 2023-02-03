@@ -137,6 +137,9 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         context['category_count'] = Project.objects.filter(
             type=PROJECT_TYPE_CATEGORY
         ).count()
+        context['project_archive_count'] = Project.objects.filter(
+            type=PROJECT_TYPE_PROJECT, archive=True
+        ).count()
 
         # User statistics
         context['user_total_count'] = User.objects.all().count()

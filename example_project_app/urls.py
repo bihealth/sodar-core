@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.urls import path
 
 from example_project_app import views, views_api
 
@@ -19,6 +20,18 @@ urls = [
         regex=r'^ext/(?P<filesfolders__folder>[0-9a-f-]+)$',
         view=views.ExampleView.as_view(),
         name='example_ext_model',
+    ),
+    # Example view with Django path URL
+    path(
+        route='path-url/<uuid:project>',
+        view=views.ExampleView.as_view(),
+        name='example_path_url',
+    ),
+    # Example view with Django path URL and model from external app
+    path(
+        route='path-ext/<uuid:filesfolders__folder>',
+        view=views.ExampleView.as_view(),
+        name='example_path_ext',
     ),
 ]
 

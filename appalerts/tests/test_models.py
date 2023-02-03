@@ -27,7 +27,7 @@ class AppAlertMixin:
     """Mixin for AppAlert test helpers"""
 
     @classmethod
-    def _make_app_alert(
+    def make_app_alert(
         cls,
         app_plugin=None,
         alert_name=ALERT_NAME,
@@ -54,7 +54,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
     """Tests for the AppAlert model"""
 
     def setUp(self):
-        self.project = self._make_project(
+        self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
         self.project_url = reverse(
@@ -65,7 +65,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
 
     def test_initialization(self):
         """Test AppAlert initialization"""
-        alert = self._make_app_alert(
+        alert = self.make_app_alert(
             user=self.user,
             url=self.project_url,
             project=self.project,
@@ -88,7 +88,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
     def test_initialization_plugin(self):
         """Test AppAlert initialization with app plugin"""
         app_plugin = Plugin.objects.get(name='filesfolders')
-        alert = self._make_app_alert(
+        alert = self.make_app_alert(
             app_plugin=app_plugin,
             user=self.user,
             url=self.project_url,
@@ -111,7 +111,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
 
     def test_str(self):
         """Test AppAlert __str__()"""
-        alert = self._make_app_alert(
+        alert = self.make_app_alert(
             user=self.user,
             url=self.project_url,
             project=self.project,
@@ -124,7 +124,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
     def test_str_plugin(self):
         """Test AppAlert __str__() with app plugin"""
         app_plugin = Plugin.objects.get(name='filesfolders')
-        alert = self._make_app_alert(
+        alert = self.make_app_alert(
             app_plugin=app_plugin,
             user=self.user,
             url=self.project_url,
@@ -137,7 +137,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
 
     def test_repr(self):
         """Test AppAlert __repr__()"""
-        alert = self._make_app_alert(
+        alert = self.make_app_alert(
             user=self.user,
             url=self.project_url,
             project=self.project,
@@ -150,7 +150,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
     def test_repr_plugin(self):
         """Test AppAlert __repr__() with app plugin"""
         app_plugin = Plugin.objects.get(name='filesfolders')
-        alert = self._make_app_alert(
+        alert = self.make_app_alert(
             app_plugin=app_plugin,
             user=self.user,
             url=self.project_url,
@@ -164,7 +164,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
     def test_validate_level(self):
         """Test level validation"""
         with self.assertRaises(ValidationError):
-            self._make_app_alert(
+            self.make_app_alert(
                 user=self.user,
                 level='not a valid level',
                 url=self.project_url,

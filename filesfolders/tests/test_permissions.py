@@ -14,6 +14,10 @@ from filesfolders.tests.test_models import (
     HyperLinkMixin,
 )
 
+
+app_settings = AppSettingAPI()
+
+
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
@@ -27,10 +31,6 @@ APP_NAME = 'filesfolders'
 SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
 
 
-# App settings API
-app_settings = AppSettingAPI()
-
-
 class TestListPermissions(TestProjectPermissionBase):
     """Tests for the file list view"""
 
@@ -41,10 +41,10 @@ class TestListPermissions(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
@@ -63,18 +63,38 @@ class TestListPermissions(TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 200)
 
+    def test_list_archive(self):
+        """Test file list for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        bad_users = [self.user_no_roles, self.anonymous]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 200)
+        self.assert_response(url, self.anonymous, 302)
+
 
 class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
     """Tests for Folder views"""
 
     def setUp(self):
         super().setUp()
-
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,  # Project owner is the owner of folder
+            owner=self.user_owner,  # Project owner is the owner of folder
             description='',
         )
 
@@ -86,11 +106,11 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
         ]
-        bad_users = [self.guest_as.user, self.user_no_roles, self.anonymous]
+        bad_users = [self.user_guest, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -107,6 +127,30 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
 
+    def test_folder_create_archive(self):
+        """Test folder creation for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:folder_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [
+            self.superuser,
+        ]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
     def test_folder_create_category(self):
         """Test folder creation under category"""
         url = reverse(
@@ -116,10 +160,10 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -130,11 +174,11 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             'filesfolders:folder_update',
             kwargs={'item': self.folder.sodar_uuid},
         )
-        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
+        good_users = [self.superuser, self.user_owner, self.user_delegate]
         bad_users = [
-            self.contributor_as.user,  # NOTE: not the owner of the folder
+            self.user_contributor,  # NOTE: not the owner of the folder
             self.anonymous,
-            self.guest_as.user,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -153,17 +197,39 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
 
+    def test_folder_update_archive(self):
+        """Test folder updating for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:folder_update',
+            kwargs={'item': self.folder.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.anonymous,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
     def test_folder_delete(self):
         """Test folder deletion"""
         url = reverse(
             'filesfolders:folder_delete',
             kwargs={'item': self.folder.sodar_uuid},
         )
-        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
+        good_users = [self.superuser, self.user_owner, self.user_delegate]
         bad_users = [
-            self.contributor_as.user,  # NOTE: not the owner of the folder
+            self.user_contributor,  # NOTE: not the owner of the folder
             self.anonymous,
-            self.guest_as.user,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -182,27 +248,46 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
 
+    def test_folder_delete_archive(self):
+        """Test folder deletion for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:folder_delete',
+            kwargs={'item': self.folder.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.anonymous,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
 
 class TestFilePermissions(FileMixin, TestProjectPermissionBase):
     """Tests for File views"""
 
     def setUp(self):
         super().setUp()
-
-        app_settings.set_app_setting(
+        app_settings.set(
             APP_NAME, 'allow_public_links', True, project=self.project
         )
-
         self.file_content = bytes('content'.encode('utf-8'))
-
         # Init file
-        self.file = self._make_file(
+        self.file = self.make_file(
             name='file.txt',
             file_name='file.txt',
             file_content=self.file_content,
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,  # Project owner is the file owner
+            owner=self.user_owner,  # Project owner is the file owner
             description='',
             public_url=True,
             secret=SECRET,
@@ -216,11 +301,11 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
         ]
-        bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
+        bad_users = [self.anonymous, self.user_guest, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -237,6 +322,29 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
 
+    def test_file_create_archive(self):
+        """Test file creation for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:file_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.anonymous,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
     def test_file_create_category(self):
         """Test file creation under category"""
         url = reverse(
@@ -246,10 +354,10 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -259,11 +367,11 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         url = reverse(
             'filesfolders:file_update', kwargs={'item': self.file.sodar_uuid}
         )
-        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
+        good_users = [self.superuser, self.user_owner, self.user_delegate]
         bad_users = [
-            self.contributor_as.user,  # NOTE: not the owner of the file
+            self.user_contributor,  # NOTE: not the owner of the file
             self.anonymous,
-            self.guest_as.user,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -281,16 +389,37 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
 
+    def test_file_update_archive(self):
+        """Test file updating for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:file_update', kwargs={'item': self.file.sodar_uuid}
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,  # NOTE: not the owner of the file
+            self.anonymous,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
     def test_file_delete(self):
         """Test file deletion"""
         url = reverse(
             'filesfolders:file_delete', kwargs={'item': self.file.sodar_uuid}
         )
-        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
+        good_users = [self.superuser, self.user_owner, self.user_delegate]
         bad_users = [
-            self.contributor_as.user,  # NOTE: not the owner of the file
+            self.user_contributor,  # NOTE: not the owner of the file
             self.anonymous,
-            self.guest_as.user,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -308,6 +437,27 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
 
+    def test_file_delete_archive(self):
+        """Test file deletion for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:file_delete', kwargs={'item': self.file.sodar_uuid}
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.anonymous,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
     def test_file_public_link(self):
         """Test generation of a public URL to a file"""
         url = reverse(
@@ -316,11 +466,11 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
         ]
-        bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
+        bad_users = [self.anonymous, self.user_guest, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -329,13 +479,33 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_file_public_link_anon(self):
-        """Test generation of a public URL to a file with anonymous access"""
+        """Test generation of public URL to file with anonymous access"""
         url = reverse(
             'filesfolders:file_public_link',
             kwargs={'file': self.file.sodar_uuid},
         )
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
+
+    def test_file_public_link_archive(self):
+        """Test generation of public URL to file  for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:file_public_link',
+            kwargs={'file': self.file.sodar_uuid},
+        )
+        good_users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+        ]
+        bad_users = [self.anonymous, self.user_guest, self.user_no_roles]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
 
     def test_file_serve(self):
         """Test file serving for authenticated users"""
@@ -345,10 +515,32 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        bad_users = [self.anonymous, self.user_no_roles]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 200)
+        self.assert_response(url, self.anonymous, 302)
+
+    def test_file_serve_archive(self):
+        """Test file serving for authenticated users in archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:file_serve',
+            kwargs={'file': self.file.sodar_uuid, 'file_name': self.file.name},
+        )
+        good_users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200)
@@ -366,10 +558,10 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.anonymous,
             self.user_no_roles,
         ]
@@ -377,7 +569,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
 
     def test_file_serve_public_disabled(self):
         """Test public file serving if not allowed in project, should fail"""
-        app_settings.set_app_setting(
+        app_settings.set(
             APP_NAME, 'allow_public_links', False, project=self.project
         )
         url = reverse(
@@ -386,18 +578,16 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         bad_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
-
         for user in bad_users:
             with self.login(user):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 400)
-
         # Anonymous
         response = self.client.get(url)
         self.assertEqual(response.status_code, 400)
@@ -408,9 +598,8 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
 
     def setUp(self):
         super().setUp()
-
         # Init link
-        self.hyperlink = self._make_hyperlink(
+        self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
             project=self.project,
@@ -427,11 +616,11 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
         ]
-        bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
+        bad_users = [self.anonymous, self.user_guest, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -448,6 +637,28 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
 
+    def test_hyperlink_create_archive(self):
+        """Test hyperlink creation for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:hyperlink_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
     def test_hyperlink_create_category(self):
         """Test hyperlink creation under category"""
         url = reverse(
@@ -457,10 +668,10 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -471,11 +682,33 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
             'filesfolders:hyperlink_update',
             kwargs={'item': self.hyperlink.sodar_uuid},
         )
-        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
+        good_users = [self.superuser, self.user_owner, self.user_delegate]
         bad_users = [
-            self.contributor_as.user,  # NOTE: not the owner of the link
+            self.user_contributor,  # NOTE: not the owner of the link
             self.anonymous,
-            self.guest_as.user,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    def test_hyperlink_update_archive(self):
+        """Test hyperlink updating for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:hyperlink_update',
+            kwargs={'item': self.hyperlink.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.anonymous,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -500,11 +733,11 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
             'filesfolders:hyperlink_delete',
             kwargs={'item': self.hyperlink.sodar_uuid},
         )
-        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
+        good_users = [self.superuser, self.user_owner, self.user_delegate]
         bad_users = [
-            self.contributor_as.user,  # NOTE: not the owner of the link
+            self.user_contributor,  # NOTE: not the owner of the link
             self.anonymous,
-            self.guest_as.user,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -523,18 +756,39 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.anonymous, 302)
 
+    def test_hyperlink_delete_archive(self):
+        """Test hyperlink deletion for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:hyperlink_delete',
+            kwargs={'item': self.hyperlink.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.anonymous,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
 
 class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
     """Tests for batch editing views"""
 
     def setUp(self):
         super().setUp()
-
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,  # Project owner is the owner of folder
+            owner=self.user_owner,  # Project owner is the owner of folder
             description='',
         )
 
@@ -544,36 +798,66 @@ class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
             'filesfolders:batch_edit',
             kwargs={'project': self.project.sodar_uuid},
         )
-
         # NOTE: Contributor is OK as checks for object perms happen after POST
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
         ]
         bad_users = [
             # self.anonymous,
-            self.guest_as.user,
+            self.user_guest,
             self.user_no_roles,
         ]
-
         post_data = {
             'batch-action': 'delete',
             'user-confirmed': '0',
             'batch_item_Folder_{}'.format(self.folder.sodar_uuid): '1',
         }
-
         for user in good_users:
             with self.login(user):
                 response = self.client.post(url, post_data)
                 self.assertEqual(response.status_code, 200)
-
+        for user in bad_users:
+            with self.login(user):
+                response = self.client.post(url, post_data)
+                self.assertEqual(response.status_code, 302)
+        # Test public project
+        self.project.set_public()
         for user in bad_users:
             with self.login(user):
                 response = self.client.post(url, post_data)
                 self.assertEqual(response.status_code, 302)
 
+    def test_batch_edit_archive(self):
+        """Test access to batch editing confirmation for archived project"""
+        self.project.set_archive()
+        url = reverse(
+            'filesfolders:batch_edit',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        post_data = {
+            'batch-action': 'delete',
+            'user-confirmed': '0',
+            'batch_item_Folder_{}'.format(self.folder.sodar_uuid): '1',
+        }
+        for user in good_users:
+            with self.login(user):
+                response = self.client.post(url, post_data)
+                self.assertEqual(response.status_code, 200)
+        for user in bad_users:
+            with self.login(user):
+                response = self.client.post(url, post_data)
+                self.assertEqual(response.status_code, 302)
         # Test public project
         self.project.set_public()
         for user in bad_users:

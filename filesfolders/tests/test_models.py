@@ -7,11 +7,11 @@ from django.forms.models import model_to_dict
 
 from test_plus.test import TestCase
 
-from ..models import File, FileData, Folder, HyperLink
-
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin
+
+from filesfolders.models import File, FileData, Folder, HyperLink
 
 
 # SODAR constants
@@ -30,7 +30,7 @@ class FileMixin:
     """Helper mixin for File creation"""
 
     @classmethod
-    def _make_file(
+    def make_file(
         cls,
         name,
         file_name,
@@ -63,7 +63,7 @@ class FolderMixin:
     """Helper mixin for Folder creation"""
 
     @classmethod
-    def _make_folder(cls, name, project, folder, owner, description, flag=None):
+    def make_folder(cls, name, project, folder, owner, description, flag=None):
         values = {
             'name': name,
             'project': project,
@@ -81,7 +81,7 @@ class HyperLinkMixin:
     """Helper mixin for HyperLink creation"""
 
     @classmethod
-    def _make_hyperlink(
+    def make_hyperlink(
         cls, name, url, project, folder, owner, description, flag=None
     ):
         values = {
@@ -107,14 +107,12 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
     def setUp(self):
         # Make owner user
         self.user_owner = self.make_user('owner')
-
         # Make project
-        self.project = self._make_project(
+        self.project = self.make_project(
             PROJECT_NAME, PROJECT_TYPE_PROJECT, None
         )
-
         # Make folder
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -162,7 +160,7 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
 
     def test_create_subfolder(self):
         """Test subfolder creation"""
-        subfolder = self._make_folder(
+        subfolder = self.make_folder(
             name='subfolder',
             project=self.project,
             folder=self.folder,
@@ -182,14 +180,12 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(model_to_dict(subfolder), expected)
 
     def test_get_path(self):
-        """Test the get_irods_path() function in Folder"""
+        """Test get_irods_path() in Folder"""
         self.assertEqual(self.folder.get_path(), 'root/folder/')
 
     def test_get_path_subfolder(self):
-        """Test the get_irods_path() function in Folder for a subfolder"""
-
-        # Make subfolder
-        subfolder = self._make_folder(
+        """Test get_irods_path() in Folder for a subfolder"""
+        subfolder = self.make_folder(
             name='subfolder',
             project=self.project,
             folder=self.folder,
@@ -199,14 +195,12 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(subfolder.get_path(), 'root/folder/subfolder/')
 
     def test_is_empty(self):
-        """Test the is_empty() function in Folder for an empty folder"""
+        """Test is_empty() in Folder for an empty folder"""
         self.assertEqual(self.folder.is_empty(), True)
 
     def test_is_empty_nonempty(self):
-        """Test the is_empty() function in Folder for a non-empty folder"""
-
-        # Make hyperlink
-        self.hyperlink = self._make_hyperlink(
+        """Test is_empty() in Folder for a non-empty folder"""
+        self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
             project=self.project,
@@ -214,36 +208,28 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             owner=self.user_owner,
             description='',
         )
-
         self.assertEqual(self.folder.is_empty(), False)
 
     def test_has_in_path(self):
-        """Test the has_in_path() function in Folder"""
-
-        # Make subfolder
-        subfolder = self._make_folder(
+        """Test has_in_path() in Folder"""
+        subfolder = self.make_folder(
             name='subfolder',
             project=self.project,
             folder=self.folder,
             owner=self.user_owner,
             description='',
         )
-
         self.assertEqual(subfolder.has_in_path(self.folder), True)
 
     def test_has_in_path_false(self):
-        """Test the has_in_path() function in Folder with expected false
-        result"""
-
-        # Make subfolder
-        subfolder = self._make_folder(
+        """Test has_in_path() in Folder with expected false result"""
+        subfolder = self.make_folder(
             name='subfolder',
             project=self.project,
             folder=self.folder,
             owner=self.user_owner,
             description='',
         )
-
         self.assertEqual(self.folder.has_in_path(subfolder), False)
 
 
@@ -253,25 +239,21 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
     def setUp(self):
         # Make owner user
         self.user_owner = self.make_user('owner')
-
         # Make project
-        self.project = self._make_project(
+        self.project = self.make_project(
             PROJECT_NAME, PROJECT_TYPE_PROJECT, None
         )
-
         # Make folder
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
             owner=self.user_owner,
             description='description',
         )
-
         self.file_content = bytes('content'.encode('utf-8'))
-
         # Make file
-        self.file = self._make_file(
+        self.file = self.make_file(
             name='file.txt',
             file_name='file.txt',
             file_content=self.file_content,
@@ -331,7 +313,6 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
     def test_file_access(self):
         """Test file can be accessed in database after creation"""
         file_data = FileData.objects.get(file_name=self.file.file.name)
-
         expected = {
             'id': file_data.pk,
             'file_name': 'filesfolders.FileData/bytes/file_name/'
@@ -339,18 +320,12 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
             'content_type': 'text/plain',
             'bytes': base64.b64encode(self.file_content).decode('utf-8'),
         }
-
         self.assertEqual(model_to_dict(file_data), expected)
 
     def test_file_deletion(self):
         """Test file is removed from database after deletion"""
-
-        # Assert precondition
         self.assertEqual(FileData.objects.all().count(), 1)
-
         self.file.delete()
-
-        # Assert postcondition
         self.assertEqual(FileData.objects.all().count(), 0)
 
 
@@ -362,23 +337,20 @@ class TestHyperLink(
     def setUp(self):
         # Make owner user
         self.user_owner = self.make_user('owner')
-
         # Make project
-        self.project = self._make_project(
+        self.project = self.make_project(
             PROJECT_NAME, PROJECT_TYPE_PROJECT, None
         )
-
         # Make folder
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
             owner=self.user_owner,
             description='',
         )
-
         # Make hyperlink
-        self.hyperlink = self._make_hyperlink(
+        self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
             project=self.project,

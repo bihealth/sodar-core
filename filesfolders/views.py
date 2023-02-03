@@ -90,7 +90,7 @@ class FilesfoldersTimelineMixin:
     """Mixin for filesfolders specific timeline helpers"""
 
     @classmethod
-    def _add_item_modify_event(
+    def add_item_modify_event(
         cls,
         obj,
         request,
@@ -173,7 +173,7 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
         self.object = form.save()
 
         # Add event in Timeline
-        self._add_item_modify_event(
+        self.add_item_modify_event(
             obj=self.object,
             request=self.request,
             view_action=view_action,
@@ -549,12 +549,12 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
 
         # Add timeline events
         for new_folder in new_folders:
-            self._add_item_modify_event(
+            self.add_item_modify_event(
                 obj=new_folder, request=self.request, view_action='create'
             )
 
         for new_file in new_files:
-            self._add_item_modify_event(
+            self.add_item_modify_event(
                 obj=new_file, request=self.request, view_action='create'
             )
 
@@ -638,7 +638,7 @@ class FileServePublicView(FileServeMixin, View):
         try:
             file = File.objects.get(secret=kwargs['secret'])
             # Check if sharing public files is not allowed in project settings
-            if not app_settings.get_app_setting(
+            if not app_settings.get(
                 APP_NAME, 'allow_public_links', file.project
             ):
                 return HttpResponseBadRequest(LINK_BAD_REQUEST_MSG)
@@ -677,9 +677,7 @@ class FilePublicLinkView(
             messages.error(self.request, 'File not found.')
             return redirect(reverse('home'))
 
-        if not app_settings.get_app_setting(
-            APP_NAME, 'allow_public_links', file.project
-        ):
+        if not app_settings.get(APP_NAME, 'allow_public_links', file.project):
             messages.error(
                 self.request,
                 'Sharing public links not allowed for this {}.'.format(

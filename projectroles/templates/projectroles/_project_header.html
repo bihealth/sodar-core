@@ -8,7 +8,6 @@
 {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 
 <div class="row sodar-pr-content-title">
-
   {# Project menu dropdown, only visible if browser width < X and sidebar is hidden #}
   {% if not kiosk_mode %}
     {% include 'projectroles/_project_menu_btn.html' %}
@@ -58,28 +57,46 @@
       <span class="sodar-pr-header-icon"
             title="{% if project.is_revoked %}REVOKED remote{% else %}Remote{% endif %}
                    {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
+            id="sodar-pr-header-icon-remote"
             data-toggle="tooltip" data-placement="left">
         <i class="iconify {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
            data-icon="mdi:cloud" data-height="30">
         </i>
       </span>
     {% endif %}
-
     {# Public access status #}
     {% if project.type == 'PROJECT' and project.public_guest_access %}
       <span class="ml-2 sodar-pr-header-icon" title="Public guest access"
+            id="sodar-pr-header-icon-archive-public"
             data-toggle="tooltip" data-placement="left">
         <i class="iconify text-info" data-icon="mdi:earth" data-height="30"></i>
       </span>
     {% endif %}
+    {# Archive status #}
+    {% if project.type == 'PROJECT' and project.archive %}
+      <span class="ml-2 sodar-pr-header-icon" title="Archived"
+            id="sodar-pr-header-icon-archive"
+            data-toggle="tooltip" data-placement="left">
+        <i class="iconify text-info" data-icon="mdi:archive" data-height="30"></i>
+      </span>
+    {% endif %}
   </div>
-
 </div>
 
+{% get_display_name project.type as project_display %}
+
+{% if project.type == 'PROJECT' and project.archive %}
+  <div class="alert alert-info mt-3 mb-0" id="sodar-pr-alert-archive">
+    <i class="iconify" data-icon="mdi:archive"></i> This {{ project_display }}
+    has been archived. Access to data in {{ project_display }} apps has been set
+    to read-only for all users.
+  </div>
+{% endif %}
 {% if project.is_revoked %}
-  <div class="alert alert-danger mt-3" id="sodar-pr-alert-remote-revoked">
-    <strong>Access revoked:</strong> The source site has revoked access to this
-    remotely synchronized project. Only a superuser, an owner or a delegate can
-    currently access the project.
+  <div class="alert alert-danger mt-3 mb-0" id="sodar-pr-alert-remote-revoked">
+    <i class="iconify" data-icon="mdi:cloud"></i> The source site has revoked
+    access to this remotely synchronized {{ project_display }}. Only a
+    superuser, an owner or a delegate can currently access the
+    {{ project_display }}.
   </div>
 {% endif %}

@@ -35,7 +35,10 @@ from projectroles.views import (
     APP_NAME,
     User,
 )
-from projectroles.views_api import SODARAPIProjectPermission
+from projectroles.views_api import (
+    SODARAPIProjectPermission,
+    CurrentUserRetrieveAPIView,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -199,6 +202,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     'type': p.type,
                     'full_title': p.full_title[full_title_idx:],
                     'public_guest_access': p.public_guest_access,
+                    'archive': p.archive,
                     'remote': p.is_remote(),
                     'revoked': p.is_revoked(),
                     'starred': p in starred_projects,
@@ -382,6 +386,14 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         return Response(0 if tag_state else 1, status=200)
 
 
+class CurrentUserRetrieveAjaxView(
+    SODARBaseAjaxMixin, CurrentUserRetrieveAPIView
+):
+    """
+    Return information of the requesting user for Ajax requests.
+    """
+
+
 class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
     """User autocompletion widget view"""
 
@@ -393,7 +405,6 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
         - "project": project UUID
         - "scope": string for expected scope (all/project/project_exclude)
         - "exclude": list of explicit User.sodar_uuid to exclude from queryset
-
         """
         current_user = self.request.user
         project_uuid = self.forwarded.get('project', None)
@@ -442,12 +453,7 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
 
     def get_result_label(self, user):
         """Display options with name, username and email address"""
-        display = '{}{}{}'.format(
-            user.name if user.name else '',
-            ' ({})'.format(user.username) if user.name else user.username,
-            ' <{}>'.format(user.email) if user.email else '',
-        )
-        return display
+        return user.get_form_label()
 
     def get_result_value(self, user):
         """Use sodar_uuid in the User model instead of pk"""

@@ -5,6 +5,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 # Projectroles dependency
 from projectroles.models import Project
@@ -45,6 +46,22 @@ class ProjectEventManager(models.Manager):
             event_objects__object_model=object_model,
             event_objects__object_uuid=object_uuid,
         ).order_by(order_by)
+
+    def find(self, search_terms, keywords=None):
+        """
+        Return events matching the query.
+
+        :param search_terms: Search terms (list of strings)
+        :param keywords: Optional search keywords as key/value pairs (dict)
+        :return: QuerySet of ProjectEvent objects
+        """
+        objects = super().get_queryset().order_by('event_name')
+        term_query = Q()
+        for t in search_terms:
+            term_query.add(Q(event_name__icontains=t), Q.OR)
+            term_query.add(Q(description__icontains=t), Q.OR)
+            term_query.add(Q(event_objects__name__icontains=t), Q.OR)
+        return objects.filter(term_query)
 
 
 class ProjectEvent(models.Model):
@@ -134,14 +151,6 @@ class ProjectEvent(models.Model):
 
     def get_status(self):
         """Return the current event status"""
-        return self.status_changes.order_by('-timestamp').first()
-
-    def get_current_status(self):
-        """Return the current event status"""
-        logger.warning(
-            'ProjectEvent.get_current_status() is deprecated and will be '
-            'removed in SODAR Core v0.12: use get_status()'
-        )
         return self.status_changes.order_by('-timestamp').first()
 
     def get_timestamp(self):
@@ -299,6 +308,11 @@ class ProjectEventStatus(models.Model):
         default=dict, help_text='Additional status data as JSON'
     )
 
+    #: UUID for the status
+    sodar_uuid = models.UUIDField(
+        default=uuid.uuid4, unique=True, help_text='Status SODAR UUID'
+    )
+
     def __str__(self):
         return '{} ({})'.format(
             self.event.__str__(),
@@ -310,3 +324,7 @@ class ProjectEventStatus(models.Model):
         return 'ProjectEventStatus({})'.format(
             ', '.join(repr(v) for v in values)
         )
+
+    def get_project(self):
+        """Return the project for the event"""
+        return self.event.project

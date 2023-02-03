@@ -13,6 +13,7 @@ from projectroles.models import (
     Role,
     RoleAssignment,
     ProjectInvite,
+    AppSetting,
     SODAR_CONSTANTS,
 )
 from projectroles.utils import build_secret, get_expiry_date
@@ -21,6 +22,9 @@ from projectroles.views import (
     RoleAssignmentModifyMixin,
     ProjectInviteMixin,
 )
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -32,14 +36,11 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
-
 # Local constants
 REMOTE_MODIFY_MSG = (
     'Modification of remote projects is not allowed, modify on '
     'the SOURCE site instead'
 )
-
-User = get_user_model()
 
 
 # Base Serializers -------------------------------------------------------------
@@ -143,7 +144,7 @@ class SODARUserSerializer(SODARModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'name', 'email', 'sodar_uuid']
+        fields = ['username', 'name', 'email', 'is_superuser', 'sodar_uuid']
 
 
 # Projectroles Serializers -----------------------------------------------------
@@ -160,14 +161,12 @@ class RoleAssignmentValidateMixin:
         # Validation for remote sites and projects
         if project.is_remote():
             raise serializers.ValidationError(REMOTE_MODIFY_MSG)
-
         if 'role' not in attrs:
             return attrs
 
         # Do not allow modifying/inviting owner
         if attrs['role'].name == PROJECT_ROLE_OWNER:
             raise serializers.ValidationError('Modifying owner not allowed')
-
         # Check delegate perms
         if attrs[
             'role'
@@ -177,7 +176,6 @@ class RoleAssignmentValidateMixin:
             raise exceptions.PermissionDenied(
                 'User lacks permission to assign delegates'
             )
-
         # Check delegate limit
         if (
             attrs['role'].name == PROJECT_ROLE_DELEGATE
@@ -190,7 +188,6 @@ class RoleAssignmentValidateMixin:
                     del_limit
                 )
             )
-
         return attrs
 
 
@@ -232,7 +229,6 @@ class RoleAssignmentSerializer(
             old_as = RoleAssignment.objects.filter(
                 project=project, user=attrs['user']
             ).first()
-
             if old_as:
                 raise serializers.ValidationError(
                     'User already has the role of "{}" in project '
@@ -242,7 +238,6 @@ class RoleAssignmentSerializer(
         # Add user to instance for PATCH requests
         if self.instance and not attrs.get('user'):
             attrs['user'] = self.instance.user
-
         return attrs
 
     def save(self, **kwargs):
@@ -299,13 +294,11 @@ class ProjectInviteSerializer(
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-
         # Validate email
         if not parseaddr(attrs['email'])[1]:
             raise serializers.ValidationError(
                 'Invalid email address "{}"'.format(attrs['email'])
             )
-
         # Check for existing user
         user = User.objects.filter(email=attrs['email']).first()
         if user:
@@ -315,7 +308,6 @@ class ProjectInviteSerializer(
                     attrs['email'], user.username, user.sodar_uuid
                 )
             )
-
         return attrs
 
     def create(self, validated_data):
@@ -341,6 +333,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         queryset=Project.objects.filter(type=PROJECT_TYPE_CATEGORY),
     )
     readme = serializers.CharField(required=False, allow_blank=True)
+    archive = serializers.BooleanField(read_only=True)
     roles = RoleAssignmentNestedListSerializer(read_only=True, many=True)
 
     class Meta:
@@ -352,6 +345,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'description',
             'readme',
             'public_guest_access',
+            'archive',
             'owner',
             'roles',
             'sodar_uuid',
@@ -397,7 +391,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
         if parent and parent.type != PROJECT_TYPE_CATEGORY:
             raise serializers.ValidationError('Parent is not a category')
-
         elif (
             'parent' in attrs
             and not parent
@@ -488,7 +481,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Set readme
         if 'readme' in attrs and 'raw' in attrs['readme']:
             attrs['readme'] = attrs['readme']['raw']
-
         return attrs
 
     def save(self, **kwargs):
@@ -501,7 +493,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         )
 
     def to_representation(self, instance):
-        """Override to make sure fields are correctly returned."""
+        """Override to make sure fields are correctly returned"""
         ret = super().to_representation(instance)
         parent = ret.get('parent')
         project = Project.objects.get(
@@ -512,4 +504,38 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         ret['readme'] = project.readme.raw or ''
         if not ret.get('sodar_uuid'):
             ret['sodar_uuid'] = str(project.sodar_uuid)
+        return ret
+
+
+class AppSettingSerializer(SODARProjectModelSerializer):
+    """
+    Serializer for the AppSetting model. Should only be used for read and list
+    views. The sodar_uuid is not provided, as interacting with database objects
+    directly is not the intended way to set/get app settings.
+    """
+
+    app_name = serializers.CharField(read_only=True)
+    user = SODARUserSerializer(read_only=True)
+
+    class Meta:
+        model = AppSetting
+        fields = [
+            'app_name',
+            'project',
+            'user',
+            'name',
+            'type',
+            'value',
+            'user_modifiable',
+        ]
+        read_only_fields = [*fields]
+
+    def to_representation(self, instance):
+        """Override to clean up data for serialization"""
+        ret = super().to_representation(instance)
+        if instance.app_plugin:
+            ret['app_name'] = instance.app_plugin.name
+        else:
+            ret['app_name'] = 'projectroles'
+        ret['value'] = instance.get_value()
         return ret

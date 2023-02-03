@@ -73,8 +73,8 @@
     {% endif %}
 
     <div class="sodar-app-container" id="sodar-app-container">
+      {# Scrolling project breadcrumb navigation #}
       {% if not breadcrumb_sticky %}
-        {# Scrolling project breadcrumb navigation #}
         {% include 'projectroles/_project_navi.html' %}
       {% endif %}
 
@@ -120,6 +120,9 @@
                 $('.modal-title').text('Warning!');
                 var htmlData = '{{ admin_warning|safe }}';
                 $('.modal-body').html(htmlData);
+                $('#sodar-pr-btn-admin-continue').click(function () {
+                    $('#sodar-modal').modal('hide');
+                });
            });
         });
     </script>

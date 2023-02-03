@@ -46,7 +46,7 @@ class BatchUpdateRolesMixin:
 
     file = None
 
-    def _write_file(self, data):
+    def write_file(self, data):
         """Write data to temporary CSV file"""
         if not isinstance(data[0], list):
             data = [data]
@@ -87,16 +87,16 @@ class TestBatchUpdateRoles(
         self.user_owner_cat.save()
 
         # Init projects
-        self.category = self._make_project(
+        self.category = self.make_project(
             'top_category', PROJECT_TYPE_CATEGORY, None
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             self.category, self.user_owner_cat, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'sub_project', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
 
@@ -116,7 +116,7 @@ class TestBatchUpdateRoles(
         email = 'new@example.com'
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -133,10 +133,10 @@ class TestBatchUpdateRoles(
         """Test inviting a user when they already have an active invite"""
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
-        self._make_invite(email, self.project, self.role_guest, self.user_owner)
+        self.make_invite(email, self.project, self.role_guest, self.user_owner)
         self.assertEqual(ProjectInvite.objects.count(), 1)
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -155,7 +155,7 @@ class TestBatchUpdateRoles(
             [p_uuid, email, PROJECT_ROLE_GUEST],
             [p_uuid, email2, PROJECT_ROLE_GUEST],
         ]
-        self._write_file(fd)
+        self.write_file(fd)
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -174,7 +174,7 @@ class TestBatchUpdateRoles(
             [c_uuid, email, PROJECT_ROLE_GUEST],
             [p_uuid, email, PROJECT_ROLE_GUEST],
         ]
-        self._write_file(fd)
+        self.write_file(fd)
         # NOTE: Using user_owner_cat as they have perms for both projects
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner_cat.username}
@@ -192,7 +192,7 @@ class TestBatchUpdateRoles(
         """Test inviting an owner (should fail)"""
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
-        self._write_file([p_uuid, email, PROJECT_ROLE_OWNER])
+        self.write_file([p_uuid, email, PROJECT_ROLE_OWNER])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -203,7 +203,7 @@ class TestBatchUpdateRoles(
         """Test inviting a delegate"""
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
-        self._write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -216,8 +216,8 @@ class TestBatchUpdateRoles(
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         user_delegate = self.make_user('delegate')
-        self._make_assignment(self.project, user_delegate, self.role_delegate)
-        self._write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.make_assignment(self.project, user_delegate, self.role_delegate)
+        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': user_delegate.username}
         )
@@ -229,9 +229,9 @@ class TestBatchUpdateRoles(
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         user_delegate = self.make_user('delegate')
-        self._make_assignment(self.project, user_delegate, self.role_delegate)
+        self.make_assignment(self.project, user_delegate, self.role_delegate)
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -248,7 +248,7 @@ class TestBatchUpdateRoles(
         user_new.save()
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -267,7 +267,7 @@ class TestBatchUpdateRoles(
         user_new = self.make_user('user_new')
         user_new.email = email
         user_new.save()
-        role_as = self._make_assignment(self.project, user_new, self.role_guest)
+        role_as = self.make_assignment(self.project, user_new, self.role_guest)
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project, user=user_new
@@ -275,7 +275,7 @@ class TestBatchUpdateRoles(
             1,
         )
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
+        self.write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -292,7 +292,7 @@ class TestBatchUpdateRoles(
         self.user_owner.email = email
         self.user_owner.save()
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
+        self.write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -316,11 +316,11 @@ class TestBatchUpdateRoles(
         user_new = self.make_user('user_new')
         user_new.email = email
         user_new.save()
-        role_as = self._make_assignment(self.project, user_new, self.role_guest)
+        role_as = self.make_assignment(self.project, user_new, self.role_guest)
         user_delegate = self.make_user('delegate')
-        self._make_assignment(self.project, user_delegate, self.role_delegate)
+        self.make_assignment(self.project, user_delegate, self.role_delegate)
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': user_delegate.username}
         )
@@ -337,11 +337,11 @@ class TestBatchUpdateRoles(
         user_new = self.make_user('user_new')
         user_new.email = email
         user_new.save()
-        role_as = self._make_assignment(self.project, user_new, self.role_guest)
+        role_as = self.make_assignment(self.project, user_new, self.role_guest)
         user_delegate = self.make_user('delegate')
-        self._make_assignment(self.project, user_delegate, self.role_delegate)
+        self.make_assignment(self.project, user_delegate, self.role_delegate)
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -356,7 +356,7 @@ class TestBatchUpdateRoles(
         p_uuid = str(self.project.sodar_uuid)
         email = self.user_owner_cat.email
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
+        self.write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -384,7 +384,7 @@ class TestBatchUpdateRoles(
             [p_uuid, email, PROJECT_ROLE_GUEST],
             [p_uuid, email2, PROJECT_ROLE_GUEST],
         ]
-        self._write_file(fd)
+        self.write_file(fd)
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -406,7 +406,7 @@ class TestBatchUpdateRoles(
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(**{'file': self.file.name, 'issuer': None})
 
         invite = ProjectInvite.objects.first()
@@ -418,7 +418,7 @@ class TestBatchUpdateRoles(
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
 
-        self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': issuer.username}
         )
@@ -463,16 +463,16 @@ class TestCleanAppSettings(
         self.user_owner.save()
 
         # Init projects
-        self.category = self._make_project(
+        self.category = self.make_project(
             'top_category', PROJECT_TYPE_CATEGORY, None
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             self.category, self.user_owner, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'sub_project', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
         self.plugin = Plugin.objects.get(name='example_project_app')
@@ -535,7 +535,7 @@ class TestCleanAppSettings(
             self.setting_iprestrict_values,
         ]
         for s in self.settings:
-            self._make_setting(
+            self.make_setting(
                 app_name=s['app_name'],
                 name=s['name'],
                 setting_type=s['setting_type'],

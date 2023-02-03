@@ -24,6 +24,11 @@ urls_ui = [
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
+    url(
+        regex=r'^archive/(?P<project>[0-9a-f-]+)$',
+        view=views.ProjectArchiveView.as_view(),
+        name='archive',
+    ),
     # Search views
     url(
         regex=r'^search/results/$',
@@ -163,6 +168,11 @@ urls_ajax = [
         name='ajax_star',
     ),
     url(
+        regex=r'^ajax/user/current',
+        view=views_ajax.CurrentUserRetrieveAjaxView.as_view(),
+        name='ajax_user_current',
+    ),
+    url(
         r'^ajax/autocomplete/user$',
         view=views_ajax.UserAutocompleteAjaxView.as_view(),
         name='ajax_autocomplete_user',
@@ -237,6 +247,26 @@ urls_api = [
         regex=r'^api/invites/resend/(?P<projectinvite>[0-9a-f-]+)$',
         view=views_api.ProjectInviteResendAPIView.as_view(),
         name='api_invite_resend',
+    ),
+    url(
+        regex=r'^api/settings/retrieve/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectSettingRetrieveAPIView.as_view(),
+        name='api_project_setting_retrieve',
+    ),
+    url(
+        regex=r'^api/settings/set/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectSettingSetAPIView.as_view(),
+        name='api_project_setting_set',
+    ),
+    url(
+        regex=r'^api/settings/retrieve/user$',
+        view=views_api.UserSettingRetrieveAPIView.as_view(),
+        name='api_user_setting_retrieve',
+    ),
+    url(
+        regex=r'^api/settings/set/user$',
+        view=views_api.UserSettingSetAPIView.as_view(),
+        name='api_user_setting_set',
     ),
     url(
         regex=r'^api/users/list$',

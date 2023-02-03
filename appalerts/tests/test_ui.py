@@ -20,19 +20,19 @@ class TestAlertUIBase(AppAlertMixin, TestUIBase):
     def setUp(self):
         super().setUp()
         # Create users
-        self.superuser = self._make_user('superuser', superuser=True)
+        self.superuser = self.make_user('superuser', superuser=True)
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
-        self.regular_user = self._make_user('regular_user')
-        self.no_alert_user = self._make_user('no_alert_user')
+        self.regular_user = self.make_user('regular_user')
+        self.no_alert_user = self.make_user('no_alert_user')
         # No user
         self.anonymous = None
         # Create alerts
-        self.alert = self._make_app_alert(
+        self.alert = self.make_app_alert(
             user=self.regular_user, url=reverse('home')
         )
-        self.alert2 = self._make_app_alert(
+        self.alert2 = self.make_app_alert(
             user=self.regular_user, url=reverse('home')
         )
 
@@ -147,7 +147,7 @@ class TestListView(TestAlertUIBase):
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-app-alert-reload')
 
-        self._make_app_alert(user=self.regular_user, url=reverse('home'))
+        self.make_app_alert(user=self.regular_user, url=reverse('home'))
 
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.visibility_of_element_located((By.ID, 'sodar-app-alert-reload'))
@@ -195,7 +195,7 @@ class TestTitlebarBadge(TestAlertUIBase):
         self.assertEqual(alert_count.text, '2')
         self.assertEqual(alert_legend.text, 'alerts')
 
-        self._make_app_alert(user=self.regular_user, url=reverse('home'))
+        self.make_app_alert(user=self.regular_user, url=reverse('home'))
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.text_to_be_present_in_element(
                 (By.ID, 'sodar-app-alert-count'), '3'
@@ -245,7 +245,7 @@ class TestTitlebarBadge(TestAlertUIBase):
         alert_badge = self.selenium.find_element(By.ID, 'sodar-app-alert-badge')
         self.assertFalse(alert_badge.is_displayed())
 
-        self._make_app_alert(user=self.no_alert_user, url=reverse('home'))
+        self.make_app_alert(user=self.no_alert_user, url=reverse('home'))
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.visibility_of_element_located((By.ID, 'sodar-app-alert-badge'))
         )

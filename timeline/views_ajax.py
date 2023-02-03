@@ -3,6 +3,7 @@ import html
 
 from django.http import HttpResponseForbidden
 from django.utils.timezone import localtime
+from django.urls import reverse
 
 from rest_framework.response import Response
 
@@ -10,14 +11,27 @@ from rest_framework.response import Response
 from projectroles.views_ajax import (
     SODARBaseProjectAjaxView,
     SODARBasePermissionAjaxView,
+    SODARBaseAjaxView,
 )
 
-from timeline.models import ProjectEvent
+from timeline.models import ProjectEvent, ProjectEventStatus
 from timeline.templatetags.timeline_tags import get_status_style
 
 
 class EventDetailMixin:
     """Mixin for event detail retrieval helpers"""
+
+    def form_status_extra_url(self, status):
+        """Return URL for extra status data"""
+        if status.extra_data == {}:
+            return None
+        else:
+            return reverse(
+                'timeline:ajax_extra_status',
+                kwargs={
+                    'eventstatus': status.sodar_uuid,
+                },
+            )
 
     def get_event_details(self, event):
         """
@@ -36,7 +50,7 @@ class EventDetailMixin:
             'status': [],
         }
         status_changes = event.get_status_changes(reverse=True)
-        for s in status_changes:
+        for idx, s in enumerate(status_changes):
             ret['status'].append(
                 {
                     'timestamp': localtime(s.timestamp).strftime(
@@ -45,6 +59,7 @@ class EventDetailMixin:
                     'description': s.description,
                     'type': s.status_type,
                     'class': get_status_style(s),
+                    'extra_status_link': self.form_status_extra_url(s),
                 }
             )
         return ret
@@ -132,12 +147,14 @@ class EventExtraDataMixin:
         str_list.append('&nbsp;&nbsp;' * (indent - 1))
         str_list.append('<span class="json-close-bracket">]</span>')
 
-    def get_event_extra(self, event):
+    def get_event_extra(self, event, status=None):
         """
         Return event extra data.
         :param event: ProjectEvent object
         :return: JSON-serializable dict
         """
+        extra = status.extra_data if status else event.extra_data
+        extra_data = self._json_to_html(extra)
         ret = {
             'app': event.app,
             'name': event.event_name,
@@ -145,7 +162,7 @@ class EventExtraDataMixin:
             'timestamp': localtime(event.get_timestamp()).strftime(
                 '%Y-%m-%d %H:%M:%S'
             ),
-            'extra': self._json_to_html(event.extra_data),
+            'extra': extra_data,
         }
         return ret
 
@@ -179,6 +196,7 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
             'timeline.view_classified_event', event.project
         ):
             return HttpResponseForbidden()
+
         return Response(self.get_event_extra(event), status=200)
 
 
@@ -212,3 +230,39 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
         ):
             return HttpResponseForbidden()
         return Response(self.get_event_extra(event), status=200)
+
+
+class EventStatusExtraAjaxView(EventExtraDataMixin, SODARBaseAjaxView):
+    """Ajax view for retrieving event status extra data for events"""
+
+    def get(self, request, *args, **kwargs):
+        status = ProjectEventStatus.objects.filter(
+            sodar_uuid=self.kwargs['eventstatus']
+        ).first()
+        event = status.event
+        if event.project:
+            if (
+                not event.classified
+                and not request.user.has_perm(
+                    'timeline.view_timeline', event.project
+                )
+                or event.classified
+                and not request.user.has_perm(
+                    'timeline.view_classified_event', event.project
+                )
+            ):
+                return HttpResponseForbidden()
+        else:
+            if (
+                not event.classified
+                and not request.user.has_perm('timeline.view_site_timeline')
+                or event.classified
+                and not request.user.has_perm(
+                    'timeline.view_classified_site_event'
+                )
+            ):
+                return HttpResponseForbidden()
+        return Response(
+            self.get_event_extra(status.event, status),
+            status=200,
+        )

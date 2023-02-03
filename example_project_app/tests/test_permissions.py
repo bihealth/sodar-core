@@ -36,7 +36,7 @@ class TestExampleViews(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
     def test_example_ext_model(self):
         """Test permissions for example view with model from another app"""
         # Create object from filesfolders app model
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='TestFolder',
             project=self.project,
             folder=None,

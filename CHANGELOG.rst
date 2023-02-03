@@ -5,6 +5,67 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.12.0 (2023-02-03)
+====================
+
+Added
+-----
+
+- **General**
+    - Path URL examples and tests in ``example_project_app`` (#1047)
+- **Filesfolders**
+    - Project archiving support (#1086)
+- **Projectroles**
+    - App settings management via REST API (#521)
+    - App setting update methods in ``ProjectModifyPluginMixin`` (#521)
+    - Role ranking (#666)
+    - Project archiving (#369, #1098, #1099, #1100)
+    - ``Project.set_archive()`` helper (#369)
+    - ``can_modify_project_data`` predicate in rules (#369)
+    - ``cleanup_kwargs`` in ``assert_response_api()`` API test helper (#1088)
+    - ``is_superuser`` in ``SODARUserSerializer`` (#1052)
+    - Ajax view ``CurrentUserRetrieveAjaxView`` (#1053)
+- **Timeline**
+    - Admin view for all timeline events (#873)
+    - Search functionality (#1095)
+    - Back button in site event list object view (#1097)
+    - ``sodar_uuid`` field in ``ProjectEventStatus`` (#1112)
+
+Changed
+-------
+
+- **General**
+    - Rename incorrectly protected mixin methods (#1020)
+    - Upgrade ``checkout`` and ``setup-python`` GitHub actions (#1091)
+    - Upgrade minimum Django version to v3.2.17 (#1113)
+- **Projectroles**
+    - Rename ``AppSettingAPI`` methods (#539, #1040)
+    - Deprecate old ``AppSettingAPI`` method names (#539, #1039)
+    - Hide apps in ``PROJECTROLES_HIDE_APP_LINKS`` from superusers (#1042)
+    - Close Django admin warning modal on continue (#1114)
+- **Siteinfo**
+    - Use project type display names in stats view (#1107)
+- **Timeline**
+    - Display status extra data in event details modal (#1096)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Crash from path URLs in ``get_project()`` (#1047)
+    - Initial owner user name in project create form not following convention (#1059)
+- **Timeline**
+    - Project references in ``timeline_site.html`` (#1058)
+
+Removed
+-------
+
+- **Projectroles**
+    - Unused ``taskflow_testcase`` module (#1041)
+- **Timeline**
+    - Deprecated get_current_status() method (#1015)
+
+
 v0.11.1 (2023-01-09)
 ====================
 
@@ -44,6 +105,10 @@ Removed
 
 - **General**
     - Unused ``about.html`` template (#1029)
+- **Projectroles**
+    - Unused ``taskflow_testcase`` module (#1041)
+- **Timeline**
+    - Deprecated ``get_current_status()`` method (#1015)
 
 
 v0.11.0 (2022-09-23)

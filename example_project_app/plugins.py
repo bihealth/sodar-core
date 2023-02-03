@@ -36,6 +36,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     # Properties defined in ProjectAppPluginPoint -----------------------
 
     #: Project and user settings
+    # TODO: Unify naming
     app_settings = {
         'project_str_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
@@ -186,7 +187,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'description': 'Example hidden user setting',
             'user_modifiable': False,
         },
-        'project_user_string_setting': {
+        'project_user_str_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'STRING',
             'default': '',

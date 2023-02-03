@@ -98,11 +98,7 @@ def is_app_visible(plugin, project, user):
     """Check if app should be visible for user in a specific project"""
     can_view_app = user.has_perm(plugin.app_permission, project)
     app_hidden = False
-    if (
-        hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS')
-        and plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS
-        and not user.is_superuser
-    ):
+    if plugin.name in getattr(settings, 'PROJECTROLES_HIDE_APP_LINKS', []):
         app_hidden = True
     if (
         can_view_app
@@ -330,7 +326,7 @@ def get_admin_warning():
     )
     ret += (
         '<p><a class="btn btn-danger pull-right" role="button" '
-        'target="_blank" href="{}">'
+        'target="_blank" href="{}" id="sodar-pr-btn-admin-continue">'
         '<i class="iconify" data-icon="mdi:cogs"></i> Continue to Django Admin'
         '</a></p>'.format(reverse('admin:index'))
     )

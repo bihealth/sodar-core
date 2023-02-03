@@ -1,0 +1,66 @@
+{% extends 'projectroles/project_base.html' %}
+
+{% load rules %}
+{% load projectroles_common_tags %}
+
+{% block title %}
+  {% get_display_name 'PROJECT' title=True as project_display_title %}
+  Confirm {{ project_display_title }} {% if project.archive %}Unarchiving{% else %}Archiving{% endif %}
+{% endblock title %}
+
+{% block projectroles_extend %}
+
+{% get_display_name 'PROJECT' title=False as project_display %}
+<div class="container-fluid sodar-subtitle-container">
+  <h3>
+    Confirm {{ project_display|title }}
+    {% if project.archive %}Unarchiving{% else %}Archiving{% endif %}
+  </h3>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  {% if not project.archive %}
+    <div class="alert alert-warning" role="alert">
+      Are you sure you want to archive this {{ project_display }}? This will
+      make data in the apps for this {{ project_display }} read-only for all
+      users with access. Roles can still be altered, but only read access will
+      be provided for new users.
+    </div>
+  {% else %}
+    <div class="alert alert-warning" role="alert">
+      Are you sure you want to unarchive this {{ project_display }}? This will
+      make data in apps for this {{ project_display }} writable for users with
+      contributor access or above.
+    </div>
+  {% endif %}
+
+  <form method="post"
+        action="{% url 'projectroles:archive' project=project.sodar_uuid %}">
+    {% csrf_token %}
+    <input type="hidden" name="status"
+           value="{% if project.archive %}0{% else %}1{% endif %}" />
+    <div class="row">
+      <div class="btn-group ml-auto">
+        <a role="button" class="btn btn-secondary"
+           href="{{ request.session.real_referer }}">
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
+        </a>
+        {% if not project.archive %}
+          <button type="submit" class="btn btn-warning"
+                  id="sodar-pr-btn-confirm-archive">
+            <i class="iconify" data-icon="mdi:archive-arrow-up"></i>
+            Archive {{ project_display|title }}
+          </button>
+        {% else %}
+          <button type="submit" class="btn btn-warning"
+                   id="sodar-pr-btn-confirm-unarchive">
+            <i class="iconify" data-icon="mdi:archive-arrow-down"></i>
+            Unarchive {{ project_display|title }}
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock projectroles_extend %}

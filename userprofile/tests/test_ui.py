@@ -14,8 +14,8 @@ class TestUserDetails(TestUIBase):
     def setUp(self):
         super().setUp()
         # Create users
-        self.local_user = self._make_user('local_user', False)
-        self.ldap_user = self._make_user('user@EXAMPLE', False)
+        self.local_user = self.make_user('local_user', False)
+        self.ldap_user = self.make_user('user@EXAMPLE', False)
 
     def test_update_button(self):
         """Test existence of user update button"""

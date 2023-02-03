@@ -1,4 +1,5 @@
 """Plugin tests for the filesfolders app"""
+
 import uuid
 
 from django.urls import reverse
@@ -33,9 +34,6 @@ PLUGIN_URL_ID = 'filesfolders:list'
 SETTING_KEY = 'allow_public_links'
 
 
-# NOTE: Setting up the filesfolders plugin is done during migration
-
-
 class TestPlugins(
     ProjectMixin,
     FolderMixin,
@@ -52,22 +50,18 @@ class TestPlugins(
         self.user.is_staff = True
         self.user.is_superuser = True
         self.user.save()
-
         # Init roles
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-
         # Init project and owner role
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Init file
         self.file_content = bytes('content'.encode('utf-8'))
-
-        self.file = self._make_file(
+        self.file = self.make_file(
             name='file.txt',
             file_name='file.txt',
             file_content=self.file_content,
@@ -78,18 +72,16 @@ class TestPlugins(
             public_url=True,
             secret=SECRET,
         )
-
         # Init folder
-        self.folder = self._make_folder(
+        self.folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
             owner=self.user,
             description='',
         )
-
         # Init link
-        self.hyperlink = self._make_hyperlink(
+        self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
             project=self.project,
@@ -121,7 +113,6 @@ class TestPlugins(
             kwargs={'file': self.file.sodar_uuid, 'file_name': self.file.name},
         )
         ret = plugin.get_object_link('File', self.file.sodar_uuid)
-
         self.assertEqual(ret['url'], url)
         self.assertEqual(ret['label'], self.file.name)
         self.assertEqual(ret['blank'], True)
@@ -133,7 +124,6 @@ class TestPlugins(
             'filesfolders:list', kwargs={'folder': self.folder.sodar_uuid}
         )
         ret = plugin.get_object_link('Folder', self.folder.sodar_uuid)
-
         self.assertEqual(ret['url'], url)
         self.assertEqual(ret['label'], self.folder.name)
 
@@ -141,7 +131,6 @@ class TestPlugins(
         """Test get_object_link() for a HyperLink object"""
         plugin = ProjectAppPluginPoint.get_plugin(PLUGIN_NAME)
         ret = plugin.get_object_link('HyperLink', self.hyperlink.sodar_uuid)
-
         self.assertEqual(ret['url'], self.hyperlink.url)
         self.assertEqual(ret['label'], self.hyperlink.name)
         self.assertEqual(ret['blank'], True)

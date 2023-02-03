@@ -31,6 +31,9 @@
     {% endif %}
   </td>
   <td>
+    {% if event.project and user.is_superuser and timeline_mode == 'admin' %}
+      {% include 'timeline/_project_badge.html' %}
+    {% endif %}
     {% get_event_description event plugin_lookup request as event_desc %}
     {{ event_desc|safe }}
     {% if not details_card_mode and event.extra_data %}

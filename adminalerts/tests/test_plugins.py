@@ -5,8 +5,8 @@ from test_plus.test import TestCase
 # Projectroles dependency
 from projectroles.plugins import SiteAppPluginPoint
 
-from ..urls import urlpatterns
-from .test_models import AdminAlertMixin
+from adminalerts.urls import urlpatterns
+from adminalerts.tests.test_models import AdminAlertMixin
 
 
 PLUGIN_NAME = 'adminalerts'
@@ -26,9 +26,8 @@ class TestPlugins(AdminAlertMixin, TestCase):
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
-
         # Create alert
-        self.alert = self._make_alert(
+        self.alert = self.make_alert(
             message='alert',
             user=self.superuser,
             description='description',
@@ -55,7 +54,6 @@ class TestPlugins(AdminAlertMixin, TestCase):
         plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
         messages = plugin.get_messages()
         message = messages[0]
-
         self.assertEqual(len(messages), 1)
         self.assertIn(self.alert.message, message['content'])
         self.assertEqual(message['color'], 'info')

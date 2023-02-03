@@ -1,0 +1,60 @@
+{% load rules %}
+{% load timeline_tags %}
+
+{# Projectroles dependency #}
+{% load projectroles_common_tags %}
+
+<style type="text/css">
+  .table#sodar-tl-search-table tbody tr td:nth-child(1),
+  .table#sodar-tl-search-table tbody tr td:nth-child(2),
+  .table#sodar-tl-search-table tbody tr td:nth-child(3) {
+    white-space: nowrap;
+  }
+
+  .table#sodar-tl-search-table tbody tr td:nth-child(4) {
+    width: 100%;
+  }
+
+  /* Responsive modifications */
+  @media screen and (max-width: 1200px) {
+    .table#sodar-tl-search-table tr th:nth-child(3),
+    .table#sodar-tl-search-table tr td:nth-child(3) {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 850px) {
+    .table#sodar-tl-search-table tr th:nth-child(2),
+    .table#sodar-tl-search-table tr td:nth-child(2) {
+      display: none;
+    }
+  }
+
+    @media screen and (max-width: 650px) {
+    .table#sodar-tl-search-table tr th:nth-child(1),
+    .table#sodar-tl-search-table tr td:nth-child(1) {
+      display: none;
+    }
+  }
+</style>
+
+{% if search_results.all.items|length > 0 %}
+  {% include 'projectroles/_search_header.html' with search_title=search_results.all.title result_count=search_results.all.items|length %}
+  <table class="table table-striped sodar-card-table sodar-search-table"
+         id="sodar-tl-search-table">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Event</th>
+        <th>User</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in search_results.all.items %}
+        {% include 'timeline/_search_item.html' with event=t %}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include 'projectroles/_search_footer.html' %}
+{% endif %}

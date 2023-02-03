@@ -19,12 +19,12 @@ from markupfield.fields import MarkupField
 
 from projectroles.constants import get_sodar_constants
 
+
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 logger = logging.getLogger(__name__)
 
-# Access Django user model
-AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
-# Global SODAR constants
+# SODAR constants
 SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
@@ -76,7 +76,7 @@ class Project(models.Model):
     A SODAR project. Can have one parent category in case of nested
     projects. The project must be of a specific type, of which "CATEGORY" and
     "PROJECT" are currently implemented. "CATEGORY" projects are used as
-    containers for other projects
+    containers for other projects.
     """
 
     #: Project title
@@ -126,6 +126,12 @@ class Project(models.Model):
         'unauthenticated users if allowed on the site',
     )
 
+    #: Project is archived (read-only)
+    archive = models.BooleanField(
+        default=False,
+        help_text='Project is archived (read-only)',
+    )
+
     #: Full project title with parent path (auto-generated)
     full_title = models.CharField(
         max_length=4096,
@@ -168,16 +174,14 @@ class Project(models.Model):
         self._validate_parent()
         self._validate_title()
         self._validate_parent_type()
-
+        self._validate_archive()
         # Update full title of self and children
         self.full_title = self._get_full_title()
         for child in self.get_children():
             child.save()
-
         # Update public children
         # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
         self.has_public_children = self._has_public_children()
-
         super().save(*args, **kwargs)
 
     def _validate_parent(self):
@@ -203,6 +207,19 @@ class Project(models.Model):
         """
         if self.parent and self.title == self.parent.title:
             raise ValidationError('Project and parent titles can not be equal')
+
+    def _validate_archive(self):
+        """
+        Validate archive status against project type to ensure archiving is only
+        applied to projects.
+        """
+        if (
+            self.archive
+            and self.type != SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+        ):
+            raise ValidationError(
+                'Archiving a category is not currently supported'
+            )
 
     def get_absolute_url(self):
         return reverse(
@@ -396,7 +413,6 @@ class Project(models.Model):
                     user, include_children=True, check_owner=False
                 ):
                     return True
-
         return False
 
     def get_parents(self):
@@ -418,7 +434,6 @@ class Project(models.Model):
         ):
             return None
         RemoteProject = apps.get_model('projectroles', 'RemoteProject')
-
         try:
             return RemoteProject.objects.get(
                 project_uuid=self.sodar_uuid,
@@ -426,7 +441,6 @@ class Project(models.Model):
             ).site
         except RemoteProject.DoesNotExist:
             pass
-
         return None
 
     def is_remote(self):
@@ -448,7 +462,6 @@ class Project(models.Model):
             remote_project = RemoteProject.objects.filter(
                 project=self, site=self.get_source_site()
             ).first()
-
             if (
                 remote_project
                 and remote_project.level
@@ -464,6 +477,14 @@ class Project(models.Model):
             self.save()
             self._update_public_children()  # Update for parents
 
+    def set_archive(self, status=True):
+        """
+        Helper for setting archive value. Raises ValidationError for categories.
+        """
+        if status != self.archive:
+            self.archive = status
+            self.save()
+
     def get_log_title(self):
         """Return a log title for the project"""
         return '"{}" ({})'.format(self.title, self.sodar_uuid)
@@ -478,6 +499,12 @@ class Role(models.Model):
     #: Name of role
     name = models.CharField(
         max_length=64, unique=True, help_text='Name of role'
+    )
+
+    #: Role rank for determining role hierarchy
+    rank = models.IntegerField(
+        default=0,  # 0 = No rank
+        help_text='Role rank for determining role hierarchy',
     )
 
     #: Role description
@@ -500,10 +527,8 @@ class RoleAssignmentManager(models.Manager):
         """Return assignment of user to project, or None if not found"""
         if not user.is_authenticated:  # Anonymous users can't have roles
             return None
-
         try:
             return super().get_queryset().get(user=user, project=project)
-
         except RoleAssignment.DoesNotExist:
             return None
 
@@ -570,8 +595,9 @@ class RoleAssignment(models.Model):
         super().save(*args, **kwargs)
 
     def _validate_user(self):
-        """Validate fields to ensure user has only one role set for the
-        project"""
+        """
+        Validate fields to ensure user has only one role set for the project.
+        """
         assignment = RoleAssignment.objects.get_assignment(
             self.user, self.project
         )
@@ -584,11 +610,12 @@ class RoleAssignment(models.Model):
             )
 
     def _validate_owner(self):
-        """Validate role to ensure no more than one project owner is assigned
-        to a project"""
+        """
+        Validate role to ensure no more than one project owner is assigned to a
+        project.
+        """
         if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_OWNER']:
             owner = self.project.get_owner()
-
             if owner and (not self.pk or owner.pk != self.pk):
                 raise ValidationError(
                     'User {} already set as owner of {}'.format(
@@ -597,9 +624,10 @@ class RoleAssignment(models.Model):
                 )
 
     def _validate_delegate(self):
-        """Validate role to ensure no more than project delegate is
-        assigned to a project"""
-
+        """
+        Validate role to ensure no more than project delegate is assigned to a
+        project.
+        """
         # No validation if the project is a remote one
         if not (self.project.is_remote()):
             # Get project delegate limit
@@ -758,10 +786,8 @@ class AppSetting(models.Model):
         """Version of save() to convert 'value' data according to 'type'"""
         if self.type == 'BOOLEAN':
             self.value = str(int(self.value))
-
         elif self.type == 'INTEGER':
             self.value = str(self.value)
-
         super().save(*args, **kwargs)
 
     # Custom row-level functions
@@ -770,13 +796,10 @@ class AppSetting(models.Model):
         """Return value of the setting in the format specified in 'type'"""
         if self.type == 'INTEGER':
             return int(self.value)
-
         elif self.type == 'BOOLEAN':
             return bool(int(self.value))
-
         elif self.type == 'JSON':
             return self.value_json
-
         return self.value
 
 
@@ -1015,7 +1038,6 @@ class RemoteSite(models.Model):
         projects = RemoteProject.objects.filter(site=self).order_by(
             '-date_access'
         )
-
         if projects.count() > 0:
             return projects.first().date_access
 
@@ -1131,6 +1153,14 @@ class SODARUser(AbstractUser):
         super().save(*args, **kwargs)
         self.set_group()
 
+    def get_form_label(self):
+        """Return options with name, username and email"""
+        return '{}{}{}'.format(
+            self.name if self.name else '',
+            ' ({})'.format(self.username) if self.username else '',
+            ' <{}>'.format(self.email) if self.email else '',
+        )
+
     def get_full_name(self):
         """Return full name or username if not set"""
         if hasattr(self, 'name') and self.name:
@@ -1161,7 +1191,6 @@ def handle_ldap_login(sender, user, **kwargs):
     """Signal for LDAP login handling"""
 
     if hasattr(user, 'ldap_username'):
-
         # Make domain in username uppercase
         if (
             user.username.find('@') != -1
@@ -1170,7 +1199,6 @@ def handle_ldap_login(sender, user, **kwargs):
             u_split = user.username.split('@')
             user.username = u_split[0] + '@' + u_split[1].upper()
             user.save()
-
         # Save user name from first_name and last_name into name
         if user.name in ['', None]:
             if user.first_name != '':

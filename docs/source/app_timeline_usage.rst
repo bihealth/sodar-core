@@ -10,13 +10,28 @@ Usage instructions for the ``timeline`` app are detailed in this document.
 Timeline UI
 ===========
 
-You can browse events by navigating to a project or a category and selecting the
-"Timeline" app from the project sidebar. Alternatively, a view for site-wide
-events (not linked to a project) can be found in the user menu on the top right
-corner of the site.
+Timeline events can be browsed in three different views.
 
-By clicking on the time stamp for each event, you can view the details on
-different stages of event execution, in case of e.g. asynchronous events.
+Project Events
+    Project-specific events can be found by navigating to a project or a
+    category and selecting the "Timeline" app from the project sidebar.
+Site-Wide Events
+    Site-wide timeline events are events which are not linked to any project.
+    They can be found in the user dropdown on the top right corner of the UI.
+All Timeline Events
+    Superusers can also access a list of all timeline events regardless of their
+    project context. This link can also be found in the user dropdown.
+
+.. figure:: _static/app_timeline/sodar_timeline.png
+    :align: center
+    :scale: 50%
+
+    Timeline project event list view
+
+The event list layout is practically similar for each view. By clicking on the
+time stamp for each event, you can view the details on different status updates
+for the execution of the event. This is used e.g. in case of asynchronous
+events.
 
 By clicking on the clock icon next to an object link in the event description,
 you can view the event history of that object. The link itself will take you
@@ -25,16 +40,12 @@ to the relevant view for the object on your Django site.
 Certain events have a file icon in their description. If clicked, a popup
 showing a collection of extra data for the given event will appear.
 The popup will display extra data of the event itself and of the different
-states the event went through, if there are any.
+states the event went through, if there are any. Similarly, extra data may be
+available for certain event status updates. These can be accessed in the event
+detail modal.
 
-Admin users are able to see certain *"classified"* level events hidden from
-normal users.
-
-.. figure:: _static/app_timeline/sodar_timeline.png
-    :align: center
-    :scale: 50%
-
-    Timeline event list view
+Superusers are able to see certain *"classified"* level events hidden from
+regular users.
 
 
 Backend API for Event Logging

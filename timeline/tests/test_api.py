@@ -106,6 +106,7 @@ class TestTimelineAPI(
             'status_type': 'INIT',
             'description': DEFAULT_MESSAGES['INIT'],
             'extra_data': {},
+            'sodar_uuid': status.sodar_uuid,
         }
         self.assertEqual(model_to_dict(status), expected_status)
 
@@ -150,6 +151,7 @@ class TestTimelineAPI(
             'status_type': 'OK',
             'description': 'OK',
             'extra_data': {},
+            'sodar_uuid': status.sodar_uuid,
         }
         self.assertEqual(model_to_dict(status), expected_status)
 
@@ -180,6 +182,7 @@ class TestTimelineAPI(
             'status_type': 'INIT',
             'description': custom_init_desc,
             'extra_data': {},
+            'sodar_uuid': status.sodar_uuid,
         }
         self.assertEqual(model_to_dict(status), expected_status)
 
@@ -443,7 +446,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        site = self._make_site(name=REMOTE_SITE_NAME, url=REMOTE_SITE_URL)
+        site = self.make_site(name=REMOTE_SITE_NAME, url=REMOTE_SITE_URL)
         event.add_object(
             obj=site,
             label='obj',
@@ -464,7 +467,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -491,7 +494,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -543,7 +546,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,
@@ -571,7 +574,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='event with {obj}',
         )
-        folder = self._make_folder(
+        folder = self.make_folder(
             name='folder',
             project=self.project,
             folder=None,

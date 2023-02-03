@@ -229,9 +229,9 @@ The following projectroles settings are **optional**:
 * ``PROJECTROLES_DISABLE_CATEGORIES``: If set True, disable categories and only
   allow a list of projects on the root level (boolean) (see note)
 * ``PROJECTROLES_HIDE_APP_LINKS``: Apps hidden from the project sidebar and
-  dropdown menus for non-superusers. The app views and URLs are still
-  accessible. The names should correspond to the ``name`` property in each
-  project app's plugin (list)
+  dropdown menus for all users. The app views and URLs are still accessible via
+  other links or knowing the URL. The names should correspond to the ``name``
+  property in project app plugins (list)
 * ``PROJECTROLES_DELEGATE_LIMIT``: The number of delegate roles allowed per
   project. The amount is limited to 1 per project if not set, unlimited if set
   to 0. Will be ignored for remote projects synchronized from a source site

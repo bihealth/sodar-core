@@ -48,16 +48,16 @@ class TestViewsBase(
         self.user.save()
 
         # Init category and project
-        self.category = self._make_project(
+        self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.cat_owner_as = self._make_assignment(
+        self.cat_owner_as = self.make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.project = self._make_project(
+        self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self._make_assignment(
+        self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -193,3 +193,33 @@ class TestSiteObjectListView(TestViewsBase):
             self.assertEqual(
                 response.context['object_list'].first(), self.event_site
             )
+
+
+class TestAdminEventListView(TestViewsBase):
+    """Tests for the admin timeline list view"""
+
+    def setUp(self):
+        super().setUp()
+        self.event_site = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.user,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+        )
+
+    def test_render(self):
+        """Test rendering the admin list view"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:timeline_site_admin',
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['object_list']), 2)
+        self.assertEqual(
+            response.context['object_list'].first(), self.event_site
+        )
+        self.assertEqual(response.context['object_list'][1], self.event)

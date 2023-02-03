@@ -10,6 +10,82 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.12.0 (2023-02-03)
+********************
+
+Release Highlights
+==================
+
+- Add project archiving
+- Add role ranking
+- Add timeline admin view for all events
+- Add timeline search
+- Add app settings retrieve/set REST API views
+- Add current user info Ajax API view
+- Add superuser info to REST API views
+- Rename app settings API methods
+- Fix path URL support
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.17.
+
+App Settings API Methods Renamed
+--------------------------------
+
+Several methods in :ref:`AppSettingAPI <app_projectroles_api_django_settings>`
+have been renamed. The old named functions are deprecated and will be removed in
+SODAR Core v0.13. Please rename your method calls. The complete list of changed
+method names is as follows:
+
+- ``get_default_setting()`` -> ``get_default()``
+- ``get_app_setting()`` -> ``get()``
+- ``get_all_settings()`` -> ``get_all()``
+- ``get_all_defaults()`` -> ``get_defaults()``
+- ``set_app_setting()`` -> ``set()``
+- ``delete_setting()`` -> ``delete()``
+- ``validate_setting()`` -> ``validate()``
+- ``get_setting_def()`` -> ``get_definition()``
+- ``get_setting_defs()`` -> ``get_definitions()``
+
+Hiding Project App Links Affects Superusers
+-------------------------------------------
+
+Hiding project app links from the project sidebar and project dropdown with
+``PROJECTROLES_HIDE_APP_LINKS`` now also affects superusers. Note that the apps
+themselves can still be accessed if relevant URL are known or links provided to
+them elsewhere on the site.
+
+Incorrectly Protected Mixin Methods Renamed
+-------------------------------------------
+
+This release renames a large number of mixin methods in SODAR Core which had
+incorrectly set as protected by the ``_method_name()`` syntax. This affects many
+commonly used helpers in unit tests. If your tests fail with errors regarding
+undefined methods, rename your calls from ``_method()`` into ``method()``. See
+`the complete list of renamed methods <https://github.com/bihealth/sodar-core/issues/1020#issuecomment-1286961805>`_
+for more details.
+
+Timeline get_current_status() Method Removed
+--------------------------------------------
+
+The deprecated ``ProjectEvent.get_current_status()`` method in the Timeline app
+has been removed. Please use ``get_status()`` instead.
+
+Project Archiving Added
+-----------------------
+
+This release of SODAR Core adds the functionality to archive projects to make
+their data read-only for all users. You should update your project apps to
+support this behaviour.
+
+For more information, see :ref:`dev_project_app`.
+
+
 v0.11.1 (2023-01-09)
 ********************
 
@@ -33,6 +109,30 @@ The following minimum versions have been bumped:
 - ``django>=3.2.16``
 - ``setuptools>=65.6.3, <65.7``
 - ``wheel>=0.38.4, <0.39``
+
+Hiding Project App Links Affects Superusers
+-------------------------------------------
+
+Hiding project app links from the project sidebar and project dropdown with
+``PROJECTROLES_HIDE_APP_LINKS`` now also affects superusers. Note that the apps
+themselves can still be accessed if relevant URL are known or links provided to
+them elsewhere on the site.
+
+Incorrectly Protected Mixin Methods Renamed
+-------------------------------------------
+
+This release renames a large number of mixin methods in SODAR Core which had
+incorrectly set as protected by the ``_method_name()`` syntax. This affects many
+commonly used helpers in unit tests. If your tests fail with errors regarding
+undefined methods, rename your calls from ``_method()`` into ``method()``. See
+`the complete list of renamed methods <https://github.com/bihealth/sodar-core/issues/1020#issuecomment-1286961805>`_
+for more details.
+
+Timeline get_current_status() Method Removed
+--------------------------------------------
+
+The deprecated ``ProjectEvent.get_current_status()`` method in the Timeline app
+has been removed. Please use ``get_status()`` instead.
 
 
 v0.11.0 (2022-09-23)

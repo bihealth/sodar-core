@@ -96,6 +96,9 @@ MSG_PROJECT_WELCOME = (
     'Welcome to {project_type} "{project_title}". You have been assigned the '
     'role of {role}.'
 )
+MSG_ARCHIVE_ERR_CAT = 'Setting archival is not allowed for {}.'.format(
+    get_display_name(PROJECT_TYPE_CATEGORY, plural=True)
+)
 MSG_USER_PROFILE_UPDATE = 'User profile updated, please log in again.'
 MSG_USER_PROFILE_LDAP = 'Error: Profile editing not allowed for LDAP users.'
 MSG_INVITE_LDAP_LOCAL_VIEW = (
@@ -203,7 +206,7 @@ class ProjectAccessMixin:
         model = None
         uuid_val = None
         for k, v in kwargs.items():
-            if not re.match(r'^[0-9a-f-]+$', v):
+            if not re.match(r'^[0-9a-f-]+$', str(v)):
                 continue
             try:
                 if '__' in k:  # Model from another app
@@ -254,7 +257,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             self.request.user.is_superuser
             or project.is_owner_or_delegate(self.request.user)
         )
-        if not perm_override and app_settings.get_app_setting(
+        if not perm_override and app_settings.get(
             'projectroles', 'ip_restrict', project
         ):
             for k in (
@@ -270,7 +273,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             else:  # Can't fetch client ip address
                 return False
 
-            for record in app_settings.get_app_setting(
+            for record in app_settings.get(
                 'projectroles', 'ip_allowlist', project
             ):
                 if '/' in record:
@@ -293,7 +296,6 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         # Disable access for non-owner/delegate if remote project is revoked
         if project.is_revoked() and not perm_override:
             return False
-
         return super().has_permission()
 
     def get_queryset(self, *args, **kwargs):
@@ -444,7 +446,6 @@ class ProjectContextMixin(
             context['project_starred'] = get_tag_state(
                 context['project'], self.request.user, PROJECT_TAG_STARRED
             )
-
         return context
 
 
@@ -555,7 +556,6 @@ class ProjectDetailView(
             context['peer_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
             ).order_by('site__name')
-
         return context
 
 
@@ -643,7 +643,6 @@ class ProjectSearchResultsView(
                     )
                 )
             ret.append(search_res)
-
         return ret
 
     @classmethod
@@ -846,12 +845,12 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         for plugin in app_plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, app_name=name
                 )
 
@@ -859,15 +858,13 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 s_name = 'settings.{}.{}'.format(name, s_key)
                 s_data = data.get(s_name)
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default_setting(name, s_key)
-
+                    s_data = app_settings.get_default(name, s_key)
                 if s_val['type'] == 'JSON':
                     if s_data is None:
                         s_data = {}
                     project_settings[s_name] = json.dumps(s_data)
                 elif s_data is not None:
                     project_settings[s_name] = s_data
-
         return project_settings
 
     @staticmethod
@@ -894,14 +891,13 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         for k, v in project_settings.items():
             a_name = k.split('.')[1]
             s_name = k.split('.')[2]
-            s_def = app_settings.get_setting_def(s_name, app_name=a_name)
-            old_v = app_settings.get_app_setting(a_name, s_name, project)
+            s_def = app_settings.get_definition(s_name, app_name=a_name)
+            old_v = app_settings.get(a_name, s_name, project)
             if s_def['type'] == 'JSON':
                 v = json.loads(v)
             if old_v != v:
                 extra_data[k] = v
                 upd_fields.append(k)
-
         return extra_data, upd_fields
 
     @classmethod
@@ -925,7 +921,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             for k, v in project_settings.items():
                 a_name = k.split('.')[1]
                 s_name = k.split('.')[2]
-                s_def = app_settings.get_setting_def(s_name, app_name=a_name)
+                s_def = app_settings.get_definition(s_name, app_name=a_name)
                 if s_def['type'] == 'JSON':
                     v = json.loads(v)
                 extra_data[k] = v
@@ -956,7 +952,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
     def _update_settings(cls, project, project_settings):
         """Update project settings"""
         for k, v in project_settings.items():
-            app_settings.set_app_setting(
+            app_settings.set(
                 app_name=k.split('.')[1],
                 setting_name=k.split('.')[2],
                 value=v,
@@ -1198,7 +1194,6 @@ class ProjectModifyFormMixin(ProjectModifyMixin):
             )
             if settings.DEBUG:
                 raise ex
-
         return redirect(redirect_url)
 
 
@@ -1283,7 +1278,6 @@ class ProjectCreateView(
                         kwargs={'project': project.sodar_uuid},
                     )
                 )
-
         return super().get(request, *args, **kwargs)
 
 
@@ -1303,6 +1297,137 @@ class ProjectUpdateView(
     slug_url_kwarg = 'project'
     slug_field = 'sodar_uuid'
     allow_remote_edit = True
+
+
+class ProjectArchiveView(
+    LoginRequiredMixin,
+    ProjectModifyPermissionMixin,
+    ProjectContextMixin,
+    ProjectModifyPluginViewMixin,
+    TemplateView,
+):
+    """Project archiving/unarchiving view"""
+
+    template_name = 'projectroles/project_archive_confirm.html'
+    permission_required = 'projectroles.update_project'
+
+    def _alert_users(self, project, action, user):
+        """
+        Alert users on project archiving/unarchiving.
+
+        :param project: Project object
+        :param action: String ("archive" or "unarchive")
+        :param user: User initiating project archiving/unarchiving
+        """
+        app_alerts = get_backend_api('appalerts_backend')
+        if not app_alerts:
+            return
+        alert_p = get_display_name(PROJECT_TYPE_PROJECT, title=True)
+        if action == 'archive':
+            alert_msg = '{} data is now read-only.'.format(alert_p)
+        else:
+            alert_msg = '{} data can be modified.'.format(alert_p)
+        users = [a.user for a in project.get_all_roles() if a.user != user]
+        users = list(set(users))  # Remove possible dupes (see issue #710)
+        if not users:
+            return
+        for u in users:
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='project_{}'.format(action),
+                user=u,
+                message='{} {}d by {}. {}'.format(
+                    alert_p, action, user.get_full_name(), alert_msg
+                ),
+                url=reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.sodar_uuid},
+                ),
+                project=project,
+            )
+
+    def get(self, request, *args, **kwargs):
+        """Override get() to check project type"""
+        project = self.get_project()
+        if project.type != PROJECT_TYPE_PROJECT:
+            messages.error(request, MSG_ARCHIVE_ERR_CAT)
+            return redirect(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.sodar_uuid},
+                )
+            )
+        return super().render_to_response(
+            self.get_context_data(*args, **kwargs)
+        )
+
+    def post(self, request, **kwargs):
+        """Override post() to handle POST from confirmation template"""
+        timeline = get_backend_api('timeline_backend')
+        project = self.get_project()
+        redirect_url = reverse(
+            'projectroles:detail', kwargs={'project': project.sodar_uuid}
+        )
+        if project.type == PROJECT_TYPE_CATEGORY:
+            messages.error(request, MSG_ARCHIVE_ERR_CAT)
+            return redirect(redirect_url)
+
+        status = request.POST.get('status')
+        if status is None:
+            messages.error(request, 'Status not set, unable to set archival.')
+            return redirect(redirect_url)
+        status = True if status.lower() in ['1', 'true'] else False
+        action = 'unarchive' if not status else 'archive'
+        if project.archive == status:
+            messages.warning(
+                request,
+                '{} is already {}d.'.format(
+                    get_display_name(project.type, title=True), action
+                ),
+            )
+            return redirect(redirect_url)
+
+        try:
+            project.set_archive(status)
+            # Call for additional actions for archive/unarchive in plugins
+            if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
+                self.call_project_modify_api(
+                    'perform_project_archive',
+                    'revert_project_archive',
+                    [project],
+                )
+            messages.success(
+                request,
+                '{} {}d.'.format(
+                    get_display_name(project.type, title=True), action
+                ),
+            )
+        except Exception as ex:
+            messages.error(
+                request,
+                'Failed to {} {}: {}'.format(
+                    action, get_display_name(project.type), ex
+                ),
+            )
+            return redirect(redirect_url)
+
+        try:
+            if timeline:
+                timeline.add_event(
+                    project=project,
+                    app_name=APP_NAME,
+                    user=request.user,
+                    event_name='project_{}'.format(action),
+                    description='{} project'.format(action),
+                    status_type='OK',
+                )
+            # Alert users and send email
+            self._alert_users(project, action, request.user)
+            if SEND_EMAIL:
+                email.send_project_archive_mail(project, action, request)
+        except Exception as ex:
+            messages.error(request, 'Failed to alert users: {}'.format(ex))
+        return redirect(redirect_url)
 
 
 # RoleAssignment Views ---------------------------------------------------------
@@ -1428,7 +1553,6 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
                 email.send_role_change_mail(
                     action.lower(), project, user, role, request
                 )
-
         return role_as
 
 
@@ -1540,7 +1664,6 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             )
         if SEND_EMAIL:
             email.send_role_change_mail('delete', project, user, None, request)
-
         return instance
 
 
@@ -1868,7 +1991,6 @@ class ProjectInviteMixin:
         else:
             status_type = 'FAILED'
             status_desc = 'PROJECTROLES_SEND_EMAIL not True'
-
         if status_type != 'OK' and not resend:
             status_desc += ', invite not created'
 
@@ -2285,7 +2407,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                         kwargs={'secret': invite.secret},
                     )
                 )
-
             # Show form if user doesn't exists and no user is logged in
             return super().get(*args, **kwargs)
 
@@ -2417,13 +2538,11 @@ class ProjectInviteResendView(
                     kwargs={'project': self.get_project()},
                 )
             )
-
         # Reset invite expiration date
         invite.date_expire = get_expiry_date()
         invite.save()
         # Resend mail and add to timeline
         self.handle_invite(invite=invite, request=self.request, resend=True)
-
         return redirect(
             reverse(
                 'projectroles:invites',

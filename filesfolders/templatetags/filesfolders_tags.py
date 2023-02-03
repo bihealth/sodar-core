@@ -39,7 +39,7 @@ def get_details_items(project):
 @register.simple_tag
 def allow_public_links(project):
     """Return the boolean value for allow_public_links in project settings"""
-    return app_settings.get_app_setting(APP_NAME, 'allow_public_links', project)
+    return app_settings.get(APP_NAME, 'allow_public_links', project)
 
 
 @register.simple_tag

@@ -1,3 +1,5 @@
+"""Plugins for the adminalerts app"""
+
 from django.urls import reverse
 from django.utils import timezone
 
@@ -58,7 +60,6 @@ class SiteAppPlugin(SiteAppPluginPoint):
             content = (
                 '<i class="iconify" data-icon="mdi:alert"></i> ' + a.message
             )
-
             if a.description.raw and user and user.is_authenticated:
                 content += (
                     '<span class="pull-right"><a href="{}" class="text-info">'
@@ -70,7 +71,6 @@ class SiteAppPlugin(SiteAppPluginPoint):
                         )
                     )
                 )
-
             messages.append(
                 {
                     'content': content,
@@ -79,5 +79,4 @@ class SiteAppPlugin(SiteAppPluginPoint):
                     'require_auth': a.require_auth,
                 }
             )
-
         return messages

@@ -41,18 +41,18 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         for plugin in plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_setting_defs(
+                p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
                 )
             for s_key, s_val in p_settings.items():
                 yield {
                     'label': s_val.get('label') or '{}.{}'.format(name, s_key),
-                    'value': app_settings.get_app_setting(
+                    'value': app_settings.get(
                         name, s_key, user=self.request.user
                     ),
                     'description': s_val.get('description'),
@@ -85,7 +85,7 @@ class UserSettingUpdateView(
         for key, value in form.cleaned_data.items():
             if key.startswith('settings.'):
                 _, app_name, setting_name = key.split('.', 3)
-                app_settings.set_app_setting(
+                app_settings.set(
                     app_name, setting_name, value, user=self.request.user
                 )
         messages.success(self.request, SETTING_UPDATE_MSG)
