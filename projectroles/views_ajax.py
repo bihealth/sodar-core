@@ -370,7 +370,10 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         timeline = get_backend_api('timeline_backend')
         tag_state = get_tag_state(project, user)
         action_str = '{}star'.format('un' if tag_state else '')
-        set_tag_state(project, user, PROJECT_TAG_STARRED)
+        if tag_state:
+            set_tag_state(project, user, star=False)
+        else:
+            set_tag_state(project, user, star=True)
 
         # Add event in Timeline
         if timeline:

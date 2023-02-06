@@ -1,59 +1,24 @@
 """Functions for project tagging/starring in the projectroles app"""
 # NOTE: This can be expanded to include other types of tags later on
 
-from projectroles.models import ProjectUserTag, PROJECT_TAG_STARRED
+from projectroles.app_settings import AppSettingAPI
 
 
-def get_tag_state(project, user, name=PROJECT_TAG_STARRED):
-    """
-    Get current starring status of a project/user.
-
-    :param project: Project object
-    :param user: User object
-    :param name: Tag name (string)
-    :return: Boolean
-    """
-    if not user.is_authenticated:
-        return False
-
-    try:
-        ProjectUserTag.objects.get(project=project, user=user, name=name)
-        return True
-
-    except ProjectUserTag.DoesNotExist:
-        return False
+app_settings = AppSettingAPI()
 
 
-def set_tag_state(project, user, name=PROJECT_TAG_STARRED):
-    """
-    Set starring status of a project/user to true/false depending on the current
-    status.
-
-    :param project: Project object
-    :param user: User object
-    :param name: Tag name (string)
-    """
-    try:
-        tag = ProjectUserTag.objects.get(project=project, user=user, name=name)
-        tag.delete()
-
-    except ProjectUserTag.DoesNotExist:
-        tag = ProjectUserTag(project=project, user=user, name=name)
-        tag.save()
+def get_tag_state(project, user):
+    """Return True if project is starred"""
+    return app_settings.get('projectroles', 'project_star', project, user)
 
 
-def remove_tag(project, user, name=PROJECT_TAG_STARRED):
-    """
-    Remove ProjectUserTag object from project and user if it exists.
-
-    :param project: Project object
-    :param user: User object
-    :param name: Tag name (string)
-    """
-    try:
-        ProjectUserTag.objects.get(
-            project=project, user=user, name=name
-        ).delete()
-
-    except ProjectUserTag.DoesNotExist:
-        pass
+def set_tag_state(project, user, star=True):
+    """Creating Star in app_setting"""
+    app_settings.set(
+        app_name='projectroles',
+        setting_name='project_star',
+        value=star,
+        project=project,
+        user=user,
+        validate=False,
+    )
