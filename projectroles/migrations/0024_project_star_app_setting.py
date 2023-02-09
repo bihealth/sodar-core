@@ -1,14 +1,18 @@
-from django.db import migrations, models
+from django.db import migrations
 from projectroles.app_settings import AppSettingAPI
+from projectroles.models import Project, ProjectUserTag
 
+app_settings = AppSettingAPI()
 
-def set_ranks(apps, schema_editor):
+def migrate_stars(apps, schema_editor):
     """Set rank values for existing roles"""
-    UserTag = apps.get_model('projectroles', 'ProjectUserTag')
-    Project = apps.get_model('projectroles', 'Project')
-    app_settings = AppSettingAPI()
+    # UserTag = apps.get_model('projectroles', 'ProjectUserTag')
+    # Project = apps.get_model('projectroles', 'Project')
     for project in Project.objects.all():
-        user_tag = UserTag.objects.filter(project=project)
+        # project = Project.objects.filter(
+        #         sodar_uuid=pr.sodar_uuid
+        #     ).first()
+        user_tag = ProjectUserTag.objects.filter(project=project).first()
         if user_tag is not None:
             app_settings.set(
                 app_name='projectroles',
@@ -27,12 +31,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='role',
-            name='rank',
-            field=models.IntegerField(default=0, help_text='Role rank for determining role hierarchy'),
-        ),
-        migrations.RunPython(set_ranks, reverse_code=migrations.RunPython.noop)
+        migrations.RunPython(migrate_stars, reverse_code=migrations.RunPython.noop)
         # migrations.DeleteModel(
         #     name='ProjectUserTag',
         # ),
