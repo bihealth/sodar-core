@@ -188,10 +188,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         starred_projects = []
         if request.user.is_authenticated:
             starred_projects = [
-                t.project
-                for t in ProjectUserTag.objects.filter(
-                    user=request.user, name=PROJECT_TAG_STARRED
-                )
+                project
+                for project in Project.objects.all()
+                if get_tag_state(project, request.user)
             ]
         full_title_idx = len(parent.full_title) + 3 if parent else 0
 
