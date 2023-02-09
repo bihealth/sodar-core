@@ -40,7 +40,7 @@ from projectroles.views_api import (
 
 
 logger = logging.getLogger(__name__)
-app_setting = AppSettingAPI()
+app_settings = AppSettingAPI()
 
 
 # SODAR consants
@@ -189,7 +189,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             starred_projects = [
                 project
                 for project in Project.objects.all()
-                if app_setting.get(
+                if app_settings.get(
                     'projectroles', 'project_star', project, request.user
                 )
             ]
@@ -368,14 +368,14 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         user = request.user
         timeline = get_backend_api('timeline_backend')
-        tag_state = app_setting.get(
+        tag_state = app_settings.get(
             'projectroles', 'project_star', project, user
         )
         action_str = '{}star'.format('un' if tag_state else '')
         if tag_state:
-            app_setting.delete('projectroles', 'project_star', project, user)
+            app_settings.delete('projectroles', 'project_star', project, user)
         else:
-            app_setting.set(
+            app_settings.set(
                 app_name='projectroles',
                 setting_name='project_star',
                 value=True,

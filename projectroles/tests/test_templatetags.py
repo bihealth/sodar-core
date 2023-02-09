@@ -23,7 +23,6 @@ from projectroles.models import (
     AppSetting,
 )
 from projectroles.plugins import get_app_plugin, get_active_plugins
-from projectroles.project_tags import set_tag_state
 from projectroles.templatetags import (
     projectroles_common_tags as c_tags,
     projectroles_tags as tags,
@@ -457,11 +456,20 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         self.assertEqual(tags.has_star(self.project, self.user), False)
 
         # Set star and test again
-        set_tag_state(self.project, self.user, star=True)
+        app_settings.set(
+            app_name='projectroles',
+            setting_name='project_star',
+            value=True,
+            project=self.project,
+            user=self.user,
+            validate=False,
+        )
         self.assertEqual(tags.has_star(self.project, self.user), True)
 
         # Unset star and test again
-        set_tag_state(self.project, self.user, star=False)
+        app_settings.delete(
+            'projectroles', 'project_star', self.project, self.user
+        )
         self.assertEqual(tags.has_star(self.project, self.user), False)
 
     # TODO: Test get_remote_project_obj() (Set up remote projects)

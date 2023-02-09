@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from test_plus.test import TestCase
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -19,6 +20,9 @@ from projectroles.tests.test_views import (
 )
 from projectroles.tests.test_views_api import SerializedObjectMixin
 from projectroles.views_ajax import INHERITED_OWNER_INFO
+
+
+app_settings = AppSettingAPI()
 
 
 class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
