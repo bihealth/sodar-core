@@ -26,11 +26,6 @@ VALID_SCOPES = [
     APP_SETTING_SCOPE_USER,
     APP_SETTING_SCOPE_PROJECT_USER,
 ]
-# Deprecation message for renamed methods, see issue #539
-DEPRECATION_MSG = (
-    '{}() is deprecated and will be removed in SODAR Core v0.13: Use '
-    '{}() instead'
-)
 
 # Define App Settings for projectroles app
 PROJECTROLES_APP_SETTINGS = {
@@ -278,26 +273,6 @@ class AppSettingAPI:
         )
 
     @classmethod
-    def get_default_setting(cls, *args, **kwargs):
-        """
-        Get default setting value from an app plugin.
-
-        DEPRECATED: Use get_default() instead. Will be removed in SODAR Core
-        v0.13.
-
-        :param app_name: App name (string, must equal "name" in app plugin)
-        :param setting_name: Setting name (string)
-        :param post_safe: Whether a POST safe value should be returned (bool)
-        :return: Setting value (string, integer or boolean)
-        :raise: ValueError if app plugin is not found
-        :raise: KeyError if nothing is found with setting_name
-        """
-        logger.warning(
-            DEPRECATION_MSG.format('get_default_setting', 'get_default')
-        )
-        return cls.get_default(*args, **kwargs)
-
-    @classmethod
     def get(
         cls, app_name, setting_name, project=None, user=None, post_safe=False
     ):
@@ -326,25 +301,6 @@ class AppSettingAPI:
         if post_safe and isinstance(val, (dict, list)):
             return json.dumps(val)
         return val
-
-    @classmethod
-    def get_app_setting(cls, *args, **kwargs):
-        """
-        Return app setting value for a project or an user. If not set, return
-        default.
-
-        DEPRECATED: Use get() instead. Will be removed in SODAR Core v0.13.
-
-        :param app_name: App name (string, must equal "name" in app plugin)
-        :param setting_name: Setting name (string)
-        :param project: Project object (optional)
-        :param user: User object (optional)
-        :param post_safe: Whether a POST safe value should be returned (bool)
-        :return: String or None
-        :raise: KeyError if nothing is found with setting_name
-        """
-        logger.warning(DEPRECATION_MSG.format('get_app_setting', 'get'))
-        return cls.get(*args, **kwargs)
 
     @classmethod
     def get_all(cls, project=None, user=None, post_safe=False):
@@ -383,23 +339,6 @@ class AppSettingAPI:
         return ret
 
     @classmethod
-    def get_all_settings(cls, *args, **kwargs):
-        """
-        Return all setting values. If the value is not found, return
-        the default.
-
-        DEPRECATED: Use get_all() instead. Will be removed in SODAR Core v0.13.
-
-        :param project: Project object (optional)
-        :param user: User object (optional)
-        :param post_safe: Whether POST safe values should be returned (bool)
-        :return: Dict
-        :raise: ValueError if neither project nor user are set
-        """
-        logger.warning(DEPRECATION_MSG.format('get_all_settings', 'get_all'))
-        return cls.get_all(*args, **kwargs)
-
-    @classmethod
     def get_defaults(cls, scope, post_safe=False):
         """
         Get all default settings for a scope.
@@ -425,23 +364,6 @@ class AppSettingAPI:
                 'settings.{}.{}'.format('projectroles', s_key)
             ] = cls.get_default('projectroles', s_key, post_safe)
         return ret
-
-    @classmethod
-    def get_all_defaults(cls, *args, **kwargs):
-        """
-        Get all default settings for a scope.
-
-        DEPRECATED: Use get_defaults() instead. Will be removed in SODAR Core
-        v0.13.
-
-        :param scope: Setting scope (PROJECT, USER or PROJECT_USER)
-        :param post_safe: Whether POST safe values should be returned (bool)
-        :return: Dict
-        """
-        logger.warning(
-            DEPRECATION_MSG.format('get_all_defaults', 'get_defaults')
-        )
-        return cls.get_defaults(*args, **kwargs)
 
     @classmethod
     def set(
@@ -564,29 +486,6 @@ class AppSettingAPI:
             return True
 
     @classmethod
-    def set_app_setting(cls, *args, **kwargs):
-        """
-        Set value of an existing project or user settings. Creates the object if
-        not found.
-
-        DEPRECATED: Use set() instead. Will be removed in SODAR Core v0.13.
-
-        :param app_name: App name (string, must equal "name" in app plugin)
-        :param setting_name: Setting name (string)
-        :param value: Value to be set
-        :param project: Project object (optional)
-        :param user: User object (optional)
-        :param validate: Validate value (bool, default=True)
-        :return: True if changed, False if not changed
-        :raise: ValueError if validating and value is not accepted for setting
-                type
-        :raise: ValueError if neither project nor user are set
-        :raise: KeyError if setting name is not found in plugin specification
-        """
-        logger.warning(DEPRECATION_MSG.format('set_app_setting', 'set'))
-        return cls.set(*args, **kwargs)
-
-    @classmethod
     def delete(cls, app_name, setting_name, project=None, user=None):
         """
         Delete app setting.
@@ -622,21 +521,6 @@ class AppSettingAPI:
                 s_count, 's' if s_count != 1 else ''
             )
         )
-
-    @classmethod
-    def delete_setting(cls, *args, **kwargs):
-        """
-        Delete app setting.
-
-        DEPRECATED: Use delete() instead. Will be removed in SODAR Core v0.13.
-
-        :param app_name: App name (string, must equal "name" in app plugin)
-        :param setting_name: Setting name (string)
-        :param project: Project object to delete setting from (optional)
-        :param user: User object to delete setting from (optional)
-        """
-        logger.warning(DEPRECATION_MSG.format('delete_setting', 'delete'))
-        return cls.delete(*args, **kwargs)
 
     @classmethod
     def validate(cls, setting_type, setting_value, setting_options):
@@ -679,21 +563,6 @@ class AppSettingAPI:
         return True
 
     @classmethod
-    def validate_setting(cls, *args, **kwargs):
-        """
-        Validate setting value according to its type.
-
-        DEPRECATED: Use validate() instead. Will be removed in SODAR Core v0.13.
-
-        :param setting_type: Setting type
-        :param setting_value: Setting value
-        :param setting_options: Setting options (can be None)
-        :raise: ValueError if setting_type or setting_value is invalid
-        """
-        logger.warning(DEPRECATION_MSG.format('validate_setting', 'validate'))
-        return cls.validate(*args, **kwargs)
-
-    @classmethod
     def get_definition(cls, name, plugin=None, app_name=None):
         """
         Return definition for a single app setting, either based on an app name
@@ -717,25 +586,6 @@ class AppSettingAPI:
         cls._check_type(ret['type'])
         cls._check_type_options(ret['type'], ret.get('options'))
         return ret
-
-    @classmethod
-    def get_setting_def(cls, *args, **kwargs):
-        """
-        Return definition for a single app setting, either based on an app name
-        or the plugin object.
-
-        DEPRECATED: Use get_definition() instead. Will be removed in SODAR Core
-        v0.13.
-
-        :param name: Setting name
-        :param plugin: Plugin object extending ProjectAppPluginPoint or None
-        :param app_name: Name of the app plugin (string or None)
-        :return: Dict
-        :raise: ValueError if neither app_name or plugin are set or if setting
-                is not found in plugin
-        """
-        logger.warning(DEPRECATION_MSG.format('get_setting_def', 'get_def'))
-        return cls.get_definition(*args, **kwargs)
 
     @classmethod
     def get_definitions(
@@ -779,26 +629,6 @@ class AppSettingAPI:
             cls._check_type(v['type'])
             cls._check_type_options(v['type'], v.get('options'))
         return ret
-
-    @classmethod
-    def get_setting_defs(cls, *args, **kwargs):
-        """
-        Return app setting definitions of a specific scope from a plugin.
-
-        DEPRECATED: Use get_definitions() instead. Will be removed in SODAR Core
-        v0.13.
-
-        :param scope: PROJECT, USER or PROJECT_USER
-        :param plugin: Plugin object extending ProjectAppPluginPoint or None
-        :param app_name: Name of the app plugin (string or None)
-        :param user_modifiable: Only return modifiable settings if True
-                                (boolean)
-        :return: Dict
-        :raise: ValueError if scope is invalid or if if neither app_name or
-                plugin are set
-        """
-        logger.warning(DEPRECATION_MSG.format('get_setting_defs', 'get_defs'))
-        return cls.get_definitions(*args, **kwargs)
 
     @classmethod
     def get_projectroles_defs(cls):

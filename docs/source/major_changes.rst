@@ -10,6 +10,26 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.13.0 (WIP)
+*************
+
+Release Highlights
+==================
+
+**TODO**
+
+Breaking Changes
+================
+
+Deprecated App Settings API Methods Removed
+-------------------------------------------
+
+The app settings API methods deprecated in v0.12 have been removed in this
+release. If you are still using deprecated methods, please refer to the list
+found in the v0.12.0 major changes notes below and update your API calls
+accordingly.
+
+
 v0.12.0 (2023-02-03)
 ********************
 

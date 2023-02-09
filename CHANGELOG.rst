@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Removed
+-------
+
+- **Projectroles**
+    - Deprecated ``AppSettingAPI`` methods (#1039)
+
+
 v0.12.0 (2023-02-03)
 ====================
 
