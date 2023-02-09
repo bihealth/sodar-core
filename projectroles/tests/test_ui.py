@@ -563,7 +563,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
             By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
-        self.assertEqual(self._get_item_vis_count(), 1)
+        self.assertEqual(self._get_item_vis_count(), 2)
         self.assertEqual(
             self.selenium.find_element(
                 By.ID, 'sodar-pr-project-list-message'

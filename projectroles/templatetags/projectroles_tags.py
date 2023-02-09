@@ -7,16 +7,17 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     RoleAssignment,
     RemoteProject,
     SODAR_CONSTANTS,
 )
 from projectroles.plugins import get_active_plugins
-from projectroles.project_tags import get_tag_state
 
 
 register = template.Library()
+app_settings = AppSettingAPI()
 
 
 # SODAR constants
@@ -67,7 +68,7 @@ def has_star(project, user):
     """Return True/False for project star tag state"""
     return user.has_perm(
         'projectroles.view_project', project
-    ) and get_tag_state(project, user)
+    ) and app_settings.get('projectroles', 'project_star', project, user)
 
 
 @register.simple_tag

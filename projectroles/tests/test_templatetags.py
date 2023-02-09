@@ -17,7 +17,6 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Role,
     SODAR_CONSTANTS,
-    PROJECT_TAG_STARRED,
     Project,
     RemoteProject,
     RemoteSite,
@@ -453,14 +452,17 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
 
     # TODO: Test get_site_app_messages() (set up admin alert)
 
-    # def test_has_star(self):
-    #     """Test has_star()"""
-    #     # Test with no star
-    #     self.assertEqual(tags.has_star(self.project, self.user), False)
-    #
-    #     # Set star and test again
-    #     set_tag_state(self.project, self.user, name=PROJECT_TAG_STARRED)
-    #     self.assertEqual(tags.has_star(self.project, self.user), True)
+    def test_star(self):
+        """Test star"""
+        self.assertEqual(tags.has_star(self.project, self.user), False)
+
+        # Set star and test again
+        set_tag_state(self.project, self.user, star=True)
+        self.assertEqual(tags.has_star(self.project, self.user), True)
+
+        # Unset star and test again
+        set_tag_state(self.project, self.user, star=False)
+        self.assertEqual(tags.has_star(self.project, self.user), False)
 
     # TODO: Test get_remote_project_obj() (Set up remote projects)
 

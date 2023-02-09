@@ -2,20 +2,17 @@ from django.db import migrations
 
 
 def migrate_stars(apps, schema_editor):
-    """Set rank values for existing roles"""
+    """Create project_star AppSettings"""
     ProjectUserTag = apps.get_model('projectroles', 'ProjectUserTag')
-    Project = apps.get_model('projectroles', 'Project')
     AppSetting = apps.get_model('projectroles', 'AppSetting')
-    for project in Project.objects.all():
-        user_tag = ProjectUserTag.objects.filter(project=project).first()
-        if user_tag is not None:
-            setting = AppSetting()
-            setting.project = project
-            setting.user = user_tag.user
-            setting.value = True
-            setting.name = 'project_star'
-            setting.user_modifiable = True
-            setting.save()
+    for projectusertag in ProjectUserTag.objects.all():
+        AppSetting.objects.get_or_create(
+            project=projectusertag.project,
+            user=projectusertag.user,
+            value=True,
+            name='project_star',
+        )
+
 
 
 class Migration(migrations.Migration):

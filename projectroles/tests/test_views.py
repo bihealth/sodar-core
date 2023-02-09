@@ -1968,204 +1968,204 @@ class TestProjectSettingsFormTargetLocal(
             project=self.project,
         )
 
-    # def test_get(self):
-    #     """Test rendering settings values as target"""
-    #     with self.login(self.user):
-    #         response = self.client.get(
-    #             reverse(
-    #                 'projectroles:update',
-    #                 kwargs={'project': self.project.sodar_uuid},
-    #             )
-    #         )
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertIsNotNone(response.context['form'])
-    #     self.assertIsNotNone(
-    #         response.context['form'].fields.get(
-    #             'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
-    #         )
-    #     )
-    #     self.assertIsNotNone(
-    #         response.context['form'].fields.get(
-    #             'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
-    #         )
-    #     )
-    #     self.assertIsNotNone(
-    #         response.context['form'].fields.get(
-    #             'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
-    #         )
-    #     )
-    #     self.assertIsNotNone(
-    #         response.context['form'].fields.get(
-    #             'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
-    #         )
-    #     )
-    #     self.assertIsNotNone(
-    #         response.context['form'].fields.get(
-    #             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
-    #         )
-    #     )
-    #     self.assertIsNotNone(
-    #         response.context['form'].fields.get(
-    #             'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
-    #         )
-    #     )
-    #     self.assertIsNotNone(
-    #         response.context['form'].fields.get(
-    #             'settings.projectroles.test_setting_local'
-    #         )
-    #     )
-    #     self.assertFalse(
-    #         response.context['form']
-    #         .fields.get('settings.projectroles.test_setting_local')
-    #         .disabled
-    #     )
-    #     self.assertIsNotNone(
-    #         response.context['form'].fields.get(
-    #             'settings.projectroles.test_setting'
-    #         )
-    #     )
-    #     self.assertTrue(
-    #         response.context['form']
-    #         .fields.get('settings.projectroles.test_setting')
-    #         .disabled
-    #     )
+    def test_get(self):
+        """Test rendering settings values as target"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['form'])
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.test_setting_local'
+            )
+        )
+        self.assertFalse(
+            response.context['form']
+            .fields.get('settings.projectroles.test_setting_local')
+            .disabled
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.test_setting'
+            )
+        )
+        self.assertTrue(
+            response.context['form']
+            .fields.get('settings.projectroles.test_setting')
+            .disabled
+        )
 
-    # def test_post(self):
-    #     """Test modifying settings values as target"""
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
-    #         ),
-    #         '',
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
-    #         ),
-    #         0,
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME,
-    #             'project_str_setting_options',
-    #             project=self.project,
-    #         ),
-    #         'string1',
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME,
-    #             'project_int_setting_options',
-    #             project=self.project,
-    #         ),
-    #         0,
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
-    #         ),
-    #         False,
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
-    #         ),
-    #         {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             'projectroles', 'test_setting', project=self.project
-    #         ),
-    #         False,
-    #     )
-    #
-    #     values = {
-    #         'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
-    #         'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
-    #         'settings.%s.project_str_setting_options'
-    #         % EXAMPLE_APP_NAME: 'string2',
-    #         'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
-    #         'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
-    #         'settings.%s.project_json_setting'
-    #         % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
-    #         'settings.projectroles.test_setting_local': True,
-    #         'owner': self.user.sodar_uuid,
-    #         'title': 'TestProject',
-    #         'type': PROJECT_TYPE_PROJECT,
-    #     }
-    #
-    #     with self.login(self.user):
-    #         response = self.client.post(
-    #             reverse(
-    #                 'projectroles:update',
-    #                 kwargs={'project': self.project.sodar_uuid},
-    #             ),
-    #             values,
-    #         )
-    #
-    #     # Assert redirect
-    #     with self.login(self.user):
-    #         self.assertRedirects(
-    #             response,
-    #             reverse(
-    #                 'projectroles:detail',
-    #                 kwargs={'project': self.project.sodar_uuid},
-    #             ),
-    #         )
-    #
-    #     # Assert settings state after update
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
-    #         ),
-    #         'updated',
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
-    #         ),
-    #         170,
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME,
-    #             'project_str_setting_options',
-    #             project=self.project,
-    #         ),
-    #         'string2',
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME,
-    #             'project_int_setting_options',
-    #             project=self.project,
-    #         ),
-    #         1,
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
-    #         ),
-    #         True,
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
-    #         ),
-    #         {'Test': 'Updated'},
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             'projectroles', 'test_setting_local', project=self.project
-    #         ),
-    #         True,
-    #     )
-    #     self.assertEqual(
-    #         app_settings.get(
-    #             'projectroles', 'test_setting', project=self.project
-    #         ),
-    #         False,
-    #     )
+    def test_post(self):
+        """Test modifying settings values as target"""
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            '',
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string1',
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
+        self.assertEqual(
+            app_settings.get(
+                'projectroles', 'test_setting', project=self.project
+            ),
+            False,
+        )
+
+        values = {
+            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
+            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_str_setting_options'
+            % EXAMPLE_APP_NAME: 'string2',
+            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
+            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
+            'settings.%s.project_json_setting'
+            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
+            'settings.projectroles.test_setting_local': True,
+            'owner': self.user.sodar_uuid,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        # Assert settings state after update
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            'updated',
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            170,
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string2',
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            1,
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Test': 'Updated'},
+        )
+        self.assertEqual(
+            app_settings.get(
+                'projectroles', 'test_setting_local', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get(
+                'projectroles', 'test_setting', project=self.project
+            ),
+            False,
+        )
 
 
 class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):

@@ -58,7 +58,6 @@ from projectroles.plugins import (
     get_app_plugin,
     get_backend_api,
 )
-from projectroles.project_tags import get_tag_state, set_tag_state
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
 
@@ -442,8 +441,11 @@ class ProjectContextMixin(
         if 'project' in context and not getattr(
             settings, 'PROJECTROLES_KIOSK_MODE', False
         ):
-            context['project_starred'] = get_tag_state(
-                context['project'], self.request.user
+            context['project_starred'] = app_settings.get(
+                'projectroles',
+                'project_star',
+                context['project'],
+                self.request.user,
             )
         return context
 
@@ -1647,7 +1649,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         # Delete object itself
         instance.delete()
         # Remove project star from user if it exists
-        set_tag_state(project, user, star=False)
+        app_settings.delete('projectroles', 'project_star', project, user)
 
         if tl_event:
             tl_event.set_status('OK')

@@ -18,17 +18,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rules.contrib.views import PermissionRequiredMixin
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
-    ProjectUserTag,
-    PROJECT_TAG_STARRED,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
-from projectroles.project_tags import get_tag_state, set_tag_state
 from projectroles.utils import get_display_name
 from projectroles.views import (
     ProjectAccessMixin,
@@ -42,6 +40,7 @@ from projectroles.views_api import (
 
 
 logger = logging.getLogger(__name__)
+app_setting = AppSettingAPI()
 
 
 # SODAR consants
@@ -190,7 +189,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             starred_projects = [
                 project
                 for project in Project.objects.all()
-                if get_tag_state(project, request.user)
+                if app_setting.get(
+                    'projectroles', 'project_star', project, request.user
+                )
             ]
         full_title_idx = len(parent.full_title) + 3 if parent else 0
 
@@ -367,12 +368,21 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         user = request.user
         timeline = get_backend_api('timeline_backend')
-        tag_state = get_tag_state(project, user)
+        tag_state = app_setting.get(
+            'projectroles', 'project_star', project, user
+        )
         action_str = '{}star'.format('un' if tag_state else '')
         if tag_state:
-            set_tag_state(project, user, star=False)
+            app_setting.delete('projectroles', 'project_star', project, user)
         else:
-            set_tag_state(project, user, star=True)
+            app_setting.set(
+                app_name='projectroles',
+                setting_name='project_star',
+                value=True,
+                project=project,
+                user=user,
+                validate=False,
+            )
 
         # Add event in Timeline
         if timeline:

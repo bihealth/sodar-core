@@ -83,9 +83,6 @@ PROJECTROLES_APP_SETTINGS = {
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
         'type': 'BOOLEAN',
         'default': False,
-        'label': 'Project Star',
-        'description': 'Star/unstar projects',
-        'user_modifiable': True,
         'local': False,
     },
 }
