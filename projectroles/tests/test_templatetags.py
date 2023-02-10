@@ -451,29 +451,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
 
     # TODO: Test get_site_app_messages() (set up admin alert)
 
-    def test_star(self):
-        """Test star"""
-        self.assertEqual(tags.has_star(self.project, self.user), False)
-
-        # Set star and test again
-        app_settings.set(
-            app_name='projectroles',
-            setting_name='project_star',
-            value=True,
-            project=self.project,
-            user=self.user,
-            validate=False,
-        )
-        self.assertEqual(tags.has_star(self.project, self.user), True)
-
-        # Unset star and test again
-        app_settings.delete(
-            'projectroles', 'project_star', self.project, self.user
-        )
-        self.assertEqual(tags.has_star(self.project, self.user), False)
-
-    # TODO: Test get_remote_project_obj() (Set up remote projects)
-
     def test_allow_project_creation(self):
         """Test allow_project_creation()"""
         self.assertEqual(tags.allow_project_creation(), True)

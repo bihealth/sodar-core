@@ -368,11 +368,11 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         user = request.user
         timeline = get_backend_api('timeline_backend')
-        tag_state = app_settings.get(
+        project_star = app_settings.get(
             'projectroles', 'project_star', project, user
         )
-        action_str = '{}star'.format('un' if tag_state else '')
-        if tag_state:
+        action_str = '{}star'.format('un' if project_star else '')
+        if project_star:
             app_settings.delete('projectroles', 'project_star', project, user)
         else:
             app_settings.set(
@@ -395,7 +395,7 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
                 classified=True,
                 status_type='INFO',
             )
-        return Response(0 if tag_state else 1, status=200)
+        return Response(0 if project_star else 1, status=200)
 
 
 class CurrentUserRetrieveAjaxView(

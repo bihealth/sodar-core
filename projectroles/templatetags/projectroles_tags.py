@@ -64,14 +64,6 @@ def get_site_app_messages(user):
 
 
 @register.simple_tag
-def has_star(project, user):
-    """Return True/False for project star tag state"""
-    return user.has_perm(
-        'projectroles.view_project', project
-    ) and app_settings.get('projectroles', 'project_star', project, user)
-
-
-@register.simple_tag
 def get_remote_project_obj(site, project):
     """Return RemoteProject object for RemoteSite and Project"""
     try:

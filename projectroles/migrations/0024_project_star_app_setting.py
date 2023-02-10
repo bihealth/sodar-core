@@ -1,14 +1,16 @@
 from django.db import migrations
 
+from projectroles.models import PROJECT_TAG_STARRED
+
 
 def migrate_stars(apps, schema_editor):
     """Create project_star AppSettings"""
     ProjectUserTag = apps.get_model('projectroles', 'ProjectUserTag')
     AppSetting = apps.get_model('projectroles', 'AppSetting')
-    for projectusertag in ProjectUserTag.objects.all():
+    for tag in ProjectUserTag.objects.filter(name=PROJECT_TAG_STARRED):
         AppSetting.objects.get_or_create(
-            project=projectusertag.project,
-            user=projectusertag.user,
+            project=tag.project,
+            user=tag.user,
             value=True,
             name='project_star',
         )

@@ -347,7 +347,6 @@ class TestProjectStarringAjaxView(
 
     def test_project_star(self):
         """Test Starring a Project"""
-        # Test star
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -361,7 +360,6 @@ class TestProjectStarringAjaxView(
         )
         self.assertEqual(star, True)
 
-        # Test unstar
         with self.login(self.user):
             response = self.client.post(
                 reverse(
