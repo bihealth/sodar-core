@@ -1685,16 +1685,6 @@ class TestProjectSettingsFormTarget(
             project=self.project,
         )
 
-        # Init project_star setting
-        self.setting_star = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
-            name='project_star',
-            setting_type='BOOLEAN',
-            value=True,
-            project=self.project,
-            user=self.user,
-        )
-
     def test_get(self):
         """Test rendering the settings values"""
         with self.login(self.user):
