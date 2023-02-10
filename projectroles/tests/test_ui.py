@@ -21,13 +21,12 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import Role, SODAR_CONSTANTS, PROJECT_TAG_STARRED
+from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
-    ProjectUserTagMixin,
     RemoteTargetMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
@@ -454,7 +453,7 @@ class TestBaseTemplate(TestUIBase):
         )
 
 
-class TestHomeView(ProjectUserTagMixin, TestUIBase):
+class TestHomeView(TestUIBase):
     """Tests for the home view and project list UI"""
 
     #: Arguments for waiting for the list to get poplulated on the client side
@@ -552,9 +551,14 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
 
     def test_project_list_star(self):
         """Test project list star filter"""
-        self.make_tag(
-            self.project, self.owner_as.user, name=PROJECT_TAG_STARRED
-        )
+        app_settings.set(
+            app_name='projectroles',
+            setting_name='project_star',
+            value=True,
+            project=self.project,
+            user=self.owner_as.user,
+            validate=False,
+        ),
         url = reverse('home')
         self.login_and_redirect(self.owner_as.user, url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)

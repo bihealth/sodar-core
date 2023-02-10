@@ -74,6 +74,10 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
 
 # Local constants
 INVITE_EMAIL = 'test@example.com'
@@ -93,7 +97,7 @@ INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
     'test_setting': {
-        'scope': 'PROJECT',  # PROJECT/USER
+        'scope': APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER
         'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
         'default': False,
         'label': 'Test setting',  # Optional, defaults to name/key
@@ -102,13 +106,19 @@ PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
         'local': False,
     },
     'test_setting_local': {
-        'scope': 'PROJECT',  # PROJECT/USER
+        'scope': APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER
         'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
         'default': False,
         'label': 'Test setting',  # Optional, defaults to name/key
         'description': 'Test setting',  # Optional
         'user_modifiable': True,  # Optional, show/hide in forms
         'local': True,
+    },
+    'project_star': {  # NOTE: We have to include this for view tests
+        'scope': APP_SETTING_SCOPE_PROJECT_USER,
+        'type': 'BOOLEAN',
+        'default': False,
+        'local': False,
     },
 }
 

@@ -52,14 +52,12 @@ from projectroles.models import (
     RemoteSite,
     RemoteProject,
     SODAR_CONSTANTS,
-    PROJECT_TAG_STARRED,
 )
 from projectroles.plugins import (
     get_active_plugins,
     get_app_plugin,
     get_backend_api,
 )
-from projectroles.project_tags import get_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
 
@@ -443,8 +441,11 @@ class ProjectContextMixin(
         if 'project' in context and not getattr(
             settings, 'PROJECTROLES_KIOSK_MODE', False
         ):
-            context['project_starred'] = get_tag_state(
-                context['project'], self.request.user, PROJECT_TAG_STARRED
+            context['project_starred'] = app_settings.get(
+                'projectroles',
+                'project_star',
+                context['project'],
+                self.request.user,
             )
         return context
 
@@ -1648,7 +1649,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         # Delete object itself
         instance.delete()
         # Remove project star from user if it exists
-        remove_tag(project=project, user=user)
+        app_settings.delete('projectroles', 'project_star', project, user)
 
         if tl_event:
             tl_event.set_status('OK')

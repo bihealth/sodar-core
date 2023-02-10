@@ -2,17 +2,15 @@
 
 import json
 
-from django.forms import model_to_dict
 from django.test import override_settings
 from django.urls import reverse
 
 from test_plus.test import TestCase
 
-from projectroles.models import ProjectUserTag, PROJECT_TAG_STARRED
+from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
-    ProjectUserTagMixin,
 )
 from projectroles.tests.test_views import (
     TestViewsBase,
@@ -21,6 +19,9 @@ from projectroles.tests.test_views import (
 )
 from projectroles.tests.test_views_api import SerializedObjectMixin
 from projectroles.views_ajax import INHERITED_OWNER_INFO
+
+
+app_settings = AppSettingAPI()
 
 
 class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
@@ -330,7 +331,7 @@ class TestProjectListRoleAjaxView(
 
 
 class TestProjectStarringAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
 ):
     """Tests for ProjectStarringAjaxView"""
 
@@ -343,10 +344,8 @@ class TestProjectStarringAjaxView(
             self.project, self.user, self.role_owner
         )
 
-    def test_star_project(self):
-        """Test project starring"""
-        self.assertEqual(ProjectUserTag.objects.all().count(), 0)
-
+    def test_project_star(self):
+        """Test Starring a Project"""
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -354,26 +353,11 @@ class TestProjectStarringAjaxView(
                     kwargs={'project': self.project.sodar_uuid},
                 )
             )
-
-        self.assertEqual(ProjectUserTag.objects.all().count(), 1)
-        tag = ProjectUserTag.objects.get(
-            project=self.project, user=self.user, name=PROJECT_TAG_STARRED
+        self.assertEqual(response.status_code, 200)
+        star = app_settings.get(
+            'projectroles', 'project_star', self.project, self.user
         )
-        self.assertIsNotNone(tag)
-        expected = {
-            'id': tag.pk,
-            'project': self.project.pk,
-            'user': self.user.pk,
-            'name': PROJECT_TAG_STARRED,
-            'sodar_uuid': tag.sodar_uuid,
-        }
-        self.assertEqual(model_to_dict(tag), expected)
-        self.assertEqual(response.status_code, 200)
-
-    def test_unstar_project(self):
-        """Test project unstarring"""
-        self.make_tag(self.project, self.user, name=PROJECT_TAG_STARRED)
-        self.assertEqual(ProjectUserTag.objects.all().count(), 1)
+        self.assertEqual(star, True)
 
         with self.login(self.user):
             response = self.client.post(
@@ -382,9 +366,11 @@ class TestProjectStarringAjaxView(
                     kwargs={'project': self.project.sodar_uuid},
                 )
             )
-
-        self.assertEqual(ProjectUserTag.objects.all().count(), 0)
         self.assertEqual(response.status_code, 200)
+        star = app_settings.get(
+            'projectroles', 'project_star', self.project, self.user
+        )
+        self.assertEqual(star, False)
 
 
 class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):

@@ -18,17 +18,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rules.contrib.views import PermissionRequiredMixin
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
-    ProjectUserTag,
-    PROJECT_TAG_STARRED,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
-from projectroles.project_tags import get_tag_state, set_tag_state
 from projectroles.utils import get_display_name
 from projectroles.views import (
     ProjectAccessMixin,
@@ -42,6 +40,7 @@ from projectroles.views_api import (
 
 
 logger = logging.getLogger(__name__)
+app_settings = AppSettingAPI()
 
 
 # SODAR consants
@@ -188,9 +187,10 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         starred_projects = []
         if request.user.is_authenticated:
             starred_projects = [
-                t.project
-                for t in ProjectUserTag.objects.filter(
-                    user=request.user, name=PROJECT_TAG_STARRED
+                project
+                for project in Project.objects.all()
+                if app_settings.get(
+                    'projectroles', 'project_star', project, request.user
                 )
             ]
         full_title_idx = len(parent.full_title) + 3 if parent else 0
@@ -368,9 +368,21 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         user = request.user
         timeline = get_backend_api('timeline_backend')
-        tag_state = get_tag_state(project, user)
-        action_str = '{}star'.format('un' if tag_state else '')
-        set_tag_state(project, user, PROJECT_TAG_STARRED)
+        project_star = app_settings.get(
+            'projectroles', 'project_star', project, user
+        )
+        action_str = '{}star'.format('un' if project_star else '')
+        if project_star:
+            app_settings.delete('projectroles', 'project_star', project, user)
+        else:
+            app_settings.set(
+                app_name='projectroles',
+                setting_name='project_star',
+                value=True,
+                project=project,
+                user=user,
+                validate=False,
+            )
 
         # Add event in Timeline
         if timeline:
@@ -383,7 +395,7 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
                 classified=True,
                 status_type='INFO',
             )
-        return Response(0 if tag_state else 1, status=200)
+        return Response(0 if project_star else 1, status=200)
 
 
 class CurrentUserRetrieveAjaxView(
