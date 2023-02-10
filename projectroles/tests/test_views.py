@@ -1687,7 +1687,7 @@ class TestProjectSettingsFormTarget(
 
         # Init project_star setting
         self.setting_star = self.make_setting(
-            app_name='projectroles',
+            app_name=EXAMPLE_APP_NAME,
             name='project_star',
             setting_type='BOOLEAN',
             value=True,
