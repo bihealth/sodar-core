@@ -24,8 +24,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_stars, reverse_code=migrations.RunPython.noop)
-        # migrations.DeleteModel(
-        #     name='ProjectUserTag',
-        # ),
+        migrations.RunPython(migrate_stars, reverse_code=migrations.RunPython.noop),
     ]
