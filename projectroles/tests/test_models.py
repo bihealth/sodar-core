@@ -18,11 +18,9 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     AppSetting,
-    ProjectUserTag,
     RemoteSite,
     RemoteProject,
     SODAR_CONSTANTS,
-    PROJECT_TAG_STARRED,
 )
 from projectroles.plugins import get_app_plugin
 from projectroles.utils import build_secret
@@ -150,18 +148,6 @@ class AppSettingMixin:
         setting = AppSetting(**values)
         setting.save()
         return setting
-
-
-class ProjectUserTagMixin:
-    """Helper mixin for ProjectUserTag creation"""
-
-    @classmethod
-    def make_tag(cls, project, user, name):
-        """Make and save a ProjectUserTag"""
-        values = {'project': project, 'user': user, 'name': name}
-        tag = ProjectUserTag(**values)
-        tag.save()
-        return tag
 
 
 class RemoteSiteMixin:
@@ -1093,51 +1079,6 @@ class TestUserSetting(
         """Test get_value() with type BOOLEAN"""
         val = self.setting_json.get_value()
         self.assertEqual(val, {'Testing': 'good'})
-
-
-# TODO: Test manager
-
-
-class TestProjectUserTag(
-    ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestCase
-):
-    """Tests for model.ProjectUserTag"""
-
-    def setUp(self):
-        # Init project
-        self.project = self.make_project(
-            title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
-        )
-        # Init role
-        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
-        # Init user & role
-        self.user = self.make_user('owner')
-        self.owner_as = self.make_assignment(
-            self.project, self.user, self.role_owner
-        )
-        # Init tag
-        self.tag = self.make_tag(self.project, self.user, PROJECT_TAG_STARRED)
-
-    def test_initialization(self):
-        """Test ProjectUserTag initialization"""
-        expected = {
-            'id': self.tag.pk,
-            'project': self.project.pk,
-            'user': self.user.pk,
-            'name': PROJECT_TAG_STARRED,
-            'sodar_uuid': self.tag.sodar_uuid,
-        }
-        self.assertEqual(model_to_dict(self.tag), expected)
-
-    def test__str__(self):
-        """Test ProjectUserTag __str__()"""
-        expected = 'TestProject: owner: STARRED'
-        self.assertEqual(str(self.tag), expected)
-
-    def test__repr__(self):
-        """Test ProjectUserTag __repr__()"""
-        expected = "ProjectUserTag('TestProject', 'owner', 'STARRED')"
-        self.assertEqual(repr(self.tag), expected)
 
 
 class TestRemoteSite(

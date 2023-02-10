@@ -11,7 +11,6 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
-    ProjectUserTagMixin,
 )
 from projectroles.tests.test_views import (
     TestViewsBase,
@@ -332,7 +331,7 @@ class TestProjectListRoleAjaxView(
 
 
 class TestProjectStarringAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
 ):
     """Tests for ProjectStarringAjaxView"""
 
