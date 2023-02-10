@@ -552,7 +552,12 @@ class TestHomeView(TestUIBase):
     def test_project_list_star(self):
         """Test project list star filter"""
         app_settings.set(
-            'projectroles', 'project_star', self.project, self.owner_as.user
+            app_name='projectroles',
+            setting_name='project_star',
+            value=True,
+            project=self.project,
+            user=self.owner_as.user,
+            validate=False,
         ),
         url = reverse('home')
         self.login_and_redirect(self.owner_as.user, url, **self.wait_kwargs)
@@ -562,7 +567,7 @@ class TestHomeView(TestUIBase):
             By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
-        self.assertEqual(self._get_item_vis_count(), 2)
+        self.assertEqual(self._get_item_vis_count(), 1)
         self.assertEqual(
             self.selenium.find_element(
                 By.ID, 'sodar-pr-project-list-message'
