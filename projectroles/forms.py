@@ -610,49 +610,56 @@ class ProjectForm(SODARModelForm):
             )
 
         # Verify settings fields
-        for plugin in self.app_plugins + [None]:
-            if plugin:
-                name = plugin.name
-                p_settings = self.app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
-                )
-            else:
-                name = 'projectroles'
-                p_settings = self.app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
-                )
+        if self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT:
+            for plugin in self.app_plugins + [None]:
+                if plugin:
+                    name = plugin.name
+                    p_settings = self.app_settings.get_definitions(
+                        APP_SETTING_SCOPE_PROJECT,
+                        plugin=plugin,
+                        **self.p_kwargs
+                    )
+                else:
+                    name = 'projectroles'
+                    p_settings = self.app_settings.get_definitions(
+                        APP_SETTING_SCOPE_PROJECT,
+                        app_name=name,
+                        **self.p_kwargs
+                    )
 
-            for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(name, s_key)
+                for s_key, s_val in p_settings.items():
+                    s_field = 'settings.{}.{}'.format(name, s_key)
 
-                if s_val['type'] == 'JSON':
-                    # for some reason, there is a distinct possibility, that the
-                    # initial value has been discarded and we get '' as value.
-                    # Seems to only happen in automated tests. Will catch that
-                    # here.
-                    if not self.cleaned_data.get(s_field):
-                        self.cleaned_data[s_field] = '{}'
-                    try:
-                        self.cleaned_data[s_field] = json.loads(
-                            self.cleaned_data.get(s_field)
+                    if s_val['type'] == 'JSON':
+                        # for some reason, there is a distinct possibility, that the
+                        # initial value has been discarded and we get '' as value.
+                        # Seems to only happen in automated tests. Will catch that
+                        # here.
+                        if not self.cleaned_data.get(s_field):
+                            self.cleaned_data[s_field] = '{}'
+                        try:
+                            self.cleaned_data[s_field] = json.loads(
+                                self.cleaned_data.get(s_field)
+                            )
+                        except json.JSONDecodeError as err:
+                            # TODO: Shouldn't we use add_error() instead?
+                            raise forms.ValidationError(
+                                'Couldn\'t encode JSON\n' + str(err)
+                            )
+                    elif s_val['type'] == 'INTEGER':
+                        # When the field is a select/dropdown the information of
+                        # the datatype gets lost. We need to convert that here,
+                        # otherwise subsequent checks will fail.
+                        self.cleaned_data[s_field] = int(
+                            self.cleaned_data[s_field]
                         )
-                    except json.JSONDecodeError as err:
-                        # TODO: Shouldn't we use add_error() instead?
-                        raise forms.ValidationError(
-                            'Couldn\'t encode JSON\n' + str(err)
-                        )
-                elif s_val['type'] == 'INTEGER':
-                    # When the field is a select/dropdown the information of
-                    # the datatype gets lost. We need to convert that here,
-                    # otherwise subsequent checks will fail.
-                    self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
 
-                if not self.app_settings.validate(
-                    setting_type=s_val['type'],
-                    setting_value=self.cleaned_data.get(s_field),
-                    setting_options=s_val.get('options'),
-                ):
-                    self.add_error(s_field, 'Invalid value')
+                    if not self.app_settings.validate(
+                        setting_type=s_val['type'],
+                        setting_value=self.cleaned_data.get(s_field),
+                        setting_options=s_val.get('options'),
+                    ):
+                        self.add_error(s_field, 'Invalid value')
 
         return self.cleaned_data
 

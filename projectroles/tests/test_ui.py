@@ -18,7 +18,7 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Role, SODAR_CONSTANTS, PROJECT_TAG_STARRED
@@ -1240,6 +1240,69 @@ class TestProjectCreateView(TestUIBase):
             [self.superuser], url, 'sodar-pr-btn-archive', False
         )
 
+    def test_settings_fields_default(self):
+        """Test rendering of app settings fields for default view"""
+        url = reverse('projectroles:create')
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        element = self.selenium.find_element(
+            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        )
+        self.assertFalse(element.is_displayed())
+
+    def test_settings_fields_project(self):
+        """Test rendering of app settings fields for project creation"""
+        url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        element = self.selenium.find_element(
+            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        )
+        self.assertFalse(element.is_displayed())
+        select = Select(
+            self.selenium.find_element(
+                By.CSS_SELECTOR,
+                'div[id="div_id_type"] div select[id="id_type"]',
+            )
+        )
+        select.select_by_value('PROJECT')
+        self.assertEqual(select.first_selected_option.text, 'Project')
+        WebDriverWait(self.selenium, 10)
+        element = self.selenium.find_element(
+            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        )
+        self.assertTrue(element.is_displayed())
+
+    def test_settings_fields_category(self):
+        """Test rendering of app settings fields for category creation"""
+        url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        element = self.selenium.find_element(
+            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        )
+        self.assertFalse(element.is_displayed())
+        select = Select(
+            self.selenium.find_element(
+                By.CSS_SELECTOR,
+                'div[id="div_id_type"] div select[id="id_type"]',
+            )
+        )
+        select.select_by_value('CATEGORY')
+        self.assertEqual(select.first_selected_option.text, 'Category')
+        WebDriverWait(self.selenium, 10)
+        element = self.selenium.find_element(
+            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        )
+        self.assertFalse(element.is_displayed())
+
 
 class TestProjectUpdateView(TestUIBase):
     """Tests for ProjectUpdateView UI"""
@@ -1266,6 +1329,32 @@ class TestProjectUpdateView(TestUIBase):
         )
         element = self.selenium.find_element(By.ID, 'sodar-pr-btn-archive')
         self.assertEqual(element.text, 'Unarchive')
+
+    def test_settings_fields_project_update(self):
+        """Test rendering of app settings fields for project update view"""
+        url = reverse(
+            'projectroles:update', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        element = self.selenium.find_element(
+            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        )
+        self.assertTrue(element.is_displayed())
+
+    def test_settings_fields_category_update(self):
+        """Test rendering of app settings fields for category update view"""
+        url = reverse(
+            'projectroles:update', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        element = self.selenium.find_element(
+            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        )
+        self.assertFalse(element.is_displayed())
 
 
 class TestProjectArchiveView(TestUIBase):
