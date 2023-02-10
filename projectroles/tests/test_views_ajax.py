@@ -345,9 +345,35 @@ class TestProjectStarringAjaxView(
             self.project, self.user, self.role_owner
         )
 
-    # TODO: test_star()
+    def test_project_star(self):
+        """Test Starring a Project"""
+        # Test star
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:ajax_star',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        star = app_settings.get(
+            'projectroles', 'project_star', self.project, self.user
+        )
+        self.assertEqual(star, True)
 
-    # TODO: test_unstar()
+        # Test unstar
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:ajax_star',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        star = app_settings.get(
+            'projectroles', 'project_star', self.project, self.user
+        )
+        self.assertEqual(star, False)
 
 
 class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):
