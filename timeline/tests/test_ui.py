@@ -128,6 +128,23 @@ class TestProjectListView(
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
+    def test_sorting_project(self):
+        """Test sorting ui features on the project list page"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        page = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-sort-page-length'
+        )
+        filter = self.selenium.find_element(By.CLASS_NAME, 'sodar-sort-filter')
+        sorting = self.selenium.find_element(By.CLASS_NAME, 'sorting')
+        self.assertIsNotNone(page)
+        self.assertIsNotNone(filter)
+        self.assertIsNotNone(sorting)
+
 
 class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
     """Tests for the timeline site-wide list view UI"""
@@ -216,6 +233,21 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         except Exception:
             pass
 
+    def test_sorting_site(self):
+        """Test sorting ui features on the site-wide timeline"""
+        url = reverse('timeline:list_site')
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        page = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-sort-page-length'
+        )
+        filter = self.selenium.find_element(By.CLASS_NAME, 'sodar-sort-filter')
+        sorting = self.selenium.find_element(By.CLASS_NAME, 'sorting')
+        self.assertIsNotNone(page)
+        self.assertIsNotNone(filter)
+        self.assertIsNotNone(sorting)
+
 
 class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
     """Test for the timeline view of all events in UI"""
@@ -272,6 +304,21 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             self.superuser, url, wait_elem=None, wait_loc='ID'
         )
         self.assertIsNotNone(self.selenium.find_element(By.CLASS_NAME, 'badge'))
+
+    def test_sorting_admin(self):
+        """Test sorting ui features on the admin timeline"""
+        url = reverse('timeline:timeline_site_admin')
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        page = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-sort-page-length'
+        )
+        filter = self.selenium.find_element(By.CLASS_NAME, 'sodar-sort-filter')
+        sorting = self.selenium.find_element(By.CLASS_NAME, 'sorting')
+        self.assertIsNotNone(page)
+        self.assertIsNotNone(filter)
+        self.assertIsNotNone(sorting)
 
 
 class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
