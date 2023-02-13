@@ -3123,23 +3123,31 @@ class TestProjectInviteCreateView(
             )
         self.assertEqual(response.status_code, 404)
 
-    # def test_local_users_not_allowed(self):
-    #     """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = False"""
-    #     with self.settings(PROJECTROLES_ALLOW_LOCAL_USERS=False, ENABLE_SAML=False, AUTH_LDAP_USERNAME_DOMAIN=['example.com']):
-    #         with self.login(self.user):
-    #             response = self.client.post(
-    #                 reverse(
-    #                     'projectroles:invite_create',
-    #                     kwargs={'project': self.project.sodar_uuid},
-    #                 ),
-    #                 data={
-    #                     'email': INVITE_EMAIL,
-    #                     'project': self.project.pk,
-    #                     'role': self.role_contributor.pk,
-    #                 },
-    #             )
-    #         self.assertEqual(response.status_code, 200)
-    #         self.assertContains(response, 'is already registered')
+    @override_settings(
+        PROJECTROLES_ALLOW_LOCAL_USERS=False,
+        ENABLE_SAML=False,
+        AUTH_LDAP_USERNAME_DOMAIN=['example.com'],
+    )
+    def test_local_users_not_allowed(self):
+        """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = False"""
+        values = {
+            'email': INVITE_EMAIL,
+            'project': self.project.pk,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 302)
+        invite = ProjectInvite.objects.get(
+            project=self.project, email=INVITE_EMAIL, active=True
+        )
+        self.assertIsNotNone(invite)
 
     def test_create_invite(self):
         """Test ProjectInvite creation"""
