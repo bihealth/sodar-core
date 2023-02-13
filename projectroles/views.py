@@ -1119,7 +1119,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 user=owner,
                 role=Role.objects.get(name=PROJECT_ROLE_OWNER),
             )
-        self._update_settings(project, project_settings)
+        if project.type == PROJECT_TYPE_PROJECT:
+            self._update_settings(project, project_settings)
         project.save()  # TODO: Is this required anymore?
 
         # Call for additional actions for project creation/update in plugins
