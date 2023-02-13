@@ -1,5 +1,6 @@
 """Plugins for the Timeline app"""
 from django.utils.timezone import localtime
+from django.conf import settings
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -13,6 +14,9 @@ from projectroles.utils import get_display_name
 from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
 from timeline.urls import urlpatterns
+
+
+search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -67,7 +71,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     category_enable = True
 
     #: Names of plugin specific Django settings to display in siteinfo
-    info_settings = ['TIMELINE_PAGINATION']
+    info_settings = ['TIMELINE_PAGINATION', 'TIMELINE_SEARCH_LIMIT']
 
     def get_statistics(self):
         return {
@@ -105,16 +109,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :return: Dict
         """
         items = []
-        if not search_type:
-            events = ProjectEvent.objects.find(search_terms, keywords)
-            items = list(events)
-            items.sort(
-                key=lambda x: localtime(x.get_timestamp()).strftime(
-                    '%Y-%m-%d %H:%M:%S'
-                ),
-                reverse=False,
-            )
-        elif search_type == 'timeline':
+        if not search_type or search_type == 'timeline':
             events = ProjectEvent.objects.find(search_terms, keywords)
             items = list(events)
             items.sort(
@@ -131,7 +126,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'all': {
                 'title': 'Timeline Events',
                 'search_types': ['timeline'],
-                'items': items,
+                'items': items[:search_limit],
             }
         }
 

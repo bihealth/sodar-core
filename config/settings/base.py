@@ -659,6 +659,7 @@ BGJOBS_PAGINATION = env.int('BGJOBS_PAGINATION', 15)
 
 # Timeline app settings
 TIMELINE_PAGINATION = env.int('TIMELINE_PAGINATION', 15)
+TIMELINE_SEARCH_LIMIT = env.int('TIMELINE_SEARCH_LIMIT', 250)
 
 
 # Filesfolders app settings
