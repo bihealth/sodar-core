@@ -588,19 +588,28 @@ class ProjectSearchResultsView(
         """
         plugins = get_active_plugins(plugin_type='project_app')
         ret = []
+        omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
 
         if search_type:
             search_apps = sorted(
                 [
                     p
                     for p in plugins
-                    if (p.search_enable and search_type in p.search_types)
+                    if (
+                        p.search_enable
+                        and search_type in p.search_types
+                        and p.name not in omit_apps_list
+                    )
                 ],
                 key=lambda x: x.plugin_ordering,
             )
         else:
             search_apps = sorted(
-                [p for p in plugins if p.search_enable],
+                [
+                    p
+                    for p in plugins
+                    if p.search_enable and p.name not in omit_apps_list
+                ],
                 key=lambda x: x.plugin_ordering,
             )
 
