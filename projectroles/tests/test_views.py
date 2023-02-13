@@ -3123,6 +3123,24 @@ class TestProjectInviteCreateView(
             )
         self.assertEqual(response.status_code, 404)
 
+    # def test_local_users_not_allowed(self):
+    #     """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = False"""
+    #     with self.settings(PROJECTROLES_ALLOW_LOCAL_USERS=False, ENABLE_SAML=False, AUTH_LDAP_USERNAME_DOMAIN=['example.com']):
+    #         with self.login(self.user):
+    #             response = self.client.post(
+    #                 reverse(
+    #                     'projectroles:invite_create',
+    #                     kwargs={'project': self.project.sodar_uuid},
+    #                 ),
+    #                 data={
+    #                     'email': INVITE_EMAIL,
+    #                     'project': self.project.pk,
+    #                     'role': self.role_contributor.pk,
+    #                 },
+    #             )
+    #         self.assertEqual(response.status_code, 200)
+    #         self.assertContains(response, 'is already registered')
+
     def test_create_invite(self):
         """Test ProjectInvite creation"""
         self.assertEqual(ProjectInvite.objects.all().count(), 0)

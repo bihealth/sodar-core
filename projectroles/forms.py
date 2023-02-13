@@ -13,6 +13,13 @@ from django.utils import timezone
 from pagedown.widgets import PagedownWidget
 from dal import autocomplete, forward as dal_forward
 
+from config.settings.base import (
+    PROJECTROLES_ALLOW_LOCAL_USERS,
+    ENABLE_SAML,
+    AUTH_LDAP_USERNAME_DOMAIN,
+    AUTH_LDAP2_USERNAME_DOMAIN,
+)
+
 from projectroles.models import (
     Project,
     Role,
@@ -744,6 +751,21 @@ class RoleAssignmentForm(SODARModelForm):
             # Ensure not setting existing role again
             if existing_as and existing_as.role == role:
                 self.add_error('role', 'Role already assigned to user')
+
+        # Local users check
+        domain = existing_as.user.email[existing_as.user.email.find('@') + 1 :]
+        if (
+            not PROJECTROLES_ALLOW_LOCAL_USERS
+            and not ENABLE_SAML
+            and domain
+            not in AUTH_LDAP_USERNAME_DOMAIN + AUTH_LDAP2_USERNAME_DOMAIN
+        ):
+            self.add_error(
+                'user',
+                'Local users not allowed, email domain {} not recognized for LDAP users'.format(
+                    domain
+                ),
+            )
 
         # Delegate checks
         if role.name == PROJECT_ROLE_DELEGATE:
