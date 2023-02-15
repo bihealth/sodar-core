@@ -16,9 +16,6 @@ from timeline.models import ProjectEvent
 from timeline.urls import urlpatterns
 
 
-search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
-
-
 class ProjectAppPlugin(ProjectAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
@@ -109,6 +106,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :return: Dict
         """
         items = []
+        search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
+
         if not search_type or search_type == 'timeline':
             events = ProjectEvent.objects.find(search_terms, keywords)
             items = list(events)

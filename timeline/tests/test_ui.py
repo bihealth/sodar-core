@@ -2,6 +2,7 @@
 import json
 
 from django.urls import reverse
+from django.test import override_settings
 from urllib.parse import urlencode
 
 from selenium.webdriver.common.by import By
@@ -481,3 +482,15 @@ class TestSearch(ProjectEventMixin, TestUIBase):
                 By.CLASS_NAME, 'sodar-pr-project-list-item'
             )
             self.assertEqual(len(elements), count)
+
+    @override_settings(TIMELINE_SEARCH_LIMIT=2)
+    def test_search_limit(self):
+        """Test search limit"""
+        url = reverse('projectroles:search') + '?' + urlencode({'s': 'event'})
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        elements = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(elements), 2)

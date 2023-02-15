@@ -368,34 +368,6 @@ class TestProjectSearchView(
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.context['app_results']), 1)
 
-    @override_settings(TIMELINE_SEARCH_LIMIT=0)
-    def test_search_limit(self):
-        """Test search limit for timeline events search"""
-        # self.make_event(
-        #     project=self.project,
-        #     app='projectroles',
-        #     user=self.user,
-        #     event_name='test_event_1',
-        #     description='description',
-        #     classified=False,
-        #     extra_data={'test_key': 'test_val'},
-        # )
-        # self.make_event(
-        #     project=self.project,
-        #     app='projectroles',
-        #     user=self.user,
-        #     event_name='test_event_2',
-        #     description='description',
-        #     classified=False,
-        #     extra_data={'test_key': 'test_val'},
-        # )
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test_event'})
-            )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['app_results']), 2)
-
 
 class TestProjectAdvancedSearchView(
     ProjectMixin, RoleAssignmentMixin, TestViewsBase
