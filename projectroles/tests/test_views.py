@@ -3126,10 +3126,59 @@ class TestProjectInviteCreateView(
     @override_settings(
         PROJECTROLES_ALLOW_LOCAL_USERS=False,
         ENABLE_SAML=False,
-        AUTH_LDAP_USERNAME_DOMAIN=['example.com'],
+        AUTH_LDAP_USERNAME_DOMAIN=[],
     )
     def test_local_users_not_allowed(self):
         """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = False"""
+        values = {
+            'email': INVITE_EMAIL,
+            'project': self.project.pk,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ProjectInvite.objects.all().count(), 0)
+
+    @override_settings(
+        PROJECTROLES_ALLOW_LOCAL_USERS=True,
+        ENABLE_SAML=False,
+        AUTH_LDAP_USERNAME_DOMAIN=[],
+    )
+    def test_local_users_allowed(self):
+        """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = True"""
+        values = {
+            'email': INVITE_EMAIL,
+            'project': self.project.pk,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 302)
+        invite = ProjectInvite.objects.get(
+            project=self.project, email=INVITE_EMAIL, active=True
+        )
+        self.assertIsNotNone(invite)
+
+    @override_settings(
+        PROJECTROLES_ALLOW_LOCAL_USERS=False,
+        ENABLE_SAML=False,
+        AUTH_LDAP_USERNAME_DOMAIN=['example.com'],
+    )
+    def test_local_users_email_domain(self):
+        """Test ProjectInvite creation for local users with email domain in AUTH_LDAP_USERNAME_DOMAIN"""
         values = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,

@@ -745,28 +745,6 @@ class RoleAssignmentForm(SODARModelForm):
             if existing_as and existing_as.role == role:
                 self.add_error('role', 'Role already assigned to user')
 
-        # Local users check
-        user_email = self.cleaned_data.get('user').email
-        domain = user_email[user_email.find('@') + 1 :]
-        allow_local_users = getattr(
-            settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', True
-        )
-        enable_saml = getattr(settings, 'ENABLE_SAML', False)
-        domain_list = getattr(
-            settings, 'AUTH_LDAP_USERNAME_DOMAIN', []
-        ) + getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', [])
-        if (
-            not allow_local_users
-            and not enable_saml
-            and domain not in domain_list
-        ):
-            self.add_error(
-                'user',
-                'Local users not allowed, email domain {} not recognized for LDAP users'.format(
-                    domain
-                ),
-            )
-
         # Delegate checks
         if role.name == PROJECT_ROLE_DELEGATE:
             del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
@@ -978,6 +956,28 @@ class ProjectInviteForm(SODARModelForm):
             )
         except ProjectInvite.DoesNotExist:
             pass
+
+        # Local users check
+        user_email = self.cleaned_data.get('email')
+        domain = user_email[user_email.find('@') + 1 :]
+        allow_local_users = getattr(
+            settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False
+        )
+        enable_saml = getattr(settings, 'ENABLE_SAML', False)
+        domain_list = getattr(
+            settings, 'AUTH_LDAP_USERNAME_DOMAIN', []
+        ) + getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', [])
+        if (
+            not allow_local_users
+            and not enable_saml
+            and domain not in domain_list
+        ):
+            self.add_error(
+                'email',
+                'Local users not allowed, email domain {} not recognized for LDAP users'.format(
+                    domain
+                ),
+            )
 
         # Delegate checks
         role = self.cleaned_data.get('role')
