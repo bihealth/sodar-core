@@ -165,6 +165,31 @@ class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
         }
         self.assertEqual(model_to_dict(get_item), expected)
 
+    def delete_cache_item(self):
+        """Test for deleting a cache item"""
+        self.cache_backend.set_cache_item(
+            project=self.project,
+            app_name=TEST_APP_NAME,
+            user=self.user_owner,
+            name='test_item',
+            data={'test_key': 'test_val'},
+        )
+        item = self.cache_backend.get_cache_item(
+            app_name=TEST_APP_NAME, name='test_item', project=self.project
+        )
+        self.assertIsNotNone(item)
+        self.cache_backend.delete_cache_item(
+            app_name=TEST_APP_NAME, name='test_item', project=self.project
+        )
+        item = self.cache_backend.get_cache_item(
+            app_name=TEST_APP_NAME, name='test_item', project=self.project
+        )
+        self.assertIsNone(item)
+        # Test for deleting a non-existing item
+        self.cache_backend.delete_cache_item(
+            app_name=TEST_APP_NAME, name='test_item', project=self.project
+        )
+
     def test_get_project_cache(self):
         """Test getting all cache item of a project"""
         first_item = self.cache_backend.set_cache_item(
