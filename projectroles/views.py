@@ -1332,11 +1332,11 @@ class ProjectArchiveView(
         users = list(set(users))  # Remove possible dupes (see issue #710)
         if not users:
             return
-        for u in users:
-            app_alerts.add_alert(
+        else:
+            app_alerts.add_alerts(
                 app_name=APP_NAME,
                 alert_name='project_{}'.format(action),
-                user=u,
+                users=users,
                 message='{} {}d by {}. {}'.format(
                     alert_p, action, user.get_full_name(), alert_msg
                 ),

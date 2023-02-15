@@ -30,6 +30,9 @@ class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
     def setUp(self):
         # Create user
         self.user = self.make_user('user')
+        # Create superuser
+        self.superuser = self.make_user('superuser')
+        self.superuser.is_superuser = True
         self.project = self.make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
         )
@@ -71,6 +74,20 @@ class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
         }
         model_dict = model_to_dict(alert)
         self.assertEqual(model_dict, expected)
+
+    def test_add_alerts(self):
+        """Test add_alerts()"""
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.app_alerts.add_alerts(
+            app_name='timeline',
+            alert_name=ALERT_NAME,
+            users=[self.user, self.superuser],
+            message=ALERT_MSG,
+            level=ALERT_LEVEL,
+            url=self.project_url,
+            project=self.project,
+        )
+        self.assertEqual(AppAlert.objects.count(), 2)
 
     def test_add_alert_projectroles(self):
         """Test alert addition for projectroles"""
