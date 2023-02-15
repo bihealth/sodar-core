@@ -19,6 +19,7 @@ from appalerts.models import AppAlert
 
 # Timeline dependency
 from timeline.models import ProjectEvent
+from timeline.tests.test_models import ProjectEventMixin
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import EMPTY_CHOICE_LABEL
@@ -179,7 +180,9 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.status_code, 200)
 
 
-class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectSearchView(
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase, ProjectEventMixin
+):
     """Tests for the project search results view"""
 
     def setUp(self):
@@ -337,6 +340,33 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
             )
             self.assertRedirects(response, reverse('home'))
+
+    def test_search_omit_app(self):
+        """Test omitting an app from the advanced search"""
+        self.make_event(
+            project=self.project,
+            app='projectroles',
+            user=self.user,
+            event_name='test_event',
+            description='description',
+            classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['app_results']), 2)
+        with override_settings(PROJECTROLES_SEARCH_OMIT_APPS=['timeline']):
+            with self.login(self.user):
+                response = self.client.get(
+                    reverse('projectroles:search')
+                    + '?'
+                    + urlencode({'s': 'test'})
+                )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['app_results']), 1)
 
 
 class TestProjectAdvancedSearchView(
