@@ -1,9 +1,13 @@
-from django.conf.urls import url
+from django.urls import path
 
 from siteinfo import views
 
 app_name = 'siteinfo'
 
 urlpatterns = [
-    url(regex=r'^info$', view=views.SiteInfoView.as_view(), name='info')
+    path(
+        route='info/',
+        view=views.SiteInfoView.as_view(),
+        name='info',
+    ),
 ]

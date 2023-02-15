@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import path
 
 from projectroles import views, views_ajax, views_api
 
@@ -6,140 +6,147 @@ app_name = 'projectroles'
 
 # UI views
 urls_ui = [
-    url(
-        regex=r'^(?P<project>[0-9a-f-]+)$',
+    path(
+        route='project/<uuid:project>/',
         view=views.ProjectDetailView.as_view(),
         name='detail',
     ),
-    url(
-        regex=r'^update/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='project/update/<uuid:project>/',
         view=views.ProjectUpdateView.as_view(),
         name='update',
     ),
-    url(
-        regex=r'^create$', view=views.ProjectCreateView.as_view(), name='create'
-    ),
-    url(
-        regex=r'^create/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='project/create/',
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
-    url(
-        regex=r'^archive/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='project/create/<uuid:project>/',
+        view=views.ProjectCreateView.as_view(),
+        name='create',
+    ),
+    path(
+        route='project/archive/<uuid:project>/',
         view=views.ProjectArchiveView.as_view(),
         name='archive',
     ),
     # Search views
-    url(
-        regex=r'^search/results/$',
+    path(
+        route='search/results/',
         view=views.ProjectSearchResultsView.as_view(),
         name='search',
     ),
-    url(
-        regex=r'^search/advanced$',
+    path(
+        route='search/advanced/',
         view=views.ProjectAdvancedSearchView.as_view(),
         name='search_advanced',
     ),
     # Project role views
-    url(
-        regex=r'^members/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='members/<uuid:project>/',
         view=views.ProjectRoleView.as_view(),
         name='roles',
     ),
-    url(
-        regex=r'^members/create/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='members/<uuid:project>/',
+        view=views.ProjectRoleView.as_view(),
+        name='roles',
+    ),
+    path(
+        route='members/create/<uuid:project>/',
         view=views.RoleAssignmentCreateView.as_view(),
         name='role_create',
     ),
-    url(
-        regex=r'^members/update/(?P<roleassignment>[0-9a-f-]+)$',
+    path(
+        route='members/update/<uuid:roleassignment>/',
         view=views.RoleAssignmentUpdateView.as_view(),
         name='role_update',
     ),
-    url(
-        regex=r'^members/delete/(?P<roleassignment>[0-9a-f-]+)$',
+    path(
+        route='members/delete/<uuid:roleassignment>/',
         view=views.RoleAssignmentDeleteView.as_view(),
         name='role_delete',
     ),
-    url(
-        regex=r'^members/owner/transfer/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='members/owner/transfer/<uuid:project>/',
         view=views.RoleAssignmentOwnerTransferView.as_view(),
         name='role_owner_transfer',
     ),
     # Project invite views
-    url(
-        regex=r'^invites/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='invites/<uuid:project>/',
         view=views.ProjectInviteView.as_view(),
         name='invites',
     ),
-    url(
-        regex=r'^invites/create/(?P<project>[0-9a-f-]+)',
+    path(
+        route='invites/create/<uuid:project>/',
         view=views.ProjectInviteCreateView.as_view(),
         name='invite_create',
     ),
-    url(
-        regex=r'^invites/accept/(?P<secret>[\w\-]+)$',
+    path(
+        route='invites/accept/<str:secret>/',
         view=views.ProjectInviteAcceptView.as_view(),
         name='invite_accept',
     ),
-    url(
-        regex=r'^invites/process/ldap/(?P<secret>[\w\-]+)$',
+    path(
+        route='invites/process/ldap/<str:secret>/',
         view=views.ProjectInviteProcessLDAPView.as_view(),
         name='invite_process_ldap',
     ),
-    url(
-        regex=r'^invites/process/local/(?P<secret>[\w\-]+)$',
+    path(
+        route='invites/process/local/<str:secret>/',
         view=views.ProjectInviteProcessLocalView.as_view(),
         name='invite_process_local',
     ),
-    url(
-        regex=r'^invites/resend/(?P<projectinvite>[0-9a-f-]+)$',
+    path(
+        route='invites/resend/<uuid:projectinvite>/',
         view=views.ProjectInviteResendView.as_view(),
         name='invite_resend',
     ),
-    url(
-        regex=r'^invites/revoke/(?P<projectinvite>[0-9a-f-]+)$',
+    path(
+        route='invites/revoke/<uuid:projectinvite>/',
         view=views.ProjectInviteRevokeView.as_view(),
         name='invite_revoke',
     ),
-    url(
-        regex=r'^user/update$',
+    path(
+        route='user/update/',
         view=views.UserUpdateView.as_view(),
         name='user_update',
     ),
     # Remote site and project views
-    url(
-        regex=r'^remote/sites$',
+    path(
+        route='remote/sites/',
         view=views.RemoteSiteListView.as_view(),
         name='remote_sites',
     ),
-    url(
-        regex=r'^remote/site/add$',
+    path(
+        route='remote/site/add/',
         view=views.RemoteSiteCreateView.as_view(),
         name='remote_site_create',
     ),
-    url(
-        regex=r'^remote/site/update/(?P<remotesite>[0-9a-f-]+)$',
+    path(
+        route='remote/site/update/<uuid:remotesite>/',
         view=views.RemoteSiteUpdateView.as_view(),
         name='remote_site_update',
     ),
-    url(
-        regex=r'^remote/site/delete/(?P<remotesite>[0-9a-f-]+)$',
+    path(
+        route='remote/site/delete/<uuid:remotesite>/',
         view=views.RemoteSiteDeleteView.as_view(),
         name='remote_site_delete',
     ),
-    url(
-        regex=r'^remote/site/(?P<remotesite>[0-9a-f-]+)$',
+    path(
+        route='remote/site/<uuid:remotesite>/',
         view=views.RemoteProjectListView.as_view(),
         name='remote_projects',
     ),
-    url(
-        regex=r'^remote/site/access/(?P<remotesite>[0-9a-f-]+)$',
+    path(
+        route='remote/site/access/<uuid:remotesite>/',
         view=views.RemoteProjectBatchUpdateView.as_view(),
         name='remote_projects_update',
     ),
-    url(
-        regex=r'^remote/site/sync/(?P<remotesite>[0-9a-f-]+)$',
+    path(
+        route='remote/site/sync/<uuid:remotesite>/',
         view=views.RemoteProjectSyncView.as_view(),
         name='remote_projects_sync',
     ),
@@ -147,38 +154,38 @@ urls_ui = [
 
 # Ajax API views
 urls_ajax = [
-    url(
-        regex=r'^ajax/list$',
+    path(
+        route='ajax/list/',
         view=views_ajax.ProjectListAjaxView.as_view(),
         name='ajax_project_list',
     ),
-    url(
-        regex=r'^ajax/list/columns$',
+    path(
+        route='ajax/list/columns/',
         view=views_ajax.ProjectListColumnAjaxView.as_view(),
         name='ajax_project_list_columns',
     ),
-    url(
-        regex=r'^ajax/list/roles',
+    path(
+        route='ajax/list/roles/',
         view=views_ajax.ProjectListRoleAjaxView.as_view(),
         name='ajax_project_list_roles',
     ),
-    url(
-        regex=r'^ajax/star/(?P<project>[0-9a-f-]+)',
+    path(
+        route='ajax/star/<uuid:project>/',
         view=views_ajax.ProjectStarringAjaxView.as_view(),
         name='ajax_star',
     ),
-    url(
-        regex=r'^ajax/user/current',
+    path(
+        route='ajax/user/current/',
         view=views_ajax.CurrentUserRetrieveAjaxView.as_view(),
         name='ajax_user_current',
     ),
-    url(
-        r'^ajax/autocomplete/user$',
+    path(
+        route='ajax/autocomplete/user/',
         view=views_ajax.UserAutocompleteAjaxView.as_view(),
         name='ajax_autocomplete_user',
     ),
-    url(
-        r'^ajax/autocomplete/user/redirect$',
+    path(
+        route='ajax/autocomplete/user/redirect/',
         view=views_ajax.UserAutocompleteRedirectAjaxView.as_view(
             create_field='user'
         ),
@@ -188,98 +195,98 @@ urls_ajax = [
 
 # REST API views
 urls_api = [
-    url(
-        regex=r'^api/list$',
+    path(
+        route='api/list/',
         view=views_api.ProjectListAPIView.as_view(),
         name='api_project_list',
     ),
-    url(
-        regex=r'^api/retrieve/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/retrieve/<uuid:project>/',
         view=views_api.ProjectRetrieveAPIView.as_view(),
         name='api_project_retrieve',
     ),
-    url(
-        regex=r'^api/create$',
+    path(
+        route='api/create/',
         view=views_api.ProjectCreateAPIView.as_view(),
         name='api_project_create',
     ),
-    url(
-        regex=r'^api/update/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/update/<uuid:project>/',
         view=views_api.ProjectUpdateAPIView.as_view(),
         name='api_project_update',
     ),
-    url(
-        regex=r'^api/roles/create/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/roles/create/<uuid:project>/',
         view=views_api.RoleAssignmentCreateAPIView.as_view(),
         name='api_role_create',
     ),
-    url(
-        regex=r'^api/roles/update/(?P<roleassignment>[0-9a-f-]+)$',
+    path(
+        route='api/roles/update/<uuid:roleassignment>/',
         view=views_api.RoleAssignmentUpdateAPIView.as_view(),
         name='api_role_update',
     ),
-    url(
-        regex=r'^api/roles/destroy/(?P<roleassignment>[0-9a-f-]+)$',
+    path(
+        route='api/roles/destroy/<uuid:roleassignment>/',
         view=views_api.RoleAssignmentDestroyAPIView.as_view(),
         name='api_role_destroy',
     ),
-    url(
-        regex=r'^api/roles/owner-transfer/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/roles/owner-transfer/<uuid:project>/',
         view=views_api.RoleAssignmentOwnerTransferAPIView.as_view(),
         name='api_role_owner_transfer',
     ),
-    url(
-        regex=r'^api/invites/list/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/invites/list/<uuid:project>/',
         view=views_api.ProjectInviteListAPIView.as_view(),
         name='api_invite_list',
     ),
-    url(
-        regex=r'^api/invites/create/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/invites/create/<uuid:project>/',
         view=views_api.ProjectInviteCreateAPIView.as_view(),
         name='api_invite_create',
     ),
-    url(
-        regex=r'^api/invites/revoke/(?P<projectinvite>[0-9a-f-]+)$',
+    path(
+        route='api/invites/revoke/<uuid:projectinvite>/',
         view=views_api.ProjectInviteRevokeAPIView.as_view(),
         name='api_invite_revoke',
     ),
-    url(
-        regex=r'^api/invites/resend/(?P<projectinvite>[0-9a-f-]+)$',
+    path(
+        route='api/invites/resend/<uuid:projectinvite>/',
         view=views_api.ProjectInviteResendAPIView.as_view(),
         name='api_invite_resend',
     ),
-    url(
-        regex=r'^api/settings/retrieve/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/settings/retrieve/<uuid:project>/',
         view=views_api.ProjectSettingRetrieveAPIView.as_view(),
         name='api_project_setting_retrieve',
     ),
-    url(
-        regex=r'^api/settings/set/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/settings/set/<uuid:project>/',
         view=views_api.ProjectSettingSetAPIView.as_view(),
         name='api_project_setting_set',
     ),
-    url(
-        regex=r'^api/settings/retrieve/user$',
+    path(
+        route='api/settings/retrieve/user/',
         view=views_api.UserSettingRetrieveAPIView.as_view(),
         name='api_user_setting_retrieve',
     ),
-    url(
-        regex=r'^api/settings/set/user$',
+    path(
+        route='api/settings/set/user/',
         view=views_api.UserSettingSetAPIView.as_view(),
         name='api_user_setting_set',
     ),
-    url(
-        regex=r'^api/users/list$',
+    path(
+        route='api/users/list/',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',
     ),
-    url(
-        regex=r'^api/users/current$',
+    path(
+        route='api/users/current/',
         view=views_api.CurrentUserRetrieveAPIView.as_view(),
         name='api_user_current',
     ),
-    url(
-        regex=r'^api/remote/get/(?P<secret>[\w\-]+)$',
+    path(
+        route='api/remote/get/<str:secret>/',
         view=views_api.RemoteProjectGetAPIView.as_view(),
         name='api_remote_get',
     ),

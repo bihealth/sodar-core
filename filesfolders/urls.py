@@ -1,144 +1,143 @@
-from django.conf.urls import url
+from django.urls import path
 
 from . import views, views_api
 
 # NOTE: file/folder/hyperlink objects can be referred to as 'item', but only if
 #       ObjectPermissionMixin is used in the view
 
-
 app_name = 'filesfolders'
 
 urls_ui = [
-    url(
-        regex=r'^(?P<project>[0-9a-f-]+)$',
+    path(
+        route='<uuid:project>/',
         view=views.ProjectFileView.as_view(),
         name='list',
     ),
-    url(
-        regex=r'^folder/(?P<folder>[0-9a-f-]+)$',
+    path(
+        route='folder/<uuid:folder>/',
         view=views.ProjectFileView.as_view(),
         name='list',
     ),
-    url(
-        regex=r'^upload/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='upload/<uuid:project>/',
         view=views.FileCreateView.as_view(),
         name='file_create',
     ),
-    url(
-        regex=r'^upload/in/(?P<folder>[0-9a-f-]+)$',
+    path(
+        route='upload/in/<uuid:folder>/',
         view=views.FileCreateView.as_view(),
         name='file_create',
     ),
-    url(
-        regex=r'^update/(?P<item>[0-9a-f-]+)$',
+    path(
+        route='update/<uuid:item>/',
         view=views.FileUpdateView.as_view(),
         name='file_update',
     ),
-    url(
-        regex=r'^delete/(?P<item>[0-9a-f-]+)$',
+    path(
+        route='delete/<uuid:item>/',
         view=views.FileDeleteView.as_view(),
         name='file_delete',
     ),
-    url(
-        regex=r'^download/(?P<file>[0-9a-f-]+)/(?P<file_name>[^\0/]+)$',
+    path(
+        route='download/<uuid:file>/<path:file_name>/',
         view=views.FileServeView.as_view(),
         name='file_serve',
     ),
-    url(
-        regex=r'^download/(?P<secret>[\w\-]+)/(?P<file_name>[^\0/]+)$',
+    path(
+        route='download/<str:secret>/<path:file_name>/',
         view=views.FileServePublicView.as_view(),
         name='file_serve_public',
     ),
-    url(
-        regex=r'^link/(?P<file>[0-9a-f-]+)$',
+    path(
+        route='link/<uuid:file>/',
         view=views.FilePublicLinkView.as_view(),
         name='file_public_link',
     ),
-    url(
-        regex=r'^folder/add/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='folder/add/<uuid:project>/',
         view=views.FolderCreateView.as_view(),
         name='folder_create',
     ),
-    url(
-        regex=r'^folder/add/in/(?P<folder>[0-9a-f-]+)$',
+    path(
+        route='folder/add/in/<uuid:folder>/',
         view=views.FolderCreateView.as_view(),
         name='folder_create',
     ),
-    url(
-        regex=r'^folder/update/(?P<item>[0-9a-f-]+)$',
+    path(
+        route='folder/update/<uuid:item>/',
         view=views.FolderUpdateView.as_view(),
         name='folder_update',
     ),
-    url(
-        regex=r'^folder/delete(?P<item>[0-9a-f-]+)$',
+    path(
+        route='folder/delete/<uuid:item>/',
         view=views.FolderDeleteView.as_view(),
         name='folder_delete',
     ),
-    url(
-        regex=r'^link/add/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='link/add/<uuid:project>/',
         view=views.HyperLinkCreateView.as_view(),
         name='hyperlink_create',
     ),
-    url(
-        regex=r'^link/add/in/(?P<folder>[0-9a-f-]+)$',
+    path(
+        route='link/add/in/<uuid:folder>/',
         view=views.HyperLinkCreateView.as_view(),
         name='hyperlink_create',
     ),
-    url(
-        regex=r'^link/update/(?P<item>[0-9a-f-]+)$',
+    path(
+        route='link/update/<uuid:item>/',
         view=views.HyperLinkUpdateView.as_view(),
         name='hyperlink_update',
     ),
-    url(
-        regex=r'^link/delete/(?P<item>[0-9a-f-]+)$',
+    path(
+        route='link/delete/<uuid:item>/',
         view=views.HyperLinkDeleteView.as_view(),
         name='hyperlink_delete',
     ),
-    url(
-        regex=r'^batch/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='batch/<uuid:project>/',
         view=views.BatchEditView.as_view(),
         name='batch_edit',
     ),
-    url(
-        regex=r'^batch/in/(?P<folder>[0-9a-f-]+)$',
+    path(
+        route='batch/in/<uuid:folder>/',
         view=views.BatchEditView.as_view(),
         name='batch_edit',
     ),
 ]
 
 urls_api = [
-    url(
-        regex=r'^api/folder/list-create/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/folder/list-create/<uuid:project>/',
         view=views_api.FolderListCreateAPIView.as_view(),
         name='api_folder_list_create',
     ),
-    url(
-        regex=r'^api/folder/retrieve-update-destroy/(?P<folder>[0-9a-f-]+)$',
+    path(
+        route='api/folder/retrieve-update-destroy/<uuid:folder>/',
         view=views_api.FolderRetrieveUpdateDestroyAPIView.as_view(),
         name='api_folder_retrieve_update_destroy',
     ),
-    url(
-        regex=r'^api/file/list-create/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/file/list-create/<uuid:project>/',
         view=views_api.FileListCreateAPIView.as_view(),
         name='api_file_list_create',
     ),
-    url(
-        regex=r'^api/file/retrieve-update-destroy/(?P<file>[0-9a-f-]+)$',
+    path(
+        route='api/file/retrieve-update-destroy/<uuid:file>/',
         view=views_api.FileRetrieveUpdateDestroyAPIView.as_view(),
         name='api_file_retrieve_update_destroy',
     ),
-    url(
-        regex=r'^api/file/serve/(?P<file>[0-9a-f-]+)$',
+    path(
+        route='api/file/serve/<uuid:file>/',
         view=views_api.FileServeAPIView.as_view(),
         name='api_file_serve',
     ),
-    url(
-        regex=r'^api/hyperlink/list-create/(?P<project>[0-9a-f-]+)$',
+    path(
+        route='api/hyperlink/list-create/<uuid:project>/',
         view=views_api.HyperLinkListCreateAPIView.as_view(),
         name='api_hyperlink_list_create',
     ),
-    url(
-        regex=r'^api/hyperlink/retrieve-update-destroy/(?P<hyperlink>[0-9a-f-]+)$',
+    path(
+        route='api/hyperlink/retrieve-update-destroy/<uuid:hyperlink>/',
         view=views_api.HyperLinkRetrieveUpdateDestroyAPIView.as_view(),
         name='api_hyperlink_retrieve_update_destroy',
     ),

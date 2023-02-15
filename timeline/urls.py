@@ -1,6 +1,6 @@
 """URLs for the timeline app"""
 
-from django.conf.urls import url
+from django.urls import path
 
 from timeline import views, views_ajax
 
@@ -9,29 +9,26 @@ app_name = 'timeline'
 
 # UI views
 urls_ui = [
-    url(
-        regex=r'^(?P<project>[0-9a-f-]+)$',
+    path(
+        route='<uuid:project>/',
         view=views.ProjectTimelineView.as_view(),
         name='list_project',
     ),
-    url(
-        regex=r'^site$',
-        view=views.SiteTimelineView.as_view(),
-        name='list_site',
+    path(
+        route='site/', view=views.SiteTimelineView.as_view(), name='list_site'
     ),
-    url(
-        regex=r'^site/all$',
+    path(
+        route='site/all/',
         view=views.AdminTimelineView.as_view(),
         name='timeline_site_admin',
     ),
-    url(
-        regex=r'^(?P<project>[0-9a-f-]+)/(?P<object_model>[\w-]+)/'
-        r'(?P<object_uuid>[0-9a-f-]+)$',
+    path(
+        route='<uuid:project>/<str:object_model>/<uuid:object_uuid>/',
         view=views.ProjectObjectTimelineView.as_view(),
         name='list_object',
     ),
-    url(
-        regex=r'^site/(?P<object_model>[\w-]+)/(?P<object_uuid>[0-9a-f-]+)$',
+    path(
+        route='site/<str:object_model>/<uuid:object_uuid>/',
         view=views.SiteObjectTimelineView.as_view(),
         name='list_object_site',
     ),
@@ -39,28 +36,28 @@ urls_ui = [
 
 # Ajax API views
 urls_ajax = [
-    url(
-        regex=r'^ajax/detail/(?P<projectevent>[0-9a-f-]+)$',
+    path(
+        route='ajax/detail/<uuid:projectevent>/',
         view=views_ajax.ProjectEventDetailAjaxView.as_view(),
         name='ajax_detail_project',
     ),
-    url(
-        regex=r'^ajax/detail/site/(?P<projectevent>[0-9a-f-]+)$',
+    path(
+        route='ajax/detail/site/<uuid:projectevent>/',
         view=views_ajax.SiteEventDetailAjaxView.as_view(),
         name='ajax_detail_site',
     ),
-    url(
-        regex=r'^ajax/extra/(?P<projectevent>[0-9a-f-]+)$',
+    path(
+        route='ajax/extra/<uuid:projectevent>/',
         view=views_ajax.ProjectEventExtraAjaxView.as_view(),
         name='ajax_extra_project',
     ),
-    url(
-        regex=r'^ajax/extra/site/(?P<projectevent>[0-9a-f-]+)$',
+    path(
+        route='ajax/extra/site/<uuid:projectevent>/',
         view=views_ajax.SiteEventExtraAjaxView.as_view(),
         name='ajax_extra_site',
     ),
-    url(
-        regex=r'^ajax/extra/status/(?P<eventstatus>[0-9-a-f-]+)$',
+    path(
+        route='ajax/extra/status/<uuid:eventstatus>/',
         view=views_ajax.EventStatusExtraAjaxView.as_view(),
         name='ajax_extra_status',
     ),
