@@ -1,6 +1,4 @@
 """Plugins for the Timeline app"""
-from django.utils.timezone import localtime
-from django.conf import settings
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -106,26 +104,21 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :return: Dict
         """
         items = []
-        search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
 
         if not search_type or search_type == 'timeline':
             events = ProjectEvent.objects.find(search_terms, keywords)
-            items = list(events)
-            items.sort(
-                key=lambda x: localtime(x.get_timestamp()).strftime(
-                    '%Y-%m-%d %H:%M:%S'
-                ),
-                reverse=False,
-            )
-        if items:
+
+        if events:
             items = [
-                event for event in items if self.check_permission(user, event)
+                event
+                for event in list(events)
+                if self.check_permission(user, event)
             ]
         return {
             'all': {
                 'title': 'Timeline Events',
                 'search_types': ['timeline'],
-                'items': items[:search_limit],
+                'items': items,
             }
         }
 
