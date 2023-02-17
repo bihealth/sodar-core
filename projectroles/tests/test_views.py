@@ -3126,7 +3126,7 @@ class TestProjectInviteCreateView(
     @override_settings(
         PROJECTROLES_ALLOW_LOCAL_USERS=False,
         ENABLE_SAML=False,
-        AUTH_LDAP_USERNAME_DOMAIN=[],
+        AUTH_LDAP_USERNAME_DOMAIN='',
     )
     def test_local_users_not_allowed(self):
         """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = False"""
@@ -3149,7 +3149,7 @@ class TestProjectInviteCreateView(
     @override_settings(
         PROJECTROLES_ALLOW_LOCAL_USERS=True,
         ENABLE_SAML=False,
-        AUTH_LDAP_USERNAME_DOMAIN=[],
+        AUTH_LDAP_USERNAME_DOMAIN='',
     )
     def test_local_users_allowed(self):
         """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = True"""
@@ -3175,7 +3175,7 @@ class TestProjectInviteCreateView(
     @override_settings(
         PROJECTROLES_ALLOW_LOCAL_USERS=False,
         ENABLE_SAML=False,
-        AUTH_LDAP_USERNAME_DOMAIN=['example.com'],
+        AUTH_LDAP_USERNAME_DOMAIN='example.com',
     )
     def test_local_users_email_domain(self):
         """Test ProjectInvite creation for local users with email domain in AUTH_LDAP_USERNAME_DOMAIN"""

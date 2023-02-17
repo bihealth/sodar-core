@@ -960,23 +960,19 @@ class ProjectInviteForm(SODARModelForm):
         # Local users check
         user_email = self.cleaned_data.get('email')
         domain = user_email[user_email.find('@') + 1 :]
-        allow_local_users = getattr(
-            settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False
-        )
-        enable_saml = getattr(settings, 'ENABLE_SAML', False)
-        domain_list = getattr(
-            settings, 'AUTH_LDAP_USERNAME_DOMAIN', []
-        ) + getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', [])
+        domain_list = [
+            getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN'),
+            getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN')
+        ]
         if (
-            not allow_local_users
-            and not enable_saml
+            not settings.PROJECTROLES_ALLOW_LOCAL_USERS
+            and not settings.ENABLE_SAML
             and domain not in domain_list
         ):
             self.add_error(
                 'email',
-                'Local users not allowed, email domain {} not recognized for LDAP users'.format(
-                    domain
-                ),
+                'Local users not allowed, email domain {} not recognized for '
+                'LDAP users'.format(domain),
             )
 
         # Delegate checks
