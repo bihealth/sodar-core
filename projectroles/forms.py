@@ -962,7 +962,7 @@ class ProjectInviteForm(SODARModelForm):
         domain = user_email[user_email.find('@') + 1 :]
         domain_list = [
             getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN'),
-            getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN')
+            getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN'),
         ]
         if (
             not settings.PROJECTROLES_ALLOW_LOCAL_USERS
