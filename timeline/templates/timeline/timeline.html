@@ -54,6 +54,9 @@
         </table>
       </div>
     </div>
+    {% if is_paginated %}
+      {% include 'projectroles/_pagination.html' with pg_small=False %}
+    {% endif %}
   {% else %}
     <div class="alert alert-info" role="alert">
       No timeline events found for this
@@ -66,13 +69,6 @@
 
 {% block javascript %}
   {{ block.super }}
-
-  <!-- Settings for Javascript -->
-  <script type="text/javascript">
-    {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' default=5 as search_pagination %}
-    window.searchPagination = {{ search_pagination }};
-    window.refreshCellOverflow = true;
-  </script>
 
   <!-- DataTables -->
   <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>

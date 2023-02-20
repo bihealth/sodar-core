@@ -10,7 +10,7 @@ $(document).ready(function() {
     $('.sodar-tl-table').each(function() {
         $(this).DataTable({
             scrollX: false,
-            paging: true,
+            paging: false,
             pageLength: window.searchPagination,
             lengthChange: true,
             scrollCollapse: true,
@@ -24,9 +24,6 @@ $(document).ready(function() {
                 }
             },
             dom: 'tp',
-            fnDrawCallback: function() {
-                modifyCellOverflow();
-            }
         });
 
         // Hide pagination and disable page dropdown if only one page
@@ -38,19 +35,6 @@ $(document).ready(function() {
 
         // Display card once table has been initialized
         $(this).closest('div.sodar-sort-card').show();
-    });
-
-    // Update overflow status
-    modifyCellOverflow();
-
-    /**********
-     Pagination
-     **********/
-
-    $('.sodar-sort-page-length').change(function () {
-        var dt = $(this).closest('.sodar-sort-card').find('table').DataTable();
-        var value = parseInt($(this).val());
-        dt.page.len(value).draw();
     });
 
     /*********
