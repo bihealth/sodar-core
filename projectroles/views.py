@@ -602,29 +602,6 @@ class ProjectSearchResultsView(
             search_apps = [
                 p for p in search_apps if search_type in p.search_types
             ]
-        # if search_type:
-        #     search_apps = sorted(
-        #         [
-        #             p
-        #             for p in plugins
-        #             if (
-        #                 p.search_enable
-        #                 and search_type in p.search_types
-        #                 and p.name not in omit_apps_list
-        #             )
-        #         ],
-        #         key=lambda x: x.plugin_ordering,
-        #     )
-        # else:
-        #     search_apps = sorted(
-        #         [
-        #             p
-        #             for p in plugins
-        #             if p.search_enable and p.name not in omit_apps_list
-        #         ],
-        #         key=lambda x: x.plugin_ordering,
-        #     )
-
         for plugin in search_apps:
             search_kwargs = {
                 'user': self.request.user,
