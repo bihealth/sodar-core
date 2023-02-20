@@ -24,7 +24,7 @@ table#sodar-tl-table-extra-data tbody tr td:nth-child(1) {
   width: 100%;
 }
 
-table.sodar-timeline-table {
+table.sodar-tl-table {
   display: inline-table;
   min-width: 100%;
   max-width: 100%;
@@ -33,25 +33,15 @@ table.sodar-timeline-table {
   margin: 0 !important;
 }
 
-table.sodar-timeline-table thead tr th {
+table.sodar-tl-table thead tr th {
   padding: 12px !important;
   padding-right: 22px !important; /* Avoid covering sort icons */
   max-width: 250px !important;
 }
 
-table.sodar-timeline-table tbody tr td {
+table.sodar-tl-table tbody tr td {
   padding: 12px !important;
   max-width: 250px !important;
-}
-
-.sodar-header-input-group-search {
-    max-width: 250px;
-}
-
-@media screen and (max-width: 1000px) {
-  .sodar-header-input-group-search {
-    display: none;
-  }
 }
 
 select.sodar-sort-page-length {

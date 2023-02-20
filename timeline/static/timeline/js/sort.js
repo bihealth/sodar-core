@@ -7,7 +7,7 @@ $(document).ready(function() {
     $.fn.dataTable.ext.classes.sPageButton =
         'btn sodar-list-btn ml-1 sodar-paginate-button btn-outline-light text-primary';
 
-    $('.sodar-timeline-table').each(function() {
+    $('.sodar-tl-table').each(function() {
         $(this).DataTable({
             scrollX: false,
             paging: true,

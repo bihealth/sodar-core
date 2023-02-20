@@ -49,10 +49,10 @@
 
 <div class="container-fluid sodar-page-container">
   {% if object_list.count > 0 %}
-    <div class="card mb-3" id="sodar-tl-event-list">
+    <div class="card mb-3 sodar-sort-card" id="sodar-tl-event-list">
       {% include 'timeline/_sort_header.html' with search_title=timeline_title %}
       <div class="card-body p-0 sodar-sort-card-body">
-        <table class="table table-striped sodar-card-table sodar-timeline-table" id="sodar-tl-table">
+        <table class="table table-striped sodar-card-table sodar-tl-table" id="sodar-tl-table">
           <thead>
             {% include 'timeline/_list_header.html' %}
           </thead>
@@ -62,7 +62,6 @@
             {% endfor %}
           </tbody>
         </table>
-      </div>
       </div>
     </div>
   {% else %}
