@@ -7,7 +7,7 @@ app_name = 'projectroles'
 # UI views
 urls_ui = [
     path(
-        route='project/<uuid:project>/',
+        route='<uuid:project>',
         view=views.ProjectDetailView.as_view(),
         name='detail',
     ),
