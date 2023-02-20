@@ -56,14 +56,18 @@ class ProjectEventManager(models.Manager):
         :return: QuerySet of ProjectEvent objects
         """
         search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
-        objects = super().get_queryset().order_by('-status_changes__timestamp')
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(event_name__icontains=t), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
             term_query.add(Q(event_objects__name__icontains=t), Q.OR)
-        items = objects.filter(term_query)[:search_limit]
-        return items
+        items = (
+            super()
+            .get_queryset()
+            .filter(term_query)
+            .order_by('-status_changes__timestamp')
+        )
+        return items[:search_limit]
 
 
 class ProjectEvent(models.Model):

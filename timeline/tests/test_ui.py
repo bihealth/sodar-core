@@ -424,7 +424,7 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             app_name='projectroles',
             user=self.superuser,
             event_name='test_event',
-            description='KsdfLAfANd',
+            description='description',
             extra_data={'test_key': 'test_val'},
             status_type='OK',
         )
@@ -442,7 +442,7 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             app_name='projectroles',
             user=self.superuser,
             event_name='test_site_event',
-            description='KsdfLAfANd',
+            description='description',
             extra_data={'test_key': 'test_val'},
             status_type='OK',
         )
@@ -460,7 +460,7 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             app_name='projectroles',
             user=self.superuser,
             event_name='classified_event',
-            description='KsdfLAfANd',
+            description='description',
             extra_data={'test_key': 'test_val'},
             classified=True,
         )
@@ -477,7 +477,7 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             app_name='projectroles',
             user=self.superuser,
             event_name='classified_site_event',
-            description='KsdfLAfANd',
+            description='description',
             extra_data={'test_key': 'test_val'},
             classified=True,
         )
@@ -502,7 +502,7 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         url = (
             reverse('projectroles:search')
             + '?'
-            + urlencode({'s': 'KsdfLAfANd'})
+            + urlencode({'s': 'description'})
         )
         for user, count in expected:
             self.login_and_redirect(user, url, wait_elem=None, wait_loc='ID')
