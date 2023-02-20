@@ -490,14 +490,14 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
 
     def test_search_results(self):
-        """Test search results. !!PS: The expected values are false due to whatever!!"""
+        """Test search results"""
         expected = [
-            (self.superuser, 10),
-            (self.owner_as.user, 6),
-            (self.delegate_as.user, 6),
-            (self.contributor_as.user, 6),
-            (self.guest_as.user, 6),
-            (self.user_no_roles, 3),
+            (self.superuser, 4),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
+            (self.user_no_roles, 1),
         ]
         url = (
             reverse('projectroles:search')
@@ -509,7 +509,10 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             elements = self.selenium.find_elements(
                 By.CLASS_NAME, 'sodar-pr-project-list-item'
             )
-            self.assertEqual(len(elements), count)
+            elem_set = set()
+            for elem in elements:
+                elem_set.add(elem.get_attribute('id'))
+            self.assertEqual(len(elem_set), count)
 
     @override_settings(TIMELINE_SEARCH_LIMIT=2)
     def test_search_limit(self):
