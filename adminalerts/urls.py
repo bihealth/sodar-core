@@ -9,22 +9,22 @@ app_name = 'adminalerts'
 
 urls_ui = [
     path(
-        route='list/',
+        route='list',
         view=views.AdminAlertListView.as_view(),
         name='list',
     ),
     path(
-        route='detail/<uuid:adminalert>/',
+        route='detail/<uuid:adminalert>',
         view=views.AdminAlertDetailView.as_view(),
         name='detail',
     ),
     path(
-        route='create/',
+        route='create',
         view=views.AdminAlertCreateView.as_view(),
         name='create',
     ),
     path(
-        route='update/<uuid:adminalert>/',
+        route='update/<uuid:adminalert>',
         view=views.AdminAlertUpdateView.as_view(),
         name='update',
     ),

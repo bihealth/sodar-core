@@ -6,7 +6,7 @@ app_name = 'example_site_app'
 
 urlpatterns = [
     path(
-        route='example/',
+        route='example',
         view=views.ExampleView.as_view(),
         name='example',
     ),
