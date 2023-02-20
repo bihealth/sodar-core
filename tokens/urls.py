@@ -16,7 +16,7 @@ urlpatterns = [
         name='create',
     ),
     path(
-        route='delete/<int:pk>',
+        route='delete/<str:pk>',
         view=views.UserTokenDeleteView.as_view(),
         name='delete',
     ),

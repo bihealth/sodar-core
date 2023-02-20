@@ -14,9 +14,7 @@ urls_ui = [
         view=views.ProjectTimelineView.as_view(),
         name='list_project',
     ),
-    path(
-        route='site', view=views.SiteTimelineView.as_view(), name='list_site'
-    ),
+    path(route='site', view=views.SiteTimelineView.as_view(), name='list_site'),
     path(
         route='site/all',
         view=views.AdminTimelineView.as_view(),
