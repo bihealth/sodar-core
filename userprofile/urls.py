@@ -1,13 +1,17 @@
-from django.conf.urls import url
+from django.urls import path
 
 from userprofile import views
 
 app_name = 'userprofile'
 
 urlpatterns = [
-    url(regex=r'^profile$', view=views.UserDetailView.as_view(), name='detail'),
-    url(
-        regex=r'^profile/settings/update$',
+    path(
+        route='profile',
+        view=views.UserDetailView.as_view(),
+        name='detail',
+    ),
+    path(
+        route='profile/settings/update',
         view=views.UserSettingUpdateView.as_view(),
         name='settings_update',
     ),
