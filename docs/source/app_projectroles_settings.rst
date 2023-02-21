@@ -253,6 +253,8 @@ The following projectroles settings are **optional**:
   site and all projects where ``public_guest_access`` is set true (bool)
 * ``PROJECTROLES_SIDEBAR_ICON_SIZE``: Set the icon size for the project sidebar.
   Minimum=18, maximum=42, default=36 (int)
+* ``ROJECTROLES_SEARCH_OMIT_APPS``: List of apps to omit from search results
+  (list)
 
 Example:
 
