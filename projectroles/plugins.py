@@ -238,6 +238,16 @@ class ProjectModifyPluginMixin:
         # TODO: Implement this in your app plugin
         pass
 
+    def callable_function(self, project, user):
+        """
+        Example function for callable plugin functions.
+
+        :param project: Project object
+        :param user: User object
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
 
 # Plugin Points ----------------------------------------------------------------
 

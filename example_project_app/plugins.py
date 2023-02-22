@@ -211,6 +211,24 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'default': '',
             'description': 'Example json project user setting',
         },
+        'project_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'CALLABLE',
+            'default': None,
+            'description': 'Example callable project setting',
+        },
+        'user_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'CALLABLE',
+            'default': None,
+            'description': 'Example callable user setting',
+        },
+        'project_user_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'CALLABLE',
+            'default': None,
+            'description': 'Example callable project user setting',
+        },
     }
 
     #: Iconify icon
@@ -275,3 +293,9 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
                     action=action.lower(),
                 ),
             )
+
+    def callable_function(self, project, user):
+        """Example callable function"""
+        return 'Callable function result for {} by {}'.format(
+            project.title, user.username
+        )
