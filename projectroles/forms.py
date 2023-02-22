@@ -964,14 +964,14 @@ class ProjectInviteForm(SODARModelForm):
                 user_email[user_email.find('@') + 1 :].split('.')[0].lower()
             )
             domain_list = [
-                getattr(settings, 'ALT_LDAP_DOMAINS', ''),
+                getattr(settings, 'LDAP_ALT_DOMAINS', ''),
                 getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', ''),
                 getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', ''),
             ]
             if (
                 not settings.PROJECTROLES_ALLOW_LOCAL_USERS
                 and not settings.ENABLE_SAML
-                and domain not in [d.lower() for d in domain_list]
+                and any(domain in d for d in domain_list)
             ):
                 self.add_error(
                     'email',
