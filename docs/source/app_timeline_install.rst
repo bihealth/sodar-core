@@ -49,6 +49,7 @@ variables with values of your choosing:
 
     # Timeline app settings
     TIMELINE_PAGINATION = 15    # Number of events to be shown on one page (int)
+    TIMELINE_SEARCH_LIMIT = 250   # Max number of events to be shown in search (int)
 
 
 URL Configuration

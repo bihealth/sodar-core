@@ -1,5 +1,4 @@
 """Plugins for the Timeline app"""
-from django.utils.timezone import localtime
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -67,7 +66,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     category_enable = True
 
     #: Names of plugin specific Django settings to display in siteinfo
-    info_settings = ['TIMELINE_PAGINATION']
+    info_settings = ['TIMELINE_PAGINATION', 'TIMELINE_SEARCH_LIMIT']
 
     def get_statistics(self):
         return {
@@ -105,27 +104,15 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :return: Dict
         """
         items = []
-        if not search_type:
+
+        if not search_type or search_type == 'timeline':
             events = ProjectEvent.objects.find(search_terms, keywords)
-            items = list(events)
-            items.sort(
-                key=lambda x: localtime(x.get_timestamp()).strftime(
-                    '%Y-%m-%d %H:%M:%S'
-                ),
-                reverse=False,
-            )
-        elif search_type == 'timeline':
-            events = ProjectEvent.objects.find(search_terms, keywords)
-            items = list(events)
-            items.sort(
-                key=lambda x: localtime(x.get_timestamp()).strftime(
-                    '%Y-%m-%d %H:%M:%S'
-                ),
-                reverse=False,
-            )
-        if items:
+
+        if events:
             items = [
-                event for event in items if self.check_permission(user, event)
+                event
+                for event in list(events)
+                if self.check_permission(user, event)
             ]
         return {
             'all': {
