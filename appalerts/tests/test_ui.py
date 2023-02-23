@@ -119,7 +119,7 @@ class TestListView(TestAlertUIBase):
             self.selenium.find_element(
                 By.ID, 'sodar-app-alert-btn-dismissed'
             ).text,
-            'Dismissed Alerts',
+            'View Dismissed',
         )
         self.selenium.find_element(
             By.ID, 'sodar-app-alert-btn-dismiss-all'
