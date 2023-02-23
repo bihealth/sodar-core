@@ -562,18 +562,30 @@ class AppSettingAPI:
         )
 
     @classmethod
-    def validate(cls, setting_type, setting_value, setting_options):
+    def validate(
+        cls,
+        setting_type,
+        setting_value,
+        setting_options,
+        project=None,
+        user=None,
+    ):
         """
         Validate setting value according to its type.
 
         :param setting_type: Setting type
         :param setting_value: Setting value
         :param setting_options: Setting options (can be None)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :raise: ValueError if setting_type or setting_value is invalid
         """
         cls._check_type(setting_type)
         cls._check_type_options(setting_type, setting_options)
         cls._check_value_in_options(setting_value, setting_options)
+
+        if callable(setting_value):
+            setting_value = setting_value(project=project, user=user)
 
         if setting_type == 'BOOLEAN':
             if not isinstance(setting_value, bool):
