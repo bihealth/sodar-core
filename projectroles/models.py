@@ -1101,14 +1101,6 @@ class SODARUser(AbstractUser):
         super().save(*args, **kwargs)
         self.set_group()
 
-    def get_form_label(self):
-        """Return options with name, username and email"""
-        return '{}{}{}'.format(
-            self.name if self.name else '',
-            ' ({})'.format(self.username) if self.username else '',
-            ' <{}>'.format(self.email) if self.email else '',
-        )
-
     def get_full_name(self):
         """Return full name or username if not set"""
         if hasattr(self, 'name') and self.name:
@@ -1116,6 +1108,20 @@ class SODARUser(AbstractUser):
         elif self.first_name and self.last_name:
             return '{} {}'.format(self.first_name, self.last_name)
         return self.username
+
+    def get_form_label(self, email=False):
+        """
+        Return user label with full name, username and optional email.
+
+        :param email: Return email if True (boolean, default=False)
+        :return: String
+        """
+        ret = self.get_full_name()
+        if ret != self.username:
+            ret += ' ({})'.format(self.username)
+        if email and self.email:
+            ret += ' <{}>'.format(self.email)
+        return ret
 
     def set_group(self):
         """Set user group based on user name."""

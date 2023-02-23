@@ -6,7 +6,7 @@
 
 {% block title %}
   {% if object.pk %}
-    Update Member {{ object.user.username }} in {{ object.project.title }}
+    Update Member {{ object.user.get_form_label }} in {{ object.project.title }}
   {% else %}
     Add Member in {{ project.title }}
   {% endif %}
@@ -16,7 +16,7 @@
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
   {% if object.pk %}
-    <h3>Update Member {{ object.user.username }}</h3>
+    <h3>Update Member {{ object.user.get_form_label }}</h3>
   {% else %}
     <h3>Add Member</h3>
   {% endif %}
