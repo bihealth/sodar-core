@@ -108,6 +108,20 @@ class TestListView(TestAlertUIBase):
         )
 
         self.selenium.find_element(
+            By.ID, 'sodar-app-alert-btn-dropdown-operations'
+        ).click()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.element_to_be_clickable(
+                (By.ID, 'sodar-app-alert-btn-dismiss-all')
+            )
+        )
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-app-alert-btn-dismissed'
+            ).text,
+            'Dismissed Alerts',
+        )
+        self.selenium.find_element(
             By.ID, 'sodar-app-alert-btn-dismiss-all'
         ).click()
         WebDriverWait(self.selenium, self.wait_time).until(
@@ -131,6 +145,21 @@ class TestListView(TestAlertUIBase):
                 By.ID, 'sodar-app-alert-empty'
             ).is_displayed()
         )
+
+    def test_render_dismissed(self):
+        """Test for displaying dismissed alerts"""
+        self.dismissed_alert1 = self.make_app_alert(
+            user=self.regular_user, url=reverse('home'), active=False
+        )
+        self.dismissed_alert2 = self.make_app_alert(
+            user=self.regular_user, url=reverse('home'), active=False
+        )
+        url = reverse('appalerts:list_dismissed')
+        self.login_and_redirect(self.regular_user, url)
+        btn = self.selenium.find_element(
+            By.ID, 'sodar-app-alert-btn-not-dismissed'
+        )
+        self.assertEqual(btn.text, 'Active Alerts')
 
     def test_alert_reload(self):
         """Test displaying reload link for new alerts"""

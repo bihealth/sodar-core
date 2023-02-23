@@ -25,7 +25,7 @@
     }
 
     .sodar-app-alert-btn {
-        height: 36px;
+        height: 30px;
     }
   </style>
 {% endblock css %}
@@ -37,11 +37,13 @@
   {% if not dismissed %}
     <div class="btn-group sodar-list-btn-group ml-auto">
       <button class="btn btn-primary dropdown-toggle sodar-app-alert-btn"
+              id="sodar-app-alert-btn-dropdown-operations"
               type="button" data-toggle="dropdown" aria-expanded="false">
         <i class="iconify" data-icon="mdi:cog"></i>Alert Operations
       </button>
       <div class="dropdown-menu dropdown-menu-right">
-          <a class="dropdown-item" href="{% url 'appalerts:list_dismissed' %}">
+          <a class="dropdown-item" id="sodar-app-alert-btn-dismissed"
+             href="{% url 'appalerts:list_dismissed' %}">
             <i class="iconify" data-icon="mdi:alert-octagram"></i> Dismissed Alerts
           </a>
           <a class="dropdown-item sodar-app-alert-btn-dismiss
@@ -55,7 +57,7 @@
       </div>
     </div>
   {% else %}
-    <a class="btn btn-primary ml-auto sodar-app-alert-btn"
+    <a class="btn btn-primary ml-auto sodar-app-alert-btn" id="sodar-app-alert-btn-not-dismissed"
        href="{% url 'appalerts:list' %}">
       <i class="iconify" data-icon="mdi:alert-octagram"></i> Active Alerts
     </a>
