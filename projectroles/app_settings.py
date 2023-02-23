@@ -248,6 +248,8 @@ class AppSettingAPI:
 
         :param app_name: App name (string, must equal "name" in app plugin)
         :param setting_name: Setting name (string)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: Setting value (string, integer or boolean)
         :raise: ValueError if app plugin is not found
@@ -367,6 +369,8 @@ class AppSettingAPI:
         Get all default settings for a scope.
 
         :param scope: Setting scope (PROJECT, USER or PROJECT_USER)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param post_safe: Whether POST safe values should be returned (bool)
         :return: Dict
         """

@@ -619,8 +619,9 @@ class TestAppSettingAPI(
             },
             'project_callable_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'BOOLEAN',
-                'default': True,
+                'type': 'STRING',
+                'label': 'Callable project setting',
+                'default': 'No project',
                 'description': 'Example callable project setting',
             },
         }
@@ -700,8 +701,9 @@ class TestAppSettingAPI(
             },
             'user_callable_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'BOOLEAN',
-                'default': True,
+                'type': 'STRING',
+                'label': 'Callable user setting',
+                'default': 'No user',
                 'description': 'Example callable user setting',
             },
         }
@@ -739,8 +741,8 @@ class TestAppSettingAPI(
             },
             'project_user_callable_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-                'type': 'BOOLEAN',
-                'default': True,
+                'type': 'STRING',
+                'default': 'No project or user',
                 'description': 'Example callable project user setting',
             },
         }

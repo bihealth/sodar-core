@@ -19,9 +19,28 @@ EXAMPLE_MODIFY_API_MSG = (
 )
 
 
-def callable_function(project=None, user=None):
-    """Example callable function"""
-    return True
+def get_example_setting_project_default(project, user):
+    """Example callable function for project scope"""
+    response = 'No project'
+    if project:
+        response = project.title
+    return response
+
+
+def get_example_setting_user_default(project, user):
+    """Example callable function for user scope"""
+    response = 'No user'
+    if user:
+        response = user.username
+    return response
+
+
+def get_example_setting_project_user_default(project, user):
+    """Example callable function for project&user scope"""
+    response = 'No project or user'
+    if project and user:
+        response = '{}:{}'.format(project.title, user.username)
+    return response
 
 
 class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
@@ -218,20 +237,28 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
         },
         'project_callable_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'BOOLEAN',
-            'default': callable_function(),
+            'type': 'STRING',
+            'label': 'Callable project setting',
+            'default': get_example_setting_project_default(
+                project=None, user=None
+            ),
             'description': 'Example callable project setting',
         },
         'user_callable_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'BOOLEAN',
-            'default': callable_function(),
+            'type': 'STRING',
+            'label': 'Callable user setting',
+            'default': get_example_setting_user_default(
+                project=None, user=None
+            ),
             'description': 'Example callable user setting',
         },
         'project_user_callable_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-            'type': 'BOOLEAN',
-            'default': callable_function(),
+            'type': 'STRING',
+            'default': get_example_setting_project_user_default(
+                project=None, user=None
+            ),
             'description': 'Example callable project user setting',
         },
     }
