@@ -29,7 +29,7 @@ SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
-APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING', 'JSON', 'CALLABLE']
+APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING', 'JSON']
 APP_SETTING_TYPE_CHOICES = [
     ('BOOLEAN', 'Boolean'),
     ('INTEGER', 'Integer'),

@@ -19,6 +19,11 @@ EXAMPLE_MODIFY_API_MSG = (
 )
 
 
+def callable_function(project=None, user=None):
+    """Example callable function"""
+    return 'Callable function result for {} by {}'.format(project, user)
+
+
 class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
@@ -213,20 +218,20 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
         },
         'project_callable_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'CALLABLE',
-            'default': None,
+            'type': 'BOOLEAN',
+            'default': callable_function(),
             'description': 'Example callable project setting',
         },
         'user_callable_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'CALLABLE',
-            'default': None,
+            'type': 'BOOLEAN',
+            'default': callable_function(),
             'description': 'Example callable user setting',
         },
         'project_user_callable_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-            'type': 'CALLABLE',
-            'default': None,
+            'type': 'BOOLEAN',
+            'default': callable_function(),
             'description': 'Example callable project user setting',
         },
     }
@@ -293,9 +298,3 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
                     action=action.lower(),
                 ),
             )
-
-    def callable_function(self, project, user):
-        """Example callable function"""
-        return 'Callable function result for {} by {}'.format(
-            project.title, user.username
-        )

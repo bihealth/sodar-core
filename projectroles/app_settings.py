@@ -35,7 +35,7 @@ PROJECTROLES_APP_SETTINGS = {
     #:
     #:     'example_setting': {
     #:         'scope': 'PROJECT',  # PROJECT/USER
-    #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN/JSON/CALLABLE
+    #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN/JSON
     #:         'default': 'example',
     #:         'label': 'Project setting',  # Optional, defaults to name/key
     #:         'placeholder': 'Enter example setting here',  # Optional
@@ -240,7 +240,9 @@ class AppSettingAPI:
         return setting_obj.value == str(input_value)
 
     @classmethod
-    def get_default(cls, app_name, setting_name, project=None, user=None, post_safe=False):
+    def get_default(
+        cls, app_name, setting_name, project=None, user=None, post_safe=False
+    ):
         """
         Get default setting value from an app plugin.
 
@@ -260,7 +262,7 @@ class AppSettingAPI:
             app_settings = app_plugin.app_settings
 
         if setting_name in app_settings:
-            if app_settings[setting_name]['type'] == 'CALLABLE':
+            if callable(app_settings[setting_name]['default']):
                 return app_settings[setting_name]['default'](project, user)
             if app_settings[setting_name]['type'] == 'JSON':
                 json_default = app_settings[setting_name].get('default')
@@ -302,9 +304,21 @@ class AppSettingAPI:
                     app_name, setting_name, project=project, user=user
                 )
             except AppSetting.DoesNotExist:
-                val = cls.get_default(app_name, setting_name, project=project, user=user, post_safe=post_safe)
+                val = cls.get_default(
+                    app_name,
+                    setting_name,
+                    project=project,
+                    user=user,
+                    post_safe=post_safe,
+                )
         else:  # Anonymous user
-            val = cls.get_default(app_name, setting_name, project=project, user=user, post_safe=post_safe)
+            val = cls.get_default(
+                app_name,
+                setting_name,
+                project=project,
+                user=user,
+                post_safe=post_safe,
+            )
         # Handle post_safe for dict values (JSON)
         if post_safe and isinstance(val, (dict, list)):
             return json.dumps(val)
@@ -364,13 +378,25 @@ class AppSettingAPI:
             for s_key in p_settings:
                 ret[
                     'settings.{}.{}'.format(plugin.name, s_key)
-                ] = cls.get_default(plugin.name, s_key, project=project, user=user, post_safe=post_safe)
+                ] = cls.get_default(
+                    plugin.name,
+                    s_key,
+                    project=project,
+                    user=user,
+                    post_safe=post_safe,
+                )
 
         p_settings = cls.get_definitions(scope, app_name='projectroles')
         for s_key in p_settings:
             ret[
                 'settings.{}.{}'.format('projectroles', s_key)
-            ] = cls.get_default('projectroles', s_key, project=project, user=user, post_safe=post_safe)
+            ] = cls.get_default(
+                'projectroles',
+                s_key,
+                project=project,
+                user=user,
+                post_safe=post_safe,
+            )
         return ret
 
     @classmethod
