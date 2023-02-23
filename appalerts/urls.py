@@ -8,7 +8,14 @@ urlpatterns = [
     path(
         route='list',
         view=views.AppAlertListView.as_view(),
+        kwargs={'status': 'active'},
         name='list',
+    ),
+    path(
+        route='list/dismissed',
+        view=views.AppAlertListView.as_view(),
+        kwargs={'status': 'dismissed'},
+        name='list_dismissed',
     ),
     path(
         route='redirect/<uuid:appalert>',
