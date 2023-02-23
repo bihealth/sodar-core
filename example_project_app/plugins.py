@@ -21,7 +21,7 @@ EXAMPLE_MODIFY_API_MSG = (
 
 def callable_function(project=None, user=None):
     """Example callable function"""
-    return 'Callable function result for {} by {}'.format(project, user)
+    return True
 
 
 class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):

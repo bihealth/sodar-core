@@ -253,6 +253,7 @@ class TestAppSettingAPI(
     """Tests for AppSettingAPI"""
 
     # NOTE: This assumes an example app is available
+    maxDiff = None
 
     def setUp(self):
         # Init project
@@ -616,6 +617,12 @@ class TestAppSettingAPI(
                 'description': 'Example hidden JSON project setting',
                 'user_modifiable': False,
             },
+            'project_callable_setting': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'BOOLEAN',
+                'default': True,
+                'description': 'Example callable project setting',
+            },
         }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
@@ -691,6 +698,12 @@ class TestAppSettingAPI(
                 'description': 'Example hidden user setting',
                 'user_modifiable': False,
             },
+            'user_callable_setting': {
+                'scope': APP_SETTING_SCOPE_USER,
+                'type': 'BOOLEAN',
+                'default': True,
+                'description': 'Example callable user setting',
+            },
         }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_USER, app_name=EXAMPLE_APP_NAME
@@ -724,6 +737,12 @@ class TestAppSettingAPI(
                 'default': '',
                 'description': 'Example json project user setting',
             },
+            'project_user_callable_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+                'type': 'BOOLEAN',
+                'default': True,
+                'description': 'Example callable project user setting',
+            },
         }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT_USER, app_name=EXAMPLE_APP_NAME
@@ -735,13 +754,13 @@ class TestAppSettingAPI(
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 9)
+        self.assertEqual(len(defs), 10)
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT,
             app_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
-        self.assertEqual(len(defs), 7)
+        self.assertEqual(len(defs), 8)
 
     def test_get_defs_invalid_scope(self):
         """Test get_defs() with an invalid scope"""

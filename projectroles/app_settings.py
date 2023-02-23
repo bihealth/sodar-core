@@ -262,8 +262,9 @@ class AppSettingAPI:
             app_settings = app_plugin.app_settings
 
         if setting_name in app_settings:
-            if callable(app_settings[setting_name]['default']):
-                return app_settings[setting_name]['default'](project, user)
+            if callable(app_settings[setting_name].get('default')):
+                callable_setting = app_settings[setting_name].get('default')
+                return callable_setting(project, user)
             if app_settings[setting_name]['type'] == 'JSON':
                 json_default = app_settings[setting_name].get('default')
                 if not json_default:
