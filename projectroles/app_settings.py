@@ -590,11 +590,6 @@ class AppSettingAPI:
         cls._check_type_options(setting_type, setting_options)
         cls._check_value_in_options(setting_value, setting_options)
 
-        if callable(setting_value):
-            setting_value(
-                project=project, user=user
-            )  # I'm not sure if this is correct
-
         if setting_type == 'BOOLEAN':
             if not isinstance(setting_value, bool):
                 raise ValueError(

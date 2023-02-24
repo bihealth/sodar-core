@@ -253,7 +253,6 @@ class TestAppSettingAPI(
     """Tests for AppSettingAPI"""
 
     # NOTE: This assumes an example app is available
-    maxDiff = None
 
     def setUp(self):
         # Init project
