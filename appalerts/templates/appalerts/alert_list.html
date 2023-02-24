@@ -37,26 +37,26 @@
   {% if not dismissed %}
     <div class="btn-group ml-auto">
       <button class="btn btn-primary dropdown-toggle" id="sodar-app-alert-btn-dropdown-operations"
-        type="button" data-toggle="dropdown" aria-expanded="false">Alert Operations
+              type="button" data-toggle="dropdown" aria-expanded="false">Alert Operations
       </button>
       <div class="dropdown-menu dropdown-menu-right">
         <a class="dropdown-item" id="sodar-app-alert-btn-dismissed"
-          href="{% url 'appalerts:list_dismissed' %}">
+           href="{% url 'appalerts:list_dismissed' %}">
           <i class="iconify" data-icon="mdi:alert-octagram-outline"></i> View Dismissed
         </a>
         <a class="dropdown-item sodar-app-alert-btn-dismiss
-          {% if object_list.count == 0 %}disabled{% endif %}"
-          id="sodar-app-alert-btn-dismiss-all"
-          role="button"
-          data-uuid=""
-          data-dismiss-url="{% url 'appalerts:ajax_dismiss_all' %}">
+           {% if object_list.count == 0 %}disabled{% endif %}"
+           id="sodar-app-alert-btn-dismiss-all"
+           role="button"
+           data-uuid=""
+           data-dismiss-url="{% url 'appalerts:ajax_dismiss_all' %}">
           <i class="iconify" data-icon="mdi:close-thick"></i> Dismiss All
         </a>
       </div>
     </div>
   {% else %}
     <a class="btn btn-secondary ml-auto" id="sodar-app-alert-btn-not-dismissed"
-      href="{% url 'appalerts:list' %}">
+       href="{% url 'appalerts:list' %}">
       <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Active Alerts
     </a>
   {% endif %}
@@ -68,20 +68,20 @@
       <div class="row sodar-app-alert-row">
         <div class="col col-sm-1 px-0">
           <span data-toggle="tooltip" data-placement="top"
-            title="{% if a.app_plugin %}{{ a.app_plugin.title }}{% else %}Projectroles{% endif %}">
+                title="{% if a.app_plugin %}{{ a.app_plugin.title }}{% else %}Projectroles{% endif %}">
             <i class="iconify"
-              data-icon="{% if a.app_plugin %}{{ a.app_plugin.get_plugin.icon }}{% else %}mdi:cube{% endif %}"></i>
+               data-icon="{% if a.app_plugin %}{{ a.app_plugin.get_plugin.icon }}{% else %}mdi:cube{% endif %}"></i>
           </span>
           <span data-toggle="tooltip" data-placement="top"
-            title="{{ a.date_created | date:'Y-m-d H:i' }}">
+                title="{{ a.date_created | date:'Y-m-d H:i' }}">
             <i class="iconify" data-icon="mdi:clock"></i>
           </span>
         </div>
         <div class="col pl-0">
           {% if a.project %}
             <span class="badge badge-{{ a.level | lower }} sodar-app-alert-project-badge mr-1"
-              title="{% get_display_name a.project.type title=True %}: {{ a.project.title }}"
-              data-toggle="tooltip" data-placement="top">
+                  title="{% get_display_name a.project.type title=True %}: {{ a.project.title }}"
+                  data-toggle="tooltip" data-placement="top">
               <i class="iconify" data-icon="{% if a.project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}"></i>
               <a href="{% url 'projectroles:detail' project=a.project.sodar_uuid %}">
                 {{ a.project.title }}
@@ -95,21 +95,19 @@
             {% if not dismissed %}
               {% if a.url %}
                 <a href="{% url 'appalerts:redirect' appalert=a.sodar_uuid %}"
-                   class="btn btn-{{ a.level | lower }}
-                     sodar-list-btn sodar-app-alert-btn-link"
+                   class="btn btn-{{ a.level | lower }} sodar-list-btn sodar-app-alert-btn-link"
                    role="button"
                    title="Follow link and dismiss"
                    data-toggle="tooltip" data-placement="top">
                   <i class="iconify" data-icon="mdi:arrow-right-top-bold"></i>
                 </a>
               {% endif %}
-              <a class="btn btn-{{ a.level | lower }}
-                sodar-list-btn sodar-app-alert-btn-dismiss sodar-app-alert-btn-dismiss-single"
-                role="button"
-                title="Dismiss"
-                data-toggle="tooltip" data-placement="top"
-                data-uuid="{{ a.sodar_uuid }}"
-                data-dismiss-url="{% url 'appalerts:ajax_dismiss' appalert=a.sodar_uuid %}">
+              <a class="btn btn-{{ a.level | lower }} sodar-list-btn sodar-app-alert-btn-dismiss sodar-app-alert-btn-dismiss-single"
+                 role="button"
+                 title="Dismiss"
+                 data-toggle="tooltip" data-placement="top"
+                 data-uuid="{{ a.sodar_uuid }}"
+                 data-dismiss-url="{% url 'appalerts:ajax_dismiss' appalert=a.sodar_uuid %}">
                 <i class="iconify" data-icon="mdi:close-thick"></i>
               </a>
             {% endif %}
