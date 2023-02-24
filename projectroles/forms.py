@@ -348,6 +348,8 @@ class ProjectForm(SODARModelForm):
                         (int(option), int(option))
                         if s_val['type'] == 'INTEGER'
                         else (option, option)
+                        if not callable(s_val.get('default'))
+                        else (s_val.get('default')(option, option))
                         for option in s_val.get('options')
                     ],
                     **setting_kwargs

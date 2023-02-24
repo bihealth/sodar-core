@@ -466,7 +466,13 @@ class AppSettingAPI:
                 setting_def = cls.get_definition(
                     name=setting_name, app_name=app_name
                 )
-                cls.validate(setting.type, value, setting_def.get('options'))
+                cls.validate(
+                    setting.type,
+                    value,
+                    setting_def.get('options'),
+                    project=project,
+                    user=user,
+                )
 
             if setting.type == 'JSON':
                 setting.value_json = cls._get_json_value(value)
@@ -585,7 +591,9 @@ class AppSettingAPI:
         cls._check_value_in_options(setting_value, setting_options)
 
         if callable(setting_value):
-            setting_value = setting_value(project=project, user=user)
+            setting_value(
+                project=project, user=user
+            )  # I'm not sure if this is correct
 
         if setting_type == 'BOOLEAN':
             if not isinstance(setting_value, bool):
