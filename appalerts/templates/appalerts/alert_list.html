@@ -30,33 +30,27 @@
 
 <div class="row sodar-subtitle-container">
   {% if dismissed %}
-  <h2><i class="iconify" data-icon="mdi:alert-octagram-outline"></i>
-     Dismissed App Alerts
-  </h2>
+    <h2><i class="iconify" data-icon="mdi:alert-octagram-outline"></i>Dismissed App Alerts</h2>
   {% else %}
-  <h2><i class="iconify" data-icon="mdi:alert-octagram"></i>
-     Active App Alerts
-  </h2>
+    <h2><i class="iconify" data-icon="mdi:alert-octagram"></i>Active App Alerts</h2>
   {% endif %}
   {% if not dismissed %}
     <div class="btn-group ml-auto">
-      <button class="btn btn-primary dropdown-toggle"
-              id="sodar-app-alert-btn-dropdown-operations"
-              type="button" data-toggle="dropdown" aria-expanded="false">
-        Alert Operations
+      <button class="btn btn-primary dropdown-toggle" id="sodar-app-alert-btn-dropdown-operations"
+              type="button" data-toggle="dropdown" aria-expanded="false">Alert Operations
       </button>
       <div class="dropdown-menu dropdown-menu-right">
-          <a class="dropdown-item" id="sodar-app-alert-btn-dismissed"
-             href="{% url 'appalerts:list_dismissed' %}">
-            <i class="iconify" data-icon="mdi:alert-octagram-outline"></i> View Dismissed
-          </a>
-          <a class="dropdown-item sodar-app-alert-btn-dismiss
-            {% if object_list.count == 0 %}disabled{% endif %}"
-            id="sodar-app-alert-btn-dismiss-all"
-            role="button"
-            data-uuid=""
-            data-dismiss-url="{% url 'appalerts:ajax_dismiss_all' %}">
-        <i class="iconify" data-icon="mdi:close-thick"></i> Dismiss All
+        <a class="dropdown-item" id="sodar-app-alert-btn-dismissed"
+           href="{% url 'appalerts:list_dismissed' %}">
+          <i class="iconify" data-icon="mdi:alert-octagram-outline"></i> View Dismissed
+        </a>
+        <a class="dropdown-item sodar-app-alert-btn-dismiss
+           {% if object_list.count == 0 %}disabled{% endif %}"
+           id="sodar-app-alert-btn-dismiss-all"
+           role="button"
+           data-uuid=""
+           data-dismiss-url="{% url 'appalerts:ajax_dismiss_all' %}">
+          <i class="iconify" data-icon="mdi:close-thick"></i> Dismiss All
         </a>
       </div>
     </div>
@@ -70,8 +64,7 @@
 
 <div class="container-fluid sodar-page-container">
   {% for a in object_list %}
-    <div class="alert alert-{{ a.level | lower }} sodar-app-alert-item"
-         data-alert-uuid="{{ a.sodar_uuid }}">
+    <div class="alert alert-{{ a.level | lower }} sodar-app-alert-item" data-alert-uuid="{{ a.sodar_uuid }}">
       <div class="row sodar-app-alert-row">
         <div class="col col-sm-1 px-0">
           <span data-toggle="tooltip" data-placement="top"
