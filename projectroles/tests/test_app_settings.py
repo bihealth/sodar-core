@@ -755,7 +755,7 @@ class TestAppSettingAPI(
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 10)
+        self.assertEqual(len(defs), 11)
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT,
             app_name=EXAMPLE_APP_NAME,

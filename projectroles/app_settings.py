@@ -152,7 +152,9 @@ class AppSettingAPI:
             )
 
     @classmethod
-    def _check_value_in_options(cls, setting_value, setting_options):
+    def _check_value_in_options(
+        cls, setting_value, setting_options, project=None, user=None
+    ):
         """
         Ensure setting_value is present in setting_options.
 
@@ -160,12 +162,17 @@ class AppSettingAPI:
         :param setting_options: List of options (String or Integers)
         :raise: ValueError if type is not recognized
         """
-        if setting_options and setting_value not in setting_options:
-            raise ValueError(
-                'Choice "{}" not found in options ({})'.format(
-                    setting_value, ', '.join(map(str, setting_options))
+        if setting_options:
+            if callable(setting_options[0]):
+                setting_options = [
+                    option(project, user) for option in setting_options
+                ]
+            if setting_value not in setting_options:
+                raise ValueError(
+                    'Choice "{}" not found in options ({})'.format(
+                        setting_value, ', '.join(map(str, setting_options))
+                    )
                 )
-            )
 
     @classmethod
     def _get_app_plugin(cls, app_name):
@@ -263,11 +270,10 @@ class AppSettingAPI:
                 raise ValueError('App plugin not found: "{}"'.format(app_name))
             app_settings = app_plugin.app_settings
 
-        if callable(app_settings[setting_name].get('default')):
-            callable_setting = app_settings[setting_name].get('default')
-            return callable_setting(project, user)
-
         if setting_name in app_settings:
+            if callable(app_settings[setting_name].get('default')):
+                callable_setting = app_settings[setting_name].get('default')
+                return callable_setting(project, user)
             if app_settings[setting_name]['type'] == 'JSON':
                 json_default = app_settings[setting_name].get('default')
                 if not json_default:
@@ -589,7 +595,12 @@ class AppSettingAPI:
         """
         cls._check_type(setting_type)
         cls._check_type_options(setting_type, setting_options)
-        cls._check_value_in_options(setting_value, setting_options)
+        cls._check_value_in_options(
+            setting_value, setting_options, project=project, user=user
+        )
+
+        if callable(setting_value):
+            setting_value(project, user)
 
         if setting_type == 'BOOLEAN':
             if not isinstance(setting_value, bool):

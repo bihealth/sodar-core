@@ -345,15 +345,27 @@ class ProjectForm(SODARModelForm):
             self.initial[s_field] = json.dumps(json_data)
         else:
             if s_val.get('options'):
-                self.fields[s_field] = forms.ChoiceField(
-                    choices=[
-                        (int(option), int(option))
-                        if s_val['type'] == 'INTEGER'
-                        else (option, option)
-                        for option in s_val.get('options')
-                    ],
-                    **setting_kwargs
-                )
+                if callable(s_val.get('default')):
+                    self.fields[s_field] = forms.ChoiceField(
+                        choices=[
+                            (
+                                str(option(project=None, user=None)),
+                                str(option(project=None, user=None)),
+                            )
+                            for option in s_val.get('options')
+                        ],
+                        **setting_kwargs
+                    )
+                else:
+                    self.fields[s_field] = forms.ChoiceField(
+                        choices=[
+                            (int(option), int(option))
+                            if s_val['type'] == 'INTEGER'
+                            else (option, option)
+                            for option in s_val.get('options')
+                        ],
+                        **setting_kwargs
+                    )
             elif s_val['type'] == 'STRING':
                 self.fields[s_field] = forms.CharField(
                     max_length=APP_SETTING_VAL_MAXLENGTH,
