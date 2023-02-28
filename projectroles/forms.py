@@ -338,7 +338,9 @@ class ProjectForm(SODARModelForm):
                 )
             else:
                 json_data = self.app_settings.get_default(
-                    app_name=app_name, setting_name=s_key
+                    app_name=app_name,
+                    setting_name=s_key,
+                    project=None,
                 )
             self.initial[s_field] = json.dumps(json_data)
         else:
@@ -379,7 +381,9 @@ class ProjectForm(SODARModelForm):
                 )
             else:
                 self.initial[s_field] = self.app_settings.get_default(
-                    app_name=app_name, setting_name=s_key
+                    app_name=app_name,
+                    setting_name=s_key,
+                    project=None,
                 )
 
     def _set_app_setting_notes(self, s_field, s_val):

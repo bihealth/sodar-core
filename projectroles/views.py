@@ -832,7 +832,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         }
 
     @staticmethod
-    def _get_app_settings(data, instance):
+    def _get_app_settings(data, instance, project=None):
         """
         Return a dictionary of project app settings and their values.
 
@@ -859,7 +859,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 s_name = 'settings.{}.{}'.format(name, s_key)
                 s_data = data.get(s_name)
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default(name, s_key)
+                    s_data = app_settings.get_default(
+                        name, s_key, project=project
+                    )
                 if s_val['type'] == 'JSON':
                     if s_data is None:
                         s_data = {}

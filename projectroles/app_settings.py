@@ -263,10 +263,11 @@ class AppSettingAPI:
                 raise ValueError('App plugin not found: "{}"'.format(app_name))
             app_settings = app_plugin.app_settings
 
+        if callable(app_settings[setting_name].get('default')):
+            callable_setting = app_settings[setting_name].get('default')
+            return callable_setting(project, user)
+
         if setting_name in app_settings:
-            if callable(app_settings[setting_name].get('default')):
-                callable_setting = app_settings[setting_name].get('default')
-                return callable_setting(project, user)
             if app_settings[setting_name]['type'] == 'JSON':
                 json_default = app_settings[setting_name].get('default')
                 if not json_default:
