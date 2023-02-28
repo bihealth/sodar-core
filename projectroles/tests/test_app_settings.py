@@ -620,7 +620,7 @@ class TestAppSettingAPI(
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'STRING',
                 'label': 'Callable project setting',
-                'default': 'No project',
+                'default': 'Example callable setting',
                 'description': 'Example callable project setting',
             },
         }
@@ -702,7 +702,7 @@ class TestAppSettingAPI(
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'STRING',
                 'label': 'Callable user setting',
-                'default': 'No user',
+                'default': 'Example callable setting',
                 'description': 'Example callable user setting',
             },
         }
@@ -741,7 +741,7 @@ class TestAppSettingAPI(
             'project_user_callable_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'STRING',
-                'default': 'No project or user',
+                'default': 'Example callable setting',
                 'description': 'Example callable project user setting',
             },
         }
