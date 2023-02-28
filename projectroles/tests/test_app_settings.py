@@ -11,6 +11,9 @@ from projectroles.tests.test_models import (
     AppSettingMixin,
 )
 
+# Callable function dependency for testing
+from example_project_app.plugins import get_example_setting_default
+
 
 app_settings = AppSettingAPI()
 
@@ -253,6 +256,7 @@ class TestAppSettingAPI(
     """Tests for AppSettingAPI"""
 
     # NOTE: This assumes an example app is available
+    maxDiff = None
 
     def setUp(self):
         # Init project
@@ -620,8 +624,20 @@ class TestAppSettingAPI(
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'STRING',
                 'label': 'Callable project setting',
-                'default': 'Example callable setting',
+                'default': get_example_setting_default,
                 'description': 'Example callable project setting',
+            },
+            'project_callable_setting_options': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'STRING',
+                'label': 'Callable setting with options',
+                'default': get_example_setting_default,
+                'options': [
+                    get_example_setting_default,
+                    get_example_setting_default,
+                ],
+                'description': 'Example callable project setting with options',
+                'user_modifiable': True,
             },
         }
         defs = app_settings.get_definitions(
@@ -702,8 +718,20 @@ class TestAppSettingAPI(
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'STRING',
                 'label': 'Callable user setting',
-                'default': 'Example callable setting',
+                'default': get_example_setting_default,
                 'description': 'Example callable user setting',
+            },
+            'user_callable_setting_options': {
+                'scope': APP_SETTING_SCOPE_USER,
+                'type': 'STRING',
+                'label': 'Callable setting with options',
+                'default': get_example_setting_default,
+                'options': [
+                    get_example_setting_default,
+                    get_example_setting_default,
+                ],
+                'description': 'Example callable user setting with options',
+                'user_modifiable': True,
             },
         }
         defs = app_settings.get_definitions(
@@ -741,8 +769,18 @@ class TestAppSettingAPI(
             'project_user_callable_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'STRING',
-                'default': 'Example callable setting',
+                'default': get_example_setting_default,
                 'description': 'Example callable project user setting',
+            },
+            'project_user_callable_setting_options': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+                'type': 'STRING',
+                'default': get_example_setting_default,
+                'options': [
+                    get_example_setting_default,
+                    get_example_setting_default,
+                ],
+                'description': 'Example callable project user setting with options',
             },
         }
         defs = app_settings.get_definitions(
@@ -761,7 +799,7 @@ class TestAppSettingAPI(
             app_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
-        self.assertEqual(len(defs), 8)
+        self.assertEqual(len(defs), 9)
 
     def test_get_defs_invalid_scope(self):
         """Test get_defs() with an invalid scope"""

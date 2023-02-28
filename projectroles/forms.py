@@ -349,8 +349,8 @@ class ProjectForm(SODARModelForm):
                     self.fields[s_field] = forms.ChoiceField(
                         choices=[
                             (
-                                str(option(project=None, user=None)),
-                                str(option(project=None, user=None)),
+                                str(option()),
+                                str(option()),
                             )
                             for option in s_val.get('options')
                         ],

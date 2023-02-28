@@ -255,7 +255,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
                 get_example_setting_default,
                 get_example_setting_default,
             ],
-            'description': 'Example callable user setting with options',
+            'description': 'Example callable project setting with options',
             'user_modifiable': True,
         },
         'user_callable_setting_options': {
@@ -273,14 +273,12 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
         'project_user_callable_setting_options': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'STRING',
-            'label': 'Callable setting with options',
             'default': get_example_setting_default,
             'options': [
                 get_example_setting_default,
                 get_example_setting_default,
             ],
-            'description': 'Example callable user setting with options',
-            'user_modifiable': True,
+            'description': 'Example callable project user setting with options',
         },
     }
 
