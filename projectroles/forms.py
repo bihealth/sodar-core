@@ -346,16 +346,30 @@ class ProjectForm(SODARModelForm):
         else:
             if s_val.get('options'):
                 if callable(s_val.get('default')):
-                    self.fields[s_field] = forms.ChoiceField(
-                        choices=[
-                            (
-                                str(option()),
-                                str(option()),
-                            )
-                            for option in s_val.get('options')
-                        ],
-                        **setting_kwargs
-                    )
+                    if self.instance.pk:
+                        self.initial[s_field] = s_val.get('default')(
+                            project=self.instance
+                        )
+                        self.fields[s_field] = forms.ChoiceField(
+                            choices=[
+                                (str(option), str(option))
+                                for option in s_val.get('options')(
+                                    project=self.instance
+                                )
+                            ],
+                            **setting_kwargs
+                        )
+                    else:
+                        self.initial[s_field] = s_val.get('default')(
+                            project=None
+                        )
+                        self.fields[s_field] = forms.ChoiceField(
+                            choices=[
+                                (str(option), str(option))
+                                for option in s_val.get('options')(project=None)
+                            ],
+                            **setting_kwargs
+                        )
                 else:
                     self.fields[s_field] = forms.ChoiceField(
                         choices=[

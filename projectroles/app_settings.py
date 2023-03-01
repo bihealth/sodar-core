@@ -26,6 +26,12 @@ VALID_SCOPES = [
     APP_SETTING_SCOPE_USER,
     APP_SETTING_SCOPE_PROJECT_USER,
 ]
+APP_SETTING_DEFAULT_VALUES = {
+    'STRING': '',
+    'INTEGER': 0,
+    'BOOLEAN': False,
+    'JSON': {},
+}
 
 # Define App Settings for projectroles app
 PROJECTROLES_APP_SETTINGS = {
@@ -163,10 +169,16 @@ class AppSettingAPI:
         :raise: ValueError if type is not recognized
         """
         if setting_options:
-            if callable(setting_options[0]):
-                setting_options = [
-                    option(project, user) for option in setting_options
-                ]
+            if callable(setting_options):
+                try:
+                    setting_options = setting_options(project, user)
+                except Exception:
+                    logger.error(
+                        'Error calling options function for setting: {}'.format(
+                            setting_options
+                        )
+                    )
+                    setting_options = ['No project or user for callable']
             if setting_value not in setting_options:
                 raise ValueError(
                     'Choice "{}" not found in options ({})'.format(
@@ -272,8 +284,18 @@ class AppSettingAPI:
 
         if setting_name in app_settings:
             if callable(app_settings[setting_name].get('default')):
-                callable_setting = app_settings[setting_name].get('default')
-                return callable_setting(project, user)
+                try:
+                    callable_setting = app_settings[setting_name].get('default')
+                    return callable_setting(project, user)
+                except Exception:
+                    logger.error(
+                        'Error in callable setting "{}" for app "{}"'.format(
+                            setting_name, app_name
+                        )
+                    )
+                    return APP_SETTING_DEFAULT_VALUES[
+                        app_settings[setting_name]['type']
+                    ]
             if app_settings[setting_name]['type'] == 'JSON':
                 json_default = app_settings[setting_name].get('default')
                 if not json_default:
@@ -518,7 +540,13 @@ class AppSettingAPI:
                 setting_def = cls.get_definition(
                     name=setting_name, app_name=app_name
                 )
-                cls.validate(s_type, v, setting_def.get('options'))
+                cls.validate(
+                    s_type,
+                    v,
+                    setting_def.get('options'),
+                    project=project,
+                    user=user,
+                )
 
             s_vals = {
                 'app_plugin': app_plugin_model,

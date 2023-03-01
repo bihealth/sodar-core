@@ -57,11 +57,13 @@ class UserSettingsForm(SODARForm):
 
                 if s_val['type'] == 'STRING':
                     if 'options' in s_val:
-                        if callable(s_val['options'][0]):
+                        if callable(s_val.get('default')):
                             self.fields[s_field] = forms.ChoiceField(
                                 choices=[
-                                    (option(), option())
-                                    for option in s_val.get('options')
+                                    (str(option), str(option))
+                                    for option in s_val.get('options')(
+                                        user=self.user
+                                    )
                                 ],
                                 **setting_kwargs,
                             )

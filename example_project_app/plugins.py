@@ -20,17 +20,40 @@ EXAMPLE_MODIFY_API_MSG = (
 
 
 def get_example_setting_default(project=None, user=None):
-    """Example callable function for different scopes
+    """
+    Example callable function for different scopes
+
     :param project: Project object
     :param user: User object
-    :return: String with project and user info or 'No project'"""
-    response = 'Example callable setting'
+    :return: String with project and user info or 'No project'
+    """
+    response = 'No project or user for callable'
     if project and user:
         response = '{}:{}'.format(project.title, user.username)
     elif project:
         response = project.title
     elif user:
         response = user.username
+    return response
+
+
+def get_example_setting_options(project=None, user=None):
+    """
+    Example callable function for options forming
+
+    :param project: Project object
+    :param user: User object
+    :return: List of strings
+    """
+    response = ['No project or user for callable']
+    if project and user:
+        response.append(
+            ('{}'.format(project.title), '{}'.format(user.username))
+        )
+    elif project:
+        response.append(('project', '{}'.format(project.title)))
+    elif user:
+        response.append(('user', '{}'.format(user.username)))
     return response
 
 
@@ -251,10 +274,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'type': 'STRING',
             'label': 'Callable setting with options',
             'default': get_example_setting_default,
-            'options': [
-                get_example_setting_default,
-                get_example_setting_default,
-            ],
+            'options': get_example_setting_options,
             'description': 'Example callable project setting with options',
             'user_modifiable': True,
         },
@@ -263,10 +283,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'type': 'STRING',
             'label': 'Callable setting with options',
             'default': get_example_setting_default,
-            'options': [
-                get_example_setting_default,
-                get_example_setting_default,
-            ],
+            'options': get_example_setting_options,
             'description': 'Example callable user setting with options',
             'user_modifiable': True,
         },
@@ -274,10 +291,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'STRING',
             'default': get_example_setting_default,
-            'options': [
-                get_example_setting_default,
-                get_example_setting_default,
-            ],
+            'options': get_example_setting_options,
             'description': 'Example callable project user setting with options',
         },
     }
