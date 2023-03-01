@@ -806,11 +806,8 @@ class TestProjectUpdateView(
         ps['settings.example_project_app.project_bool_setting'] = True
         ps['settings.example_project_app.project_json_setting'] = '{}'
         ps[
-            'settings.example_project_app.project_callable_setting'
-        ] = 'Example callable setting'
-        ps[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Example callable setting'
+        ] = 'No project or user for callable'
         ps['settings.projectroles.ip_restrict'] = True
         ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         values.update(ps)
@@ -915,7 +912,7 @@ class TestProjectUpdateView(
         )
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Example callable setting'
+        ] = 'No project or user for callable'
 
         with self.login(self.user):
             response = self.client.post(
@@ -989,7 +986,7 @@ class TestProjectUpdateView(
         )
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Example callable setting'
+        ] = 'No project or user for callable'
 
         with self.login(self.user):
             response = self.client.post(
@@ -1033,7 +1030,7 @@ class TestProjectUpdateView(
         # Add settings values
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Example callable setting'
+        ] = 'No project or user for callable'
 
         with self.login(self.user):
             response = self.client.post(
@@ -1112,11 +1109,8 @@ class TestProjectUpdateView(
         ] = 'string1'
         values['settings.example_project_app.project_bool_setting'] = True
         values[
-            'settings.example_project_app.project_callable_setting'
-        ] = 'Example callable setting'
-        values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Example callable setting'
+        ] = 'No project or user for callable'
         values['settings.projectroles.ip_restrict'] = True
         values['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1538,10 +1532,8 @@ class TestProjectSettingsForm(
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
-            'settings.%s.project_callable_setting'
-            % EXAMPLE_APP_NAME: 'Example callable setting',
             'settings.%s.project_callable_setting_options'
-            % EXAMPLE_APP_NAME: 'Example callable setting',
+            % EXAMPLE_APP_NAME: 'No project or user for callable',
             'settings.projectroles.ip_restrict': True,
             'settings.projectroles.ip_allowlist': '["192.168.1.1"]',
             'owner': self.user.sodar_uuid,
@@ -1836,10 +1828,8 @@ class TestProjectSettingsFormTarget(
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
-            'settings.%s.project_callable_setting'
-            % EXAMPLE_APP_NAME: 'Example callable setting',
             'settings.%s.project_callable_setting_options'
-            % EXAMPLE_APP_NAME: 'Example callable setting',
+            % EXAMPLE_APP_NAME: 'No project or user for callable',
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -2130,10 +2120,8 @@ class TestProjectSettingsFormTargetLocal(
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
             'settings.projectroles.test_setting_local': True,
-            'settings.%s.project_callable_setting'
-            % EXAMPLE_APP_NAME: 'Example callable setting',
             'settings.%s.project_callable_setting_options'
-            % EXAMPLE_APP_NAME: 'Example callable setting',
+            % EXAMPLE_APP_NAME: 'No project or user for callable',
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,

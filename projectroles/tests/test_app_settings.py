@@ -12,7 +12,10 @@ from projectroles.tests.test_models import (
 )
 
 # Callable function dependency for testing
-from example_project_app.plugins import get_example_setting_default
+from example_project_app.plugins import (
+    get_example_setting_default,
+    get_example_setting_options,
+)
 
 
 app_settings = AppSettingAPI()
@@ -632,10 +635,7 @@ class TestAppSettingAPI(
                 'type': 'STRING',
                 'label': 'Callable setting with options',
                 'default': get_example_setting_default,
-                'options': [
-                    get_example_setting_default,
-                    get_example_setting_default,
-                ],
+                'options': get_example_setting_options,
                 'description': 'Example callable project setting with options',
                 'user_modifiable': True,
             },
@@ -726,10 +726,7 @@ class TestAppSettingAPI(
                 'type': 'STRING',
                 'label': 'Callable setting with options',
                 'default': get_example_setting_default,
-                'options': [
-                    get_example_setting_default,
-                    get_example_setting_default,
-                ],
+                'options': get_example_setting_options,
                 'description': 'Example callable user setting with options',
                 'user_modifiable': True,
             },
@@ -776,10 +773,7 @@ class TestAppSettingAPI(
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'STRING',
                 'default': get_example_setting_default,
-                'options': [
-                    get_example_setting_default,
-                    get_example_setting_default,
-                ],
+                'options': get_example_setting_options,
                 'description': 'Example callable project user setting with options',
             },
         }

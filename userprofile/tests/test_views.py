@@ -193,7 +193,7 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             'settings.%s.user_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Less"}',
             'settings.%s.user_callable_setting_options'
-            % EXAMPLE_APP_NAME: 'Example callable setting',
+            % EXAMPLE_APP_NAME: 'No project or user for callable',
         }
 
         with self.login(self.user):
