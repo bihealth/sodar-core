@@ -39,7 +39,7 @@
       </div>
     </h4>
   </div>
-  <div class="card-body p-0 {% if parent %}sodar-pr-project-list-body-parent{% endif %}">
+  <div class="card-body p-0">
     <table class="table sodar-card-table sodar-pr-project-list-table"
            id="sodar-pr-project-list-table"
            data-list-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"

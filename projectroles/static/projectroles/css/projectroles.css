@@ -308,11 +308,6 @@ table.sodar-card-table-bordered tbody tr:last-child td {
 /* Project list table ------------------------------------------------------- */
 
 
-.sodar-pr-project-list-body-parent {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
 table.sodar-pr-project-list-table {
   table-layout: fixed;
 }
