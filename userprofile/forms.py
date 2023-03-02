@@ -133,6 +133,19 @@ class UserSettingsForm(SODARForm):
                     APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
                 )
 
+            try:
+                app_settings_errors = plugin.validate_form_app_settings(
+                    p_settings,
+                    project=self.instance,
+                    user=self.user,
+                )
+            except Exception:
+                app_settings_errors = {}
+            if app_settings_errors:
+                for field, error in app_settings_errors.items():
+                    if error:
+                        self.add_error(field, error)
+
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(name, s_key)
                 if s_val['type'] == 'JSON':

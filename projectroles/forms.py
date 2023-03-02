@@ -626,6 +626,18 @@ class ProjectForm(SODARModelForm):
                         app_name=name,
                         **self.p_kwargs
                     )
+                try:
+                    app_settings_errors = plugin.validate_form_app_settings(
+                        p_settings,
+                        project=self.instance,
+                        user=instance_owner_as,
+                    )
+                except Exception:
+                    app_settings_errors = {}
+                if app_settings_errors:
+                    for field, error in app_settings_errors.items():
+                        if error:
+                            self.add_error(field, error)
 
                 for s_key, s_val in p_settings.items():
                     s_field = 'settings.{}.{}'.format(name, s_key)

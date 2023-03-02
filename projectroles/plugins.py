@@ -428,6 +428,18 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
+    def validate_form_app_settings(self, app_settings, project=None, user=None):
+        """
+        Validate app settings form data and return a dict of errors.
+
+        :param app_settings: Dict of app settings names
+        :param project: Project object
+        :param user: User object
+        :return: dict in format of {'setting_name': 'Error string' or None}
+        """
+        # TODO: Implement this in your app plugin (optional)
+        return None
+
 
 class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""
@@ -606,6 +618,17 @@ class SiteAppPluginPoint(PluginPoint):
     def get_extra_data_link(self, _extra_data, _name):
         """Return a link for timeline label starting with 'extra-'"""
         # TODO: Implement this in your app plugin
+        return None
+
+    def validate_form_app_settings(self, app_settings, user=None):
+        """
+        Validate app settings form data and return a dict of errors.
+
+        :param app_settings: Dict of app settings names
+        :param user: User object
+        :return: dict in format of {'setting_name': 'Error string' or None}
+        """
+        # TODO: Implement this in your app plugin (optional)
         return None
 
 
