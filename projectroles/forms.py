@@ -312,7 +312,14 @@ class ProjectForm(SODARModelForm):
         return sorted(ret, key=lambda x: x[1])
 
     def _set_app_setting_widget(self, app_name, s_field, s_key, s_val):
-        """Internal helper for setting app setting widget and value"""
+        """
+        Internal helper for setting app setting widget and value
+
+        :param app_name: App name
+        :param s_field: Form field name
+        :param s_key: Setting key
+        :param s_val: Setting value
+        """
         s_widget_attrs = s_val.get('widget_attrs') or {}
         if 'placeholder' in s_val:
             s_widget_attrs['placeholder'] = s_val.get('placeholder')
@@ -383,7 +390,12 @@ class ProjectForm(SODARModelForm):
                 )
 
     def _set_app_setting_notes(self, s_field, s_val):
-        """Internal helper for setting app setting label notes"""
+        """
+        Internal helper for setting app setting label notes
+
+        :param s_field: Form field name
+        :param s_val: Setting value
+        """
         if s_val.get('user_modifiable') is False:
             self.fields[s_field].label += ' [HIDDEN]'
             self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
@@ -400,6 +412,7 @@ class ProjectForm(SODARModelForm):
                 ].help_text += ' [Not editable on target sites]'
 
     def _init_app_settings(self):
+        """Analog of __init__() for app settings"""
         # Set up setting query kwargs
         self.p_kwargs = {}
         if not self.current_user.is_superuser:
