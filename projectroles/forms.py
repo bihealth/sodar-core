@@ -556,7 +556,9 @@ class ProjectForm(SODARModelForm):
 
     def clean(self):
         """Function for custom form validation and cleanup"""
-        instance_owner_as = self.instance.get_owner() if self.instance else None
+        self.instance_owner_as = (
+            self.instance.get_owner() if self.instance else None
+        )
         disable_categories = getattr(
             settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
         )
@@ -613,8 +615,8 @@ class ProjectForm(SODARModelForm):
 
         # Ensure owner is not changed on update (must use ownership transfer)
         if (
-            instance_owner_as
-            and self.cleaned_data.get('owner') != instance_owner_as.user
+            self.instance_owner_as
+            and self.cleaned_data.get('owner') != self.instance_owner_as.user
         ):
             self.add_error(
                 'owner',
@@ -635,7 +637,7 @@ class ProjectForm(SODARModelForm):
                     app_settings_errors = plugin.validate_form_app_settings(
                         p_settings,
                         project=self.instance,
-                        user=instance_owner_as,
+                        user=self.instance_owner_as,
                     )
                 else:
                     name = 'projectroles'

@@ -3,7 +3,7 @@
 from test_plus.test import TestCase
 
 from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import get_app_plugin, ProjectAppPluginPoint
 from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -881,3 +881,64 @@ class TestAppSettingAPI(
                 project=self.project,
                 user=self.user,
             )
+
+    def test_validate_form_app_settings(self):
+        """Test validate_app_settings_form() method on valid app_setting"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        self.valid_setting = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'user': self.user,
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'name': 'project_str_setting',
+            'setting_type': 'STRING',
+            'value': 'test',
+        }
+        errors = app_plugin.validate_form_app_settings(
+            self.valid_setting, project=self.project, user=self.user
+        )
+        self.assertEqual(errors, None)
+
+    def test_validate_form_app_settings_user_scope_error(self):
+        """Test validate_app_settings_form() method on invalid user scope app_setting"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        self.invalid_user_scope_setting = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'user': None,
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'name': 'project_str_setting',
+            'setting_type': 'STRING',
+            'value': 'test',
+            'update_value': 'better test',
+            'non_valid_value': False,
+        }
+        errors = app_plugin.validate_form_app_settings(
+            self.invalid_user_scope_setting, user=None
+        )
+        self.assertIsNotNone(errors)
+        self.assertIn(
+            'No user provided for user scope setting', errors.values()
+        )
+
+    def test_validate_form_app_settings_project_scope_error(self):
+        """Test validate_app_settings_form() method on invalid project scope app_setting"""
+        app_plugin = ProjectAppPluginPoint.get_plugin(EXAMPLE_APP_NAME)
+        self.invalid_project_scope_setting = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': None,
+            'user': self.user,
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'name': 'project_str_setting',
+            'setting_type': 'STRING',
+            'value': 'test',
+            'update_value': 'better test',
+            'non_valid_value': False,
+        }
+        errors = app_plugin.validate_form_app_settings(
+            self.invalid_project_scope_setting, project=None
+        )
+        self.assertIsNotNone(errors)
+        self.assertIn(
+            'No project provided for project scope setting', errors.values()
+        )
