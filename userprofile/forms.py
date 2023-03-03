@@ -127,20 +127,16 @@ class UserSettingsForm(SODARForm):
                 p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
                 )
+                app_settings_errors = plugin.validate_form_app_settings(
+                    p_settings,
+                    user=self.user,
+                )
             else:
                 name = 'projectroles'
                 p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
                 )
-
-            try:
-                app_settings_errors = plugin.validate_form_app_settings(
-                    p_settings,
-                    project=self.instance,
-                    user=self.user,
-                )
-            except Exception:
-                app_settings_errors = {}
+                app_settings_errors = None
             if app_settings_errors:
                 for field, error in app_settings_errors.items():
                     if error:

@@ -632,6 +632,11 @@ class ProjectForm(SODARModelForm):
                         plugin=plugin,
                         **self.p_kwargs
                     )
+                    app_settings_errors = plugin.validate_form_app_settings(
+                        p_settings,
+                        project=self.instance,
+                        user=instance_owner_as,
+                    )
                 else:
                     name = 'projectroles'
                     p_settings = self.app_settings.get_definitions(
@@ -639,14 +644,7 @@ class ProjectForm(SODARModelForm):
                         app_name=name,
                         **self.p_kwargs
                     )
-                try:
-                    app_settings_errors = plugin.validate_form_app_settings(
-                        p_settings,
-                        project=self.instance,
-                        user=instance_owner_as,
-                    )
-                except Exception:
-                    app_settings_errors = {}
+                    app_settings_errors = None
                 if app_settings_errors:
                     for field, error in app_settings_errors.items():
                         if error:
