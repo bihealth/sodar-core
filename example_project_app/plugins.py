@@ -48,12 +48,12 @@ def get_example_setting_options(project=None, user=None):
     response = ['No project or user for callable']
     if project and user:
         response.append(
-            ('{}'.format(project.title), '{}'.format(user.username))
+            'Project: {} from user: {}'.format(project.title, user.username)
         )
     elif project:
-        response.append(('project', '{}'.format(project.title)))
+        response.append('Project: {}'.format(project.title))
     elif user:
-        response.append(('user', '{}'.format(user.username)))
+        response.append('User: {}'.format(user.username))
     return response
 
 
