@@ -1428,33 +1428,33 @@ class TestProjectSettingsForm(
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.context['form'])
         field = response.context['form'].fields.get(
-            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+            'settings.example_project_app.project_str_setting'
         )
         self.assertIsNotNone(field)
         self.assertEqual(field.widget.attrs['placeholder'], 'Example string')
         field = response.context['form'].fields.get(
-            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+            'settings.example_project_app.project_int_setting'
         )
         self.assertIsNotNone(field)
         self.assertEqual(field.widget.attrs['placeholder'], 0)
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_str_setting_options'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_int_setting_options'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_bool_setting'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_json_setting'
             )
         )
         self.assertIsNotNone(
@@ -1524,16 +1524,13 @@ class TestProjectSettingsForm(
         )
 
         values = {
-            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
-            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
-            'settings.%s.project_str_setting_options'
-            % EXAMPLE_APP_NAME: 'string2',
-            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
-            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
-            'settings.%s.project_json_setting'
-            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
-            'settings.%s.project_callable_setting_options'
-            % EXAMPLE_APP_NAME: 'No project or user for callable',
+            'settings.example_project_app.project_str_setting': 'updated',
+            'settings.example_project_app.project_int_setting': 170,
+            'settings.example_project_app.project_str_setting_options': 'string2',
+            'settings.example_project_app.project_int_setting_options': 1,
+            'settings.example_project_app.project_bool_setting': True,
+            'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
+            'settings.example_project_app.project_callable_setting_options': 'No project or user for callable',
             'settings.projectroles.ip_restrict': True,
             'settings.projectroles.ip_allowlist': '["192.168.1.1"]',
             'owner': self.user.sodar_uuid,
@@ -1727,32 +1724,32 @@ class TestProjectSettingsFormTarget(
         self.assertIsNotNone(response.context['form'])
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_str_setting'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_int_setting'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_str_setting_options'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_int_setting_options'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_bool_setting'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_json_setting'
             )
         )
         self.assertIsNotNone(
@@ -1820,16 +1817,13 @@ class TestProjectSettingsFormTarget(
         )
 
         values = {
-            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
-            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
-            'settings.%s.project_str_setting_options'
-            % EXAMPLE_APP_NAME: 'string2',
-            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
-            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
-            'settings.%s.project_json_setting'
-            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
-            'settings.%s.project_callable_setting_options'
-            % EXAMPLE_APP_NAME: 'No project or user for callable',
+            'settings.example_project_app.project_str_setting': 'updated',
+            'settings.example_project_app.project_int_setting': 170,
+            'settings.example_project_app.project_str_setting_options': 'string2',
+            'settings.example_project_app.project_int_setting_options': 1,
+            'settings.example_project_app.project_bool_setting': True,
+            'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
+            'settings.example_project_app.project_callable_setting_options': 'No project or user for callable',
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -2012,32 +2006,32 @@ class TestProjectSettingsFormTargetLocal(
         self.assertIsNotNone(response.context['form'])
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_str_setting'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_int_setting'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_str_setting_options'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_int_setting_options'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_bool_setting'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.project_json_setting'
             )
         )
         self.assertIsNotNone(
@@ -2111,17 +2105,14 @@ class TestProjectSettingsFormTargetLocal(
         )
 
         values = {
-            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
-            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
-            'settings.%s.project_str_setting_options'
-            % EXAMPLE_APP_NAME: 'string2',
-            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
-            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
-            'settings.%s.project_json_setting'
-            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
+            'settings.example_project_app.project_str_setting': 'updated',
+            'settings.example_project_app.project_int_setting': 170,
+            'settings.example_project_app.project_str_setting_options': 'string2',
+            'settings.example_project_app.project_int_setting_options': 1,
+            'settings.example_project_app.project_bool_setting': True,
+            'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
             'settings.projectroles.test_setting_local': True,
-            'settings.%s.project_callable_setting_options'
-            % EXAMPLE_APP_NAME: 'No project or user for callable',
+            'settings.example_project_app.project_callable_setting_options': 'No project or user for callable',
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
