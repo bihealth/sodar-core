@@ -682,27 +682,17 @@ class ProjectSearchResultsView(
         keyword_input = []
         search_keywords = {}
 
-        if self.request.GET.get('m'):  # Multi search
-            search_terms = [
-                t.strip()
-                for t in self.request.GET['m'].strip().split('\r\n')
-                if len(t.strip()) >= 3
-            ]
-            if self.request.GET.get('k'):
-                keyword_input = self.request.GET['k'].strip().split(' ')
-            search_input = ''  # Clears input for basic search
-        else:  # Single term search
-            search_input = self.request.GET.get('s').strip()
-            search_split = search_input.split(' ')
-            search_term = search_split[0].strip()
-            for i in range(1, len(search_split)):
-                s = search_split[i].strip()
-                if ':' in s:
-                    keyword_input.append(s)
-                elif s != '':
-                    search_term += ' ' + s.lower()
-            if search_term:
-                search_terms = [search_term]
+        search_input = self.request.GET.get('s').strip()
+        search_split = search_input.split(' ')
+        search_term = search_split[0].strip()
+        for i in range(1, len(search_split)):
+            s = search_split[i].strip()
+            if ':' in s:
+                keyword_input.append(s)
+            elif s != '':
+                search_term += ' ' + s.lower()
+        if search_term:
+            search_terms = [search_term]
         search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
         for s in keyword_input:
