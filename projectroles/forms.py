@@ -621,7 +621,7 @@ class ProjectForm(SODARModelForm):
                     ):
                         errors.append((s_field, 'Invalid value'))
 
-            return (cleaned_data, errors)
+        return (cleaned_data, errors)
 
     def clean(self):
         """Function for custom form validation and cleanup"""
@@ -694,7 +694,7 @@ class ProjectForm(SODARModelForm):
             )
 
         # Verify settings fields
-        result = self._app_settings_validation(
+        cleaned_data, errors = self._app_settings_validation(
             self.cleaned_data,
             self.app_plugins,
             self.app_settings,
@@ -702,9 +702,9 @@ class ProjectForm(SODARModelForm):
             self.instance,
             self.instance_owner_as,
         )
-        for key, value in result[0].items():
+        for key, value in cleaned_data.items():
             self.cleaned_data[key] = value
-        for (field, error) in result[1]:
+        for (field, error) in errors:
             self.add_error(field, error)
 
         return self.cleaned_data
