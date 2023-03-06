@@ -7,7 +7,7 @@ import ssl
 import urllib.request
 
 from ipaddress import ip_address, ip_network
-from urllib.parse import unquote_plus
+from urllib.parse import unquote_plus, urlencode
 
 from django.apps import apps
 from django.conf import settings
@@ -751,6 +751,16 @@ class ProjectAdvancedSearchView(
     """View for displaying advanced search form"""
 
     template_name = 'projectroles/search_advanced.html'
+
+    def post(self, request, *args, **kwargs):
+        search_terms = request.POST.get('search_terms')
+        if not search_terms:
+            messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        params = {'s': search_terms}
+        reverse_url = reverse('projectroles:search')
+        reverse_url = '{}?{}'.format(reverse_url, urlencode(params))
+        return redirect(reverse_url)
 
 
 # Project Editing Views --------------------------------------------------------

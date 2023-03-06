@@ -18,10 +18,11 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
- <form method="get" action="{% url 'projectroles:search' %}">
+ <form method="POST">
+   {% csrf_token %}
    <div class="form-group">
-     <label for="id_m" class="col-form-label">Search Terms</label>
-     <textarea name="m" cols="40" rows="8" class=" form-control" id="id_m"></textarea>
+     <label for="search_terms" class="col-form-label">Search Terms</label>
+     <textarea name="search_terms" cols="40" rows="8" class=" form-control" id="search_terms"></textarea>
      <small class="form-text text-muted">
        Enter one or more search terms separated by line breaks.
        Terms shorter than 3 characters will be ignored.
