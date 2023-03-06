@@ -171,20 +171,27 @@ class AppSettingAPI:
         if setting_options:
             if callable(setting_options):
                 try:
-                    setting_options = setting_options(project, user)
+                    valid_options = setting_options(project, user)
+                    if setting_value not in valid_options:
+                        raise ValueError(
+                            'Choice "{}" not found in options ({})'.format(
+                                setting_value,
+                                ', '.join(map(str, valid_options)),
+                            )
+                        )
                 except Exception:
                     logger.error(
                         'Error calling options function for setting: {}'.format(
                             setting_options
                         )
                     )
-                    setting_options = ['No project or user for callable']
-            if setting_value not in setting_options:
-                raise ValueError(
-                    'Choice "{}" not found in options ({})'.format(
-                        setting_value, ', '.join(map(str, setting_options))
+            else:
+                if setting_value not in setting_options:
+                    raise ValueError(
+                        'Choice "{}" not found in options ({})'.format(
+                            setting_value, ', '.join(map(str, setting_options))
+                        )
                     )
-                )
 
     @classmethod
     def _get_app_plugin(cls, app_name):
