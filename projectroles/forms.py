@@ -631,10 +631,6 @@ class ProjectForm(SODARModelForm):
                     s_field = 'settings.{}.{}'.format(name, s_key)
 
                     if s_val['type'] == 'JSON':
-                        # for some reason, there is a distinct possibility, that the
-                        # initial value has been discarded and we get '' as value.
-                        # Seems to only happen in automated tests. Will catch that
-                        # here.
                         if not self.cleaned_data.get(s_field):
                             self.cleaned_data[s_field] = '{}'
                         try:
@@ -642,10 +638,7 @@ class ProjectForm(SODARModelForm):
                                 self.cleaned_data.get(s_field)
                             )
                         except json.JSONDecodeError as err:
-                            # TODO: Shouldn't we use add_error() instead?
-                            raise forms.ValidationError(
-                                'Couldn\'t encode JSON\n' + str(err)
-                            )
+                            self.add_error(s_field, 'Invalid JSON\n' + str(err))
                     elif s_val['type'] == 'INTEGER':
                         # When the field is a select/dropdown the information of
                         # the datatype gets lost. We need to convert that here,
