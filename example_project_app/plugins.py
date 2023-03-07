@@ -43,17 +43,18 @@ def get_example_setting_options(project=None, user=None):
 
     :param project: Project object
     :param user: User object
-    :return: List of strings
+    :return: Tuple in form (value, label)
     """
-    response = ['No project or user for callable']
+    response = ('', 'No project or user for callable')
     if project and user:
-        response.append(
-            'Project: {} from user: {}'.format(project.title, user.username)
+        response = (
+            project.sodar_uuid,
+            'Project UUID from {}'.format(user.username),
         )
     elif project:
-        response.append('Project: {}'.format(project.title))
+        response = (project.sodar_uuid, 'Project UUID')
     elif user:
-        response.append('User: {}'.format(user.username))
+        response = (user.sodar_uuid, 'User UUID')
     return response
 
 
