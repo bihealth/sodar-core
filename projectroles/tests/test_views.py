@@ -269,10 +269,9 @@ class TestProjectSearchView(
         )
 
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'m': 'testproject\r\nxxx', 'k': ''})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'testproject\r\nxxx', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -295,10 +294,9 @@ class TestProjectSearchView(
         )
 
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'m': 'testproject\r\nxx', 'k': ''})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'testproject\r\nxx', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['testproject'])
@@ -317,10 +315,9 @@ class TestProjectSearchView(
         )
 
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'m': 'testproject\r\n\r\nxxx', 'k': ''})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'testproject\r\nxxx', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -331,10 +328,9 @@ class TestProjectSearchView(
     def test_render_advanced_dupe(self):
         """Test input from advanced search with a duplicate term"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'m': 'xxx\r\nxxx', 'k': ''})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'xxx\r\nxxx', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['xxx'])

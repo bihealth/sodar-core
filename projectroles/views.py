@@ -17,7 +17,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.db.models import QuerySet
 from django.http import Http404
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import resolve, reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -563,21 +563,9 @@ class ProjectDetailView(
 class ProjectSearchMixin:
     """Common functionalities for search views"""
 
-    def dispatch(self, request, *args, **kwargs):
-        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
-            messages.error(request, 'Search is not enabled.')
-            return redirect('home')
-        return super().dispatch(request, *args, **kwargs)
-
-
-class ProjectSearchResultsView(
-    LoginRequiredMixin, ProjectSearchMixin, TemplateView
-):
-    """View for displaying results of search within projects"""
-
-    template_name = 'projectroles/search_results.html'
-
-    def _get_app_results(self, search_terms, search_type, search_keywords):
+    def _get_app_results(
+        self, user, search_terms, search_type, search_keywords
+    ):
         """
         Return app plugin search results.
 
@@ -604,7 +592,7 @@ class ProjectSearchResultsView(
             ]
         for plugin in search_apps:
             search_kwargs = {
-                'user': self.request.user,
+                'user': user,
                 'search_type': search_type,
                 'search_terms': search_terms,
                 'keywords': search_keywords,
@@ -644,8 +632,7 @@ class ProjectSearchResultsView(
             ret.append(search_res)
         return ret
 
-    @classmethod
-    def _get_not_found(cls, search_type, project_results, app_results):
+    def _get_not_found(self, search_type, project_results, app_results):
         """
         Return list of apps for which objects were search for but not returned.
 
@@ -674,6 +661,20 @@ class ProjectSearchResultsView(
                     ret.append(result['title'])
         return ret
 
+    def dispatch(self, request, *args, **kwargs):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
+            messages.error(request, 'Search is not enabled.')
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ProjectSearchResultsView(
+    LoginRequiredMixin, ProjectSearchMixin, TemplateView
+):
+    """View for displaying results of search within projects"""
+
+    template_name = 'projectroles/search_results.html'
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
         search_terms = []
@@ -681,27 +682,17 @@ class ProjectSearchResultsView(
         keyword_input = []
         search_keywords = {}
 
-        if self.request.GET.get('m'):  # Multi search
-            search_terms = [
-                t.strip()
-                for t in self.request.GET['m'].strip().split('\r\n')
-                if len(t.strip()) >= 3
-            ]
-            if self.request.GET.get('k'):
-                keyword_input = self.request.GET['k'].strip().split(' ')
-            search_input = ''  # Clears input for basic search
-        else:  # Single term search
-            search_input = self.request.GET.get('s').strip()
-            search_split = search_input.split(' ')
-            search_term = search_split[0].strip()
-            for i in range(1, len(search_split)):
-                s = search_split[i].strip()
-                if ':' in s:
-                    keyword_input.append(s)
-                elif s != '':
-                    search_term += ' ' + s.lower()
-            if search_term:
-                search_terms = [search_term]
+        search_input = self.request.GET.get('s').strip()
+        search_split = search_input.split(' ')
+        search_term = search_split[0].strip()
+        for i in range(1, len(search_split)):
+            s = search_split[i].strip()
+            if ':' in s:
+                keyword_input.append(s)
+            elif s != '':
+                search_term += ' ' + s.lower()
+        if search_term:
+            search_terms = [search_term]
         search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
         for s in keyword_input:
@@ -727,7 +718,7 @@ class ProjectSearchResultsView(
             ]
         # Get app results
         context['app_results'] = self._get_app_results(
-            search_terms, search_type, search_keywords
+            self.request.user, search_terms, search_type, search_keywords
         )
         # List apps for which no results were found
         context['not_found'] = self._get_not_found(
@@ -751,6 +742,62 @@ class ProjectAdvancedSearchView(
     """View for displaying advanced search form"""
 
     template_name = 'projectroles/search_advanced.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search_terms = []
+        search_type = None
+        keyword_input = []
+        search_keywords = {}
+
+        if self.request.POST.get('m'):  # Multi search
+            search_terms = [
+                t.strip()
+                for t in self.request.POST['m'].strip().split('\r\n')
+                if len(t.strip()) >= 3
+            ]
+            if self.request.POST.get('k'):
+                keyword_input = self.request.POST['k'].strip().split(' ')
+        search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
+
+        for s in keyword_input:
+            kw = s.split(':')[0].lower().strip()
+            val = s.split(':')[1].lower().strip()
+            if kw == 'type':
+                search_type = val
+            else:
+                search_keywords[kw] = val
+
+        context['search_terms'] = search_terms
+        context['search_type'] = search_type
+        context['search_keywords'] = search_keywords
+        # Get project results
+        if not search_type or search_type == 'project':
+            context['project_results'] = [
+                p
+                for p in Project.objects.find(
+                    search_terms, project_type='PROJECT'
+                )
+                if self.request.user.has_perm('projectroles.view_project', p)
+            ]
+        # Get app results
+        context['app_results'] = self._get_app_results(
+            self.request.user, search_terms, search_type, search_keywords
+        )
+        # List apps for which no results were found
+        context['not_found'] = self._get_not_found(
+            search_type,
+            context.get('project_results') or [],
+            context['app_results'],
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(*args, **kwargs)
+        if not context['search_terms']:
+            messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        return render(request, 'projectroles/search_results.html', context)
 
 
 # Project Editing Views --------------------------------------------------------
