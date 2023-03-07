@@ -144,16 +144,17 @@ class UserSettingsForm(SODARForm):
 
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(name, s_key)
+
                 if s_val['type'] == 'JSON':
+                    if not self.cleaned_data.get(s_field):
+                        self.cleaned_data[s_field] = '{}'
                     try:
                         self.cleaned_data[s_field] = json.loads(
                             self.cleaned_data.get(s_field)
                         )
                     except json.JSONDecodeError as err:
-                        # TODO: Shouldn't we use add_error() instead?
-                        raise forms.ValidationError(
-                            'Couldn\'t encode JSON\n' + str(err)
-                        )
+                        self.add_error(s_field, 'Invalid JSON\n' + str(err))
+
                 elif s_val['type'] == 'INTEGER':
                     # When field is a select/dropdown, the information of the
                     # data type gets lost. We need to convert that here,

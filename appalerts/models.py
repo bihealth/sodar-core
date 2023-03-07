@@ -103,7 +103,7 @@ class AppAlert(models.Model):
             self.app_plugin.name if self.app_plugin else 'projectroles',
             self.alert_name,
             self.user.username,
-            self.project.title,
+            self.project.title if self.project else 'N/A',
         )
         return 'AppAlert({})'.format(', '.join(repr(v) for v in values))
 

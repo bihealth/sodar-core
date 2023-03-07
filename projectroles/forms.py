@@ -707,6 +707,7 @@ class ProjectForm(SODARModelForm):
         for (field, error) in errors:
             self.add_error(field, error)
 
+
         return self.cleaned_data
 
 
