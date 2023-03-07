@@ -1139,7 +1139,10 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             owner = old_project.get_owner().user
 
         # Get settings
-        project_settings = self._get_app_settings(data, instance)
+        if project.type == PROJECT_TYPE_PROJECT:
+            project_settings = self._get_app_settings(data, instance)
+        else:
+            project_settings = {}
         old_settings = None
         if action == PROJECT_ACTION_UPDATE:
             old_settings = json.loads(json.dumps(project_settings))  # Copy
@@ -1216,6 +1219,15 @@ class ProjectModifyFormMixin(ProjectModifyMixin):
             )
         else:
             redirect_url = reverse('home')
+
+        if form.instance.type == PROJECT_TYPE_CATEGORY:
+            cleaned_data = form.cleaned_data.copy()
+            cleaned_data = {
+                k: v
+                for k, v in cleaned_data.items()
+                if not k.startswith('settings')
+            }
+            form.cleaned_data = cleaned_data
 
         try:
             project = self.modify_project(
@@ -1326,16 +1338,6 @@ class ProjectCreateView(
                     )
                 )
         return super().get(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        """Prevent creation of app_settings for categories"""
-        if form.instance.type == PROJECT_TYPE_CATEGORY:
-            cleaned_data = form.cleaned_data.copy()
-            cleaned_data = {k: v for k, v in cleaned_data.items() if not k.startswith('settings')}
-            form.cleaned_data = cleaned_data
-            print(form.cleaned_data)
-            form.save()
-        return super().form_valid(form)
 
 
 class ProjectUpdateView(
