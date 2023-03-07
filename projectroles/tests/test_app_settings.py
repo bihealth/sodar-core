@@ -894,8 +894,9 @@ class TestAppSettingAPI(
             'setting_type': 'STRING',
             'value': 'test',
         }
+        settings = {'name': self.valid_setting}
         errors = app_plugin.validate_form_app_settings(
-            self.valid_setting, project=self.project, user=self.user
+            settings, project=self.project, user=self.user
         )
         self.assertEqual(errors, None)
 
@@ -913,8 +914,9 @@ class TestAppSettingAPI(
             'update_value': 'better test',
             'non_valid_value': False,
         }
+        invalid_settings = {'name': self.invalid_user_scope_setting}
         errors = app_plugin.validate_form_app_settings(
-            self.invalid_user_scope_setting, user=None
+            invalid_settings, user=None, project=self.project
         )
         self.assertIsNotNone(errors)
         self.assertIn(
@@ -935,8 +937,9 @@ class TestAppSettingAPI(
             'update_value': 'better test',
             'non_valid_value': False,
         }
+        invalid_settings = {'name': self.invalid_project_scope_setting}
         errors = app_plugin.validate_form_app_settings(
-            self.invalid_project_scope_setting, project=None
+            invalid_settings, project=None, user=self.user
         )
         self.assertIsNotNone(errors)
         self.assertIn(

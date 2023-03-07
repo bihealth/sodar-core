@@ -279,22 +279,23 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     def validate_form_app_settings(self, app_settings, project=None, user=None):
         """Example implementation for app setting validation"""
         errors = {}
-        if (
-            app_settings.get('scope')
-            == SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
-            and not user
-        ):
-            errors[
-                app_settings['name']
-            ] = 'No user provided for user scope setting'
-        if (
-            app_settings.get('scope')
-            == SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
-            and not project
-        ):
-            errors[
-                app_settings['name']
-            ] = 'No project provided for project scope setting'
+        for setting in app_settings:
+            if (
+                app_settings[setting].get('scope')
+                == SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+                and not user
+            ):
+                errors[
+                    app_settings['name']
+                ] = 'No user provided for user scope setting'
+            elif (
+                app_settings[setting].get('scope')
+                == SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+                and not project
+            ):
+                errors[
+                    app_settings['name']
+                ] = 'No project provided for project scope setting'
         if errors == {}:
             return None
         return errors

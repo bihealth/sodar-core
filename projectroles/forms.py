@@ -313,7 +313,7 @@ class ProjectForm(SODARModelForm):
 
     def _set_app_setting_widget(self, app_name, s_field, s_key, s_val):
         """
-        Internal helper for setting app setting widget and value
+        Internal helper for setting app setting widget and value.
 
         :param app_name: App name
         :param s_field: Form field name
@@ -555,7 +555,7 @@ class ProjectForm(SODARModelForm):
             self.fields['readme'].widget = forms.HiddenInput()
 
     @classmethod
-    def _app_settings_validation(
+    def _validate_app_settings(
         self,
         cleaned_data,
         app_plugins,
@@ -566,60 +566,63 @@ class ProjectForm(SODARModelForm):
     ):
         """Validate and clean app_settings form fields"""
         errors = []
-        if cleaned_data.get('type') == PROJECT_TYPE_PROJECT:
-            for plugin in app_plugins + [None]:
-                if plugin:
-                    name = plugin.name
-                    p_settings = app_settings.get_definitions(
-                        APP_SETTING_SCOPE_PROJECT, plugin=plugin, **p_kwargs
-                    )
-                    app_settings_errors = plugin.validate_form_app_settings(
-                        p_settings,
-                        project=instance,
-                        user=instance_owner_as,
-                    )
-                else:
-                    name = 'projectroles'
-                    p_settings = app_settings.get_definitions(
-                        APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
-                    )
-                    app_settings_errors = None
-                if app_settings_errors:
-                    for field, error in app_settings_errors.items():
-                        if error:
-                            errors.append((field, error))
 
-                for s_key, s_val in p_settings.items():
-                    s_field = 'settings.{}.{}'.format(name, s_key)
+        if cleaned_data.get('type') == PROJECT_TYPE_CATEGORY:
+            return (cleaned_data, errors)
 
-                    if s_val['type'] == 'JSON':
-                        # for some reason, there is a distinct possibility, that the
-                        # initial value has been discarded and we get '' as value.
-                        # Seems to only happen in automated tests. Will catch that
-                        # here.
-                        if not cleaned_data.get(s_field):
-                            cleaned_data[s_field] = '{}'
-                        try:
-                            cleaned_data[s_field] = json.loads(
-                                cleaned_data.get(s_field)
-                            )
-                        except json.JSONDecodeError as err:
-                            # TODO: Shouldn't we use add_error() instead?
-                            raise forms.ValidationError(
-                                'Couldn\'t encode JSON\n' + str(err)
-                            )
-                    elif s_val['type'] == 'INTEGER':
-                        # When the field is a select/dropdown the information of
-                        # the datatype gets lost. We need to convert that here,
-                        # otherwise subsequent checks will fail.
-                        cleaned_data[s_field] = int(cleaned_data[s_field])
+        for plugin in app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_definitions(
+                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **p_kwargs
+                )
+                app_settings_errors = plugin.validate_form_app_settings(
+                    p_settings,
+                    project=instance,
+                    user=instance_owner_as,
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_definitions(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
+                )
+                app_settings_errors = None
+            if app_settings_errors:
+                for field, error in app_settings_errors.items():
+                    if error:
+                        errors.append((field, error))
 
-                    if not app_settings.validate(
-                        setting_type=s_val['type'],
-                        setting_value=cleaned_data.get(s_field),
-                        setting_options=s_val.get('options'),
-                    ):
-                        errors.append((s_field, 'Invalid value'))
+            for s_key, s_val in p_settings.items():
+                s_field = 'settings.{}.{}'.format(name, s_key)
+
+                if s_val['type'] == 'JSON':
+                    # for some reason, there is a distinct possibility, that the
+                    # initial value has been discarded and we get '' as value.
+                    # Seems to only happen in automated tests. Will catch that
+                    # here.
+                    if not cleaned_data.get(s_field):
+                        cleaned_data[s_field] = '{}'
+                    try:
+                        cleaned_data[s_field] = json.loads(
+                            cleaned_data.get(s_field)
+                        )
+                    except json.JSONDecodeError as err:
+                        # TODO: Shouldn't we use add_error() instead?
+                        raise forms.ValidationError(
+                            'Couldn\'t encode JSON\n' + str(err)
+                        )
+                elif s_val['type'] == 'INTEGER':
+                    # When the field is a select/dropdown the information of
+                    # the datatype gets lost. We need to convert that here,
+                    # otherwise subsequent checks will fail.
+                    cleaned_data[s_field] = int(cleaned_data[s_field])
+
+                if not app_settings.validate(
+                    setting_type=s_val['type'],
+                    setting_value=cleaned_data.get(s_field),
+                    setting_options=s_val.get('options'),
+                ):
+                    errors.append((s_field, 'Invalid value'))
 
         return (cleaned_data, errors)
 
@@ -694,7 +697,7 @@ class ProjectForm(SODARModelForm):
             )
 
         # Verify settings fields
-        cleaned_data, errors = self._app_settings_validation(
+        cleaned_data, errors = self._validate_app_settings(
             self.cleaned_data,
             self.app_plugins,
             self.app_settings,
