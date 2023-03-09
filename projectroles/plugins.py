@@ -428,11 +428,14 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
-    def validate_form_app_settings(self, app_settings, project=None, user=None):
+    def validate_form_app_settings(
+        self, app_settings, setting_name, project=None, user=None
+    ):
         """
         Validate app settings form data and return a dict of errors.
 
-        :param app_settings: Dict of app settings names
+        :param app_settings: Dict of app settings
+        :param setting_name: Name of the setting to validate
         :param project: Project object
         :param user: User object
         :return: dict in format of {'setting_name': 'Error string' or None}
@@ -620,11 +623,12 @@ class SiteAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin
         return None
 
-    def validate_form_app_settings(self, app_settings, user=None):
+    def validate_form_app_settings(self, app_settings, setting_name, user=None):
         """
         Validate app settings form data and return a dict of errors.
 
         :param app_settings: Dict of app settings names
+        :param setting_name: Name of the setting to validate
         :param user: User object
         :return: dict in format of {'setting_name': 'Error string' or None}
         """

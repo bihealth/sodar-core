@@ -574,26 +574,31 @@ class ProjectForm(SODARModelForm):
             if plugin:
                 name = plugin.name
                 p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **p_kwargs
-                )
-                app_settings_errors = plugin.validate_form_app_settings(
-                    p_settings,
-                    project=instance,
-                    user=instance_owner_as,
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
                 )
             else:
                 name = 'projectroles'
                 p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
                 )
-                app_settings_errors = None
-            if app_settings_errors:
-                for field, error in app_settings_errors.items():
-                    if error:
-                        errors.append((field, error))
 
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(name, s_key)
+
+                try:
+                    app_settings_errors = plugin.validate_app_settings(
+                        p_settings,
+                        s_key,
+                        project=instance,
+                        user=instance_owner_as,
+                    )
+                    if app_settings_errors:
+                        for field, error in app_settings_errors.items():
+                            if error:
+                                errors.append((field, error))
+                except AttributeError:
+                    # Plugin does not have a validate_app_settings method
+                    pass
 
                 if s_val['type'] == 'JSON':
                     # for some reason, there is a distinct possibility, that the
