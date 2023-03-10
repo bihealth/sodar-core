@@ -27,7 +27,7 @@ in complex web applications.
   `VarFish <https://github.com/bihealth/varfish-server>`_
     A web-based tool for the analysis of variants.
     It showcases how to build a complex data warehousing and data analysis web
-    appliction using SODAR Core.
+    application using SODAR Core.
     More details are described in the `NAR Web Server Issue publication (doi:10.1093/nar/gkaa241) <https://doi.org/10.1093/nar/gkaa241>`__.
     The source code can be found on `github.com/bihealth/varfish-server <https://github.com/bihealth/varfish-server>`__.
     A demo is available at `varfish-demo.bihealth.org <https://varfish-demo.bihealth.org/login/>`__.
@@ -145,7 +145,7 @@ follows.
 At this point you can test the search functionality. Typing "example" into the
 text field on the top bar and clicking :guilabel:`Search` will return your
 example project. The project overview shows the *overview card* for installed
-project apps Filefolders, Timeline, and Bgjobs. Usually, the five most recent
+project apps Filesfolders, Timeline, and Bgjobs. Usually, the five most recent
 entries are shown here.
 
 .. note::
@@ -190,7 +190,7 @@ apps:
 - Project apps can provide new content types that can be put into projects.
   For example, the Filesfolders app allows you to store files, folders, and
   assign meta data to them. As another example, the timelines app stores events
-  that occured in a project, and other apps such as the Filesfolders app can
+  that occurred in a project, and other apps such as the Filesfolders app can
   register their events with it.
 - SODAR Core defines several plugin extension points that your apps can
   implement and make their content findable, for example.
