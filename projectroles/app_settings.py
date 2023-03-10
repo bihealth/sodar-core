@@ -168,7 +168,7 @@ class AppSettingAPI:
         :param setting_options: List of options (String or Integers)
         :raise: ValueError if type is not recognized
         """
-        if setting_options and callable(setting_options):
+        if callable(setting_options):
             try:
                 valid_options = setting_options(project, user)
                 if setting_value not in valid_options:
