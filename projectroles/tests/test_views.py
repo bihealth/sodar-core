@@ -912,7 +912,7 @@ class TestProjectUpdateView(
         )
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'No project or user for callable'
+        ] = ''
 
         with self.login(self.user):
             response = self.client.post(
@@ -986,8 +986,7 @@ class TestProjectUpdateView(
         )
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'No project or user for callable'
-
+        ] = ''
         with self.login(self.user):
             response = self.client.post(
                 reverse(
