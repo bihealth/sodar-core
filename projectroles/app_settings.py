@@ -168,23 +168,22 @@ class AppSettingAPI:
         :param setting_options: List of options (String or Integers)
         :raise: ValueError if type is not recognized
         """
-        if setting_options:
-            if callable(setting_options):
-                try:
-                    valid_options = setting_options(project, user)
-                    if setting_value not in valid_options:
-                        raise ValueError(
-                            'Choice "{}" not found in options ({})'.format(
-                                setting_value,
-                                ', '.join(map(str, valid_options)),
-                            )
-                        )
-                except Exception:
-                    logger.error(
-                        'Error calling options function for setting: {}'.format(
-                            setting_options
+        if setting_options and callable(setting_options):
+            try:
+                valid_options = setting_options(project, user)
+                if setting_value not in valid_options:
+                    raise ValueError(
+                        'Choice "{}" not found in options ({})'.format(
+                            setting_value,
+                            ', '.join(map(str, valid_options)),
                         )
                     )
+            except Exception:
+                logger.error(
+                    'Error calling options function for setting: {}'.format(
+                        setting_options
+                    )
+                )
             else:
                 if setting_value not in setting_options:
                     raise ValueError(
