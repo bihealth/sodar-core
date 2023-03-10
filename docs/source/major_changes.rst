@@ -1551,7 +1551,7 @@ from your project.
     are responsible of maintaining them and ensuring SODAR compatibility. Such
     site-wide template overrides are outside of the scope for SODAR Core
     components. Leaving the existing files in without maintenance may cause
-    undesireable effects in the future.
+    undesirable effects in the future.
 
 Database File Upload Widget
 ---------------------------

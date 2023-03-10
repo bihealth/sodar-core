@@ -312,7 +312,14 @@ class ProjectForm(SODARModelForm):
         return sorted(ret, key=lambda x: x[1])
 
     def _set_app_setting_widget(self, app_name, s_field, s_key, s_val):
-        """Internal helper for setting app setting widget and value"""
+        """
+        Internal helper for setting app setting widget and value.
+
+        :param app_name: App name
+        :param s_field: Form field name
+        :param s_key: Setting key
+        :param s_val: Setting value
+        """
         s_widget_attrs = s_val.get('widget_attrs') or {}
         if 'placeholder' in s_val:
             s_widget_attrs['placeholder'] = s_val.get('placeholder')
@@ -383,7 +390,12 @@ class ProjectForm(SODARModelForm):
                 )
 
     def _set_app_setting_notes(self, s_field, s_val):
-        """Internal helper for setting app setting label notes"""
+        """
+        Internal helper for setting app setting label notes.
+
+        :param s_field: Form field name
+        :param s_val: Setting value
+        """
         if s_val.get('user_modifiable') is False:
             self.fields[s_field].label += ' [HIDDEN]'
             self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
@@ -541,9 +553,86 @@ class ProjectForm(SODARModelForm):
             self.fields['description'].widget = forms.HiddenInput()
             self.fields['readme'].widget = forms.HiddenInput()
 
+    @classmethod
+    def _validate_app_settings(
+        self,
+        cleaned_data,
+        app_plugins,
+        app_settings,
+        p_kwargs,
+        instance,
+        instance_owner_as,
+    ):
+        """Validate and clean app_settings form fields"""
+        errors = []
+
+        if cleaned_data.get('type') == PROJECT_TYPE_CATEGORY:
+            return (cleaned_data, errors)
+
+        for plugin in app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_definitions(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_definitions(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
+                )
+
+            plugin_app_settings = {}
+            for s_key, s_val in p_settings.items():
+                s_field = 'settings.{}.{}'.format(name, s_key)
+                plugin_app_settings[s_key] = cleaned_data.get(s_field)
+
+                if s_val['type'] == 'JSON':
+                    if s_val['type'] == 'JSON':
+                        if not cleaned_data.get(s_field):
+                            cleaned_data[s_field] = '{}'
+                        try:
+                            cleaned_data[s_field] = json.loads(
+                                cleaned_data.get(s_field)
+                            )
+                        except json.JSONDecodeError as err:
+                            errors.append(
+                                (s_field, 'Invalid JSON\n' + str(err))
+                            )
+                elif s_val['type'] == 'INTEGER':
+                    # When the field is a select/dropdown the information of
+                    # the datatype gets lost. We need to convert that here,
+                    # otherwise subsequent checks will fail.
+                    cleaned_data[s_field] = int(cleaned_data[s_field])
+
+                if not app_settings.validate(
+                    setting_type=s_val['type'],
+                    setting_value=cleaned_data.get(s_field),
+                    setting_options=s_val.get('options'),
+                ):
+                    errors.append((s_field, 'Invalid value'))
+
+            # Custom validation for app settings
+            try:
+                app_settings_errors = plugin.validate_app_settings(
+                    plugin_app_settings,
+                    project=instance,
+                    user=instance_owner_as,
+                )
+                if app_settings_errors:
+                    for field, error in app_settings_errors.items():
+                        if error:
+                            errors.append((field, error))
+            except AttributeError:
+                # Plugin does not have a validate_form_app_settings method
+                pass
+
+        return (cleaned_data, errors)
+
     def clean(self):
         """Function for custom form validation and cleanup"""
-        instance_owner_as = self.instance.get_owner() if self.instance else None
+        self.instance_owner_as = (
+            self.instance.get_owner() if self.instance else None
+        )
         disable_categories = getattr(
             settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
         )
@@ -600,8 +689,8 @@ class ProjectForm(SODARModelForm):
 
         # Ensure owner is not changed on update (must use ownership transfer)
         if (
-            instance_owner_as
-            and self.cleaned_data.get('owner') != instance_owner_as.user
+            self.instance_owner_as
+            and self.cleaned_data.get('owner') != self.instance_owner_as.user
         ):
             self.add_error(
                 'owner',
@@ -610,49 +699,18 @@ class ProjectForm(SODARModelForm):
             )
 
         # Verify settings fields
-        if self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT:
-            for plugin in self.app_plugins + [None]:
-                if plugin:
-                    name = plugin.name
-                    p_settings = self.app_settings.get_definitions(
-                        APP_SETTING_SCOPE_PROJECT,
-                        plugin=plugin,
-                        **self.p_kwargs
-                    )
-                else:
-                    name = 'projectroles'
-                    p_settings = self.app_settings.get_definitions(
-                        APP_SETTING_SCOPE_PROJECT,
-                        app_name=name,
-                        **self.p_kwargs
-                    )
-
-                for s_key, s_val in p_settings.items():
-                    s_field = 'settings.{}.{}'.format(name, s_key)
-
-                    if s_val['type'] == 'JSON':
-                        if not self.cleaned_data.get(s_field):
-                            self.cleaned_data[s_field] = '{}'
-                        try:
-                            self.cleaned_data[s_field] = json.loads(
-                                self.cleaned_data.get(s_field)
-                            )
-                        except json.JSONDecodeError as err:
-                            self.add_error(s_field, 'Invalid JSON\n' + str(err))
-                    elif s_val['type'] == 'INTEGER':
-                        # When the field is a select/dropdown the information of
-                        # the datatype gets lost. We need to convert that here,
-                        # otherwise subsequent checks will fail.
-                        self.cleaned_data[s_field] = int(
-                            self.cleaned_data[s_field]
-                        )
-
-                    if not self.app_settings.validate(
-                        setting_type=s_val['type'],
-                        setting_value=self.cleaned_data.get(s_field),
-                        setting_options=s_val.get('options'),
-                    ):
-                        self.add_error(s_field, 'Invalid value')
+        cleaned_data, errors = self._validate_app_settings(
+            self.cleaned_data,
+            self.app_plugins,
+            self.app_settings,
+            self.p_kwargs,
+            self.instance,
+            self.instance_owner_as,
+        )
+        for key, value in cleaned_data.items():
+            self.cleaned_data[key] = value
+        for (field, error) in errors:
+            self.add_error(field, error)
 
         return self.cleaned_data
 

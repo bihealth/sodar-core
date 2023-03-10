@@ -275,3 +275,25 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
                     action=action.lower(),
                 ),
             )
+
+    def validate_form_app_settings(self, app_settings, project=None, user=None):
+        """Example implementation for app setting validation plugin API"""
+        errors = {}
+        for setting_name in app_settings:
+            if (
+                app_settings[setting_name].get('scope')
+                == SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+                and not user
+            ):
+                errors[setting_name] = 'No user provided for user scope setting'
+            elif (
+                app_settings[setting_name].get('scope')
+                == SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+                and not project
+            ):
+                errors[
+                    setting_name
+                ] = 'No project provided for project scope setting'
+        if errors == {}:
+            return None
+        return errors
