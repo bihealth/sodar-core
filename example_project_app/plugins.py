@@ -47,13 +47,13 @@ def get_example_setting_options(project=None, user=None):
     """
     response = ['No project or user for callable']
     if project and user:
-        response.append(
-            'Project UUID {} by {}'.format(project.sodar_uuid, user.username),
-        )
+        response = [
+            'Project UUID {} by {}'.format(project.sodar_uuid, user.username)
+        ]
     elif project:
-        response.append('Project UUID: {}'.format(project.sodar_uuid))
+        response = ['Project UUID: {}'.format(project.sodar_uuid)]
     elif user:
-        response.append('User UUID: {}'.format(user.sodar_uuid))
+        response = ['User UUID: {}'.format(user.sodar_uuid)]
     return response
 
 
