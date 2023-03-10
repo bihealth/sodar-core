@@ -1,7 +1,5 @@
 """Template tags for internal use within the projectroles app"""
 
-from math import ceil
-
 from django import template
 from django.conf import settings
 from django.urls import reverse
@@ -271,36 +269,6 @@ def get_remote_access_legend(level):
 def get_sidebar_app_legend(title):
     """Return sidebar link legend HTML"""
     return '<br />'.join(title.split(' '))
-
-
-@register.simple_tag
-def get_sidebar_icon_size():
-    """Return sidebar icon size with a min/max limit"""
-    return sorted(
-        [
-            SIDEBAR_ICON_MIN_SIZE,
-            getattr(settings, 'PROJECTROLES_SIDEBAR_ICON_SIZE', 32),
-            SIDEBAR_ICON_MAX_SIZE,
-        ]
-    )[1]
-
-
-@register.simple_tag
-def get_sidebar_notch_pos():
-    """Return sidebar notch position"""
-    return ceil(get_sidebar_icon_size() / 3)
-
-
-@register.simple_tag
-def get_sidebar_notch_size():
-    """Return sidebar notch size"""
-    return min(ceil(get_sidebar_icon_size() / 2), 12)
-
-
-@register.simple_tag
-def get_sidebar_padding():
-    """Return sidebar padding"""
-    return ceil(get_sidebar_icon_size() / 4.5)
 
 
 @register.simple_tag

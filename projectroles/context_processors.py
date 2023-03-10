@@ -1,7 +1,15 @@
 """Context processors for the projectroles app"""
 
+from math import ceil
+
+from django.conf import settings
+
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.urls import urlpatterns
+
+
+SIDEBAR_ICON_MIN_SIZE = 18
+SIDEBAR_ICON_MAX_SIZE = 42
 
 
 def urls_processor(request):
@@ -48,3 +56,38 @@ def app_alerts_processor(request):
                 .count()
             }
     return {'app_alerts': 0}
+
+
+def sidebar_processor(request):
+    """
+    Context processor for providing sidebar information.
+    """
+
+    def get_sidebar_icon_size():
+        """Return sidebar icon size with a min/max limit"""
+        return sorted(
+            [
+                SIDEBAR_ICON_MIN_SIZE,
+                getattr(settings, 'PROJECTROLES_SIDEBAR_ICON_SIZE', 32),
+                SIDEBAR_ICON_MAX_SIZE,
+            ]
+        )[1]
+
+    def get_sidebar_notch_pos():
+        """Return sidebar notch position"""
+        return ceil(get_sidebar_icon_size() / 3)
+
+    def get_sidebar_notch_size():
+        """Return sidebar notch size"""
+        return min(ceil(get_sidebar_icon_size() / 2), 12)
+
+    def get_sidebar_padding():
+        """Return sidebar padding"""
+        return ceil(get_sidebar_icon_size() / 4.5)
+
+    return {
+        'get_sidebar_icon_size': get_sidebar_icon_size(),
+        'get_sidebar_notch_pos': get_sidebar_notch_pos(),
+        'get_sidebar_notch_size': get_sidebar_notch_size(),
+        'get_sidebar_padding': get_sidebar_padding(),
+    }
