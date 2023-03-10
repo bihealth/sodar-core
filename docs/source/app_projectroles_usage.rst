@@ -41,12 +41,12 @@ User Interface
 Basics
 ------
 
-Upon logging into a SODAR Core based Django site using default templates and CSS,
+Upon loggin into a SODAR Core based Django site using default templates and CSS,
 the general view of your site is split into the following elements:
 
 - **Top navigation bar**: Contains the site logo and title, search element, link
   to advanced search, help link and the user dropdown menu.
-- **User dropdown menu**: Contains links to user management, admin site and
+- **User dropown menu**: Contains links to user management, admin site and
   site-wide apps the user has access to.
 - **Project sidebar**: Shortcuts to project apps and project management pages
 - **Project navigation**: Project structure breadcrumb (disabled for site apps)
@@ -190,7 +190,7 @@ be either be set with the scope of *project*, *user* or *user within a project*.
 Widgets for project specific settings will show up in the project creation and
 updating form and can only be modified by users with sufficient project access.
 User specific settings will be displayed in the
-:ref:`Userprofile app <app_userprofile>`.
+:ref:`Userpforile app <app_userprofile>`.
 
 By defining the attribute ``user_modifiable=False``, project or user app
 settings will not be shown in the respective project/user update views. This is
@@ -211,7 +211,7 @@ specific UIs for this functionality if manual user selection is needed.
 The projectroles app provides the following built-in app settings with the
 project scope:
 
-- ``ip_restrict``: Restrict project access by an allowed IP list if enabled.
+- ``ip_restrict``: Restict project access by an allowed IP list if enabled.
 - ``ip_allowlist``: List of allowed IP addresses for project access.
 
 To clean up settings which have been stored in the database but have since
@@ -371,7 +371,7 @@ three are currently implemented:
   user roles in order to synchronize project access remotely.
 - **Revoked access**: Previously available access which has been revoked. The
   project will still remain in the target site, but only superusers, the project
-  owner or the project delegate(s) can access it.
+  owner or the project delegate(s) can acesss it.
 
 .. note::
 
@@ -406,7 +406,7 @@ using the provided secret string as the access token.
 
 After creating the source site, remote project metadata and member roles (for
 which access has been granted) can be accessed using the *Synchronize* link.
-Additionally if the remote Source site is synchronized with multiple Target Sites,
+Additionaly if the remote Source site is synchronized with multiple Target Sites,
 information about those other Target sites will be synchronized as well an displayed
 as *Peer Sites*.
 

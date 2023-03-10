@@ -11,7 +11,7 @@ messages to all users with an expiration date.
 Basics
 ======
 
-The app displays un-dismissible small alerts on the top of page content to all
+The app displays un-dismissable small alerts on the top of page content to all
 users. They can be used to e.g. warn users of upcoming downtime or highlight
 recently deployed changes.
 
@@ -83,7 +83,7 @@ output:
 
 .. code-block:: console
 
-    Registering Plugin for adminalerts.plugins.SiteAppPlugin
+    Registering Plugin for admimnalert.plugins.SiteAppPlugin
 
 
 Usage

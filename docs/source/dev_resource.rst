@@ -180,7 +180,7 @@ Tour Help
 SODAR Core uses `Shepherd <https://shipshapecode.github.io/shepherd/docs/welcome/>`_
 to present an optional interactive tour for a rendered page. To enable the tour
 in your template, set it up inside the ``javascript`` template block. Within an
-inline javascript structure, set the ``tourEnabled`` variable to ``true`` and add
+inline javascript strucure, set the ``tourEnabled`` variable to ``true`` and add
 steps according to the `Shepherd documentation <https://shipshapecode.github.io/shepherd>`_.
 
 Example:
@@ -298,7 +298,7 @@ to access the actual Python logger being used, you can access it via
 
 .. note::
 
-    The use of this logger class assumes your site sets up logging similarly to
+    The use of this logger class assumes your site sets up logging simlarly to
     the example site and the SODAR Django Site template, including the use of a
     ``LOGGING_LEVEL`` Django settings variable.
 
@@ -321,7 +321,7 @@ Test Settings
 
 SODAR Core provides settings for configuring your UI tests, if using the base
 UI test classes found in ``projectroles.tests.test_ui``. Default values for
-these settings can be found in ``config/settings/test.py``. The settings are as
+these settings can be found in ``config/settings/test.py``. The settins are as
 follows:
 
 - ``PROJECTROLES_TEST_UI_CHROME_OPTIONS``: Options for Chrome through Selenium.

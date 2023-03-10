@@ -168,7 +168,7 @@ Other features in the projectroles app:
 Templates and Styles
 ====================
 
-Projectroles provides views and templates for all GUI-related functionalities
+Projectoles provides views and templates for all GUI-related functionalities
 described above. The templates utilize the plugin framework to provide content
 under projects dynamically. The project also provides default CSS stylings, base
 templates and a base layout which can be used or adapted as needed. See the

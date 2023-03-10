@@ -61,7 +61,7 @@ Overview & Getting Started
 
 SODAR Core Apps
   This part documents each Django app that ships with SODAR. As
-  a reminder, in Django development, *apps* are re-usable modules with code
+  a reminder, in Django development, *apps* are re-useable modules with code
   for supporting a certain use case.
 
 Project Info

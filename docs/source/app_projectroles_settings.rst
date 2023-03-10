@@ -253,7 +253,7 @@ The following projectroles settings are **optional**:
   site and all projects where ``public_guest_access`` is set true (bool)
 * ``PROJECTROLES_SIDEBAR_ICON_SIZE``: Set the icon size for the project sidebar.
   Minimum=18, maximum=42, default=36 (int)
-* ``PROJECTROLES_SEARCH_OMIT_APPS``: List of apps to omit from search results
+* ``ROJECTROLES_SEARCH_OMIT_APPS``: List of apps to omit from search results
   (list)
 
 Example:
@@ -513,7 +513,7 @@ configuration:
         },
         # Custom target redirect URL after the user get logged in.
         # Defaults to /admin if not set. This setting will be overwritten if you
-        # have parameter ?next= specified in the login URL.
+        # have parameter ?next= specificed in the login URL.
         'DEFAULT_NEXT_URL': '/',
         # # Optional settings below
         # 'NEW_USER_PROFILE': {

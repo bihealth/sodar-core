@@ -42,7 +42,7 @@ Glossary
 
     Peer Site
         A SODAR Core based web site which mirrors one or more projects also
-        mirrored on the currently active site. This allows linking to remote
+        mirrored on the currrently active site. This allows linking to remote
         projects on other sites where the user would have access.
 
     Project App

@@ -5,7 +5,7 @@ Projectroles REST API Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This document contains the HTTP REST API documentation for the ``projectroles``
-app. The provided API endpoints allow project and role operations through
+app. The provided API enpoints allow project and role operations through
 HTTP API calls in addition to the GUI.
 
 

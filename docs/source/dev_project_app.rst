@@ -258,7 +258,7 @@ Implementing the following is **optional**:
 
 Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create
-the project app plugin in the Django database with the following command:
+the project app plugin in the Django databse with the following command:
 
 .. code-block:: console
 
@@ -412,7 +412,7 @@ templates, you can replace the ``projectroles_extend`` block with a
 .. warning::
 
     When customizing your templates, make sure you are not accidentally nesting
-    built-in blocks within each other by e.g. placing the ``css`` block *inside*
+    built-in blocks within eachother by e.g. placing the ``css`` block *inside*
     the ``projectroles`` or ``projectroles_extend`` block. Doing so may cause
     the page to render incorrectly or includes to fail.
 
@@ -614,7 +614,7 @@ See the signature of ``search()`` in
 .. note::
 
    Within this function, you are expected to verify appropriate access of the
-   searching user yourself!
+   seaching user yourself!
 
 .. warning::
 
