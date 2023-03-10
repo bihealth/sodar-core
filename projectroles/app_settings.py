@@ -184,13 +184,16 @@ class AppSettingAPI:
                         setting_options
                     )
                 )
-            else:
-                if setting_value not in setting_options:
-                    raise ValueError(
-                        'Choice "{}" not found in options ({})'.format(
-                            setting_value, ', '.join(map(str, setting_options))
-                        )
-                    )
+        elif (
+            setting_options
+            and not callable(setting_options)
+            and setting_value not in setting_options
+        ):
+            raise ValueError(
+                'Choice "{}" not found in options ({})'.format(
+                    setting_value, ', '.join(map(str, setting_options))
+                )
+            )
 
     @classmethod
     def _get_app_plugin(cls, app_name):
@@ -291,7 +294,7 @@ class AppSettingAPI:
         if setting_name in app_settings:
             if callable(app_settings[setting_name].get('default')):
                 try:
-                    callable_setting = app_settings[setting_name].get('default')
+                    callable_setting = app_settings[setting_name]['default']
                     return callable_setting(project, user)
                 except Exception:
                     logger.error(

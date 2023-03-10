@@ -345,7 +345,7 @@ class ProjectForm(SODARModelForm):
             self.initial[s_field] = json.dumps(json_data)
         else:
             if s_val.get('options'):
-                if callable(s_val.get('default')):
+                if callable(s_val['options']):
                     if self.instance.pk:
                         self.initial[s_field] = s_val.get('default')(
                             project=self.instance
@@ -353,7 +353,7 @@ class ProjectForm(SODARModelForm):
                         self.fields[s_field] = forms.ChoiceField(
                             choices=[
                                 (str(option), str(option))
-                                for option in s_val.get('options')(
+                                for option in s_val['options'](
                                     project=self.instance
                                 )
                             ],
@@ -366,7 +366,7 @@ class ProjectForm(SODARModelForm):
                         self.fields[s_field] = forms.ChoiceField(
                             choices=[
                                 (str(option), str(option))
-                                for option in s_val.get('options')(project=None)
+                                for option in s_val['options'](project=None)
                             ],
                             **setting_kwargs
                         )
@@ -376,7 +376,7 @@ class ProjectForm(SODARModelForm):
                             (int(option), int(option))
                             if s_val['type'] == 'INTEGER'
                             else (option, option)
-                            for option in s_val.get('options')
+                            for option in s_val['options']
                         ],
                         **setting_kwargs
                     )

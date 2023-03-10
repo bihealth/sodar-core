@@ -807,7 +807,7 @@ class TestProjectUpdateView(
         ps['settings.example_project_app.project_json_setting'] = '{}'
         ps[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Project UUID'
+        ] = 'Project UUID: {}'.format(self.project.sodar_uuid)
         ps['settings.projectroles.ip_restrict'] = True
         ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         values.update(ps)
@@ -912,7 +912,7 @@ class TestProjectUpdateView(
         )
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Project UUID'
+        ] = 'No project or user for callable'
 
         with self.login(self.user):
             response = self.client.post(
@@ -986,7 +986,7 @@ class TestProjectUpdateView(
         )
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Project UUID'
+        ] = 'No project or user for callable'
 
         with self.login(self.user):
             response = self.client.post(
@@ -1030,7 +1030,7 @@ class TestProjectUpdateView(
         # Add settings values
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Project UUID'
+        ] = 'Project UUID: {}'.format(self.project.sodar_uuid)
 
         with self.login(self.user):
             response = self.client.post(
@@ -1110,7 +1110,7 @@ class TestProjectUpdateView(
         values['settings.example_project_app.project_bool_setting'] = True
         values[
             'settings.example_project_app.project_callable_setting_options'
-        ] = 'Project UUID'
+        ] = 'Project UUID: {}'.format(self.project.sodar_uuid)
         values['settings.projectroles.ip_restrict'] = True
         values['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1530,7 +1530,9 @@ class TestProjectSettingsForm(
             'settings.example_project_app.project_int_setting_options': 1,
             'settings.example_project_app.project_bool_setting': True,
             'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
-            'settings.example_project_app.project_callable_setting_options': 'Project UUID',
+            'settings.example_project_app.project_callable_setting_options': 'Project UUID: {}'.format(
+                self.project.sodar_uuid
+            ),
             'settings.projectroles.ip_restrict': True,
             'settings.projectroles.ip_allowlist': '["192.168.1.1"]',
             'owner': self.user.sodar_uuid,
@@ -1823,7 +1825,9 @@ class TestProjectSettingsFormTarget(
             'settings.example_project_app.project_int_setting_options': 1,
             'settings.example_project_app.project_bool_setting': True,
             'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
-            'settings.example_project_app.project_callable_setting_options': 'Project UUID',
+            'settings.example_project_app.project_callable_setting_options': 'Project UUID: {}'.format(
+                self.project.sodar_uuid
+            ),
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -2112,7 +2116,9 @@ class TestProjectSettingsFormTargetLocal(
             'settings.example_project_app.project_bool_setting': True,
             'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
             'settings.projectroles.test_setting_local': True,
-            'settings.example_project_app.project_callable_setting_options': 'Project UUID',
+            'settings.example_project_app.project_callable_setting_options': 'Project UUID: {}'.format(
+                self.project.sodar_uuid
+            ),
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
