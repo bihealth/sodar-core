@@ -111,9 +111,9 @@ Usage
 =====
 
 When logged in as an authenticated user, you can find the "App Alerts" option in
-your user dropdown menu. This displays a list of active alerts you have in the
-system. You have the possibility to dismiss alerts or follow a related link. The
-latter action will also dismiss the alert.
+your user dropdown menu. This displays a list of active alerts that you currently
+have in the system. Under the dropdown menu labeled 'Alert Operations', you have
+the option to dismiss all active alerts or view previously dismissed alerts.
 
 When you are anywhere on the site, a notification about existing events will
 appear on the top bar of the site.

@@ -1271,3 +1271,44 @@ class TestRemoteProject(
         self.remote_project.project = None
         self.remote_project.save()
         self.assertEqual(self.remote_project.get_project(), self.project)
+
+
+class TestSODARUser(TestCase):
+    """Tests for the SODARUser class"""
+
+    def setUp(self):
+        self.user = self.make_user()
+
+    def test__str__(self):
+        """Test __str__()"""
+        self.assertEqual(
+            self.user.__str__(), 'testuser'
+        )  # This is the default username for self.make_user()
+
+    def test_get_form_label(self):
+        """Test get_form_label()"""
+        self.assertEqual(self.user.get_form_label(), 'testuser')
+
+    def test_get_form_label_email(self):
+        """Test get_form_label() with email"""
+        self.assertEqual(
+            self.user.get_form_label(email=True),
+            'testuser <testuser@example.com>',
+        )
+
+    def test_get_form_label_name(self):
+        """Test get_form_label() with name"""
+        self.user.name = 'Full Name'
+        self.assertEqual(
+            self.user.get_form_label(),
+            'Full Name (testuser)',
+        )
+
+    def test_get_form_label_first_last(self):
+        """Test get_form_label() with first and last name"""
+        self.user.first_name = 'Full'
+        self.user.last_name = 'Name'
+        self.assertEqual(
+            self.user.get_form_label(email=True),
+            'Full Name (testuser) <testuser@example.com>',
+        )

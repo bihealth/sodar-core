@@ -19,6 +19,10 @@ from appalerts.models import AppAlert
 
 # Timeline dependency
 from timeline.models import ProjectEvent
+from timeline.tests.test_models import (
+    ProjectEventMixin,
+    ProjectEventStatusMixin,
+)
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import EMPTY_CHOICE_LABEL
@@ -179,7 +183,13 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.status_code, 200)
 
 
-class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectSearchView(
+    ProjectMixin,
+    RoleAssignmentMixin,
+    TestViewsBase,
+    ProjectEventMixin,
+    ProjectEventStatusMixin,
+):
     """Tests for the project search results view"""
 
     def setUp(self):
@@ -259,10 +269,9 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
 
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'m': 'testproject\r\nxxx', 'k': ''})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'testproject\r\nxxx', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -285,10 +294,9 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
 
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'m': 'testproject\r\nxx', 'k': ''})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'testproject\r\nxx', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['testproject'])
@@ -307,10 +315,9 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
 
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'m': 'testproject\r\n\r\nxxx', 'k': ''})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'testproject\r\nxxx', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -321,10 +328,9 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     def test_render_advanced_dupe(self):
         """Test input from advanced search with a duplicate term"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'m': 'xxx\r\nxxx', 'k': ''})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'xxx\r\nxxx', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['xxx'])
@@ -337,6 +343,39 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
             )
             self.assertRedirects(response, reverse('home'))
+
+    def test_search_omit_app(self):
+        """Test omitting an app from the advanced search"""
+        self.event = self.make_event(
+            project=self.project,
+            app='projectroles',
+            user=self.user,
+            event_name='test_event',
+            description='description',
+            classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
+        self.make_event_status(
+            event=self.event,
+            status_type='SUBMIT',
+            description='SUBMIT',
+            extra_data={'test_key': 'test_val'},
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['app_results']), 2)
+        with override_settings(PROJECTROLES_SEARCH_OMIT_APPS=['timeline']):
+            with self.login(self.user):
+                response = self.client.get(
+                    reverse('projectroles:search')
+                    + '?'
+                    + urlencode({'s': 'test'})
+                )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['app_results']), 1)
 
 
 class TestProjectAdvancedSearchView(
@@ -3194,6 +3233,107 @@ class TestProjectInviteCreateView(
                 )
             )
         self.assertEqual(response.status_code, 404)
+
+    @override_settings(
+        PROJECTROLES_ALLOW_LOCAL_USERS=False,
+        ENABLE_SAML=False,
+    )
+    def test_local_users_not_allowed(self):
+        """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS=False"""
+        values = {
+            'email': INVITE_EMAIL,
+            'project': self.project.pk,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ProjectInvite.objects.all().count(), 0)
+
+    @override_settings(
+        PROJECTROLES_ALLOW_LOCAL_USERS=True,
+        ENABLE_SAML=False,
+    )
+    def test_local_users_allowed(self):
+        """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = True"""
+        values = {
+            'email': INVITE_EMAIL,
+            'project': self.project.pk,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 302)
+        invite = ProjectInvite.objects.get(
+            project=self.project, email=INVITE_EMAIL, active=True
+        )
+        self.assertIsNotNone(invite)
+
+    @override_settings(
+        PROJECTROLES_ALLOW_LOCAL_USERS=False,
+        ENABLE_SAML=False,
+        ENABLE_LDAP=True,
+        AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE',
+    )
+    def test_local_users_email_domain(self):
+        """Test ProjectInvite creation for local users with email domain in AUTH_LDAP_USERNAME_DOMAIN"""
+        values = {
+            'email': INVITE_EMAIL,
+            'project': self.project.pk,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 302)
+        invite = ProjectInvite.objects.get(
+            project=self.project, email=INVITE_EMAIL, active=True
+        )
+        self.assertIsNotNone(invite)
+
+    @override_settings(
+        PROJECTROLES_ALLOW_LOCAL_USERS=False,
+        ENABLE_SAML=False,
+        ENABLE_LDAP=True,
+        LDAP_ALT_DOMAINS=['example.com'],
+    )
+    def test_local_users_email_domain_ldap(self):
+        """Test ProjectInvite creation for local users with email domain in LDAP_ALT_DOMAINS"""
+        values = {
+            'email': INVITE_EMAIL,
+            'project': self.project.pk,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 302)
+        invite = ProjectInvite.objects.get(
+            project=self.project, email=INVITE_EMAIL, active=True
+        )
+        self.assertIsNotNone(invite)
 
     def test_create_invite(self):
         """Test ProjectInvite creation"""

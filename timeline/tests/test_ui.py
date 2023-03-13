@@ -2,6 +2,7 @@
 import json
 
 from django.urls import reverse
+from django.test import override_settings
 from urllib.parse import urlencode
 
 from selenium.webdriver.common.by import By
@@ -410,7 +411,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         btn.click()
 
 
-class TestSearch(ProjectEventMixin, TestUIBase):
+class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
     """Tests for the project search UI functionalities"""
 
     def setUp(self):
@@ -428,6 +429,13 @@ class TestSearch(ProjectEventMixin, TestUIBase):
             status_type='OK',
         )
 
+        self.make_event_status(
+            event=self.event,
+            status_type='SUBMIT',
+            description='SUBMIT',
+            extra_data={'test_key': 'test_val'},
+        )
+
         # Init default site event
         self.site_event = self.timeline.add_event(
             project=None,
@@ -437,6 +445,13 @@ class TestSearch(ProjectEventMixin, TestUIBase):
             description='description',
             extra_data={'test_key': 'test_val'},
             status_type='OK',
+        )
+
+        self.make_event_status(
+            event=self.site_event,
+            status_type='SUBMIT',
+            description='SUBMIT',
+            extra_data={'test_key': 'test_val'},
         )
 
         # Init classified event
@@ -450,6 +465,13 @@ class TestSearch(ProjectEventMixin, TestUIBase):
             classified=True,
         )
 
+        self.make_event_status(
+            event=self.classified_event,
+            status_type='SUBMIT',
+            description='SUBMIT',
+            extra_data={'test_key': 'test_val'},
+        )
+
         self.classified_site_event = self.timeline.add_event(
             project=None,
             app_name='projectroles',
@@ -458,6 +480,13 @@ class TestSearch(ProjectEventMixin, TestUIBase):
             description='description',
             extra_data={'test_key': 'test_val'},
             classified=True,
+        )
+
+        self.make_event_status(
+            event=self.classified_site_event,
+            status_type='SUBMIT',
+            description='SUBMIT',
+            extra_data={'test_key': 'test_val'},
         )
 
     def test_search_results(self):
@@ -480,4 +509,19 @@ class TestSearch(ProjectEventMixin, TestUIBase):
             elements = self.selenium.find_elements(
                 By.CLASS_NAME, 'sodar-pr-project-list-item'
             )
-            self.assertEqual(len(elements), count)
+            elem_set = set()
+            for elem in elements:
+                elem_set.add(elem.get_attribute('id'))
+            self.assertEqual(len(elem_set), count)
+
+    @override_settings(TIMELINE_SEARCH_LIMIT=2)
+    def test_search_limit(self):
+        """Test search limit"""
+        url = reverse('projectroles:search') + '?' + urlencode({'s': 'event'})
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        elements = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(elements), 2)

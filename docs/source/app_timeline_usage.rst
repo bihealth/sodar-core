@@ -191,7 +191,7 @@ Extra Data
 Extra data can be added in the JSON format for both events and their status
 states with the ``extra_data`` and ``status_extra_data`` parameters.
 
-Speciying a label ``{extra-NAME}`` in the event description will lead to a
+Specifying a label ``{extra-NAME}`` in the event description will lead to a
 callback to ``get_extra_data_link()`` in the app plugin. To support this you
 need to make sure to implement the ``get_extra_data_link()`` function in your
 plugin.

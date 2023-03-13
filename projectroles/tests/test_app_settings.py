@@ -932,3 +932,24 @@ class TestAppSettingAPI(
                 project=self.project,
                 user=self.user,
             )
+
+    def test_validate_form_app_settings(self):
+        """Test validate_form_app_settings() method on valid app_setting"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        valid_setting = {'valid_setting': True}
+        errors = app_plugin.validate_form_app_settings(
+            valid_setting, project=self.project, user=self.user
+        )
+        self.assertEqual(errors, None)
+
+    def test_validate_form_app_settings_user_scope_error(self):
+        """Test validate_form_app_settings() method on invalid app_setting"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        settings = {'project_hidden_setting': 'Example project hidden setting'}
+        errors = app_plugin.validate_form_app_settings(
+            settings, project=self.project
+        )
+        self.assertIsNotNone(errors)
+        self.assertIn(
+            'Invalid value for a custom validation method', errors.values()
+        )

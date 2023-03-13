@@ -55,13 +55,19 @@ class ProjectEventManager(models.Manager):
         :param keywords: Optional search keywords as key/value pairs (dict)
         :return: QuerySet of ProjectEvent objects
         """
-        objects = super().get_queryset().order_by('event_name')
+        search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(event_name__icontains=t), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
             term_query.add(Q(event_objects__name__icontains=t), Q.OR)
-        return objects.filter(term_query)
+        items = (
+            super()
+            .get_queryset()
+            .filter(term_query)
+            .order_by('-status_changes__timestamp')
+        )
+        return items[:search_limit]
 
 
 class ProjectEvent(models.Model):

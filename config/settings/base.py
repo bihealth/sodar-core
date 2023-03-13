@@ -608,6 +608,9 @@ PROJECTROLES_EMAIL_HEADER = env.str('PROJECTROLES_EMAIL_HEADER', None)
 PROJECTROLES_EMAIL_FOOTER = env.str('PROJECTROLES_EMAIL_FOOTER', None)
 
 PROJECTROLES_ENABLE_SEARCH = env.bool('PROJECTROLES_ENABLE_SEARCH', True)
+PROJECTROLES_SEARCH_OMIT_APPS = env.list(
+    'PROJECTROLES_SEARCH_OMIT_APPS', None, []
+)
 
 # Optional projectroles settings
 # Sidebar icon size. Minimum=18, maximum=42.
@@ -656,6 +659,7 @@ BGJOBS_PAGINATION = env.int('BGJOBS_PAGINATION', 15)
 
 # Timeline app settings
 TIMELINE_PAGINATION = env.int('TIMELINE_PAGINATION', 15)
+TIMELINE_SEARCH_LIMIT = env.int('TIMELINE_SEARCH_LIMIT', 250)
 
 
 # Filesfolders app settings

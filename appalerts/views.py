@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import ListView, View
+from django.conf import settings
 
 # Projectroles dependency
 from projectroles.views import (
@@ -21,9 +22,30 @@ class AppAlertListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
     template_name = 'appalerts/alert_list.html'
 
     def get_queryset(self):
+        status = self.kwargs.get('status', 'active')
+        if status == 'dismissed':
+            return AppAlert.objects.filter(
+                user=self.request.user, active=False
+            ).order_by('-pk')
         return AppAlert.objects.filter(
             user=self.request.user, active=True
         ).order_by('-pk')
+
+    def get_paginate_by(self, queryset):
+        status = self.kwargs.get('status', 'active')
+        if status == 'dismissed':
+            return getattr(settings, 'DEFAULT_PAGINATION', 15)
+        else:
+            return None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        status = self.kwargs.get('status', 'active')
+        if status == 'dismissed':
+            context['dismissed'] = True
+        else:
+            context['dismissed'] = False
+        return context
 
 
 class AppAlertLinkRedirectView(
