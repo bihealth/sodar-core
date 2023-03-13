@@ -785,21 +785,17 @@ class AppSetting(models.Model):
 
     def save(self, *args, **kwargs):
         """Version of save() to convert 'value' data according to 'type'"""
-        self._validate_category()
+        self._validate_project_type()
         if self.type == 'BOOLEAN':
             self.value = str(int(self.value))
         elif self.type == 'INTEGER':
             self.value = str(self.value)
         super().save(*args, **kwargs)
 
-    @classmethod
-    def _validate_category(self):
-        """Validate the category of the setting"""
-        pass
-        # if self.project and self.project.type == PROJECT_TYPE_CATEGORY:
-        #     raise ValidationError(
-        #         'Categories do not support settings'
-        #     )
+    def _validate_project_type(self):
+        """Validate that project is not a category"""
+        if self.project and self.project.type == 'CATEGORY':
+            raise ValidationError('AppSetting cannot be set for a category.')
 
     # Custom row-level functions
 

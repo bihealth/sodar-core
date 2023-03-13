@@ -18,6 +18,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 # Local constants
 APP_SETTING_LOCAL_DEFAULT = True
@@ -426,6 +427,15 @@ class AppSettingAPI:
             if not app_name == 'projectroles':
                 q_kwargs['app_plugin__name'] = app_name
             setting = AppSetting.objects.get(**q_kwargs)
+
+            # Check if setting is set to a category
+            if (
+                setting
+                and setting.project
+                and setting.project.type == PROJECT_TYPE_CATEGORY
+            ):
+                return False
+
             if cls._compare_value(setting, value):
                 return False
 
@@ -473,6 +483,10 @@ class AppSettingAPI:
                     name=setting_name, app_name=app_name
                 )
                 cls.validate(s_type, v, setting_def.get('options'))
+
+            # Check if setting is set to a category
+            if project and project.type == PROJECT_TYPE_CATEGORY:
+                return False
 
             s_vals = {
                 'app_plugin': app_plugin_model,
