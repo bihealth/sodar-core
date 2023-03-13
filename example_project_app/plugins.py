@@ -22,6 +22,7 @@ EXAMPLE_MODIFY_API_MSG = (
 def get_example_setting_default(project=None, user=None):
     """
     Example callable function for different scopes.
+
     :param project: Project object
     :param user: User object
     :return: String with project and user info or 'No project'
@@ -39,6 +40,7 @@ def get_example_setting_default(project=None, user=None):
 def get_example_setting_options(project=None, user=None):
     """
     Example callable function for options forming.
+
     :param project: Project object
     :param user: User object
     :return: List of tuples for ChoiceField

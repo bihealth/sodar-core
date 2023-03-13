@@ -636,6 +636,7 @@ class ProjectForm(SODARModelForm):
                     setting_type=s_val['type'],
                     setting_value=cleaned_data.get(s_field),
                     setting_options=s_val.get('options'),
+                    project=instance,
                 ):
                     errors.append((s_field, 'Invalid value'))
 
