@@ -27,13 +27,13 @@ def get_example_setting_default(project=None, user=None):
     :param user: User object
     :return: String with project and user info or 'No project'
     """
-    response = 'No project or user for callable'
+    response = 'N/A'
     if project and user:
         response = '{}:{}'.format(project.title, user.username)
     elif project:
-        response = project.title
+        response = 'N/A'
     elif user:
-        response = user.username
+        response = 'N/A'
     return response
 
 
@@ -288,7 +288,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
             'type': 'STRING',
             'label': 'Callable setting with options',
-            'default': get_example_setting_options,
+            'default': get_example_setting_default,
             'options': get_example_setting_options,
             'description': 'Example callable project setting with options',
             'user_modifiable': True,
@@ -297,7 +297,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
             'type': 'STRING',
             'label': 'Callable setting with options',
-            'default': get_example_setting_options,
+            'default': get_example_setting_default,
             'options': get_example_setting_options,
             'description': 'Example callable user setting with options',
             'user_modifiable': True,
@@ -305,7 +305,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
         'project_user_callable_setting_options': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'STRING',
-            'default': get_example_setting_options,
+            'default': get_example_setting_default,
             'options': get_example_setting_options,
             'description': 'Example callable project user setting with options',
         },

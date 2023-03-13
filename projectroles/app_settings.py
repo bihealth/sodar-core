@@ -291,11 +291,7 @@ class AppSettingAPI:
             if callable(app_settings[setting_name].get('default')):
                 try:
                     callable_setting = app_settings[setting_name]['default']
-                    if app_settings[setting_name].get('options'):
-                        setting_value = callable_setting(project, user)[0][0]
-                    else:
-                        setting_value = callable_setting(project, user)
-                    return setting_value
+                    return callable_setting(project, user)
                 except Exception:
                     logger.error(
                         'Error in callable setting "{}" for app "{}"'.format(
