@@ -19,6 +19,57 @@ EXAMPLE_MODIFY_API_MSG = (
 )
 
 
+def get_example_setting_default(project=None, user=None):
+    """
+    Example callable function for different scopes.
+    :param project: Project object
+    :param user: User object
+    :return: String with project and user info or 'No project'
+    """
+    response = 'N/A'
+    if project and user:
+        response = '{}:{}'.format(project.title, user.username)
+    elif project:
+        response = str(project.sodar_uuid)
+    elif user:
+        response = str(user.sodar_uuid)
+    return response
+
+
+def get_example_setting_options(project=None, user=None):
+    """
+    Example callable function for options forming.
+    :param project: Project object
+    :param user: User object
+    :return: List of tuples for ChoiceField
+    """
+    response = [
+        ('N/A', 'No project or user for callable'),
+        'Example string option',
+    ]
+    if project and user:
+        response.append(
+            (
+                str(project.sodar_uuid),
+                'Project UUID {} by {}'.format(
+                    project.sodar_uuid, user.username
+                ),
+            )
+        )
+    elif project:
+        response.append(
+            (
+                str(project.sodar_uuid),
+                'Project UUID: {}'.format(project.sodar_uuid),
+            )
+        )
+    elif user:
+        response.append(
+            (str(user.sodar_uuid), 'User UUID: {}'.format(user.sodar_uuid))
+        )
+    return response
+
+
 class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
@@ -210,6 +261,51 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'type': 'JSON',
             'default': '',
             'description': 'Example json project user setting',
+        },
+        'project_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'STRING',
+            'label': 'Callable project setting',
+            'default': get_example_setting_default,
+            'description': 'Example callable project setting',
+        },
+        'user_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'STRING',
+            'label': 'Callable user setting',
+            'default': get_example_setting_default,
+            'description': 'Example callable user setting',
+        },
+        'project_user_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'STRING',
+            'default': get_example_setting_default,
+            'description': 'Example callable project user setting',
+        },
+        'project_callable_setting_options': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'STRING',
+            'label': 'Callable setting with options',
+            'default': get_example_setting_default,
+            'options': get_example_setting_options,
+            'description': 'Example callable project setting with options',
+            'user_modifiable': True,
+        },
+        'user_callable_setting_options': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'STRING',
+            'label': 'Callable setting with options',
+            'default': get_example_setting_default,
+            'options': get_example_setting_options,
+            'description': 'Example callable user setting with options',
+            'user_modifiable': True,
+        },
+        'project_user_callable_setting_options': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'STRING',
+            'default': get_example_setting_default,
+            'options': get_example_setting_options,
+            'description': 'Example callable project user setting with options',
         },
     }
 

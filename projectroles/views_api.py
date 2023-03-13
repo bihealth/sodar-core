@@ -869,7 +869,9 @@ class AppSettingMixin:
                 app_settings.set(
                     app_name=app_name,
                     setting_name=setting_name,
-                    value=app_settings.get_default(app_name, setting_name),
+                    value=app_settings.get_default(
+                        app_name, setting_name, project=project, user=user
+                    ),
                     project=project,
                     user=user,
                 )

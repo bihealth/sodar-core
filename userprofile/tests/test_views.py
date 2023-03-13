@@ -114,33 +114,33 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.context['form'])
         field = response.context['form'].fields.get(
-            'settings.%s.user_str_setting' % EXAMPLE_APP_NAME
+            'settings.example_project_app.user_str_setting'
         )
         self.assertIsNotNone(field)
         self.assertEqual(field.widget.attrs['placeholder'], 'Example string')
         field = response.context['form'].fields.get(
-            'settings.%s.user_int_setting' % EXAMPLE_APP_NAME
+            'settings.example_project_app.user_int_setting'
         )
         self.assertIsNotNone(field)
         self.assertEqual(field.widget.attrs['placeholder'], 0)
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.user_str_setting_options' % EXAMPLE_APP_NAME
+                'settings.example_project_app.user_str_setting_options'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.user_int_setting_options' % EXAMPLE_APP_NAME
+                'settings.example_project_app.user_int_setting_options'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.user_bool_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.user_bool_setting'
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.user_json_setting' % EXAMPLE_APP_NAME
+                'settings.example_project_app.user_json_setting'
             )
         )
 
@@ -184,14 +184,16 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
         )
 
         values = {
-            'settings.%s.user_str_setting' % EXAMPLE_APP_NAME: 'another-text',
-            'settings.%s.user_int_setting' % EXAMPLE_APP_NAME: '123',
-            'settings.%s.user_str_setting_options'
-            % EXAMPLE_APP_NAME: 'string2',
-            'settings.%s.user_int_setting_options' % EXAMPLE_APP_NAME: 1,
-            'settings.%s.user_bool_setting' % EXAMPLE_APP_NAME: False,
-            'settings.%s.user_json_setting'
-            % EXAMPLE_APP_NAME: '{"Test": "Less"}',
+            'settings.example_project_app.user_str_setting': 'another-text',
+            'settings.example_project_app.user_int_setting': '123',
+            'settings.example_project_app.user_str_setting_options': 'string2',
+            'settings.example_project_app.user_int_setting_options': 1,
+            'settings.example_project_app.user_bool_setting': False,
+            'settings.example_project_app.user_json_setting': '{"Test": "Less"}',
+            'settings.example_project_app.user_callable_setting': 'Test',
+            'settings.example_project_app.user_callable_setting_options': str(
+                self.user.sodar_uuid
+            ),
         }
 
         with self.login(self.user):
@@ -243,4 +245,18 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
                 EXAMPLE_APP_NAME, 'user_json_setting', user=self.user
             ),
             {'Test': 'Less'},
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'user_callable_setting', user=self.user
+            ),
+            'Test',
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'user_callable_setting_options',
+                user=self.user,
+            ),
+            str(self.user.sodar_uuid),
         )

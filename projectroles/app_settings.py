@@ -26,6 +26,12 @@ VALID_SCOPES = [
     APP_SETTING_SCOPE_USER,
     APP_SETTING_SCOPE_PROJECT_USER,
 ]
+APP_SETTING_DEFAULT_VALUES = {
+    'STRING': '',
+    'INTEGER': 0,
+    'BOOLEAN': False,
+    'JSON': {},
+}
 
 # Define App Settings for projectroles app
 PROJECTROLES_APP_SETTINGS = {
@@ -35,7 +41,7 @@ PROJECTROLES_APP_SETTINGS = {
     #:
     #:     'example_setting': {
     #:         'scope': 'PROJECT',  # PROJECT/USER
-    #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+    #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN/JSON
     #:         'default': 'example',
     #:         'label': 'Project setting',  # Optional, defaults to name/key
     #:         'placeholder': 'Enter example setting here',  # Optional
@@ -152,15 +158,35 @@ class AppSettingAPI:
             )
 
     @classmethod
-    def _check_value_in_options(cls, setting_value, setting_options):
+    def _check_value_in_options(
+        cls, setting_value, setting_options, project=None, user=None
+    ):
         """
         Ensure setting_value is present in setting_options.
 
         :param setting_value: String
         :param setting_options: List of options (String or Integers)
+        :param project: Project object
+        :param user: User object
         :raise: ValueError if type is not recognized
         """
-        if setting_options and setting_value not in setting_options:
+        if callable(setting_options):
+            valid_options = [
+                val[0] if isinstance(val, tuple) else val
+                for val in setting_options(project, user)
+            ]
+            if setting_value not in valid_options:
+                raise ValueError(
+                    'Choice "{}" not found in options ({})'.format(
+                        setting_value,
+                        ', '.join(map(str, valid_options)),
+                    )
+                )
+        elif (
+            setting_options
+            and not callable(setting_options)
+            and setting_value not in setting_options
+        ):
             raise ValueError(
                 'Choice "{}" not found in options ({})'.format(
                     setting_value, ', '.join(map(str, setting_options))
@@ -240,12 +266,16 @@ class AppSettingAPI:
         return setting_obj.value == str(input_value)
 
     @classmethod
-    def get_default(cls, app_name, setting_name, post_safe=False):
+    def get_default(
+        cls, app_name, setting_name, project=None, user=None, post_safe=False
+    ):
         """
         Get default setting value from an app plugin.
 
         :param app_name: App name (string, must equal "name" in app plugin)
         :param setting_name: Setting name (string)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: Setting value (string, integer or boolean)
         :raise: ValueError if app plugin is not found
@@ -260,7 +290,20 @@ class AppSettingAPI:
             app_settings = app_plugin.app_settings
 
         if setting_name in app_settings:
-            if app_settings[setting_name]['type'] == 'JSON':
+            if callable(app_settings[setting_name].get('default')):
+                try:
+                    callable_setting = app_settings[setting_name]['default']
+                    return callable_setting(project, user)
+                except Exception:
+                    logger.error(
+                        'Error in callable setting "{}" for app "{}"'.format(
+                            setting_name, app_name
+                        )
+                    )
+                    return APP_SETTING_DEFAULT_VALUES[
+                        app_settings[setting_name]['type']
+                    ]
+            elif app_settings[setting_name]['type'] == 'JSON':
                 json_default = app_settings[setting_name].get('default')
                 if not json_default:
                     if isinstance(json_default, dict):
@@ -283,7 +326,7 @@ class AppSettingAPI:
         cls, app_name, setting_name, project=None, user=None, post_safe=False
     ):
         """
-        Return app setting value for a project or an user. If not set, return
+        Return app setting value for a project or a user. If not set, return
         default.
 
         :param app_name: App name (string, must equal "name" in app plugin)
@@ -300,9 +343,21 @@ class AppSettingAPI:
                     app_name, setting_name, project=project, user=user
                 )
             except AppSetting.DoesNotExist:
-                val = cls.get_default(app_name, setting_name, post_safe)
+                val = cls.get_default(
+                    app_name,
+                    setting_name,
+                    project=project,
+                    user=user,
+                    post_safe=post_safe,
+                )
         else:  # Anonymous user
-            val = cls.get_default(app_name, setting_name, post_safe)
+            val = cls.get_default(
+                app_name,
+                setting_name,
+                project=project,
+                user=user,
+                post_safe=post_safe,
+            )
         # Handle post_safe for dict values (JSON)
         if post_safe and isinstance(val, (dict, list)):
             return json.dumps(val)
@@ -345,11 +400,13 @@ class AppSettingAPI:
         return ret
 
     @classmethod
-    def get_defaults(cls, scope, post_safe=False):
+    def get_defaults(cls, scope, project=None, user=None, post_safe=False):
         """
         Get all default settings for a scope.
 
         :param scope: Setting scope (PROJECT, USER or PROJECT_USER)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param post_safe: Whether POST safe values should be returned (bool)
         :return: Dict
         """
@@ -362,13 +419,25 @@ class AppSettingAPI:
             for s_key in p_settings:
                 ret[
                     'settings.{}.{}'.format(plugin.name, s_key)
-                ] = cls.get_default(plugin.name, s_key, post_safe)
+                ] = cls.get_default(
+                    plugin.name,
+                    s_key,
+                    project=project,
+                    user=user,
+                    post_safe=post_safe,
+                )
 
         p_settings = cls.get_definitions(scope, app_name='projectroles')
         for s_key in p_settings:
             ret[
                 'settings.{}.{}'.format('projectroles', s_key)
-            ] = cls.get_default('projectroles', s_key, post_safe)
+            ] = cls.get_default(
+                'projectroles',
+                s_key,
+                project=project,
+                user=user,
+                post_safe=post_safe,
+            )
         return ret
 
     @classmethod
@@ -433,7 +502,13 @@ class AppSettingAPI:
                 setting_def = cls.get_definition(
                     name=setting_name, app_name=app_name
                 )
-                cls.validate(setting.type, value, setting_def.get('options'))
+                cls.validate(
+                    setting.type,
+                    value,
+                    setting_def.get('options'),
+                    project=project,
+                    user=user,
+                )
 
             if setting.type == 'JSON':
                 setting.value_json = cls._get_json_value(value)
@@ -472,7 +547,13 @@ class AppSettingAPI:
                 setting_def = cls.get_definition(
                     name=setting_name, app_name=app_name
                 )
-                cls.validate(s_type, v, setting_def.get('options'))
+                cls.validate(
+                    s_type,
+                    v,
+                    setting_def.get('options'),
+                    project=project,
+                    user=user,
+                )
 
             s_vals = {
                 'app_plugin': app_plugin_model,
@@ -529,18 +610,33 @@ class AppSettingAPI:
         )
 
     @classmethod
-    def validate(cls, setting_type, setting_value, setting_options):
+    def validate(
+        cls,
+        setting_type,
+        setting_value,
+        setting_options,
+        project=None,
+        user=None,
+    ):
         """
         Validate setting value according to its type.
 
         :param setting_type: Setting type
         :param setting_value: Setting value
         :param setting_options: Setting options (can be None)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :raise: ValueError if setting_type or setting_value is invalid
         """
         cls._check_type(setting_type)
         cls._check_type_options(setting_type, setting_options)
-        cls._check_value_in_options(setting_value, setting_options)
+        cls._check_value_in_options(
+            setting_value, setting_options, project=project, user=user
+        )
+
+        # Check callable
+        if callable(setting_value):
+            setting_value(project, user)
 
         if setting_type == 'BOOLEAN':
             if not isinstance(setting_value, bool):
@@ -578,7 +674,7 @@ class AppSettingAPI:
         :param plugin: Plugin object extending ProjectAppPluginPoint or None
         :param app_name: Name of the app plugin (string or None)
         :return: Dict
-        :raise: ValueError if neither app_name or plugin are set or if setting
+        :raise: ValueError if neither app_name nor plugin are set or if setting
                 is not found in plugin
         """
         defs = cls._get_defs(plugin, app_name)
@@ -610,7 +706,7 @@ class AppSettingAPI:
         :param user_modifiable: Only return modifiable settings if True
                                 (boolean)
         :return: Dict
-        :raise: ValueError if scope is invalid or if if neither app_name or
+        :raise: ValueError if scope is invalid or if neither app_name nor
                 plugin are set
         """
         cls._check_scope(scope)
