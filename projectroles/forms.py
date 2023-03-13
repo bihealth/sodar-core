@@ -347,27 +347,13 @@ class ProjectForm(SODARModelForm):
             if s_val.get('options'):
                 if callable(s_val['options']):
                     if self.instance.pk:
-                        self.initial[s_field] = s_val.get('default')(
-                            project=self.instance
-                        )
                         self.fields[s_field] = forms.ChoiceField(
-                            choices=[
-                                (str(option), str(option))
-                                for option in s_val['options'](
-                                    project=self.instance
-                                )
-                            ],
+                            choices=s_val['options'](project=self.instance),
                             **setting_kwargs
                         )
                     else:
-                        self.initial[s_field] = s_val.get('default')(
-                            project=None
-                        )
                         self.fields[s_field] = forms.ChoiceField(
-                            choices=[
-                                (str(option), str(option))
-                                for option in s_val['options'](project=None)
-                            ],
+                            choices=s_val['options'](project=None),
                             **setting_kwargs
                         )
                 else:
@@ -688,6 +674,7 @@ class ProjectForm(SODARModelForm):
                         setting_type=s_val['type'],
                         setting_value=self.cleaned_data.get(s_field),
                         setting_options=s_val.get('options'),
+                        project=self.instance,
                     ):
                         self.add_error(s_field, 'Invalid value')
 

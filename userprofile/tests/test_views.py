@@ -190,7 +190,10 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             'settings.example_project_app.user_int_setting_options': 1,
             'settings.example_project_app.user_bool_setting': False,
             'settings.example_project_app.user_json_setting': '{"Test": "Less"}',
-            'settings.example_project_app.user_callable_setting_options': '',
+            'settings.example_project_app.user_callable_setting': 'Test',
+            'settings.example_project_app.user_callable_setting_options': str(
+                self.user.sodar_uuid
+            ),
         }
 
         with self.login(self.user):
@@ -242,4 +245,18 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
                 EXAMPLE_APP_NAME, 'user_json_setting', user=self.user
             ),
             {'Test': 'Less'},
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'user_callable_setting', user=self.user
+            ),
+            'Test',
+        )
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'user_callable_setting_options',
+                user=self.user,
+            ),
+            str(self.user.sodar_uuid),
         )

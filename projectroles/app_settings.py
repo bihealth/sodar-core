@@ -169,19 +169,12 @@ class AppSettingAPI:
         :raise: ValueError if type is not recognized
         """
         if callable(setting_options):
-            try:
-                valid_options = setting_options(project, user)
-                if setting_value not in valid_options:
-                    raise ValueError(
-                        'Choice "{}" not found in options ({})'.format(
-                            setting_value,
-                            ', '.join(map(str, valid_options)),
-                        )
-                    )
-            except Exception:
-                logger.error(
-                    'Error calling options function for setting: {}'.format(
-                        setting_options
+            valid_options = [val[0] for val in setting_options(project, user)]
+            if setting_value not in valid_options:
+                raise ValueError(
+                    'Choice "{}" not found in options ({})'.format(
+                        setting_value,
+                        ', '.join(map(str, valid_options)),
                     )
                 )
         elif (
@@ -295,7 +288,11 @@ class AppSettingAPI:
             if callable(app_settings[setting_name].get('default')):
                 try:
                     callable_setting = app_settings[setting_name]['default']
-                    return callable_setting(project, user)
+                    if app_settings[setting_name].get('options'):
+                        setting_value = callable_setting(project, user)[0][0]
+                    else:
+                        setting_value = callable_setting(project, user)
+                    return setting_value
                 except Exception:
                     logger.error(
                         'Error in callable setting "{}" for app "{}"'.format(
@@ -305,7 +302,7 @@ class AppSettingAPI:
                     return APP_SETTING_DEFAULT_VALUES[
                         app_settings[setting_name]['type']
                     ]
-            if app_settings[setting_name]['type'] == 'JSON':
+            elif app_settings[setting_name]['type'] == 'JSON':
                 json_default = app_settings[setting_name].get('default')
                 if not json_default:
                     if isinstance(json_default, dict):
@@ -328,7 +325,7 @@ class AppSettingAPI:
         cls, app_name, setting_name, project=None, user=None, post_safe=False
     ):
         """
-        Return app setting value for a project or an user. If not set, return
+        Return app setting value for a project or a user. If not set, return
         default.
 
         :param app_name: App name (string, must equal "name" in app plugin)
@@ -636,6 +633,7 @@ class AppSettingAPI:
             setting_value, setting_options, project=project, user=user
         )
 
+        # Check callable
         if callable(setting_value):
             setting_value(project, user)
 
@@ -675,7 +673,7 @@ class AppSettingAPI:
         :param plugin: Plugin object extending ProjectAppPluginPoint or None
         :param app_name: Name of the app plugin (string or None)
         :return: Dict
-        :raise: ValueError if neither app_name or plugin are set or if setting
+        :raise: ValueError if neither app_name nor plugin are set or if setting
                 is not found in plugin
         """
         defs = cls._get_defs(plugin, app_name)
@@ -707,7 +705,7 @@ class AppSettingAPI:
         :param user_modifiable: Only return modifiable settings if True
                                 (boolean)
         :return: Dict
-        :raise: ValueError if scope is invalid or if if neither app_name or
+        :raise: ValueError if scope is invalid or if neither app_name nor
                 plugin are set
         """
         cls._check_scope(scope)
