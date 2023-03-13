@@ -31,9 +31,9 @@ def get_example_setting_default(project=None, user=None):
     if project and user:
         response = '{}:{}'.format(project.title, user.username)
     elif project:
-        response = 'N/A'
+        response = str(project.sodar_uuid)
     elif user:
-        response = 'N/A'
+        response = str(user.sodar_uuid)
     return response
 
 
