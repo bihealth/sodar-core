@@ -31,8 +31,6 @@ ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
     SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
 ]
-SIDEBAR_ICON_MIN_SIZE = 18
-SIDEBAR_ICON_MAX_SIZE = 42
 
 
 # SODAR and site operations ----------------------------------------------------
