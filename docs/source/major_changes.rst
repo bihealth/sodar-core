@@ -49,6 +49,17 @@ Release Highlights
 Breaking Changes
 ================
 
+New Context Processors
+------------------
+
+Several templatetags have been moved to context processors. If you have
+customized the following tags, you need to update it's usage:
+
+- ``projectroles_tags.get_sidebar_icon_size()``
+- ``projectroles_tags.get_sidebar_notch_pos()``
+- ``projectroles_tags.get_sidebar_notch_size()``
+- ``projectroles_tags.get_sidebar_padding()``
+
 System Prerequisites
 --------------------
 
