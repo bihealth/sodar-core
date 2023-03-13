@@ -86,8 +86,8 @@ def sidebar_processor(request):
         return ceil(get_sidebar_icon_size() / 4.5)
 
     return {
-        'get_sidebar_icon_size': get_sidebar_icon_size(),
-        'get_sidebar_notch_pos': get_sidebar_notch_pos(),
-        'get_sidebar_notch_size': get_sidebar_notch_size(),
-        'get_sidebar_padding': get_sidebar_padding(),
+        'sidebar_icon_size': get_sidebar_icon_size(),
+        'sidebar_notch_pos': get_sidebar_notch_pos(),
+        'sidebar_notch_size': get_sidebar_notch_size(),
+        'sidebar_padding': get_sidebar_padding(),
     }

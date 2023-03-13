@@ -4,7 +4,6 @@ import mistune
 import uuid
 
 from importlib import import_module
-from math import ceil
 
 from django.conf import settings
 from django.test import override_settings, RequestFactory
@@ -549,57 +548,57 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             tags.get_sidebar_app_legend('Update Project'), 'Update<br />Project'
         )
 
-    def test_get_sidebar_icon_size(self):
-        """Test get_sidebar_icon_size() with default value"""
-        self.assertEqual(tags.get_sidebar_icon_size(), 36)
+    # def test_get_sidebar_icon_size(self):
+    #     """Test get_sidebar_icon_size() with default value"""
+    #     self.assertEqual(tags.get_sidebar_icon_size(), 36)
 
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE - 2
-    )
-    def test_get_sidebar_icon_size_min(self):
-        """Test get_sidebar_icon_size() with a value below minimum"""
-        self.assertEqual(
-            tags.get_sidebar_icon_size(), tags.SIDEBAR_ICON_MIN_SIZE
-        )
+    # @override_settings(
+    #     PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE - 2
+    # )
+    # def test_get_sidebar_icon_size_min(self):
+    #     """Test get_sidebar_icon_size() with a value below minimum"""
+    #     self.assertEqual(
+    #         tags.get_sidebar_icon_size(), tags.SIDEBAR_ICON_MIN_SIZE
+    #     )
 
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE + 2
-    )
-    def test_get_sidebar_icon_size_max(self):
-        """Test get_sidebar_icon_size() with a value over max"""
-        self.assertEqual(
-            tags.get_sidebar_icon_size(), tags.SIDEBAR_ICON_MAX_SIZE
-        )
+    # @override_settings(
+    #     PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE + 2
+    # )
+    # def test_get_sidebar_icon_size_max(self):
+    #     """Test get_sidebar_icon_size() with a value over max"""
+    #     self.assertEqual(
+    #         tags.get_sidebar_icon_size(), tags.SIDEBAR_ICON_MAX_SIZE
+    #     )
 
-    def test_get_sidebar_notch_pos(self):
-        """Test get_sidebar_notch_pos()"""
-        self.assertEqual(tags.get_sidebar_notch_pos(), ceil(36 / 3))
+    # def test_get_sidebar_notch_pos(self):
+    #     """Test get_sidebar_notch_pos()"""
+    #     self.assertEqual(tags.get_sidebar_notch_pos(), ceil(36 / 3))
 
-    def test_get_sidebar_notch_size(self):
-        """Test get_sidebar_notch_size()"""
-        self.assertEqual(tags.get_sidebar_notch_size(), 12)
+    # def test_get_sidebar_notch_size(self):
+    #     """Test get_sidebar_notch_size()"""
+    #     self.assertEqual(tags.get_sidebar_notch_size(), 12)
+    #
+    # @override_settings(
+    #     PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
+    # )
+    # def test_get_sidebar_notch_size_min(self):
+    #     """Test get_sidebar_notch_size() with minimum icon size"""
+    #     self.assertEqual(tags.get_sidebar_notch_size(), 9)
 
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
-    )
-    def test_get_sidebar_notch_size_min(self):
-        """Test get_sidebar_notch_size() with minimum icon size"""
-        self.assertEqual(tags.get_sidebar_notch_size(), 9)
+    # def test_get_sidebar_padding(self):
+    #     """Test get_sidebar_padding()"""
+    #     self.assertEqual(tags.get_sidebar_padding(), 8)
 
-    def test_get_sidebar_padding(self):
-        """Test get_sidebar_padding()"""
-        self.assertEqual(tags.get_sidebar_padding(), 8)
+    # @override_settings(
+    #     PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE
+    # )
+    # def test_get_sidebar_padding_max(self):
+    #     """Test get_sidebar_padding() with maximum icon size"""
+    #     self.assertEqual(tags.get_sidebar_padding(), 10)
 
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE
-    )
-    def test_get_sidebar_padding_max(self):
-        """Test get_sidebar_padding() with maximum icon size"""
-        self.assertEqual(tags.get_sidebar_padding(), 10)
-
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
-    )
-    def test_get_sidebar_padding_min(self):
-        """Test get_sidebar_padding() with minimum icon size"""
-        self.assertEqual(tags.get_sidebar_padding(), 4)
+    # @override_settings(
+    #     PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
+    # )
+    # def test_get_sidebar_padding_min(self):
+    #     """Test get_sidebar_padding() with minimum icon size"""
+    #     self.assertEqual(tags.get_sidebar_padding(), 4)

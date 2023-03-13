@@ -62,6 +62,7 @@ from projectroles.views import (
     MSG_INVITE_USER_NOT_EQUAL,
     MSG_INVITE_USER_EXISTS,
 )
+from projectroles.templatetags import projectroles_tags as tags
 
 
 app_settings = AppSettingAPI()
@@ -181,6 +182,81 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         """Test rendering with anonymous access"""
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
+
+    def test_context_get_sidebar_icon_size(self):
+        """Test getting sidebar icon size in context"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(response.context['sidebar_icon_size'], 36)
+
+    @override_settings(
+        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE - 2
+    )
+    def test_context_get_sidebar_icon_size_min(self):
+        """Test getting sidebar icon size in context with a value below minimum"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(
+                response.context['sidebar_icon_size'],
+                tags.SIDEBAR_ICON_MIN_SIZE,
+            )
+
+    @override_settings(
+        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE + 2
+    )
+    def test_context_get_sidebar_icon_size_max(self):
+        """Test get_sidebar_icon_size() with a value over max"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(
+                response.context['sidebar_icon_size'],
+                tags.SIDEBAR_ICON_MAX_SIZE,
+            )
+
+    def test_context_get_sidebar_notch_pos(self):
+        """Test get_sidebar_notch_pos()"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(response.context['sidebar_notch_pos'], 12)
+
+    def test_context_get_sidebar_notch_size(self):
+        """Test get_sidebar_notch_size()"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(response.context['sidebar_notch_size'], 12)
+
+    @override_settings(
+        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
+    )
+    def test_context_get_sidebar_notch_size_min(self):
+        """Test get_sidebar_notch_size() with minimum icon size"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(response.context['sidebar_notch_size'], 9)
+
+    def test_context_get_sidebar_padding(self):
+        """Test get_sidebar_padding()"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(response.context['sidebar_padding'], 8)
+
+    @override_settings(
+        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE
+    )
+    def test_context_get_sidebar_padding_max(self):
+        """Test get_sidebar_padding() with maximum icon size"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(response.context['sidebar_padding'], 10)
+
+    @override_settings(
+        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
+    )
+    def test_context_get_sidebar_padding_min(self):
+        """Test get_sidebar_padding() with minimum icon size"""
+        with self.login(self.user):
+            response = self.client.get(reverse('home'))
+            self.assertEqual(response.context['sidebar_padding'], 4)
 
 
 class TestProjectSearchView(
