@@ -275,3 +275,18 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
                     action=action.lower(),
                 ),
             )
+
+    def validate_form_app_settings(self, app_settings, project=None, user=None):
+        """Example implementation for app setting validation plugin API"""
+        errors = {}
+        for setting_name, setting_value in app_settings.items():
+            if (
+                setting_name == 'project_hidden_setting'
+                and setting_value == 'Example project hidden setting'
+            ):
+                errors[
+                    setting_name
+                ] = 'Invalid value for a custom validation method'
+        if errors == {}:
+            return None
+        return errors
