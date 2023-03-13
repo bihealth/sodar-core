@@ -45,7 +45,10 @@ def get_example_setting_options(project=None, user=None):
     :param user: User object
     :return: List of tuples for ChoiceField
     """
-    response = [('N/A', 'No project or user for callable')]
+    response = [
+        ('N/A', 'No project or user for callable'),
+        'Example string option',
+    ]
     if project and user:
         response.append(
             (

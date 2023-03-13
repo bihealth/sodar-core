@@ -347,13 +347,26 @@ class ProjectForm(SODARModelForm):
             if s_val.get('options'):
                 if callable(s_val['options']):
                     if self.instance.pk:
+                        values = s_val['options'](project=self.instance)
+                        print(values)
                         self.fields[s_field] = forms.ChoiceField(
-                            choices=s_val['options'](project=self.instance),
+                            choices=[
+                                (str(value[0]), str(value[1]))
+                                if isinstance(value, tuple)
+                                else (str(value), str(value))
+                                for value in values
+                            ],
                             **setting_kwargs
                         )
                     else:
+                        values = s_val['options'](project=None)
                         self.fields[s_field] = forms.ChoiceField(
-                            choices=s_val['options'](project=None),
+                            choices=[
+                                (str(value[0]), str(value[1]))
+                                if isinstance(value, tuple)
+                                else (str(value), str(value))
+                                for value in values
+                            ],
                             **setting_kwargs
                         )
                 else:

@@ -169,7 +169,10 @@ class AppSettingAPI:
         :raise: ValueError if type is not recognized
         """
         if callable(setting_options):
-            valid_options = [val[0] for val in setting_options(project, user)]
+            valid_options = [
+                val[0] if isinstance(val, tuple) else val
+                for val in setting_options(project, user)
+            ]
             if setting_value not in valid_options:
                 raise ValueError(
                     'Choice "{}" not found in options ({})'.format(
