@@ -345,20 +345,46 @@ class ProjectForm(SODARModelForm):
                 )
             else:
                 json_data = self.app_settings.get_default(
-                    app_name=app_name, setting_name=s_key
+                    app_name=app_name,
+                    setting_name=s_key,
+                    project=None,
                 )
             self.initial[s_field] = json.dumps(json_data)
         else:
             if s_val.get('options'):
-                self.fields[s_field] = forms.ChoiceField(
-                    choices=[
-                        (int(option), int(option))
-                        if s_val['type'] == 'INTEGER'
-                        else (option, option)
-                        for option in s_val.get('options')
-                    ],
-                    **setting_kwargs
-                )
+                if callable(s_val['options']):
+                    if self.instance.pk:
+                        values = s_val['options'](project=self.instance)
+                        self.fields[s_field] = forms.ChoiceField(
+                            choices=[
+                                (str(value[0]), str(value[1]))
+                                if isinstance(value, tuple)
+                                else (str(value), str(value))
+                                for value in values
+                            ],
+                            **setting_kwargs
+                        )
+                    else:
+                        values = s_val['options'](project=None)
+                        self.fields[s_field] = forms.ChoiceField(
+                            choices=[
+                                (str(value[0]), str(value[1]))
+                                if isinstance(value, tuple)
+                                else (str(value), str(value))
+                                for value in values
+                            ],
+                            **setting_kwargs
+                        )
+                else:
+                    self.fields[s_field] = forms.ChoiceField(
+                        choices=[
+                            (int(option), int(option))
+                            if s_val['type'] == 'INTEGER'
+                            else (option, option)
+                            for option in s_val['options']
+                        ],
+                        **setting_kwargs
+                    )
             elif s_val['type'] == 'STRING':
                 self.fields[s_field] = forms.CharField(
                     max_length=APP_SETTING_VAL_MAXLENGTH,
@@ -386,7 +412,9 @@ class ProjectForm(SODARModelForm):
                 )
             else:
                 self.initial[s_field] = self.app_settings.get_default(
-                    app_name=app_name, setting_name=s_key
+                    app_name=app_name,
+                    setting_name=s_key,
+                    project=None,
                 )
 
     def _set_app_setting_notes(self, s_field, s_val):
@@ -608,6 +636,7 @@ class ProjectForm(SODARModelForm):
                     setting_type=s_val['type'],
                     setting_value=cleaned_data.get(s_field),
                     setting_options=s_val.get('options'),
+                    project=instance,
                 ):
                     errors.append((s_field, 'Invalid value'))
 

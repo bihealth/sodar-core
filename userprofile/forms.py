@@ -57,13 +57,26 @@ class UserSettingsForm(SODARForm):
 
                 if s_val['type'] == 'STRING':
                     if 'options' in s_val:
-                        self.fields[s_field] = forms.ChoiceField(
-                            choices=[
-                                (option, option)
-                                for option in s_val.get('options')
-                            ],
-                            **setting_kwargs,
-                        )
+                        if callable(s_val['options']):
+                            self.fields[s_field] = forms.ChoiceField(
+                                choices=[
+                                    (str(value[0]), str(value[1]))
+                                    if isinstance(value, tuple)
+                                    else (str(value), str(value))
+                                    for value in s_val['options'](
+                                        user=self.user
+                                    )
+                                ],
+                                **setting_kwargs,
+                            )
+                        else:
+                            self.fields[s_field] = forms.ChoiceField(
+                                choices=[
+                                    (option, option)
+                                    for option in s_val['options']
+                                ],
+                                **setting_kwargs,
+                            )
                     else:
                         self.fields[s_field] = forms.CharField(
                             max_length=APP_SETTING_VAL_MAXLENGTH,
@@ -76,7 +89,7 @@ class UserSettingsForm(SODARForm):
                         self.fields[s_field] = forms.ChoiceField(
                             choices=[
                                 (int(option), int(option))
-                                for option in s_val.get('options')
+                                for option in s_val['options']
                             ],
                             **setting_kwargs,
                         )
@@ -158,6 +171,7 @@ class UserSettingsForm(SODARForm):
                     setting_type=s_val['type'],
                     setting_value=self.cleaned_data.get(s_field),
                     setting_options=s_val.get('options'),
+                    user=self.user,
                 ):
                     self.add_error(s_field, 'Invalid value')
             try:
