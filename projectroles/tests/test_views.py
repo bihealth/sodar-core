@@ -585,10 +585,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'description': 'description',
             'public_guest_access': False,
         }
-        # Add settings values
-        values.update(
-            app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT, post_safe=True)
-        )
         with self.login(self.user):
             response = self.client.post(reverse('projectroles:create'), values)
 
@@ -652,10 +648,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'description': 'description',
             'public_guest_access': False,
         }
-        # Add settings values
-        values.update(
-            app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT, post_safe=True)
-        )
 
         with self.login(self.user):
             response = self.client.post(reverse('projectroles:create'), values)
@@ -942,10 +934,6 @@ class TestProjectUpdateView(
         values['description'] = 'updated description'
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         values['parent'] = ''
-        # Add settings values
-        values.update(
-            app_settings.get_all(project=self.category, post_safe=True)
-        )
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -979,8 +967,6 @@ class TestProjectUpdateView(
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        # TODO: Assert settings
-
         # Assert redirect
         with self.login(self.user):
             self.assertRedirects(
@@ -1013,9 +999,6 @@ class TestProjectUpdateView(
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         values['parent'] = new_category.sodar_uuid  # Updated category
         # Add settings values
-        values.update(
-            app_settings.get_all(project=self.category, post_safe=True)
-        )
 
         with self.login(self.user):
             response = self.client.post(

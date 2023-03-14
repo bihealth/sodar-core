@@ -987,13 +987,19 @@ class ProjectSettingSetAPIView(
             old_value = app_settings.get(
                 app_name, setting_name, project=project, user=setting_user
             )
-            app_settings.set(
+            setting_status = app_settings.set(
                 app_name=app_name,
                 setting_name=setting_name,
                 value=value,
                 project=project,
                 user=setting_user,
             )
+            if not setting_status:
+                raise serializers.ValidationError(
+                    'Setting {} for {} was not set'.format(
+                        setting_name, project.title
+                    )
+                )
             # Call for additional actions for project creation/update in plugins
             if s_def['scope'] == APP_SETTING_SCOPE_PROJECT and (
                 settings,

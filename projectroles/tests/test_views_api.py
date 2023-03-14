@@ -2547,6 +2547,23 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         self.assertEqual(tl_event.classified, True)
         self.assertEqual(tl_event.extra_data, {'value': 'value'})
 
+    def test_set_category(self):
+        """Test setting app setting value to CATEGORY"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+        setting_name = 'project_str_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': 'value',
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
     def test_set_project_user(self):
         """Test setting app setting value with PROJECT_USER scope"""
         self.assertEqual(AppSetting.objects.count(), 0)

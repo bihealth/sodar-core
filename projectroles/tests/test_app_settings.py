@@ -432,6 +432,21 @@ class TestAppSettingAPI(
         )
         self.assertEqual(ret, True)
 
+    def test_set_category(self):
+        """Test set() to a category Project"""
+        self.category = self.make_project(
+            title='TestCategory', type=PROJECT_TYPE_CATEGORY, parent=None
+        )
+        ret = app_settings.set(
+            app_name=EXAMPLE_APP_NAME,
+            setting_name='project_bool_setting',
+            project=self.category,
+            value=True,
+        )
+        # NOTE: This return False because the setting is not defined for
+        # categories
+        self.assertEqual(ret, False)
+
     def test_validator(self):
         """Test validate() with type BOOLEAN"""
         for setting in self.settings:
