@@ -998,7 +998,6 @@ class TestProjectUpdateView(
         values['description'] = self.category.description
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         values['parent'] = new_category.sodar_uuid  # Updated category
-        # Add settings values
 
         with self.login(self.user):
             response = self.client.post(
