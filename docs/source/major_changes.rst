@@ -16,7 +16,7 @@ v0.13.0 (WIP)
 Release Highlights
 ==================
 
-**TODO**
+- App settings for categories are deprecated
 
 Breaking Changes
 ================

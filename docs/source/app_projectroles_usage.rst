@@ -41,12 +41,12 @@ User Interface
 Basics
 ------
 
-Upon loggin into a SODAR Core based Django site using default templates and CSS,
+Upon logging into a SODAR Core based Django site using default templates and CSS,
 the general view of your site is split into the following elements:
 
 - **Top navigation bar**: Contains the site logo and title, search element, link
   to advanced search, help link and the user dropdown menu.
-- **User dropown menu**: Contains links to user management, admin site and
+- **User dropdown menu**: Contains links to user management, admin site and
   site-wide apps the user has access to.
 - **Project sidebar**: Shortcuts to project apps and project management pages
 - **Project navigation**: Project structure breadcrumb (disabled for site apps)
@@ -204,14 +204,14 @@ specific UIs for this functionality if manual user selection is needed.
 
 .. note::
 
-    Currently, project specific app settings are also enabled for categories but
-    do not actually do anything. The behaviour regarding this (remove settings /
-    inherit by nested projects / etc) is TBD.
+    Previously, project specific app settings were available both for
+    projects and categories. After the release v0.13, project specific
+    app settings are only enabled for projects.
 
 The projectroles app provides the following built-in app settings with the
 project scope:
 
-- ``ip_restrict``: Restict project access by an allowed IP list if enabled.
+- ``ip_restrict``: Restrict project access by an allowed IP list if enabled.
 - ``ip_allowlist``: List of allowed IP addresses for project access.
 
 To clean up settings which have been stored in the database but have since
