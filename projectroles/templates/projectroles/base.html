@@ -7,9 +7,6 @@
 
 {% block css %}
   {{ block.super }}
-  {% get_sidebar_notch_size as sidebar_notch_size %}
-  {% get_sidebar_notch_pos as sidebar_notch_pos %}
-  {% get_sidebar_padding as sidebar_padding %}
   <style type="text/css">
     /* Notch visualizaton for sidebar */
     .sodar-pr-sidebar-nav-ul li.active a span.sodar-pr-sidebar-icon:after {
@@ -34,7 +31,6 @@
 
 {% block content %}
   {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
-  {% get_sidebar_icon_size as sidebar_icon_size %}
 
   {# Ensure passing CSRF token to Ajax API views #}
   {% csrf_token %}

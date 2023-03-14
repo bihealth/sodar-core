@@ -49,6 +49,19 @@ Release Highlights
 Breaking Changes
 ================
 
+New Context Processors
+----------------------
+
+Several templatetags have been relocated to context processors. Therefore,
+it is necessary to incorporate `projectroles.context_processors.sidebar_processor`
+in the `TEMPLATES['OPTIONS']['context_processors']` settings located in the base
+configuration file. New context processors are:
+
+- ``get_sidebar_icon_size()``
+- ``get_sidebar_notch_pos()``
+- ``get_sidebar_notch_size()``
+- ``get_sidebar_padding()``
+
 System Prerequisites
 --------------------
 

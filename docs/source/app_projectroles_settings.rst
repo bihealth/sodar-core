@@ -91,6 +91,8 @@ projectroles processors:
 
     'projectroles.context_processors.urls_processor',
     'projectroles.context_processors.site_app_processor',
+    'projectroles.context_processors.app_alerts_processor',
+    'projectroles.context_processors.sidebar_processor',
 
 
 Email

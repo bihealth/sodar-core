@@ -1,7 +1,15 @@
 """Context processors for the projectroles app"""
 
+from math import ceil
+
+from django.conf import settings
+
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.urls import urlpatterns
+
+
+SIDEBAR_ICON_MIN_SIZE = 18
+SIDEBAR_ICON_MAX_SIZE = 42
 
 
 def urls_processor(request):
@@ -48,3 +56,24 @@ def app_alerts_processor(request):
                 .count()
             }
     return {'app_alerts': 0}
+
+
+def sidebar_processor(request):
+    """
+    Context processor for providing sidebar information.
+    """
+
+    sidebar_icon_size = sorted(
+        [
+            SIDEBAR_ICON_MIN_SIZE,
+            getattr(settings, 'PROJECTROLES_SIDEBAR_ICON_SIZE', 32),
+            SIDEBAR_ICON_MAX_SIZE,
+        ]
+    )[1]
+
+    return {
+        'sidebar_icon_size': sidebar_icon_size,
+        'sidebar_notch_pos': ceil(sidebar_icon_size / 3),
+        'sidebar_notch_size': min(ceil(sidebar_icon_size / 2), 12),
+        'sidebar_padding': ceil(sidebar_icon_size / 4.5),
+    }
