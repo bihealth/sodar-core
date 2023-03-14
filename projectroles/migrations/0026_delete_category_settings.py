@@ -3,16 +3,11 @@
 from django.db import migrations
 
 def clean_up_app_settings(apps, schema_editor):
-    Project = apps.get_model('projectroles', 'Project')
     AppSetting = apps.get_model('projectroles', 'AppSetting')
 
-    # Get all projects that are of type PROJECT_TYPE_CATEGORY
-    category_projects = Project.objects.filter(type='CATEGORY')
-
-    # Loop through all category projects and delete their app settings
-    for project in category_projects:
-        app_settings = AppSetting.objects.filter(project=project)
-        app_settings.delete()
+    # Find all app settings with project type 'CATEGORY'
+    app_settings = AppSetting.objects.filter(project__type='CATEGORY')
+    app_settings.delete()
 
 
 class Migration(migrations.Migration):

@@ -18,6 +18,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 # Local constants
@@ -45,6 +46,8 @@ PROJECTROLES_APP_SETTINGS = {
     #:                    settings of type STRING or INTEGER
     #:         'user_modifiable': True,  # Optional, show/hide in forms
     #:         'local': False,  # Allow editing in target site forms if True
+    #:         'project_types': [PROJECT_TYPE_PROJECT],  # Optional, list may
+    #:          contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
     #:     }
     'ip_restrict': {
         'scope': APP_SETTING_SCOPE_PROJECT,
@@ -74,12 +77,14 @@ PROJECTROLES_APP_SETTINGS = {
         'multiple emails with semicolon.',
         'user_modifiable': True,
         'local': False,
+        'project_types': [PROJECT_TYPE_PROJECT],
     },
     'project_star': {
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
         'type': 'BOOLEAN',
         'default': False,
         'local': False,
+        'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
     },
 }
 
@@ -428,14 +433,6 @@ class AppSettingAPI:
                 q_kwargs['app_plugin__name'] = app_name
             setting = AppSetting.objects.get(**q_kwargs)
 
-            # Check if setting is set to a category
-            if (
-                setting
-                and setting.project
-                and setting.project.type == PROJECT_TYPE_CATEGORY
-            ):
-                return False
-
             if cls._compare_value(setting, value):
                 return False
 
@@ -444,6 +441,19 @@ class AppSettingAPI:
                     name=setting_name, app_name=app_name
                 )
                 cls.validate(setting.type, value, setting_def.get('options'))
+                if (
+                    project
+                    and not setting_def.get('project_types', None)
+                    and project.type != PROJECT_TYPE_PROJECT
+                    or project
+                    and setting_def.get('project_types', None)
+                    and project.type not in setting_def['project_types']
+                ):
+                    raise ValueError(
+                        'Setting "{}" not allowed for project type "{}"'.format(
+                            setting_name, project.type
+                        )
+                    )
 
             if setting.type == 'JSON':
                 setting.value_json = cls._get_json_value(value)
@@ -477,16 +487,26 @@ class AppSettingAPI:
 
             cls._check_scope(s_def['scope'])
             cls._check_project_and_user(s_def['scope'], project, user)
+
             if validate:
                 v = cls._get_json_value(value) if s_type == 'JSON' else value
                 setting_def = cls.get_definition(
                     name=setting_name, app_name=app_name
                 )
                 cls.validate(s_type, v, setting_def.get('options'))
-
-            # Check if setting is set to a category
-            if project and project.type == PROJECT_TYPE_CATEGORY:
-                return False
+                if (
+                    project
+                    and not setting_def.get('project_types', None)
+                    and project.type != PROJECT_TYPE_PROJECT
+                    or project
+                    and setting_def.get('project_types', None)
+                    and project.type not in setting_def['project_types']
+                ):
+                    raise ValueError(
+                        'Setting "{}" not allowed for project type "{}"'.format(
+                            setting_name, project.type
+                        )
+                    )
 
             s_vals = {
                 'app_plugin': app_plugin_model,

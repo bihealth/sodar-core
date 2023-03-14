@@ -13,7 +13,8 @@ from projectroles.utils import get_display_name
 
 from example_project_app.urls import urlpatterns
 
-
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 EXAMPLE_MODIFY_API_MSG = (
     'Example project app plugin API called from ' '{project_type} {action}.'
 )
@@ -210,6 +211,13 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'type': 'JSON',
             'default': '',
             'description': 'Example json project user setting',
+        },
+        'project_category_str_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'BOOLEAN',
+            'default': False,
+            'description': 'Example boolean project category setting',
+            'project_types': [PROJECT_TYPE_CATEGORY],
         },
     }
 
