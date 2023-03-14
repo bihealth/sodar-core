@@ -13,19 +13,19 @@ app_name = 'bgjobs'
 urlpatterns = [
     # List jobs that the user has access to
     path(
-        route='<uuid:project>/list',
+        route='list/<uuid:project>',
         view=views.ProjectBackgroundJobView.as_view(),
         name='list',
     ),
     # Clear jobs in project owned by the current user
     path(
-        route='<uuid:project>/clear/own',
+        route='clear/own/<uuid:project>',
         view=views.BackgroundJobClearOwnView.as_view(),
         name='clear_own',
     ),
     # Clear jobs in project regardless of the user
     path(
-        route='<uuid:project>/clear/all',
+        route='clear/all/<uuid:project>',
         view=views.BackgroundJobClearAllView.as_view(),
         name='clear_all',
     ),

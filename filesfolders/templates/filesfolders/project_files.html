@@ -9,7 +9,7 @@
 {% load filesfolders_tags %}
 
 {% block title %}
-  Small Files for {{ project.title }}
+  Files for {{ project.title }}
   {% if folder %}
     / {{ folder.name }}
   {% endif %}
@@ -83,7 +83,7 @@
 
 {% if can_view_data %}
   <div class="row sodar-subtitle-container bg-white sticky-top">
-    <h3><i class="iconify" data-icon="mdi:file"></i> Small Files</h3>
+    <h3><i class="iconify" data-icon="mdi:file"></i> Files</h3>
     {% if can_add_data %}
       {% include 'filesfolders/_list_buttons.html' with project=project folder=folder up=False %}
     {% endif %}

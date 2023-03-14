@@ -25,7 +25,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     name = 'filesfolders'
 
     #: Title (used in templates)
-    title = 'Small Files'
+    title = 'Files'
 
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
@@ -39,7 +39,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'type': 'BOOLEAN',
             'default': False,
             'label': 'Allow public links',
-            'description': 'Allow generation of public links for small files',
+            'description': 'Allow generation of public links for files',
             'user_modifiable': True,
         }
     }
@@ -71,7 +71,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     details_template = 'filesfolders/_details_card.html'
 
     #: App card title for the project details page
-    details_title = 'Small Files Overview'
+    details_title = 'Files Overview'
 
     #: Position in plugin ordering
     plugin_ordering = 30
@@ -80,7 +80,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'files': {
             'title': 'Files',
             'width': 75,
-            'description': 'Small files stored for the project',
+            'description': 'files stored for the project',
             'active': SHOW_LIST_COLUMNS,
             'ordering': 35,
             'align': 'right',
@@ -88,7 +88,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'links': {
             'title': 'Links',
             'width': 75,
-            'description': 'Hyperlinks defined in the small files app',
+            'description': 'Hyperlinks defined in the files app',
             'active': SHOW_LIST_COLUMNS,
             'ordering': 25,
             'align': 'right',
@@ -174,7 +174,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
         return {
             'all': {
-                'title': 'Small Files, Folders and Links',
+                'title': 'Files, Folders and Links',
                 'search_types': ['file', 'folder', 'link'],
                 'items': items,
             }
