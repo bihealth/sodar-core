@@ -156,7 +156,7 @@ entries are shown here.
     data more strongly.
 
 Go ahead and try out the Filesfolders app by clicking the
-:guilabel:`Small Files` link on the sidebar. After creating folders and
+:guilabel:`Files` link on the sidebar. After creating folders and
 uploading a few files, you will see a trace of actions in the Timeline app:
 
 .. figure:: _static/for_the_impatient/timeline.png

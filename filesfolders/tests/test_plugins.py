@@ -29,7 +29,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 # Local constants
 SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
 PLUGIN_NAME = 'filesfolders'
-PLUGIN_TITLE = 'Small Files'
+PLUGIN_TITLE = 'Files'
 PLUGIN_URL_ID = 'filesfolders:list'
 SETTING_KEY = 'allow_public_links'
 
