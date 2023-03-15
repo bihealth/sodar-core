@@ -17,6 +17,8 @@ from example_project_app.urls import urlpatterns
 EXAMPLE_MODIFY_API_MSG = (
     'Example project app plugin API called from ' '{project_type} {action}.'
 )
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 
 def get_example_setting_default(project=None, user=None):
@@ -308,6 +310,15 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'default': get_example_setting_default,
             'options': get_example_setting_options,
             'description': 'Example callable project user setting with options',
+        },
+        'project_category_bool_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'BOOLEAN',
+            'label': 'Category boolean setting',
+            'default': False,
+            'description': 'Example boolean project category setting',
+            'user_modifiable': True,
+            'project_types': [PROJECT_TYPE_CATEGORY],
         },
     }
 
