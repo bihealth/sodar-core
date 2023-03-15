@@ -62,7 +62,6 @@ def sidebar_processor(request):
     """
     Context processor for providing sidebar information.
     """
-
     sidebar_icon_size = sorted(
         [
             SIDEBAR_ICON_MIN_SIZE,
@@ -70,7 +69,6 @@ def sidebar_processor(request):
             SIDEBAR_ICON_MAX_SIZE,
         ]
     )[1]
-
     return {
         'sidebar_icon_size': sidebar_icon_size,
         'sidebar_notch_pos': ceil(sidebar_icon_size / 3),
