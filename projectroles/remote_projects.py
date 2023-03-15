@@ -1,6 +1,7 @@
 """Remote project management utilities for the projectroles app"""
 
 import logging
+
 from copy import deepcopy
 
 from django.conf import settings
@@ -90,7 +91,6 @@ class RemoteProjectAPI:
             sync_data = cls._add_parent_categories(
                 sync_data, category.parent, project_level
             )
-
         # Add if not added yet OR if a READ_ROLES project is encountered
         if (
             str(category.sodar_uuid) not in sync_data['projects'].keys()
@@ -107,7 +107,6 @@ class RemoteProjectAPI:
                 'description': category.description,
                 'readme': category.readme.raw,
             }
-
             if project_level == REMOTE_LEVEL_READ_ROLES:
                 cat_data['roles'] = {}
                 cat_data['level'] = REMOTE_LEVEL_READ_ROLES
@@ -119,9 +118,7 @@ class RemoteProjectAPI:
                     sync_data = cls._add_user(sync_data, role_as.user)
             else:
                 cat_data['level'] = REMOTE_LEVEL_READ_INFO
-
             sync_data['projects'][str(category.sodar_uuid)] = cat_data
-
         return sync_data
 
     @classmethod
@@ -261,7 +258,6 @@ class RemoteProjectAPI:
                 'type': PROJECT_TYPE_PROJECT,
                 'remote_sites': [str(site.sodar_uuid) for site in remote_sites],
             }
-
             # View available projects
             if rp.level == REMOTE_LEVEL_VIEW_AVAIL:
                 project_data['available'] = True if project else False
@@ -274,7 +270,7 @@ class RemoteProjectAPI:
             ]:
                 project_data['description'] = project.description
                 project_data['readme'] = project.readme.raw
-                # Add categories
+                # Add parent categories and inherited roles
                 if project.parent:
                     sync_data = self._add_parent_categories(
                         sync_data, project.parent, rp.level
@@ -296,9 +292,7 @@ class RemoteProjectAPI:
                             'role': role_as.role.name,
                         }
                         sync_data = self._add_user(sync_data, role_as.user)
-
             sync_data['projects'][str(rp.project_uuid)] = project_data
-
         return sync_data
 
     # Internal Target Site Functions -------------------------------------------
@@ -459,7 +453,6 @@ class RemoteProjectAPI:
         """
         updated_fields = []
         uuid = str(project.sodar_uuid)
-
         for k, v in project_data.items():
             if (
                 k not in ['parent', 'sodar_uuid', 'roles', 'readme']
@@ -467,7 +460,6 @@ class RemoteProjectAPI:
                 and str(getattr(project, k)) != str(v)
             ):
                 updated_fields.append(k)
-
         # README is a special case
         if project.readme.raw != project_data['readme']:
             updated_fields.append('readme')
@@ -480,7 +472,6 @@ class RemoteProjectAPI:
                 project.save()
                 updated_fields.append('parent')
             self.remote_data['projects'][uuid]['status'] = 'updated'
-
             if self.tl_user:  # Timeline
                 tl_desc = (
                     'update project from remote site '
@@ -498,14 +489,12 @@ class RemoteProjectAPI:
                 tl_event.add_object(
                     self.source_site, 'site', self.source_site.name
                 )
-
             logger.info(
                 'Updated {}: {}'.format(
                     project_data['type'].lower(),
                     ', '.join(sorted(updated_fields)),
                 )
             )
-
         else:
             logger.debug('Nothing to update in project details')
 
@@ -552,7 +541,6 @@ class RemoteProjectAPI:
             )
             # TODO: Add extra_data
             tl_event.add_object(self.source_site, 'site', self.source_site.name)
-
         logger.info('Created {}'.format(project_data['type'].lower()))
 
     def _create_peer_site(self, uuid, site_data):
@@ -750,7 +738,6 @@ class RemoteProjectAPI:
                     tl_event.add_object(
                         self.source_site, 'site', self.source_site.name
                     )
-
                 logger.info(
                     'Created role {}: {} -> {}'.format(
                         r_uuid, role_user.username, role.name
@@ -804,7 +791,6 @@ class RemoteProjectAPI:
                     tl_event.add_object(
                         self.source_site, 'site', self.source_site.name
                     )
-
             logger.info(
                 'Deleted {} removed role{} for: {}'.format(
                     deleted_count,
@@ -885,7 +871,6 @@ class RemoteProjectAPI:
                 date_access=timezone.now(),
             )
             remote_action = 'created'
-
         logger.debug(
             '{} RemoteProject {}'.format(
                 remote_action.capitalize(), remote_project.sodar_uuid
@@ -898,7 +883,6 @@ class RemoteProjectAPI:
             REMOTE_LEVEL_REVOKED,
         ]:
             return
-
         # Create/update roles
         # NOTE: Only update AD/LDAP user roles and local owner roles
         if project_data['level'] == REMOTE_LEVEL_READ_ROLES:
@@ -1112,7 +1096,6 @@ class RemoteProjectAPI:
             self.tl_user = request.user if request else self.default_owner
 
         logger.info('Synchronizing data from "{}"..'.format(site.name))
-
         # Return unchanged data if no projects with READ_ROLES are included
         if not {
             k: v
@@ -1125,12 +1108,8 @@ class RemoteProjectAPI:
             )
             return self.remote_data
 
-        ##############
         # Peer Sites
-        ##############
-
         logger.info('Synchronizing Peer Sites...')
-
         if self.remote_data.get('peer_sites', None):
             for remote_site_uuid, site_data in self.remote_data[
                 'peer_sites'
@@ -1147,10 +1126,7 @@ class RemoteProjectAPI:
         else:
             logger.info('No new Peer Sites to sync')
 
-        ########
         # Users
-        ########
-
         logger.info('Synchronizing LDAP/AD users..')
         # NOTE: only sync LDAP/AD users
         for u_uuid, u_data in {
@@ -1161,11 +1137,7 @@ class RemoteProjectAPI:
             self._sync_user(u_uuid, u_data)
         logger.info('User sync OK')
 
-        ##########################
         # Categories and Projects
-        ##########################
-
-        # Update projects
         logger.info('Synchronizing projects..')
         for p_uuid, p_data in {
             k: v
@@ -1177,10 +1149,7 @@ class RemoteProjectAPI:
             self._sync_peer_projects(p_uuid, p_data)
             self._remove_revoked_peers(p_uuid, p_data)
 
-        ###############
         # App Settings
-        ###############
-
         logger.info('Synchronizing app settings..')
         for a_uuid, a_data in self.remote_data['app_settings'].items():
             try:
@@ -1198,6 +1167,5 @@ class RemoteProjectAPI:
                 )
                 if settings.DEBUG:
                     raise ex
-
         logger.info('Synchronization OK')
         return self.remote_data

@@ -14,12 +14,11 @@ from test_plus.test import TestCase
 import projectroles
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
-    Role,
-    SODAR_CONSTANTS,
     Project,
     RemoteProject,
     RemoteSite,
     AppSetting,
+    SODAR_CONSTANTS,
 )
 from projectroles.plugins import get_app_plugin, get_active_plugins
 from projectroles.templatetags import (
@@ -28,9 +27,14 @@ from projectroles.templatetags import (
 )
 from projectroles.tests.test_models import (
     ProjectMixin,
+    RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
 )
+
+
+app_settings = AppSettingAPI()
+site = import_module(settings.SITE_PACKAGE)
 
 
 # SODAR constants
@@ -45,44 +49,32 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
-
 # Local constants
 NON_EXISTING_UUID = uuid.uuid4()
 STATIC_FILE_PATH = 'images/logo_navbar.png'
 TEMPLATE_PATH = 'projectroles/home.html'
 
 
-site = import_module(settings.SITE_PACKAGE)
-
-
-# App settings API
-app_settings = AppSettingAPI()
-
-
 class TestTemplateTagsBase(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase
+    ProjectMixin, RoleMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase
 ):
     """Base class for testing template tags"""
 
     def setUp(self):
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-
+        self.init_roles()
         # Init users
         self.user = self.make_user('user_owner')
-
         # Init category
         self.category = self.make_project(
             title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
         )
-
         # Init project under category
         self.project = self.make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category,
         )
-
         # Init role assignments
         self.owner_as_cat = self.make_assignment(
             self.category, self.user, self.role_owner
@@ -90,8 +82,7 @@ class TestTemplateTagsBase(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
-        # Init app_setting
+        # Init app_settings
         app_settings.set(
             'filesfolders', 'allow_public_links', True, project=self.project
         )
@@ -274,7 +265,7 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         )
         self.assertEqual(
             c_tags.get_history_dropdown(self.user, self.project),
-            '<a class="dropdown-item" href="{}">\n'
+            '<a class="dropdown-item sodar-pr-role-link-history" href="{}">\n'
             '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i> '
             'History</a>\n'.format(url),
         )

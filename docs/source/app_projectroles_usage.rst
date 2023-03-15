@@ -256,17 +256,14 @@ category (owner or delegate) or superuser status.
 
     Project member list view
 
-.. note::
+All members of categories automatically inherit identical access rights to
+subcategories and projects under those categories, starting in SODAR Core
+v0.13. Inherited member roles can be promoted to a higher local role, but
+demoting to a lesser role for child categories or projects is not allowed.
 
-    Owners of categories automatically inherit owner rights to projects
-    placed under those categories, starting in SODAR Core v0.8.0. Adding
-    separate roles for those users in the inherited projects is not allowed.
-
-.. note::
-
-    At this time, category memberships are not automatically propagated to
-    projects created under the category. An inheritance functionality may be
-    implemented at a later date.
+For inherited members, the member list displays a link to the category where
+the inheritance is derived from. Inherited members can not be removed or edited
+locally, with the exception of promoting a user to a higher role.
 
 Adding Members
 --------------

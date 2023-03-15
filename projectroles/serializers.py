@@ -180,8 +180,7 @@ class RoleAssignmentValidateMixin:
         if (
             attrs['role'].name == PROJECT_ROLE_DELEGATE
             and del_limit != 0
-            and project.get_delegates(exclude_inherited=True).count()
-            >= del_limit
+            and len(project.get_delegates(inherited=False)) >= del_limit
         ):
             raise serializers.ValidationError(
                 'Project delegate limit of {} has been reached'.format(
@@ -212,6 +211,9 @@ class RoleAssignmentSerializer(
     def validate(self, attrs):
         attrs = super().validate(attrs)
         project = self.context['project']
+        # Add user to instance for PATCH requests
+        if self.instance and not attrs.get('user'):
+            attrs['user'] = self.instance.user
 
         # Do not allow updating user
         if (
@@ -234,10 +236,15 @@ class RoleAssignmentSerializer(
                     'User already has the role of "{}" in project '
                     '(UUID={})'.format(old_as.role.name, old_as.sodar_uuid)
                 )
-
-        # Add user to instance for PATCH requests
-        if self.instance and not attrs.get('user'):
-            attrs['user'] = self.instance.user
+        # Prevent demoting if inherited role exists
+        for old_role_as in RoleAssignment.objects.filter(
+            project__in=project.get_parents(), user=attrs['user']
+        ):
+            if attrs['role'].rank > old_role_as.role.rank:
+                raise serializers.ValidationError(
+                    'User inherits role "{}", demoting from inherited role is '
+                    'not allowed'.format(old_role_as.role.name)
+                )
         return attrs
 
     def save(self, **kwargs):
@@ -334,7 +341,9 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     )
     readme = serializers.CharField(required=False, allow_blank=True)
     archive = serializers.BooleanField(read_only=True)
-    roles = RoleAssignmentNestedListSerializer(read_only=True, many=True)
+    roles = RoleAssignmentNestedListSerializer(
+        read_only=True, many=True, source='get_roles'
+    )
 
     class Meta:
         model = Project
@@ -350,6 +359,11 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'roles',
             'sodar_uuid',
         ]
+
+    def get_roles(self):
+        if self.instance:
+            return self.instance.get_roles()
+        return None
 
     def validate(self, attrs):
         site_mode = getattr(
@@ -377,7 +391,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
         # Validate parent
         parent = attrs.get('parent')
-
         # Attempting to move project under category without perms
         if (
             parent
@@ -388,7 +401,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             raise exceptions.PermissionDenied(
                 'User lacks permission to place project under given category'
             )
-
         if parent and parent.type != PROJECT_TYPE_CATEGORY:
             raise serializers.ValidationError('Parent is not a category')
         elif (
@@ -401,7 +413,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             raise exceptions.PermissionDenied(
                 'Only superusers are allowed to place categories in root'
             )
-
         # Attempting to create/move project in root
         if (
             'parent' in attrs
@@ -412,7 +423,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             raise serializers.ValidationError(
                 'Project must be placed under a category'
             )
-
         # Ensure we are not moving a category under one of its children
         if (
             parent
@@ -424,20 +434,9 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 'Moving a category under its own child is not allowed'
             )
 
-        # Validate type
-        if (
-            attrs.get('type')
-            and self.instance
-            and attrs['type'] != self.instance.type
-        ):
-            raise serializers.ValidationError(
-                'Changing the project type is not allowed'
-            )
-
         # Validate title
         if parent and attrs.get('title') == parent.title:
             raise serializers.ValidationError('Title can\'t match with parent')
-
         if (
             attrs.get('title')
             and not self.instance
@@ -457,6 +456,14 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 'Type is not {} or {}'.format(
                     PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT
                 )
+            )
+        if (
+            attrs.get('type')
+            and self.instance
+            and attrs['type'] != self.instance.type
+        ):
+            raise serializers.ValidationError(
+                'Changing the project type is not allowed'
             )
 
         # Validate and set owner
@@ -495,15 +502,24 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     def to_representation(self, instance):
         """Override to make sure fields are correctly returned"""
         ret = super().to_representation(instance)
+        # Set up parent
         parent = ret.get('parent')
         project = Project.objects.get(
             title=ret['title'],
             **{'parent__sodar_uuid': parent} if parent else {},
         )
-        # TODO: Better way to ensure this?
+        # Proper rendering of readme
         ret['readme'] = project.readme.raw or ''
+        # Force project UUID
         if not ret.get('sodar_uuid'):
             ret['sodar_uuid'] = str(project.sodar_uuid)
+        # Add "inherited" info to roles
+        if ret.get('roles'):
+            for k, v in ret['roles'].items():
+                role_as = RoleAssignment.objects.get(sodar_uuid=k)
+                ret['roles'][k]['inherited'] = (
+                    True if role_as.project != project else False
+                )
         return ret
 
 

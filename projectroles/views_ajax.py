@@ -21,7 +21,6 @@ from rules.contrib.views import PermissionRequiredMixin
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
-    Role,
     RoleAssignment,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
@@ -48,9 +47,6 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
-
-# Local constants
-INHERITED_OWNER_INFO = 'Ownership inherited from parent category'
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -131,13 +127,12 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             )
         elif not user.is_superuser:
             # Quick and dirty filtering for inheritance using full_title
-            role_owner = Role.objects.filter(name=PROJECT_ROLE_OWNER).first()
-            owned_cats = [
+            # role_owner = Role.objects.filter(name=PROJECT_ROLE_OWNER).first()
+            role_cats = [
                 r.project.full_title + CAT_DELIMITER
                 for r in RoleAssignment.objects.filter(
                     project__type=PROJECT_TYPE_CATEGORY,
                     user=user,
-                    role=role_owner,
                 )
             ]
             project_list = [
@@ -145,7 +140,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 for p in project_list
                 if p.public_guest_access
                 or p.has_public_children
-                or any(p.full_title.startswith(c) for c in owned_cats)
+                or any(p.full_title.startswith(c) for c in role_cats)
                 or p.roles.filter(user=user).count() > 0
             ]
 
@@ -314,19 +309,12 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
     @classmethod
     def _get_user_role(cls, project, user):
         """Return user role for project"""
-        ret = {'name': None, 'class': None, 'info': None}
+        ret = {'name': None, 'class': None}
         role_as = None
         if user.is_authenticated:
-            role_as = RoleAssignment.objects.filter(
-                project=project, user=user
-            ).first()
+            role_as = project.get_role(user)
             if role_as:
                 ret['name'] = role_as.role.name.split(' ')[1].capitalize()
-            elif project.is_owner(user):
-                ret['name'] = 'Owner'
-                if not role_as or role_as.role.name != PROJECT_ROLE_OWNER:
-                    ret['class'] = 'text-muted'
-                    ret['info'] = INHERITED_OWNER_INFO
         if project.public_guest_access and not role_as:
             ret['name'] = 'Guest'
         if not ret['name']:
@@ -434,7 +422,7 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
                 'projectroles.view_project', project
             ):
                 return User.objects.none()
-            project_users = [a.user.pk for a in project.get_all_roles()]
+            project_users = [a.user.pk for a in project.get_roles()]
             if scope == 'project':  # Limit choices to current project users
                 qs = User.objects.filter(pk__in=project_users)
             elif scope == 'project_exclude':  # Exclude project users

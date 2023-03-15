@@ -52,6 +52,7 @@ from projectroles.models import (
     RemoteSite,
     RemoteProject,
     SODAR_CONSTANTS,
+    ROLE_RANKING,
 )
 from projectroles.plugins import (
     get_active_plugins,
@@ -1018,7 +1019,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         """
         app_alerts = get_backend_api('appalerts_backend')
         # Create alerts and send emails
-        owner_as = RoleAssignment.objects.get_assignment(owner, project)
+        owner_as = RoleAssignment.objects.filter(
+            project=project, user=owner
+        ).first()
         # Owner change notification
         if request.user != owner and action == PROJECT_ACTION_CREATE:
             if app_alerts:
@@ -1376,7 +1379,7 @@ class ProjectArchiveView(
             alert_msg = '{} data is now read-only.'.format(alert_p)
         else:
             alert_msg = '{} data can be modified.'.format(alert_p)
-        users = [a.user for a in project.get_all_roles() if a.user != user]
+        users = [a.user for a in project.get_roles() if a.user != user]
         users = list(set(users))  # Remove possible dupes (see issue #710)
         if not users:
             return
@@ -1498,18 +1501,13 @@ class ProjectRoleView(
     def get_context_data(self, *args, **kwargs):
         project = self.get_project()
         context = super().get_context_data(*args, **kwargs)
-        context['owner'] = project.get_owner()
-        inherited_owners = project.get_owners(inherited_only=True)
-        context['inherited_owners'] = [
-            a for a in inherited_owners if a.user != context['owner'].user
-        ]
-        inherited_users = [a.user for a in inherited_owners]
-        context['delegates'] = [
-            a for a in project.get_delegates() if a.user not in inherited_users
-        ]
-        context['members'] = [
-            a for a in project.get_members() if a.user not in inherited_users
-        ]
+        context['roles'] = sorted(
+            project.get_roles(), key=lambda x: [x.role.rank, x.user.username]
+        )
+        owner_rank = ROLE_RANKING[PROJECT_ROLE_OWNER]
+        context['enable_owner_transfer'] = any(
+            [r.role.rank >= owner_rank for r in context['roles']]
+        )
         if project.is_remote():
             context[
                 'remote_roles_url'
@@ -1523,7 +1521,9 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
     """Mixin for RoleAssignment creation/updating in UI and API views"""
 
     @transaction.atomic
-    def modify_assignment(self, data, request, project, instance=None):
+    def modify_assignment(
+        self, data, request, project, instance=None, promote=False
+    ):
         """
         Create or update a RoleAssignment. This method should be called either
         in form_valid() in a Django form view or save() in a DRF serializer.
@@ -1534,6 +1534,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         :param request: Request initiating the action
         :param project: Project object
         :param instance: Existing RoleAssignment object or None
+        :param promote: Promoting an inherited user (boolean, default=False)
         :return: Created or updated RoleAssignment object
         """
         app_alerts = get_backend_api('appalerts_backend')
@@ -1600,7 +1601,11 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
                 )
             if SEND_EMAIL:
                 email.send_role_change_mail(
-                    action.lower(), project, user, role, request
+                    'update' if promote else action.lower(),
+                    project,
+                    user,
+                    role,
+                    request,
                 )
         return role_as
 
@@ -1610,7 +1615,10 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        change_type = self.request.resolver_match.url_name.split('_')[1]
+        if self.kwargs.get('promote_as'):
+            change_type = 'update'  # If promoting inherited role
+        else:
+            change_type = self.request.resolver_match.url_name.split('_')[1]
         project = self.get_project()
         if change_type != 'delete':
             context['preview_subject'] = email.get_role_change_subject(
@@ -1643,6 +1651,7 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
                 request=self.request,
                 project=project,
                 instance=form.instance if instance else None,
+                promote=True if form.cleaned_data.get('promote') else False,
             )
             messages.success(
                 self.request,
@@ -1699,20 +1708,34 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         # Remove project star from user if it exists
         app_settings.delete('projectroles', 'project_star', project, user)
 
+        inh_as = project.get_role(user, inherited_only=True)
         if tl_event:
             tl_event.set_status('OK')
         if app_alerts:
+            if inh_as:
+                message = ALERT_MSG_ROLE_UPDATE.format(
+                    project=project.title, role=inh_as.role.name
+                )
+            else:
+                message = 'Your membership in this {} has been removed.'.format(
+                    get_display_name(project.type)
+                )
             app_alerts.add_alert(
                 app_name=APP_NAME,
-                alert_name='role_delete',
+                alert_name='role_{}'.format('update' if inh_as else 'delete'),
                 user=user,
-                message='Your membership in this {} has been removed.'.format(
-                    get_display_name(project.type)
-                ),
+                message=message,
                 project=project,
             )
         if SEND_EMAIL:
-            email.send_role_change_mail('delete', project, user, None, request)
+            if inh_as:
+                email.send_role_change_mail(
+                    'update', project, user, inh_as.role, request
+                )
+            else:
+                email.send_role_change_mail(
+                    'delete', project, user, None, request
+                )
         return instance
 
 
@@ -1730,11 +1753,44 @@ class RoleAssignmentCreateView(
     model = RoleAssignment
     form_class = RoleAssignmentForm
 
+    #: Promote assignment
+    promote_as = None
+
     def get_form_kwargs(self):
         """Pass URL arguments and current user to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context['promote_as'] = self.promote_as  # Queried in get()
+        return context
+
+    def get(self, request, *args, **kwargs):
+        # Validate inherited role promotion if set
+        if self.kwargs.get('promote_as'):
+            project = self.get_project()
+            self.promote_as = RoleAssignment.objects.filter(
+                sodar_uuid=self.kwargs['promote_as']
+            ).first()
+            if (
+                not self.promote_as
+                or self.promote_as.role.rank
+                <= ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+                or self.promote_as.project == project
+                or self.promote_as.project not in project.get_parents()
+            ):
+                messages.error(
+                    request, 'Invalid role assignment for promotion.'
+                )
+                return redirect(
+                    reverse(
+                        'projectroles:roles',
+                        kwargs={'project': project.sodar_uuid},
+                    )
+                )
+        return super().get(request, *args, **kwargs)
 
 
 class RoleAssignmentUpdateView(
@@ -1770,6 +1826,27 @@ class RoleAssignmentDeleteView(
     slug_url_kwarg = 'roleassignment'
     slug_field = 'sodar_uuid'
 
+    def _get_inherited_children(self, project, user, ret):
+        for child in project.get_children():
+            if not RoleAssignment.objects.filter(project=child, user=user):
+                ret.append(child)
+            else:
+                ret = self._get_inherited_children(child, user, ret)
+        return ret
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        project = self.get_project()
+        user = self.object.user
+        context['inherited_as'] = project.get_role(user, inherited_only=True)
+        context['inherited_children'] = None
+        if not context['inherited_as']:
+            context['inherited_children'] = sorted(
+                self._get_inherited_children(project, user, []),
+                key=lambda x: x.full_title,
+            )
+        return context
+
     def post(self, *args, **kwargs):
         self.object = self.get_object()
         user = self.object.user
@@ -1803,7 +1880,6 @@ class RoleAssignmentDeleteView(
                         user.username, ex
                     ),
                 )
-
         return redirect(
             reverse(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
@@ -1814,12 +1890,14 @@ class RoleAssignmentDeleteView(
 class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     """Mixin for owner RoleAssignment transfer in UI and API views"""
 
+    #: Owner role object
+    role_owner = None
+
     def _create_timeline_event(self, old_owner, new_owner, project):
         timeline = get_backend_api('timeline_backend')
         # Init Timeline event
         if not timeline:
             return None
-
         tl_desc = 'transfer ownership from {{{}}} to {{{}}}'.format(
             'prev_owner', 'new_owner'
         )
@@ -1840,31 +1918,42 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
     @transaction.atomic
     def _handle_transfer(
-        self, project, old_owner_as, new_owner, old_owner_role
+        self,
+        project,
+        old_owner_as,
+        new_owner,
+        old_owner_role,
+        old_inh_owner,
     ):
-        # Update roles
-        old_owner_as.role = old_owner_role
-        old_owner_as.save()
-        role_as = RoleAssignment.objects.get_assignment(new_owner, project)
-        role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        """
+        Handle ownership transfer with atomic rollback.
 
-        if role_as:
-            role_as.role = role_owner
-            role_as.save()
-        elif new_owner in [
-            a.user for a in project.get_owners(inherited_only=True)
-        ]:
-            RoleAssignment.objects.create(
-                project=project, user=new_owner, role=role_owner
-            )
+        :param project: Project object
+        :param old_owner_as: RoleAssignment object for old owner
+        :param new_owner: User object for new user
+        :param old_owner_role: Role object to set for old owner
+        :param old_inh_owner: Whether old owner is inherited owner (boolean)
+        """
+        # Inherited owner, delete local role
+        if old_inh_owner:
+            old_owner_as.delete()
+        # Update old owner role
         else:
-            # We should already catch this earlier, but just in case..
-            raise Exception(
-                'New owner must have direct or inherited role in project'
+            old_owner_as.role = old_owner_role
+            old_owner_as.save()
+        # Update or create new owner role
+        new_role_as = RoleAssignment.objects.filter(
+            project=project, user=new_owner
+        ).first()
+        if new_role_as:
+            new_role_as.role = self.role_owner
+            new_role_as.save()
+        else:
+            RoleAssignment.objects.create(
+                project=project, user=new_owner, role=self.role_owner
             )
-
         # Call for additional actions for role creation/update in plugins
-        if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             args = [
                 project,
                 new_owner,
@@ -1889,13 +1978,23 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :return:
         """
         app_alerts = get_backend_api('appalerts_backend')
+        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
         old_owner = old_owner_as.user
-        owner_role = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        # Old owner inheritance
+        old_inh_as = project.get_role(old_owner, inherited_only=True)
+        old_inh_owner = (
+            True if old_inh_as and old_inh_as.role == self.role_owner else False
+        )
+        # New owner inheritance
+        new_inh_as = project.get_role(new_owner, inherited_only=True)
+        new_inh_owner = (
+            True if new_inh_as and new_inh_as.role == self.role_owner else False
+        )
         tl_event = self._create_timeline_event(old_owner, new_owner, project)
 
         try:
             self._handle_transfer(
-                project, old_owner_as, new_owner, old_owner_role
+                project, old_owner_as, new_owner, old_owner_role, old_inh_owner
             )
         except Exception as ex:
             if tl_event:
@@ -1904,8 +2003,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
         if tl_event:
             tl_event.set_status('OK')
-
-        if self.request.user != old_owner:
+        if not old_inh_owner and self.request.user != old_owner:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
@@ -1924,15 +2022,14 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                 email.send_role_change_mail(
                     'update', project, old_owner, old_owner_role, self.request
                 )
-
-        if self.request.user != new_owner:
+        if not new_inh_owner and self.request.user != new_owner:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
                     alert_name='role_update',
                     user=new_owner,
                     message=ALERT_MSG_ROLE_UPDATE.format(
-                        project=project.title, role=owner_role.name
+                        project=project.title, role=self.role_owner.name
                     ),
                     url=reverse(
                         'projectroles:detail',
@@ -1945,7 +2042,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                     'update',
                     project,
                     new_owner,
-                    owner_role,
+                    self.role_owner,
                     self.request,
                 )
 
@@ -1990,7 +2087,6 @@ class RoleAssignmentOwnerTransferView(
         redirect_url = reverse(
             'projectroles:roles', kwargs={'project': project.sodar_uuid}
         )
-
         try:
             self.transfer_owner(
                 project, new_owner, old_owner_as, old_owner_role
@@ -2000,14 +2096,17 @@ class RoleAssignmentOwnerTransferView(
             messages.error(
                 self.request, 'Unable to transfer ownership: {}'.format(ex)
             )
-
-        success_msg = (
-            'Successfully transferred ownership from '
-            '{} to {}.'.format(old_owner.username, new_owner.username)
-        )
-        if SEND_EMAIL:
-            success_msg += ' Notification(s) have been sent by email.'
-        messages.success(self.request, success_msg)
+            if settings.DEBUG:
+                raise ex
+            return redirect(redirect_url)
+        if old_owner.username != new_owner.username:
+            success_msg = (
+                'Successfully transferred ownership from '
+                '{} to {}.'.format(old_owner.username, new_owner.username)
+            )
+            if SEND_EMAIL:
+                success_msg += ' Notification(s) have been sent by email.'
+            messages.success(self.request, success_msg)
         return redirect(redirect_url)
 
 

@@ -4,8 +4,12 @@ from test_plus.test import TestCase
 from django.forms.models import model_to_dict
 
 # Projectroles dependency
-from projectroles.models import Role, SODAR_CONSTANTS
-from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
+from projectroles.models import SODAR_CONSTANTS
+from projectroles.tests.test_models import (
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+)
 
 from sodarcache.models import JSONCacheItem
 
@@ -39,18 +43,18 @@ class JsonCacheItemMixin:
         return result
 
 
-class TestJsonCacheItemBase(ProjectMixin, RoleAssignmentMixin, TestCase):
+class TestJsonCacheItemBase(
+    ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase
+):
     def setUp(self):
         # Make owner user
         self.user_owner = self.make_user('owner')
-        # Init project, role and assignment
+        # Init roles
+        self.init_roles()
+        # Init project and assignment
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
         self.assignment_owner = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )

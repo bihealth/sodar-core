@@ -671,7 +671,7 @@ def send_project_archive_mail(project, action, request):
     :return: Amount of sent email (int)
     """
     user = request.user
-    project_users = [a.user for a in project.get_all_roles() if a.user != user]
+    project_users = [a.user for a in project.get_roles() if a.user != user]
     project_users = list(set(project_users))  # Remove possible dupes (see #710)
     if not project_users:
         return 0

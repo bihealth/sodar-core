@@ -7,9 +7,12 @@
 {% block title %}
   {% if object.pk %}
     Update Member {{ object.user.get_form_label }} in {{ object.project.title }}
+  {% elif promote_as %}
+    Promote Member {{ promote_as.user.get_form_label }}
   {% else %}
-    Add Member in {{ project.title }}
+    Add Member
   {% endif %}
+  in {{ project.title }}
 {% endblock title %}
 
 {% block projectroles_extend %}
@@ -17,6 +20,8 @@
 <div class="row sodar-subtitle-container bg-white sticky-top">
   {% if object.pk %}
     <h3>Update Member {{ object.user.get_form_label }}</h3>
+  {% elif promote_as %}
+    <h3>Promote Member {{ promote_as.user.get_form_label }}</h3>
   {% else %}
     <h3>Add Member</h3>
   {% endif %}
@@ -42,6 +47,8 @@
         <button type="submit" class="btn btn-primary">
           {% if object.pk %}
             <i class="iconify" data-icon="mdi:check-bold"></i> Update
+          {% elif promote_as %}
+            <i class="iconify" data-icon="mdi:account-arrow-up"></i> Promote
           {% else %}
             <i class="iconify" data-icon="mdi:account-plus"></i> Add
           {% endif %}
@@ -56,27 +63,27 @@
 {% block javascript %}
   {{ block.super }}
   <script type="text/javascript">
-      $(document).ready(function() {
-          $('#sodar-pr-email-preview-link').click(function () {
-              $('.modal-title').text('Email Preview');
-
-              var body = '{{ preview_body }}';
-              var userName = $('#id_user').find('option:selected').text();
-              var userDisplayName = userName.substr(0, userName.indexOf('(') - 1);
-              var roleName = $('#id_role').find('option:selected').text();
-              body = body.replace('{role_name}', roleName);
-              body = body.replace('{user_name}', userDisplayName);
-
-              var htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>';
-              htmlData += '<strong>Body:</strong>';
-              htmlData += '<pre id="sodar-email-body">' + body;
-              htmlData += '</pre>';
-
-              $('.modal-body').html(htmlData);
-          });
-      });
+    $(document).ready(function() {
+        $('#sodar-pr-email-preview-link').click(function () {
+            $('.modal-title').text('Email Preview');
+            var body = '{{ preview_body }}';
+            var userName = $('#id_user').find('option:selected').text();
+            if (!userName) {
+                userName = "{{ promote_as.user.get_full_name }}";
+            } else {
+              userName = userName.substr(0, userName.indexOf('(') - 1);
+            }
+            var roleName = $('#id_role').find('option:selected').text();
+            body = body.replace('{role_name}', roleName);
+            body = body.replace('{user_name}', userName);
+            var htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>';
+            htmlData += '<strong>Body:</strong>';
+            htmlData += '<pre id="sodar-email-body">' + body;
+            htmlData += '</pre>';
+            $('.modal-body').html(htmlData);
+        });
+    });
   </script>
-
   <!-- DAL redirect event listener -->
   <script type="text/javascript" src="{% static 'projectroles/js/autocomplete_redirect.js' %}"></script>
 {% endblock javascript %}

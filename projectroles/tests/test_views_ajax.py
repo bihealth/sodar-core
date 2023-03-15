@@ -18,7 +18,6 @@ from projectroles.tests.test_views import (
     PROJECT_TYPE_PROJECT,
 )
 from projectroles.tests.test_views_api import SerializedObjectMixin
-from projectroles.views_ajax import INHERITED_OWNER_INFO
 
 
 app_settings = AppSettingAPI()
@@ -29,17 +28,24 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def setUp(self):
         super().setUp()
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_contributor_cat = self.make_user('user_contributor_cat')
+        self.user_owner = self.make_user('user_owner')
+        self.user_no_roles = self.make_user('user_no_roles')
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.owner_as_cat = self.make_assignment(
-            self.category, self.user, self.role_owner
+            self.category, self.user_owner_cat, self.role_owner
         )
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self.make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
+        )
+        self.cat_contributor_as = self.make_assignment(
+            self.project, self.user_contributor_cat, self.role_contributor
         )
 
     def test_get(self):
@@ -114,13 +120,16 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_get_inherited_owner(self):
         """Test project list retrieval for inherited owner"""
-        cat_owner = self.make_user('cat_owner')
-        self.owner_as_cat.user = cat_owner
-        self.owner_as_cat.save()
-        pro_owner = self.make_user('pro_owner')
-        self.owner_as.user = pro_owner
-        self.owner_as.save()
-        with self.login(cat_owner):
+        with self.login(self.user_owner_cat):
+            response = self.client.get(
+                reverse('projectroles:ajax_project_list'),
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['projects']), 2)
+
+    def test_get_inherited_contrib(self):
+        """Test project list retrieval for inherited contributor"""
+        with self.login(self.user_contributor_cat):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list'),
             )
@@ -129,8 +138,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_get_no_results(self):
         """Test project list retrieval with no results"""
-        new_user = self.make_user('new_user')  # User with no roles
-        with self.login(new_user):
+        with self.login(self.user_no_roles):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list'),
             )
@@ -267,16 +275,8 @@ class TestProjectListRoleAjaxView(
             )
         self.assertEqual(response.status_code, 200)
         expected = {
-            str(self.category.sodar_uuid): {
-                'name': 'Owner',
-                'class': None,
-                'info': None,
-            },
-            str(self.project.sodar_uuid): {
-                'name': 'Owner',
-                'class': 'text-muted',
-                'info': INHERITED_OWNER_INFO,
-            },
+            str(self.category.sodar_uuid): {'name': 'Owner', 'class': None},
+            str(self.project.sodar_uuid): {'name': 'Owner', 'class': None},
         }
         self.assertEqual(response.data, expected)
 
@@ -300,13 +300,8 @@ class TestProjectListRoleAjaxView(
             str(self.category.sodar_uuid): {
                 'name': 'N/A',
                 'class': 'text-muted',
-                'info': None,
             },
-            str(self.project.sodar_uuid): {
-                'name': 'Owner',
-                'class': None,
-                'info': None,
-            },
+            str(self.project.sodar_uuid): {'name': 'Owner', 'class': None},
         }
         self.assertEqual(response.data, expected)
 

@@ -13,7 +13,6 @@ from test_plus.test import TestCase
 
 from projectroles.models import (
     Project,
-    Role,
     RoleAssignment,
     RemoteProject,
     RemoteSite,
@@ -23,6 +22,7 @@ from projectroles.models import (
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
+    RoleMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
@@ -130,6 +130,7 @@ PR_IP_ALLOWLIST_UUID = str(uuid.uuid4())
 
 class TestGetSourceData(
     ProjectMixin,
+    RoleMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
@@ -140,14 +141,7 @@ class TestGetSourceData(
 
     def setUp(self):
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
-        self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR
-        )[0]
-        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
+        self.init_roles()
         # Init an LDAP user on the source site
         self.user_source = self.make_sodar_user(
             username=SOURCE_USER_USERNAME,
@@ -156,7 +150,6 @@ class TestGetSourceData(
             last_name=SOURCE_USER_LAST_NAME,
             email=SOURCE_USER_EMAIL,
         )
-
         # Init local category and project
         self.category = self.make_project(
             SOURCE_CATEGORY_TITLE, PROJECT_TYPE_CATEGORY, None
@@ -220,7 +213,7 @@ class TestGetSourceData(
         self.assertEqual(sync_data, expected)
 
     def test_read_info(self):
-        """Test get data with project level of READ_INFO (read information)"""
+        """Test get data with project level of READ_INFO"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -314,7 +307,7 @@ class TestGetSourceData(
         self.assertEqual(sync_data, expected)
 
     def test_read_roles(self):
-        """Test get data with project level of READ_ROLES (read roles)"""
+        """Test get data with project level of READ_ROLES"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -379,6 +372,44 @@ class TestGetSourceData(
             'app_settings': {},
         }
         self.assertEqual(sync_data, expected)
+
+    def test_read_roles_inherited(self):
+        """Test get data with READ_ROLES and inherited contributor"""
+        user_new_name = 'user_new@' + SOURCE_USER_DOMAIN
+        user_new = self.make_sodar_user(
+            username=user_new_name,
+            name='New User',
+            first_name='New',
+            last_name='User',
+            email='user_new@example.com',
+        )
+        contrib_as = self.make_assignment(
+            self.category, user_new, self.role_contributor
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.peer_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+
+        sync_data = self.remote_api.get_source_data(self.target_site)
+        c_uuid = str(self.category.sodar_uuid)
+        a_uuid = str(contrib_as.sodar_uuid)
+        self.assertIn(str(user_new.sodar_uuid), sync_data['users'].keys())
+        self.assertIn(a_uuid, sync_data['projects'][c_uuid]['roles'].keys())
+        self.assertEqual(
+            sync_data['projects'][c_uuid]['roles'][a_uuid]['user'],
+            user_new_name,
+        )
+        self.assertEqual(
+            sync_data['projects'][c_uuid]['roles'][a_uuid]['role'],
+            PROJECT_ROLE_CONTRIBUTOR,
+        )
 
     def test_revoked(self):
         """Test get data with project level of REVOKED"""
@@ -451,6 +482,7 @@ class TestGetSourceData(
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestSyncRemoteDataBase(
     ProjectMixin,
+    RoleMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
@@ -467,15 +499,7 @@ class TestSyncRemoteDataBase(
         self.admin_user.is_superuser = True
         self.maxDiff = None
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
-        self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR
-        )[0]
-        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
-
+        self.init_roles()
         # Init source site
         self.source_site = self.make_site(
             name=SOURCE_SITE_NAME,
@@ -1069,6 +1093,37 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
+    def test_create_inherited(self):
+        """Test sync with inherited contributor"""
+        self.assertEqual(User.objects.all().count(), 1)
+        new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
+        new_user_uuid = str(uuid.uuid4())
+        new_role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+        remote_data['users'][str(new_user_uuid)] = {
+            'sodar_uuid': new_user_uuid,
+            'username': new_user_username,
+            'name': 'Some Name',
+            'first_name': 'Some',
+            'last_name': 'Name',
+            'groups': [SOURCE_USER_GROUP],
+        }
+        remote_data['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            new_role_uuid
+        ] = {
+            'user': new_user_username,
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+        }
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
+
+        self.assertEqual(User.objects.all().count(), 3)
+        new_user = User.objects.get(username=new_user_username)
+        category = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
+        self.assertEqual(
+            RoleAssignment.objects.get(project=category, user=new_user).role,
+            self.role_contributor,
+        )
+
     def test_create_no_access(self):
         """Test sync with no READ_ROLE access set"""
         remote_data = self.default_data
@@ -1575,6 +1630,39 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
         expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'updated'
         expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'updated'
         self.assertEqual(remote_data, expected)
+
+    def test_update_inherited(self):
+        """Test sync with existing project data and inherited contributor"""
+        self.assertEqual(User.objects.all().count(), 2)
+        remote_data = self.default_data
+        # Add new user and contributor role to source category
+        new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
+        new_user_uuid = str(uuid.uuid4())
+        new_role_uuid = str(uuid.uuid4())
+        remote_data['users'][str(new_user_uuid)] = {
+            'sodar_uuid': new_user_uuid,
+            'username': new_user_username,
+            'name': 'Some Name',
+            'first_name': 'Some',
+            'last_name': 'Name',
+            'groups': [SOURCE_USER_GROUP],
+        }
+        remote_data['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            new_role_uuid
+        ] = {
+            'user': new_user_username,
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+        }
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
+
+        self.assertEqual(User.objects.all().count(), 3)
+        new_user = User.objects.get(username=new_user_username)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.category_obj, user=new_user
+            ).role,
+            self.role_contributor,
+        )
 
     def test_update_app_setting_local(self):
         """Test update with a local app setting"""

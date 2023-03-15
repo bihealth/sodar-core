@@ -16,7 +16,6 @@ from projectroles.management.commands.batchupdateroles import (
     Command as BatchUpdateRolesCommand,
 )
 from projectroles.models import (
-    Role,
     RoleAssignment,
     ProjectInvite,
     AppSetting,
@@ -24,6 +23,7 @@ from projectroles.models import (
 )
 from projectroles.tests.test_models import (
     ProjectMixin,
+    RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
     AppSettingMixin,
@@ -58,6 +58,7 @@ class BatchUpdateRolesMixin:
 
 class TestBatchUpdateRoles(
     ProjectMixin,
+    RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
     BatchUpdateRolesMixin,
@@ -67,17 +68,8 @@ class TestBatchUpdateRoles(
 
     def setUp(self):
         super().setUp()
-
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
-        self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR
-        )[0]
-        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
-
+        self.init_roles()
         # Init users
         self.user_owner = self.make_user('owner')
         self.user_owner.email = 'owner_user@example.com'
@@ -99,6 +91,9 @@ class TestBatchUpdateRoles(
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
+        # Save UUIDs for easy access
+        self.category_uuid = str(self.category.sodar_uuid)
+        self.project_uuid = str(self.project.sodar_uuid)
 
         # Init command class
         self.command = BatchUpdateRolesCommand()
@@ -112,11 +107,10 @@ class TestBatchUpdateRoles(
 
     def test_invite(self):
         """Test inviting a single user via email to project"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
-        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -131,12 +125,11 @@ class TestBatchUpdateRoles(
 
     def test_invite_existing(self):
         """Test inviting a user when they already have an active invite"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         self.make_invite(email, self.project, self.role_guest, self.user_owner)
         self.assertEqual(ProjectInvite.objects.count(), 1)
 
-        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -146,14 +139,13 @@ class TestBatchUpdateRoles(
 
     def test_invite_multi_user(self):
         """Test inviting multiple users"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         email2 = 'new2@example.com'
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
         fd = [
-            [p_uuid, email, PROJECT_ROLE_GUEST],
-            [p_uuid, email2, PROJECT_ROLE_GUEST],
+            [self.project_uuid, email, PROJECT_ROLE_GUEST],
+            [self.project_uuid, email2, PROJECT_ROLE_GUEST],
         ]
         self.write_file(fd)
         self.command.handle(
@@ -165,14 +157,12 @@ class TestBatchUpdateRoles(
 
     def test_invite_multi_project(self):
         """Test inviting user to multiple projects"""
-        c_uuid = str(self.category.sodar_uuid)
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
         fd = [
-            [c_uuid, email, PROJECT_ROLE_GUEST],
-            [p_uuid, email, PROJECT_ROLE_GUEST],
+            [self.category_uuid, email, PROJECT_ROLE_GUEST],
+            [self.project_uuid, email, PROJECT_ROLE_GUEST],
         ]
         self.write_file(fd)
         # NOTE: Using user_owner_cat as they have perms for both projects
@@ -190,9 +180,9 @@ class TestBatchUpdateRoles(
 
     def test_invite_owner(self):
         """Test inviting an owner (should fail)"""
-        p_uuid = str(self.project.sodar_uuid)
-        email = 'new@example.com'
-        self.write_file([p_uuid, email, PROJECT_ROLE_OWNER])
+        self.write_file(
+            [self.project_uuid, 'new@example.com', PROJECT_ROLE_OWNER]
+        )
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -201,9 +191,9 @@ class TestBatchUpdateRoles(
 
     def test_invite_delegate(self):
         """Test inviting a delegate"""
-        p_uuid = str(self.project.sodar_uuid)
-        email = 'new@example.com'
-        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file(
+            [self.project_uuid, 'new@example.com', PROJECT_ROLE_DELEGATE]
+        )
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -213,11 +203,11 @@ class TestBatchUpdateRoles(
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
     def test_invite_delegate_no_perms(self):
         """Test inviting a delegate without perms (should fail)"""
-        p_uuid = str(self.project.sodar_uuid)
-        email = 'new@example.com'
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
-        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file(
+            [self.project_uuid, 'new@example.com', PROJECT_ROLE_DELEGATE]
+        )
         self.command.handle(
             **{'file': self.file.name, 'issuer': user_delegate.username}
         )
@@ -226,29 +216,26 @@ class TestBatchUpdateRoles(
 
     def test_invite_delegate_limit(self):
         """Test inviting a delegate with limit reached (should fail)"""
-        p_uuid = str(self.project.sodar_uuid)
-        email = 'new@example.com'
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
-
-        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file(
+            [self.project_uuid, 'new@example.com', PROJECT_ROLE_DELEGATE]
+        )
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
-
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_role_add(self):
         """Test adding role to user already in system"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
         user_new.save()
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
-        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -262,7 +249,6 @@ class TestBatchUpdateRoles(
 
     def test_role_update(self):
         """Test updating an existing role for user"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -275,7 +261,7 @@ class TestBatchUpdateRoles(
             1,
         )
 
-        self.write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -287,12 +273,11 @@ class TestBatchUpdateRoles(
 
     def test_role_update_owner(self):
         """Test updating the role of current owner (should fail)"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'owner@example.com'
         self.user_owner.email = email
         self.user_owner.save()
 
-        self.write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -311,7 +296,6 @@ class TestBatchUpdateRoles(
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
     def test_role_update_delegate_no_perms(self):
         """Test updating a delegate role without perms (should fail)"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -320,7 +304,7 @@ class TestBatchUpdateRoles(
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
 
-        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': user_delegate.username}
         )
@@ -332,7 +316,6 @@ class TestBatchUpdateRoles(
 
     def test_role_update_delegate_limit(self):
         """Test updating a delegate role with limit reached (should fail)"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -341,7 +324,7 @@ class TestBatchUpdateRoles(
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
 
-        self.write_file([p_uuid, email, PROJECT_ROLE_DELEGATE])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -352,11 +335,14 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 0)
 
     def test_role_add_inherited_owner(self):
-        """Test adding a role of an inherited owner (should fail)"""
-        p_uuid = str(self.project.sodar_uuid)
-        email = self.user_owner_cat.email
-
-        self.write_file([p_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
+        """Test adding role with inherited owner rank (should fail)"""
+        self.write_file(
+            [
+                self.project_uuid,
+                self.user_owner_cat.email,
+                PROJECT_ROLE_CONTRIBUTOR,
+            ]
+        )
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -370,9 +356,80 @@ class TestBatchUpdateRoles(
         )
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_role_add_inherited_higher(self):
+        """Test adding role with inherited role of higher rank"""
+        user_new = self.make_user('user_new')
+        user_new.email = 'user_new@example.com'
+        self.make_assignment(self.category, user_new, self.role_guest)
+
+        self.write_file(
+            [
+                self.project_uuid,
+                user_new.email,
+                PROJECT_ROLE_CONTRIBUTOR,
+            ]
+        )
+        self.command.handle(
+            **{'file': self.file.name, 'issuer': self.user_owner.username}
+        )
+
+        self.assertEqual(ProjectInvite.objects.count(), 0)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, user=user_new
+            ).count(),
+            0,
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_role_add_inherited_equal(self):
+        """Test adding role with inherited role of equal rank (should fail)"""
+        user_new = self.make_user('user_new')
+        user_new.email = 'user_new@example.com'
+        self.make_assignment(self.category, user_new, self.role_contributor)
+
+        self.write_file(
+            [
+                self.project_uuid,
+                user_new.email,
+                PROJECT_ROLE_CONTRIBUTOR,
+            ]
+        )
+        self.command.handle(
+            **{'file': self.file.name, 'issuer': self.user_owner.username}
+        )
+
+        self.assertEqual(ProjectInvite.objects.count(), 0)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, user=user_new
+            ).count(),
+            0,
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_role_add_inherited_lower(self):
+        """Test adding role with inherited role of lower rank (should fail)"""
+        user_new = self.make_user('user_new')
+        user_new.email = 'user_new@example.com'
+        self.make_assignment(self.category, user_new, self.role_contributor)
+
+        self.write_file([self.project_uuid, user_new.email, PROJECT_ROLE_GUEST])
+        self.command.handle(
+            **{'file': self.file.name, 'issuer': self.user_owner.username}
+        )
+
+        self.assertEqual(ProjectInvite.objects.count(), 0)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, user=user_new
+            ).count(),
+            0,
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_invite_and_update(self):
         """Test inviting and updating in one command"""
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -381,8 +438,8 @@ class TestBatchUpdateRoles(
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
         fd = [
-            [p_uuid, email, PROJECT_ROLE_GUEST],
-            [p_uuid, email2, PROJECT_ROLE_GUEST],
+            [self.project_uuid, email, PROJECT_ROLE_GUEST],
+            [self.project_uuid, email2, PROJECT_ROLE_GUEST],
         ]
         self.write_file(fd)
         self.command.handle(
@@ -403,32 +460,26 @@ class TestBatchUpdateRoles(
         admin = self.make_user(settings.PROJECTROLES_DEFAULT_ADMIN)
         admin.is_superuser = True
         admin.save()
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
-
-        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(**{'file': self.file.name, 'issuer': None})
-
         invite = ProjectInvite.objects.first()
         self.assertEqual(invite.issuer, admin)
 
     def test_command_no_perms(self):
         """Test invite with issuer who lacks permissions for a project"""
         issuer = self.make_user('issuer')
-        p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
-
-        self.write_file([p_uuid, email, PROJECT_ROLE_GUEST])
+        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': issuer.username}
         )
-
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
 
 class TestCleanAppSettings(
-    ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
+    ProjectMixin, RoleMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
 ):
     """Tests for cleanappsettings command and associated functions"""
 
@@ -446,17 +497,8 @@ class TestCleanAppSettings(
 
     def setUp(self):
         super().setUp()
-
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
-        self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR
-        )[0]
-        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
-
+        self.init_roles()
         # Init users
         self.user_owner = self.make_user('owner')
         self.user_owner.email = 'owner_user@example.com'

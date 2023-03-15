@@ -7,7 +7,7 @@ from django.urls import reverse
 from test_plus.test import TestCase, RequestFactory
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import Role, SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.email import (
     send_role_change_mail,
     send_generic_mail,
@@ -15,7 +15,11 @@ from projectroles.email import (
     get_email_user,
     get_user_addr,
 )
-from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
+from projectroles.tests.test_models import (
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+)
 
 
 app_settings = AppSettingAPI()
@@ -40,20 +44,11 @@ USER_ADD_EMAIL = 'user1@example.com'
 USER_ADD_EMAIL2 = 'user2@example.com'
 
 
-class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
+class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
-        self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR
-        )[0]
-        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
-
+        self.init_roles()
         # Init users
         self.user_owner = self.make_user('owner')
         self.user_owner.email = 'owner_user@example.com'

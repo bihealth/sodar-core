@@ -5,9 +5,8 @@
     Member Operations
   </button>
   <div class="dropdown-menu dropdown-menu-right">
-
     {# Add Role #}
-    {% if can_update_members %}
+    {% if role_perms.can_update_members %}
       <a class="dropdown-item"
          href="{% url 'projectroles:role_create' project=project.sodar_uuid %}"
          title="Add Member"
@@ -17,7 +16,7 @@
     {% endif %}
 
     {# Send Invite #}
-    {% if can_invite %}
+    {% if role_perms.can_invite %}
       <a class="dropdown-item"
          href="{% url 'projectroles:invite_create' project=project.sodar_uuid %}"
          title="Send Invite"
@@ -27,7 +26,7 @@
     {% endif %}
 
     {# View Roles #}
-    {% if can_update_members and request.resolver_match.url_name != 'project_roles' %}
+    {% if role_perms.can_update_members and request.resolver_match.url_name != 'project_roles' %}
       <a class="dropdown-item"
          href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
          title="View Members"
@@ -37,7 +36,7 @@
     {% endif %}
 
     {# View Invites #}
-    {% if can_invite and request.resolver_match.url_name != 'role_invites' %}
+    {% if role_perms.can_invite and request.resolver_match.url_name != 'role_invites' %}
       <a class="dropdown-item"
          href="{% url 'projectroles:invites' project=project.sodar_uuid %}"
          title="View Invites"
@@ -45,6 +44,5 @@
         <i class="iconify" data-icon="mdi:email"></i> View Invites
       </a>
     {% endif %}
-
   </div>
 </div>

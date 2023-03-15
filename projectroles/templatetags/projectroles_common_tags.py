@@ -125,13 +125,19 @@ def get_display_name(key, title=False, count=1, plural=False):
 
 
 @register.simple_tag
-def get_role_display_name(role_as, title=False):
-    """Return display name for role assignment"""
+def get_role_display_name(role_as, project, title=False):
+    """
+    Return display name for role assignment.
+
+    :param role_as: Role assignment
+    :param project: Project object for context (to support inheritance)
+    :param title: Return in title case if True (boolean)
+    """
     role_suffix = role_as.role.name.split(' ')[1]
     if title:
         role_suffix = role_suffix.title()
     return '{} {}'.format(
-        _get_display_name(role_as.project.type, title=title), role_suffix
+        _get_display_name(project.type, title=title), role_suffix
     )
 
 
@@ -216,7 +222,7 @@ def get_history_dropdown(obj, project=None):
         return ''
     url = timeline.get_object_url(obj, project)
     return (
-        '<a class="dropdown-item" href="{}">\n'
+        '<a class="dropdown-item sodar-pr-role-link-history" href="{}">\n'
         '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i> '
         'History</a>\n'.format(url)
     )

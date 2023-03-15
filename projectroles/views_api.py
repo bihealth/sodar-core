@@ -591,6 +591,7 @@ class RoleAssignmentOwnerTransferAPIView(
             name=request.data.get('old_owner_role')
         ).first()
         old_owner_as = project.get_owner()
+        old_owner = old_owner_as.user
 
         # Validate input
         if not new_owner or not old_owner_role:
@@ -607,12 +608,23 @@ class RoleAssignmentOwnerTransferAPIView(
             raise serializers.ValidationError(
                 'User "{}" not found'.format(request.data.get('new_owner'))
             )
-        if new_owner == old_owner_as.user:
+        if new_owner == old_owner:
             raise serializers.ValidationError('Owner role already set for user')
         if not project.has_role(new_owner):
             raise serializers.ValidationError(
                 'User {} is not a member of the project'.format(
                     new_owner.username
+                )
+            )
+        # Validate existing inherited role for old owner, do not allow demoting
+        inh_roles = RoleAssignment.objects.filter(
+            user=old_owner, project__in=project.get_parents()
+        ).order_by('role__rank')
+        if inh_roles and old_owner_role.rank > inh_roles.first().role.rank:
+            raise serializers.ValidationError(
+                'User {} has inherited role "{}", demoting is not '
+                'allowed'.format(
+                    old_owner.username, inh_roles.first().role.name
                 )
             )
 

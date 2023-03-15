@@ -9,8 +9,12 @@ from django.urls import reverse
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import Role, SODAR_CONSTANTS
-from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
+from projectroles.models import SODAR_CONSTANTS
+from projectroles.tests.test_models import (
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+)
 from projectroles.app_settings import AppSettingAPI
 
 from filesfolders.models import File, Folder, HyperLink
@@ -43,19 +47,17 @@ INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
 class TestViewsBaseMixin(
-    ProjectMixin, RoleAssignmentMixin, FileMixin, FolderMixin, HyperLinkMixin
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    FileMixin,
+    FolderMixin,
+    HyperLinkMixin,
 ):
     def setUp(self):
         self.req_factory = RequestFactory()
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
-        self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR
-        )[0]
-        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
+        self.init_roles()
         # Init superuser
         self.user = self.make_user('superuser')
         self.user.is_staff = True

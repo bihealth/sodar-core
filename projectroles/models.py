@@ -26,6 +26,10 @@ logger = logging.getLogger(__name__)
 
 # SODAR constants
 SODAR_CONSTANTS = get_sodar_constants()
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 
 # Local constants
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
@@ -40,6 +44,12 @@ APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
+ROLE_RANKING = {
+    PROJECT_ROLE_OWNER: 10,
+    PROJECT_ROLE_DELEGATE: 20,
+    PROJECT_ROLE_CONTRIBUTOR: 30,
+    PROJECT_ROLE_GUEST: 40,
+}
 
 
 # Project ----------------------------------------------------------------------
@@ -227,6 +237,7 @@ class Project(models.Model):
         )
 
     # Internal helpers
+
     def _get_full_title(self):
         """Return full title of project with path."""
         parents = self.get_parents()
@@ -266,12 +277,27 @@ class Project(models.Model):
 
     # Custom row-level functions
 
+    def get_parents(self):
+        """
+        Return a list of parent projects in inheritance order.
+
+        :return: List of Project objects
+        """
+        if not self.parent:
+            return []
+        ret = []
+        parent = self.parent
+        while parent:
+            ret.append(parent)
+            parent = parent.parent
+        return reversed(ret)
+
     def get_children(self, flat=False):
         """
         Return child objects for the Project sorted by title.
 
         :param flat: Return all children recursively as a flat list (bool)
-        :return: Iterable of Project
+        :return: QuerySet
         """
 
         def _get(obj, ret=None):
@@ -295,139 +321,257 @@ class Project(models.Model):
             p = p.parent
         return ret
 
+    def get_role(self, user, inherited_only=False):
+        """
+        Return the currently active role for user, or None if not available.
+        Returns the highest ranked role including inherited roles. In case of
+        multiple roles of the same level in the hierarchy, the lowest one is
+        returned.
+
+        :param user: User object
+        :param inherited_only: Only return an inherited role if True
+                               (boolean, default=False)
+        :return: RoleAssignment object or None
+        """
+        projects = [self] if not inherited_only else []
+        projects += list(self.get_parents())
+        return (
+            RoleAssignment.objects.filter(project__in=projects, user=user)
+            .order_by('role__rank', '-project__full_title')
+            .first()
+        )
+
+    def get_roles(
+        self,
+        user=None,
+        inherited=True,
+        inherited_only=False,
+        min_rank=None,
+        max_rank=None,
+    ):
+        """
+        Return project role assignments.
+
+        :param user: Limit to user (User object or None)
+        :param inherited: Include inherited roles (bool)
+        :param inherited_only: Return only inherited roles (bool)
+        :param min_rank: Limit roles to minimum rank (integer or None)
+        :param max_rank: Limit roles to maximum rank (integer or None)
+        :return: List of RoleAssignment objects
+        :raise: ValueError If inheritance arguments conflict
+        """
+        if not inherited and inherited_only:
+            raise ValueError(
+                'Inherited set False and inherited_only set True, No results '
+                'can be returned'
+            )
+        projects = [] if inherited_only else [self]
+        # NOTE: We have to get inherited roles to exclude overridden ones
+        parents = list(self.get_parents())
+        projects += parents
+        q_kwargs = {'project__in': projects}
+        if user and user.is_authenticated:
+            q_kwargs['user'] = user
+        roles = RoleAssignment.objects.filter(**q_kwargs).order_by(
+            '-project__full_title', 'role__name', 'user'
+        )
+        user_roles = {}
+        for a in roles:
+            u = a.user
+            rank_ok = (not min_rank or a.role.rank >= min_rank) and (
+                not max_rank or a.role.rank <= max_rank
+            )
+            # Local role (always returned first if it exists)
+            if a.project == self and not inherited_only and rank_ok:
+                user_roles[u] = a
+            # Inherited role of higher rank
+            elif (
+                inherited
+                and a.project in parents
+                and (
+                    u not in user_roles or a.role.rank < user_roles[u].role.rank
+                )
+                and rank_ok
+            ):
+                user_roles[u] = a
+            # Pop overridden role if in list
+            elif (
+                a.project in parents
+                and u in user_roles
+                and a.role.rank < user_roles[u].role.rank
+            ):
+                user_roles.pop(u, None)
+        return list(user_roles.values())
+
+    def get_roles_by_rank(
+        self, role_name, inherited=True, inherited_only=False
+    ):
+        """
+        Return RoleAssignments for specific role name. Will also include custom
+        roles of identical rank once role customization is implemented (see
+        issue #288).
+
+        :param role_name: Name of role (string)
+        :param inherited: Include inherited roles (bool)
+        :param inherited_only: Return only inherited roles (bool)
+        :return: List
+        """
+        if role_name not in ROLE_RANKING:
+            role = Role.objects.filter(name=role_name).first()
+            if not role:
+                raise ValueError('Unknown role "{}"'.format(role_name))
+            rank = role.rank
+        else:
+            rank = ROLE_RANKING[role_name]
+        return self.get_roles(
+            inherited=inherited,
+            inherited_only=inherited_only,
+            min_rank=rank,
+            max_rank=rank,
+        )
+
     def get_owner(self):
         """
-        Return RoleAssignment for owner (without inherited owners) or None if
-        not set.
-        """
-        return self.roles.filter(
-            role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-        ).first()
+        Return RoleAssignment for local (non-inherited) owner or None if not
+        set.
 
-    def get_owners(self, inherited_only=False):
+        :return: QuerySet
+        """
+        return self.roles.filter(role__name=PROJECT_ROLE_OWNER).first()
+
+    def get_owners(self, inherited=True, inherited_only=False):
         """
         Return RoleAssignments for project owner as well as possible inherited
         owners from parent projects.
 
-        :param inherited_only: Only show inherited owners if True (bool)
+        :param inherited: Include inherited roles (bool)
+        :param inherited_only: Return only inherited roles (bool)
         :return: List
         """
-        owners = []
-        projects = list(self.get_parents())
-        if not inherited_only:
-            projects.append(self)
-        if projects:
-            db_owners = RoleAssignment.objects.filter(
-                role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'],
-                project__in=projects,
-            )
-            for parent_owner_as in db_owners:
-                if parent_owner_as.user not in [a.user for a in owners]:
-                    owners.append(parent_owner_as)
-        return owners
+        rank = ROLE_RANKING[PROJECT_ROLE_OWNER]
+        return self.get_roles(
+            inherited=inherited,
+            inherited_only=inherited_only,
+            min_rank=rank,
+            max_rank=rank,
+        )
+
+    def get_delegates(self, inherited=True, inherited_only=False):
+        """
+        Return RoleAssignments for delegates. Excludes delegates with an
+        inherited owner role.
+
+        :param inherited: Include inherited roles (bool)
+        :param inherited_only: Return only inherited roles (bool)
+        :return: List
+        """
+        rank = ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+        return self.get_roles(
+            inherited=inherited,
+            inherited_only=inherited_only,
+            min_rank=rank,
+            max_rank=rank,
+        )
 
     def is_owner(self, user):
         """
         Return True if user is owner in this project or inherits ownership from
         a parent category.
+
+        :return: Boolean
         """
-        if user.is_authenticated and user in [
-            a.user for a in self.get_owners()
-        ]:
+        if not user.is_authenticated:
+            return False
+        role_as = self.get_role(user)
+        if role_as and role_as.role.rank == ROLE_RANKING[PROJECT_ROLE_OWNER]:
             return True
         return False
 
     def is_delegate(self, user):
         """
-        Return True if user is delegate in this project.
+        Return True if user is delegate in this project or inherits delegate
+        status from a parent category.
+
+        :return: Boolean
         """
-        if (
-            user
-            and user.is_authenticated
-            and user in [a.user for a in self.get_delegates()]
-        ):
+        if not user.is_authenticated:
+            return False
+        role_as = self.get_role(user)
+        if role_as and role_as.role.rank == ROLE_RANKING[PROJECT_ROLE_DELEGATE]:
             return True
         return False
 
     def is_owner_or_delegate(self, user):
         """
         Return True if user is either an owner or a delegate in this project.
-        Includes inherited owner relationships.
+        Includes inherited assignments.
+
+        :return: Boolean
         """
-        return (
-            user
-            and user.is_authenticated
-            and (self.is_owner(user) or self.is_delegate(user))
-        )
+        if not user.is_authenticated:
+            return False
+        role_as = self.get_role(user)
+        if role_as and role_as.role.rank in [
+            ROLE_RANKING[PROJECT_ROLE_OWNER],
+            ROLE_RANKING[PROJECT_ROLE_DELEGATE],
+        ]:
+            return True
+        return False
 
-    def get_delegates(self, exclude_inherited=False):
-        """Return RoleAssignments for delegates"""
-        delegates = self.roles.filter(
-            role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
-        )
-        if exclude_inherited:
-            return delegates.exclude(
-                user__in=[a.user for a in self.get_owners(inherited_only=True)]
-            )
-        return delegates
-
-    def get_members(self):
+    def get_members(self, inherited=True):
         """
         Return RoleAssignments for members of project excluding owner and
         delegates.
+
+        :param inherited: Include inherited roles (boolean)
+        :return: List of RoleAssignments
         """
-        return self.roles.filter(
-            ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])
-            & ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE'])
+        return self.get_roles(
+            inherited=inherited,
+            min_rank=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).rank,
         )
 
-    def get_all_roles(self, inherited=True):
+    def has_role(self, user):
         """
-        Return all RoleAssignments for the project, including inherited owner
-        rights from parent categories.
+        Return whether user has roles in Project. Returns True if user has local
+        role, inherits a role from a parent category, or if public guest access
+        is enabled for the project.
 
-        :param inherited: Include inherited owners (bool, default=True)
-        :return: List
+        :param user: User object
+        :return: Boolean
         """
-        owners = self.get_owners() if inherited else [self.get_owner()]
-        return owners + list(self.get_delegates()) + list(self.get_members())
-
-    def has_role(self, user, include_children=False, check_owner=True):
-        """
-        Return whether user has roles in Project. If include_children is
-        True, return True if user has roles in ANY child project. Returns
-        True if user inherits owner permissions from a parent category, or if
-        public access is allowed for the project.
-        """
-        if (
-            self.public_guest_access
-            or self.roles.filter(user=user).count() > 0
-            or (check_owner and self.is_owner(user))
-        ):
+        if self.public_guest_access or self.get_role(user=user):
             return True
-
-        if include_children:
-            for child in self.children.all():
-                # Inherited ownership check is redundant for children
-                if child.has_role(
-                    user, include_children=True, check_owner=False
-                ):
-                    return True
         return False
 
-    def get_parents(self):
-        """Return an array of parent projects in inheritance order"""
-        if not self.parent:
-            return []
-        ret = []
-        parent = self.parent
-        while parent:
-            ret.append(parent)
-            parent = parent.parent
-        return reversed(ret)
+    def has_role_in_children(self, user):
+        """
+        Return True if user has a role in any of the children in the project.
+        Also returns true if public guest access is true for any child.
+
+        :param user: User object
+        :return: Boolean
+        """
+        # User with role in self has at least the same role in children
+        if self.has_role(user):
+            return True
+        children = self.get_children(flat=True)
+        if (
+            any([c.public_guest_access for c in children])
+            or RoleAssignment.objects.filter(
+                user=user, project__in=children
+            ).count()
+            > 0
+        ):
+            return True
+        return False
 
     def get_source_site(self):
-        """Return source site or None if this is a locally defined project"""
+        """
+        Return source site or None if this is a locally defined project.
+
+        :return: RemoteProject object or None
+        """
         if (
             settings.PROJECTROLES_SITE_MODE
             == SODAR_CONSTANTS['SITE_MODE_SOURCE']
@@ -445,8 +589,10 @@ class Project(models.Model):
 
     def is_remote(self):
         """
-        Return True if current project has been retrieved from a remote
-        SODAR site.
+        Return True if current project has been retrieved from a remote SODAR
+        site.
+
+        :return: Boolean
         """
         if (
             settings.PROJECTROLES_SITE_MODE
@@ -457,7 +603,11 @@ class Project(models.Model):
         return False
 
     def is_revoked(self):
-        """Return True if remote access has been revoked for the project"""
+        """
+        Return True if remote access has been revoked for the project.
+
+        :return: Boolean
+        """
         if self.is_remote():
             remote_project = RemoteProject.objects.filter(
                 project=self, site=self.get_source_site()
@@ -520,19 +670,6 @@ class Role(models.Model):
 # RoleAssignment ---------------------------------------------------------------
 
 
-class RoleAssignmentManager(models.Manager):
-    """Manager for custom table-level RoleAssignment queries"""
-
-    def get_assignment(self, user, project):
-        """Return assignment of user to project, or None if not found"""
-        if not user.is_authenticated:  # Anonymous users can't have roles
-            return None
-        try:
-            return super().get_queryset().get(user=user, project=project)
-        except RoleAssignment.DoesNotExist:
-            return None
-
-
 class RoleAssignment(models.Model):
     """
     Assignment of an user to a role in a project. One role per user is
@@ -569,9 +706,6 @@ class RoleAssignment(models.Model):
         default=uuid.uuid4, unique=True, help_text='RoleAssignment SODAR UUID'
     )
 
-    # Set manager for custom queries
-    objects = RoleAssignmentManager()
-
     class Meta:
         ordering = [
             'project__parent__title',
@@ -598,14 +732,13 @@ class RoleAssignment(models.Model):
         """
         Validate fields to ensure user has only one role set for the project.
         """
-        assignment = RoleAssignment.objects.get_assignment(
-            self.user, self.project
-        )
-
-        if assignment and (not self.pk or assignment.pk != self.pk):
+        role_as = RoleAssignment.objects.filter(
+            project=self.project, user=self.user
+        ).first()
+        if role_as and (not self.pk or role_as.pk != self.pk):
             raise ValidationError(
                 'Role {} already set for {} in {}'.format(
-                    assignment.role, assignment.user, assignment.project
+                    role_as.role, role_as.user, role_as.project
                 )
             )
 
@@ -614,7 +747,7 @@ class RoleAssignment(models.Model):
         Validate role to ensure no more than one project owner is assigned to a
         project.
         """
-        if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_OWNER']:
+        if self.role.name == PROJECT_ROLE_OWNER:
             owner = self.project.get_owner()
             if owner and (not self.pk or owner.pk != self.pk):
                 raise ValidationError(
@@ -625,27 +758,27 @@ class RoleAssignment(models.Model):
 
     def _validate_delegate(self):
         """
-        Validate role to ensure no more than project delegate is assigned to a
-        project.
+        Validate role to ensure no more than the allowed amount of project
+        delegates are assigned to a project.
         """
-        # No validation if the project is a remote one
-        if not (self.project.is_remote()):
-            # Get project delegate limit
-            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
-            if (
-                self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
-                and del_limit != 0
-                and self.project.get_delegates(exclude_inherited=True).count()
-                >= del_limit
-                and (
-                    not self.pk
-                    or (self.project.get_delegates().filter(pk=self.pk) is None)
-                )
-            ):
-                raise ValidationError(
-                    'The limit ({}) of delegates for this project has '
-                    'already been reached.'.format(del_limit)
-                )
+        if (
+            self.role.name != PROJECT_ROLE_DELEGATE
+            or self.project.is_remote()  # No validation for remote projects
+        ):
+            return
+        del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
+        delegates = self.project.get_delegates(inherited=False)
+        if 0 < del_limit <= len(delegates) and (
+            not self.pk
+            or self.project.roles.filter(
+                role__name=PROJECT_ROLE_DELEGATE, pk=self.pk
+            )
+            is None
+        ):
+            raise ValidationError(
+                'The local delegate limit for this project ({}) has already '
+                'been reached.'.format(del_limit)
+            )
 
 
 # AppSetting -------------------------------------------------------------------

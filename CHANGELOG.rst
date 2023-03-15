@@ -8,11 +8,71 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **General**
+    - Separate Chromedriver install script (#1127)
+- **Appalerts**
+    - Dismissed alerts list view (#711)
+    - ``add_alerts()`` API method (#1101)
+- **Projectroles**
+    - ``project_star`` app setting (#321)
+    - Search app omitting with ``PROJECTROLES_SEARCH_OMIT_APPS`` (#1119)
+    - Inherited roles in project list and retrieve REST API views (#1121)
+    - App settings validation by plugin method (#860)
+    - App settings callable default value and options support (#1050)
+    - ``Project.get_roles_by_rank()`` helper (#638)
+    - ``RoleMixin`` with ``init_roles()`` for tests
+- **Siteinfo**
+    - Add ``LDAP_ALT_DOMAINS`` to displayed settings (#1123)
+- **Sodarcache**
+    - ``delete_cache_item()`` method (#1068)
+- **Timeline**
+    - Search result limiting with ``TIMELINE_SEARCH_LIMIT``` (#1124)
+
+Changed
+-------
+
+- **General**
+    - Use path instead of regex for URL patterns (#1116)
+- **Filesfolders**
+    - Change app display name to "Files" (#828)
+- **Projectroles**
+    - Display full user name in role update form (#1147)
+    - Make email optional in ``SODARUser.get_form_label()`` (#1148)
+    - Move user model tests to projectroles model tests (#1149)
+    - Replace ``ProjectUserTag`` project starring with app setting (#321)
+    - Prevent sending invites to local users with local users disabled (#616)
+    - Implement advanced search with POST (#712)
+    - Remove category project list scrolling (#1141)
+    - Move sidebar template tags to context processor (#969)
+    - Extend role inheritance to all roles (#638)
+    - Update ``Project`` model API methods (#638, #710, #1045)
+    - Update permission and UI test setup (#638)
+
+Fixed
+-----
+
+- **Appalerts**
+    - ``AppAlert.__repr__()`` crash if project not set (#1150)
+- **Bgjobs**
+    - Non-standard URL paths (#1139)
+- **Projectroles**
+    - ``get_form_label()`` displaying user without full name in parenthesis (#1140)
+    - Project and user update form JSON error handling (#1151)
+    - ``Project`` API methods returning unexpected multiple ``RoleAssignment`` objects for user (#710)
+
 Removed
 -------
 
+- **General**
+    - User model tests from ``example_site`` (#1149)
 - **Projectroles**
     - Deprecated ``AppSettingAPI`` methods (#1039)
+    - ``ProjectUserTag`` model (#321)
+    - ``RoleAssignmentManager`` (#638)
+    - ``Project.get_all_roles()`` method (#638, #710)
 
 
 v0.12.0 (2023-02-03)

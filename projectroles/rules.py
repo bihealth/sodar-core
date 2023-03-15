@@ -29,19 +29,16 @@ def is_project_owner(user, obj):
 @rules.predicate
 def is_project_delegate(user, obj):
     """Whether or not the user has the role of project delegate"""
-    assignment = RoleAssignment.objects.get_assignment(user, obj)
-    if assignment:
-        return assignment.role.name == PROJECT_ROLE_DELEGATE
-    return False
+    return obj.is_delegate(user) if obj else False
 
 
 @rules.predicate
 def is_project_contributor(user, obj):
     """Whether or not the user has the role of project contributor"""
-    assignment = RoleAssignment.objects.get_assignment(user, obj)
-    if assignment:
-        return assignment.role.name == PROJECT_ROLE_CONTRIBUTOR
-    return False
+    if not obj or not user or not user.is_authenticated:
+        return False
+    role_as = obj.get_role(user=user)
+    return role_as and role_as.role.name == PROJECT_ROLE_CONTRIBUTOR
 
 
 @rules.predicate
@@ -52,10 +49,10 @@ def is_project_guest(user, obj):
     """
     if obj.public_guest_access:
         return True
-    assignment = RoleAssignment.objects.get_assignment(user, obj)
-    if assignment:
-        return assignment.role.name == PROJECT_ROLE_GUEST
-    return False
+    if not obj or not user or not user.is_authenticated:
+        return False
+    role_as = obj.get_role(user=user)
+    return role_as and role_as.role.name == PROJECT_ROLE_GUEST
 
 
 @rules.predicate
@@ -75,11 +72,14 @@ def has_project_role(user, obj):
 def has_category_child_role(user, obj):
     """
     Whether or not the user has any role in any child project under the
-    current one, if the current project is a category. Also returns true if
+    current one, if the current project is a category. Also returns True if
     user is anonymous and category includes children with public guest access.
     """
     return obj.type == PROJECT_TYPE_CATEGORY and (
-        (user.is_authenticated and obj.has_role(user, include_children=True))
+        (
+            user.is_authenticated
+            and (obj.has_role(user) or obj.has_role_in_children(user))
+        )
         or (
             user.is_anonymous
             and getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)

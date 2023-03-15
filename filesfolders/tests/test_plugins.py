@@ -6,9 +6,13 @@ from django.urls import reverse
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import Role, SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import ProjectAppPluginPoint
-from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
+from projectroles.tests.test_models import (
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+)
 
 from filesfolders.urls import urlpatterns
 from filesfolders.tests.test_models import (
@@ -36,6 +40,7 @@ SETTING_KEY = 'allow_public_links'
 
 class TestPlugins(
     ProjectMixin,
+    RoleMixin,
     FolderMixin,
     FileMixin,
     HyperLinkMixin,
@@ -51,7 +56,7 @@ class TestPlugins(
         self.user.is_superuser = True
         self.user.save()
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
+        self.init_roles()
         # Init project and owner role
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None

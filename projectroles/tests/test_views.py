@@ -1,6 +1,7 @@
 """UI view tests for the projectroles app"""
 
 import json
+
 from urllib.parse import urlencode
 
 from django.contrib import auth
@@ -28,7 +29,6 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import EMPTY_CHOICE_LABEL
 from projectroles.models import (
     Project,
-    Role,
     RoleAssignment,
     ProjectInvite,
     RemoteSite,
@@ -46,6 +46,7 @@ from projectroles.utils import (
 )
 from projectroles.tests.test_models import (
     ProjectMixin,
+    RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
     RemoteSiteMixin,
@@ -131,20 +132,12 @@ PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
 }
 
 
-class TestViewsBase(TestCase):
+class TestViewsBase(RoleMixin, TestCase):
     """Base class for view testing"""
 
     def setUp(self):
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
-        self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR
-        )[0]
-        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
-
+        self.init_roles()
         # Init superuser
         self.user = self.make_user('superuser')
         self.user.is_staff = True
@@ -372,7 +365,7 @@ class TestProjectSearchView(
         self.assertEqual(len(response.context['project_results']), 1)
 
     def test_render_advanced_empty_input(self):
-        """Test input from advanced search with empty term (should be ignored)"""
+        """Test advanced search input with empty term (should be ignored)"""
         new_project = self.make_project(
             'AnotherProject',
             PROJECT_TYPE_PROJECT,
@@ -515,7 +508,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         """Test rendering top level category creation form"""
         with self.login(self.user):
             response = self.client.get(reverse('projectroles:create'))
-
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertIsNotNone(form)
@@ -529,7 +521,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         """Test rendering top level creation with categories disabled"""
         with self.login(self.user):
             response = self.client.get(reverse('projectroles:create'))
-
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertIsNotNone(form)
@@ -645,7 +636,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     def test_create_top_level_category(self):
         """Test creation of top level category"""
         self.assertEqual(Project.objects.all().count(), 0)
-
         values = {
             'title': 'TestCategory',
             'type': PROJECT_TYPE_CATEGORY,
@@ -699,7 +689,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'sodar_uuid': owner_as.sodar_uuid,
         }
         self.assertEqual(model_to_dict(owner_as), expected)
-
         # Assert redirect
         with self.login(self.user):
             self.assertRedirects(
@@ -898,7 +887,6 @@ class TestProjectUpdateView(
         timeline = get_backend_api('timeline_backend')
         new_category = self.make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
         self.make_assignment(new_category, self.user, self.role_owner)
-
         self.assertEqual(Project.objects.all().count(), 3)
 
         values = model_to_dict(self.project)
@@ -982,7 +970,6 @@ class TestProjectUpdateView(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
-
         # Assert timeline event
         tl_event = (
             timeline.get_project_events(self.project).order_by('-pk').first()
@@ -1072,7 +1059,6 @@ class TestProjectUpdateView(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.make_assignment(new_category, self.user, self.role_owner)
-
         self.assertEqual(
             self.category.full_title,
             self.category.title,
@@ -1152,7 +1138,6 @@ class TestProjectUpdateView(
     def test_render_remote(self):
         """Test rendering form for remote site as target"""
         self.set_up_as_target(projects=[self.category, self.project])
-
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -1461,7 +1446,6 @@ class TestProjectSettingsForm(
             value='',
             project=self.project,
         )
-
         # Init string setting with options
         self.setting_str_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -1470,7 +1454,6 @@ class TestProjectSettingsForm(
             value='string1',
             project=self.project,
         )
-
         # Init integer setting
         self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -1479,7 +1462,6 @@ class TestProjectSettingsForm(
             value=0,
             project=self.project,
         )
-
         # Init integer setting with options
         self.setting_int_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -1488,7 +1470,6 @@ class TestProjectSettingsForm(
             value=0,
             project=self.project,
         )
-
         # Init boolean setting
         self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -1497,8 +1478,7 @@ class TestProjectSettingsForm(
             value=False,
             project=self.project,
         )
-
-        # Init json setting
+        # Init JSON setting
         self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_json_setting',
@@ -1511,7 +1491,6 @@ class TestProjectSettingsForm(
             },
             project=self.project,
         )
-
         # Init IP restrict setting
         self.setting_ip_restrict = self.make_setting(
             app_name='projectroles',
@@ -1520,7 +1499,6 @@ class TestProjectSettingsForm(
             value=False,
             project=self.project,
         )
-
         # Init IP allowlist setting
         self.setting_ip_allowlist = self.make_setting(
             app_name='projectroles',
@@ -1673,7 +1651,6 @@ class TestProjectSettingsForm(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
-
         # Assert settings state after update
         self.assertEqual(
             app_settings.get(
@@ -1752,7 +1729,6 @@ class TestProjectSettingsFormTarget(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Create site
         self.site = self.make_site(
             name=REMOTE_SITE_NAME,
@@ -1761,7 +1737,6 @@ class TestProjectSettingsFormTarget(
             description='',
             secret=REMOTE_SITE_SECRET,
         )
-
         self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
@@ -1777,7 +1752,6 @@ class TestProjectSettingsFormTarget(
             value='',
             project=self.project,
         )
-
         # Init string setting with options
         self.setting_str_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -1786,7 +1760,6 @@ class TestProjectSettingsFormTarget(
             value='string1',
             project=self.project,
         )
-
         # Init integer setting
         self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -1795,7 +1768,6 @@ class TestProjectSettingsFormTarget(
             value='0',
             project=self.project,
         )
-
         # Init integer setting with options
         self.setting_int_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -1804,7 +1776,6 @@ class TestProjectSettingsFormTarget(
             value=0,
             project=self.project,
         )
-
         # Init boolean setting
         self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -1813,8 +1784,7 @@ class TestProjectSettingsFormTarget(
             value=False,
             project=self.project,
         )
-
-        # Init json setting
+        # Init JSON setting
         self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_json_setting',
@@ -1967,7 +1937,6 @@ class TestProjectSettingsFormTarget(
                 ),
                 values,
             )
-
         # Assert redirect
         with self.login(self.user):
             self.assertRedirects(
@@ -1977,7 +1946,6 @@ class TestProjectSettingsFormTarget(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
-
         # Assert settings state after update
         self.assertEqual(
             app_settings.get(
@@ -2063,7 +2031,6 @@ class TestProjectSettingsFormTargetLocal(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Create site
         self.site = self.make_site(
             name=REMOTE_SITE_NAME,
@@ -2072,7 +2039,6 @@ class TestProjectSettingsFormTargetLocal(
             description='',
             secret=REMOTE_SITE_SECRET,
         )
-
         self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
@@ -2088,7 +2054,6 @@ class TestProjectSettingsFormTargetLocal(
             value='',
             project=self.project,
         )
-
         # Init string setting with options
         self.setting_str_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -2097,7 +2062,6 @@ class TestProjectSettingsFormTargetLocal(
             value='string1',
             project=self.project,
         )
-
         # Init integer setting
         self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -2106,7 +2070,6 @@ class TestProjectSettingsFormTargetLocal(
             value='0',
             project=self.project,
         )
-
         # Init integer setting with options
         self.setting_int_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -2115,7 +2078,6 @@ class TestProjectSettingsFormTargetLocal(
             value=0,
             project=self.project,
         )
-
         # Init boolean setting
         self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -2124,8 +2086,7 @@ class TestProjectSettingsFormTargetLocal(
             value=False,
             project=self.project,
         )
-
-        # Init json setting
+        # Init JSON setting
         self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_json_setting',
@@ -2285,7 +2246,6 @@ class TestProjectSettingsFormTargetLocal(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
-
         # Assert settings state after update
         self.assertEqual(
             app_settings.get(
@@ -2365,22 +2325,19 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
-
         # Set superuser as owner
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Set new user as delegate
-        self.user_delegate = self.make_user('delegate')
+        self.user_delegate = self.make_user('user_delegate')
         self.delegate_as = self.make_assignment(
             self.project, self.user_delegate, self.role_delegate
         )
-
         # Set another new user as guest (= one of the member roles)
-        self.user_new = self.make_user('guest')
+        self.user_guest = self.make_user('user_guest')
         self.guest_as = self.make_assignment(
-            self.project, self.user_new, self.role_guest
+            self.project, self.user_guest, self.role_guest
         )
 
     def test_render(self):
@@ -2396,32 +2353,34 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.context['project'].pk, self.project.pk)
 
         # Assert users
-        expected = {
-            'id': self.owner_as.pk,
-            'project': self.project.pk,
-            'role': self.role_owner.pk,
-            'user': self.user.pk,
-            'sodar_uuid': self.owner_as.sodar_uuid,
-        }
-        self.assertEqual(model_to_dict(response.context['owner']), expected)
-        expected = {
-            'id': self.delegate_as.pk,
-            'project': self.project.pk,
-            'role': self.role_delegate.pk,
-            'user': self.user_delegate.pk,
-            'sodar_uuid': self.delegate_as.sodar_uuid,
-        }
-        self.assertEqual(model_to_dict(response.context['delegate']), expected)
-        expected = {
-            'id': self.guest_as.pk,
-            'project': self.project.pk,
-            'role': self.role_guest.pk,
-            'user': self.user_new.pk,
-            'sodar_uuid': self.guest_as.sodar_uuid,
-        }
+        expected = [
+            {
+                'id': self.owner_as.pk,
+                'project': self.project.pk,
+                'role': self.role_owner.pk,
+                'user': self.user.pk,
+                'sodar_uuid': self.owner_as.sodar_uuid,
+            },
+            {
+                'id': self.delegate_as.pk,
+                'project': self.project.pk,
+                'role': self.role_delegate.pk,
+                'user': self.user_delegate.pk,
+                'sodar_uuid': self.delegate_as.sodar_uuid,
+            },
+            {
+                'id': self.guest_as.pk,
+                'project': self.project.pk,
+                'role': self.role_guest.pk,
+                'user': self.user_guest.pk,
+                'sodar_uuid': self.guest_as.sodar_uuid,
+            },
+        ]
         self.assertEqual(
-            model_to_dict(response.context['members'][0]), expected
+            [model_to_dict(m) for m in response.context['roles']], expected
         )
+        # Assert other context data
+        self.assertNotIn('remote_role_url', response.context)
 
     def test_render_not_found(self):
         """Test rendering project roles view with invalid project UUID"""
@@ -2442,7 +2401,6 @@ class TestRoleAssignmentCreateView(
 
     def setUp(self):
         super().setUp()
-
         # Set up category and project
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
@@ -2454,11 +2412,11 @@ class TestRoleAssignmentCreateView(
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.user_owner = self.make_user('owner')
+        self.user_owner = self.make_user('user_owner')
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-        self.user_new = self.make_user('guest')
+        self.user_guest = self.make_user('user_guest')
 
         app_alerts = get_backend_api('appalerts_backend')
         if app_alerts:
@@ -2474,7 +2432,6 @@ class TestRoleAssignmentCreateView(
                 )
             )
         self.assertEqual(response.status_code, 200)
-
         form = response.context['form']
         self.assertIsNotNone(form)
         self.assertIsInstance(form.fields['project'].widget, HiddenInput)
@@ -2523,7 +2480,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_guest.pk,
         }
         with self.login(self.user):
@@ -2537,12 +2494,12 @@ class TestRoleAssignmentCreateView(
 
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_new
+            project=self.project, user=self.user_guest
         )
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
-            'user': self.user_new.pk,
+            'user': self.user_guest.pk,
             'role': self.role_guest.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
@@ -2553,7 +2510,6 @@ class TestRoleAssignmentCreateView(
             ).count(),
             1,
         )
-
         with self.login(self.user):
             self.assertRedirects(
                 response,
@@ -2566,10 +2522,9 @@ class TestRoleAssignmentCreateView(
     def test_create_delegate(self):
         """Test RoleAssignment creation with project delegate role"""
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
-
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2584,12 +2539,12 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(response.status_code, 302)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_new
+            project=self.project, user=self.user_guest
         )
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
-            'user': self.user_new.pk,
+            'user': self.user_guest.pk,
             'role': self.role_delegate.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
@@ -2603,7 +2558,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2619,7 +2574,7 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertIsNone(
             RoleAssignment.objects.filter(
-                project=self.project, user=self.user_new
+                project=self.project, user=self.user_guest
             ).first()
         )
 
@@ -2632,7 +2587,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2648,7 +2603,7 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         self.assertIsNotNone(
             RoleAssignment.objects.filter(
-                project=self.project, user=self.user_new
+                project=self.project, user=self.user_guest
             ).first()
         )
 
@@ -2661,7 +2616,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2678,7 +2633,7 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         self.assertIsNotNone(
             RoleAssignment.objects.filter(
-                project=self.project, user=self.user_new
+                project=self.project, user=self.user_guest
             ).first()
         )
 
@@ -2705,8 +2660,8 @@ class TestRoleAssignmentCreateView(
                 ),
             )
 
-    def test_create_option(self):
-        """Test if new options are being displayed by SODARUserRedirectWidget"""
+    def test_display_options(self):
+        """Test test displaying options by SODARUserRedirectWidget"""
         values = {
             'project': self.project.sodar_uuid,
             'role': self.role_guest.pk,
@@ -2725,8 +2680,8 @@ class TestRoleAssignmentCreateView(
         data = json.loads(response.content)
         self.assertIn(new_option, data['results'])
 
-    def test_dont_create_option(self):
-        """Test for new options not displayed if not valid email addresses"""
+    def test_display_options_invalid_email(self):
+        """Test displaying options with invalid email"""
         values = {
             'project': self.project.sodar_uuid,
             'role': self.role_guest.pk,
@@ -2745,6 +2700,154 @@ class TestRoleAssignmentCreateView(
         data = json.loads(response.content)
         self.assertNotIn(new_option, data['results'])
 
+    def test_render_promote(self):
+        """Test rendering for inherited role promotion"""
+        # Assign category guest user for inherit/promote tests
+        guest_as_cat = self.make_assignment(
+            self.category, self.user_guest, self.role_guest
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': guest_as_cat.sodar_uuid,
+                    },
+                )
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['promote_as'], guest_as_cat)
+        form = response.context['form']
+        self.assertIsInstance(form.fields['project'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['user'].widget, HiddenInput)
+        self.assertEqual(form.initial['project'], self.project.sodar_uuid)
+        self.assertEqual(form.initial['user'], self.user_guest)
+        self.assertEqual(
+            [c[0] for c in form.fields['role'].choices],
+            [self.role_delegate.pk, self.role_contributor.pk],
+        )
+
+    def test_render_promote_local_role(self):
+        """Test rendering for promotion with local role (should fail)"""
+        guest_as = self.make_assignment(
+            self.project, self.user_guest, self.role_guest
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': guest_as.sodar_uuid,
+                    },
+                )
+            )
+            self.assertEqual(response.status_code, 302)
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:roles',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+    def test_render_promote_child_role(self):
+        """Test rendering for promotion with child role (should fail)"""
+        # Set up sub category and project with role
+        sub_category = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        sub_project = self.make_project(
+            'SubProject', PROJECT_TYPE_PROJECT, sub_category
+        )
+        sub_as = self.make_assignment(
+            sub_project, self.user_guest, self.role_guest
+        )
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': sub_as.sodar_uuid,
+                    },
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+
+    def test_render_promote_delegate(self):
+        """Test rendering for promotion with delegate role (should fail)"""
+        delegate_as_cat = self.make_assignment(
+            self.category, self.user_guest, self.role_delegate
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': delegate_as_cat.sodar_uuid,
+                    },
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+
+    def test_render_promote_owner(self):
+        """Test rendering for promotion with ownere role (should fail)"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': self.owner_as_cat.sodar_uuid,
+                    },
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+
+    def test_post_promote(self):
+        """Test RoleAssignment creation for promoting inherited role"""
+        self.make_assignment(self.category, self.user_guest, self.role_guest)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_create'
+            ).count(),
+            0,
+        )
+
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
+            'role': self.role_contributor.pk,
+            'promote': True,
+        }
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        role_as = RoleAssignment.objects.get(
+            project=self.project, user=self.user_guest
+        )
+        expected = {
+            'id': role_as.pk,
+            'project': self.project.pk,
+            'user': self.user_guest.pk,
+            'role': self.role_contributor.pk,
+            'sodar_uuid': role_as.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(role_as), expected)
+
 
 class TestRoleAssignmentUpdateView(
     ProjectMixin, RoleAssignmentMixin, TestViewsBase
@@ -2753,7 +2856,6 @@ class TestRoleAssignmentUpdateView(
 
     def setUp(self):
         super().setUp()
-
         # Set up category and project
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
@@ -2765,17 +2867,15 @@ class TestRoleAssignmentUpdateView(
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.user_owner = self.make_user('owner')
+        self.user_owner = self.make_user('user_owner')
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-
         # Create guest user and role
-        self.user_new = self.make_user('new_user')
+        self.user_guest = self.make_user('user_guest')
         self.role_as = self.make_assignment(
-            self.project, self.user_new, self.role_guest
+            self.project, self.user_guest, self.role_guest
         )
-
         app_alerts = get_backend_api('appalerts_backend')
         if app_alerts:
             self.app_alert_model = app_alerts.get_model()
@@ -2798,7 +2898,7 @@ class TestRoleAssignmentUpdateView(
         self.assertIsInstance(form.fields['user'].widget, HiddenInput)
         self.assertEqual(form.initial['user'], self.role_as.user.sodar_uuid)
 
-        # Assert owner role is not sectable
+        # Assert owner role is not selectable
         self.assertNotIn(
             [(self.role_owner.pk, self.role_owner.name)],
             form.fields['role'].choices,
@@ -2846,12 +2946,12 @@ class TestRoleAssignmentUpdateView(
 
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_new
+            project=self.project, user=self.user_guest
         )
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
-            'user': self.user_new.pk,
+            'user': self.user_guest.pk,
             'role': self.role_contributor.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
@@ -2874,7 +2974,6 @@ class TestRoleAssignmentUpdateView(
     def test_update_delegate(self):
         """Test RoleAssignment updating to delegate"""
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-
         values = {
             'project': self.role_as.project.sodar_uuid,
             'user': self.role_as.user.sodar_uuid,
@@ -2892,12 +2991,12 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(response.status_code, 302)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_new
+            project=self.project, user=self.user_guest
         )
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
-            'user': self.user_new.pk,
+            'user': self.user_guest.pk,
             'role': self.role_delegate.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
@@ -2911,7 +3010,7 @@ class TestRoleAssignmentUpdateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2927,7 +3026,7 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         self.assertEqual(
             RoleAssignment.objects.filter(
-                project=self.project, user=self.user_new
+                project=self.project, user=self.user_guest
             )
             .first()
             .role,
@@ -2948,7 +3047,7 @@ class TestRoleAssignmentUpdateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2982,7 +3081,7 @@ class TestRoleAssignmentUpdateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -3003,6 +3102,28 @@ class TestRoleAssignmentUpdateView(
             2,
         )
 
+    def test_render_inactive_local_role(self):
+        """Test rendering with inherited role overriding local inactive role"""
+        # Set user as category contributor
+        self.make_assignment(
+            self.category, self.user_guest, self.role_contributor
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        # Assert only delegate role is selectable
+        self.assertEqual(len(form.fields['role'].choices), 1)
+        self.assertEqual(
+            form.fields['role'].choices[0],
+            (self.role_delegate.pk, self.role_delegate.name),
+        )
+
 
 class TestRoleAssignmentDeleteView(
     ProjectMixin, RoleAssignmentMixin, TestViewsBase
@@ -3011,33 +3132,72 @@ class TestRoleAssignmentDeleteView(
 
     def setUp(self):
         super().setUp()
-
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user, self.role_owner
+        )
         self.project = self.make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
         # Create guest user and role
-        self.user_new = self.make_user('guest')
-        self.role_as = self.make_assignment(
-            self.project, self.user_new, self.role_guest
+        self.user_contrib = self.make_user('user_contrib')
+        self.contrib_as = self.make_assignment(
+            self.project, self.user_contrib, self.role_contributor
         )
-
+        self.user_new = self.make_user('user_new')
         app_alerts = get_backend_api('appalerts_backend')
         if app_alerts:
             self.app_alert_model = app_alerts.get_model()
 
     def test_render(self):
-        """Test rendering of the RoleAssignment deletion confirmation form"""
+        """Test rendering RoleAssignment deletion confirmation form"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:role_delete',
-                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                    kwargs={'roleassignment': self.contrib_as.sodar_uuid},
                 )
             )
         self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['inherited_as'])
+        self.assertEqual(response.context['inherited_children'], [])
+
+    def test_render_inherit(self):
+        """Test rendering for user with inherited role"""
+        inh_as = self.make_assignment(
+            self.category, self.user_contrib, self.role_guest
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': self.contrib_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['inherited_as'], inh_as)
+        self.assertIsNone(response.context['inherited_children'])
+
+    def test_render_children(self):
+        """Test rendering for user with inherited child roles to be removed"""
+        inh_as = self.make_assignment(
+            self.category, self.user_new, self.role_guest
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': inh_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['inherited_as'])
+        self.assertEqual(response.context['inherited_children'], [self.project])
 
     def test_render_not_found(self):
         """Test rendering with invalid assignment UUID"""
@@ -3050,32 +3210,23 @@ class TestRoleAssignmentDeleteView(
             )
         self.assertEqual(response.status_code, 404)
 
-    def test_delete_assignment(self):
+    def test_delete(self):
         """Test RoleAssignment deleting"""
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(
             self.app_alert_model.objects.filter(
                 alert_name='role_delete'
             ).count(),
             0,
         )
-
+        self.assertEqual(len(mail.outbox), 0)
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:role_delete',
-                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                    kwargs={'roleassignment': self.contrib_as.sodar_uuid},
                 )
             )
-
-        self.assertEqual(RoleAssignment.objects.all().count(), 1)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            1,
-        )
-        with self.login(self.user):
             self.assertRedirects(
                 response,
                 reverse(
@@ -3083,15 +3234,23 @@ class TestRoleAssignmentDeleteView(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete'
+            ).count(),
+            1,
+        )
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_delete_owner(self):
         """Test RoleAssignment owner deletion (should fail)"""
-        owner_user = self.make_user('owner_user')
-        self.owner_as.user = owner_user  # Not a superuser
+        user_owner = self.make_user('user_owner')
+        self.owner_as.user = user_owner  # Not a superuser
         self.owner_as.save()
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-
-        with self.login(owner_user):
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(user_owner):
             response = self.client.post(
                 reverse(
                     'projectroles:role_delete',
@@ -3099,23 +3258,53 @@ class TestRoleAssignmentDeleteView(
                 )
             )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_delete_delegate(self):
         """Test RoleAssignment delegate deleting by contributor (should fail)"""
-        contrib_user = self.make_user('contrib_user')
-        self.make_assignment(self.project, contrib_user, self.role_contributor)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-
-        with self.login(contrib_user):
+        with self.login(self.user_contrib):
             response = self.client.post(
                 reverse(
                     'projectroles:role_delete',
-                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                    kwargs={'roleassignment': self.contrib_as.sodar_uuid},
                 )
             )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+    def test_delete_inherit(self):
+        """Test RoleAssignment deleting with remaining inherited role"""
+        self.make_assignment(self.category, self.user_contrib, self.role_guest)
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': self.contrib_as.sodar_uuid},
+                )
+            )
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:roles',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_update'
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete'
+            ).count(),
+            0,
+        )
 
 
 class TestRoleAssignmentOwnerTransferView(
@@ -3123,34 +3312,95 @@ class TestRoleAssignmentOwnerTransferView(
 ):
     def setUp(self):
         super().setUp()
-
         # Set up category and project
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.user_owner_cat = self.make_user('owner_cat')
+        self.user_owner_cat = self.make_user('user_owner_cat')
         self.owner_as_cat = self.make_assignment(
             self.category, self.user_owner_cat, self.role_owner
         )
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.user_owner = self.make_user('owner')
+        self.user_owner = self.make_user('user_owner')
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
         # Create guest user and role
-        self.user_new = self.make_user('guest')
+        self.user_guest = self.make_user('user_guest')
         self.role_as = self.make_assignment(
-            self.project, self.user_new, self.role_guest
+            self.project, self.user_guest, self.role_guest
         )
-
+        # User without roles
+        self.user_new = self.make_user('user_new')
         app_alerts = get_backend_api('appalerts_backend')
         if app_alerts:
             self.app_alert_model = app_alerts.get_model()
 
-    def test_transfer_ownership(self):
+    def test_render(self):
+        """Test rendering ownership transfer form"""
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIsNotNone(form.fields.get('old_owner_role'))
+        self.assertEqual(len(form.fields['old_owner_role'].choices), 3)
+
+    def test_render_old_inherited_member(self):
+        """Test rendering with inherited non-owner role for old owner"""
+        self.make_assignment(
+            self.category, self.user_owner, self.role_contributor
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        # Only delegate and contributor roles allowed
+        self.assertEqual(
+            [c[0] for c in form.fields['old_owner_role'].choices],
+            [self.role_delegate.pk, self.role_contributor.pk],
+        )
+        self.assertEqual(form.fields['old_owner_role'].disabled, False)
+
+    def test_render_old_inherited_owner(self):
+        """Test rendering with inherited owner role for old owner"""
+        self.owner_as_cat.user = self.user_owner
+        self.owner_as_cat.save()
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        # Only owner role included
+        self.assertEqual(len(form.fields['old_owner_role'].choices), 1)
+        self.assertEqual(
+            form.fields['old_owner_role'].choices[0][0], self.role_owner.pk
+        )
+        self.assertEqual(form.fields['old_owner_role'].disabled, True)
+
+    def test_transfer(self):
         """Test ownership transfer"""
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -3159,13 +3409,12 @@ class TestRoleAssignmentOwnerTransferView(
                 ),
                 data={
                     'project': self.project.sodar_uuid,
+                    'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_guest.pk,
-                    'new_owner': self.user_new.sodar_uuid,
                 },
             )
-
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
         self.assertEqual(
             RoleAssignment.objects.get(
                 project=self.project, user=self.user_owner
@@ -3176,7 +3425,7 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(len(mail.outbox), 2)
 
     def test_transfer_as_old_owner(self):
-        """Test ownership transfer as old owner (should only create one mail)"""
+        """Test ownership transfer as old owner"""
         with self.login(self.user_owner):
             response = self.client.post(
                 reverse(
@@ -3185,24 +3434,28 @@ class TestRoleAssignmentOwnerTransferView(
                 ),
                 data={
                     'project': self.project.sodar_uuid,
+                    'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_guest.pk,
-                    'new_owner': self.user_new.sodar_uuid,
                 },
             )
-
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
         self.assertEqual(
             RoleAssignment.objects.get(
                 project=self.project, user=self.user_owner
             ).role,
             self.role_guest,
         )
+        # Should only create one alert/mail for new owner
         self.assertEqual(self.app_alert_model.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
 
-    def test_transfer_ownership_inherited(self):
-        """Test ownership transfer to an inherited owner"""
+    def test_transfer_old_inherited_member(self):
+        """Test transfer from old owner with inherited non-owner role"""
+        self.make_assignment(
+            self.category, self.user_owner, self.role_contributor
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -3211,19 +3464,134 @@ class TestRoleAssignmentOwnerTransferView(
                 ),
                 data={
                     'project': self.project.sodar_uuid,
-                    'old_owner_role': self.role_guest.pk,
-                    'new_owner': self.user_owner_cat.sodar_uuid,
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': self.role_contributor.pk,
                 },
             )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
+        self.owner_as.refresh_from_db()
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        self.assertEqual(self.owner_as.role, self.role_contributor)
+        self.assertEqual(self.app_alert_model.objects.count(), 2)
+        self.assertEqual(len(mail.outbox), 2)
 
+    def test_transfer_old_inherited_owner(self):
+        """Test transfer from old owner with inherited owner role"""
+        self.owner_as_cat.user = self.user_owner
+        self.owner_as_cat.save()
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': self.role_owner.pk,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_owner
+            ).first()
+        )
+        self.assertEqual(
+            self.project.get_role(self.user_owner), self.owner_as_cat
+        )
+        self.assertEqual(self.owner_as.role, self.role_owner)
+        # No alert or message for old owner as they are still owner
+        self.assertEqual(self.app_alert_model.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_transfer_new_inherited_member(self):
+        """Test transfer to new owner with inherited non-owner role"""
+        self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'new_owner': self.user_new.sodar_uuid,
+                    'old_owner_role': self.role_contributor.pk,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.owner_as.refresh_from_db()
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        self.assertEqual(self.owner_as.role, self.role_contributor)
+        self.assertEqual(self.app_alert_model.objects.count(), 2)
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_transfer_new_inherited_owner(self):
+        """Test transfer to new owner with inherited owner role"""
+        self.assertEqual(
+            self.project.get_role(self.user_owner_cat), self.owner_as_cat
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'new_owner': self.user_owner_cat.sodar_uuid,
+                    'old_owner_role': self.role_contributor.pk,
+                },
+            )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.project.get_owner().user, self.user_owner_cat)
+        self.owner_as.refresh_from_db()
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        self.assertEqual(self.owner_as.role, self.role_contributor)
         self.assertEqual(
+            self.project.get_role(self.user_owner_cat),
             RoleAssignment.objects.get(
-                project=self.project, user=self.user_owner
-            ).role,
-            self.role_guest,
+                project=self.project,
+                user=self.user_owner_cat,
+                role=self.role_owner,
+            ),
         )
+        self.assertEqual(self.app_alert_model.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_transfer_new_local_role(self):
+        """Test transfer to new owner with overridden local role"""
+        new_as = self.make_assignment(
+            self.project, self.user_new, self.role_contributor
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'new_owner': self.user_new.sodar_uuid,
+                    'old_owner_role': self.role_contributor.pk,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertEqual(self.project.get_owner(), new_as)
+        self.owner_as.refresh_from_db()
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        self.assertEqual(self.owner_as.role, self.role_contributor)
         self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
 
@@ -3241,7 +3609,7 @@ class TestProjectInviteCreateView(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-        self.new_user = self.make_user('new_user')
+        self.user_new = self.make_user('user_new')
 
     def test_render(self):
         """Test rendering ProjectInvite creation form"""
@@ -3406,7 +3774,6 @@ class TestProjectInviteCreateView(
     def test_create_invite(self):
         """Test ProjectInvite creation"""
         self.assertEqual(ProjectInvite.objects.all().count(), 0)
-
         values = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,
@@ -3426,7 +3793,6 @@ class TestProjectInviteCreateView(
             project=self.project, email=INVITE_EMAIL, active=True
         )
         self.assertIsNotNone(invite)
-
         expected = {
             'id': invite.pk,
             'project': self.project.pk,
@@ -3440,7 +3806,6 @@ class TestProjectInviteCreateView(
             'sodar_uuid': invite.sodar_uuid,
         }
         self.assertEqual(model_to_dict(invite), expected)
-
         # Assert redirect
         with self.login(self.user):
             self.assertRedirects(
@@ -3465,7 +3830,7 @@ class TestProjectInviteAcceptView(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-        self.new_user = self.make_user('new_user')
+        self.user_new = self.make_user('user_new')
 
     @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
     @override_settings(ENABLE_LDAP=True)
@@ -3482,13 +3847,13 @@ class TestProjectInviteAcceptView(
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project,
-                user=self.new_user,
+                user=self.user_new,
                 role=self.role_contributor,
             ).count(),
             0,
         )
 
-        with self.login(self.new_user):
+        with self.login(self.user_new):
             response = self.client.get(
                 reverse(
                     'projectroles:invite_accept',
@@ -3520,7 +3885,7 @@ class TestProjectInviteAcceptView(
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project,
-                user=self.new_user,
+                user=self.user_new,
                 role=self.role_contributor,
             ).count(),
             1,
@@ -3542,13 +3907,13 @@ class TestProjectInviteAcceptView(
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project,
-                user=self.new_user,
+                user=self.user_new,
                 role=self.role_contributor,
             ).count(),
             0,
         )
 
-        with self.login(self.new_user):
+        with self.login(self.user_new):
             response = self.client.get(
                 reverse(
                     'projectroles:invite_accept',
@@ -3577,7 +3942,7 @@ class TestProjectInviteAcceptView(
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project,
-                user=self.new_user,
+                user=self.user_new,
                 role=self.role_contributor,
             ).count(),
             0,
@@ -3585,7 +3950,7 @@ class TestProjectInviteAcceptView(
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_accept_local(self):
-        """Test accepting local invite (user doesn't exist and no user is logged in)"""
+        """Test accepting local invite (user doesn't exist, no user logged in)"""
         # Init invite
         invite = self.make_invite(
             email=INVITE_EMAIL,
@@ -3694,7 +4059,7 @@ class TestProjectInviteAcceptView(
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project,
-                user=self.new_user,
+                user=self.user_new,
                 role=self.role_contributor,
             ).count(),
             0,
@@ -3728,7 +4093,7 @@ class TestProjectInviteAcceptView(
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project,
-                user=self.new_user,
+                user=self.user_new,
                 role=self.role_contributor,
             ).count(),
             0,
@@ -4110,7 +4475,6 @@ class TestProjectInviteRevokeView(
         """Test invite revocation"""
         self.assertEqual(ProjectInvite.objects.all().count(), 1)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-
         with self.login(self.user):
             self.client.post(
                 reverse(
@@ -4126,7 +4490,6 @@ class TestProjectInviteRevokeView(
         self.invite.role = self.role_delegate
         self.invite.save()
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-
         with self.login(self.user):
             self.client.post(
                 reverse(
@@ -4140,11 +4503,10 @@ class TestProjectInviteRevokeView(
         """Test delegate revocation with insufficient perms (should fail)"""
         self.invite.role = self.role_delegate
         self.invite.save()
-        delegate = self.make_user('delegate')
-        self.make_assignment(self.project, delegate, self.role_delegate)
+        user_delegate = self.make_user('user_delegate')
+        self.make_assignment(self.project, user_delegate, self.role_delegate)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-
-        with self.login(delegate):
+        with self.login(user_delegate):
             self.client.post(
                 reverse(
                     'projectroles:invite_revoke',
@@ -4198,9 +4560,6 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
 class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site create view"""
 
-    def setUp(self):
-        super().setUp()
-
     def test_render_as_source(self):
         """Test rendering remote site create view as source"""
         with self.login(self.user):
@@ -4237,7 +4596,6 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             description='',
             secret=REMOTE_SITE_SECRET,
         )
-
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:remote_site_create')
@@ -4247,7 +4605,6 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     def test_create_target(self):
         """Test creating a target site"""
         self.assertEqual(RemoteSite.objects.all().count(), 0)
-
         values = {
             'name': REMOTE_SITE_NAME,
             'url': REMOTE_SITE_URL,
@@ -4281,7 +4638,6 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     def test_create_source(self):
         """Test creating a source site as target"""
         self.assertEqual(RemoteSite.objects.all().count(), 0)
-
         values = {
             'name': REMOTE_SITE_NAME,
             'url': REMOTE_SITE_URL,
@@ -4384,7 +4740,6 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
     def test_update(self):
         """Test updating target site as source"""
         self.assertEqual(RemoteSite.objects.all().count(), 1)
-
         values = {
             'name': REMOTE_SITE_NEW_NAME,
             'url': REMOTE_SITE_NEW_URL,
@@ -4509,7 +4864,6 @@ class TestRemoteProjectBatchUpdateView(
 
     def setUp(self):
         super().setUp()
-
         # Set up project
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
@@ -4520,7 +4874,6 @@ class TestRemoteProjectBatchUpdateView(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Set up target site
         self.target_site = self.make_site(
             name=REMOTE_SITE_NAME,
@@ -4569,7 +4922,6 @@ class TestRemoteProjectBatchUpdateView(
     def test_post_create(self):
         """Test updating remote project access by adding a new RemoteProject"""
         self.assertEqual(RemoteProject.objects.all().count(), 0)
-
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {
             access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
@@ -4659,7 +5011,7 @@ class TestUserUpdateView(TestViewsBase):
 
     def test_submit_local_user(self):
         self.assertEqual(User.objects.count(), 2)
-        user = User.objects.get(id=self.user_local.id)
+        user = User.objects.get(pk=self.user_local.pk)
         self.assertEqual(user.first_name, '')
         self.assertEqual(user.last_name, '')
 
@@ -4687,6 +5039,6 @@ class TestUserUpdateView(TestViewsBase):
             ],
         )
         self.assertEqual(User.objects.count(), 2)
-        user = User.objects.get(id=self.user_local.id)
+        user = User.objects.get(pk=self.user_local.pk)
         self.assertEqual(user.first_name, 'Local')
         self.assertEqual(user.last_name, 'User')

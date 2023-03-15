@@ -16,10 +16,82 @@ v0.13.0 (WIP)
 Release Highlights
 ==================
 
-**TODO**
+- Extend role inheritance to all roles
+- Add custom method support for app settings defaults, options and validation
+- Add dismissed alerts view to appalerts
+- Add sodarcache item deletion via API
+- Add omitting of apps in search
+- Replace ProjectUserTag model with app settings
+- General bug fixes and minor updates
 
 Breaking Changes
 ================
+
+New Context Processor Required
+------------------------------
+
+Certain sidebar related functionality which was redundantly implemented as
+template tags has been moved into the new ``sidebar_processor`` context
+processor. You need to add this to the context processors on your site in
+``base.py`` under ``TEMPLATES``:
+
+.. code-block:: python
+
+    TEMPLATES = [
+        {
+            'OPTIONS': {
+                'context_processors': {
+                    # ...
+                    'projectroles.context_processors.sidebar_processor',
+                }
+            }
+        }
+
+Role Inheritance Extended to All Roles
+--------------------------------------
+
+Inheriting roles from parent categories has been extended from the owner role to
+all roles. Access to inherited projects will be given automatically when
+updating your site to SODAR Core v0.12.
+
+Inherited roles override "local" roles assigned to a specific project based on
+the role rank. Local roles can still be assigned to projects, but only promoting
+inherited users to a higher role is allowed.
+
+The following steps are recommended:
+
+1. Review your site's existing project hierarchy and roles before upgrading to
+   avoid unwanted inheritance.
+2. Update the rules and permission tests in your site to ensure proper access
+   for users to all views.
+
+Projectroles Models API Updated
+-------------------------------
+
+There have been multiple changes in the projectroles models API due to the role
+inheritance and ranking updates. Please consult
+:ref:`app_projectroles_api_django` to review specific changes and update any
+effected code accordingly.
+
+- ``RoleAssignmentManager`` along with the ``get_assignment()`` method have been
+  removed. Instead, please use ``Project.get_role()`` or direct
+  ``RoleAssignment`` model queries.
+- ``Project.get_all_roles()`` has been removed. ``Project.get_roles()`` should
+  be used in its place.
+- ``Project.get_delegates()`` returns a ``list`` instead of a ``QuerySet``. The
+  method signature has also been changed.
+
+Base Classes for Tests Updated
+------------------------------
+
+Base classes such as ``TestProjectPermissionBase`` and ``TestUIBase`` have been
+updated. The default test category and project are now set up with separate
+users for all roles to help test extended role inheritance. This may cause some
+of your existing tests to fail. In that case, please update your tests to match
+the updated roles.
+
+For populating ``Role`` objects in tests, it is recommended for you to use the
+``RoleMixin.init_roles()`` helper.
 
 Deprecated App Settings API Methods Removed
 -------------------------------------------
@@ -48,19 +120,6 @@ Release Highlights
 
 Breaking Changes
 ================
-
-New Context Processors
-----------------------
-
-Several templatetags have been relocated to context processors. Therefore,
-it is necessary to incorporate `projectroles.context_processors.sidebar_processor`
-in the `TEMPLATES['OPTIONS']['context_processors']` settings located in the base
-configuration file. New context processors are:
-
-- ``get_sidebar_icon_size()``
-- ``get_sidebar_notch_pos()``
-- ``get_sidebar_notch_size()``
-- ``get_sidebar_padding()``
 
 System Prerequisites
 --------------------

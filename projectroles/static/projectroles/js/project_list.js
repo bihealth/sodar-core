@@ -75,13 +75,6 @@ function updateRoleColumn (uuids) {
                     var roleCol = item.find('.sodar-pr-project-list-role');
                     roleCol.attr('class', colData['class'])
                         .text(colData['name']);
-                    if (colData['info']) {
-                        roleCol.append($('<i>')
-                            .attr('class', 'iconify text-info ml-1')
-                            .attr('data-icon', 'mdi:information')
-                            .attr('title', colData['info'])
-                        );
-                    }
                 });
             });
         });
