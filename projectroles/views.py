@@ -1153,7 +1153,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             owner = old_project.get_owner().user
 
         # Get settings
-        project_settings = self._get_app_settings(data, instance)
+        project_settings = self._get_app_settings(data, project)
         old_settings = None
         if action == PROJECT_ACTION_UPDATE:
             old_settings = json.loads(json.dumps(project_settings))  # Copy
