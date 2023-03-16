@@ -22,6 +22,7 @@ def clean_up_app_settings(apps, schema_editor):
                 app_name=app_name, name=app_setting.name
             )
         except ValueError:
+            app_setting.delete()
             continue
 
         if app_setting.project.type not in setting_def.get(
