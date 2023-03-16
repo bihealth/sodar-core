@@ -3,7 +3,7 @@ $(document).ready(function() {
     $('div[id^="div_id_settings"]').hide();
 
     // Check if it's category/project update and show corresponding fields
-    if ($('#object-type').text() == 'Update Project') {
+    if ($('#object-type').attr('data-project-action') == 'PROJECT') {
         $('div[id^="div_id_settings"]').each(function () {
             var $parentDiv = $(this);
             var $projectElements = $parentDiv.find('select[data-project-types="project"]')
@@ -19,7 +19,8 @@ $(document).ready(function() {
             }
         });
     }
-    if ($('#object-type').text() == 'Update Category' || $('#object-type').text() == 'Create Top Level Category') {
+
+    if ($('#object-type').attr('data-project-action') == 'CATEGORY') {
         $('div[id^="div_id_settings"]').each(function () {
             var $parentDiv = $(this);
             var $categoryElements = $parentDiv.find('select[data-project-types="category"]')

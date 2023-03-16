@@ -8,26 +8,24 @@ def clean_up_app_settings(apps, schema_editor):
     app_settings_api = AppSettingAPI()
     AppSetting = apps.get_model('projectroles', 'AppSetting')
 
-    # Find all app settings with project type 'CATEGORY'
+    # Find all app settings whith a project
     app_settings = AppSetting.objects.exclude(project=None)
 
     for app_setting in app_settings:
         try:
+            app_name = (
+                app_setting.app_plugin.name
+                if app_setting.app_plugin
+                else 'projectroles'
+            )
             setting_def = app_settings_api.get_definition(
-                app_name=app_setting.app_plugin.name, name=app_setting.name
+                app_name=app_name, name=app_setting.name
             )
         except ValueError:
             continue
-        except AttributeError:
-            # app_plugin is None, what means that the app plugin is projectroles
-            setting_def = app_settings_api.get_definition(
-                app_name='projectroles', name=app_setting.name
-            )
 
-        if (
-            app_setting.project.type not in setting_def.get(
-                'project_types', ['PROJECT']
-            )
+        if app_setting.project.type not in setting_def.get(
+            'project_types', ['PROJECT']
         ):
             # Delete app setting if it is not restricted to any project types
             app_setting.delete()

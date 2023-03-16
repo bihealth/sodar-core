@@ -38,7 +38,7 @@
   <div class="row sodar-subtitle-container">
     {% if object.pk %}
       {# NOTE: h3 is correct here, as we also have the project header #}
-      <h3 id="object-type">Update {% get_display_name object.type title=True %}</h3>
+      <h3 id="object-type" data-project-action={{ object.type }}>Update {% get_display_name object.type title=True %}</h3>
       {% if object.type == 'PROJECT' %}
         <div class="ml-auto">
           <a role="button" class="btn btn-warning"
@@ -57,7 +57,7 @@
     {% elif disable_categories %}
       <h2>Create {{ project_display }}</h2>
     {% else %}
-      <h2 id="object-type">Create Top Level {{ category_display }}</h2>
+      <h2 id="object-type" data-project-action="CATEGORY">Create Top Level {{ category_display }}</h2>
     {% endif %}
   </div>
 
