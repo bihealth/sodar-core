@@ -22,6 +22,7 @@ Release Highlights
 - Add sodarcache item deletion via API
 - Add omitting of apps in search
 - Replace ProjectUserTag model with app settings
+- Add project_types scope for app_settings
 - General bug fixes and minor updates
 
 Breaking Changes
