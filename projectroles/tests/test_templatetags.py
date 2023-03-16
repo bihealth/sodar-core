@@ -23,6 +23,7 @@ from projectroles.models import (
 from projectroles.plugins import get_app_plugin, get_active_plugins
 from projectroles.templatetags import (
     projectroles_common_tags as c_tags,
+    projectroles_role_tags as r_tags,
     projectroles_tags as tags,
 )
 from projectroles.tests.test_models import (
@@ -96,7 +97,7 @@ class TestTemplateTagsBase(
         )
 
 
-class TestCommonTemplateTags(TestTemplateTagsBase):
+class TestProjectrolesCommonTags(TestTemplateTagsBase):
     """Test for template tags in projectroles_common_tags"""
 
     def test_site_version(self):
@@ -424,8 +425,99 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         )
 
 
-class TestProjectrolesTemplateTags(TestTemplateTagsBase):
-    """Test for template tags in projectroless_tags"""
+class TestProjectrolesRoleTags(TestTemplateTagsBase):
+    """Test for template tags in projectroles_role_tags"""
+
+    def test_get_role_icon(self):
+        """Test get_role_icon()"""
+        self.assertEqual(r_tags.get_role_icon(self.role_owner), 'mdi:star')
+        self.assertEqual(
+            r_tags.get_role_icon(self.role_delegate), 'mdi:star-half-full'
+        )
+        self.assertEqual(
+            r_tags.get_role_icon(self.role_contributor), 'mdi:account'
+        )
+        self.assertEqual(r_tags.get_role_icon(self.role_guest), 'mdi:account')
+
+    def test_get_role_perms(self):
+        """Test get_role_perms()"""
+        self.assertEqual(
+            r_tags.get_role_perms(self.project, self.user),
+            {
+                'can_update_owner': True,
+                'can_update_delegate': True,
+                'can_update_members': True,
+                'can_invite': True,
+            },
+        )
+        # Guest
+        user_guest = self.make_user('user_new')
+        self.make_assignment(self.project, user_guest, self.role_guest)
+        self.assertEqual(
+            r_tags.get_role_perms(self.project, user_guest),
+            {
+                'can_update_owner': False,
+                'can_update_delegate': False,
+                'can_update_members': False,
+                'can_invite': False,
+            },
+        )
+        # Inherited delegate
+        user_delegate_cat = self.make_user('user_delegate_cat')
+        self.make_assignment(
+            self.category, user_delegate_cat, self.role_delegate
+        )
+        self.assertEqual(
+            r_tags.get_role_perms(self.project, user_delegate_cat),
+            {
+                'can_update_owner': False,
+                'can_update_delegate': False,
+                'can_update_members': True,
+                'can_invite': True,
+            },
+        )
+
+    def test_display_role_buttons(self):
+        """Test display_role_buttons()"""
+        self.assertTrue(
+            r_tags.display_role_buttons(
+                self.project,
+                self.owner_as,
+                r_tags.get_role_perms(self.project, self.owner_as.user),
+            ),
+        )
+        # Guest
+        user_guest = self.make_user('user_new')
+        guest_as = self.make_assignment(
+            self.project, user_guest, self.role_guest
+        )
+        self.assertFalse(
+            r_tags.display_role_buttons(
+                self.project,
+                guest_as,
+                r_tags.get_role_perms(self.project, guest_as.user),
+            ),
+        )
+
+    def test_get_inactive_role(self):
+        """Test get_inactive_role()"""
+        inh_user = self.make_user('inh_user')
+        self.owner_as_cat.user = inh_user
+        self.owner_as_cat.save()
+        self.assertEqual(
+            r_tags.get_inactive_role(self.project, self.owner_as_cat), None
+        )
+        inactive_as = self.make_assignment(
+            self.project, inh_user, self.role_contributor
+        )
+        self.assertEqual(
+            r_tags.get_inactive_role(self.project, self.owner_as_cat),
+            inactive_as,
+        )
+
+
+class TestProjectrolesTags(TestTemplateTagsBase):
+    """Test for template tags in projectroles_tags"""
 
     def test_sodar_constant(self):
         """Test sodar_constant()"""

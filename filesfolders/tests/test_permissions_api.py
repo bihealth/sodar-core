@@ -38,7 +38,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             name='folder',
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,
+            owner=self.user_owner,
             description='',
         )
         folder.sodar_uuid = obj_uuid
@@ -50,7 +50,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             name='folder',
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,  # Project owner is the owner of folder
+            owner=self.user_owner,  # Project owner is the owner of folder
             description='',
         )
 
@@ -62,10 +62,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
@@ -95,10 +99,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
@@ -122,11 +130,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         }
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
         ]
-        bad_users = [self.guest_as.user, self.user_no_roles]
+        bad_users = [self.user_guest_cat, self.user_guest, self.user_no_roles]
         self.assert_response_api(
             url,
             good_users,
@@ -187,10 +198,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         }
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -230,10 +245,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
@@ -263,10 +282,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
@@ -289,12 +312,16 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         }
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of folder
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of folder
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -346,10 +373,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         }
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -376,12 +407,16 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         request_data = {'name': 'UPDATED Folder'}
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of folder
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of folder
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -425,10 +460,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         request_data = {'name': 'UPDATED Folder'}
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -456,12 +495,16 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of folder
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of folder
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self._cleanup_folder_destroy(**c_kwargs)
@@ -495,7 +538,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             name='folder',
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,
+            owner=self.user_owner,
             description='',
         )
         url = reverse(
@@ -516,10 +559,14 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self._cleanup_folder_destroy(**c_kwargs)
@@ -557,7 +604,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             file_content=self.file_content,
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,
+            owner=self.user_owner,
             description='',
             public_url=True,
             secret=build_secret(),
@@ -574,7 +621,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             file_content=self.file_content,
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,
+            owner=self.user_owner,
             description='',
             public_url=True,
             secret=SECRET,
@@ -601,10 +648,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
@@ -634,10 +685,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
@@ -657,11 +712,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         # NOTE: Must call cleanup for ALL requests to seek the file
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
         ]
-        bad_users = [self.guest_as.user, self.user_no_roles]
+        bad_users = [self.user_guest_cat, self.user_guest, self.user_no_roles]
         self.assert_response_api(
             url,
             good_users,
@@ -738,10 +796,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -801,10 +863,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
@@ -834,10 +900,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
@@ -863,12 +933,16 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of file
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of file
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -959,10 +1033,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1012,12 +1090,16 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         self.request_data.update({'name': 'UPDATED Folder'})
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of file
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of file
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1096,10 +1178,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         self.request_data.update({'name': 'UPDATED Folder'})
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1150,12 +1236,16 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of file
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of file
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self._cleanup_file_destroy(**c_kwargs)
@@ -1196,7 +1286,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             file_content=self.file_content,
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,
+            owner=self.user_owner,
             description='',
             public_url=True,
             secret=build_secret(),
@@ -1224,10 +1314,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self._cleanup_file_destroy(**c_kwargs)
@@ -1257,10 +1351,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
@@ -1288,10 +1386,14 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
@@ -1318,7 +1420,7 @@ class TestHyperLinkAPIPermissions(
             url='http://www.duckduckgo.com/',
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,
+            owner=self.user_owner,
             description='',
         )
         link.sodar_uuid = obj_uuid
@@ -1331,7 +1433,7 @@ class TestHyperLinkAPIPermissions(
             url='http://www.google.com/',
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,
+            owner=self.user_owner,
             description='',
         )
 
@@ -1343,10 +1445,14 @@ class TestHyperLinkAPIPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
@@ -1376,10 +1482,14 @@ class TestHyperLinkAPIPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
@@ -1405,11 +1515,14 @@ class TestHyperLinkAPIPermissions(
 
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
         ]
-        bad_users = [self.guest_as.user, self.user_no_roles]
+        bad_users = [self.user_guest_cat, self.user_guest, self.user_no_roles]
         self.assert_response_api(
             url,
             good_users,
@@ -1473,10 +1586,14 @@ class TestHyperLinkAPIPermissions(
 
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1516,10 +1633,14 @@ class TestHyperLinkAPIPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
@@ -1549,10 +1670,14 @@ class TestHyperLinkAPIPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
@@ -1577,12 +1702,16 @@ class TestHyperLinkAPIPermissions(
         }
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of link
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of link
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1636,10 +1765,14 @@ class TestHyperLinkAPIPermissions(
         }
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1669,12 +1802,16 @@ class TestHyperLinkAPIPermissions(
         request_data = {'name': 'UPDATED Hyperlink'}
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of link
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of link
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1718,10 +1855,14 @@ class TestHyperLinkAPIPermissions(
         request_data = {'name': 'UPDATED Hyperlink'}
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1752,12 +1893,16 @@ class TestHyperLinkAPIPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,  # Owner of link
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of link
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self._cleanup_link_destroy(**c_kwargs)
@@ -1797,7 +1942,7 @@ class TestHyperLinkAPIPermissions(
             url='http://www.duckduckgo.com/',
             project=self.project,
             folder=None,
-            owner=self.owner_as.user,
+            owner=self.user_owner,
             description='',
         )
         url = reverse(
@@ -1823,10 +1968,14 @@ class TestHyperLinkAPIPermissions(
         )
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self._cleanup_link_destroy(**c_kwargs)

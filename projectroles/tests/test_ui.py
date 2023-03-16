@@ -127,11 +127,16 @@ class TestUIBase(
         self.init_roles()
         # Init users
         self.superuser = self.make_user('admin', True)
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_delegate_cat = self.make_user('user_delegate_cat')
+        self.user_contributor_cat = self.make_user('user_contributor_cat')
+        self.user_guest_cat = self.make_user('user_guest_cat')
         self.user_owner = self.make_user('user_owner', False)
         self.user_delegate = self.make_user('user_delegate', False)
         self.user_contributor = self.make_user('user_contributor', False)
         self.user_guest = self.make_user('user_guest', False)
         self.user_no_roles = self.make_user('user_no_roles', False)
+
         # Init category and project
         self.category = self.make_project(
             title='TestCategory', type=PROJECT_TYPE_CATEGORY, parent=None
@@ -143,11 +148,18 @@ class TestUIBase(
         )
 
         # Init role assignments
-        # Category
         self.owner_as_cat = self.make_assignment(
-            self.category, self.user_owner, self.role_owner
+            self.category, self.user_owner_cat, self.role_owner
         )
-        # Project
+        self.delegate_as_cat = self.make_assignment(
+            self.category, self.user_delegate_cat, self.role_delegate
+        )
+        self.contributor_as_cat = self.make_assignment(
+            self.category, self.user_contributor_cat, self.role_contributor
+        )
+        self.guest_as_cat = self.make_assignment(
+            self.category, self.user_guest_cat, self.role_guest
+        )
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
@@ -436,6 +448,10 @@ class TestBaseTemplate(TestUIBase):
         """Test admin site link visibility according to user permissions"""
         expected_true = [self.superuser]
         expected_false = [
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -443,12 +459,9 @@ class TestBaseTemplate(TestUIBase):
             self.user_no_roles,
         ]
         url = reverse('home')
-        self.assert_element_exists(
-            expected_true, url, 'sodar-navbar-link-admin', True
-        )
-        self.assert_element_exists(
-            expected_false, url, 'sodar-navbar-link-admin', False
-        )
+        elem_id = 'sodar-navbar-link-admin'
+        self.assert_element_exists(expected_true, url, elem_id, True)
+        self.assert_element_exists(expected_false, url, elem_id, False)
 
 
 class TestHomeView(TestUIBase):
@@ -481,20 +494,20 @@ class TestHomeView(TestUIBase):
         """Test visibility of project list items"""
         expected = [
             (self.superuser, 2),
+            (self.user_owner_cat, 2),
+            (self.user_delegate_cat, 2),
+            (self.user_contributor_cat, 2),
+            (self.user_guest_cat, 2),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
         ]
         url = reverse('home')
+        elem_id = 'sodar-pr-project-list-item'
+        self.assert_element_count(expected, url, elem_id, **self.wait_kwargs)
         self.assert_element_count(
-            expected, url, 'sodar-pr-project-list-item', **self.wait_kwargs
-        )
-        self.assert_element_count(
-            [(self.user_no_roles, 0)],
-            url,
-            'sodar-pr-project-list-item',
-            **self.wait_kwargs_empty,
+            [(self.user_no_roles, 0)], url, elem_id, **self.wait_kwargs_empty
         )
 
     def test_project_list_items_public(self):
@@ -502,6 +515,10 @@ class TestHomeView(TestUIBase):
         self.project.set_public()
         expected = [
             (self.superuser, 2),
+            (self.user_owner_cat, 2),
+            (self.user_delegate_cat, 2),
+            (self.user_contributor_cat, 2),
+            (self.user_guest_cat, 2),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
@@ -589,6 +606,10 @@ class TestHomeView(TestUIBase):
         """Test project creation link visibility"""
         expected_true = [self.superuser]
         expected_false = [
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -596,7 +617,6 @@ class TestHomeView(TestUIBase):
             self.user_no_roles,
         ]
         url = reverse('home')
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-home-link-create', True
         )
@@ -624,6 +644,11 @@ class TestHomeView(TestUIBase):
 class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
     """Tests for ProjectDetailView UI"""
 
+    @classmethod
+    def _get_pr_links(cls, *args):
+        """Return full IDs of project links"""
+        return ['sodar-pr-link-project-' + x for x in args]
+
     def _setup_remote_project(
         self, site_mode=SITE_MODE_TARGET, user_visibility=True
     ):
@@ -648,38 +673,21 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
     def test_project_links(self):
         """Test visibility of project links"""
         expected = [
+            (self.superuser, self._get_pr_links('roles', 'update', 'star')),
             (
-                self.superuser,
-                [
-                    'sodar-pr-link-project-roles',
-                    'sodar-pr-link-project-update',
-                    'sodar-pr-link-project-star',
-                ],
+                self.user_owner_cat,
+                self._get_pr_links('roles', 'update', 'star'),
             ),
             (
-                self.user_owner,
-                [
-                    'sodar-pr-link-project-roles',
-                    'sodar-pr-link-project-update',
-                    'sodar-pr-link-project-star',
-                ],
+                self.user_delegate_cat,
+                self._get_pr_links('roles', 'update', 'star'),
             ),
-            (
-                self.user_delegate,
-                [
-                    'sodar-pr-link-project-roles',
-                    'sodar-pr-link-project-update',
-                    'sodar-pr-link-project-star',
-                ],
-            ),
-            (
-                self.user_contributor,
-                ['sodar-pr-link-project-roles', 'sodar-pr-link-project-star'],
-            ),
-            (
-                self.user_guest,
-                ['sodar-pr-link-project-roles', 'sodar-pr-link-project-star'],
-            ),
+            (self.user_contributor_cat, self._get_pr_links('roles', 'star')),
+            (self.user_guest_cat, self._get_pr_links('roles', 'star')),
+            (self.user_owner, self._get_pr_links('roles', 'update', 'star')),
+            (self.user_delegate, self._get_pr_links('roles', 'update', 'star')),
+            (self.user_contributor, self._get_pr_links('roles', 'star')),
+            (self.user_guest, self._get_pr_links('roles', 'star')),
         ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -691,23 +699,25 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         expected = [
             (
                 self.superuser,
-                [
-                    'sodar-pr-link-project-roles',
-                    'sodar-pr-link-project-update',
-                    'sodar-pr-link-project-create',
-                    'sodar-pr-link-project-star',
-                ],
+                self._get_pr_links('roles', 'update', 'create', 'star'),
             ),
             (
-                self.user_owner,
-                [
-                    'sodar-pr-link-project-roles',
-                    'sodar-pr-link-project-update',
-                    'sodar-pr-link-project-create',
-                    'sodar-pr-link-project-star',
-                ],
+                self.user_owner_cat,
+                self._get_pr_links('roles', 'update', 'create', 'star'),
             ),
-            (self.user_contributor, ['sodar-pr-link-project-star']),
+            (
+                self.user_delegate_cat,
+                self._get_pr_links('roles', 'update', 'create', 'star'),
+            ),
+            (
+                self.user_contributor_cat,
+                self._get_pr_links('roles', 'create', 'star'),
+            ),
+            (self.user_guest_cat, self._get_pr_links('roles', 'star')),
+            (self.user_owner, self._get_pr_links('star')),
+            (self.user_delegate, self._get_pr_links('star')),
+            (self.user_contributor, self._get_pr_links('star')),
+            (self.user_guest, self._get_pr_links('star')),
         ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
@@ -718,6 +728,10 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         """Test default UUID copy button visibility (should not be visible)"""
         users = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -767,6 +781,10 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         self._setup_remote_project(user_visibility=True)
         users = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -775,7 +793,6 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-
         # Visibile for all users
         for user in users:
             self.login_and_redirect(user, url)
@@ -794,7 +811,6 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-
         # Invisible for basic users
         for user in users:
             self.login_and_redirect(user, url)
@@ -816,18 +832,20 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
     def test_peer_project_source_invisible(self):
         """Test visibility of peer projects on SOURCE site"""
         self._setup_remote_project(site_mode=SITE_MODE_PEER)
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
         users = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
         ]
-
         for user in users:
             self.login_and_redirect(user, url)
             with self.assertRaises(NoSuchElementException):
@@ -861,6 +879,10 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         )
         users = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -908,8 +930,11 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-        expected_true = [self.superuser, self.user_owner]
+        expected_true = [self.superuser, self.user_owner_cat, self.user_owner]
         expected_false = [
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -945,6 +970,10 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         """Test archive icon and alert visibility (should not be visible)"""
         users = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -967,6 +996,10 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
         self.project.set_archive()
         users = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1029,6 +1062,10 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
         self.set_up_as_target(projects=[self.category, self.project])
         non_superusers = [
             self.user_owner,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1044,10 +1081,17 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
         """Test visibility of role invite button"""
         expected_true = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
-        expected_false = [self.user_contributor, self.user_guest]
+        expected_false = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
+        ]
         self.assert_element_exists(
             expected_true, self.url, 'sodar-pr-btn-role-list-invite', True
         )
@@ -1059,10 +1103,17 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
         """Test visibility of role invite button"""
         expected_true = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
-        expected_false = [self.user_contributor, self.user_guest]
+        expected_false = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
+        ]
         self.assert_element_exists(
             expected_true, self.url, 'sodar-pr-btn-role-list-create', True
         )
@@ -1073,9 +1124,13 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
     def test_role_buttons(self):
         """Test visibility of role management buttons"""
         expected = [
-            (self.superuser, 4),
-            (self.user_owner, 4),
-            (self.user_delegate, 2),
+            (self.superuser, 6),
+            (self.user_owner_cat, 6),
+            (self.user_delegate_cat, 4),
+            (self.user_contributor_cat, 0),
+            (self.user_guest_cat, 0),
+            (self.user_owner, 6),
+            (self.user_delegate, 4),
             (self.user_contributor, 0),
             (self.user_guest, 0),
         ]
@@ -1112,12 +1167,9 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
 
     def test_role_links_delegate_inherited(self):
         """Test role dropdown links for inherited delegate"""
-        self.make_assignment(
-            self.category, self.user_assign, self.role_delegate
-        )
         self.login_and_redirect(self.superuser, self.url)
         with self.assertRaises(NoSuchElementException):
-            self._get_role_dropdown(self.user_assign)
+            self._get_role_dropdown(self.user_delegate_cat)
 
     def test_role_links_contrib_local(self):
         """Test role dropdown links for local contributor"""
@@ -1229,6 +1281,8 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
         """Test visibility of invite list button group"""
         expected_true = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
@@ -1243,6 +1297,8 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
         """Test visibility of role invite button"""
         expected_true = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
@@ -1257,6 +1313,8 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
         """Test visibility of role invite button"""
         expected_true = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
@@ -1278,6 +1336,8 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
         )
         expected = [
             (self.superuser, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
             (self.user_owner, 1),
             (self.user_delegate, 1),
         ]
@@ -1680,6 +1740,8 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         """Test visibility of update link"""
         expected_true = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
@@ -1708,6 +1770,8 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
 
         expected_true = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
@@ -1731,8 +1795,15 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
 
     def test_create_link(self):
         """Test visibility of create link"""
-        expected_true = [self.superuser, self.user_owner]
+        expected_true = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+        ]
         expected_false = [
+            self.user_guest_cat,
+            self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1760,6 +1831,10 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         expected_true = [self.superuser]
         expected_false = [
             self.user_owner,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1789,6 +1864,10 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
 
         expected_false = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1808,8 +1887,15 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_link_target_local(self):
         """Test visibility of create link as target under a local category"""
-        expected_true = [self.superuser, self.user_owner]
+        expected_true = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+        ]
         expected_false = [
+            self.user_guest_cat,
+            self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1840,6 +1926,10 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         self.set_up_as_target(projects=[self.category, self.project])
         expected_false = [
             self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1991,6 +2081,10 @@ class TestProjectSearchResultsView(TestUIBase):
         """Test project search items visibility according to user permissions"""
         expected = [
             (self.superuser, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
             (self.user_owner, 1),
             (self.user_delegate, 1),
             (self.user_contributor, 1),
@@ -2004,6 +2098,10 @@ class TestProjectSearchResultsView(TestUIBase):
         """Test project search items visibility with 'project' type"""
         expected = [
             (self.superuser, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
             (self.user_owner, 1),
             (self.user_delegate, 1),
             (self.user_contributor, 1),
@@ -2021,6 +2119,10 @@ class TestProjectSearchResultsView(TestUIBase):
         """Test project search items visibility with a nonexisting type"""
         expected = [
             (self.superuser, 0),
+            (self.user_owner_cat, 0),
+            (self.user_delegate_cat, 0),
+            (self.user_contributor_cat, 0),
+            (self.user_guest_cat, 0),
             (self.user_owner, 0),
             (self.user_delegate, 0),
             (self.user_contributor, 0),

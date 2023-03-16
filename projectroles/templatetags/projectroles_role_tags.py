@@ -22,7 +22,6 @@ ROLE_RANK_ICONS = {
 }
 
 
-# TODO: Add tests
 @register.simple_tag
 def get_role_icon(role):
     """Return the icon class for a Role"""
@@ -31,7 +30,6 @@ def get_role_icon(role):
     return ROLE_RANK_ICONS[keys[key_idx]]
 
 
-# TODO: Add tests
 @register.simple_tag
 def get_role_perms(project, user):
     """
@@ -55,7 +53,6 @@ def get_role_perms(project, user):
     }
 
 
-# TODO: Add tests
 @register.simple_tag
 def display_role_buttons(project, role_as, perms):
     """Return True/False on whether role buttons can be displayed for role"""
@@ -79,7 +76,6 @@ def display_role_buttons(project, role_as, perms):
     return False
 
 
-# TODO: Add tests
 @register.simple_tag
 def get_inactive_role(project, inherited_as):
     """

@@ -64,10 +64,14 @@ class TestProjectListView(
         """Test visibility of events in project event list"""
         expected = [
             (self.superuser, 2),
-            (self.owner_as.user, 2),
-            (self.delegate_as.user, 2),
-            (self.contributor_as.user, 1),
-            (self.guest_as.user, 1),
+            (self.user_owner_cat, 2),
+            (self.user_delegate_cat, 2),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_owner, 2),
+            (self.user_delegate, 2),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
         ]
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
@@ -79,10 +83,14 @@ class TestProjectListView(
         self.event.user = None
         expected = [
             (self.superuser, 2),
-            (self.owner_as.user, 2),
-            (self.delegate_as.user, 2),
-            (self.contributor_as.user, 1),
-            (self.guest_as.user, 1),
+            (self.user_owner_cat, 2),
+            (self.user_delegate_cat, 2),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_owner, 2),
+            (self.user_delegate, 2),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
         ]
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
@@ -100,10 +108,14 @@ class TestProjectListView(
         )
         expected = [
             (self.superuser, 2),
-            (self.owner_as.user, 2),
-            (self.delegate_as.user, 2),
-            (self.contributor_as.user, 1),
-            (self.guest_as.user, 1),
+            (self.user_owner_cat, 2),
+            (self.user_delegate_cat, 2),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_owner, 2),
+            (self.user_delegate, 2),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
         ]
         url = reverse(
             'timeline:list_object',
@@ -119,10 +131,14 @@ class TestProjectListView(
         """Test visibility of events on the project details page"""
         expected = [
             (self.superuser, 2),
-            (self.owner_as.user, 2),
-            (self.delegate_as.user, 2),
-            (self.contributor_as.user, 1),
-            (self.guest_as.user, 1),
+            (self.user_owner_cat, 2),
+            (self.user_delegate_cat, 2),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_owner, 2),
+            (self.user_delegate, 2),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
         ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -163,10 +179,14 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         """Test visibility of events in the site-wide event list"""
         expected = [
             (self.superuser, 2),
-            (self.owner_as.user, 1),
-            (self.delegate_as.user, 1),
-            (self.contributor_as.user, 1),
-            (self.guest_as.user, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_owner, 1),
+            (self.user_delegate, 1),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
         ]
         url = reverse('timeline:list_site')
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
@@ -182,10 +202,14 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
         expected = [
             (self.superuser, 2),
-            (self.owner_as.user, 1),
-            (self.delegate_as.user, 1),
-            (self.contributor_as.user, 1),
-            (self.guest_as.user, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_owner, 1),
+            (self.user_delegate, 1),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
         ]
         url = reverse(
             'timeline:list_object_site',
@@ -493,10 +517,14 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         """Test search results"""
         expected = [
             (self.superuser, 4),
-            (self.owner_as.user, 2),
-            (self.delegate_as.user, 2),
-            (self.contributor_as.user, 2),
-            (self.guest_as.user, 2),
+            (self.user_owner_cat, 2),
+            (self.user_delegate_cat, 2),
+            (self.user_contributor_cat, 2),
+            (self.user_guest_cat, 2),
+            (self.user_owner, 2),
+            (self.user_delegate, 2),
+            (self.user_contributor, 2),
+            (self.user_guest, 2),
             (self.user_no_roles, 1),
         ]
         url = (
