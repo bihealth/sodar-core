@@ -26,6 +26,7 @@ from projectroles.models import (
     ProjectInvite,
     AppSetting,
     SODAR_CONSTANTS,
+    CAT_DELIMITER,
 )
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_app_settings import AppSettingInitMixin
@@ -650,6 +651,23 @@ class TestProjectCreateAPIView(
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Project.objects.count(), 2)
 
+    def test_create_project_title_delimiter(self):
+        """Test creating project with category delimiter in title (should fail)"""
+        self.assertEqual(Project.objects.count(), 2)
+        url = reverse('projectroles:api_project_create')
+        post_data = {
+            'title': 'New{}Project'.format(CAT_DELIMITER),
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'public_guest_access': False,
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Project.objects.count(), 2)
+
     def test_create_project_unknown_user(self):
         """Test creating project with non-existent user (should fail)"""
         self.assertEqual(Project.objects.count(), 2)
@@ -1025,6 +1043,16 @@ class TestProjectUpdateAPIView(
             'sodar_uuid': str(self.project.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)
+
+    def test_patch_project_title_delimiter(self):
+        """Test patch() with category delimiter in title (should fail)"""
+        url = reverse(
+            'projectroles:api_project_update',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        patch_data = {'title': 'New{}Project'.format(CAT_DELIMITER)}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_patch_project_owner(self):
         """Test patch() for updating project owner (should fail)"""

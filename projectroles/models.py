@@ -32,6 +32,12 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 
 # Local constants
+ROLE_RANKING = {
+    PROJECT_ROLE_OWNER: 10,
+    PROJECT_ROLE_DELEGATE: 20,
+    PROJECT_ROLE_CONTRIBUTOR: 30,
+    PROJECT_ROLE_GUEST: 40,
+}
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
 APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING', 'JSON']
 APP_SETTING_TYPE_CHOICES = [
@@ -44,12 +50,9 @@ APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
-ROLE_RANKING = {
-    PROJECT_ROLE_OWNER: 10,
-    PROJECT_ROLE_DELEGATE: 20,
-    PROJECT_ROLE_CONTRIBUTOR: 30,
-    PROJECT_ROLE_GUEST: 40,
-}
+CAT_DELIMITER_ERROR_MSG = 'String "{}" is not allowed in title'.format(
+    CAT_DELIMITER
+)
 
 
 # Project ----------------------------------------------------------------------
@@ -217,6 +220,12 @@ class Project(models.Model):
         """
         if self.parent and self.title == self.parent.title:
             raise ValidationError('Project and parent titles can not be equal')
+        if (
+            CAT_DELIMITER in self.title
+            or self.title.startswith(CAT_DELIMITER.strip())
+            or self.title.endswith(CAT_DELIMITER.strip())
+        ):
+            raise ValidationError(CAT_DELIMITER_ERROR_MSG)
 
     def _validate_archive(self):
         """

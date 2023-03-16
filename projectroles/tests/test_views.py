@@ -35,6 +35,7 @@ from projectroles.models import (
     RemoteSite,
     RemoteProject,
     SODAR_CONSTANTS,
+    CAT_DELIMITER,
 )
 from projectroles.plugins import (
     get_backend_api,
@@ -726,7 +727,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         category = Project.objects.first()
         self.assertIsNotNone(category)
 
-        # Make project with owner in Django
+        # Create project
         values = {
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -843,6 +844,35 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         # Alert and email for parent owner should be created
         self.assertEqual(self.app_alert_model.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_create_project_title_delimiter(self):
+        """Test Project creation with category delimiter in title (should fail)"""
+        category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category, self.user, self.role_owner)
+        self.assertEqual(Project.objects.all().count(), 1)
+        values = {
+            'title': 'Test{}Project'.format(CAT_DELIMITER),
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': category.sodar_uuid,
+            'owner': self.user.sodar_uuid,
+            'description': 'description',
+            'public_guest_access': False,
+        }
+        values.update(
+            app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT, post_safe=True)
+        )
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:create',
+                    kwargs={'project': category.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Project.objects.all().count(), 1)
 
 
 class TestProjectUpdateView(
@@ -1006,6 +1036,26 @@ class TestProjectUpdateView(
         self.assertIn('title', tl_event.extra_data)
         self.assertIn('description', tl_event.extra_data)
         self.assertIn('parent', tl_event.extra_data)
+
+    def test_update_project_title_delimiter(self):
+        """Test Project updating with category delimiter in title (should fail)"""
+        values = model_to_dict(self.project)
+        values['title'] = 'Project{}Title'.format(CAT_DELIMITER)
+        # Add settings values
+        values.update(
+            app_settings.get_all(project=self.project, post_safe=True)
+        )
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 200)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title, 'TestProject')
 
     def test_render_category(self):
         """Test rendering with existing category"""

@@ -26,6 +26,7 @@ Added
     - ``Project.get_roles_by_rank()`` helper (#638)
     - ``RoleMixin`` with ``init_roles()`` for tests
     - App settings project type limiting (#1169)
+    - Validation for category delimiter in ``Project.title`` (#1163)
 - **Siteinfo**
     - Add ``LDAP_ALT_DOMAINS`` to displayed settings (#1123)
 - **Sodarcache**

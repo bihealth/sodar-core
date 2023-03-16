@@ -15,6 +15,8 @@ from projectroles.models import (
     ProjectInvite,
     AppSetting,
     SODAR_CONSTANTS,
+    CAT_DELIMITER,
+    CAT_DELIMITER_ERROR_MSG,
 )
 from projectroles.utils import build_secret, get_expiry_date
 from projectroles.views import (
@@ -435,10 +437,17 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             )
 
         # Validate title
-        if parent and attrs.get('title') == parent.title:
+        title = attrs.get('title')
+        if title and (
+            CAT_DELIMITER in title
+            or title.startswith(CAT_DELIMITER.strip())
+            or title.endswith(CAT_DELIMITER.strip())
+        ):
+            raise serializers.ValidationError(CAT_DELIMITER_ERROR_MSG)
+        if parent and title == parent.title:
             raise serializers.ValidationError('Title can\'t match with parent')
         if (
-            attrs.get('title')
+            title
             and not self.instance
             and Project.objects.filter(title=attrs['title'], parent=parent)
         ):

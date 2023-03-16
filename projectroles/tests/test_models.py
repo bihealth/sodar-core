@@ -21,6 +21,7 @@ from projectroles.models import (
     RemoteProject,
     SODAR_CONSTANTS,
     ROLE_RANKING,
+    CAT_DELIMITER,
 )
 from projectroles.plugins import get_app_plugin
 from projectroles.utils import build_secret
@@ -339,11 +340,20 @@ class TestProject(ProjectMixin, TestCase):
             self.project.parent = self.project
             self.project.save()
 
-    def test_validate_title(self):
-        """Test title validation with identical project name"""
+    def test_validate_title_identical(self):
+        """Test title validation with identical title"""
         with self.assertRaises(ValidationError):
             self.make_project(
                 title='TestCategory',
+                type=PROJECT_TYPE_PROJECT,
+                parent=self.category,
+            )
+
+    def test_validate_title_delimiter(self):
+        """Test title validation with category delimiter"""
+        with self.assertRaises(ValidationError):
+            self.make_project(
+                title='Test{}PROJECT'.format(CAT_DELIMITER),
                 type=PROJECT_TYPE_PROJECT,
                 parent=self.category,
             )

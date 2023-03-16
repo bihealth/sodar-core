@@ -23,6 +23,7 @@ from projectroles.models import (
     ROLE_RANKING,
     APP_SETTING_VAL_MAXLENGTH,
     CAT_DELIMITER,
+    CAT_DELIMITER_ERROR_MSG,
 )
 
 from projectroles.plugins import get_active_plugins
@@ -259,7 +260,6 @@ class ProjectForm(SODARModelForm):
         categories = Project.objects.filter(type=PROJECT_TYPE_CATEGORY).exclude(
             pk=instance.pk
         )
-
         if not user.is_superuser:
             categories = categories.filter(
                 roles__in=RoleAssignment.objects.filter(
@@ -475,6 +475,78 @@ class ProjectForm(SODARModelForm):
                 # Set label notes
                 self._set_app_setting_notes(s_field, s_val)
 
+    @classmethod
+    def _validate_app_settings(
+        self,
+        cleaned_data,
+        app_plugins,
+        app_settings,
+        p_kwargs,
+        instance,
+        instance_owner_as,
+    ):
+        """Validate and clean app_settings form fields"""
+        errors = []
+
+        for plugin in app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_definitions(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_definitions(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
+                )
+
+            plugin_app_settings = {}
+            for s_key, s_val in p_settings.items():
+                s_field = 'settings.{}.{}'.format(name, s_key)
+                plugin_app_settings[s_key] = cleaned_data.get(s_field)
+
+                if s_val['type'] == 'JSON':
+                    if s_val['type'] == 'JSON':
+                        if not cleaned_data.get(s_field):
+                            cleaned_data[s_field] = '{}'
+                        try:
+                            cleaned_data[s_field] = json.loads(
+                                cleaned_data.get(s_field)
+                            )
+                        except json.JSONDecodeError as err:
+                            errors.append(
+                                (s_field, 'Invalid JSON\n' + str(err))
+                            )
+                elif s_val['type'] == 'INTEGER':
+                    # When the field is a select/dropdown the information of
+                    # the datatype gets lost. We need to convert that here,
+                    # otherwise subsequent checks will fail.
+                    cleaned_data[s_field] = int(cleaned_data[s_field])
+
+                if not app_settings.validate(
+                    setting_type=s_val['type'],
+                    setting_value=cleaned_data.get(s_field),
+                    setting_options=s_val.get('options'),
+                    project=instance,
+                ):
+                    errors.append((s_field, 'Invalid value'))
+
+            # Custom validation for app settings
+            try:
+                app_settings_errors = plugin.validate_app_settings(
+                    plugin_app_settings,
+                    project=instance,
+                    user=instance_owner_as,
+                )
+                if app_settings_errors:
+                    for field, error in app_settings_errors.items():
+                        if error:
+                            errors.append((field, error))
+            except AttributeError:
+                # Plugin does not have a validate_form_app_settings method
+                pass
+        return cleaned_data, errors
+
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
@@ -503,10 +575,6 @@ class ProjectForm(SODARModelForm):
         )
         self.fields['description'].help_text = 'Short description'
         self.fields['readme'].help_text = 'README (optional, supports markdown)'
-
-        ####################
-        # Form modifications
-        ####################
 
         # Modify ModelChoiceFields to use sodar_uuid
         self.fields['parent'].to_field_name = 'sodar_uuid'
@@ -587,79 +655,6 @@ class ProjectForm(SODARModelForm):
             self.fields['description'].widget = forms.HiddenInput()
             self.fields['readme'].widget = forms.HiddenInput()
 
-    @classmethod
-    def _validate_app_settings(
-        self,
-        cleaned_data,
-        app_plugins,
-        app_settings,
-        p_kwargs,
-        instance,
-        instance_owner_as,
-    ):
-        """Validate and clean app_settings form fields"""
-        errors = []
-
-        for plugin in app_plugins + [None]:
-            if plugin:
-                name = plugin.name
-                p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
-                )
-            else:
-                name = 'projectroles'
-                p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
-                )
-
-            plugin_app_settings = {}
-            for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(name, s_key)
-                plugin_app_settings[s_key] = cleaned_data.get(s_field)
-
-                if s_val['type'] == 'JSON':
-                    if s_val['type'] == 'JSON':
-                        if not cleaned_data.get(s_field):
-                            cleaned_data[s_field] = '{}'
-                        try:
-                            cleaned_data[s_field] = json.loads(
-                                cleaned_data.get(s_field)
-                            )
-                        except json.JSONDecodeError as err:
-                            errors.append(
-                                (s_field, 'Invalid JSON\n' + str(err))
-                            )
-                elif s_val['type'] == 'INTEGER':
-                    # When the field is a select/dropdown the information of
-                    # the datatype gets lost. We need to convert that here,
-                    # otherwise subsequent checks will fail.
-                    cleaned_data[s_field] = int(cleaned_data[s_field])
-
-                if not app_settings.validate(
-                    setting_type=s_val['type'],
-                    setting_value=cleaned_data.get(s_field),
-                    setting_options=s_val.get('options'),
-                    project=instance,
-                ):
-                    errors.append((s_field, 'Invalid value'))
-
-            # Custom validation for app settings
-            try:
-                app_settings_errors = plugin.validate_app_settings(
-                    plugin_app_settings,
-                    project=instance,
-                    user=instance_owner_as,
-                )
-                if app_settings_errors:
-                    for field, error in app_settings_errors.items():
-                        if error:
-                            errors.append((field, error))
-            except AttributeError:
-                # Plugin does not have a validate_form_app_settings method
-                pass
-
-        return (cleaned_data, errors)
-
     def clean(self):
         """Function for custom form validation and cleanup"""
         self.instance_owner_as = (
@@ -669,11 +664,14 @@ class ProjectForm(SODARModelForm):
             settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
         )
         parent = self.cleaned_data.get('parent')
+        title = self.cleaned_data.get('title')
+        p_type = self.cleaned_data.get('type')
+        owner = self.cleaned_data.get('owner')
 
         # Check for category/project being placed in root
         if not parent and (not self.instance or self.instance.parent):
             if (
-                self.cleaned_data.get('type') == PROJECT_TYPE_CATEGORY
+                p_type == PROJECT_TYPE_CATEGORY
                 and not self.current_user.is_superuser
             ):
                 self.add_error(
@@ -681,48 +679,44 @@ class ProjectForm(SODARModelForm):
                     'You do not have permission to place a {} under '
                     'root'.format(get_display_name(PROJECT_TYPE_CATEGORY)),
                 )
-            elif (
-                self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
-                and not disable_categories
-            ):
+            elif p_type == PROJECT_TYPE_PROJECT and not disable_categories:
                 self.add_error(
                     'parent', 'Projects can not be placed under root'
                 )
 
+        # Ensure prohibited substrings are not found in title
+        if (
+            CAT_DELIMITER in title
+            or title.startswith(CAT_DELIMITER.strip())
+            or title.endswith(CAT_DELIMITER.strip())
+        ):
+            self.add_error('title', CAT_DELIMITER_ERROR_MSG)
         # Ensure title does not match parent
-        if parent and parent.title == self.cleaned_data.get('title'):
+        if parent and parent.title == title:
             self.add_error(
                 'title',
                 '{} and parent titles can not be equal'.format(
-                    get_display_name(self.cleaned_data.get('type'), title=True)
+                    get_display_name(p_type, title=True)
                 ),
             )
-
         # Ensure title is unique within parent
         existing_project = Project.objects.filter(
-            parent=self.cleaned_data.get('parent'),
-            title=self.cleaned_data.get('title'),
+            parent=parent,
+            title=title,
         ).first()
-
         if existing_project and (
             not self.instance or existing_project.pk != self.instance.pk
         ):
             self.add_error('title', 'Title must be unique within parent')
 
         # Ensure owner has been set
-        if not self.cleaned_data.get('owner'):
+        if not owner:
             self.add_error(
                 'owner',
-                'Owner must be set for {}'.format(
-                    get_display_name(self.cleaned_data.get('type'))
-                ),
+                'Owner must be set for {}'.format(get_display_name(p_type)),
             )
-
         # Ensure owner is not changed on update (must use ownership transfer)
-        if (
-            self.instance_owner_as
-            and self.cleaned_data.get('owner') != self.instance_owner_as.user
-        ):
+        if self.instance_owner_as and owner != self.instance_owner_as.user:
             self.add_error(
                 'owner',
                 'Owner update is not allowed in this form, use Ownership '
@@ -742,7 +736,6 @@ class ProjectForm(SODARModelForm):
             self.cleaned_data[key] = value
         for (field, error) in errors:
             self.add_error(field, error)
-
         return self.cleaned_data
 
 
@@ -1035,14 +1028,12 @@ class ProjectInviteForm(SODARModelForm):
         self.fields['role'].choices = get_role_choices(
             self.project, self.current_user, allow_delegate=True
         )
-
         if role:
             self.fields['role'].initial = role
         else:
             self.fields['role'].initial = Role.objects.get(
                 name=PROJECT_ROLE_GUEST
             ).pk
-
         # Limit textarea height
         self.fields['message'].widget.attrs['rows'] = 4
 
@@ -1125,7 +1116,6 @@ class ProjectInviteForm(SODARModelForm):
                         del_limit, get_display_name(self.project.type)
                     ),
                 )
-
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
