@@ -325,15 +325,7 @@ class ProjectForm(SODARModelForm):
 
         # Set project type
         s_project_types = s_val.get('project_types') or [PROJECT_TYPE_PROJECT]
-        if PROJECT_TYPE_PROJECT in s_project_types:
-            s_widget_attrs['data-project-types'] = 'project'
-        elif PROJECT_TYPE_CATEGORY in s_project_types:
-            s_widget_attrs['data-project-types'] = 'category'
-        elif (
-            PROJECT_TYPE_PROJECT in s_project_types
-            and PROJECT_TYPE_CATEGORY in s_project_types
-        ):
-            s_widget_attrs['data-project-types'] = 'project,category'
+        s_widget_attrs['data-project-types'] = ','.join(s_project_types).lower()
 
         if 'placeholder' in s_val:
             s_widget_attrs['placeholder'] = s_val.get('placeholder')

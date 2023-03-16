@@ -2971,6 +2971,22 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
 
+    def test_set_invalid_project_type(self):
+        """Test setting app setting with the wrong project type (should fail)"""
+        setting_name = 'project_category_bool_setting'
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'app_name': EX_APP_NAME,
+            'setting_name': setting_name,
+            'value': True,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
     def test_set_no_value(self):
         """Test setting without value (should fail)"""
         self.assertEqual(AppSetting.objects.count(), 0)

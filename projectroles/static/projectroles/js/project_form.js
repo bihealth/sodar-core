@@ -19,7 +19,7 @@ $(document).ready(function() {
             }
         });
     }
-    if ($('#object-type').text() == 'Update Category') {
+    if ($('#object-type').text() == 'Update Category' || $('#object-type').text() == 'Create Top Level Category') {
         $('div[id^="div_id_settings"]').each(function () {
             var $parentDiv = $(this);
             var $categoryElements = $parentDiv.find('select[data-project-types="category"]')
