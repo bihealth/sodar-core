@@ -904,6 +904,15 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             for s_key, s_val in p_settings.items():
                 s_name = 'settings.{}.{}'.format(name, s_key)
                 s_data = data.get(s_name)
+
+                if (
+                    not s_val.get('project_types', None)
+                    and not instance.type == PROJECT_TYPE_PROJECT
+                    or s_val.get('project_types', None)
+                    and instance.type not in s_val['project_types']
+                ):
+                    continue
+
                 if s_data is None and not instance:
                     s_data = app_settings.get_default(
                         name, s_key, project=project
@@ -1006,8 +1015,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 setting_name=k.split('.')[2],
                 value=v,
                 project=project,
-                validate=False,
-            )  # Already validated in form
+                validate=True,
+            )
 
     @classmethod
     def _notify_users(
@@ -1144,7 +1153,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             owner = old_project.get_owner().user
 
         # Get settings
-        project_settings = self._get_app_settings(data, instance)
+        project_settings = self._get_app_settings(data, project)
         old_settings = None
         if action == PROJECT_ACTION_UPDATE:
             old_settings = json.loads(json.dumps(project_settings))  # Copy
@@ -1169,8 +1178,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 user=owner,
                 role=Role.objects.get(name=PROJECT_ROLE_OWNER),
             )
-        if project.type == PROJECT_TYPE_PROJECT:
-            self._update_settings(project, project_settings)
+        self._update_settings(project, project_settings)
         project.save()  # TODO: Is this required anymore?
 
         # Call for additional actions for project creation/update in plugins

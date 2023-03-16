@@ -29,6 +29,7 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import EMPTY_CHOICE_LABEL
 from projectroles.models import (
     Project,
+    AppSetting,
     RoleAssignment,
     ProjectInvite,
     RemoteSite,
@@ -675,7 +676,11 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        # TODO: Assert settings
+        # Assert settings comparison
+        settings = AppSetting.objects.filter(project=project)
+        self.assertEqual(settings.count(), 1)
+        setting = settings.first()
+        self.assertEqual(setting.name, 'project_category_bool_setting')
 
         # Assert owner role assignment
         owner_as = RoleAssignment.objects.get(
@@ -765,6 +770,29 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
+
+        # Assert settings comparison
+        project_settings = [
+            'project_bool_setting',
+            'project_callable_setting',
+            'project_callable_setting_options',
+            'project_global_setting',
+            'project_hidden_json_setting',
+            'project_hidden_setting',
+            'project_int_setting',
+            'project_int_setting_options',
+            'project_json_setting',
+            'project_str_setting',
+            'project_str_setting_options',
+            'allow_public_links',
+            'ip_allowlist',
+            'ip_restrict',
+        ]
+        settings = AppSetting.objects.filter(project=project)
+        self.assertEqual(settings.count(), 14)
+        for setting in settings:
+            self.assertIn(setting.name, project_settings)
+
         # Assert owner role assignment
         owner_as = RoleAssignment.objects.get(
             project=project, role=self.role_owner
@@ -1041,7 +1069,11 @@ class TestProjectUpdateView(
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        # TODO: Assert settings
+        # Assert settings comparison
+        settings = AppSetting.objects.filter(project=self.category)
+        self.assertEqual(settings.count(), 1)
+        setting = settings.first()
+        self.assertEqual(setting.name, 'project_category_bool_setting')
 
         # Assert redirect
         with self.login(self.user):

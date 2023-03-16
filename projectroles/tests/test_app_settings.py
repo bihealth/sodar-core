@@ -407,7 +407,7 @@ class TestAppSettingAPI(
 
     def test_set_undefined(self):
         """Test set() with an undefined setting (should fail)"""
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             app_settings.set(
                 app_name=EXAMPLE_APP_NAME,
                 setting_name='new_setting',
@@ -437,6 +437,16 @@ class TestAppSettingAPI(
             value=True,
         )
         self.assertEqual(ret, True)
+
+    def test_set_invalid_project_types(self):
+        """Test set() with invalid project types scope"""
+        with self.assertRaises(ValueError):
+            app_settings.set(
+                app_name=EXAMPLE_APP_NAME,
+                setting_name='project_category_bool_setting',
+                project=self.project,
+                value=True,
+            )  # Should fail because project_category_bool_setting is a CATEGORY setting
 
     def test_validator(self):
         """Test validate() with type BOOLEAN"""
@@ -638,6 +648,15 @@ class TestAppSettingAPI(
                 'description': 'Example callable project setting with options',
                 'user_modifiable': True,
             },
+            'project_category_bool_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+                'type': 'BOOLEAN',
+                'label': 'Category boolean setting',
+                'default': False,
+                'description': 'Example boolean project category setting',
+                'user_modifiable': True,
+                'project_types': [PROJECT_TYPE_CATEGORY],
+            },
         }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
@@ -786,13 +805,13 @@ class TestAppSettingAPI(
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 11)
+        self.assertEqual(len(defs), 12)
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT,
             app_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
-        self.assertEqual(len(defs), 9)
+        self.assertEqual(len(defs), 10)
 
     def test_get_defs_invalid_scope(self):
         """Test get_defs() with an invalid scope"""

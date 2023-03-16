@@ -322,6 +322,11 @@ class ProjectForm(SODARModelForm):
         :param s_val: Setting value
         """
         s_widget_attrs = s_val.get('widget_attrs') or {}
+
+        # Set project type
+        s_project_types = s_val.get('project_types') or [PROJECT_TYPE_PROJECT]
+        s_widget_attrs['data-project-types'] = ','.join(s_project_types).lower()
+
         if 'placeholder' in s_val:
             s_widget_attrs['placeholder'] = s_val.get('placeholder')
         setting_kwargs = {
@@ -594,9 +599,6 @@ class ProjectForm(SODARModelForm):
     ):
         """Validate and clean app_settings form fields"""
         errors = []
-
-        if cleaned_data.get('type') == PROJECT_TYPE_CATEGORY:
-            return (cleaned_data, errors)
 
         for plugin in app_plugins + [None]:
             if plugin:

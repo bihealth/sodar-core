@@ -18,6 +18,8 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 # Local constants
 APP_SETTING_LOCAL_DEFAULT = True
@@ -50,6 +52,8 @@ PROJECTROLES_APP_SETTINGS = {
     #:                    settings of type STRING or INTEGER
     #:         'user_modifiable': True,  # Optional, show/hide in forms
     #:         'local': False,  # Allow editing in target site forms if True
+    #:         'project_types': [PROJECT_TYPE_PROJECT],  # Optional, list may
+    #:          contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
     #:     }
     'ip_restrict': {
         'scope': APP_SETTING_SCOPE_PROJECT,
@@ -79,12 +83,14 @@ PROJECTROLES_APP_SETTINGS = {
         'multiple emails with semicolon.',
         'user_modifiable': True,
         'local': False,
+        'project_types': [PROJECT_TYPE_PROJECT],
     },
     'project_star': {
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
         'type': 'BOOLEAN',
         'default': False,
         'local': False,
+        'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
     },
 }
 
@@ -486,6 +492,23 @@ class AppSettingAPI:
         if not project and not user:
             raise ValueError('Project and user are both unset')
 
+        setting_def = cls.get_definition(name=setting_name, app_name=app_name)
+
+        # Check project type
+        if (
+            project
+            and not setting_def.get('project_types', None)
+            and not project.type == PROJECT_TYPE_PROJECT
+            or project
+            and setting_def.get('project_types', None)
+            and project.type not in setting_def['project_types']
+        ):
+            raise ValueError(
+                'Project type {} not allowed for setting {}'.format(
+                    project.type, setting_name
+                )
+            )
+
         try:
             q_kwargs = {
                 'name': setting_name,
@@ -499,9 +522,6 @@ class AppSettingAPI:
                 return False
 
             if validate:
-                setting_def = cls.get_definition(
-                    name=setting_name, app_name=app_name
-                )
                 cls.validate(
                     setting.type,
                     value,
@@ -544,9 +564,6 @@ class AppSettingAPI:
             cls._check_project_and_user(s_def['scope'], project, user)
             if validate:
                 v = cls._get_json_value(value) if s_type == 'JSON' else value
-                setting_def = cls.get_definition(
-                    name=setting_name, app_name=app_name
-                )
                 cls.validate(
                     s_type,
                     v,
