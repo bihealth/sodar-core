@@ -17,7 +17,6 @@ def clean_up_app_settings(apps, schema_editor):
                 app_name=app_setting.app_plugin.name, name=app_setting.name
             )
         except ValueError:
-            # AppSetting is already deleted
             continue
         except AttributeError:
             # app_plugin is None, what means that the app plugin is projectroles
