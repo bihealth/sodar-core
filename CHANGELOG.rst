@@ -22,8 +22,10 @@ Added
     - Inherited roles in project list and retrieve REST API views (#1121)
     - App settings validation by plugin method (#860)
     - App settings callable default value and options support (#1050)
+    - Full role inheritance (#638, #1103, #1172, #1173)
     - ``Project.get_roles_by_rank()`` helper (#638)
     - ``RoleMixin`` with ``init_roles()`` for tests
+    - App settings project type limiting (#1169)
 - **Siteinfo**
     - Add ``LDAP_ALT_DOMAINS`` to displayed settings (#1123)
 - **Sodarcache**
@@ -47,7 +49,6 @@ Changed
     - Implement advanced search with POST (#712)
     - Remove category project list scrolling (#1141)
     - Move sidebar template tags to context processor (#969)
-    - Extend role inheritance to all roles (#638)
     - Update ``Project`` model API methods (#638, #710, #1045)
     - Update permission and UI test setup (#638)
 
@@ -73,6 +74,7 @@ Removed
     - ``ProjectUserTag`` model (#321)
     - ``RoleAssignmentManager`` (#638)
     - ``Project.get_all_roles()`` method (#638, #710)
+    - ``is_inherited_owner()`` template tag (#1172)
 
 
 v0.12.0 (2023-02-03)

@@ -101,19 +101,6 @@ def is_app_visible(plugin, project, user):
 # Template rendering -----------------------------------------------------------
 
 
-# TODO: Remove or replace?
-@register.simple_tag
-def is_inherited_owner(project, user):
-    """Return True if user is inherited owner"""
-    if (
-        project
-        and user
-        and user in [r.user for r in project.get_owners(inherited_only=True)]
-    ):
-        return True
-    return False
-
-
 @register.simple_tag
 def get_app_link_state(app_plugin, app_name, url_name):
     """
