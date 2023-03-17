@@ -566,7 +566,7 @@ class TestProjectrolesTags(TestTemplateTagsBase):
             tags.is_app_visible(app_plugin, self.category, self.user), True
         )
 
-    @override_settings(PROJECTROLES_HIDE_APP_LINKS=['filesfolders'])
+    @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=['filesfolders'])
     def test_is_app_visible_hide(self):
         """Test is_app_visible() with a hidden app and normal/superuser"""
         app_plugin = get_app_plugin('filesfolders')

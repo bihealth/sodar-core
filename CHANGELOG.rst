@@ -55,6 +55,8 @@ Changed
     - Display roles consistently in member/owner update UI (#1027)
     - Reduce site app view top margin (#866)
     - Rename ``RoleAssignment.project`` related name to ``local_roles`` (#1175)
+    - Replace ``PROJECTROLES_HIDE_APP_LINKS`` with ``PROJECTROLES_HIDE_PROJECT_APPS`` (#1142)
+    - Deprecate ``PROJECTROLES_HIDE_APP_LINKS`` (#1142)
 
 Fixed
 -----

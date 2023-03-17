@@ -624,6 +624,11 @@ PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 # Scroll project navigation with page content if set False
 # PROJECTROLES_BREADCRUMB_STICKY = True
 
+# Hide project apps from the UI (sidebar, dropdown menus and project details)
+PROJECTROLES_HIDE_PROJECT_APPS = env.list(
+    'PROJECTROLES_HIDE_PROJECT_APPS', None, []
+)
+# NOTE: This setting has been deprecated and will be removed in v0.14
 PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 
 # Set limit for delegate roles per project (if 0, no limit is applied)

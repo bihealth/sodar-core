@@ -96,6 +96,14 @@ the updated roles.
 For populating ``Role`` objects in tests, it is recommended for you to use the
 ``RoleMixin.init_roles()`` helper.
 
+PROJECTROLES_HIDE_APP_LINKS Deprecated
+--------------------------------------
+
+The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting has been depreacted. Instead,
+you should use ``PROJECTROLES_HIDE_PROJECT_APPS`` which now handles the same
+functionality. Support for the ``PROJECTROLES_HIDE_APP_LINKS`` setting will be
+removed in v0.14.
+
 Deprecated App Settings API Methods Removed
 -------------------------------------------
 
