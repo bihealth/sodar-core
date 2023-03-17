@@ -78,7 +78,8 @@
       {% include 'projectroles/_messages.html' %}
 
       {# Actual content #}
-      <div class="sodar-app-content" id="sodar-app-content">
+      <div class="sodar-app-content{% if project %}-project{% endif %}"
+           id="sodar-app-content">
         {% block projectroles %}
           Projectroles app content here
         {% endblock projectroles %}
