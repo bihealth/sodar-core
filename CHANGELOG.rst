@@ -67,6 +67,7 @@ Fixed
     - ``get_form_label()`` displaying user without full name in parenthesis (#1140)
     - Project and user update form JSON error handling (#1151)
     - ``Project`` API methods returning unexpected multiple ``RoleAssignment`` objects for user (#710)
+    - ``ProjectListAPIView`` failure with inheritance and public guest access (#1176)
 
 Removed
 -------

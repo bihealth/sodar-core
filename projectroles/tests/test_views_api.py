@@ -280,7 +280,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
     """Tests for ProjectListAPIView"""
 
     def test_get(self):
-        """Test ProjectListAPIView get() as project owner"""
+        """Test ProjectListAPIView get() as superuser"""
         url = reverse('projectroles:api_project_list')
         response = self.request_knox(url)
 
@@ -334,26 +334,80 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
         ]
         self.assertEqual(response_data, expected)
 
+    def test_get_cat_owner(self):
+        """Test ProjectListAPIView get() as category owner"""
+        url = reverse('projectroles:api_project_list')
+        response = self.request_knox(
+            url, token=self.get_token(self.user_owner_cat)
+        )
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 2)
+
+    def test_get_owner(self):
+        """Test ProjectListAPIView get() as project owner"""
+        url = reverse('projectroles:api_project_list')
+        response = self.request_knox(url, token=self.get_token(self.user_owner))
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 1)
+        self.assertEqual(
+            response_data[0]['sodar_uuid'], str(self.project.sodar_uuid)
+        )
+
     def test_get_no_roles(self):
         """Test ProjectListAPIView get() without roles"""
-        user_no_roles = self.make_user('user_no_roles')
+        user_new = self.make_user('user_new')
         url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url, token=self.get_token(user_no_roles))
-
+        response = self.request_knox(url, token=self.get_token(user_new))
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 0)
 
-    def test_get_limited_roles(self):
-        """Test ProjectListAPIView get() with only one role"""
-        user_no_roles = self.make_user('user_no_roles')
-        self.make_assignment(self.project, user_no_roles, self.role_contributor)
+    def test_get_member(self):
+        """Test ProjectListAPIView get() with only local role"""
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.project, user_new, self.role_contributor)
         url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url, token=self.get_token(user_no_roles))
-
+        response = self.request_knox(url, token=self.get_token(user_new))
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)
+        self.assertEqual(
+            response_data[0]['sodar_uuid'], str(self.project.sodar_uuid)
+        )
+
+    def test_get_inherited_member(self):
+        """Test ProjectListAPIView get() with inherited member role"""
+        sub_category = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(sub_category, self.user_owner, self.role_owner)
+        sub_project = self.make_project(
+            'SubProject', PROJECT_TYPE_PROJECT, sub_category
+        )
+        self.make_assignment(sub_project, self.user_owner, self.role_owner)
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.category, user_new, self.role_contributor)
+        url = reverse('projectroles:api_project_list')
+        response = self.request_knox(url, token=self.get_token(user_new))
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 4)
+
+    def test_get_public_guest_access(self):
+        """Test ProjectListAPIView get() with public guest access"""
+        self.project.public_guest_access = True
+        self.project.save()
+        user_new = self.make_user('user_new')
+        url = reverse('projectroles:api_project_list')
+        response = self.request_knox(url, token=self.get_token(user_new))
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 1)
+        self.assertEqual(
+            response_data[0]['sodar_uuid'], str(self.project.sodar_uuid)
+        )
 
 
 class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):

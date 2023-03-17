@@ -43,6 +43,7 @@ from projectroles.models import (
     RemoteSite,
     AppSetting,
     SODAR_CONSTANTS,
+    CAT_DELIMITER,
 )
 from projectroles.plugins import get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
@@ -358,7 +359,7 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
 # API Views --------------------------------------------------------------------
 
 
-class ProjectListAPIView(ListAPIView):
+class ProjectListAPIView(APIView):
     """
     List all projects and categories for which the requesting user has access.
 
@@ -371,22 +372,31 @@ class ProjectListAPIView(ListAPIView):
 
     permission_classes = [IsAuthenticated]
     renderer_classes = [CoreAPIRenderer]
-    serializer_class = ProjectSerializer
     versioning_class = CoreAPIVersioning
 
-    def get_queryset(self):
-        """
-        Override get_queryset() to return projects of type PROJECT for which the
-        requesting user has access.
-        """
-        qs = Project.objects.all().order_by('pk')
-        if self.request.user.is_superuser:
-            return qs
-        return qs.filter(
-            local_roles__in=RoleAssignment.objects.filter(
-                user=self.request.user
-            )
-        )
+    def get(self, request, *args, **kwargs):
+        projects_all = Project.objects.all().order_by('full_title')
+        if request.user.is_superuser:
+            ret = projects_all
+        else:
+            ret = []
+            role_cats = []
+            projects_local = [
+                a.project
+                for a in RoleAssignment.objects.filter(user=request.user)
+            ]
+            for p in projects_all:
+                local_role = p in projects_local
+                if (
+                    local_role
+                    or p.public_guest_access
+                    or any(p.full_title.startswith(c) for c in role_cats)
+                ):
+                    ret.append(p)
+                if local_role and p.type == PROJECT_TYPE_CATEGORY:
+                    role_cats.append(p.full_title + CAT_DELIMITER)
+        serializer = ProjectSerializer(ret, many=True)
+        return Response(serializer.data, status=200)
 
 
 class ProjectRetrieveAPIView(
