@@ -488,6 +488,19 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
         response = self.request_knox(url)
         self.assertEqual(response.status_code, 404)
 
+    def test_get_inherited_member(self):
+        """Test ProjectRetrieveAPIView get() with inherited member"""
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.category, user_new, self.role_contributor)
+        url = reverse(
+            'projectroles:api_project_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        response = self.request_knox(url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data['roles']), 3)
+
 
 class TestProjectCreateAPIView(
     RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
