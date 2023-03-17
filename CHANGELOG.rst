@@ -52,6 +52,7 @@ Changed
     - Move sidebar template tags to context processor (#969)
     - Update ``Project`` model API methods (#638, #710, #1045)
     - Update permission and UI test setup (#638)
+    - Display roles consistently in member/owner update UI (#1027)
 
 Fixed
 -----

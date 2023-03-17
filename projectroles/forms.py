@@ -896,7 +896,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         if inh_role_as:
             q_kwargs['rank__lte'] = inh_role_as.role.rank
         return [
-            get_role_option(role)
+            get_role_option(project, role)
             for role in Role.objects.filter(**q_kwargs).order_by('rank')
         ]
 
@@ -939,18 +939,11 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         )
 
     def clean_old_owner_role(self):
-        role = next(
-            (
-                choice
-                for choice in self.selectable_roles
-                if choice[0] == int(self.cleaned_data['old_owner_role'])
-            ),
-            None,
-        )
-        try:
-            role = Role.objects.get(name=role[1])
-        except Role.DoesNotExist:
-            raise forms.ValidationError('Selected role does not exist')
+        role = Role.objects.filter(
+            pk=self.cleaned_data.get('old_owner_role')
+        ).first()
+        if not role:
+            raise forms.ValidationError('Selected role not found')
 
         if role.name == PROJECT_ROLE_DELEGATE:
             del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
@@ -1226,6 +1219,20 @@ class LocalUserForm(SODARModelForm):
 # Helper functions -------------------------------------------------------------
 
 
+def get_role_option(project, role):
+    """
+    Return form option value for a Role object.
+
+    :param project: Project object
+    :param role: Role object
+    return: Role key and legend
+    """
+    return role.pk, '{} {}'.format(
+        get_display_name(project.type, title=True),
+        role.name.split(' ')[1].capitalize(),
+    )
+
+
 def get_role_choices(
     project, current_user, promote_as=None, allow_delegate=True
 ):
@@ -1250,16 +1257,6 @@ def get_role_choices(
     if promote_as:
         qs = qs.filter(rank__lt=promote_as.role.rank)
     return [
-        get_role_option(role) for role in qs.exclude(name__in=role_excludes)
+        get_role_option(project, role)
+        for role in qs.exclude(name__in=role_excludes)
     ]
-
-
-def get_role_option(role):
-    """
-    Return form option value for a Role object.
-
-    :param role: Role object
-    return: Role key and legend
-    """
-    # TODO: Update for proper display name (see #1027)
-    return role.pk, role.name

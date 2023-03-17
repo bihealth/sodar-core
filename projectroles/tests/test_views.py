@@ -26,7 +26,7 @@ from timeline.tests.test_models import (
 )
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.forms import EMPTY_CHOICE_LABEL
+from projectroles.forms import get_role_option, EMPTY_CHOICE_LABEL
 from projectroles.models import (
     Project,
     AppSetting,
@@ -2530,12 +2530,12 @@ class TestRoleAssignmentCreateView(
         )
         # Assert owner role is not selectable
         self.assertNotIn(
-            [(self.role_owner.pk, self.role_owner.name)],
+            get_role_option(self.project, self.role_owner),
             form.fields['role'].choices,
         )
         # Assert delegate role is selectable
         self.assertIn(
-            (self.role_delegate.pk, self.role_delegate.name),
+            get_role_option(self.project, self.role_delegate),
             form.fields['role'].choices,
         )
 
@@ -2982,12 +2982,12 @@ class TestRoleAssignmentUpdateView(
 
         # Assert owner role is not selectable
         self.assertNotIn(
-            [(self.role_owner.pk, self.role_owner.name)],
+            get_role_option(self.project, self.role_owner),
             form.fields['role'].choices,
         )
         # Assert delegate role is selectable
         self.assertIn(
-            (self.role_delegate.pk, self.role_delegate.name),
+            get_role_option(self.project, self.role_delegate),
             form.fields['role'].choices,
         )
 
@@ -3203,7 +3203,7 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(len(form.fields['role'].choices), 1)
         self.assertEqual(
             form.fields['role'].choices[0],
-            (self.role_delegate.pk, self.role_delegate.name),
+            get_role_option(self.project, self.role_delegate),
         )
 
 
@@ -3708,7 +3708,7 @@ class TestProjectInviteCreateView(
         self.assertIsNotNone(form)
         # Assert owner role is not selectable
         self.assertNotIn(
-            [(self.role_owner.pk, self.role_owner.name)],
+            get_role_option(self.project, self.role_owner),
             form.fields['role'].choices,
         )
 
@@ -3732,7 +3732,7 @@ class TestProjectInviteCreateView(
         self.assertIsNotNone(form)
         # Assert owner role is not selectable
         self.assertNotIn(
-            [(self.role_owner.pk, self.role_owner.name)],
+            get_role_option(self.project, self.role_owner),
             form.fields['role'].choices,
         )
         # Assert forwarded mail address and role have been set in the form
