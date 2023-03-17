@@ -54,6 +54,7 @@ Changed
     - Update permission and UI test setup (#638)
     - Display roles consistently in member/owner update UI (#1027)
     - Reduce site app view top margin (#866)
+    - Rename ``RoleAssignment.project`` related name to ``local_roles`` (#1175)
 
 Fixed
 -----

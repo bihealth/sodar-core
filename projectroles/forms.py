@@ -262,7 +262,7 @@ class ProjectForm(SODARModelForm):
         )
         if not user.is_superuser:
             categories = categories.filter(
-                roles__in=RoleAssignment.objects.filter(
+                local_roles__in=RoleAssignment.objects.filter(
                     user=user,
                     role__name__in=[
                         PROJECT_ROLE_OWNER,

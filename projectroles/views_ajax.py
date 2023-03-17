@@ -141,7 +141,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 if p.public_guest_access
                 or p.has_public_children
                 or any(p.full_title.startswith(c) for c in role_cats)
-                or p.roles.filter(user=user).count() > 0
+                or p.local_roles.filter(user=user).count() > 0
             ]
 
         # Populate final list

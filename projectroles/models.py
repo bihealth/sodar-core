@@ -446,7 +446,7 @@ class Project(models.Model):
 
         :return: QuerySet
         """
-        return self.roles.filter(role__name=PROJECT_ROLE_OWNER).first()
+        return self.local_roles.filter(role__name=PROJECT_ROLE_OWNER).first()
 
     def get_owners(self, inherited=True, inherited_only=False):
         """
@@ -681,15 +681,20 @@ class Role(models.Model):
 
 class RoleAssignment(models.Model):
     """
-    Assignment of an user to a role in a project. One role per user is
-    allowed for each project. Roles of project owner and project delegate
-    assignements might be limited (to PROJECTROLES_DELEGATE_LIMIT) per project.
+    Assignment of an user to a role in a project. One local assignment per user
+    is allowed for each project.
+
+    One local project owner assignment is allowed for a project. Local project
+    delegate assignements might be limited using PROJECTROLES_DELEGATE_LIMIT.
+
+    Inherited role assignments can be accessed via the Project model API, e.g.
+    Project.get_roles().
     """
 
     #: Project in which role is assigned
     project = models.ForeignKey(
         Project,
-        related_name='roles',
+        related_name='local_roles',
         help_text='Project in which role is assigned',
         on_delete=models.CASCADE,
     )
@@ -779,7 +784,7 @@ class RoleAssignment(models.Model):
         delegates = self.project.get_delegates(inherited=False)
         if 0 < del_limit <= len(delegates) and (
             not self.pk
-            or self.project.roles.filter(
+            or self.project.local_roles.filter(
                 role__name=PROJECT_ROLE_DELEGATE, pk=self.pk
             )
             is None

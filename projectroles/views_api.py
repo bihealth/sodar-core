@@ -383,7 +383,9 @@ class ProjectListAPIView(ListAPIView):
         if self.request.user.is_superuser:
             return qs
         return qs.filter(
-            roles__in=RoleAssignment.objects.filter(user=self.request.user)
+            local_roles__in=RoleAssignment.objects.filter(
+                user=self.request.user
+            )
         )
 
 

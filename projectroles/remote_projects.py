@@ -110,7 +110,7 @@ class RemoteProjectAPI:
             if project_level == REMOTE_LEVEL_READ_ROLES:
                 cat_data['roles'] = {}
                 cat_data['level'] = REMOTE_LEVEL_READ_ROLES
-                for role_as in category.roles.all():
+                for role_as in category.local_roles.all():
                     cat_data['roles'][str(role_as.sodar_uuid)] = {
                         'user': role_as.user.username,
                         'role': role_as.role.name,
@@ -280,7 +280,7 @@ class RemoteProjectAPI:
             # If level is READ_ROLES or REVOKED, add roles
             if rp.level in [REMOTE_LEVEL_READ_ROLES, REMOTE_LEVEL_REVOKED]:
                 project_data['roles'] = {}
-                for role_as in project.roles.all():
+                for role_as in project.local_roles.all():
                     # If REVOKED, only sync owner and delegate
                     if (
                         rp.level == REMOTE_LEVEL_READ_ROLES

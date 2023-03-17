@@ -81,6 +81,8 @@ effected code accordingly.
   be used in its place.
 - ``Project.get_delegates()`` returns a ``list`` instead of a ``QuerySet``. The
   method signature has also been changed.
+- For ``RoleAssignment.project``, the ``related_name`` field has been renamed
+  from ``roles`` into ``local_roles``.
 
 Base Classes for Tests Updated
 ------------------------------
