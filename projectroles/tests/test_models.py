@@ -1466,3 +1466,17 @@ class TestSODARUser(TestCase):
             self.user.get_form_label(email=True),
             'Full Name (testuser) <testuser@example.com>',
         )
+
+    def test_update_full_name(self):
+        """Test update_full_name()"""
+        self.assertEqual(self.user.name, '')
+        self.user.first_name = 'Full'
+        self.user.last_name = 'Name'
+        self.user.update_full_name()
+        self.assertEqual(self.user.name, 'Full Name')
+
+    def test_update_ldap_username(self):
+        """Test update_ldap_username()"""
+        self.user.username = 'user@example'
+        self.user.update_ldap_username()
+        self.assertEqual(self.user.username, 'user@EXAMPLE')

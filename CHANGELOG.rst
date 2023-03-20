@@ -27,6 +27,7 @@ Added
     - ``RoleMixin`` with ``init_roles()`` for tests
     - App settings project type limiting (#1169)
     - Validation for category delimiter in ``Project.title`` (#1163)
+    - ``SODARUser.update_full_name()`` and ``update_ldap_username()`` helpers (#1056)
 - **Siteinfo**
     - Add ``LDAP_ALT_DOMAINS`` to displayed settings (#1123)
 - **Sodarcache**
@@ -59,6 +60,7 @@ Changed
     - Rename ``RoleAssignment.project`` related name to ``local_roles`` (#1175)
     - Replace ``PROJECTROLES_HIDE_APP_LINKS`` with ``PROJECTROLES_HIDE_PROJECT_APPS`` (#1142)
     - Deprecate ``PROJECTROLES_HIDE_APP_LINKS`` (#1142)
+    - Move Django signals to ``signals.py`` (#1056)
 
 Fixed
 -----

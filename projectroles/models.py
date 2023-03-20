@@ -7,7 +7,6 @@ import uuid
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group
-from django.contrib.auth.signals import user_logged_in
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -1284,35 +1283,32 @@ class SODARUser(AbstractUser):
     def is_local(self):
         return not bool(re.search('@[A-Za-z0-9._-]+$', self.username))
 
+    def update_full_name(self):
+        """
+        Update full name of user.
 
-# User signals -----------------------------------------------------------------
+        :return: String
+        """
+        # Save user name from first_name and last_name into name
+        if self.name in ['', None] and self.first_name != '':
+            self.name = self.first_name + (
+                ' ' + self.last_name if self.last_name != '' else ''
+            )
+        self.save()
+        return self.name
 
+    def update_ldap_username(self):
+        """
+        Update username for an LDAP user.
 
-def handle_ldap_login(sender, user, **kwargs):
-    """Signal for LDAP login handling"""
-
-    if hasattr(user, 'ldap_username'):
+        :return: String
+        """
         # Make domain in username uppercase
         if (
-            user.username.find('@') != -1
-            and user.username.split('@')[1].islower()
+            self.username.find('@') != -1
+            and self.username.split('@')[1].islower()
         ):
-            u_split = user.username.split('@')
-            user.username = u_split[0] + '@' + u_split[1].upper()
-            user.save()
-        # Save user name from first_name and last_name into name
-        if user.name in ['', None]:
-            if user.first_name != '':
-                user.name = user.first_name + (
-                    ' ' + user.last_name if user.last_name != '' else ''
-                )
-                user.save()
-
-
-def assign_user_group(sender, user, **kwargs):
-    """Signal for user group assignment"""
-    user.set_group()
-
-
-user_logged_in.connect(handle_ldap_login)
-user_logged_in.connect(assign_user_group)
+            u_split = self.username.split('@')
+            self.username = u_split[0] + '@' + u_split[1].upper()
+            self.save()
+        return self.username
