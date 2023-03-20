@@ -96,6 +96,17 @@ the updated roles.
 For populating ``Role`` objects in tests, it is recommended for you to use the
 ``RoleMixin.init_roles()`` helper.
 
+System Prerequisites
+--------------------
+
+Third party Python package dependencies have been upgraded. See the
+``requirements`` directory for up-to-date package versions and upgrade your
+project accordingly.
+
+Note that the upgrade to ``django-crispy-forms>=2.0`` requires the separate
+installation of ``crispy-bootstrap4==2022.1``. You also need to add
+``crispy_bootstrap4`` under ``THIRD_PARTY_APPS`` in your base configuration.
+
 PROJECTROLES_HIDE_APP_LINKS Deprecated
 --------------------------------------
 

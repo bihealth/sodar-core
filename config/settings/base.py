@@ -53,6 +53,7 @@ DJANGO_APPS = [
 ]
 THIRD_PARTY_APPS = [
     'crispy_forms',  # Form layouts
+    'crispy_bootstrap4',  # Bootstrap4 theme for Crispy
     'rules.apps.AutodiscoverRulesConfig',  # Django rules engine
     'djangoplugins',  # Django plugins
     'pagedown',  # For markdown

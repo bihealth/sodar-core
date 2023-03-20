@@ -39,6 +39,8 @@ Changed
 
 - **General**
     - Use path instead of regex for URL patterns (#1116)
+    - Upgrade minimum Django version to v3.2.18 (#1117)
+    - Upgrade general Python dependencies (#1117)
 - **Filesfolders**
     - Change app display name to "Files" (#828)
 - **Projectroles**

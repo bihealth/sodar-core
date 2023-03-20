@@ -734,7 +734,7 @@ class ProjectForm(SODARModelForm):
         )
         for key, value in cleaned_data.items():
             self.cleaned_data[key] = value
-        for (field, error) in errors:
+        for field, error in errors:
             self.add_error(field, error)
         return self.cleaned_data
 

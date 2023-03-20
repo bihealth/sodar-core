@@ -119,7 +119,7 @@ FILESFOLDERS_SHOW_LIST_COLUMNS = True
 
 # UI test settings
 PROJECTROLES_TEST_UI_CHROME_OPTIONS = [
-    'headless',
+    'headless=new',
     'no-sandbox',  # For Gitlab-CI compatibility
     'disable-dev-shm-usage',  # For testing stability
 ]
