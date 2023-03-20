@@ -53,6 +53,7 @@ from projectroles.models import (
     RemoteProject,
     SODAR_CONSTANTS,
     ROLE_RANKING,
+    CAT_DELIMITER,
 )
 from projectroles.plugins import (
     get_active_plugins,
@@ -1685,6 +1686,53 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
+    @transaction.atomic
+    def _update_app_alerts(self, app_alerts, project, user, inh_as):
+        """
+        Update app alerts for user on role assignment deletion. Creates a new
+        alert as appropriate and dismisses alerts in projects the user can no
+        longer access.
+
+        :param app_alerts: AppAlertAPI object
+        :param project: Project object
+        :param user: SODARUser object
+        :param inh_as: RoleAssignment object for inherited assignment or None
+        """
+        if inh_as:
+            message = ALERT_MSG_ROLE_UPDATE.format(
+                project=project.title, role=inh_as.role.name
+            )
+        else:
+            message = 'Your membership in this {} has been removed.'.format(
+                get_display_name(project.type)
+            )
+            # Dismiss existing alerts
+            AppAlert = app_alerts.get_model()
+            dis_projects = [project]
+            if project.type == PROJECT_TYPE_CATEGORY:
+                # TODO: Use get_children() once refactored
+                for c in Project.objects.filter(
+                    full_title__startswith=project.full_title + CAT_DELIMITER
+                ):
+                    c_role_as = RoleAssignment.objects.filter(
+                        project=c, user=user
+                    ).first()
+                    if not c.public_guest_access and not c_role_as:
+                        dis_projects.append(c)
+            for a in AppAlert.objects.filter(
+                user=user, project__in=dis_projects, active=True
+            ):
+                a.active = False
+                a.save()
+
+        app_alerts.add_alert(
+            app_name=APP_NAME,
+            alert_name='role_{}'.format('update' if inh_as else 'delete'),
+            user=user,
+            message=message,
+            project=project,
+        )
+
     def delete_assignment(self, request, instance):
         app_alerts = get_backend_api('appalerts_backend')
         timeline = get_backend_api('timeline_backend')
@@ -1720,21 +1768,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         if tl_event:
             tl_event.set_status('OK')
         if app_alerts:
-            if inh_as:
-                message = ALERT_MSG_ROLE_UPDATE.format(
-                    project=project.title, role=inh_as.role.name
-                )
-            else:
-                message = 'Your membership in this {} has been removed.'.format(
-                    get_display_name(project.type)
-                )
-            app_alerts.add_alert(
-                app_name=APP_NAME,
-                alert_name='role_{}'.format('update' if inh_as else 'delete'),
-                user=user,
-                message=message,
-                project=project,
-            )
+            self._update_app_alerts(app_alerts, project, user, inh_as)
         if SEND_EMAIL:
             if inh_as:
                 email.send_role_change_mail(

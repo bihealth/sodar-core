@@ -49,14 +49,12 @@ class AppAlertAPI:
                 raise ValueError(
                     'Plugin not found with name: {}'.format(app_name)
                 )
-
         if level not in ALERT_LEVELS:
             raise ValueError(
                 'Invalid level "{}", accepted values: {}'.format(
                     level, ', '.join(ALERT_LEVELS)
                 )
             )
-
         return AppAlert.objects.create(
             app_plugin=app_plugin,
             alert_name=alert_name,
@@ -89,7 +87,6 @@ class AppAlertAPI:
         :param url: URL for following up on alert (string, optional)
         :param project: Project the alert belongs to (Project object, optional)
         :raise: ValueError if the plugin is not found or the level is invalid
-        :return: AppAlert object
         """
         for user in users:
             cls.add_alert(

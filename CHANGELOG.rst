@@ -28,6 +28,7 @@ Added
     - App settings project type limiting (#1169)
     - Validation for category delimiter in ``Project.title`` (#1163)
     - ``SODARUser.update_full_name()`` and ``update_ldap_username()`` helpers (#1056)
+    - Project app alert dismissal on role assignment deletion (#703)
 - **Siteinfo**
     - Add ``LDAP_ALT_DOMAINS`` to displayed settings (#1123)
 - **Sodarcache**
@@ -42,6 +43,8 @@ Changed
     - Use path instead of regex for URL patterns (#1116)
     - Upgrade minimum Django version to v3.2.18 (#1117)
     - Upgrade general Python dependencies (#1117)
+- **Appalerts**
+    - Handle alerts with no project access in UI (#1177)
 - **Filesfolders**
     - Change app display name to "Files" (#828)
 - **Projectroles**

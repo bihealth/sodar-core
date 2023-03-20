@@ -38,7 +38,13 @@ class TestAlertUIBase(AppAlertMixin, TestUIBase):
 
 
 class TestListView(TestAlertUIBase):
-    """Tests for the admin alert list view"""
+    """Tests for app alert list view"""
+
+    def _find_alert_element(self, alert):
+        """Return element for AppAlert object"""
+        return self.selenium.find_element(
+            By.XPATH, '//div[@data-alert-uuid="{}"]'.format(alert.sodar_uuid)
+        )
 
     def test_render(self):
         """Test existence of alert items in list"""
@@ -55,6 +61,45 @@ class TestListView(TestAlertUIBase):
             'class',
             exact=True,
         )
+
+    def test_render_dismissed(self):
+        """Test displaying dismissed alerts"""
+        self.alert.active = False
+        self.alert.save()
+        self.alert2.active = False
+        self.alert2.save()
+        url = reverse('appalerts:list_dismissed')
+        self.login_and_redirect(self.regular_user, url)
+        btn = self.selenium.find_element(
+            By.ID, 'sodar-app-alert-btn-not-dismissed'
+        )
+        self.assertEqual(btn.text, 'Active Alerts')
+        self.assertIsNotNone(self._find_alert_element(self.alert))
+        self.assertIsNotNone(self._find_alert_element(self.alert2))
+
+    def test_render_dismissed_project(self):
+        """Test displaying dismissed alerts with project"""
+        self.make_assignment(
+            self.project, self.regular_user, self.role_contributor
+        )
+        self.alert.project = self.project
+        self.alert.active = False
+        self.alert.save()
+        url = reverse('appalerts:list_dismissed')
+        self.login_and_redirect(self.regular_user, url)
+        alert_cat = self._find_alert_element(self.alert)
+        self.assertIn('alert-info', alert_cat.get_attribute('class'))
+
+    def test_render_dismissed_project_no_role(self):
+        """Test displaying dismissed alerts with project and no access"""
+        # No role assignment created
+        self.alert.project = self.project
+        self.alert.active = False
+        self.alert.save()
+        url = reverse('appalerts:list_dismissed')
+        self.login_and_redirect(self.regular_user, url)
+        alert_cat = self._find_alert_element(self.alert)
+        self.assertIn('alert-secondary', alert_cat.get_attribute('class'))
 
     def test_alert_dismiss(self):
         """Test dismissing alert"""
@@ -94,7 +139,7 @@ class TestListView(TestAlertUIBase):
         )
 
     def test_alert_dismiss_all(self):
-        """Test dismissing all alerts for the user"""
+        """Test dismissing all alerts for user"""
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 2)
 
         url = reverse('appalerts:list')
@@ -145,21 +190,6 @@ class TestListView(TestAlertUIBase):
                 By.ID, 'sodar-app-alert-empty'
             ).is_displayed()
         )
-
-    def test_render_dismissed(self):
-        """Test for displaying dismissed alerts"""
-        self.dismissed_alert1 = self.make_app_alert(
-            user=self.regular_user, url=reverse('home'), active=False
-        )
-        self.dismissed_alert2 = self.make_app_alert(
-            user=self.regular_user, url=reverse('home'), active=False
-        )
-        url = reverse('appalerts:list_dismissed')
-        self.login_and_redirect(self.regular_user, url)
-        btn = self.selenium.find_element(
-            By.ID, 'sodar-app-alert-btn-not-dismissed'
-        )
-        self.assertEqual(btn.text, 'Active Alerts')
 
     def test_alert_reload(self):
         """Test displaying reload link for new alerts"""

@@ -40,11 +40,9 @@ class AppAlertListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        status = self.kwargs.get('status', 'active')
-        if status == 'dismissed':
-            context['dismissed'] = True
-        else:
-            context['dismissed'] = False
+        context['dismissed'] = (
+            True if self.kwargs.get('status') == 'dismissed' else False
+        )
         return context
 
 
@@ -63,7 +61,6 @@ class AppAlertLinkRedirectView(
         alert = AppAlert.objects.filter(
             sodar_uuid=kwargs.get('appalert')
         ).first()
-
         # Handle errors
         if not alert:
             return self._handle_error('Alert not found.')
@@ -71,7 +68,6 @@ class AppAlertLinkRedirectView(
             return self._handle_error('Alert assigned to different user.')
         if not alert.url:
             return self._handle_error('No URL found for alert.')
-
         # All OK = dismiss and redirect
         alert.active = False
         alert.save()

@@ -3232,9 +3232,8 @@ class TestRoleAssignmentDeleteView(
             self.project, self.user_contrib, self.role_contributor
         )
         self.user_new = self.make_user('user_new')
-        app_alerts = get_backend_api('appalerts_backend')
-        if app_alerts:
-            self.app_alert_model = app_alerts.get_model()
+        self.app_alerts = get_backend_api('appalerts_backend')
+        self.app_alert_model = self.app_alerts.get_model()
 
     def test_render(self):
         """Test rendering RoleAssignment deletion confirmation form"""
@@ -3294,6 +3293,14 @@ class TestRoleAssignmentDeleteView(
 
     def test_delete(self):
         """Test RoleAssignment deleting"""
+        alert = self.app_alerts.add_alert(
+            'projectroles',
+            'test_alert',
+            self.user_contrib,
+            'test',
+            project=self.project,
+        )
+        self.assertEqual(alert.active, True)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(
             self.app_alert_model.objects.filter(
@@ -3323,6 +3330,8 @@ class TestRoleAssignmentDeleteView(
             ).count(),
             1,
         )
+        alert.refresh_from_db()
+        self.assertEqual(alert.active, False)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_delete_owner(self):
@@ -3360,19 +3369,20 @@ class TestRoleAssignmentDeleteView(
         """Test RoleAssignment deleting with remaining inherited role"""
         self.make_assignment(self.category, self.user_contrib, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        alert = self.app_alerts.add_alert(
+            'projectroles',
+            'test_alert',
+            self.user_contrib,
+            'test',
+            project=self.project,
+        )
+        self.assertEqual(alert.active, True)
         with self.login(self.user):
-            response = self.client.post(
+            self.client.post(
                 reverse(
                     'projectroles:role_delete',
                     kwargs={'roleassignment': self.contrib_as.sodar_uuid},
                 )
-            )
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:roles',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
             )
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(
@@ -3387,6 +3397,45 @@ class TestRoleAssignmentDeleteView(
             ).count(),
             0,
         )
+        alert.refresh_from_db()
+        self.assertEqual(alert.active, True)
+
+    def test_delete_children(self):
+        """Test RoleAssignment deleting with child categories or projects"""
+        new_as = self.make_assignment(
+            self.category, self.user_new, self.role_guest
+        )
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        alert = self.app_alerts.add_alert(
+            'projectroles',
+            'test_alert',
+            self.user_new,
+            'test',
+            project=self.project,  # NOTE: Setting for child project
+        )
+        self.assertEqual(alert.active, True)
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': new_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_update'
+            ).count(),
+            0,
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete'
+            ).count(),
+            1,
+        )
+        alert.refresh_from_db()
+        self.assertEqual(alert.active, False)
 
 
 class TestRoleAssignmentOwnerTransferView(
