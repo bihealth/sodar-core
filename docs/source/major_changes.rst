@@ -83,6 +83,8 @@ effected code accordingly.
   method signature has also been changed.
 - For ``RoleAssignment.project``, the ``related_name`` field has been renamed
   from ``roles`` into ``local_roles``.
+- ``Project.get_children()`` returns projects sorted by ``full_title`` with the
+  argument ``flat=True``.
 
 Base Classes for Tests Updated
 ------------------------------

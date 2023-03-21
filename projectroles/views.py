@@ -53,7 +53,6 @@ from projectroles.models import (
     RemoteProject,
     SODAR_CONSTANTS,
     ROLE_RANKING,
-    CAT_DELIMITER,
 )
 from projectroles.plugins import (
     get_active_plugins,
@@ -1710,10 +1709,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             AppAlert = app_alerts.get_model()
             dis_projects = [project]
             if project.type == PROJECT_TYPE_CATEGORY:
-                # TODO: Use get_children() once refactored
-                for c in Project.objects.filter(
-                    full_title__startswith=project.full_title + CAT_DELIMITER
-                ):
+                for c in project.get_children(flat=True):
                     c_role_as = RoleAssignment.objects.filter(
                         project=c, user=user
                     ).first()

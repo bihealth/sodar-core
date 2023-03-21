@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 # SODAR constants
 SODAR_CONSTANTS = get_sodar_constants()
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
@@ -189,7 +191,7 @@ class Project(models.Model):
         self._validate_archive()
         # Update full title of self and children
         self.full_title = self._get_full_title()
-        for child in self.get_children():
+        for child in self.children.all():
             child.save()
         # Update public children
         # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
@@ -302,22 +304,15 @@ class Project(models.Model):
 
     def get_children(self, flat=False):
         """
-        Return child objects for the Project sorted by title.
+        Return child objects for a Category, sorted by full title.
 
         :param flat: Return all children recursively as a flat list (bool)
         :return: QuerySet
         """
-
-        def _get(obj, ret=None):
-            if ret is None:
-                ret = []
-            ret += list(obj.get_children())
-            for child in obj.get_children():
-                ret = _get(child, ret)
-            return ret
-
         if flat:
-            return _get(self)
+            return Project.objects.filter(
+                full_title__startswith=self.full_title + CAT_DELIMITER
+            ).order_by('full_title')
         return self.children.all().order_by('title')
 
     def get_depth(self):
