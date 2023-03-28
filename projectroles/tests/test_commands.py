@@ -483,6 +483,8 @@ class TestCleanAppSettings(
 ):
     """Tests for cleanappsettings command and associated functions"""
 
+    maxDiff = None
+
     def _make_undefined_setting(self):
         """Create database setting not reflected in the AppSetting dict"""
         ghost = AppSetting(
@@ -602,9 +604,29 @@ class TestCleanAppSettings(
                     (
                         CLEAN_LOG_PREFIX
                         + 'Deleting "settings.example_project_app.ghost" '
-                        'from project "{}"'.format(self.project.title)
+                        'from project "{}" - definition not found'.format(
+                            self.project.title
+                        )
                     ),
                     CLEAN_LOG_PREFIX + END_MSG,
                 ],
             )
         self.assertEqual(AppSetting.objects.count(), 5)
+
+    # def test_command_cleanappsettings_project_type(self):
+    #     """Test the cleanappsetting commmand with project type failure"""
+    #     self._make_undefined_setting()
+    #     self.assertEqual(AppSetting.objects.count(), 6)
+    #
+    #     with self.assertLogs(
+    #         'projectroles.management.commands.cleanappsettings', level='INFO'
+    #     ) as cm:
+    #         call_command('cleanappsettings', project_type=PROJECT_TYPE_CATEGORY)
+    #         self.assertEqual(
+    #             cm.output,
+    #             [
+    #                 CLEAN_LOG_PREFIX + START_MSG,
+    #                 CLEAN_LOG_PREFIX + END_MSG,
+    #             ],
+    #         )
+    #     self.assertEqual(AppSetting.objects.count(), 6)
