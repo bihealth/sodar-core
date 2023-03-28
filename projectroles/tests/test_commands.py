@@ -533,7 +533,7 @@ class TestCleanAppSettings(
         }
         self.setting_int_values = {
             'app_name': EXAMPLE_APP_NAME,
-            'project': self.project,
+            'project': self.category,
             'name': 'project_int_setting',
             'setting_type': 'INTEGER',
             'value': 0,
@@ -608,25 +608,15 @@ class TestCleanAppSettings(
                             self.project.title
                         )
                     ),
+                    # Check for project type
+                    (
+                        CLEAN_LOG_PREFIX
+                        + 'Deleting "settings.example_project_app.project_int_setting" '
+                        'from project "{}" - project type "{}" does not match allowed types: {}'.format(
+                            self.category.title, self.category.type, ['PROJECT']
+                        )
+                    ),
                     CLEAN_LOG_PREFIX + END_MSG,
                 ],
             )
-        self.assertEqual(AppSetting.objects.count(), 5)
-
-    # def test_command_cleanappsettings_project_type(self):
-    #     """Test the cleanappsetting commmand with project type failure"""
-    #     self._make_undefined_setting()
-    #     self.assertEqual(AppSetting.objects.count(), 6)
-    #
-    #     with self.assertLogs(
-    #         'projectroles.management.commands.cleanappsettings', level='INFO'
-    #     ) as cm:
-    #         call_command('cleanappsettings', project_type=PROJECT_TYPE_CATEGORY)
-    #         self.assertEqual(
-    #             cm.output,
-    #             [
-    #                 CLEAN_LOG_PREFIX + START_MSG,
-    #                 CLEAN_LOG_PREFIX + END_MSG,
-    #             ],
-    #         )
-    #     self.assertEqual(AppSetting.objects.count(), 6)
+        self.assertEqual(AppSetting.objects.count(), 4)

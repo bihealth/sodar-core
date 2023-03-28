@@ -51,7 +51,7 @@ class Command(BaseCommand):
                             get_setting_str(s),
                             s.project.title,
                             s.project.type,
-                            definition.get('project_types', []),
+                            definition.get('project_types', ['PROJECT']),
                         )
                     )
                     s.delete()
