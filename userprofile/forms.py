@@ -1,6 +1,7 @@
 import json
 
 from django import forms
+from django.utils.html import format_html
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
@@ -130,6 +131,18 @@ class UserSettingsForm(SODARForm):
                             setting_name=s_key,
                             user=self.user,
                         )
+                    )
+
+                if plugin:
+                    self.fields[s_field].label = format_html(
+                        '<i class="iconify" data-icon="{}"></i> {}',
+                        plugin.icon,
+                        self.fields[s_field].label,
+                    )
+                else:
+                    self.fields[s_field].label = format_html(
+                        '<i class="iconify" data-icon="mdi-cube"></i> {}',
+                        self.fields[s_field].label,
                     )
 
     def clean(self):

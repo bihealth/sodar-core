@@ -9,6 +9,7 @@ from django.contrib import auth
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html
 
 from pagedown.widgets import PagedownWidget
 from dal import autocomplete, forward as dal_forward
@@ -423,12 +424,13 @@ class ProjectForm(SODARModelForm):
                     project=None,
                 )
 
-    def _set_app_setting_notes(self, s_field, s_val):
+    def _set_app_setting_notes(self, s_field, s_val, plugin):
         """
         Internal helper for setting app setting label notes.
 
         :param s_field: Form field name
         :param s_val: Setting value
+        :param plugin: Plugin object
         """
         if s_val.get('user_modifiable') is False:
             self.fields[s_field].label += ' [HIDDEN]'
@@ -444,6 +446,17 @@ class ProjectForm(SODARModelForm):
                 self.fields[
                     s_field
                 ].help_text += ' [Not editable on target sites]'
+        if plugin:
+            self.fields[s_field].label = format_html(
+                '<i class="iconify" data-icon="{}"></i> {}',
+                plugin.icon,
+                self.fields[s_field].label,
+            )
+        else:
+            self.fields[s_field].label = format_html(
+                '<i class="iconify" data-icon="mdi-cube"></i> {}',
+                self.fields[s_field].label,
+            )
 
     def _init_app_settings(self):
         # Set up setting query kwargs
@@ -473,7 +486,7 @@ class ProjectForm(SODARModelForm):
                 # Set widget and value
                 self._set_app_setting_widget(app_name, s_field, s_key, s_val)
                 # Set label notes
-                self._set_app_setting_notes(s_field, s_val)
+                self._set_app_setting_notes(s_field, s_val, plugin)
 
     @classmethod
     def _validate_app_settings(

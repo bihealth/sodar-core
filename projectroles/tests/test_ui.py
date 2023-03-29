@@ -1461,6 +1461,28 @@ class TestProjectCreateView(TestUIBase):
         )
         self.assertFalse(element.is_displayed())
 
+    def test_settings_label_icon(self):
+        """Test rendering of app settings icon for project creation"""
+        url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        select = Select(
+            self.selenium.find_element(
+                By.CSS_SELECTOR,
+                'div[id="div_id_type"] div select[id="id_type"]',
+            )
+        )
+        select.select_by_value('PROJECT')
+        WebDriverWait(self.selenium, 10)
+        logo = self.selenium.find_element(
+            By.CSS_SELECTOR,
+            'div[id="div_id_settings.example_project_app.project_int_setting"] ',
+        ).find_element(By.TAG_NAME, 'svg')
+        self.assertTrue(logo.is_displayed())
+
 
 class TestProjectUpdateView(TestUIBase):
     """Tests for ProjectUpdateView UI"""
