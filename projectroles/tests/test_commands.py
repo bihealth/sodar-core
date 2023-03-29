@@ -11,7 +11,14 @@ from djangoplugins.models import Plugin
 
 from test_plus.test import TestCase
 
-from projectroles.management.commands.cleanappsettings import START_MSG, END_MSG
+from projectroles.management.commands.cleanappsettings import (
+    START_MSG,
+    END_MSG,
+    DEFINITION_NOT_FOUND_MSG,
+    ALLOWED_TYPES_MSG,
+    DELETE_PREFIX_MSG,
+    DELETE_PROJECT_TYPE_MSG,
+)
 from projectroles.management.commands.batchupdateroles import (
     Command as BatchUpdateRolesCommand,
 )
@@ -483,18 +490,6 @@ class TestCleanAppSettings(
 ):
     """Tests for cleanappsettings command and associated functions"""
 
-    def _make_undefined_setting(self):
-        """Create database setting not reflected in the AppSetting dict"""
-        ghost = AppSetting(
-            app_plugin=self.plugin,
-            project=self.project,
-            name='ghost',
-            type='BOOLEAN',
-            value=True,
-        )
-        ghost.save()
-        return ghost
-
     def setUp(self):
         super().setUp()
         # Init roles
@@ -586,9 +581,16 @@ class TestCleanAppSettings(
                 project=s['project'],
             )
 
-    def test_command_cleanappsettings(self):
+    def test_command_definition(self):
         """Test the cleanappsetting commmand"""
-        self._make_undefined_setting()
+        ghost = AppSetting(
+            app_plugin=self.plugin,
+            project=self.project,
+            name='ghost',
+            type='BOOLEAN',
+            value=True,
+        )
+        ghost.save()
         self.assertEqual(AppSetting.objects.count(), 6)
 
         with self.assertLogs(
@@ -601,10 +603,58 @@ class TestCleanAppSettings(
                     CLEAN_LOG_PREFIX + START_MSG,
                     (
                         CLEAN_LOG_PREFIX
-                        + 'Deleting "settings.example_project_app.ghost" '
-                        'from project "{}"'.format(self.project.title)
+                        + DELETE_PREFIX_MSG.format(
+                            'settings.example_project_app.ghost',
+                            self.project.title,
+                        )
+                        + DEFINITION_NOT_FOUND_MSG
                     ),
                     CLEAN_LOG_PREFIX + END_MSG,
                 ],
             )
         self.assertEqual(AppSetting.objects.count(), 5)
+        self.assertQuerysetEqual(
+            AppSetting.objects.filter(name='ghost'),
+            [],
+        )
+
+    def test_command_project_types(self):
+        """Test the cleanappsettings command on the settings with wrong project types"""
+        cat_sett = AppSetting(
+            app_plugin=self.plugin,
+            project=self.category,
+            name='project_user_bool_setting',
+            type='BOOLEAN',
+            value=True,
+        )
+        cat_sett.save()
+        self.assertEqual(AppSetting.objects.count(), 6)
+
+        with self.assertLogs(
+            'projectroles.management.commands.cleanappsettings', level='INFO'
+        ) as cm:
+            call_command('cleanappsettings')
+            self.assertEqual(
+                cm.output,
+                [
+                    CLEAN_LOG_PREFIX + START_MSG,
+                    (
+                        CLEAN_LOG_PREFIX
+                        + DELETE_PREFIX_MSG.format(
+                            'settings.example_project_app.project_user_bool_setting',
+                            self.category.title,
+                        )
+                        + DELETE_PROJECT_TYPE_MSG.format(
+                            self.category.type,
+                            ALLOWED_TYPES_MSG,
+                            '[\'PROJECT\']',
+                        )
+                    ),
+                    CLEAN_LOG_PREFIX + END_MSG,
+                ],
+            )
+            self.assertEqual(AppSetting.objects.count(), 5)
+            self.assertQuerysetEqual(
+                AppSetting.objects.filter(name='project_user_bool_setting'),
+                [],
+            )
