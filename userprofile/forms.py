@@ -135,13 +135,14 @@ class UserSettingsForm(SODARForm):
 
                 if plugin:
                     self.fields[s_field].label = format_html(
-                        '<i class="iconify" data-icon="{}"></i> {}',
+                        '{} <i class="iconify" title="{}" data-toggle="tooltip" data-icon="{}"></i>',
                         plugin.icon,
+                        plugin.name,
                         self.fields[s_field].label,
                     )
                 else:
                     self.fields[s_field].label = format_html(
-                        '<i class="iconify" data-icon="mdi-cube"></i> {}',
+                        '{} <i class="iconify" title="projectroles" data-toggle="tooltip" data-icon="mdi-cube"></i>',
                         self.fields[s_field].label,
                     )
 

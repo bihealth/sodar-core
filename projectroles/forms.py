@@ -448,13 +448,14 @@ class ProjectForm(SODARModelForm):
                 ].help_text += ' [Not editable on target sites]'
         if plugin:
             self.fields[s_field].label = format_html(
-                '<i class="iconify" data-icon="{}"></i> {}',
-                plugin.icon,
+                '{} <i class="iconify" title="{}" data-toggle="tooltip" data-icon="{}"></i>',
                 self.fields[s_field].label,
+                plugin.name,
+                plugin.icon,
             )
         else:
             self.fields[s_field].label = format_html(
-                '<i class="iconify" data-icon="mdi-cube"></i> {}',
+                '{} <i class="iconify" title="projectroles" data-toggle="tooltip" data-icon="mdi-cube"></i>',
                 self.fields[s_field].label,
             )
 
