@@ -450,7 +450,7 @@ class ProjectForm(SODARModelForm):
             self.fields[s_field].label = format_html(
                 '{} <i class="iconify" title="{}" data-toggle="tooltip" data-icon="{}"></i>',
                 self.fields[s_field].label,
-                plugin.name,
+                plugin.title,
                 plugin.icon,
             )
         else:

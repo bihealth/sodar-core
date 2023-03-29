@@ -137,7 +137,7 @@ class UserSettingsForm(SODARForm):
                     self.fields[s_field].label = format_html(
                         '{} <i class="iconify" title="{}" data-toggle="tooltip" data-icon="{}"></i>',
                         plugin.icon,
-                        plugin.name,
+                        plugin.title,
                         self.fields[s_field].label,
                     )
                 else:
