@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from projectroles.views_ajax import (
     SODARBaseProjectAjaxView,
     SODARBasePermissionAjaxView,
-    SODARBaseAjaxView,
 )
 
 from timeline.models import ProjectEvent, ProjectEventStatus
@@ -186,7 +185,7 @@ class ProjectEventDetailAjaxView(EventDetailMixin, SODARBaseProjectAjaxView):
 class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
     """Ajax view for retrieving event extra data for projects"""
 
-    permission_required = 'timeline.view_timeline'
+    permission_required = 'timeline.view_event_extra_data'
 
     def get(self, request, *args, **kwargs):
         event = ProjectEvent.objects.filter(
@@ -219,7 +218,7 @@ class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):
 class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
     """Ajax view for retrieving event extra data for site-wide events"""
 
-    permission_required = 'timeline.view_site_timeline'
+    permission_required = 'timeline.view_event_extra_data'
 
     def get(self, request, *args, **kwargs):
         event = ProjectEvent.objects.filter(
@@ -232,8 +231,12 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
         return Response(self.get_event_extra(event), status=200)
 
 
-class EventStatusExtraAjaxView(EventExtraDataMixin, SODARBaseAjaxView):
+class EventStatusExtraAjaxView(
+    EventExtraDataMixin, SODARBasePermissionAjaxView
+):
     """Ajax view for retrieving event status extra data for events"""
+
+    permission_required = 'timeline.view_event_extra_data'
 
     def get(self, request, *args, **kwargs):
         status = ProjectEventStatus.objects.filter(

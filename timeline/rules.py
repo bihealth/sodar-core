@@ -44,3 +44,9 @@ rules.add_perm(
 
 # Allow viewing classified site-wide event
 rules.add_perm('timeline.view_classified_site_event', rules.is_superuser)
+
+# Allow viewing extra data of event
+rules.add_perm(
+    'timeline.view_event_extra_data',
+    pr_rules.is_project_owner | pr_rules.is_project_delegate,
+)
