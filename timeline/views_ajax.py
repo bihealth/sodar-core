@@ -20,9 +20,11 @@ from timeline.templatetags.timeline_tags import get_status_style
 class EventDetailMixin:
     """Mixin for event detail retrieval helpers"""
 
-    def form_status_extra_url(self, status):
+    def form_status_extra_url(self, status, request):
         """Return URL for extra status data"""
-        if status.extra_data == {}:
+        if status.extra_data == {} or not request.user.has_perm(
+            'timeline.view_event_extra_data', status.event.project
+        ):
             return None
         else:
             return reverse(
@@ -32,11 +34,12 @@ class EventDetailMixin:
                 },
             )
 
-    def get_event_details(self, event):
+    def get_event_details(self, event, request):
         """
         Return event details.
 
         :param event: ProjectEvent object
+        :param request: Django request object
         :return: Dict
         """
         ret = {
@@ -58,7 +61,7 @@ class EventDetailMixin:
                     'description': s.description,
                     'type': s.status_type,
                     'class': get_status_style(s),
-                    'extra_status_link': self.form_status_extra_url(s),
+                    'extra_status_link': self.form_status_extra_url(s, request),
                 }
             )
         return ret
@@ -150,6 +153,7 @@ class EventExtraDataMixin:
         """
         Return event extra data.
         :param event: ProjectEvent object
+        :param status: ProjectEventStatus object
         :return: JSON-serializable dict
         """
         extra = status.extra_data if status else event.extra_data
@@ -179,7 +183,7 @@ class ProjectEventDetailAjaxView(EventDetailMixin, SODARBaseProjectAjaxView):
             'timeline.view_classified_event', event.project
         ):
             return HttpResponseForbidden()
-        return Response(self.get_event_details(event), status=200)
+        return Response(self.get_event_details(event, request), status=200)
 
 
 class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
