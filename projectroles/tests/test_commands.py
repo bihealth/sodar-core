@@ -11,7 +11,14 @@ from djangoplugins.models import Plugin
 
 from test_plus.test import TestCase
 
-from projectroles.management.commands.cleanappsettings import START_MSG, END_MSG
+from projectroles.management.commands.cleanappsettings import (
+    START_MSG,
+    END_MSG,
+    DEFINITION_NOT_FOUND_MSG,
+    ALLOWED_TYPES_MSG,
+    DELETE_PREFIX_MSG,
+    DELETE_PROJECT_TYPE_MSG,
+)
 from projectroles.management.commands.batchupdateroles import (
     Command as BatchUpdateRolesCommand,
 )
@@ -39,12 +46,6 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 EXAMPLE_APP_NAME = 'example_project_app'
 CLEAN_LOG_PREFIX = 'INFO:projectroles.management.commands.cleanappsettings:'
-CLEAN_LOG_DELETE_GHOST = (
-    'Deleting "settings.example_project_app.ghost" from project'
-)
-CLEAN_LOG_DELETE_GHOST_END = 'definition not found'
-CLEAN_LOG_DELETE_INT_SETTING = 'Deleting "settings.example_project_app.project_user_bool_setting" from project'
-CLEAN_LOG_DELETE_INT_SETTING_END = 'does not match allowed types: [\'PROJECT\']'
 
 
 class BatchUpdateRolesMixin:
@@ -489,30 +490,6 @@ class TestCleanAppSettings(
 ):
     """Tests for cleanappsettings command and associated functions"""
 
-    def _make_undefined_setting(self):
-        """Create database setting not reflected in the AppSetting dict"""
-        ghost = AppSetting(
-            app_plugin=self.plugin,
-            project=self.project,
-            name='ghost',
-            type='BOOLEAN',
-            value=True,
-        )
-        ghost.save()
-        return ghost
-
-    def _make_setting_category_type(self):
-        """Create database setting with category type project"""
-        catsett = AppSetting(
-            app_plugin=self.plugin,
-            project=self.category,
-            name='project_user_bool_setting',
-            type='BOOLEAN',
-            value=True,
-        )
-        catsett.save()
-        return catsett
-
     def setUp(self):
         super().setUp()
         # Init roles
@@ -604,9 +581,16 @@ class TestCleanAppSettings(
                 project=s['project'],
             )
 
-    def test_command_cleanappsettings(self):
+    def test_command_definition(self):
         """Test the cleanappsetting commmand"""
-        self._make_undefined_setting()
+        ghost = AppSetting(
+            app_plugin=self.plugin,
+            project=self.project,
+            name='ghost',
+            type='BOOLEAN',
+            value=True,
+        )
+        ghost.save()
         self.assertEqual(AppSetting.objects.count(), 6)
 
         with self.assertLogs(
@@ -619,9 +603,11 @@ class TestCleanAppSettings(
                     CLEAN_LOG_PREFIX + START_MSG,
                     (
                         CLEAN_LOG_PREFIX
-                        + CLEAN_LOG_DELETE_GHOST
-                        + ' "{}": '.format(self.project.title)
-                        + CLEAN_LOG_DELETE_GHOST_END
+                        + DELETE_PREFIX_MSG.format(
+                            'settings.example_project_app.ghost',
+                            self.project.title,
+                        )
+                        + DEFINITION_NOT_FOUND_MSG
                     ),
                     CLEAN_LOG_PREFIX + END_MSG,
                 ],
@@ -632,9 +618,16 @@ class TestCleanAppSettings(
             [],
         )
 
-    def test_command_cleanappsettings_project_types(self):
+    def test_command_project_types(self):
         """Test the cleanappsettings command on the settings with wrong project types"""
-        self._make_setting_category_type()
+        cat_sett = AppSetting(
+            app_plugin=self.plugin,
+            project=self.category,
+            name='project_user_bool_setting',
+            type='BOOLEAN',
+            value=True,
+        )
+        cat_sett.save()
         self.assertEqual(AppSetting.objects.count(), 6)
 
         with self.assertLogs(
@@ -647,11 +640,15 @@ class TestCleanAppSettings(
                     CLEAN_LOG_PREFIX + START_MSG,
                     (
                         CLEAN_LOG_PREFIX
-                        + CLEAN_LOG_DELETE_INT_SETTING
-                        + ' "{}": project type "{}" '.format(
-                            self.category.title, self.category.type
+                        + DELETE_PREFIX_MSG.format(
+                            'settings.example_project_app.project_user_bool_setting',
+                            self.category.title,
                         )
-                        + CLEAN_LOG_DELETE_INT_SETTING_END
+                        + DELETE_PROJECT_TYPE_MSG.format(
+                            self.category.type,
+                            ALLOWED_TYPES_MSG,
+                            '[\'PROJECT\']',
+                        )
                     ),
                     CLEAN_LOG_PREFIX + END_MSG,
                 ],

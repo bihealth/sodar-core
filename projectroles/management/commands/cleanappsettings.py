@@ -14,6 +14,8 @@ START_MSG = 'Checking database for undefined app settings..'
 END_MSG = 'OK'
 DEFINITION_NOT_FOUND_MSG = 'definition not found'
 ALLOWED_TYPES_MSG = 'does not match allowed types'
+DELETE_PREFIX_MSG = 'Deleting "{}" from project "{}": '
+DELETE_PROJECT_TYPE_MSG = 'project type "{}" {}: {}'
 
 
 def get_setting_str(db_setting):
@@ -47,11 +49,10 @@ class Command(BaseCommand):
                 definition = app_settings.get_definition(**def_kwargs)
             except ValueError:
                 logger.info(
-                    'Deleting "{}" from project "{}": {}'.format(
-                        get_setting_str(s),
-                        s.project.title,
-                        DEFINITION_NOT_FOUND_MSG,
+                    DELETE_PREFIX_MSG.format(
+                        get_setting_str(s), s.project.title
                     )
+                    + DEFINITION_NOT_FOUND_MSG
                 )
                 s.delete()
                 continue
@@ -59,9 +60,10 @@ class Command(BaseCommand):
                 'project_types', ['PROJECT']
             ):
                 logger.info(
-                    'Deleting "{}" from project "{}": project type "{}" {}: {}'.format(
-                        get_setting_str(s),
-                        s.project.title,
+                    DELETE_PREFIX_MSG.format(
+                        get_setting_str(s), s.project.title
+                    )
+                    + DELETE_PROJECT_TYPE_MSG.format(
                         s.project.type,
                         ALLOWED_TYPES_MSG,
                         definition.get('project_types', ['PROJECT']),
