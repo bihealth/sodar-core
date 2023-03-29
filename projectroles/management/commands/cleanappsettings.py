@@ -43,29 +43,23 @@ class Command(BaseCommand):
                 def_kwargs['app_name'] = 'projectroles'
             try:
                 definition = app_settings.get_definition(**def_kwargs)
-                if s.project and s.project.type not in definition.get(
-                    'project_types', ['PROJECT']
-                ):
-                    logger.info(
-                        'Deleting "{}" from project "{}" - project type "{}" does not match allowed types: {}'.format(
-                            get_setting_str(s),
-                            s.project.title,
-                            s.project.type,
-                            definition.get('project_types', ['PROJECT']),
-                        )
-                    )
-                    s.delete()
-                elif not definition:
-                    logger.info(
-                        'Deleting "{}" from project "{}" - definition not found'.format(
-                            get_setting_str(s), s.project.title
-                        )
-                    )
-                    s.delete()
             except ValueError:
                 logger.info(
-                    'Deleting "{}" from project "{}" - definition not found'.format(
+                    'Deleting "{}" from project "{}": definition not found'.format(
                         get_setting_str(s), s.project.title
+                    )
+                )
+                s.delete()
+                continue
+            if s.project and s.project.type not in definition.get(
+                'project_types', ['PROJECT']
+            ):
+                logger.info(
+                    'Deleting "{}" from project "{}": project type "{}" does not match allowed types: {}'.format(
+                        get_setting_str(s),
+                        s.project.title,
+                        s.project.type,
+                        definition.get('project_types', ['PROJECT']),
                     )
                 )
                 s.delete()

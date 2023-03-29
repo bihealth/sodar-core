@@ -39,6 +39,12 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 EXAMPLE_APP_NAME = 'example_project_app'
 CLEAN_LOG_PREFIX = 'INFO:projectroles.management.commands.cleanappsettings:'
+CLEAN_LOG_DELETE_GHOST = (
+    'Deleting "settings.example_project_app.ghost" from project'
+)
+CLEAN_LOG_DELETE_GHOST_END = 'definition not found'
+CLEAN_LOG_DELETE_INT_SETTING = 'Deleting "settings.example_project_app.project_user_bool_setting" from project'
+CLEAN_LOG_DELETE_INT_SETTING_END = 'does not match allowed types: [\'PROJECT\']'
 
 
 class BatchUpdateRolesMixin:
@@ -483,8 +489,6 @@ class TestCleanAppSettings(
 ):
     """Tests for cleanappsettings command and associated functions"""
 
-    maxDiff = None
-
     def _make_undefined_setting(self):
         """Create database setting not reflected in the AppSetting dict"""
         ghost = AppSetting(
@@ -496,6 +500,18 @@ class TestCleanAppSettings(
         )
         ghost.save()
         return ghost
+
+    def _make_setting_category_type(self):
+        """Create database setting with category type project"""
+        catsett = AppSetting(
+            app_plugin=self.plugin,
+            project=self.category,
+            name='project_user_bool_setting',
+            type='BOOLEAN',
+            value=True,
+        )
+        catsett.save()
+        return catsett
 
     def setUp(self):
         super().setUp()
@@ -533,7 +549,7 @@ class TestCleanAppSettings(
         }
         self.setting_int_values = {
             'app_name': EXAMPLE_APP_NAME,
-            'project': self.category,
+            'project': self.project,
             'name': 'project_int_setting',
             'setting_type': 'INTEGER',
             'value': 0,
@@ -603,20 +619,45 @@ class TestCleanAppSettings(
                     CLEAN_LOG_PREFIX + START_MSG,
                     (
                         CLEAN_LOG_PREFIX
-                        + 'Deleting "settings.example_project_app.ghost" '
-                        'from project "{}" - definition not found'.format(
-                            self.project.title
-                        )
-                    ),
-                    # Check for project type
-                    (
-                        CLEAN_LOG_PREFIX
-                        + 'Deleting "settings.example_project_app.project_int_setting" '
-                        'from project "{}" - project type "{}" does not match allowed types: {}'.format(
-                            self.category.title, self.category.type, ['PROJECT']
-                        )
+                        + CLEAN_LOG_DELETE_GHOST
+                        + ' "{}": '.format(self.project.title)
+                        + CLEAN_LOG_DELETE_GHOST_END
                     ),
                     CLEAN_LOG_PREFIX + END_MSG,
                 ],
             )
-        self.assertEqual(AppSetting.objects.count(), 4)
+        self.assertEqual(AppSetting.objects.count(), 5)
+        self.assertQuerysetEqual(
+            AppSetting.objects.filter(name='ghost'),
+            [],
+        )
+
+    def test_command_cleanappsettings_project_types(self):
+        """Test the cleanappsettings command on the settings with wrong project types"""
+        self._make_setting_category_type()
+        self.assertEqual(AppSetting.objects.count(), 6)
+
+        with self.assertLogs(
+            'projectroles.management.commands.cleanappsettings', level='INFO'
+        ) as cm:
+            call_command('cleanappsettings')
+            self.assertEqual(
+                cm.output,
+                [
+                    CLEAN_LOG_PREFIX + START_MSG,
+                    (
+                        CLEAN_LOG_PREFIX
+                        + CLEAN_LOG_DELETE_INT_SETTING
+                        + ' "{}": project type "{}" '.format(
+                            self.category.title, self.category.type
+                        )
+                        + CLEAN_LOG_DELETE_INT_SETTING_END
+                    ),
+                    CLEAN_LOG_PREFIX + END_MSG,
+                ],
+            )
+            self.assertEqual(AppSetting.objects.count(), 5)
+            self.assertQuerysetEqual(
+                AppSetting.objects.filter(name='project_user_bool_setting'),
+                [],
+            )
