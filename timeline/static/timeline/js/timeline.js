@@ -48,7 +48,7 @@ $(document).ready(function() {
                     'data-url="' + data['status'][i]['extra_status_link'] + '"><i class="iconify" ' +
                     'data-icon="mdi:text-box" title="Status Extra Data" data-toggle="tooltip" data-placement="right">' +
                     '</i></a>';
-                if (data['status'][i]['extra_status_link'] === null || data['status'][i]['extra_status_link'] === '') {
+                if (data['status'][i]['extra_status_link'] === null ) {
                     extraData = '';
                 }
                 tableBody.append($('<tr>')
