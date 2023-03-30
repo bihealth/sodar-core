@@ -240,7 +240,7 @@ class EventStatusExtraAjaxView(
 ):
     """Ajax view for retrieving event status extra data for events"""
 
-    permission_required = 'timeline.view_event_extra_data'
+    permission_required = 'timeline.view_timeline'
 
     def get(self, request, *args, **kwargs):
         status = ProjectEventStatus.objects.filter(
