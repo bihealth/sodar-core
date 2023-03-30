@@ -291,14 +291,14 @@ class TestTimelineAjaxPermissions(
         )
         good_users = [
             self.superuser,
-        ]
-        bad_users = [
             self.user_owner_cat,
             self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
+        ]
+        bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -332,14 +332,14 @@ class TestTimelineAjaxPermissions(
         )
         good_users = [
             self.superuser,
-        ]
-        bad_users = [
             self.user_owner_cat,
             self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
+        ]
+        bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,

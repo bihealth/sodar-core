@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from projectroles.views_ajax import (
     SODARBaseProjectAjaxView,
     SODARBasePermissionAjaxView,
+    SODARBaseAjaxView,
 )
 
 from timeline.models import ProjectEvent, ProjectEventStatus
@@ -235,24 +236,36 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
         return Response(self.get_event_extra(event), status=200)
 
 
-class EventStatusExtraAjaxView(
-    EventExtraDataMixin, SODARBasePermissionAjaxView
-):
+class EventStatusExtraAjaxView(EventExtraDataMixin, SODARBaseAjaxView):
     """Ajax view for retrieving event status extra data for events"""
-
-    permission_required = 'timeline.view_timeline'
 
     def get(self, request, *args, **kwargs):
         status = ProjectEventStatus.objects.filter(
             sodar_uuid=self.kwargs['eventstatus']
         ).first()
         event = status.event
-        if (
-            not event.project
-            and event.classified
-            and not request.user.has_perm('timeline.view_classified_site_event')
-        ):
-            return HttpResponseForbidden()
+        if event.project:
+            if (
+                not event.classified
+                and not request.user.has_perm(
+                    'timeline.view_event_extra_data', event.project
+                )
+                or event.classified
+                and not request.user.has_perm(
+                    'timeline.view_classified_event', event.project
+                )
+            ):
+                return HttpResponseForbidden()
+        else:
+            if (
+                not event.classified
+                and not request.user.has_perm('timeline.view_event_extra_data')
+                or event.classified
+                and not request.user.has_perm(
+                    'timeline.view_classified_site_event'
+                )
+            ):
+                return HttpResponseForbidden()
         return Response(
             self.get_event_extra(status.event, status),
             status=200,
