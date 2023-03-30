@@ -216,7 +216,7 @@ class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):
             'timeline.view_classified_site_event'
         ):
             return HttpResponseForbidden()
-        return Response(self.get_event_details(event), status=200)
+        return Response(self.get_event_details(event, request), status=200)
 
 
 class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
@@ -247,28 +247,12 @@ class EventStatusExtraAjaxView(
             sodar_uuid=self.kwargs['eventstatus']
         ).first()
         event = status.event
-        if event.project:
-            if (
-                not event.classified
-                and not request.user.has_perm(
-                    'timeline.view_timeline', event.project
-                )
-                or event.classified
-                and not request.user.has_perm(
-                    'timeline.view_classified_event', event.project
-                )
-            ):
-                return HttpResponseForbidden()
-        else:
-            if (
-                not event.classified
-                and not request.user.has_perm('timeline.view_site_timeline')
-                or event.classified
-                and not request.user.has_perm(
-                    'timeline.view_classified_site_event'
-                )
-            ):
-                return HttpResponseForbidden()
+        if (
+            not event.project
+            and event.classified
+            and not request.user.has_perm('timeline.view_classified_site_event')
+        ):
+            return HttpResponseForbidden()
         return Response(
             self.get_event_extra(status.event, status),
             status=200,
