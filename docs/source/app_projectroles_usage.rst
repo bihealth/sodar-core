@@ -181,6 +181,10 @@ specifically granting it.
     make the project available to anyone who can access the site in your
     network! Please use this feature carefully.
 
+.. note::
+
+    This feature is currently only available for projects and not for categories!
+
 App Settings
 ------------
 
