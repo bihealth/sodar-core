@@ -1,7 +1,6 @@
 import json
 
 from django import forms
-from django.utils.html import format_html
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
@@ -132,19 +131,9 @@ class UserSettingsForm(SODARForm):
                             user=self.user,
                         )
                     )
-
-                if plugin:
-                    self.fields[s_field].label = format_html(
-                        '{} <i class="iconify" title="{}" data-toggle="tooltip" data-icon="{}"></i>',
-                        plugin.icon,
-                        plugin.title,
-                        self.fields[s_field].label,
-                    )
-                else:
-                    self.fields[s_field].label = format_html(
-                        '{} <i class="iconify" title="projectroles" data-toggle="tooltip" data-icon="mdi-cube"></i>',
-                        self.fields[s_field].label,
-                    )
+                self.fields[s_field].label = self.get_app_setting_label(
+                    plugin, self.fields[s_field].label
+                )
 
     def clean(self):
         """Function for custom form validation and cleanup"""

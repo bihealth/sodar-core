@@ -41,7 +41,7 @@ class TestUserSettings(TestUIBase):
         self.login_and_redirect(
             self.superuser, url, wait_elem=None, wait_loc='ID'
         )
-        WebDriverWait(self.selenium, 10)
+        WebDriverWait(self.selenium, 15)
 
         logo = self.selenium.find_element(
             By.CSS_SELECTOR,

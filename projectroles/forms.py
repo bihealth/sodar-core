@@ -90,6 +90,21 @@ class SODARFormMixin:
         self.logger.error(log_msg)
         super().add_error(field, error)  # Call the error method in Django forms
 
+    def get_app_setting_label(self, plugin, label):
+        """Return label for app setting key"""
+        if plugin:
+            return format_html(
+                '{} <i class="iconify" title="{}" data-toggle="tooltip" data-icon="{}"></i>',
+                label,
+                plugin.title,
+                plugin.icon,
+            )
+        else:
+            return format_html(
+                '{} <i class="iconify" title="projectroles" data-icon="mdi-cube"></i>',
+                label,
+            )
+
 
 class SODARForm(SODARFormMixin, forms.Form):
     """Override of Django base form with SODAR Core specific helpers."""
@@ -446,18 +461,9 @@ class ProjectForm(SODARModelForm):
                 self.fields[
                     s_field
                 ].help_text += ' [Not editable on target sites]'
-        if plugin:
-            self.fields[s_field].label = format_html(
-                '{} <i class="iconify" title="{}" data-toggle="tooltip" data-icon="{}"></i>',
-                self.fields[s_field].label,
-                plugin.title,
-                plugin.icon,
-            )
-        else:
-            self.fields[s_field].label = format_html(
-                '{} <i class="iconify" title="projectroles" data-toggle="tooltip" data-icon="mdi-cube"></i>',
-                self.fields[s_field].label,
-            )
+        self.fields[s_field].label = self.get_app_setting_label(
+            plugin, self.fields[s_field].label
+        )
 
     def _init_app_settings(self):
         # Set up setting query kwargs
