@@ -494,6 +494,14 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 'The "owner" parameter must be supplied for project creation'
             )
 
+        # Validate public_guest_access for categories
+        if attrs.get('type') == PROJECT_TYPE_CATEGORY and attrs.get(
+            'public_guest_access'
+        ):
+            raise serializers.ValidationError(
+                'Public guest access is not allowed for categories'
+            )
+
         # Set readme
         if 'readme' in attrs and 'raw' in attrs['readme']:
             attrs['readme'] = attrs['readme']['raw']

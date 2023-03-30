@@ -367,6 +367,17 @@ class TestProject(ProjectMixin, TestCase):
                 parent=self.project,
             )
 
+    def test_validate_public_guest_access(self):
+        """Test public guest access validation with project"""
+        # Test with project
+        self.project.public_guest_access = True
+        self.project.save()
+
+        # Test with category
+        with self.assertRaises(ValidationError):
+            self.category.public_guest_access = True
+            self.category.save()
+
     def test_get_absolute_url(self):
         """Test get_absolute_url()"""
         expected_url = reverse(

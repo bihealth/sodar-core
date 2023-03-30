@@ -4,6 +4,7 @@ from urllib.parse import urlencode, quote
 
 from django.test import override_settings
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 from test_plus.test import TestCase
 
@@ -1061,8 +1062,9 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
-        self.category.set_public()
-        self.assert_response(url, self.user_no_roles, 200)
+        # public guest access is temporally disabled for categories
+        with self.assertRaises(ValidationError):
+            self.category.set_public()
 
     def test_role_create(self):
         """Test role create permissions"""
@@ -1122,8 +1124,9 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
-        self.category.set_public()
-        self.assert_response(url, self.user_no_roles, 302)
+        # public guest access is temporarily disabled for categories
+        with self.assertRaises(ValidationError):
+            self.category.set_public()
 
     def test_role_create_archive(self):
         """Test permissions for role creation in archived project"""
@@ -1522,8 +1525,9 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
-        self.category.set_public()
-        self.assert_response(url, self.user_no_roles, 302)
+        # public guest access is temporally disabled for categories
+        with self.assertRaises(ValidationError):
+            self.category.set_public()
 
     def test_role_invite_resend(self):
         """Test invite resend permissions"""

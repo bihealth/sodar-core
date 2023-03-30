@@ -188,6 +188,7 @@ class Project(models.Model):
         self._validate_parent()
         self._validate_title()
         self._validate_parent_type()
+        self._validate_public_guest_access()
         self._validate_archive()
         # Update full title of self and children
         self.full_title = self._get_full_title()
@@ -213,6 +214,16 @@ class Project(models.Model):
         ):
             raise ValidationError(
                 'Subprojects are only allowed within categories'
+            )
+
+    def _validate_public_guest_access(self):
+        """Validate public guest access to ensure it is not set on categories"""
+        if (
+            self.public_guest_access
+            and self.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+        ):
+            raise ValidationError(
+                'Public guest access is not allowed for categories'
             )
 
     def _validate_title(self):

@@ -723,6 +723,15 @@ class ProjectForm(SODARModelForm):
                 'Transfer instead',
             )
 
+        # Ensure public_guest_access is not set on a category
+        if p_type == PROJECT_TYPE_CATEGORY and self.cleaned_data.get(
+            'public_guest_access'
+        ):
+            self.add_error(
+                'public_guest_access',
+                'Public guest access is not allowed for categories',
+            )
+
         # Verify settings fields
         cleaned_data, errors = self._validate_app_settings(
             self.cleaned_data,
