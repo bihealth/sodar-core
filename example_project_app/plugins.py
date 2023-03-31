@@ -320,6 +320,14 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'user_modifiable': True,
             'project_types': [PROJECT_TYPE_CATEGORY],
         },
+        'site_bool_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
+            'type': 'BOOLEAN',
+            'label': 'Site boolean setting',
+            'default': False,
+            'description': 'Example boolean site setting',
+            'user_modifiable': True,
+        },
     }
 
     #: Iconify icon

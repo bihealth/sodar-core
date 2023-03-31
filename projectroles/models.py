@@ -810,8 +810,6 @@ class AppSettingManager(models.Manager):
         :return: Value (string)
         :raise: AppSetting.DoesNotExist if setting is not found
         """
-        if (project is None) and (user is None):
-            raise ValueError('Project and user unset.')
         query_parameters = {
             'name': setting_name,
             'project': project,
@@ -820,6 +818,19 @@ class AppSettingManager(models.Manager):
         if not app_name == 'projectroles':
             query_parameters['app_plugin__name'] = app_name
         setting = super().get_queryset().get(**query_parameters)
+        if (
+            (project is None)
+            and (user is None)
+            and setting.name != 'site_bool_setting'
+        ):
+            raise ValueError('Project and user unset.')
+        if (
+            setting.name == 'site_bool_setting'
+            and project
+            or setting.name == 'site_bool_setting'
+            and user
+        ):
+            raise ValueError('Project or user set for site scope setting.')
         return setting.get_value()
 
 
@@ -910,8 +921,10 @@ class AppSetting(models.Model):
         )
         if self.project:
             label = self.project.title
-        else:
+        elif self.user:
             label = self.user.username
+        else:
+            label = 'SITE'
         return '{}: {} / {}'.format(label, plugin_name, self.name)
 
     def __repr__(self):
