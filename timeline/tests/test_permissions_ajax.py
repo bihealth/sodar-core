@@ -174,14 +174,14 @@ class TestTimelineAjaxPermissions(
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
         ]
         bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -246,11 +246,7 @@ class TestTimelineAjaxPermissions(
             'timeline:ajax_extra_site',
             kwargs={'projectevent': self.site_event.sodar_uuid},
         )
-        good_users = [
-            self.superuser,
-            self.regular_user,
-        ]
-        self.assert_response(url, good_users, 200)
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -270,11 +266,7 @@ class TestTimelineAjaxPermissions(
             'timeline:ajax_extra_site',
             kwargs={'projectevent': self.site_event.sodar_uuid},
         )
-        good_users = [
-            self.superuser,
-            self.regular_user,
-        ]
-        self.assert_response(url, good_users, 200)
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -286,6 +278,7 @@ class TestTimelineAjaxPermissions(
             'timeline:ajax_extra_site',
             kwargs={'projectevent': self.site_event.sodar_uuid},
         )
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     def test_status_extra_data_project(self):
@@ -300,14 +293,14 @@ class TestTimelineAjaxPermissions(
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
         ]
         bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -380,11 +373,7 @@ class TestTimelineAjaxPermissions(
                 'eventstatus': self.site_event_status.sodar_uuid,
             },
         )
-        good_users = [
-            self.superuser,
-            self.regular_user,
-        ]
-        self.assert_response(url, good_users, 200)
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -408,11 +397,7 @@ class TestTimelineAjaxPermissions(
                 'eventstatus': self.site_event_status.sodar_uuid,
             },
         )
-        good_users = [
-            self.superuser,
-            self.regular_user,
-        ]
-        self.assert_response(url, good_users, 200)
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
