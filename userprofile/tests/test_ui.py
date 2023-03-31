@@ -43,8 +43,8 @@ class TestUserSettings(TestUIBase):
         )
         WebDriverWait(self.selenium, 15)
 
-        logo = self.selenium.find_element(
+        icon = self.selenium.find_element(
             By.CSS_SELECTOR,
             'div[id="div_id_settings.example_project_app.user_int_setting"] label svg',
         )
-        self.assertTrue(logo.is_displayed())
+        self.assertTrue(icon.is_displayed())

@@ -1479,7 +1479,7 @@ class TestProjectCreateView(TestUIBase):
         WebDriverWait(self.selenium, 10)
         logo = self.selenium.find_element(
             By.CSS_SELECTOR,
-            'div[id="div_id_settings.example_project_app.project_int_setting"] ',
+            'div[id="div_id_settings.example_project_app.project_int_setting"]',
         ).find_element(By.TAG_NAME, 'svg')
         self.assertTrue(logo.is_displayed())
 

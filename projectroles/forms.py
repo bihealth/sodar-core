@@ -94,7 +94,7 @@ class SODARFormMixin:
         """Return label for app setting key"""
         if plugin:
             return format_html(
-                '{} <i class="iconify" title="{}" data-toggle="tooltip" data-icon="{}"></i>',
+                '{} <i class="iconify" title="{}" data-icon="{}"></i>',
                 label,
                 plugin.title,
                 plugin.icon,
