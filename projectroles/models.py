@@ -820,18 +820,21 @@ class AppSettingManager(models.Manager):
         if not app_name == 'projectroles':
             query_parameters['app_plugin__name'] = app_name
         setting = super().get_queryset().get(**query_parameters)
-        plugin = get_app_plugin(app_name)
-        scope = plugin.app_settings[setting_name].get('scope', None)
+        # plugin = get_app_plugin(app_name)
+        # scope = plugin.app_settings[setting_name].get('scope', None)
         if (
             (project is None)
             and (user is None)
-            and scope != APP_SETTING_SCOPE_SITE
+            and setting.name != 'site_bool_setting'
+            # and scope != APP_SETTING_SCOPE_SITE
         ):
             raise ValueError('Project and user unset.')
         if (
-            scope != APP_SETTING_SCOPE_SITE
+            setting.name != 'site_bool_setting'
+            # scope != APP_SETTING_SCOPE_SITE
             and project
-            or scope != APP_SETTING_SCOPE_SITE
+            or setting.name != 'site_bool_setting'
+            # or scope != APP_SETTING_SCOPE_SITE
             and user
         ):
             raise ValueError('Project or user set for site scope setting.')
