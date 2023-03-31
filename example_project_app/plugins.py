@@ -251,19 +251,23 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
         'project_user_int_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'INTEGER',
-            'default': '',
+            'default': 0,
             'description': 'Example int project user setting',
         },
         'project_user_bool_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'BOOLEAN',
-            'default': '',
+            'default': False,
             'description': 'Example bool project user setting',
         },
         'project_user_json_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'JSON',
-            'default': '',
+            'default': {
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
             'description': 'Example json project user setting',
         },
         'project_callable_setting': {
