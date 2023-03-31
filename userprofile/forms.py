@@ -131,6 +131,9 @@ class UserSettingsForm(SODARForm):
                             user=self.user,
                         )
                     )
+                self.fields[s_field].label = self.get_app_setting_label(
+                    plugin, self.fields[s_field].label
+                )
 
     def clean(self):
         """Function for custom form validation and cleanup"""
