@@ -367,6 +367,113 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             return self.instance.get_roles()
         return None
 
+    def _validate_parent(self, parent, attrs, current_user, disable_categories):
+        """Validate parent field"""
+        # Attempting to move project under category without perms
+        if (
+            parent
+            and not current_user.is_superuser
+            and not current_user.has_perm('projectroles.create_project', parent)
+            and (not self.instance or self.instance.parent != parent)
+        ):
+            raise exceptions.PermissionDenied(
+                'User lacks permission to place project under given category'
+            )
+        if parent and parent.type != PROJECT_TYPE_CATEGORY:
+            raise serializers.ValidationError('Parent is not a category')
+        elif (
+            'parent' in attrs
+            and not parent
+            and self.instance
+            and self.instance.parent
+            and not current_user.is_superuser
+        ):
+            raise exceptions.PermissionDenied(
+                'Only superusers are allowed to place categories in root'
+            )
+
+        # Attempting to create/move project in root
+        if (
+            'parent' in attrs
+            and not parent
+            and attrs.get('type') == PROJECT_TYPE_PROJECT
+            and not disable_categories
+        ):
+            raise serializers.ValidationError(
+                'Project must be placed under a category'
+            )
+        # Ensure we are not moving a category under one of its children
+        if (
+            parent
+            and self.instance
+            and self.instance.type == PROJECT_TYPE_CATEGORY
+            and parent in self.instance.get_children(flat=True)
+        ):
+            raise serializers.ValidationError(
+                'Moving a category under its own child is not allowed'
+            )
+
+    def _validate_title(self, parent, attrs):
+        """Validate title field"""
+        title = attrs.get('title')
+        if title and (
+            CAT_DELIMITER in title
+            or title.startswith(CAT_DELIMITER.strip())
+            or title.endswith(CAT_DELIMITER.strip())
+        ):
+            raise serializers.ValidationError(CAT_DELIMITER_ERROR_MSG)
+        if parent and title == parent.title:
+            raise serializers.ValidationError('Title can\'t match with parent')
+        if (
+            title
+            and not self.instance
+            and Project.objects.filter(title=attrs['title'], parent=parent)
+        ):
+            raise serializers.ValidationError(
+                'Title must be unique within parent'
+            )
+
+    def _validate_type(self, attrs):
+        """Validate type field"""
+        if attrs.get('type') not in [
+            PROJECT_TYPE_CATEGORY,
+            PROJECT_TYPE_PROJECT,
+            None,
+        ]:  # None is ok for PATCH (will be updated in modify_project())
+            raise serializers.ValidationError(
+                'Type is not {} or {}'.format(
+                    PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT
+                )
+            )
+        if (
+            attrs.get('type')
+            and self.instance
+            and attrs['type'] != self.instance.type
+        ):
+            raise serializers.ValidationError(
+                'Changing the project type is not allowed'
+            )
+
+    def _validate_owner(self, attrs):
+        """Validate owner field"""
+        if attrs.get('owner'):
+            if (
+                self.partial
+                and attrs['owner'] != self.instance.get_owner().user.sodar_uuid
+            ):
+                raise serializers.ValidationError(
+                    'Modifying owner not allowed here, '
+                    'use ownership transfer API view instead'
+                )
+            owner = User.objects.filter(sodar_uuid=attrs['owner']).first()
+            if not owner:
+                raise serializers.ValidationError('Owner not found')
+            attrs['owner'] = owner
+        elif not self.instance:
+            raise serializers.ValidationError(
+                'The "owner" parameter must be supplied for project creation'
+            )
+
     def validate(self, attrs):
         site_mode = getattr(
             settings,
@@ -393,105 +500,23 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
         # Validate parent
         parent = attrs.get('parent')
-        # Attempting to move project under category without perms
-        if (
-            parent
-            and not current_user.is_superuser
-            and not current_user.has_perm('projectroles.create_project', parent)
-            and (not self.instance or self.instance.parent != parent)
-        ):
-            raise exceptions.PermissionDenied(
-                'User lacks permission to place project under given category'
-            )
-        if parent and parent.type != PROJECT_TYPE_CATEGORY:
-            raise serializers.ValidationError('Parent is not a category')
-        elif (
-            'parent' in attrs
-            and not parent
-            and self.instance
-            and self.instance.parent
-            and not current_user.is_superuser
-        ):
-            raise exceptions.PermissionDenied(
-                'Only superusers are allowed to place categories in root'
-            )
-        # Attempting to create/move project in root
-        if (
-            'parent' in attrs
-            and not parent
-            and attrs.get('type') == PROJECT_TYPE_PROJECT
-            and not disable_categories
-        ):
-            raise serializers.ValidationError(
-                'Project must be placed under a category'
-            )
-        # Ensure we are not moving a category under one of its children
-        if (
-            parent
-            and self.instance
-            and self.instance.type == PROJECT_TYPE_CATEGORY
-            and parent in self.instance.get_children(flat=True)
-        ):
-            raise serializers.ValidationError(
-                'Moving a category under its own child is not allowed'
-            )
+        self._validate_parent(parent, attrs, current_user, disable_categories)
 
         # Validate title
-        title = attrs.get('title')
-        if title and (
-            CAT_DELIMITER in title
-            or title.startswith(CAT_DELIMITER.strip())
-            or title.endswith(CAT_DELIMITER.strip())
-        ):
-            raise serializers.ValidationError(CAT_DELIMITER_ERROR_MSG)
-        if parent and title == parent.title:
-            raise serializers.ValidationError('Title can\'t match with parent')
-        if (
-            title
-            and not self.instance
-            and Project.objects.filter(title=attrs['title'], parent=parent)
-        ):
-            raise serializers.ValidationError(
-                'Title must be unique within parent'
-            )
+        self._validate_title(parent, attrs)
 
         # Validate type
-        if attrs.get('type') not in [
-            PROJECT_TYPE_CATEGORY,
-            PROJECT_TYPE_PROJECT,
-            None,
-        ]:  # None is ok for PATCH (will be updated in modify_project())
-            raise serializers.ValidationError(
-                'Type is not {} or {}'.format(
-                    PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT
-                )
-            )
-        if (
-            attrs.get('type')
-            and self.instance
-            and attrs['type'] != self.instance.type
-        ):
-            raise serializers.ValidationError(
-                'Changing the project type is not allowed'
-            )
+        self._validate_type(attrs)
 
         # Validate and set owner
-        if attrs.get('owner'):
-            if (
-                self.partial
-                and attrs['owner'] != self.instance.get_owner().user.sodar_uuid
-            ):
-                raise serializers.ValidationError(
-                    'Modifying owner not allowed here, '
-                    'use ownership transfer API view instead'
-                )
-            owner = User.objects.filter(sodar_uuid=attrs['owner']).first()
-            if not owner:
-                raise serializers.ValidationError('Owner not found')
-            attrs['owner'] = owner
-        elif not self.instance:
+        self._validate_owner(attrs)
+
+        # Validate public_guest_access for categories
+        if attrs.get('type') == PROJECT_TYPE_CATEGORY and attrs.get(
+            'public_guest_access'
+        ):
             raise serializers.ValidationError(
-                'The "owner" parameter must be supplied for project creation'
+                'Public guest access is not allowed for categories'
             )
 
         # Set readme

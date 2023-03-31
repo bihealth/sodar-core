@@ -2,6 +2,9 @@ $(document).ready(function() {
     // Hide settings fields by default
     $('div[id^="div_id_settings"]').hide();
 
+    // Temporary solution for hiding the public_guest_access field
+    $('#div_id_public_guest_access').hide();
+
     // Check if it's category/project update and show corresponding fields
     if ($('#sodar-pr-project-form-title').attr('data-project-action') == 'PROJECT') {
         $('div[id^="div_id_settings"]').each(function () {
@@ -18,6 +21,9 @@ $(document).ready(function() {
                 $parentDiv.hide();
             }
         });
+
+        // Temporary solution for hiding the public_guest_access field
+        $('#div_id_public_guest_access').show();
     }
 
     if ($('#sodar-pr-project-form-title').attr('data-project-action') == 'CATEGORY') {
@@ -38,7 +44,7 @@ $(document).ready(function() {
     }
 
     // Show settings fields if selected type is project/category in update form
-   $('#div_id_type .form-control').change(function() {
+    $('#div_id_type .form-control').change(function() {
         if ($('#div_id_type .form-control').val() == 'PROJECT') {
             $('div[id^="div_id_settings"]').each(function () {
                 var $parentDiv = $(this);
@@ -53,6 +59,9 @@ $(document).ready(function() {
                 } else {
                     $parentDiv.hide();
                 }
+
+                // Temporary solution for hiding the public_guest_access field
+                $('#div_id_public_guest_access').show();
             });
         } else if ($('#div_id_type .form-control').val() == 'CATEGORY') {
             $('div[id^="div_id_settings"]').each(function () {

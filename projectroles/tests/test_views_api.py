@@ -880,7 +880,7 @@ class TestProjectUpdateAPIView(
             'parent': '',
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': True,
+            'public_guest_access': False,
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
@@ -897,7 +897,7 @@ class TestProjectUpdateAPIView(
             'parent': None,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': True,
+            'public_guest_access': False,
             'archive': False,
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
@@ -911,7 +911,7 @@ class TestProjectUpdateAPIView(
             'parent': None,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': True,
+            'public_guest_access': False,
             'archive': False,
             'roles': {
                 str(self.category.get_owner().sodar_uuid): {
@@ -924,6 +924,23 @@ class TestProjectUpdateAPIView(
             'sodar_uuid': str(self.category.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)
+
+    def test_put_public_guest_access_category(self):
+        """Test setting public guest access for category"""
+        url = reverse(
+            'projectroles:api_project_update',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        put_data = {
+            'title': UPDATED_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent': '',
+            'description': UPDATED_DESC,
+            'readme': UPDATED_README,
+            'public_guest_access': True,
+        }
+        response = self.request_knox(url, method='PUT', data=put_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_put_project(self):
         """Test put() for project updating"""
