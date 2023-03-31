@@ -127,6 +127,11 @@ class AppSettingAPI:
                 raise ValueError(
                     'User unset for setting with project_user scope'
                 )
+        elif scope == APP_SETTING_SCOPE_SITE:
+            if project:
+                raise ValueError('Project set for setting with site scope')
+            if user:
+                raise ValueError('User set for setting with site scope')
 
     @classmethod
     def _check_scope(cls, scope):
