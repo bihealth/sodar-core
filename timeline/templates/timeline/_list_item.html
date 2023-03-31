@@ -46,8 +46,7 @@
              data-toggle="tooltip" data-placement="right">
           </i>
         </a>
-      {% endif %}
-      {% if not event.project and user.is_superuser %}
+      {% elif not event.project and user.is_superuser %}
         <a class="sodar-tl-link-extra-data text-primary pull-right"
            data-url="{% url 'timeline:ajax_extra_site' projectevent=event.sodar_uuid %}">
           <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
