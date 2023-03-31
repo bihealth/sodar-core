@@ -17,7 +17,6 @@ from djangoplugins.models import Plugin
 from markupfield.fields import MarkupField
 
 from projectroles.constants import get_sodar_constants
-from projectroles.plugins import get_app_plugin
 
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
@@ -32,6 +31,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 
 # Local constants
 ROLE_RANKING = {
@@ -49,7 +49,6 @@ APP_SETTING_TYPE_CHOICES = [
     ('JSON', 'Json'),
 ]
 APP_SETTING_VAL_MAXLENGTH = 255
-APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
@@ -820,24 +819,6 @@ class AppSettingManager(models.Manager):
         if not app_name == 'projectroles':
             query_parameters['app_plugin__name'] = app_name
         setting = super().get_queryset().get(**query_parameters)
-        # plugin = get_app_plugin(app_name)
-        # scope = plugin.app_settings[setting_name].get('scope', None)
-        if (
-            (project is None)
-            and (user is None)
-            and setting.name != 'site_bool_setting'
-            # and scope != APP_SETTING_SCOPE_SITE
-        ):
-            raise ValueError('Project and user unset.')
-        if (
-            setting.name != 'site_bool_setting'
-            # scope != APP_SETTING_SCOPE_SITE
-            and project
-            or setting.name != 'site_bool_setting'
-            # or scope != APP_SETTING_SCOPE_SITE
-            and user
-        ):
-            raise ValueError('Project or user set for site scope setting.')
         return setting.get_value()
 
 

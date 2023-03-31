@@ -44,7 +44,7 @@ PROJECTROLES_APP_SETTINGS = {
     #: Example ::
     #:
     #:     'example_setting': {
-    #:         'scope': 'PROJECT',  # PROJECT/USER/SITE
+    #:         'scope': 'PROJECT',  # PROJECT/USER/PROJECT-USER/SITE
     #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN/JSON
     #:         'default': 'example',
     #:         'label': 'Project setting',  # Optional, defaults to name/key
