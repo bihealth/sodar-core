@@ -39,9 +39,17 @@
     {% get_event_description event plugin_lookup request as event_desc %}
     {{ event_desc|safe }}
     {% if not details_card_mode and event.extra_data %}
-      {% if event.project and can_view_extra_data or not event.project and user.is_superuser %}
+      {% if event.project and can_view_extra_data %}
         <a class="sodar-tl-link-extra-data text-primary pull-right"
            data-url="{% url 'timeline:ajax_extra_project' projectevent=event.sodar_uuid %}">
+          <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
+             data-toggle="tooltip" data-placement="right">
+          </i>
+        </a>
+      {% endif %}
+      {% if not event.project and user.is_superuser %}
+        <a class="sodar-tl-link-extra-data text-primary pull-right"
+           data-url="{% url 'timeline:ajax_extra_site' projectevent=event.sodar_uuid %}">
           <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
              data-toggle="tooltip" data-placement="right">
           </i>
