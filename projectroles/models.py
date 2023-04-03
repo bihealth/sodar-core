@@ -31,6 +31,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 
 # Local constants
 ROLE_RANKING = {
@@ -821,8 +822,6 @@ class AppSettingManager(models.Manager):
         :return: Value (string)
         :raise: AppSetting.DoesNotExist if setting is not found
         """
-        if (project is None) and (user is None):
-            raise ValueError('Project and user unset.')
         query_parameters = {
             'name': setting_name,
             'project': project,
@@ -921,8 +920,10 @@ class AppSetting(models.Model):
         )
         if self.project:
             label = self.project.title
-        else:
+        elif self.user:
             label = self.user.username
+        else:
+            label = 'SITE'
         return '{}: {} / {}'.format(label, plugin_name, self.name)
 
     def __repr__(self):

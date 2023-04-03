@@ -254,7 +254,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:
     #:     app_settings = {
     #:         'example_setting': {
-    #:             'scope': 'PROJECT',  # PROJECT/USER
+    #:             'scope': 'PROJECT',  # PROJECT/USER/SITE
     #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
     #:             'default': 'example',
     #:             'label': 'Project setting',  # Optional, defaults to name/key

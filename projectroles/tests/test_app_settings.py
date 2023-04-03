@@ -33,6 +33,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 
 # Local constants
 EXISTING_SETTING = 'project_bool_setting'
@@ -766,19 +767,23 @@ class TestAppSettingAPI(
             'project_user_int_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'INTEGER',
-                'default': '',
+                'default': 0,
                 'description': 'Example int project user setting',
             },
             'project_user_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'BOOLEAN',
-                'default': '',
+                'default': False,
                 'description': 'Example bool project user setting',
             },
             'project_user_json_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'JSON',
-                'default': '',
+                'default': {
+                    'Example': 'Value',
+                    'list': [1, 2, 3, 4, 5],
+                    'level_6': False,
+                },
                 'description': 'Example json project user setting',
             },
             'project_user_callable_setting': {
@@ -797,6 +802,23 @@ class TestAppSettingAPI(
         }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT_USER, app_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(defs, expected)
+
+    def test_get_defs_site(self):
+        """Test get_defs() with the SITE scope"""
+        expected = {
+            'site_bool_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
+                'label': 'Site boolean setting',
+                'type': 'BOOLEAN',
+                'default': False,
+                'description': 'Example boolean site setting',
+                'user_modifiable': True,
+            }
+        }
+        defs = app_settings.get_definitions(
+            APP_SETTING_SCOPE_SITE, app_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
@@ -843,6 +865,24 @@ class TestAppSettingAPI(
             defaults[prefix + 'user_json_setting'],
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
+
+    def test_get_defaults_project_user(self):
+        """Test get_defaults() with the PROJECT_USER scope"""
+        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        defaults = app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT_USER)
+        self.assertEqual(defaults[prefix + 'project_user_str_setting'], '')
+        self.assertEqual(defaults[prefix + 'project_user_int_setting'], 0)
+        self.assertEqual(defaults[prefix + 'project_user_bool_setting'], False)
+        self.assertEqual(
+            defaults[prefix + 'project_user_json_setting'],
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
+
+    def test_get_defaults_site(self):
+        """Test get_defaults() with the SITE scope"""
+        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        defaults = app_settings.get_defaults(APP_SETTING_SCOPE_SITE)
+        self.assertEqual(defaults[prefix + 'site_bool_setting'], False)
 
     def test_delete_scope_user_params_none(self):
         """Test delete() with USER scope and no params"""

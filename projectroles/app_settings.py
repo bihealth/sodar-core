@@ -18,6 +18,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
@@ -27,6 +28,7 @@ VALID_SCOPES = [
     APP_SETTING_SCOPE_PROJECT,
     APP_SETTING_SCOPE_USER,
     APP_SETTING_SCOPE_PROJECT_USER,
+    APP_SETTING_SCOPE_SITE,
 ]
 APP_SETTING_DEFAULT_VALUES = {
     'STRING': '',
@@ -42,7 +44,7 @@ PROJECTROLES_APP_SETTINGS = {
     #: Example ::
     #:
     #:     'example_setting': {
-    #:         'scope': 'PROJECT',  # PROJECT/USER
+    #:         'scope': 'PROJECT',  # PROJECT/USER/PROJECT-USER/SITE
     #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN/JSON
     #:         'default': 'example',
     #:         'label': 'Project setting',  # Optional, defaults to name/key
@@ -125,6 +127,11 @@ class AppSettingAPI:
                 raise ValueError(
                     'User unset for setting with project_user scope'
                 )
+        elif scope == APP_SETTING_SCOPE_SITE:
+            if project:
+                raise ValueError('Project set for setting with site scope')
+            if user:
+                raise ValueError('User set for setting with site scope')
 
     @classmethod
     def _check_scope(cls, scope):
@@ -489,10 +496,21 @@ class AppSettingAPI:
                 )
             )
 
-        if not project and not user:
-            raise ValueError('Project and user are both unset')
-
         setting_def = cls.get_definition(name=setting_name, app_name=app_name)
+
+        if (
+            setting_def.get('scope') != APP_SETTING_SCOPE_SITE
+            and not project
+            and not user
+        ):
+            raise ValueError('Project and user are both unset')
+        elif (
+            setting_def.get('scope') == APP_SETTING_SCOPE_SITE
+            and project
+            or setting_def.get('scope') == APP_SETTING_SCOPE_SITE
+            and user
+        ):
+            raise ValueError('Project or user is set for site scope setting')
 
         # Check project type
         if (
