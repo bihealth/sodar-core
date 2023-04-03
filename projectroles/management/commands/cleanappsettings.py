@@ -16,6 +16,7 @@ DEFINITION_NOT_FOUND_MSG = 'definition not found'
 ALLOWED_TYPES_MSG = 'does not match allowed types'
 DELETE_PREFIX_MSG = 'Deleting "{}" from project "{}": '
 DELETE_PROJECT_TYPE_MSG = 'project type "{}" {}: {}'
+DELETE_SCOPE_MSG = 'user {} has no Role in the project'
 
 
 def get_setting_str(db_setting):
@@ -80,7 +81,7 @@ class Command(BaseCommand):
                     DELETE_PREFIX_MSG.format(
                         get_setting_str(s), s.project.title
                     )
-                    + 'user has no Role in the project'
+                    + DELETE_SCOPE_MSG.format(s.user.username)
                 )
                 s.delete()
         logger.info(END_MSG)
