@@ -952,6 +952,45 @@ class TestAppSettingAPI(
                 user=self.user,
             )
 
+    def test_delete_settings_by_scope(self):
+        """Test delete_settings_by_scope() method"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        # Delete PROJECT_USER scope settings
+        app_settings.delete_settings_by_scope(
+            project=self.project,
+            user=self.user,
+            scope=APP_SETTING_SCOPE_PROJECT_USER,
+        )
+        self.assertEqual(AppSetting.objects.count(), 12)
+        # Delete PROJECT scope settings
+        app_settings.delete_settings_by_scope(
+            user=self.user, scope=APP_SETTING_SCOPE_USER
+        )
+        self.assertEqual(AppSetting.objects.count(), 6)
+        # Delete USER scope settings
+        app_settings.delete_settings_by_scope(
+            project=self.project, scope=APP_SETTING_SCOPE_PROJECT
+        )
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_delete_settings_by_scope_param_project(self):
+        """Test delete_settings_by_scope() method with invalid Project params"""
+        with self.assertRaises(ValueError):
+            app_settings.delete_settings_by_scope(
+                project=self.project,
+                user=self.user,
+                scope=APP_SETTING_SCOPE_PROJECT,
+            )
+
+    def test_delete_settings_by_scope_param_user(self):
+        """Test delete_settings_by_scope() method with invalid User params"""
+        with self.assertRaises(ValueError):
+            app_settings.delete_settings_by_scope(
+                project=self.project,
+                user=self.user,
+                scope=APP_SETTING_SCOPE_USER,
+            )
+
     def test_validate_form_app_settings(self):
         """Test validate_form_app_settings() method on valid app_setting"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
