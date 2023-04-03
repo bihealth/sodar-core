@@ -70,4 +70,17 @@ class Command(BaseCommand):
                     )
                 )
                 s.delete()
+
+        db_settings = AppSetting.objects.filter(
+            project__isnull=False, user__isnull=False
+        )
+        for s in db_settings:
+            if s.project.get_role(s.user, inherited_only=True) is None:
+                logger.info(
+                    DELETE_PREFIX_MSG.format(
+                        get_setting_str(s), s.project.title
+                    )
+                    + 'user has no Role in the project'
+                )
+                s.delete()
         logger.info(END_MSG)
