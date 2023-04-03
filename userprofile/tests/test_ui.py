@@ -41,11 +41,19 @@ class TestUserSettings(TestUIBase):
         self.login_and_redirect(
             self.superuser, url, wait_elem=None, wait_loc='ID'
         )
-        WebDriverWait(self.selenium, 15)
-
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: x.find_element(
+                By.CSS_SELECTOR,
+                'div[id="div_id_settings.example_project_app.user_int_setting"] label',
+            )
+        )
         label = self.selenium.find_element(
             By.CSS_SELECTOR,
             'div[id="div_id_settings.example_project_app.user_int_setting"] label',
+        )
+        # Wait before icon is rendered
+        WebDriverWait(label, 15).until(
+            lambda x: x.find_element(By.TAG_NAME, 'svg')
         )
         icon = label.find_element(By.TAG_NAME, 'svg')
         self.assertTrue(icon.is_displayed())
