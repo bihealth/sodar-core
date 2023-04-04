@@ -918,7 +918,12 @@ class TestAppSettingAPI(
     def test_delete_scope_project_user_params_none(self):
         """Test delete() with PROJECT_USER scope and no params"""
         self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(EXAMPLE_APP_NAME, 'project_user_str_setting')
+        app_settings.delete(
+            EXAMPLE_APP_NAME,
+            'project_user_str_setting',
+            self.project,
+            self.user,
+        )
         self.assertEqual(AppSetting.objects.count(), 15)
 
     def test_delete_scope_project_user_params_user(self):
