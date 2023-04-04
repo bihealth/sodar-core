@@ -1763,14 +1763,14 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
 
         # Delete corresponding PROJECT_USER settings
         if (
-            not project.get_role(user, inherited_only=True)
+            not project.get_role(user)
             and project.type == PROJECT_TYPE_CATEGORY
             and not RoleAssignment.objects.filter(
-                project__parent=project, user=user
+                project__in=project.get_children(flat=True), user=user
             ).exists()
         ):
-            app_settings.delete_settings_by_scope(
-                project, user, scope=APP_SETTING_SCOPE_PROJECT_USER
+            app_settings.delete_by_scope(
+                APP_SETTING_SCOPE_PROJECT_USER, project, user
             )
 
         inh_as = project.get_role(user, inherited_only=True)

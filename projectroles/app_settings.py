@@ -18,6 +18,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
@@ -627,18 +628,18 @@ class AppSettingAPI:
         )
 
     @classmethod
-    def delete_settings_by_scope(
+    def delete_by_scope(
         cls,
+        scope,
         project=None,
         user=None,
-        scope=None,
     ):
         """
-        Delete all app settings with a given scope.
+        Delete all app settings within a given scope for a project and/or user.
 
+        :param scope: Setting scope (string)
         :param project: Project object to delete setting from
         :param user: User object to delete setting from
-        :param scope: Setting scope
         """
         if not scope:
             raise ValueError('Scope must be set')
@@ -652,6 +653,10 @@ class AppSettingAPI:
         elif scope == APP_SETTING_SCOPE_PROJECT_USER and not (project and user):
             raise ValueError(
                 'App setting scope is PROJECT_USER but project or user is unset.'
+            )
+        elif scope == APP_SETTING_SCOPE_SITE and (project or user):
+            raise ValueError(
+                'App setting scope is SITE but project or user is set.'
             )
 
         for app_name, app_settings in cls.get_all_defs().items():
