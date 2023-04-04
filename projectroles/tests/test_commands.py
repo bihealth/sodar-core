@@ -18,6 +18,7 @@ from projectroles.management.commands.cleanappsettings import (
     ALLOWED_TYPES_MSG,
     DELETE_PREFIX_MSG,
     DELETE_PROJECT_TYPE_MSG,
+    DELETE_SCOPE_MSG,
 )
 from projectroles.management.commands.batchupdateroles import (
     Command as BatchUpdateRolesCommand,
@@ -648,6 +649,49 @@ class TestCleanAppSettings(
                             self.category.type,
                             ALLOWED_TYPES_MSG,
                             '[\'PROJECT\']',
+                        )
+                    ),
+                    CLEAN_LOG_PREFIX + END_MSG,
+                ],
+            )
+            self.assertEqual(AppSetting.objects.count(), 5)
+            self.assertQuerysetEqual(
+                AppSetting.objects.filter(name='project_user_bool_setting'),
+                [],
+            )
+
+    def test_command_project_user_scope(self):
+        """Test the cleanappsettings command on the settings with PROJECT_USER scope"""
+        demouser = self.make_user('demouser')
+        demouser.email = 'demouser@example.com'
+        demouser.save()
+        project_user_sett = AppSetting(
+            app_plugin=self.plugin,
+            project=self.project,
+            user=demouser,
+            name='project_user_bool_setting',
+            type='BOOLEAN',
+            value=True,
+        )
+        project_user_sett.save()
+        self.assertEqual(AppSetting.objects.count(), 6)
+
+        with self.assertLogs(
+            'projectroles.management.commands.cleanappsettings', level='INFO'
+        ) as cm:
+            call_command('cleanappsettings')
+            self.assertEqual(
+                cm.output,
+                [
+                    CLEAN_LOG_PREFIX + START_MSG,
+                    (
+                        CLEAN_LOG_PREFIX
+                        + DELETE_PREFIX_MSG.format(
+                            'settings.example_project_app.project_user_bool_setting',
+                            self.project.title,
+                        )
+                        + DELETE_SCOPE_MSG.format(
+                            demouser.username,
                         )
                     ),
                     CLEAN_LOG_PREFIX + END_MSG,

@@ -82,6 +82,9 @@ REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
 PROJECT_ACTION_CREATE = SODAR_CONSTANTS['PROJECT_ACTION_CREATE']
 PROJECT_ACTION_UPDATE = SODAR_CONSTANTS['PROJECT_ACTION_UPDATE']
 
@@ -1757,8 +1760,18 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             )
         # Delete object itself
         instance.delete()
-        # Remove project star from user if it exists
-        app_settings.delete('projectroles', 'project_star', project, user)
+
+        # Delete corresponding PROJECT_USER settings
+        if (
+            not project.get_role(user)
+            and project.type == PROJECT_TYPE_CATEGORY
+            and not RoleAssignment.objects.filter(
+                project__in=project.get_children(flat=True), user=user
+            ).exists()
+        ):
+            app_settings.delete_by_scope(
+                APP_SETTING_SCOPE_PROJECT_USER, project, user
+            )
 
         inh_as = project.get_role(user, inherited_only=True)
         if tl_event:

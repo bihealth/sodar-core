@@ -645,6 +645,48 @@ class AppSettingAPI:
         )
 
     @classmethod
+    def delete_by_scope(
+        cls,
+        scope,
+        project=None,
+        user=None,
+    ):
+        """
+        Delete all app settings within a given scope for a project and/or user.
+
+        :param scope: Setting scope (string)
+        :param project: Project object to delete setting from
+        :param user: User object to delete setting from
+        """
+        if not scope:
+            raise ValueError('Scope must be set')
+        cls._check_scope(scope)
+        if scope == APP_SETTING_SCOPE_USER and not user:
+            raise ValueError('App setting scope is USER but user is unset.')
+        elif scope == APP_SETTING_SCOPE_PROJECT and not project:
+            raise ValueError(
+                'App setting scope is PROJECT but project is unset.'
+            )
+        elif scope == APP_SETTING_SCOPE_PROJECT_USER and not (project and user):
+            raise ValueError(
+                'App setting scope is PROJECT_USER but project or user is unset.'
+            )
+        elif scope == APP_SETTING_SCOPE_SITE and (project or user):
+            raise ValueError(
+                'App setting scope is SITE but project or user is set.'
+            )
+
+        for app_name, app_settings in cls.get_all_defs().items():
+            for setting_name, setting_def in app_settings.items():
+                if setting_def['scope'] == scope:
+                    cls.delete(
+                        app_name,
+                        setting_name,
+                        project=project,
+                        user=user,
+                    )
+
+    @classmethod
     def validate(
         cls,
         setting_type,
