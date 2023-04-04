@@ -952,8 +952,8 @@ class TestAppSettingAPI(
                 user=self.user,
             )
 
-    def test_delete_settings_by_scope(self):
-        """Test delete_settings_by_scope() method"""
+    def test_delete_by_scope(self):
+        """Test delete_by_scope() method"""
         self.assertEqual(AppSetting.objects.count(), 16)
         # Delete PROJECT_USER scope settings
         app_settings.delete_by_scope(
@@ -975,8 +975,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(AppSetting.objects.count(), 0)
 
-    def test_delete_settings_by_scope_param_project(self):
-        """Test delete_settings_by_scope() method with invalid Project params"""
+    def test_delete_by_scope_param_project(self):
+        """Test delete_by_scope() method with invalid Project params"""
         with self.assertRaises(ValueError):
             app_settings.delete_by_scope(
                 APP_SETTING_SCOPE_PROJECT,
@@ -984,8 +984,8 @@ class TestAppSettingAPI(
                 user=self.user,
             )
 
-    def test_delete_settings_by_scope_param_user(self):
-        """Test delete_settings_by_scope() method with invalid User params"""
+    def test_delete_by_scope_param_user(self):
+        """Test delete_by_scope() method with invalid User params"""
         with self.assertRaises(ValueError):
             app_settings.delete_by_scope(
                 APP_SETTING_SCOPE_USER,

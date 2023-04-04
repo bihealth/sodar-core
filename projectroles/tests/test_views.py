@@ -3437,6 +3437,118 @@ class TestRoleAssignmentDeleteView(
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
 
+    def test_delete_app_settings_contributor(self):
+        """Test deletion of project-user app settings after RoleAssignment contributor deletion"""
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        app_settings.set(
+            app_name=EXAMPLE_APP_NAME,
+            setting_name='project_user_bool_setting',
+            project=self.project,
+            user=self.user,
+            value=True,
+        )
+        self.assertIsNotNone(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_user_bool_setting',
+                self.project,
+                self.user_contrib,
+            )
+        )
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': self.contrib_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_user_bool_setting',
+                self.project,
+                self.user_contrib,
+            ),
+            '',
+        )
+
+    def test_delete_app_settings_inherit(self):
+        """Test deletion of project-user app settings after RoleAssignment deleting with remaining inherited role"""
+        self.make_assignment(self.category, self.user_contrib, self.role_guest)
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        app_settings.set(
+            app_name=EXAMPLE_APP_NAME,
+            setting_name='project_user_bool_setting',
+            project=self.project,
+            user=self.user,
+            value=True,
+        )
+        self.assertIsNotNone(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_user_bool_setting',
+                self.project,
+                self.user_contrib,
+            )
+        )
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': self.contrib_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_user_bool_setting',
+                self.project,
+                self.user_contrib,
+            ),
+            '',
+        )
+
+    def test_delete_app_settings_children(self):
+        """Test deletion of project-user app settings after RoleAssignment deleting with child categories or projects"""
+        new_as = self.make_assignment(
+            self.category, self.user_new, self.role_guest
+        )
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        app_settings.set(
+            app_name=EXAMPLE_APP_NAME,
+            setting_name='project_user_bool_setting',
+            project=self.project,
+            user=self.user,
+            value=True,
+        )
+        self.assertIsNotNone(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_user_bool_setting',
+                self.project,
+                self.user_new,
+            )
+        )
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': new_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_user_bool_setting',
+                self.project,
+                self.user_new,
+            ),
+            '',
+        )
+
 
 class TestRoleAssignmentOwnerTransferView(
     ProjectMixin, RoleAssignmentMixin, TestViewsBase
