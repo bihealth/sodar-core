@@ -3470,7 +3470,7 @@ class TestRoleAssignmentDeleteView(
                 self.project,
                 self.user_contrib,
             ),
-            '',
+            False,
         )
 
     def test_delete_app_settings_inherit(self):
@@ -3507,7 +3507,7 @@ class TestRoleAssignmentDeleteView(
                 self.project,
                 self.user_contrib,
             ),
-            '',
+            False,
         )
 
     def test_delete_app_settings_children(self):
@@ -3546,7 +3546,7 @@ class TestRoleAssignmentDeleteView(
                 self.project,
                 self.user_new,
             ),
-            '',
+            False,
         )
 
 
