@@ -48,15 +48,13 @@
           <tbody>
             {% for a in modifying_access %}
               <tr>
-                <td class="text-nowrap">
-                 <div class="sodar-overflow-container">
+                <td>
                    <a href="{% url 'projectroles:detail' project=a.project.sodar_uuid %}" target="_blank">
                      {% get_project_title_html a.project %}
                    </a>
-                  </div>
                 </td>
                 <td class="text-nowrap text-danger">{% get_remote_access_legend a.old_level %}</td>
-                <td><i class="iconify text-secondary" data-icon="mdi:arrow-left-thick"></i></td>
+                <td><i class="iconify text-secondary" data-icon="mdi:arrow-right-thick"></i></td>
                 <td class="text-nowrap text-success">
                   {% get_remote_access_legend a.new_level %}
                   <input type="hidden"
