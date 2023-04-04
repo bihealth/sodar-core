@@ -36,6 +36,12 @@ APP_SETTING_DEFAULT_VALUES = {
     'BOOLEAN': False,
     'JSON': {},
 }
+APP_SETTING_VALID_SCOPE_VALIDATION = {
+    APP_SETTING_SCOPE_PROJECT: {'project': True, 'user': False},
+    APP_SETTING_SCOPE_USER: {'project': False, 'user': True},
+    APP_SETTING_SCOPE_PROJECT_USER: {'project': True, 'user': True},
+    APP_SETTING_SCOPE_SITE: {'project': False, 'user': False},
+}
 
 # Define App Settings for projectroles app
 PROJECTROLES_APP_SETTINGS = {
@@ -101,37 +107,33 @@ class AppSettingAPI:
     @classmethod
     def _check_project_and_user(cls, scope, project, user):
         """
-        Ensure one of the project and user parameters is set.
+        Ensure project and user parameters are set according to scope.
 
-        :param scope: Scope of Setting (USER, PROJECT, PROJECT_USER)
+        :param scope: Scope of Setting (USER, PROJECT, PROJECT_USER, SITE)
         :param project: Project object
         :param user: User object
-        :raise: ValueError if none or both objects exist
+        :raise: ValueError if parameters are not valid for scope
         """
-        if scope == APP_SETTING_SCOPE_PROJECT:
-            if not project:
-                raise ValueError('Project unset for setting with project scope')
-            if user:
-                raise ValueError('User set for setting with project scope')
-        elif scope == APP_SETTING_SCOPE_USER:
-            if project:
-                raise ValueError('Project set for setting with user scope')
-            if not user:
-                raise ValueError('User unset for setting with user scope')
-        elif scope == APP_SETTING_SCOPE_PROJECT_USER:
-            if not project:
-                raise ValueError(
-                    'Project unset for setting with project_user scope'
-                )
-            if not user:
-                raise ValueError(
-                    'User unset for setting with project_user scope'
-                )
-        elif scope == APP_SETTING_SCOPE_SITE:
-            if project:
-                raise ValueError('Project set for setting with site scope')
-            if user:
-                raise ValueError('User set for setting with site scope')
+        valid_scope = APP_SETTING_VALID_SCOPE_VALIDATION.get(scope)
+        if valid_scope is None:
+            raise ValueError('Invalid scope')
+
+        if project is not None and not valid_scope['project']:
+            raise ValueError(
+                f'Project cannot be set for setting with {scope} scope'
+            )
+
+        if user is not None and not valid_scope['user']:
+            raise ValueError(
+                f'User cannot be set for setting with {scope} scope'
+            )
+
+        if (
+            (project is None or user is None)
+            and valid_scope['project']
+            and valid_scope['user']
+        ):
+            raise ValueError(f'Project and user must be set for {scope} scope')
 
     @classmethod
     def _check_scope(cls, scope):
