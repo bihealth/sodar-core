@@ -578,7 +578,7 @@ PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
 
 # Full path to the custom template includes
 PROJECTROLES_TEMPLATE_INCLUDE_PATH = env.str(
-    'PROJECTROLES_TEMPLATE_INCLUDE_PATH', ''
+    'PROJECTROLES_TEMPLATE_INCLUDE_PATH', os.path.join(APPS_DIR, 'templates', 'include')
 )
 
 # Enable or disable project creation if site is in TARGET mode
