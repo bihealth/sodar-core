@@ -922,7 +922,7 @@ class TestAppSettingAPI(
             EXAMPLE_APP_NAME,
             'project_user_str_setting',
             self.project,
-            self.user
+            self.user,
         )
         self.assertEqual(AppSetting.objects.count(), 15)
 
