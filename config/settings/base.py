@@ -576,6 +576,11 @@ SODAR_API_DEFAULT_HOST = env.url(
 # Remote access mode: SOURCE or TARGET
 PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
 
+# Full path to the custom template includes
+PROJECTROLES_TEMPLATE_INCLUDE_PATH = env.str(
+    'PROJECTROLES_TEMPLATE_INCLUDE_PATH', ''
+)
+
 # Enable or disable project creation if site is in TARGET mode
 PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
 
