@@ -2875,6 +2875,7 @@ class RemoteSiteListView(
 
 class RemoteSiteModifyMixin(ModelFormMixin):
     def form_valid(self, form):
+        timeline=get_backend_api('timeline_backend')
         if self.object:
             form_action = 'updated'
         elif settings.PROJECTROLES_SITE_MODE == 'TARGET':
@@ -2882,6 +2883,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         else:
             form_action = 'created'
         self.object = form.save()
+        self.create_timeline_event(self.object, self.request.user, timeline=timeline)
         messages.success(
             self.request,
             '{} site "{}" {}.'.format(
@@ -2900,7 +2902,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
             event_name = 'target_site_{}'.format(status)
         if timeline:
             timeline.add_event(
-                project=remote_site,
+                project=None,
                 app_name=APP_NAME,
                 user=user,
                 event_name=event_name,
@@ -2924,19 +2926,6 @@ class RemoteSiteCreateView(
     model = RemoteSite
     form_class = RemoteSiteForm
     permission_required = 'projectroles.update_remote'
-
-    @transaction.atomic
-    def create_timeline_event(self, remote_site, user, timeline=None):
-        """Create timeline event for remote site deletion"""
-        if timeline:
-            timeline.add_event(
-                project=remote_site,
-                app_name=APP_NAME,
-                user=user,
-                event_name='source_site_delete',
-                description='delete remote site "{}"'.format(remote_site.name),
-                classified=True,
-            )
 
     def get(self, request, *args, **kwargs):
         """
@@ -2986,6 +2975,10 @@ class RemoteSiteDeleteView(
     slug_field = 'sodar_uuid'
 
     def get_success_url(self):
+        timeline = get_backend_api('timeline_backend')
+        self.create_timeline_event(
+            self.object, self.request.user, timeline=timeline
+        )
         messages.success(
             self.request,
             '{} site "{}" deleted'.format(
@@ -2993,6 +2986,19 @@ class RemoteSiteDeleteView(
             ),
         )
         return reverse('projectroles:remote_sites')
+
+    @transaction.atomic
+    def create_timeline_event(self, remote_site, user, timeline=None):
+        """Create timeline event for remote site deletion"""
+        if timeline:
+            timeline.add_event(
+                project=None,
+                app_name=APP_NAME,
+                user=user,
+                event_name='source_site_delete',
+                description='delete remote site "{}"'.format(remote_site.name),
+                classified=True,
+            )
 
 
 class RemoteProjectListView(
@@ -3043,16 +3049,18 @@ class RemoteProjectBatchUpdateView(
         return context
 
     @transaction.atomic
-    def create_timeline_event(self, project, user, timeline=None):
+    def create_timeline_event(self, remote_site, user, timeline=None):
         """Create timeline event for remote site batch update"""
         if timeline:
             timeline.add_event(
-                project=project,
+                project=None,
                 app_name=APP_NAME,
                 user=user,
-                event_name='project_update',
-                description='update project "{}"'.format(project.title),
-                extra_data={'remote_site': project.remote_site.name},
+                event_name='target_site_batch_update',
+                description='update remote site "{}"'.format(remote_site.name),
+                extra_data={
+                    'site': remote_site.name
+                },  # TODO: change to statuses from modifying access
                 classified=True,
             )
 
@@ -3143,6 +3151,8 @@ class RemoteProjectBatchUpdateView(
                 )
             rp.save()
 
+            self.create_timeline_event(rp, request.user, timeline=timeline)
+
             if timeline and project:
                 tl_desc = 'update remote access for site {{{}}} to "{}"'.format(
                     'site',
@@ -3194,7 +3204,7 @@ class RemoteProjectSyncView(
         """Create timeline event for remote site sync"""
         if timeline:
             timeline.add_event(
-                project=project,
+                project=None,
                 app_name=APP_NAME,
                 user=user,
                 event_name='project_update',
@@ -3216,6 +3226,7 @@ class RemoteProjectSyncView(
             CORE_API_DEFAULT_VERSION,
         )
 
+        timeline = get_backend_api('timeline_backend')
         remote_api = RemoteProjectAPI()
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
@@ -3302,6 +3313,10 @@ class RemoteProjectSyncView(
         context['project_count'] = project_count
         context['role_count'] = role_count
         context['app_settings_count'] = app_settings_count
+
+        # Create timeline events for projects
+        self.create_timeline_event(site, request.user, timeline)
+
         messages.success(
             request,
             '{} data updated according to source site.'.format(
