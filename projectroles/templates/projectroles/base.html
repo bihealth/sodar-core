@@ -31,6 +31,7 @@
 
 {% block content %}
   {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
+  {% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
 
   {# Ensure passing CSRF token to Ajax API views #}
   {% csrf_token %}
@@ -86,10 +87,10 @@
       </div>
 
       {# Footer #}
-      {% template_exists 'include/_footer.html' as footer_exists %}
+      {% template_exists template_include_path|add:'/_footer.html' as footer_exists %}
       <footer class="sodar-footer">
         {% if footer_exists %}
-          {% include 'include/_footer.html' %}
+          {% include template_include_path|add:'/_footer.html' %}
         {% else %}
           {% include 'projectroles/_footer.html' %}
         {% endif %}

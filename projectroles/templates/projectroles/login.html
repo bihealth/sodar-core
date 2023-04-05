@@ -5,6 +5,7 @@
 {% load projectroles_common_tags %}
 
 {% get_django_setting 'SITE_INSTANCE_TITLE' as site_title %}
+{% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
 
 {% block title %}Login{% endblock title %}
 
@@ -60,9 +61,9 @@
   </div>
 
   {# Optional template for additional login page HTML #}
-  {% template_exists 'include/_login_extend.html' as login_extend %}
+  {% template_exists template_include_path|add:'/_login_extend.html' as login_extend %}
   {% if login_extend %}
-    {% include 'include/_login_extend.html' %}
+    {% include template_include_path|add:'/_login_extend.html' %}
   {% endif %}
 
 </div>

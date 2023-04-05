@@ -79,7 +79,9 @@ Additional Title Bar Links
 
 If you want to add additional links *not* related to apps in the title bar, you
 can implement in the template file
-``{SITE_NAME}/templates/include/_titlebar_nav.html``. This can be done for e.g.
+``{SITE_NAME}/templates/include/_titlebar_nav.html`` or provide a full path to a
+``_titlebar_nav.html`` template directory in the ``PROJECTROLES_TEMPLATE_INCLUDE_PATH``
+variable in environment file. This can be done for e.g.
 documentation links or linking to external sites. Example:
 
 .. code-block:: django
@@ -97,7 +99,9 @@ Extra Login View Content
 
 If you want to provide extra content in your site's login view, you can add
 custom HTML into the template file
-``{SITE_NAME}/templates/include/_login_extend.html``. The content will appear
+``{SITE_NAME}/templates/include/_login_extend.html`` or provide a full path to a
+``_login_extend.html`` template directory in the ``PROJECTROLES_TEMPLATE_INCLUDE_PATH``
+variable in environment file. The content will appear
 below the login form and its format is not restricted.
 
 
@@ -132,7 +136,9 @@ Footer
 ======
 
 Footer content can be specified in the optional template file
-``{SITE_NAME}/templates/include/_footer.html``.
+``{SITE_NAME}/templates/include/_footer.html``. Alternatively,
+you can provide a full path to a ``_footer.html`` template directory
+in the ``PROJECTROLES_TEMPLATE_INCLUDE_PATH`` in the environment file.
 
 
 Project and Category Display Names
