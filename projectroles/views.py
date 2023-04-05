@@ -2890,6 +2890,26 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         )
         return redirect(reverse('projectroles:remote_sites'))
 
+    @transaction.atomic
+    def create_timeline_event(self, remote_site, user, timeline=None):
+        """Create timeline event for remote site creation/update"""
+        status = 'create' if not remote_site.sodar_uuid else 'update'
+        if remote_site.mode == SITE_MODE_SOURCE:
+            event_name = 'source_site_{}'.format(status)
+        else:
+            event_name = 'target_site_{}'.format(status)
+        if timeline:
+            timeline.add_event(
+                project=remote_site,
+                app_name=APP_NAME,
+                user=user,
+                event_name=event_name,
+                description='{} remote site "{}"'.format(
+                    status, remote_site.name
+                ),
+                classified=True,
+            )
+
 
 class RemoteSiteCreateView(
     LoginRequiredMixin,
@@ -2904,6 +2924,19 @@ class RemoteSiteCreateView(
     model = RemoteSite
     form_class = RemoteSiteForm
     permission_required = 'projectroles.update_remote'
+
+    @transaction.atomic
+    def create_timeline_event(self, remote_site, user, timeline=None):
+        """Create timeline event for remote site deletion"""
+        if timeline:
+            timeline.add_event(
+                project=remote_site,
+                app_name=APP_NAME,
+                user=user,
+                event_name='source_site_delete',
+                description='delete remote site "{}"'.format(remote_site.name),
+                classified=True,
+            )
 
     def get(self, request, *args, **kwargs):
         """
@@ -3008,6 +3041,20 @@ class RemoteProjectBatchUpdateView(
             sodar_uuid=kwargs['remotesite']
         ).first()
         return context
+
+    @transaction.atomic
+    def create_timeline_event(self, project, user, timeline=None):
+        """Create timeline event for remote site batch update"""
+        if timeline:
+            timeline.add_event(
+                project=project,
+                app_name=APP_NAME,
+                user=user,
+                event_name='project_update',
+                description='update project "{}"'.format(project.title),
+                extra_data={'remote_site': project.remote_site.name},
+                classified=True,
+            )
 
     def post(self, request, *args, **kwargs):
         timeline = get_backend_api('timeline_backend')
@@ -3141,6 +3188,19 @@ class RemoteProjectSyncView(
             sodar_uuid=kwargs['remotesite']
         ).first()
         return context
+
+    @transaction.atomic
+    def create_timeline_event(self, project, user, timeline=None):
+        """Create timeline event for remote site sync"""
+        if timeline:
+            timeline.add_event(
+                project=project,
+                app_name=APP_NAME,
+                user=user,
+                event_name='project_update',
+                description='update project "{}"'.format(project.title),
+                classified=True,
+            )
 
     def get(self, request, *args, **kwargs):
         """Override get() for a confirmation view"""
