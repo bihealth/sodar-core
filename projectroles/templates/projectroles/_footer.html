@@ -3,5 +3,7 @@
 
 {% get_django_setting 'SITE_TITLE' as site_title %}
 
-Set the content for your footer in include/_footer.html.
+Set the content for your footer in include/_footer.html. Or
+provide path to your custom footer template in the
+PROJECTROLES_TEMPLATE_INCLUDE_PATH setting.
 {{ site_title }} v{% site_version %} / SODAR Core v{% core_version %}
