@@ -119,9 +119,8 @@ class AppSettingAPI:
             'user': user is not None,
         }:
             raise ValueError(
-                'Project and/or user are set incorrect for setting with {} scope'.format(
-                    scope
-                )
+                'Project and/or user are set incorrect for setting '
+                'with {} scope'.format(scope)
             )
 
     @classmethod
@@ -275,6 +274,7 @@ class AppSettingAPI:
     ):
         """
         Helper method for logging setting changes in set() method.
+
         :param action: Action string (string)
         :param app_name: Plugin app name (string)
         :param setting_name: Setting name (string)
