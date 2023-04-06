@@ -1,8 +1,11 @@
 """Remote project management utilities for the projectroles app"""
-
+import json
 import logging
+import ssl
+import urllib
 
 from copy import deepcopy
+import re
 
 from django.conf import settings
 from django.contrib import auth
@@ -10,6 +13,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
+from django.urls.base import reverse
 
 from djangoplugins.models import Plugin
 
@@ -27,6 +31,7 @@ from projectroles.models import (
     AppSetting,
 )
 from projectroles.plugins import get_backend_api
+from projectroles import __version__ as core_version
 
 
 app_settings = AppSettingAPI()
@@ -51,6 +56,11 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
 APP_NAME = 'projectroles'
+
+CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
+CORE_API_DEFAULT_VERSION = re.match(
+    r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
+)[1]
 
 
 class RemoteProjectAPI:
@@ -294,6 +304,42 @@ class RemoteProjectAPI:
                         sync_data = self._add_user(sync_data, role_as.user)
             sync_data['projects'][str(rp.project_uuid)] = project_data
         return sync_data
+
+    def get_remote_data(self, site):
+        """
+        Method for synchronisation tasks.
+
+        :param site: Remote Site object
+        :raise: Exception if some Errors occured
+        :return: remote data (dict)
+        """
+        api_url = site.get_url() + reverse(
+            'projectroles:api_remote_get', kwargs={'secret': site.secret}
+        )
+
+        try:
+            api_req = urllib.request.Request(api_url)
+            api_req.add_header(
+                'accept',
+                '{}; version={}'.format(
+                    CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+                ),
+            )
+            response = urllib.request.urlopen(api_req)
+            remote_data = json.loads(response.read().decode('utf-8'))
+        except Exception as ex:
+            ex_str = str(ex)
+            if (
+                isinstance(ex, urllib.error.URLError)
+                and isinstance(ex.reason, ssl.SSLError)
+                and ex.reason.reason == 'WRONG_VERSION_NUMBER'
+            ):
+                ex_str = 'Most likely server cannot handle HTTPS requests.'
+            if len(ex_str) >= 255:
+                ex_str = ex_str[:255]
+            raise Exception(ex_str)
+
+        return remote_data
 
     # Internal Target Site Functions -------------------------------------------
 

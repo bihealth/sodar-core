@@ -3,8 +3,6 @@
 import json
 import logging
 import re
-import ssl
-import urllib.request
 
 from ipaddress import ip_address, ip_network
 from urllib.parse import unquote_plus
@@ -3151,42 +3149,52 @@ class RemoteProjectSyncView(
             )
             return redirect(redirect_url)
 
-        from projectroles.views_api import (
-            CORE_API_MEDIA_TYPE,
-            CORE_API_DEFAULT_VERSION,
-        )
-
+        # from projectroles.views_api import (
+        #     CORE_API_MEDIA_TYPE,
+        #     CORE_API_DEFAULT_VERSION,
+        # )
+        #
         remote_api = RemoteProjectAPI()
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
-        api_url = site.get_url() + reverse(
-            'projectroles:api_remote_get', kwargs={'secret': site.secret}
-        )
-
+        # api_url = site.get_url() + reverse(
+        #     'projectroles:api_remote_get', kwargs={'secret': site.secret}
+        # )
+        #
+        # try:
+        #     api_req = urllib.request.Request(api_url)
+        #     api_req.add_header(
+        #         'accept',
+        #         '{}; version={}'.format(
+        #             CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+        #         ),
+        #     )
+        #     response = urllib.request.urlopen(api_req)
+        #     remote_data = json.loads(response.read().decode('utf-8'))
+        # except Exception as ex:
+        #     ex_str = str(ex)
+        #     if (
+        #         isinstance(ex, urllib.error.URLError)
+        #         and isinstance(ex.reason, ssl.SSLError)
+        #         and ex.reason.reason == 'WRONG_VERSION_NUMBER'
+        #     ):
+        #         ex_str = 'Most likely server cannot handle HTTPS requests.'
+        #     if len(ex_str) >= 255:
+        #         ex_str = ex_str[:255]
+        #     messages.error(
+        #         request,
+        #         'Unable to synchronize {}: {}'.format(
+        #             get_display_name(PROJECT_TYPE_PROJECT, plural=True), ex_str
+        #         ),
+        #     )
+        #     return redirect(redirect_url)
         try:
-            api_req = urllib.request.Request(api_url)
-            api_req.add_header(
-                'accept',
-                '{}; version={}'.format(
-                    CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
-                ),
-            )
-            response = urllib.request.urlopen(api_req)
-            remote_data = json.loads(response.read().decode('utf-8'))
+            remote_data = remote_api.get_remote_data(site)
         except Exception as ex:
-            ex_str = str(ex)
-            if (
-                isinstance(ex, urllib.error.URLError)
-                and isinstance(ex.reason, ssl.SSLError)
-                and ex.reason.reason == 'WRONG_VERSION_NUMBER'
-            ):
-                ex_str = 'Most likely server cannot handle HTTPS requests.'
-            if len(ex_str) >= 255:
-                ex_str = ex_str[:255]
             messages.error(
                 request,
                 'Unable to synchronize {}: {}'.format(
-                    get_display_name(PROJECT_TYPE_PROJECT, plural=True), ex_str
+                    get_display_name(PROJECT_TYPE_PROJECT, plural=True), ex
                 ),
             )
             return redirect(redirect_url)
