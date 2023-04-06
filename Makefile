@@ -4,6 +4,7 @@ define USAGE=
 @echo -e
 @echo -e "Usage:"
 @echo -e "\tmake black [arg=--<arg>]                 -- black formatting"
+@echo -e "\tmake celery                              -- start celery worker"
 @echo -e "\tmake serve                               -- start source server"
 @echo -e "\tmake serve_target                        -- start target server"
 @echo -e "\tmake collectstatic                       -- run collectstatic"
@@ -22,6 +23,11 @@ target_port = 8001
 .PHONY: black
 black:
 	black . -l 80 --skip-string-normalization --exclude ".git|.venv|.tox|build|env|src|docs|migrations|versioneer.py" $(arg)
+
+
+.PHONY: celery
+celery:
+	celery -A config worker -l info --beat
 
 
 .PHONY: serve

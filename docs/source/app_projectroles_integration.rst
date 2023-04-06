@@ -345,6 +345,13 @@ You can now browse your site locally at ``http://127.0.0.1:8000``. You are
 expected to log in to view the site. Use e.g. the superuser account you created
 when setting up your cookiecutter-django site.
 
+To enable periodic tasks, you need to start a Celery worker. This is done by
+running the ``make celery`` command in a separate terminal.
+
+.. code-block:: console
+
+    $ make celery
+
 You can now continue on to create apps or modify your existing apps to be
 compatible with the SODAR Core framework. See the
 :ref:`development section <dev_site>` for app development guides. Also see the

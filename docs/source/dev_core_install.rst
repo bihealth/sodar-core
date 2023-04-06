@@ -113,3 +113,10 @@ You are now able to run the server:
 .. code-block:: console
 
     $ make serve
+
+To enable periodic tasks, you need to start a Celery worker. This is done by
+running the ``make celery`` command in a separate terminal.
+
+.. code-block:: console
+
+    $ make celery
