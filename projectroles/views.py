@@ -2886,7 +2886,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         # Create timeline event
         timeline = get_backend_api('timeline_backend')
         self.create_timeline_event(
-            self.object, self.request.user, timeline=timeline
+            self.object, self.request.user, form_action, timeline=timeline
         )
 
         messages.success(
@@ -2897,9 +2897,11 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         )
         return redirect(reverse('projectroles:remote_sites'))
 
-    def create_timeline_event(self, remote_site, user, timeline=None):
+    def create_timeline_event(
+        self, remote_site, user, form_action, timeline=None
+    ):
         """Create timeline event for remote site creation/update"""
-        status = 'create' if not remote_site.sodar_uuid else 'update'
+        status = form_action if form_action == 'set' else form_action[0:-1]
         if remote_site.mode == SITE_MODE_SOURCE:
             event_name = 'source_site_{}'.format(status)
         else:
@@ -2978,9 +2980,8 @@ class RemoteSiteDeleteView(
     slug_url_kwarg = 'remotesite'
     slug_field = 'sodar_uuid'
 
-    def form_valid(self, form):
-        """Override form_valid() to add timeline event"""
-        self.object = form.save()
+    def get_success_url(self):
+        """Override get_success_url() to add message"""
         timeline = get_backend_api('timeline_backend')
         if timeline:
             event_name = (
@@ -2997,10 +2998,6 @@ class RemoteSiteDeleteView(
                 description=description,
                 classified=True,
             )
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        """Override get_success_url() to add message"""
         messages.success(
             self.request,
             '{} site "{}" deleted'.format(
@@ -3056,21 +3053,6 @@ class RemoteProjectBatchUpdateView(
             sodar_uuid=kwargs['remotesite']
         ).first()
         return context
-
-    def create_timeline_event(self, remote_site, user, timeline=None):
-        """Create timeline event for remote site batch update"""
-        if timeline:
-            timeline.add_event(
-                project=None,
-                app_name=APP_NAME,
-                user=user,
-                event_name='target_site_batch_update',
-                description='update remote site "{}"'.format(remote_site.name),
-                extra_data={
-                    'site': remote_site.name
-                },  # TODO: change to statuses from modifying access
-                classified=True,
-            )
 
     def post(self, request, *args, **kwargs):
         timeline = get_backend_api('timeline_backend')
