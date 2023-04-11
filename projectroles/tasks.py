@@ -21,7 +21,7 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 
 @app.task(bind=True)
-def sync_remote_site(_self):
+def sync_remote_site_task(_self):
     """Synchronise remote project"""
     source_site = RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).first()
     if source_site:
@@ -42,6 +42,6 @@ def setup_periodic_tasks(sender, **kwargs):
     ):
         sender.add_periodic_task(
             getattr(settings, 'PROJECTROLES_TARGET_SYNC_INTERVAL', 5) * 60,
-            sync_remote_site.s(),
+            sync_remote_site_task.s(),
             name='synchronise_remote_site',
         )
