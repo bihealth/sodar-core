@@ -21,14 +21,14 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 
 @app.task(bind=True)
-def sync_remote_site(_self, target_site_uuid):
+def sync_remote_site(_self):
     """Synchronise remote project"""
     source_site = RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).first()
-    target_site = RemoteSite.objects.filter(sodar_uuid=target_site_uuid).first()
     if source_site:
         try:
             remote_data = remote_api.get_remote_data(source_site)
-            remote_api.sync_remote_data(target_site, remote_data)
+            logger.debug(remote_data)
+            remote_api.sync_remote_data(source_site, remote_data)
         except Exception as ex:
             logger.error(
                 'Unable to synchronize {}: {}'.format(source_site.name, ex),

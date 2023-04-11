@@ -3151,9 +3151,9 @@ class RemoteProjectSyncView(
 
         remote_api = RemoteProjectAPI()
         context = self.get_context_data(*args, **kwargs)
-        site = context['site']
+        source_site = context['site']
         try:
-            remote_data = remote_api.get_remote_data(site)
+            remote_data = remote_api.get_remote_data(source_site)
         except Exception as ex:
             messages.error(
                 request,
@@ -3166,7 +3166,7 @@ class RemoteProjectSyncView(
         # Sync data
         try:
             update_data = remote_api.sync_remote_data(
-                site, remote_data, request
+                source_site, remote_data, request
             )
         except Exception as ex:
             messages.error(

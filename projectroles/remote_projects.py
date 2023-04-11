@@ -1094,7 +1094,7 @@ class RemoteProjectAPI:
     # Target Site API functions ------------------------------------------------
 
     @transaction.atomic
-    def sync_remote_data(self, site, remote_data, request=None):
+    def sync_remote_data(self, source_site, remote_data, request=None):
         """
         Synchronize remote user and project data into the local Django database
         on a target site and return information of additions.
@@ -1106,7 +1106,7 @@ class RemoteProjectAPI:
         :return: Dict with updated remote_data
         :raise: ValueError if user from PROJECTROLES_DEFAULT_ADMIN is not found
         """
-        self.source_site = site
+        self.source_site = source_site
         self.remote_data = remote_data
         self.updated_parents = []
 
@@ -1141,7 +1141,7 @@ class RemoteProjectAPI:
         if self.timeline:
             self.tl_user = request.user if request else self.default_owner
 
-        logger.info('Synchronizing data from "{}"..'.format(site.name))
+        logger.info('Synchronizing data from "{}"..'.format(source_site.name))
         # Return unchanged data if no projects with READ_ROLES are included
         if not {
             k: v
