@@ -114,6 +114,10 @@ Among the data which can be synchronized:
 - User accounts for LDAP/AD users (required for the previous step)
 - Information of other Target Sites linking a common project
 
+.. note::
+
+    An automated synchronisation using celery is implemented in ``projectroles.tasks``.
+
 
 Rule System
 ===========

@@ -69,6 +69,16 @@ General utility functions are stored in ``utils.py``.
 
 .. _app_projectroles_api_django_rest:
 
+Tasks
+=========
+
+Synchronisation of remote projects with source site could
+be found in ``tasks.py``.
+
+.. automodule:: projectroles.tasks
+    :members:
+
+
 Base REST API View Classes
 ==========================
 
