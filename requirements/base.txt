@@ -83,3 +83,6 @@ django-autocomplete-light>=3.9.4, <3.10
 
 # SAML2 support for SSO
 django-saml2-auth-ai>=2.1.6, <2.2
+
+# Test-plus library
+django-test-plus
