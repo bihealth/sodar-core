@@ -136,6 +136,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -163,7 +164,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -200,6 +201,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -287,6 +289,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -367,6 +370,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -435,6 +439,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -524,6 +529,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -598,6 +604,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -676,6 +683,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -751,6 +759,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -794,6 +803,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -878,6 +888,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -958,6 +969,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1029,6 +1041,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1080,6 +1093,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1152,6 +1166,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1211,6 +1226,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1286,6 +1302,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1342,6 +1359,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1401,6 +1419,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1420,6 +1439,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,

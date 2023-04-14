@@ -26,7 +26,7 @@ class TestTimelinePermissions(TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -52,6 +52,7 @@ class TestTimelinePermissions(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -78,6 +79,7 @@ class TestTimelinePermissions(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -115,7 +117,7 @@ class TestTimelinePermissions(TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -152,6 +154,7 @@ class TestTimelinePermissions(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,

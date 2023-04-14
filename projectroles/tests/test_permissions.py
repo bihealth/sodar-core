@@ -167,6 +167,7 @@ class TestProjectPermissionBase(
         self.user_delegate_cat = self.make_user('user_delegate_cat')
         self.user_contributor_cat = self.make_user('user_contributor_cat')
         self.user_guest_cat = self.make_user('user_guest_cat')
+        self.user_finder_cat = self.make_user('user_finder_cat')
         self.user_owner = self.make_user('user_owner')
         self.user_delegate = self.make_user('user_delegate')
         self.user_contributor = self.make_user('user_contributor')
@@ -198,6 +199,9 @@ class TestProjectPermissionBase(
         self.guest_as_cat = self.make_assignment(
             self.category, self.user_guest_cat, self.role_guest
         )
+        self.finder_as_cat = self.make_assignment(
+            self.category, self.user_finder_cat, self.role_finder
+        )
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
@@ -224,6 +228,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -244,6 +249,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -262,6 +268,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -282,6 +289,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -300,6 +308,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -320,6 +329,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -338,6 +348,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -355,6 +366,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -378,6 +390,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -404,6 +417,7 @@ class TestBaseViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -429,23 +443,19 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
         )
-        # Add user with access to project below category: should still be able
-        # to view the category
-        new_user = self.make_user('new_user')
-        self.make_assignment(self.project, new_user, self.role_contributor)
         good_users = [
             self.superuser,
-            self.user_owner_cat,  # Inherited
-            self.user_delegate_cat,  # Inherited
-            self.user_contributor_cat,  # Inherited
-            self.user_guest_cat,  # Inherited
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
-            new_user,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -464,12 +474,13 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -492,7 +503,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         self.project.set_public()
@@ -515,7 +526,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         self.project.set_public()
@@ -537,6 +548,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -564,6 +576,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -591,6 +604,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -618,6 +632,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -647,6 +662,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -674,6 +690,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -701,6 +718,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -728,6 +746,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -756,6 +775,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -781,6 +801,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -808,6 +829,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -828,6 +850,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -860,6 +883,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -896,6 +920,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -928,6 +953,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -963,6 +989,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -985,6 +1012,8 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         ]
         bad_users_other = [
             self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1025,7 +1054,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         self.project.set_public()
@@ -1051,6 +1080,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
         ]
         bad_users = [
             self.user_owner,
@@ -1082,6 +1112,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
             self.anonymous,
@@ -1115,6 +1146,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1145,6 +1177,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1171,6 +1204,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_guest,
             self.user_contributor,
             self.user_no_roles,
@@ -1207,6 +1241,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1239,6 +1274,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1277,6 +1313,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1299,6 +1336,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1335,6 +1373,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1360,6 +1399,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1386,6 +1426,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1423,6 +1464,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1457,6 +1499,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1484,6 +1527,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1516,6 +1560,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1553,6 +1598,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1596,6 +1642,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1656,7 +1703,7 @@ class TestTargetProjectViews(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
 
@@ -1676,6 +1723,7 @@ class TestTargetProjectViews(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1701,6 +1749,7 @@ class TestTargetProjectViews(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1726,6 +1775,7 @@ class TestTargetProjectViews(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1751,6 +1801,7 @@ class TestTargetProjectViews(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1778,6 +1829,7 @@ class TestTargetProjectViews(
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -1803,6 +1855,7 @@ class TestTargetProjectViews(
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -1828,6 +1881,7 @@ class TestTargetProjectViews(
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -1853,6 +1907,7 @@ class TestTargetProjectViews(
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -1878,6 +1933,7 @@ class TestTargetProjectViews(
             self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -1901,6 +1957,7 @@ class TestTargetProjectViews(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1926,6 +1983,7 @@ class TestTargetProjectViews(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.anonymous,
@@ -1949,6 +2007,7 @@ class TestTargetProjectViews(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1966,6 +2025,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1994,6 +2054,7 @@ class TestTargetProjectViews(
         bad_users = [
             self.anonymous,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2014,6 +2075,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2035,6 +2097,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2056,6 +2119,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2077,6 +2141,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2097,6 +2162,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2118,6 +2184,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2140,6 +2207,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2160,6 +2228,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2180,6 +2249,7 @@ class TestTargetProjectViews(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2235,6 +2305,7 @@ class TestRevokedRemoteProject(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -2258,6 +2329,7 @@ class TestRevokedRemoteProject(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,

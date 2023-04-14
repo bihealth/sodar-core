@@ -73,6 +73,13 @@ the home view displays a tree view of categories and projects to choose from.
 You can filter the list with a search term or restrict display to your starred
 projects.
 
+.. hint::
+
+    If you have been granted a *finder* role to a category, projects under it
+    will be visible in the list as grayed out text instead of links. You can
+    navigate to the parent category and see the member roles there in order to
+    request access to a project from an owner or delegate.
+
 Project Detail View
 -------------------
 
@@ -133,8 +140,8 @@ may be modified later.
 
     Category/project creation form
 
-Creating Projects
------------------
+Creating Categories and Projects
+--------------------------------
 
 Once navigating into a category, a user with sufficient access will see the
 **Create Project or Category** link in the side bar. This opens up a form for
@@ -145,9 +152,8 @@ between creating a project or a category.
 Users with the role of *project contributor* or higher in a category are allowed
 to create a project within that category.
 
-
-Updating Projects
------------------
+Updating Categories and Projects
+--------------------------------
 
 An existing project or category can be updated from the
 **Update Project/Category** link in the side bar. Again, a similar form as
@@ -285,9 +291,8 @@ previewed in corresponding forms.
 
 .. hint::
 
-    As of SODAR Core v0.4.5, it is also possible to create an invite in the "add
-    member" form. Inviting is enabled when inputting an email address not found
-    among the system users.
+    It is also possible to create an invite in the Add Member form. Inviting is
+    enabled when inputting an email address not found among the system users.
 
 Modifying Members
 -----------------

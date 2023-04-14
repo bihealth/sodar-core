@@ -67,6 +67,8 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'revoked': False,
                     'starred': False,
                     'depth': 0,
+                    'access': True,
+                    'finder_url': None,
                     'uuid': str(self.category.sodar_uuid),
                 },
                 {
@@ -79,6 +81,8 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'revoked': False,
                     'starred': False,
                     'depth': 1,
+                    'access': True,
+                    'finder_url': None,
                     'uuid': str(self.project.sodar_uuid),
                 },
             ],
@@ -89,7 +93,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.data, expected)
 
     def test_get_parent(self):
-        """Test project list retrieval with a parent project"""
+        """Test project list with parent project"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list')
@@ -109,6 +113,8 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     'revoked': False,
                     'starred': False,
                     'depth': 1,
+                    'access': True,
+                    'finder_url': None,
                     'uuid': str(self.project.sodar_uuid),
                 },
             ],
@@ -119,7 +125,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.data, expected)
 
     def test_get_inherited_owner(self):
-        """Test project list retrieval for inherited owner"""
+        """Test project list for inherited owner"""
         with self.login(self.user_owner_cat):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list'),
@@ -128,7 +134,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(len(response.data['projects']), 2)
 
     def test_get_inherited_contrib(self):
-        """Test project list retrieval for inherited contributor"""
+        """Test project list for inherited contributor"""
         with self.login(self.user_contributor_cat):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list'),
@@ -137,7 +143,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(len(response.data['projects']), 2)
 
     def test_get_no_results(self):
-        """Test project list retrieval with no results"""
+        """Test project list with no results"""
         with self.login(self.user_no_roles):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list'),
@@ -147,7 +153,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertIsNotNone(response.data['messages'].get('no_projects'))
 
     def test_get_project_parent(self):
-        """Test project list retrieval with project as parent (should fail)"""
+        """Test project list with project as parent (should fail)"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list')
@@ -155,6 +161,72 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 + str(self.project.sodar_uuid),
             )
         self.assertEqual(response.status_code, 400)
+
+    def test_get_finder(self):
+        """Test project list with finder role"""
+        user_finder = self.make_user('user_finder')
+        self.make_assignment(self.category, user_finder, self.role_finder)
+        with self.login(user_finder):
+            response = self.client.get(
+                reverse('projectroles:ajax_project_list')
+            )
+        self.assertEqual(response.status_code, 200)
+        res_data = response.data['projects']
+        self.assertEqual(len(res_data), 2)
+        self.assertEqual(res_data[0]['title'], self.category.title)
+        self.assertEqual(res_data[0]['access'], True)
+        self.assertEqual(res_data[0]['finder_url'], None)
+        self.assertEqual(res_data[1]['title'], self.project.title)
+        self.assertEqual(res_data[1]['access'], False)
+        self.assertEqual(
+            res_data[1]['finder_url'],
+            reverse(
+                'projectroles:roles',
+                kwargs={'project': self.category.sodar_uuid},
+            ),
+        )
+
+    def test_get_finder_parent(self):
+        """Test project list with finder role inside parent"""
+        user_finder = self.make_user('user_finder')
+        self.make_assignment(self.category, user_finder, self.role_finder)
+        with self.login(user_finder):
+            response = self.client.get(
+                reverse('projectroles:ajax_project_list')
+                + '?parent='
+                + str(self.category.sodar_uuid),
+            )
+        self.assertEqual(response.status_code, 200)
+        res_data = response.data['projects']
+        self.assertEqual(len(res_data), 1)
+        self.assertEqual(res_data[0]['title'], self.project.title)
+        self.assertEqual(res_data[0]['access'], False)
+
+    def test_get_finder_nested(self):
+        """Test project list with finder role and nested access"""
+        sub_cat = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(sub_cat, self.user_owner, self.role_owner)
+        sub_project = self.make_project(
+            'SubProject', PROJECT_TYPE_PROJECT, sub_cat
+        )
+        self.make_assignment(sub_project, self.user_owner, self.role_owner)
+        user_finder = self.make_user('user_finder')
+        self.make_assignment(sub_cat, user_finder, self.role_finder)
+        with self.login(user_finder):
+            response = self.client.get(
+                reverse('projectroles:ajax_project_list')
+            )
+        self.assertEqual(response.status_code, 200)
+        res_data = response.data['projects']
+        self.assertEqual(len(res_data), 3)
+        self.assertEqual(res_data[0]['title'], self.category.title)
+        self.assertEqual(res_data[0]['access'], True)
+        self.assertEqual(res_data[1]['title'], sub_cat.title)
+        self.assertEqual(res_data[1]['access'], True)
+        self.assertEqual(res_data[2]['title'], sub_project.title)
+        self.assertEqual(res_data[2]['access'], False)
 
 
 class TestProjectListColumnAjaxView(

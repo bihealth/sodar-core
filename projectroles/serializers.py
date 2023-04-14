@@ -15,8 +15,10 @@ from projectroles.models import (
     ProjectInvite,
     AppSetting,
     SODAR_CONSTANTS,
+    ROLE_RANKING,
     CAT_DELIMITER,
     CAT_DELIMITER_ERROR_MSG,
+    ROLE_PROJECT_TYPE_ERROR_MSG,
 )
 from projectroles.utils import build_secret, get_expiry_date
 from projectroles.views import (
@@ -36,12 +38,13 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 REMOTE_MODIFY_MSG = (
-    'Modification of remote projects is not allowed, modify on '
-    'the SOURCE site instead'
+    'Modification of remote projects is not allowed, modify on the SOURCE site '
+    'instead'
 )
 
 
@@ -228,6 +231,13 @@ class RoleAssignmentSerializer(
                 'assignment instead'
             )
 
+        # Validate project type
+        if project.type not in attrs['role'].project_types:
+            raise serializers.ValidationError(
+                ROLE_PROJECT_TYPE_ERROR_MSG.format(
+                    project_type=project.type, role_name=attrs['role'].name
+                )
+            )
         # Check for existing role if creating
         if not self.instance:
             old_as = RoleAssignment.objects.filter(
@@ -362,11 +372,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'sodar_uuid',
         ]
 
-    def get_roles(self):
-        if self.instance:
-            return self.instance.get_roles()
-        return None
-
     def _validate_parent(self, parent, attrs, current_user, disable_categories):
         """Validate parent field"""
         # Attempting to move project under category without perms
@@ -497,20 +502,15 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             raise serializers.ValidationError(
                 'Creation of local projects not allowed on this target site'
             )
-
         # Validate parent
         parent = attrs.get('parent')
         self._validate_parent(parent, attrs, current_user, disable_categories)
-
         # Validate title
         self._validate_title(parent, attrs)
-
         # Validate type
         self._validate_type(attrs)
-
         # Validate and set owner
         self._validate_owner(attrs)
-
         # Validate public_guest_access for categories
         if attrs.get('type') == PROJECT_TYPE_CATEGORY and attrs.get(
             'public_guest_access'
@@ -534,14 +534,34 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         )
 
     def to_representation(self, instance):
-        """Override to make sure fields are correctly returned"""
+        """
+        Override to make sure fields are correctly returned.
+        NOTE: Requires request in context object!
+        """
         ret = super().to_representation(instance)
-        # Set up parent
+        # Set up project to get instance with UUID
         parent = ret.get('parent')
         project = Project.objects.get(
             title=ret['title'],
             **{'parent__sodar_uuid': parent} if parent else {},
         )
+        # Return only title and UUID for projects with finder role
+        user = self.context['request'].user
+        if (
+            project.type == PROJECT_TYPE_PROJECT
+            and project.parent
+            and not project.has_role(user)
+        ):
+            parent_as = project.parent.get_role(user)
+            if (
+                parent_as
+                and parent_as.role.rank >= ROLE_RANKING[PROJECT_ROLE_FINDER]
+            ):
+                return {
+                    'title': project.title,
+                    'sodar_uuid': str(project.sodar_uuid),
+                }
+        # Else return full serialization
         # Proper rendering of readme
         ret['readme'] = project.readme.raw or ''
         # Force project UUID

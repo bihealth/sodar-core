@@ -131,11 +131,12 @@ class TestUIBase(
         self.user_delegate_cat = self.make_user('user_delegate_cat')
         self.user_contributor_cat = self.make_user('user_contributor_cat')
         self.user_guest_cat = self.make_user('user_guest_cat')
-        self.user_owner = self.make_user('user_owner', False)
-        self.user_delegate = self.make_user('user_delegate', False)
-        self.user_contributor = self.make_user('user_contributor', False)
-        self.user_guest = self.make_user('user_guest', False)
-        self.user_no_roles = self.make_user('user_no_roles', False)
+        self.user_finder_cat = self.make_user('user_finder_cat')
+        self.user_owner = self.make_user('user_owner')
+        self.user_delegate = self.make_user('user_delegate')
+        self.user_contributor = self.make_user('user_contributor')
+        self.user_guest = self.make_user('user_guest')
+        self.user_no_roles = self.make_user('user_no_roles')
 
         # Init category and project
         self.category = self.make_project(
@@ -159,6 +160,9 @@ class TestUIBase(
         )
         self.guest_as_cat = self.make_assignment(
             self.category, self.user_guest_cat, self.role_guest
+        )
+        self.finder_as_cat = self.make_assignment(
+            self.category, self.user_finder_cat, self.role_finder
         )
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
@@ -452,6 +456,7 @@ class TestBaseTemplate(TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -466,6 +471,9 @@ class TestBaseTemplate(TestUIBase):
 
 class TestHomeView(TestUIBase):
     """Tests for the home view and project list UI"""
+
+    #: Home view URL
+    url = reverse('home')
 
     #: Arguments for waiting for the list to get poplulated on the client side
     wait_kwargs = {
@@ -490,6 +498,15 @@ class TestHomeView(TestUIBase):
             ]
         )
 
+    def _get_list_item(self, project):
+        return self.selenium.find_element(
+            By.XPATH,
+            '//tr[@class="sodar-pr-project-list-item '
+            'sodar-pr-project-list-item-{}" and @data-uuid="{}"]'.format(
+                project.type.lower(), project.sodar_uuid
+            ),
+        )
+
     def test_project_list_items(self):
         """Test visibility of project list items"""
         expected = [
@@ -498,16 +515,21 @@ class TestHomeView(TestUIBase):
             (self.user_delegate_cat, 2),
             (self.user_contributor_cat, 2),
             (self.user_guest_cat, 2),
+            (self.user_finder_cat, 2),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
         ]
-        url = reverse('home')
         elem_id = 'sodar-pr-project-list-item'
-        self.assert_element_count(expected, url, elem_id, **self.wait_kwargs)
         self.assert_element_count(
-            [(self.user_no_roles, 0)], url, elem_id, **self.wait_kwargs_empty
+            expected, self.url, elem_id, **self.wait_kwargs
+        )
+        self.assert_element_count(
+            [(self.user_no_roles, 0)],
+            self.url,
+            elem_id,
+            **self.wait_kwargs_empty
         )
 
     def test_project_list_items_public(self):
@@ -519,22 +541,22 @@ class TestHomeView(TestUIBase):
             (self.user_delegate_cat, 2),
             (self.user_contributor_cat, 2),
             (self.user_guest_cat, 2),
+            (self.user_finder_cat, 2),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
             (self.user_no_roles, 2),
         ]
-        url = reverse('home')
         self.assert_element_count(
-            expected, url, 'sodar-pr-project-list-item', **self.wait_kwargs
+            expected, self.url, 'sodar-pr-project-list-item', **self.wait_kwargs
         )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_project_list_items_anon(self):
         """Test visibility of project list items with anonymous access"""
         self.project.set_public()
-        self.selenium.get(self.build_selenium_url(reverse('home')))
+        self.selenium.get(self.build_selenium_url(self.url))
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
                 (getattr(By, 'CLASS_NAME'), 'sodar-pr-project-list-item')
@@ -542,10 +564,43 @@ class TestHomeView(TestUIBase):
         )
         self.assertEqual(self._get_item_vis_count(), 2)
 
+    def test_project_list_links_member(self):
+        """Test project links as regular member"""
+        self.login_and_redirect(self.user_guest, self.url, **self.wait_kwargs)
+        elem = self._get_list_item(self.category)
+        self.assertIsNotNone(
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-project-link')
+        )
+        elem = self._get_list_item(self.project)
+        self.assertIsNotNone(
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-project-link')
+        )
+        with self.assertRaises(NoSuchElementException):
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-project-findable')
+
+    def test_project_list_links_finder(self):
+        """Test project links as finder"""
+        self.login_and_redirect(
+            self.user_finder_cat, self.url, **self.wait_kwargs
+        )
+        elem = self._get_list_item(self.category)
+        self.assertIsNotNone(
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-project-link')
+        )
+        with self.assertRaises(NoSuchElementException):
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-project-findable')
+        # Project is present but it is not a link
+        elem = self._get_list_item(self.project)
+        with self.assertRaises(NoSuchElementException):
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-project-link')
+        # Link to parent project is found
+        self.assertIsNotNone(
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-project-findable')
+        )
+
     def test_project_list_filter(self):
         """Test filtering project list items"""
-        url = reverse('home')
-        self.login_and_redirect(self.user_owner, url, **self.wait_kwargs)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
         f_input = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-filter'
@@ -555,8 +610,7 @@ class TestHomeView(TestUIBase):
 
     def test_project_list_filter_trim(self):
         """Test filtering project list items with trimming for spaces"""
-        url = reverse('home')
-        self.login_and_redirect(self.user_owner, url, **self.wait_kwargs)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
         f_input = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-filter'
@@ -574,10 +628,8 @@ class TestHomeView(TestUIBase):
             user=self.user_owner,
             validate=False,
         ),
-        url = reverse('home')
-        self.login_and_redirect(self.user_owner, url, **self.wait_kwargs)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
-
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-link-star'
         )
@@ -592,10 +644,8 @@ class TestHomeView(TestUIBase):
 
     def test_project_list_star_no_project(self):
         """Test project list star filter with no starred project"""
-        url = reverse('home')
-        self.login_and_redirect(self.user_owner, url, **self.wait_kwargs)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
-
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-link-star'
         )
@@ -610,33 +660,31 @@ class TestHomeView(TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
         ]
-        url = reverse('home')
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-home-link-create', True
+            expected_true, self.url, 'sodar-pr-home-link-create', True
         )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-home-link-create', False
+            expected_false, self.url, 'sodar-pr-home-link-create', False
         )
 
     @override_settings(PROJECTROLES_INLINE_HEAD_INCLUDE=HEAD_INCLUDE)
     def test_inline_head_include_enabled(self):
         """Test visibility of inline head include from env variables"""
-        url = reverse('home')
-        self.login_and_redirect(self.user_owner, url)
+        self.login_and_redirect(self.user_owner, self.url)
         self.assertIsNotNone(
             self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
         )
 
     def test_inline_head_include_disabled(self):
         """Test absence of inline head include when not set"""
-        url = reverse('home')
-        self.login_and_redirect(self.user_owner, url)
+        self.login_and_redirect(self.user_owner, self.url)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
 
@@ -714,6 +762,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
                 self._get_pr_links('roles', 'create', 'star'),
             ),
             (self.user_guest_cat, self._get_pr_links('roles', 'star')),
+            (self.user_finder_cat, self._get_pr_links('roles', 'star')),
             (self.user_owner, self._get_pr_links('star')),
             (self.user_delegate, self._get_pr_links('star')),
             (self.user_contributor, self._get_pr_links('star')),
@@ -732,6 +781,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -841,6 +891,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -974,6 +1025,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1066,6 +1118,7 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1089,6 +1142,7 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
         expected_false = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
         ]
@@ -1111,6 +1165,7 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
         expected_false = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
         ]
@@ -1129,6 +1184,7 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
             (self.user_delegate_cat, 4),
             (self.user_contributor_cat, 0),
             (self.user_guest_cat, 0),
+            (self.user_finder_cat, 0),
             (self.user_owner, 6),
             (self.user_delegate, 4),
             (self.user_contributor, 0),
@@ -1620,6 +1676,24 @@ class TestRoleAssignmentDeleteView(TestUIBase):
             )
         )
 
+    def test_render_children_inherit(self):
+        """Test rendering as finder with inherited child roles"""
+        user_new = self.make_user('user_new')
+        new_as = self.make_assignment(self.category, user_new, self.role_finder)
+        url = reverse(
+            'projectroles:role_delete',
+            kwargs={'roleassignment': new_as.sodar_uuid},
+        )
+        self.login_and_redirect(self.superuser, url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-role-delete-alert-inherit'
+            )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-role-delete-alert-child'
+            )
+
 
 class TestRemoteSiteCreateView(RemoteSiteMixin, TestUIBase):
     """Tests for RemoteSiteCreateView UI"""
@@ -1825,6 +1899,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         ]
         expected_false = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1857,6 +1932,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1890,6 +1966,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1917,6 +1994,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         ]
         expected_false = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1952,6 +2030,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -2107,6 +2186,7 @@ class TestProjectSearchResultsView(TestUIBase):
             (self.user_delegate_cat, 1),
             (self.user_contributor_cat, 1),
             (self.user_guest_cat, 1),
+            (self.user_finder_cat, 1),
             (self.user_owner, 1),
             (self.user_delegate, 1),
             (self.user_contributor, 1),
@@ -2124,6 +2204,7 @@ class TestProjectSearchResultsView(TestUIBase):
             (self.user_delegate_cat, 1),
             (self.user_contributor_cat, 1),
             (self.user_guest_cat, 1),
+            (self.user_finder_cat, 1),
             (self.user_owner, 1),
             (self.user_delegate, 1),
             (self.user_contributor, 1),
@@ -2145,6 +2226,7 @@ class TestProjectSearchResultsView(TestUIBase):
             (self.user_delegate_cat, 0),
             (self.user_contributor_cat, 0),
             (self.user_guest_cat, 0),
+            (self.user_finder_cat, 0),
             (self.user_owner, 0),
             (self.user_delegate, 0),
             (self.user_contributor, 0),
@@ -2157,3 +2239,43 @@ class TestProjectSearchResultsView(TestUIBase):
             + urlencode({'s': 'test type:Jaix1au'})
         )
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+
+    def test_search_project_link(self):
+        """Test project link visibility according to user permissions"""
+        expected = [
+            (self.superuser, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_finder_cat, 0),  # This should not exist
+            (self.user_owner, 1),
+            (self.user_delegate, 1),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
+            (self.user_no_roles, 0),
+        ]
+        url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+        self.assert_element_count(
+            expected, url, 'sodar-pr-project-search-link', attribute='class'
+        )
+
+    def test_search_project_findable_link(self):
+        """Test project findable link visibility"""
+        expected = [
+            (self.superuser, 0),
+            (self.user_owner_cat, 0),
+            (self.user_delegate_cat, 0),
+            (self.user_contributor_cat, 0),
+            (self.user_guest_cat, 0),
+            (self.user_finder_cat, 1),  # Finder user should see this
+            (self.user_owner, 0),
+            (self.user_delegate, 0),
+            (self.user_contributor, 0),
+            (self.user_guest, 0),
+            (self.user_no_roles, 0),
+        ]
+        url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+        self.assert_element_count(
+            expected, url, 'sodar-pr-project-findable', attribute='class'
+        )

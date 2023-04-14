@@ -32,6 +32,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -95,6 +96,11 @@ class RoleMixin:
         )[0]
         self.role_guest = Role.objects.get_or_create(
             name=PROJECT_ROLE_GUEST, rank=ROLE_RANKING[PROJECT_ROLE_GUEST]
+        )[0]
+        self.role_finder = Role.objects.get_or_create(
+            name=PROJECT_ROLE_FINDER,
+            rank=ROLE_RANKING[PROJECT_ROLE_FINDER],
+            project_types=[PROJECT_TYPE_CATEGORY],
         )[0]
 
 
@@ -447,29 +453,43 @@ class TestProject(ProjectMixin, TestCase):
             self.category.set_archive()
 
 
-class TestRole(TestCase):
+class TestRole(RoleMixin, TestCase):
+    """Tests for models.Role"""
+
     def setUp(self):
-        self.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        self.init_roles()
 
     def test_initialization(self):
         """Test Role initialization"""
         expected = {
-            'id': self.role.pk,
+            'id': self.role_owner.pk,
             'name': PROJECT_ROLE_OWNER,
             'rank': 10,
-            'description': self.role.description,
+            'project_types': [PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT],
+            'description': self.role_owner.description,
         }
-        self.assertEqual(model_to_dict(self.role), expected)
+        self.assertEqual(model_to_dict(self.role_owner), expected)
+
+    def test_initialization_finder(self):
+        """Test Role initialization for project finder"""
+        expected = {
+            'id': self.role_finder.pk,
+            'name': PROJECT_ROLE_FINDER,
+            'rank': 50,
+            'project_types': [PROJECT_TYPE_CATEGORY],
+            'description': self.role_finder.description,
+        }
+        self.assertEqual(model_to_dict(self.role_finder), expected)
 
     def test__str__(self):
         """Test Role __str__()"""
         expected = PROJECT_ROLE_OWNER
-        self.assertEqual(str(self.role), expected)
+        self.assertEqual(str(self.role_owner), expected)
 
     def test__repr__(self):
         """Test Role __repr__()"""
         expected = "Role('{}')".format(PROJECT_ROLE_OWNER)
-        self.assertEqual(repr(self.role), expected)
+        self.assertEqual(repr(self.role_owner), expected)
 
 
 class TestRoleAssignment(
@@ -521,6 +541,18 @@ class TestRoleAssignment(
         self.assertEqual(
             model_to_dict(self.owner_as_cat), self.expected_default
         )
+
+    def test_init_finder_category(self):
+        """Test initializing project finder with category"""
+        role_as = self.make_assignment(
+            self.category, self.user_bob, self.role_finder
+        )
+        self.assertIsInstance(role_as, RoleAssignment)
+
+    def test_init_finder_project(self):
+        """Test initializing project finder with project (should fail)"""
+        with self.assertRaises(ValidationError):
+            self.make_assignment(self.project, self.user_bob, self.role_finder)
 
     def test__str__(self):
         """Test RoleAssignment __str__()"""

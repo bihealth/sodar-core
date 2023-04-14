@@ -9,6 +9,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -51,15 +52,25 @@ def is_project_guest(user, obj):
         return True
     if not obj or not user or not user.is_authenticated:
         return False
-    role_as = obj.get_role(user=user)
+    role_as = obj.get_role(user)
     return role_as and role_as.role.name == PROJECT_ROLE_GUEST
 
 
 @rules.predicate
-def has_project_role(user, obj):
+def is_project_finder(user, obj):
     """
-    Whether or not the user has any role in the project. Also returns true if
-    project has public guest access.
+    Whether or not the user has the role of project finder.
+    """
+    if not obj or not user or not user.is_authenticated:
+        return False
+    role_as = obj.get_role(user)
+    return role_as and role_as.role.name == PROJECT_ROLE_GUEST
+
+
+@rules.predicate
+def can_view_project(user, obj):
+    """
+    Whether or not user can view the project.
     """
     if obj.public_guest_access:
         return True
@@ -157,7 +168,7 @@ is_role_update_user = is_project_owner | is_project_delegate
 
 # Allow viewing project/category details
 rules.add_perm(
-    'projectroles.view_project', has_project_role | has_category_child_role
+    'projectroles.view_project', can_view_project | has_category_child_role
 )
 
 # Allow project updating
@@ -180,10 +191,7 @@ rules.add_perm(
 # Allow viewing project roles
 rules.add_perm(
     'projectroles.view_project_roles',
-    is_project_owner
-    | is_project_delegate
-    | is_project_contributor
-    | is_project_guest,
+    can_view_project,
 )
 
 # Allow updating project owner

@@ -41,16 +41,8 @@ from projectroles.tests.test_models import (
 )
 from projectroles.tests.test_views import (
     TestViewsBase,
-    PROJECT_TYPE_CATEGORY,
-    PROJECT_TYPE_PROJECT,
-    PROJECT_ROLE_OWNER,
-    PROJECT_ROLE_DELEGATE,
-    PROJECT_ROLE_CONTRIBUTOR,
-    PROJECT_ROLE_GUEST,
     REMOTE_SITE_NAME,
     REMOTE_SITE_URL,
-    SITE_MODE_SOURCE,
-    SITE_MODE_TARGET,
     REMOTE_SITE_DESC,
     REMOTE_SITE_SECRET,
 )
@@ -60,6 +52,18 @@ from projectroles.utils import build_secret
 app_settings = AppSettingAPI()
 
 
+# SODAR constants
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+
+# Local constants
 CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
 CORE_API_VERSION_INVALID = '9.9.9'
 
@@ -394,6 +398,29 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 4)
+
+    def test_get_finder(self):
+        """Test ProjectListAPIView get() with finder"""
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.category, user_new, self.role_finder)
+        url = reverse('projectroles:api_project_list')
+        response = self.request_knox(url, token=self.get_token(user_new))
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 2)
+        self.assertEqual(
+            response_data[0]['sodar_uuid'], str(self.category.sodar_uuid)
+        )
+        self.assertEqual(
+            response_data[1]['sodar_uuid'], str(self.project.sodar_uuid)
+        )
+        self.assertEqual(
+            response_data[1],
+            {
+                'title': self.project.title,
+                'sodar_uuid': str(self.project.sodar_uuid),
+            },
+        )
 
     def test_get_public_guest_access(self):
         """Test ProjectListAPIView get() with public guest access"""
@@ -1322,7 +1349,6 @@ class TestRoleAssignmentCreateAPIView(
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 1
         )
-
         url = reverse(
             'projectroles:api_role_create',
             kwargs={'project': self.project.sodar_uuid},
@@ -1369,7 +1395,6 @@ class TestRoleAssignmentCreateAPIView(
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 1
         )
-
         url = reverse(
             'projectroles:api_role_create',
             kwargs={'project': self.project.sodar_uuid},
@@ -1469,6 +1494,58 @@ class TestRoleAssignmentCreateAPIView(
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 201, msg=response.content)
 
+    def test_create_finder_project(self):
+        """Test creating finder role for project (should fail)"""
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 1
+        )
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_FINDER,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(
+            url,
+            method='POST',
+            data=post_data,
+            token=self.get_token(self.user_owner),
+        )
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 1
+        )
+
+    def test_create_finder_category(self):
+        """Test creating finder role for category"""
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.category).count(), 1
+        )
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_FINDER,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(
+            url,
+            method='POST',
+            data=post_data,
+            token=self.get_token(self.user_owner_cat),
+        )
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.category).count(), 2
+        )
+        role_as = RoleAssignment.objects.filter(
+            project=self.category, role=self.role_finder, user=self.assign_user
+        ).first()
+        self.assertIsNotNone(role_as)
+
     def test_create_role_existing(self):
         """Test creating role for user already in the project"""
         self.assertEqual(
@@ -1489,7 +1566,6 @@ class TestRoleAssignmentCreateAPIView(
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
         )
-
         post_data = {
             'role': PROJECT_ROLE_GUEST,
             'user': str(self.assign_user.sodar_uuid),
@@ -1778,18 +1854,34 @@ class TestRoleAssignmentUpdateAPIView(
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_patch_change_user(self):
-        """Test patch() with different user (should fail)"""
-        new_user = self.make_user('new_user')
+    def test_patch_role_finder_project(self):
+        """Test patch() for finder role updating in project (should fail)"""
+        self.assertEqual(RoleAssignment.objects.count(), 3)
         url = reverse(
             'projectroles:api_role_update',
             kwargs={'roleassignment': self.update_as.sodar_uuid},
         )
-        patch_data = {'user': str(new_user.sodar_uuid)}
+        patch_data = {'role': PROJECT_ROLE_FINDER}
         response = self.request_knox(url, method='PATCH', data=patch_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
 
-    def test_patch_inherited_promote(self):
+    def test_patch_role_finder_category(self):
+        """Test patch() for finder role updating in categody"""
+        user_new = self.make_user('user_new')
+        new_as = self.make_assignment(self.category, user_new, self.role_finder)
+        self.assertEqual(RoleAssignment.objects.count(), 4)
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': new_as.sodar_uuid},
+        )
+        patch_data = {'role': PROJECT_ROLE_FINDER}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 4)
+        new_as.refresh_from_db()
+        self.assertEqual(new_as.role, self.role_finder)
+
+    def test_patch_role_inherited_promote(self):
         """Test patch() with promoted role for inherited user"""
         self.make_assignment(
             self.category, self.assign_user, self.role_contributor
@@ -1813,7 +1905,7 @@ class TestRoleAssignmentUpdateAPIView(
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_patch_inherited_equal(self):
+    def test_patch_role_inherited_equal(self):
         """Test patch() with equal role for inherited user"""
         self.make_assignment(
             self.category, self.assign_user, self.role_contributor
@@ -1837,7 +1929,7 @@ class TestRoleAssignmentUpdateAPIView(
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_patch_inherited_demote(self):
+    def test_patch_role_inherited_demote(self):
         """Test patch() with demoted role for inherited user (should fail)"""
         self.make_assignment(
             self.category, self.assign_user, self.role_contributor
@@ -1878,6 +1970,17 @@ class TestRoleAssignmentUpdateAPIView(
             kwargs={'roleassignment': self.update_as.sodar_uuid},
         )
         patch_data = {'role': PROJECT_ROLE_GUEST}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_patch_user(self):
+        """Test patch() with different user (should fail)"""
+        new_user = self.make_user('new_user')
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        patch_data = {'user': str(new_user.sodar_uuid)}
         response = self.request_knox(url, method='PATCH', data=patch_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
 
@@ -1990,7 +2093,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_new.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
@@ -2008,7 +2111,41 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_new.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.category.get_owner().user, self.user_new)
+
+    def test_transfer_finder_project(self):
+        """Test transfer with finder role in project (should fail)"""
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        url = reverse(
+            'projectroles:api_role_owner_transfer',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': PROJECT_ROLE_FINDER,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+
+    def test_transfer_finder_category(self):
+        """Test transfer with finder role in category"""
+        self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        url = reverse(
+            'projectroles:api_role_owner_transfer',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': PROJECT_ROLE_FINDER,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
@@ -2026,7 +2163,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_guest.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
@@ -2047,7 +2184,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_guest.username,
-            'old_owner_role': self.role_guest.name,
+            'old_owner_role': PROJECT_ROLE_GUEST,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
@@ -2067,7 +2204,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_guest.username,
-            'old_owner_role': self.role_owner.name,
+            'old_owner_role': PROJECT_ROLE_OWNER,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
@@ -2093,7 +2230,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_guest.username,
-            'old_owner_role': self.role_delegate.name,
+            'old_owner_role': PROJECT_ROLE_DELEGATE,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
@@ -2117,7 +2254,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_new.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
@@ -2139,7 +2276,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_owner_cat.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
@@ -2157,7 +2294,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
 
     def test_transfer_no_roles(self):
-        """Test transferring ownership to user with no existing roles (should fail)"""
+        """Test transfer to user with no existing roles (should fail)"""
         # NOTE: No role given to user
         url = reverse(
             'projectroles:api_role_owner_transfer',
@@ -2165,7 +2302,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_new.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
@@ -2182,7 +2319,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_new.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
@@ -2205,7 +2342,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_new.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
@@ -2226,7 +2363,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_new.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
@@ -2262,7 +2399,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
         )
         post_data = {
             'new_owner': self.user_new.username,
-            'old_owner_role': self.role_contributor.name,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
@@ -2307,7 +2444,7 @@ class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
             {
                 'email': INVITE_USER_EMAIL,
                 'project': str(self.project.sodar_uuid),
-                'role': self.role_guest.name,
+                'role': PROJECT_ROLE_GUEST,
                 'issuer': self.get_serialized_user(self.user),
                 'date_created': self.get_drf_datetime(self.invite.date_created),
                 'date_expire': self.get_drf_datetime(self.invite.date_expire),
@@ -2317,7 +2454,7 @@ class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
             {
                 'email': INVITE_USER2_EMAIL,
                 'project': str(self.project.sodar_uuid),
-                'role': self.role_contributor.name,
+                'role': PROJECT_ROLE_CONTRIBUTOR,
                 'issuer': self.get_serialized_user(self.user),
                 'date_created': self.get_drf_datetime(
                     self.invite2.date_created
@@ -2347,7 +2484,7 @@ class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
             {
                 'email': INVITE_USER2_EMAIL,
                 'project': str(self.project.sodar_uuid),
-                'role': self.role_contributor.name,
+                'role': PROJECT_ROLE_CONTRIBUTOR,
                 'issuer': self.get_serialized_user(self.user),
                 'date_created': self.get_drf_datetime(
                     self.invite2.date_created

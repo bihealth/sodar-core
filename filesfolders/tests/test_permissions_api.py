@@ -71,7 +71,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -108,7 +108,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -137,7 +137,12 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate,
             self.user_contributor,
         ]
-        bad_users = [self.user_guest_cat, self.user_guest, self.user_no_roles]
+        bad_users = [
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_guest,
+            self.user_no_roles,
+        ]
         self.assert_response_api(
             url,
             good_users,
@@ -202,6 +207,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -254,7 +260,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -291,7 +297,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -320,6 +326,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -377,6 +384,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -415,6 +423,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -464,6 +473,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -503,6 +513,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -563,6 +574,7 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -657,7 +669,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -694,7 +706,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -719,7 +731,12 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate,
             self.user_contributor,
         ]
-        bad_users = [self.user_guest_cat, self.user_guest, self.user_no_roles]
+        bad_users = [
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_guest,
+            self.user_no_roles,
+        ]
         self.assert_response_api(
             url,
             good_users,
@@ -800,6 +817,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -872,7 +890,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -909,7 +927,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -941,6 +959,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1037,6 +1056,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1098,6 +1118,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1182,6 +1203,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1244,6 +1266,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1318,6 +1341,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1360,7 +1384,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -1395,7 +1419,7 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -1454,7 +1478,7 @@ class TestHyperLinkAPIPermissions(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -1491,7 +1515,7 @@ class TestHyperLinkAPIPermissions(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -1522,7 +1546,12 @@ class TestHyperLinkAPIPermissions(
             self.user_delegate,
             self.user_contributor,
         ]
-        bad_users = [self.user_guest_cat, self.user_guest, self.user_no_roles]
+        bad_users = [
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_guest,
+            self.user_no_roles,
+        ]
         self.assert_response_api(
             url,
             good_users,
@@ -1591,6 +1620,7 @@ class TestHyperLinkAPIPermissions(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
@@ -1642,7 +1672,7 @@ class TestHyperLinkAPIPermissions(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -1679,7 +1709,7 @@ class TestHyperLinkAPIPermissions(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200, method='GET')
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -1710,6 +1740,7 @@ class TestHyperLinkAPIPermissions(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1769,6 +1800,7 @@ class TestHyperLinkAPIPermissions(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1810,6 +1842,7 @@ class TestHyperLinkAPIPermissions(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1859,6 +1892,7 @@ class TestHyperLinkAPIPermissions(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -1901,6 +1935,7 @@ class TestHyperLinkAPIPermissions(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
             self.user_no_roles,
@@ -1972,6 +2007,7 @@ class TestHyperLinkAPIPermissions(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,

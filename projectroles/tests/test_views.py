@@ -247,7 +247,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             self.assertEqual(response.context['sidebar_padding'], 4)
 
 
-class TestProjectSearchView(
+class TestProjectSearchResultsView(
     ProjectMixin,
     RoleAssignmentMixin,
     TestViewsBase,
@@ -319,6 +319,26 @@ class TestProjectSearchView(
                 reverse('projectroles:search') + '?s=+++'
             )
             self.assertRedirects(response, reverse('home'))
+
+    def test_render_finder(self):
+        """Test rendering project search view as finder"""
+        user_finder = self.make_user('user_finder')
+        finder_cat = self.make_project(
+            'FinderCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(finder_cat, self.user, self.role_owner)
+        self.make_assignment(finder_cat, user_finder, self.role_finder)
+        finder_project = self.make_project(
+            'FinderProject', PROJECT_TYPE_PROJECT, finder_cat
+        )
+        self.make_assignment(finder_project, self.user, self.role_owner)
+        with self.login(user_finder):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['project_results']), 1)
+        self.assertEqual(response.context['project_results'][0], finder_project)
 
     def test_render_advanced(self):
         """Test input from advanced search"""
@@ -2498,7 +2518,7 @@ class TestRoleAssignmentCreateView(
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-        self.user_guest = self.make_user('user_guest')
+        self.user_new = self.make_user('user_new')
 
         app_alerts = get_backend_api('appalerts_backend')
         if app_alerts:
@@ -2522,8 +2542,8 @@ class TestRoleAssignmentCreateView(
         self.assertNotIn(
             [
                 (
-                    self.owner_as.user.sodar_uuid,
-                    get_user_display_name(self.owner_as.user, True),
+                    self.user_owner.sodar_uuid,
+                    get_user_display_name(self.user_owner, True),
                 )
             ],
             form.fields['user'].choices,
@@ -2536,6 +2556,48 @@ class TestRoleAssignmentCreateView(
         # Assert delegate role is selectable
         self.assertIn(
             get_role_option(self.project, self.role_delegate),
+            form.fields['role'].choices,
+        )
+        # Assert finder role is not selectable
+        self.assertNotIn(
+            get_role_option(self.project, self.role_finder),
+            form.fields['role'].choices,
+        )
+
+    def test_render_category(self):
+        """Test rendering for category"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.category.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIsInstance(form.fields['project'].widget, HiddenInput)
+        self.assertEqual(form.initial['project'], self.category.sodar_uuid)
+        # Assert user with previously added role in project is not selectable
+        self.assertNotIn(
+            [
+                (
+                    self.user_owner_cat.sodar_uuid,
+                    get_user_display_name(self.user_owner_cat, True),
+                )
+            ],
+            form.fields['user'].choices,
+        )
+        self.assertNotIn(
+            get_role_option(self.category, self.role_owner),
+            form.fields['role'].choices,
+        )
+        self.assertIn(
+            get_role_option(self.category, self.role_delegate),
+            form.fields['role'].choices,
+        )
+        # Assert finder role is selectable
+        self.assertIn(
+            get_role_option(self.category, self.role_finder),
             form.fields['role'].choices,
         )
 
@@ -2562,7 +2624,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_guest.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_guest.pk,
         }
         with self.login(self.user):
@@ -2576,12 +2638,12 @@ class TestRoleAssignmentCreateView(
 
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_guest
+            project=self.project, user=self.user_new
         )
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
-            'user': self.user_guest.pk,
+            'user': self.user_new.pk,
             'role': self.role_guest.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
@@ -2606,7 +2668,7 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_guest.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2621,12 +2683,12 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(response.status_code, 302)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_guest
+            project=self.project, user=self.user_new
         )
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
-            'user': self.user_guest.pk,
+            'user': self.user_new.pk,
             'role': self.role_delegate.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
@@ -2640,7 +2702,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_guest.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2656,7 +2718,7 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertIsNone(
             RoleAssignment.objects.filter(
-                project=self.project, user=self.user_guest
+                project=self.project, user=self.user_new
             ).first()
         )
 
@@ -2669,7 +2731,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_guest.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2685,7 +2747,7 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         self.assertIsNotNone(
             RoleAssignment.objects.filter(
-                project=self.project, user=self.user_guest
+                project=self.project, user=self.user_new
             ).first()
         )
 
@@ -2698,7 +2760,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_guest.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -2715,7 +2777,7 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         self.assertIsNotNone(
             RoleAssignment.objects.filter(
-                project=self.project, user=self.user_guest
+                project=self.project, user=self.user_new
             ).first()
         )
 
@@ -2786,7 +2848,7 @@ class TestRoleAssignmentCreateView(
         """Test rendering for inherited role promotion"""
         # Assign category guest user for inherit/promote tests
         guest_as_cat = self.make_assignment(
-            self.category, self.user_guest, self.role_guest
+            self.category, self.user_new, self.role_guest
         )
         with self.login(self.user):
             response = self.client.get(
@@ -2805,7 +2867,7 @@ class TestRoleAssignmentCreateView(
         self.assertIsInstance(form.fields['project'].widget, HiddenInput)
         self.assertIsInstance(form.fields['user'].widget, HiddenInput)
         self.assertEqual(form.initial['project'], self.project.sodar_uuid)
-        self.assertEqual(form.initial['user'], self.user_guest)
+        self.assertEqual(form.initial['user'], self.user_new)
         self.assertEqual(
             [c[0] for c in form.fields['role'].choices],
             [self.role_delegate.pk, self.role_contributor.pk],
@@ -2814,7 +2876,7 @@ class TestRoleAssignmentCreateView(
     def test_render_promote_local_role(self):
         """Test rendering for promotion with local role (should fail)"""
         guest_as = self.make_assignment(
-            self.project, self.user_guest, self.role_guest
+            self.project, self.user_new, self.role_guest
         )
         with self.login(self.user):
             response = self.client.get(
@@ -2845,7 +2907,7 @@ class TestRoleAssignmentCreateView(
             'SubProject', PROJECT_TYPE_PROJECT, sub_category
         )
         sub_as = self.make_assignment(
-            sub_project, self.user_guest, self.role_guest
+            sub_project, self.user_new, self.role_guest
         )
 
         with self.login(self.user):
@@ -2863,7 +2925,7 @@ class TestRoleAssignmentCreateView(
     def test_render_promote_delegate(self):
         """Test rendering for promotion with delegate role (should fail)"""
         delegate_as_cat = self.make_assignment(
-            self.category, self.user_guest, self.role_delegate
+            self.category, self.user_new, self.role_delegate
         )
         with self.login(self.user):
             response = self.client.get(
@@ -2893,7 +2955,7 @@ class TestRoleAssignmentCreateView(
 
     def test_post_promote(self):
         """Test RoleAssignment creation for promoting inherited role"""
-        self.make_assignment(self.category, self.user_guest, self.role_guest)
+        self.make_assignment(self.category, self.user_new, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(
             self.app_alert_model.objects.filter(
@@ -2904,7 +2966,7 @@ class TestRoleAssignmentCreateView(
 
         values = {
             'project': self.project.sodar_uuid,
-            'user': self.user_guest.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_contributor.pk,
             'promote': True,
         }
@@ -2919,12 +2981,12 @@ class TestRoleAssignmentCreateView(
 
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_guest
+            project=self.project, user=self.user_new
         )
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
-            'user': self.user_guest.pk,
+            'user': self.user_new.pk,
             'role': self.role_contributor.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
@@ -2979,7 +3041,6 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(form.initial['project'], self.project.sodar_uuid)
         self.assertIsInstance(form.fields['user'].widget, HiddenInput)
         self.assertEqual(form.initial['user'], self.role_as.user.sodar_uuid)
-
         # Assert owner role is not selectable
         self.assertNotIn(
             get_role_option(self.project, self.role_owner),
@@ -2988,6 +3049,43 @@ class TestRoleAssignmentUpdateView(
         # Assert delegate role is selectable
         self.assertIn(
             get_role_option(self.project, self.role_delegate),
+            form.fields['role'].choices,
+        )
+        # Assert finder role is not selectable
+        self.assertNotIn(
+            get_role_option(self.project, self.role_finder),
+            form.fields['role'].choices,
+        )
+
+    def test_render_category(self):
+        """Test rendering for category"""
+        user_new = self.make_user('user_new')
+        new_as = self.make_assignment(self.category, user_new, self.role_guest)
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': new_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+
+        form = response.context['form']
+        self.assertIsInstance(form.fields['project'].widget, HiddenInput)
+        self.assertEqual(form.initial['project'], self.category.sodar_uuid)
+        self.assertIsInstance(form.fields['user'].widget, HiddenInput)
+        self.assertEqual(form.initial['user'], user_new.sodar_uuid)
+        self.assertNotIn(
+            get_role_option(self.category, self.role_owner),
+            form.fields['role'].choices,
+        )
+        self.assertIn(
+            get_role_option(self.category, self.role_delegate),
+            form.fields['role'].choices,
+        )
+        # Assert finder role is selectable
+        self.assertIn(
+            get_role_option(self.category, self.role_finder),
             form.fields['role'].choices,
         )
 
@@ -3279,6 +3377,22 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(response.context['inherited_as'])
         self.assertEqual(response.context['inherited_children'], [self.project])
+
+    def test_render_children_finder(self):
+        """Test rendering for finder user with inherited child roles"""
+        inh_as = self.make_assignment(
+            self.category, self.user_new, self.role_finder
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': inh_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['inherited_as'])
+        self.assertIsNone(response.context['inherited_children'])
 
     def test_render_not_found(self):
         """Test rendering with invalid assignment UUID"""
@@ -3578,8 +3692,7 @@ class TestRoleAssignmentOwnerTransferView(
         # User without roles
         self.user_new = self.make_user('user_new')
         app_alerts = get_backend_api('appalerts_backend')
-        if app_alerts:
-            self.app_alert_model = app_alerts.get_model()
+        self.app_alert_model = app_alerts.get_model()
 
     def test_render(self):
         """Test rendering ownership transfer form"""
@@ -3596,6 +3709,11 @@ class TestRoleAssignmentOwnerTransferView(
         form = response.context['form']
         self.assertIsNotNone(form.fields.get('old_owner_role'))
         self.assertEqual(len(form.fields['old_owner_role'].choices), 3)
+        # Assert finder role is not selectable
+        self.assertNotIn(
+            self.role_finder.pk,
+            [c[0] for c in form.fields['old_owner_role'].choices],
+        )
 
     def test_render_old_inherited_member(self):
         """Test rendering with inherited non-owner role for old owner"""
@@ -3639,6 +3757,26 @@ class TestRoleAssignmentOwnerTransferView(
             form.fields['old_owner_role'].choices[0][0], self.role_owner.pk
         )
         self.assertEqual(form.fields['old_owner_role'].disabled, True)
+
+    def test_render_category(self):
+        """Test rendering for category"""
+        self.make_assignment(self.category, self.user_new, self.role_guest)
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.category.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIsNotNone(form.fields.get('old_owner_role'))
+        self.assertEqual(len(form.fields['old_owner_role'].choices), 4)
+        # Assert finder role is selectable
+        self.assertIn(
+            self.role_finder.pk,
+            [c[0] for c in form.fields['old_owner_role'].choices],
+        )
 
     def test_transfer(self):
         """Test ownership transfer"""

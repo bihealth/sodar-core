@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Extend role inheritance to all roles
+- Add project finder role
 - Add custom method support for app settings defaults, options and validation
 - Add dismissed alerts view to appalerts
 - Add sodarcache item deletion via API
@@ -65,6 +66,14 @@ The following steps are recommended:
    avoid unwanted inheritance.
 2. Update the rules and permission tests in your site to ensure proper access
    for users to all views.
+
+Project Finder Role Added
+-------------------------
+
+The *project finder* role has been added. For more information on this role, see
+:ref:`app_projectroles_basics`. It is recommended to update permission tests and
+rules as applicable to ensure users with this role have proper access to your
+apps.
 
 Projectroles Models API Updated
 -------------------------------

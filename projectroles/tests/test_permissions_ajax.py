@@ -24,10 +24,11 @@ class TestProjectViews(TestProjectPermissionBase):
         url = reverse('projectroles:ajax_project_list')
         good_users = [
             self.superuser,
-            self.user_owner_cat,  # Inherited
-            self.user_delegate_cat,  # Inherited
-            self.user_contributor_cat,  # Inherited
-            self.user_guest_cat,  # Inherited
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -58,6 +59,7 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -117,6 +119,7 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -182,7 +185,7 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
         # Test public project
@@ -211,12 +214,13 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
         # Test public project
@@ -242,6 +246,7 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -262,6 +267,7 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,

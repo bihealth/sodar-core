@@ -74,6 +74,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
@@ -713,13 +714,20 @@ class ProjectSearchResultsView(
         context['search_keywords'] = search_keywords
         # Get project results
         if not search_type or search_type == 'project':
-            context['project_results'] = [
-                p
-                for p in Project.objects.find(
-                    search_terms, project_type='PROJECT'
-                )
-                if self.request.user.has_perm('projectroles.view_project', p)
-            ]
+            context['project_results'] = []
+            for p in Project.objects.find(search_terms, project_type='PROJECT'):
+                if p.public_guest_access or self.request.user.has_perm(
+                    'projectroles.view_project', p
+                ):
+                    context['project_results'].append(p)
+                elif self.request.user.is_authenticated and p.parent:
+                    parent_as = p.parent.get_role(self.request.user)
+                    if (
+                        parent_as
+                        and parent_as.role.rank
+                        >= ROLE_RANKING[PROJECT_ROLE_FINDER]
+                    ):
+                        context['project_results'].append(p)
         # Get app results
         context['app_results'] = self._get_app_results(
             self.request.user, search_terms, search_type, search_keywords
@@ -1891,7 +1899,10 @@ class RoleAssignmentDeleteView(
         user = self.object.user
         context['inherited_as'] = project.get_role(user, inherited_only=True)
         context['inherited_children'] = None
-        if not context['inherited_as']:
+        if (
+            not context['inherited_as']
+            and self.object.role.rank < ROLE_RANKING[PROJECT_ROLE_FINDER]
+        ):
             context['inherited_children'] = sorted(
                 self._get_inherited_children(project, user, []),
                 key=lambda x: x.full_title,

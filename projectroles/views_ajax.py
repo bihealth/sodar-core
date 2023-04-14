@@ -24,6 +24,7 @@ from projectroles.models import (
     RoleAssignment,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
+    ROLE_RANKING,
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.utils import get_display_name
@@ -46,6 +47,7 @@ app_settings = AppSettingAPI()
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 
@@ -113,9 +115,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_project_list(cls, user, parent=None):
+    def _get_projects(cls, user, parent=None):
         """
-        Return a flat list of categories and projects.
+        Return a flat list of categories and projects the user can view.
 
         :param user: User for which the projects are visible
         :param parent: Project object of type CATEGORY or None
@@ -135,6 +137,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     user=user,
                 )
             ]
+            # NOTE: Not using get_role() here as that would exclude finder role
             project_list = [
                 p
                 for p in project_list
@@ -164,6 +167,39 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         # Sort by full title
         return sorted(ret, key=lambda x: x.full_title.lower())
 
+    @classmethod
+    def _get_access(cls, project, user, finder_cats, depth):
+        """
+        Return whether user has access to a project for the project list.
+
+        :param project: Project object
+        :param user: SODARUser object
+        :param finder_cats: List of category names where user has finder role
+        :param depth: Project depth in category structure (int)
+        :return: Boolean
+        """
+        # Cases which are always true if we get this far
+        if (
+            (user.is_authenticated and user.is_superuser)
+            or project.type == PROJECT_TYPE_CATEGORY
+            or project.public_guest_access
+        ):
+            return True
+        # If user has finder role in a parent category, we need to check role
+        if finder_cats and depth > 0:
+            for i in range(0, depth + 1):
+                c = ' / '.join(project.full_title.split(' / ')[:i])
+                if c in finder_cats:
+                    role_as = project.get_role(user)
+                    if (
+                        role_as
+                        and role_as.role.rank
+                        < ROLE_RANKING[PROJECT_ROLE_FINDER]
+                    ):
+                        return True
+            return False
+        return True
+
     def get(self, request, *args, **kwargs):
         parent_uuid = request.GET.get('parent', None)
         parent = (
@@ -178,7 +214,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 status=400,
             )
 
-        project_list = self._get_project_list(request.user, parent)
+        projects = self._get_projects(request.user, parent)
         starred_projects = []
         if request.user.is_authenticated:
             starred_projects = [
@@ -188,24 +224,46 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     'projectroles', 'project_star', project, request.user
                 )
             ]
+        finder_cats = []
+        if request.user.is_authenticated:
+            finder_cats = [
+                a.project.full_title
+                for a in RoleAssignment.objects.filter(
+                    project__type=PROJECT_TYPE_CATEGORY,
+                    role__rank=ROLE_RANKING[PROJECT_ROLE_FINDER],
+                    user=request.user,
+                )
+            ]
         full_title_idx = len(parent.full_title) + 3 if parent else 0
 
+        ret_projects = []
+        for p in projects:
+            p_depth = p.get_depth()
+            p_access = self._get_access(p, request.user, finder_cats, p_depth)
+            p_finder_url = None
+            if not p_access and p.parent:
+                p_finder_url = reverse(
+                    'projectroles:roles',
+                    kwargs={'project': p.parent.sodar_uuid},
+                )
+
+            rp = {
+                'title': p.title,
+                'type': p.type,
+                'full_title': p.full_title[full_title_idx:],
+                'public_guest_access': p.public_guest_access,
+                'archive': p.archive,
+                'remote': p.is_remote(),
+                'revoked': p.is_revoked(),
+                'starred': p in starred_projects,
+                'depth': p_depth,
+                'access': p_access,
+                'finder_url': p_finder_url,
+                'uuid': str(p.sodar_uuid),
+            }
+            ret_projects.append(rp)
         ret = {
-            'projects': [
-                {
-                    'title': p.title,
-                    'type': p.type,
-                    'full_title': p.full_title[full_title_idx:],
-                    'public_guest_access': p.public_guest_access,
-                    'archive': p.archive,
-                    'remote': p.is_remote(),
-                    'revoked': p.is_revoked(),
-                    'starred': p in starred_projects,
-                    'depth': p.get_depth(),
-                    'uuid': str(p.sodar_uuid),
-                }
-                for p in project_list
-            ],
+            'projects': ret_projects,
             'parent_depth': parent.get_depth() + 1 if parent else 0,
             'messages': {},
             'user': {'superuser': request.user.is_superuser},

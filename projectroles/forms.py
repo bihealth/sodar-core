@@ -914,8 +914,9 @@ class RoleAssignmentForm(SODARModelForm):
 class RoleAssignmentOwnerTransferForm(SODARForm):
     """Form for transferring owner role assignment between users"""
 
-    def _get_old_owner_choices(self, project, old_owner_as):
-        q_kwargs = {}
+    @classmethod
+    def _get_old_owner_choices(cls, project, old_owner_as):
+        q_kwargs = {'project_types__contains': [project.type]}
         inh_role_as = project.get_role(old_owner_as.user, inherited_only=True)
         if (
             not inh_role_as
@@ -1282,7 +1283,7 @@ def get_role_choices(
         'projectroles.update_project_delegate', obj=project
     ):
         role_excludes.append(PROJECT_ROLE_DELEGATE)
-    qs = Role.objects.all()
+    qs = Role.objects.filter(project_types__contains=[project.type])
     if promote_as:
         qs = qs.filter(rank__lt=promote_as.role.rank)
     return [

@@ -22,12 +22,15 @@ class TestExampleViews(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
         good_users = [
             self.superuser,
             self.user_owner_cat,  # Inherited
+            self.user_delegate_cat,  # Inherited
+            self.user_contributor_cat,  # Inherited
+            self.user_guest_cat,  # Inherited
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         self.project.set_public()
@@ -49,13 +52,16 @@ class TestExampleViews(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.user_owner_cat,  # Inherited
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         self.project.set_public()

@@ -50,7 +50,7 @@ class TestListPermissions(TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -84,7 +84,7 @@ class TestListPermissions(TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -123,6 +123,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
             self.anonymous,
@@ -158,6 +159,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -183,6 +185,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -208,6 +211,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the folder
             self.user_guest,
             self.user_no_roles,
@@ -242,6 +246,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -271,6 +276,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the folder
             self.user_guest,
             self.user_no_roles,
@@ -305,6 +311,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -358,6 +365,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
             self.anonymous,
@@ -391,6 +399,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -416,6 +425,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -440,6 +450,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the file
             self.user_guest,
             self.user_no_roles,
@@ -472,6 +483,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,  # NOTE: not the owner of the file
@@ -500,6 +512,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the file
             self.user_guest,
             self.user_no_roles,
@@ -532,6 +545,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -562,6 +576,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
             self.anonymous,
@@ -600,6 +615,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
             self.anonymous,
@@ -627,7 +643,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -653,7 +669,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -673,6 +689,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -697,6 +714,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -744,6 +762,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
             self.anonymous,
@@ -777,6 +796,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -802,6 +822,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -827,6 +848,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the link
             self.user_guest,
             self.user_no_roles,
@@ -851,6 +873,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -890,6 +913,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the link
             self.user_guest,
             self.user_no_roles,
@@ -924,6 +948,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -969,6 +994,7 @@ class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
         ]
@@ -1005,6 +1031,7 @@ class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,

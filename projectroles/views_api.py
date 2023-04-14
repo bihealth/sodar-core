@@ -44,6 +44,7 @@ from projectroles.models import (
     AppSetting,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
+    ROLE_PROJECT_TYPE_ERROR_MSG,
 )
 from projectroles.plugins import get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
@@ -76,6 +77,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
@@ -367,7 +369,8 @@ class ProjectListAPIView(APIView):
 
     **Methods:** ``GET``
 
-    **Returns:** List of project details (see ``ProjectRetrieveAPIView``)
+    **Returns:** List of project details (see ``ProjectRetrieveAPIView``). For
+    project finder role, only lists title and UUID of projects.
     """
 
     permission_classes = [IsAuthenticated]
@@ -395,7 +398,9 @@ class ProjectListAPIView(APIView):
                     ret.append(p)
                 if local_role and p.type == PROJECT_TYPE_CATEGORY:
                     role_cats.append(p.full_title + CAT_DELIMITER)
-        serializer = ProjectSerializer(ret, many=True)
+        serializer = ProjectSerializer(
+            ret, many=True, context={'request': request}
+        )
         return Response(serializer.data, status=200)
 
 
@@ -613,6 +618,12 @@ class RoleAssignmentOwnerTransferAPIView(
         if not old_owner_role:
             raise serializers.ValidationError(
                 'Unknown role "{}"'.format(request.data.get('old_owner_role'))
+            )
+        if project.type not in old_owner_role.project_types:
+            raise serializers.ValidationError(
+                ROLE_PROJECT_TYPE_ERROR_MSG.format(
+                    project_type=project.type, role_name=old_owner_role.name
+                )
             )
         if not old_owner_as:
             raise serializers.ValidationError('Existing owner role not found')

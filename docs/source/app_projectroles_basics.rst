@@ -61,6 +61,16 @@ The built-in roles in SODAR Core are as follows:
 - **Project Guest**
     - Read only access to project data
     - Rank = 40
+- **Project Finder**
+    - Role can only been given for categories
+    - User can see categories and their member roles
+    - User can see titles of projects under categories in UI home view project
+      list, the corresponding REST API view and project search results
+    - User can not access projects, project apps or project data without a
+      greater role
+    - Used for e.g. staff for ensuring relevant categories and projects are
+      discoverable without granting superuser status
+    - Rank = 50
 
 .. note::
 

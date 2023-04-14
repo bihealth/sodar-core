@@ -29,12 +29,14 @@ Added
     - Validation for category delimiter in ``Project.title`` (#1163)
     - ``SODARUser.update_full_name()`` and ``update_ldap_username()`` helpers (#1056)
     - Project app alert dismissal on role assignment deletion (#703)
+    - Project finder role (#1011)
+    - ``is_project_finder()`` rule predicate (#1011)
 - **Siteinfo**
     - Add ``LDAP_ALT_DOMAINS`` to displayed settings (#1123)
 - **Sodarcache**
     - ``delete_cache_item()`` method (#1068)
 - **Timeline**
-    - Search result limiting with ``TIMELINE_SEARCH_LIMIT``` (#1124)
+    - Search result limiting with ``TIMELINE_SEARCH_LIMIT`` (#1124)
 
 Changed
 -------

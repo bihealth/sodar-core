@@ -7,6 +7,7 @@ import uuid
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -31,6 +32,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 
 # Local constants
@@ -39,6 +41,7 @@ ROLE_RANKING = {
     PROJECT_ROLE_DELEGATE: 20,
     PROJECT_ROLE_CONTRIBUTOR: 30,
     PROJECT_ROLE_GUEST: 40,
+    PROJECT_ROLE_FINDER: 50,
 }
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
 APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING', 'JSON']
@@ -54,6 +57,9 @@ PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
 CAT_DELIMITER_ERROR_MSG = 'String "{}" is not allowed in title'.format(
     CAT_DELIMITER
+)
+ROLE_PROJECT_TYPE_ERROR_MSG = (
+    'Invalid project type "{project_type}" for ' 'role "{role_name}"'
 )
 
 
@@ -77,12 +83,10 @@ class ProjectManager(models.Manager):
         projects = super().get_queryset().order_by('title')
         if project_type:
             projects = projects.filter(type=project_type)
-
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(full_title__icontains=t), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
-
         return projects.filter(term_query).order_by('full_title')
 
 
@@ -351,7 +355,11 @@ class Project(models.Model):
         projects = [self] if not inherited_only else []
         projects += list(self.get_parents())
         return (
-            RoleAssignment.objects.filter(project__in=projects, user=user)
+            RoleAssignment.objects.filter(
+                project__in=projects,
+                user=user,
+                role__project_types__contains=[self.type],
+            )
             .order_by('role__rank', '-project__full_title')
             .first()
         )
@@ -384,7 +392,10 @@ class Project(models.Model):
         # NOTE: We have to get inherited roles to exclude overridden ones
         parents = list(self.get_parents())
         projects += parents
-        q_kwargs = {'project__in': projects}
+        q_kwargs = {
+            'project__in': projects,
+            'role__project_types__contains': [self.type],
+        }
         if user and user.is_authenticated:
             q_kwargs['user'] = user
         roles = RoleAssignment.objects.filter(**q_kwargs).order_by(
@@ -658,6 +669,11 @@ class Project(models.Model):
 # Role -------------------------------------------------------------------------
 
 
+def get_role_project_type_default():
+    """Return default value for Role.project_type"""
+    return [PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT]
+
+
 class Role(models.Model):
     """Role definition, used to assign roles to projects in RoleAssignment"""
 
@@ -670,6 +686,13 @@ class Role(models.Model):
     rank = models.IntegerField(
         default=0,  # 0 = No rank
         help_text='Role rank for determining role hierarchy',
+    )
+
+    #: Allowed project types for the role
+    project_types = ArrayField(
+        models.CharField(max_length=64, blank=False),
+        default=get_role_project_type_default,
+        help_text='Allowed project types for the role',
     )
 
     #: Role description
@@ -743,10 +766,20 @@ class RoleAssignment(models.Model):
 
     def save(self, *args, **kwargs):
         """Version of save() to include custom validation for RoleAssignment"""
+        self._validate_project_type()
         self._validate_user()
         self._validate_owner()
         self._validate_delegate()
         super().save(*args, **kwargs)
+
+    def _validate_project_type(self):
+        """Validate type of project to ensure it is in allowed types"""
+        if self.project.type not in self.role.project_types:
+            raise ValidationError(
+                ROLE_PROJECT_TYPE_ERROR_MSG.format(
+                    project_type=self.project.type, role_name=self.role.name
+                )
+            )
 
     def _validate_user(self):
         """
