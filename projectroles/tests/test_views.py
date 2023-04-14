@@ -4985,6 +4985,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
 
     def test_create_target(self):
         """Test creating a target site"""
+        timeline = get_backend_api('timeline_backend')
         self.assertEqual(RemoteSite.objects.all().count(), 0)
         values = {
             'name': REMOTE_SITE_NAME,
@@ -5012,12 +5013,20 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
         }
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
+
+        tl_event = (
+            timeline.get_project_events(project=None, classified=True)
+            .order_by('-pk')
+            .first()
+        )
+        self.assertEqual(tl_event.event_name, 'target_site_create')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_source(self):
         """Test creating a source site as target"""
+        timeline = get_backend_api('timeline_backend')
         self.assertEqual(RemoteSite.objects.all().count(), 0)
         values = {
             'name': REMOTE_SITE_NAME,
@@ -5045,6 +5054,13 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
         }
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
+
+        tl_event = (
+            timeline.get_project_events(project=None, classified=True)
+            .order_by('-pk')
+            .first()
+        )
+        self.assertEqual(tl_event.event_name, 'source_site_set')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
@@ -5120,6 +5136,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
 
     def test_update(self):
         """Test updating target site as source"""
+        timeline = get_backend_api('timeline_backend')
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         values = {
             'name': REMOTE_SITE_NEW_NAME,
@@ -5151,6 +5168,13 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
         }
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
+
+        tl_event = (
+            timeline.get_project_events(project=None, classified=True)
+            .order_by('-pk')
+            .first()
+        )
+        self.assertEqual(tl_event.event_name, 'target_site_update')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
@@ -5222,6 +5246,7 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
 
     def test_delete(self):
         """Test deleting the remote site"""
+        timeline = get_backend_api('timeline_backend')
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         with self.login(self.user):
             response = self.client.post(
@@ -5231,6 +5256,13 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
                 )
             )
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
+
+        tl_event = (
+            timeline.get_project_events(project=None, classified=True)
+            .order_by('-pk')
+            .first()
+        )
+        self.assertEqual(tl_event.event_name, 'target_site_delete')
         self.assertEqual(RemoteSite.objects.all().count(), 0)
 
 
@@ -5266,6 +5298,7 @@ class TestRemoteProjectBatchUpdateView(
 
     def test_render_confirm(self):
         """Test rendering remote project update view in confirm mode"""
+        timeline = get_backend_api('timeline_backend')
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']}
         with self.login(self.user):
@@ -5276,12 +5309,20 @@ class TestRemoteProjectBatchUpdateView(
                 ),
                 values,
             )
+
+        tl_event = (
+            timeline.get_project_events(project=None, classified=True)
+            .order_by('-pk')
+            .first()
+        )
+        self.assertIsNone(tl_event)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['site'], self.target_site)
         self.assertIsNotNone(response.context['modifying_access'])
 
     def test_render_confirm_no_change(self):
         """Test rendering without changes (should redirect)"""
+        timeline = get_backend_api('timeline_backend')
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {access_field: SODAR_CONSTANTS['REMOTE_LEVEL_NONE']}
         with self.login(self.user):
@@ -5300,8 +5341,16 @@ class TestRemoteProjectBatchUpdateView(
                 ),
             )
 
+        tl_event = (
+            timeline.get_project_events(project=None, classified=True)
+            .order_by('-pk')
+            .first()
+        )
+        self.assertIsNone(tl_event)
+
     def test_post_create(self):
         """Test updating remote project access by adding a new RemoteProject"""
+        timeline = get_backend_api('timeline_backend')
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {
@@ -5329,8 +5378,16 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
+        tl_event = (
+            timeline.get_project_events(project=None, classified=True)
+            .order_by('-pk')
+            .first()
+        )
+        self.assertEqual(tl_event.event_name, 'batch_update_remote')
+
     def test_post_update(self):
         """Test updating by modifying an existing RemoteProject"""
+        timeline = get_backend_api('timeline_backend')
         rp = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -5363,6 +5420,83 @@ class TestRemoteProjectBatchUpdateView(
         rp.refresh_from_db()
         self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+
+        tl_event = (
+            timeline.get_project_events(project=None, classified=True)
+            .order_by('-pk')
+            .first()
+        )
+        self.assertEqual(tl_event.event_name, 'batch_update_remote')
+
+
+# class TestRemoteProjectSyncView(
+#     ProjectMixin,
+#     RoleAssignmentMixin,
+#     RemoteSiteMixin,
+#     RemoteProjectMixin,
+#     TestViewsBase,
+# ):
+#     """Tests for the remote project sync view"""
+#
+#     def setUp(self):
+#         super().setUp()
+#         self.category = self.make_project(
+#             'TestCategory', PROJECT_TYPE_CATEGORY, None
+#         )
+#         self.project = self.make_project(
+#             'TestProject', PROJECT_TYPE_PROJECT, self.category
+#         )
+#         self.owner_as = self.make_assignment(
+#             self.project, self.user, self.role_owner
+#         )
+#         # Set up target site
+#         self.target_site = self.make_site(
+#             name=REMOTE_SITE_NAME,
+#             url=REMOTE_SITE_URL,
+#             mode=SITE_MODE_TARGET,
+#             description=REMOTE_SITE_DESC,
+#             secret=REMOTE_SITE_SECRET,
+#         )
+#
+#     @override_settings(SETTINGS_MODULE='config.settings.local_target')
+#     def test_get(self):
+#         """Test rendering the view and synchronizing remote projects"""
+#         # Synchronizing first time
+#         with self.login(self.user):
+#             response = self.client.get(
+#                 reverse(
+#                     'projectroles:remote_projects_sync',
+#                     kwargs={'remotesite': self.target_site.sodar_uuid},
+#                 )
+#             )
+#             self.assertRedirects(
+#                 response,
+#                 reverse(
+#                     'projectroles:remote_sites'
+#                 ),
+#             )
+#             # Assert message warning
+#             messages = list(get_messages(response.wsgi_request))
+#             self.assertEqual(len(messages), 1)
+#             self.assertEqual(
+#                 messages[0].message,
+#                 'Remote projects synchronized successfully',
+#             )
+#
+#         # Synchronizing second time
+#         with self.login(self.user):
+#             response = self.client.get(
+#                 reverse(
+#                     'projectroles:remote_projects_sync',
+#                     kwargs={'remotesite': self.target_site.sodar_uuid},
+#                 )
+#             )
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.context['site'], self.target_site)
+#         self.assertIsNotNone(response.context['modifying_access'])
+
+
+# SODAR User view tests --------------------------------------------------------
 
 
 class TestUserUpdateView(TestViewsBase):
