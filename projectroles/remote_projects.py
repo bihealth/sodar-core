@@ -330,9 +330,9 @@ class RemoteProjectAPI:
         except Exception as ex:
             ex_str = str(ex)
             if (
-                    isinstance(ex, urllib.error.URLError)
-                    and isinstance(ex.reason, ssl.SSLError)
-                    and ex.reason.reason == 'WRONG_VERSION_NUMBER'
+                isinstance(ex, urllib.error.URLError)
+                and isinstance(ex.reason, ssl.SSLError)
+                and ex.reason.reason == 'WRONG_VERSION_NUMBER'
             ):
                 ex_str = 'Most likely server cannot handle HTTPS requests.'
             if len(ex_str) >= 255:
