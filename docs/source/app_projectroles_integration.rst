@@ -341,6 +341,12 @@ Or, run the standard Django ``runserver`` command:
 
     $ ./manage.py runserver
 
+To enable periodic tasks, you need to start a Celery worker. This is done by
+running the ``make celery`` command in a separate terminal.
+
+.. code-block:: console
+    $ make celery
+
 You can now browse your site locally at ``http://127.0.0.1:8000``. You are
 expected to log in to view the site. Use e.g. the superuser account you created
 when setting up your cookiecutter-django site.

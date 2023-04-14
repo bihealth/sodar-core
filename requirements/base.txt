@@ -72,6 +72,9 @@ mistune>=2.0.5, <2.1
 # Database file storage for filesfolders
 django-db-file-storage==0.5.5
 
+# Celery dependency
+redis>=4.4.4
+
 # Backround Jobs requirements
 celery>=5.2.7, <5.3
 
