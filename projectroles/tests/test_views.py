@@ -4985,7 +4985,6 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
 
     def test_create_target(self):
         """Test creating a target site"""
-        timeline = get_backend_api('timeline_backend')
         tl_event = ProjectEvent.objects.filter(
             event_name='target_site_create'
         ).first()
@@ -5018,11 +5017,9 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
 
-        tl_event = (
-            timeline.get_project_events(project=None, classified=True)
-            .order_by('-pk')
-            .first()
-        )
+        tl_event = ProjectEvent.objects.filter(
+            event_name='target_site_create'
+        ).first()
         self.assertEqual(tl_event.event_name, 'target_site_create')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
@@ -5030,7 +5027,6 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_source(self):
         """Test creating a source site as target"""
-        timeline = get_backend_api('timeline_backend')
         tl_event = ProjectEvent.objects.filter(
             event_name='source_site_set'
         ).first()
@@ -5063,11 +5059,9 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
 
-        tl_event = (
-            timeline.get_project_events(project=None, classified=True)
-            .order_by('-pk')
-            .first()
-        )
+        tl_event = ProjectEvent.objects.filter(
+            event_name='source_site_set'
+        ).first()
         self.assertEqual(tl_event.event_name, 'source_site_set')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
@@ -5144,7 +5138,6 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
 
     def test_update(self):
         """Test updating target site as source"""
-        timeline = get_backend_api('timeline_backend')
         tl_event = ProjectEvent.objects.filter(
             event_name='target_site_update'
         ).first()
@@ -5181,11 +5174,9 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
 
-        tl_event = (
-            timeline.get_project_events(project=None, classified=True)
-            .order_by('-pk')
-            .first()
-        )
+        tl_event = ProjectEvent.objects.filter(
+            event_name='target_site_update'
+        ).first()
         self.assertEqual(tl_event.event_name, 'target_site_update')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
@@ -5258,7 +5249,6 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
 
     def test_delete(self):
         """Test deleting the remote site"""
-        timeline = get_backend_api('timeline_backend')
         tl_event = ProjectEvent.objects.filter(
             event_name='target_site_delete'
         ).first()
@@ -5273,11 +5263,9 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
             )
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
-        tl_event = (
-            timeline.get_project_events(project=None, classified=True)
-            .order_by('-pk')
-            .first()
-        )
+        tl_event = ProjectEvent.objects.filter(
+            event_name='target_site_delete'
+        ).first()
         self.assertEqual(tl_event.event_name, 'target_site_delete')
         self.assertEqual(RemoteSite.objects.all().count(), 0)
 
@@ -5314,7 +5302,6 @@ class TestRemoteProjectBatchUpdateView(
 
     def test_render_confirm(self):
         """Test rendering remote project update view in confirm mode"""
-        timeline = get_backend_api('timeline_backend')
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']}
         with self.login(self.user):
@@ -5326,11 +5313,9 @@ class TestRemoteProjectBatchUpdateView(
                 values,
             )
 
-        tl_event = (
-            timeline.get_project_events(project=None, classified=True)
-            .order_by('-pk')
-            .first()
-        )
+        tl_event = ProjectEvent.objects.filter(
+            event_name='remote_access_update'
+        ).first()
         self.assertIsNone(tl_event)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['site'], self.target_site)
@@ -5338,7 +5323,6 @@ class TestRemoteProjectBatchUpdateView(
 
     def test_render_confirm_no_change(self):
         """Test rendering without changes (should redirect)"""
-        timeline = get_backend_api('timeline_backend')
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {access_field: SODAR_CONSTANTS['REMOTE_LEVEL_NONE']}
         with self.login(self.user):
@@ -5357,16 +5341,13 @@ class TestRemoteProjectBatchUpdateView(
                 ),
             )
 
-        tl_event = (
-            timeline.get_project_events(project=None, classified=True)
-            .order_by('-pk')
-            .first()
-        )
+        tl_event = ProjectEvent.objects.filter(
+            event_name='remote_access_update'
+        ).first()
         self.assertIsNone(tl_event)
 
     def test_post_create(self):
         """Test updating remote project access by adding a new RemoteProject"""
-        timeline = get_backend_api('timeline_backend')
         tl_event = ProjectEvent.objects.filter(
             event_name='batch_update_remote'
         ).first()
@@ -5398,16 +5379,17 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
-        tl_event = (
-            timeline.get_project_events(project=None, classified=True)
-            .order_by('-pk')
-            .first()
-        )
+        tl_event = ProjectEvent.objects.filter(
+            event_name='batch_update_remote'
+        ).first()
         self.assertEqual(tl_event.event_name, 'batch_update_remote')
 
     def test_post_update(self):
         """Test updating by modifying an existing RemoteProject"""
-        timeline = get_backend_api('timeline_backend')
+        tl_event = ProjectEvent.objects.filter(
+            event_name='batch_update_remote'
+        ).first()
+        self.assertIsNone(tl_event)
         rp = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -5441,11 +5423,9 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
-        tl_event = (
-            timeline.get_project_events(project=None, classified=True)
-            .order_by('-pk')
-            .first()
-        )
+        tl_event = ProjectEvent.objects.filter(
+            event_name='batch_update_remote'
+        ).first()
         self.assertEqual(tl_event.event_name, 'batch_update_remote')
 
 
