@@ -11,7 +11,6 @@ from projectroles.models import (
     RemoteSite,
     RemoteProject,
 )
-from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tasks import sync_remote_site_task
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -22,7 +21,6 @@ from projectroles.tests.test_models import (
 
 
 app_settings = AppSettingAPI()
-remote_projects_api = RemoteProjectAPI()
 
 
 # SODAR constants
