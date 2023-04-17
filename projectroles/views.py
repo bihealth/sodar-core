@@ -2896,9 +2896,10 @@ class RemoteSiteModifyMixin(ModelFormMixin):
 
         # Create timeline event
         timeline = get_backend_api('timeline_backend')
-        self.create_timeline_event(
-            self.object, self.request.user, form_action, timeline=timeline
-        )
+        if timeline:
+            self.create_timeline_event(
+                self.object, self.request.user, form_action, timeline=timeline
+            )
 
         messages.success(
             self.request,
@@ -2917,17 +2918,26 @@ class RemoteSiteModifyMixin(ModelFormMixin):
             event_name = 'source_site_{}'.format(status)
         else:
             event_name = 'target_site_{}'.format(status)
-        if timeline:
-            timeline.add_event(
-                project=None,
-                app_name=APP_NAME,
-                user=user,
-                event_name=event_name,
-                description='{} remote site "{}"'.format(
-                    status, remote_site.name
-                ),
-                classified=True,
-            )
+
+        tl_event = timeline.add_event(
+            project=None,
+            app_name=APP_NAME,
+            user=user,
+            event_name=event_name,
+            description='{} remote {} site "{}"'.format(
+                status, remote_site.mode, remote_site.name
+            ),
+            classified=True,
+            extra_data={
+                'name': remote_site.name,
+                'url': remote_site.url,
+                'description': remote_site.description,
+                'mode': remote_site.mode,
+                'user display': remote_site.user_display,
+                'secret': remote_site.secret,
+            },
+        )
+        tl_event.set_status('OK')
 
 
 class RemoteSiteCreateView(
@@ -2995,13 +3005,11 @@ class RemoteSiteDeleteView(
         """Override get_success_url() to add message"""
         timeline = get_backend_api('timeline_backend')
         if timeline:
-            event_name = (
-                'source_site_delete'
-                if self.object.mode == SITE_MODE_SOURCE
-                else 'target_site_delete'
+            event_name = '{}_site_delete'.format(
+                'source' if self.object.mode == SITE_MODE_SOURCE else 'target'
             )
             description = 'delete remote site "{}"'.format(self.object.name)
-            timeline.add_event(
+            tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
                 user=self.request.user,
@@ -3009,6 +3017,7 @@ class RemoteSiteDeleteView(
                 description=description,
                 classified=True,
             )
+            tl_event.set_status('OK')
         messages.success(
             self.request,
             '{} site "{}" deleted'.format(
@@ -3179,10 +3188,11 @@ class RemoteProjectBatchUpdateView(
                     classified=True,
                     status_type='OK',
                 )
+                tl_event.set_status('OK')
                 tl_event.add_object(site, 'site', site.name)
 
         if timeline:
-            timeline.add_event(
+            tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
                 user=request.user,
@@ -3191,6 +3201,7 @@ class RemoteProjectBatchUpdateView(
                 extra_data={'modifying_access': modifying_access},
                 classified=True,
             )
+            tl_event.set_status('OK')
 
         # All OK
         messages.success(
@@ -3326,7 +3337,7 @@ class RemoteProjectSyncView(
 
         # Create timeline events for projects
         if timeline:
-            timeline.add_event(
+            tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
                 user=request.user,
@@ -3334,6 +3345,7 @@ class RemoteProjectSyncView(
                 description='synchronize remote site "{}"'.format(site.name),
                 classified=True,
             )
+            tl_event.set_status('OK')
 
         messages.success(
             request,
