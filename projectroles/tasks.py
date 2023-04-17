@@ -8,11 +8,9 @@ from config.celery import app
 
 # Projectroles dependency
 from projectroles.remote_projects import RemoteProjectAPI
-from projectroles.constants import SODAR_CONSTANTS
-from projectroles.models import RemoteSite
+from projectroles.models import RemoteSite, SODAR_CONSTANTS
 
 
-remote_api = RemoteProjectAPI()
 logger = logging.getLogger(__name__)
 
 # SODAR constants
@@ -22,7 +20,8 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 @app.task(bind=True)
 def sync_remote_site_task(_self):
-    """Synchronise remote project"""
+    """Synchronize remote project"""
+    remote_api = RemoteProjectAPI()
     source_site = RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).first()
     if source_site:
         try:
@@ -43,5 +42,5 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(
             getattr(settings, 'PROJECTROLES_TARGET_SYNC_INTERVAL', 5) * 60,
             sync_remote_site_task.s(),
-            name='synchronise_remote_site',
+            name='synchronize_remote_site',
         )

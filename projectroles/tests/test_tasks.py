@@ -1,3 +1,5 @@
+"""Tests for the tasks module"""
+
 from test_plus.test import TestCase
 
 # Projectroles dependency
@@ -31,7 +33,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 
 
 class TestSyncRemoteSiteTask(
-    TestCase, ProjectMixin, RoleMixin, RemoteTargetMixin, RoleAssignmentMixin
+    ProjectMixin, RoleMixin, RemoteTargetMixin, RoleAssignmentMixin, TestCase
 ):
     """Tests for the sync_remote_site_task() task"""
 

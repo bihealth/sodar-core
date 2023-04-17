@@ -309,6 +309,7 @@ class RemoteProjectAPI:
     def get_remote_data(self, site):
         """
         Method for synchronisation tasks.
+
         :param site: Remote Site object
         :raise: Exception if some Errors occured
         :return: remote data (dict)

@@ -740,7 +740,6 @@ def get_backend_api(plugin_name, force=False, **kwargs):
         except BackendPluginPoint.DoesNotExist:
             return None
         return plugin.get_api(**kwargs) if plugin.is_active() else None
-    return None
 
 
 # Plugins within projectroles --------------------------------------------------
