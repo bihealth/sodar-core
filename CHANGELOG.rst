@@ -45,6 +45,7 @@ Changed
     - Use path instead of regex for URL patterns (#1116)
     - Upgrade minimum Django version to v3.2.18 (#1117)
     - Upgrade general Python dependencies (#1117)
+    - Update ``env.example`` (#1065)
 - **Appalerts**
     - Handle alerts with no project access in UI (#1177)
 - **Filesfolders**
