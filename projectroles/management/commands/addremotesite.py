@@ -7,6 +7,7 @@ from django.db import transaction
 
 from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
+from projectroles.plugins import get_backend_api
 
 
 User = auth.get_user_model()
@@ -140,6 +141,16 @@ class Command(BaseCommand):
                 'user_display': user_diplsay,
             }
             site = RemoteSite.objects.create(**create_values)
+
+        timeline = get_backend_api('timeline_backend')
+        timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            event_name='remote_site_create',
+            description=description,
+            classified=True,
+            status_type='OK',
+        )
 
         logger.info(
             'Created remote site "{}" with mode {}'.format(site.name, site.mode)

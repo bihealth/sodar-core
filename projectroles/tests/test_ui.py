@@ -563,6 +563,10 @@ class TestHomeView(TestUIBase):
             )
         )
         self.assertEqual(self._get_item_vis_count(), 2)
+        links = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-link'
+        )
+        self.assertEqual(len(links), 1)
 
     def test_project_list_links_member(self):
         """Test project links as regular member"""

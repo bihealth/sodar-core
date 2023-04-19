@@ -483,9 +483,6 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         bad_users = [self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
-        # Test public project
-        self.project.set_public()
-        self.assert_response(url, bad_users, 200)
 
     def test_project_details(self):
         """Test project details permissions"""

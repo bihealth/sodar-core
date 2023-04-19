@@ -333,12 +333,7 @@ class Project(models.Model):
 
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""
-        ret = 0
-        p = self
-        while p.parent:
-            ret += 1
-            p = p.parent
-        return ret
+        return len(self.full_title.split(CAT_DELIMITER)) - 1
 
     def get_role(self, user, inherited_only=False):
         """

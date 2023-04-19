@@ -178,10 +178,13 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         :param depth: Project depth in category structure (int)
         :return: Boolean
         """
+        # Disable categories for anonymous users if anonymous access is enabled
+        if not user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY:
+            return False
         # Cases which are always true if we get this far
         if (
-            (user.is_authenticated and user.is_superuser)
-            or project.type == PROJECT_TYPE_CATEGORY
+            user.is_superuser
+            or (user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY)
             or project.public_guest_access
         ):
             return True
