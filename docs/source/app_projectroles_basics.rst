@@ -118,7 +118,7 @@ A SODAR site can be set by the user in either **source** or **target** mode.
 
 .. note::
 
-    An automated synchronisation using celery is implemented in ``projectroles.tasks``.
+    An automated synchronization using celery is implemented in ``projectroles.tasks``.
 
 
 Among the data which can be synchronized:

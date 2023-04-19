@@ -261,6 +261,8 @@ The following projectroles settings are **optional**:
   (list)
 * ``PROJECTROLES_TARGET_SYNC_ENABLE``: Enable/disable remote project
   synchronization with a source site (bool)
+* ``PROJECTROLES_TARGET_SYNC_INTERVAL``: Interval in minutes for remote project
+  synchronization with a source site (int)
 
 Example:
 
