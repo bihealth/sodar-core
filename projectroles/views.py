@@ -2919,10 +2919,9 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         else:
             event_name = 'target_site_{}'.format(status)
 
-        tl_desc = '{} remote {} site "{{{}}}"'.format(
+        tl_desc = '{} remote {} site "{{remote_site}}"'.format(
             status,
             remote_site.mode.lower(),
-            'remote_site',
         )
         tl_event = timeline.add_event(
             project=None,
@@ -3014,7 +3013,7 @@ class RemoteSiteDeleteView(
             event_name = '{}_site_delete'.format(
                 'source' if self.object.mode == SITE_MODE_SOURCE else 'target'
             )
-            tl_desc = 'delete remote site "{{{}}}"'.format('remote_site')
+            tl_desc = 'delete remote site "{{remote_site}}"'
             tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
@@ -3184,8 +3183,7 @@ class RemoteProjectBatchUpdateView(
             )
 
             if timeline and project:
-                tl_desc = 'update remote access for site {{{}}} to "{}"'.format(
-                    'site',
+                tl_desc = 'update remote access for site {{remote_site}} to "{}"'.format(
                     SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower(),
                 )
                 tl_event = timeline.add_event(
@@ -3197,10 +3195,10 @@ class RemoteProjectBatchUpdateView(
                     classified=True,
                     status_type='OK',
                 )
-                tl_event.add_object(site, 'site', site.name)
+                tl_event.add_object(site, 'remote_site', site.name)
 
         if timeline:
-            tl_desc = 'update remote site "{{{}}}"'.format('remote_site')
+            tl_desc = 'update remote site "{{remote_site}}"'
             tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
@@ -3347,7 +3345,7 @@ class RemoteProjectSyncView(
 
         # Create timeline events for projects
         if timeline:
-            tl_desc = 'synchronize remote site "{{{}}}"'.format('remote_site')
+            tl_desc = 'synchronize remote site "{{remote_site}}"'
             tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
