@@ -2919,14 +2919,17 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         else:
             event_name = 'target_site_{}'.format(status)
 
-        timeline.add_event(
+        tl_desc = '{} remote {} site "{{{}}}"'.format(
+            status,
+            remote_site.mode.lower(),
+            'remote_site',
+        )
+        tl_event = timeline.add_event(
             project=None,
             app_name=APP_NAME,
             user=user,
             event_name=event_name,
-            description='{} remote {} site "{}"'.format(
-                status, remote_site.mode.lower(), remote_site.name
-            ),
+            description=tl_desc,
             classified=True,
             extra_data={
                 'name': remote_site.name,
@@ -2937,6 +2940,9 @@ class RemoteSiteModifyMixin(ModelFormMixin):
                 'secret': remote_site.secret,
             },
             status_type='OK',
+        )
+        tl_event.add_object(
+            obj=remote_site, label='remote_site', name=remote_site.name
         )
 
 
@@ -3008,15 +3014,18 @@ class RemoteSiteDeleteView(
             event_name = '{}_site_delete'.format(
                 'source' if self.object.mode == SITE_MODE_SOURCE else 'target'
             )
-            description = 'delete remote site "{}"'.format(self.object.name)
-            timeline.add_event(
+            tl_desc = 'delete remote site "{{{}}}"'.format('remote_site')
+            tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
                 user=self.request.user,
                 event_name=event_name,
-                description=description,
+                description=tl_desc,
                 classified=True,
                 status_type='OK',
+            )
+            tl_event.add_object(
+                obj=self.object, label='remote_site', name=self.object.name
             )
         messages.success(
             self.request,
@@ -3191,16 +3200,18 @@ class RemoteProjectBatchUpdateView(
                 tl_event.add_object(site, 'site', site.name)
 
         if timeline:
+            tl_desc = 'update remote site "{{{}}}"'.format('remote_site')
             tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
                 user=request.user,
                 event_name='batch_update_remote',
-                description='update remote site "{}"'.format(site.name),
+                description=tl_desc,
                 extra_data={'modifying_access': modifying_access},
                 classified=True,
                 status_type='OK',
             )
+            tl_event.add_object(obj=site, label='remote_site', name=site.name)
 
         # All OK
         messages.success(
@@ -3336,15 +3347,17 @@ class RemoteProjectSyncView(
 
         # Create timeline events for projects
         if timeline:
-            timeline.add_event(
+            tl_desc = 'synchronize remote site "{{{}}}"'.format('remote_site')
+            tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
                 user=request.user,
                 event_name='remote_project_sync',
-                description='synchronize remote site "{}"'.format(site.name),
+                description=tl_desc,
                 classified=True,
                 status_type='OK',
             )
+            tl_event.add_object(obj=site, label='remote_site', name=site.name)
 
         messages.success(
             request,

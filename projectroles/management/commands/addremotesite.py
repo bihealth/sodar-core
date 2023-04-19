@@ -143,14 +143,14 @@ class Command(BaseCommand):
             site = RemoteSite.objects.create(**create_values)
 
         timeline = get_backend_api('timeline_backend')
-        tl_event = timeline.add_event(
+        timeline.add_event(
             project=None,
             app_name='projectroles',
             event_name='remote_site_create',
             description=description,
             classified=True,
+            status_type='OK',
         )
-        tl_event.set_status('OK')
 
         logger.info(
             'Created remote site "{}" with mode {}'.format(site.name, site.mode)
