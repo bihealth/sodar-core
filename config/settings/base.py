@@ -619,6 +619,12 @@ PROJECTROLES_ENABLE_SEARCH = env.bool('PROJECTROLES_ENABLE_SEARCH', True)
 PROJECTROLES_SEARCH_OMIT_APPS = env.list(
     'PROJECTROLES_SEARCH_OMIT_APPS', None, []
 )
+PROJECTROLES_TARGET_SYNC_ENABLE = env.bool(
+    'PROJECTROLES_TARGET_SYNC_ENABLE', default=False
+)
+PROJECTROLES_TARGET_SYNC_INTERVAL = env.int(
+    'PROJECTROLES_TARGET_SYNC_INTERVAL', default=5
+)
 
 # Optional projectroles settings
 # Sidebar icon size. Minimum=18, maximum=42.
