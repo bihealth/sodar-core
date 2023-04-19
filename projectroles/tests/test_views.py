@@ -4985,10 +4985,12 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
 
     def test_create_target(self):
         """Test creating a target site"""
-        tl_event = ProjectEvent.objects.filter(
-            event_name='target_site_create'
-        ).first()
-        self.assertIsNone(tl_event)
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='target_site_create'
+            ).count(),
+        )
         self.assertEqual(RemoteSite.objects.all().count(), 0)
         values = {
             'name': REMOTE_SITE_NAME,
@@ -5027,10 +5029,10 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_source(self):
         """Test creating a source site as target"""
-        tl_event = ProjectEvent.objects.filter(
-            event_name='source_site_set'
-        ).first()
-        self.assertIsNone(tl_event)
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(event_name='source_site_set').count(),
+        )
         self.assertEqual(RemoteSite.objects.all().count(), 0)
         values = {
             'name': REMOTE_SITE_NAME,
@@ -5138,10 +5140,12 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
 
     def test_update(self):
         """Test updating target site as source"""
-        tl_event = ProjectEvent.objects.filter(
-            event_name='target_site_update'
-        ).first()
-        self.assertIsNone(tl_event)
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='target_site_update'
+            ).count(),
+        )
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         values = {
             'name': REMOTE_SITE_NEW_NAME,
@@ -5249,10 +5253,12 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
 
     def test_delete(self):
         """Test deleting the remote site"""
-        tl_event = ProjectEvent.objects.filter(
-            event_name='target_site_delete'
-        ).first()
-        self.assertIsNone(tl_event)
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='target_site_delete'
+            ).count(),
+        )
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         with self.login(self.user):
             response = self.client.post(
@@ -5313,10 +5319,12 @@ class TestRemoteProjectBatchUpdateView(
                 values,
             )
 
-        tl_event = ProjectEvent.objects.filter(
-            event_name='remote_access_update'
-        ).first()
-        self.assertIsNone(tl_event)
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='remote_access_update'
+            ).count(),
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['site'], self.target_site)
         self.assertIsNotNone(response.context['modifying_access'])
@@ -5341,17 +5349,21 @@ class TestRemoteProjectBatchUpdateView(
                 ),
             )
 
-        tl_event = ProjectEvent.objects.filter(
-            event_name='remote_access_update'
-        ).first()
-        self.assertIsNone(tl_event)
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='remote_access_update'
+            ).count(),
+        )
 
     def test_post_create(self):
         """Test updating remote project access by adding a new RemoteProject"""
-        tl_event = ProjectEvent.objects.filter(
-            event_name='batch_update_remote'
-        ).first()
-        self.assertIsNone(tl_event)
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='batch_update_remote'
+            ).count(),
+        )
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {
@@ -5386,10 +5398,12 @@ class TestRemoteProjectBatchUpdateView(
 
     def test_post_update(self):
         """Test updating by modifying an existing RemoteProject"""
-        tl_event = ProjectEvent.objects.filter(
-            event_name='batch_update_remote'
-        ).first()
-        self.assertIsNone(tl_event)
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='batch_update_remote'
+            ).count(),
+        )
         rp = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
