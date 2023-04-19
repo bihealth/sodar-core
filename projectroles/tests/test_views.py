@@ -4985,6 +4985,12 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
 
     def test_create_target(self):
         """Test creating a target site"""
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='target_site_create'
+            ).count(),
+        )
         self.assertEqual(RemoteSite.objects.all().count(), 0)
         values = {
             'name': REMOTE_SITE_NAME,
@@ -5012,12 +5018,21 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
         }
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
+
+        tl_event = ProjectEvent.objects.filter(
+            event_name='target_site_create'
+        ).first()
+        self.assertEqual(tl_event.event_name, 'target_site_create')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_source(self):
         """Test creating a source site as target"""
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(event_name='source_site_set').count(),
+        )
         self.assertEqual(RemoteSite.objects.all().count(), 0)
         values = {
             'name': REMOTE_SITE_NAME,
@@ -5045,6 +5060,11 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
         }
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
+
+        tl_event = ProjectEvent.objects.filter(
+            event_name='source_site_set'
+        ).first()
+        self.assertEqual(tl_event.event_name, 'source_site_set')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
@@ -5120,6 +5140,12 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
 
     def test_update(self):
         """Test updating target site as source"""
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='target_site_update'
+            ).count(),
+        )
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         values = {
             'name': REMOTE_SITE_NEW_NAME,
@@ -5151,6 +5177,11 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
         }
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
+
+        tl_event = ProjectEvent.objects.filter(
+            event_name='target_site_update'
+        ).first()
+        self.assertEqual(tl_event.event_name, 'target_site_update')
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
@@ -5222,6 +5253,12 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
 
     def test_delete(self):
         """Test deleting the remote site"""
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='target_site_delete'
+            ).count(),
+        )
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         with self.login(self.user):
             response = self.client.post(
@@ -5231,6 +5268,11 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
                 )
             )
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
+
+        tl_event = ProjectEvent.objects.filter(
+            event_name='target_site_delete'
+        ).first()
+        self.assertEqual(tl_event.event_name, 'target_site_delete')
         self.assertEqual(RemoteSite.objects.all().count(), 0)
 
 
@@ -5276,6 +5318,13 @@ class TestRemoteProjectBatchUpdateView(
                 ),
                 values,
             )
+
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='remote_access_update'
+            ).count(),
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['site'], self.target_site)
         self.assertIsNotNone(response.context['modifying_access'])
@@ -5300,8 +5349,21 @@ class TestRemoteProjectBatchUpdateView(
                 ),
             )
 
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='remote_access_update'
+            ).count(),
+        )
+
     def test_post_create(self):
         """Test updating remote project access by adding a new RemoteProject"""
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='batch_update_remote'
+            ).count(),
+        )
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {
@@ -5329,8 +5391,19 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
+        tl_event = ProjectEvent.objects.filter(
+            event_name='batch_update_remote'
+        ).first()
+        self.assertEqual(tl_event.event_name, 'batch_update_remote')
+
     def test_post_update(self):
         """Test updating by modifying an existing RemoteProject"""
+        self.assertEqual(
+            0,
+            ProjectEvent.objects.filter(
+                event_name='batch_update_remote'
+            ).count(),
+        )
         rp = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -5363,6 +5436,14 @@ class TestRemoteProjectBatchUpdateView(
         rp.refresh_from_db()
         self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+
+        tl_event = ProjectEvent.objects.filter(
+            event_name='batch_update_remote'
+        ).first()
+        self.assertEqual(tl_event.event_name, 'batch_update_remote')
+
+
+# SODAR User view tests --------------------------------------------------------
 
 
 class TestUserUpdateView(TestViewsBase):
