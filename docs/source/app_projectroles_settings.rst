@@ -259,6 +259,8 @@ The following projectroles settings are **optional**:
   Minimum=18, maximum=42, default=36 (int)
 * ``PROJECTROLES_SEARCH_OMIT_APPS``: List of apps to omit from search results
   (list)
+* ``PROJECTROLES_TARGET_SYNC_ENABLE``: Enable/disable remote project
+  synchronization with a source site (bool)
 
 Example:
 

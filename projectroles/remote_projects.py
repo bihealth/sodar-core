@@ -6,7 +6,6 @@ import ssl
 import urllib
 
 from copy import deepcopy
-import re
 
 from django.conf import settings
 from django.contrib import auth
@@ -32,7 +31,6 @@ from projectroles.models import (
     AppSetting,
 )
 from projectroles.plugins import get_backend_api
-from projectroles import __version__ as core_version
 
 
 app_settings = AppSettingAPI()
@@ -57,11 +55,6 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
 APP_NAME = 'projectroles'
-
-CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-CORE_API_DEFAULT_VERSION = re.match(
-    r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
-)[1]
 
 
 class RemoteProjectAPI:
@@ -314,6 +307,11 @@ class RemoteProjectAPI:
         :raise: Exception if some Errors occured
         :return: remote data (dict)
         """
+        from projectroles.views_api import (
+            CORE_API_MEDIA_TYPE,
+            CORE_API_DEFAULT_VERSION,
+        )
+
         api_url = site.get_url() + reverse(
             'projectroles:api_remote_get', kwargs={'secret': site.secret}
         )
