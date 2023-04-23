@@ -3328,7 +3328,9 @@ class RemoteProjectSyncView(
                 classified=True,
                 status_type='OK',
             )
-            tl_event.add_object(obj=source_site, label='remote_site', name=source_site.name)
+            tl_event.add_object(
+                obj=source_site, label='remote_site', name=source_site.name
+            )
 
         messages.success(
             request,
