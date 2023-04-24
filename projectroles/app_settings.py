@@ -36,6 +36,12 @@ APP_SETTING_DEFAULT_VALUES = {
     'BOOLEAN': False,
     'JSON': {},
 }
+APP_SETTING_SCOPE_ARGS = {
+    APP_SETTING_SCOPE_PROJECT: {'project': True, 'user': False},
+    APP_SETTING_SCOPE_USER: {'project': False, 'user': True},
+    APP_SETTING_SCOPE_PROJECT_USER: {'project': True, 'user': True},
+    APP_SETTING_SCOPE_SITE: {'project': False, 'user': False},
+}
 
 # Define App Settings for projectroles app
 PROJECTROLES_APP_SETTINGS = {
@@ -101,37 +107,21 @@ class AppSettingAPI:
     @classmethod
     def _check_project_and_user(cls, scope, project, user):
         """
-        Ensure one of the project and user parameters is set.
+        Ensure project and user parameters are set according to scope.
 
-        :param scope: Scope of Setting (USER, PROJECT, PROJECT_USER)
+        :param scope: Scope of Setting (USER, PROJECT, PROJECT_USER, SITE)
         :param project: Project object
         :param user: User object
         :raise: ValueError if none or both objects exist
         """
-        if scope == APP_SETTING_SCOPE_PROJECT:
-            if not project:
-                raise ValueError('Project unset for setting with project scope')
-            if user:
-                raise ValueError('User set for setting with project scope')
-        elif scope == APP_SETTING_SCOPE_USER:
-            if project:
-                raise ValueError('Project set for setting with user scope')
-            if not user:
-                raise ValueError('User unset for setting with user scope')
-        elif scope == APP_SETTING_SCOPE_PROJECT_USER:
-            if not project:
-                raise ValueError(
-                    'Project unset for setting with project_user scope'
-                )
-            if not user:
-                raise ValueError(
-                    'User unset for setting with project_user scope'
-                )
-        elif scope == APP_SETTING_SCOPE_SITE:
-            if project:
-                raise ValueError('Project set for setting with site scope')
-            if user:
-                raise ValueError('User set for setting with site scope')
+        if not APP_SETTING_SCOPE_ARGS[scope] == {
+            'project': project is not None,
+            'user': user is not None,
+        }:
+            raise ValueError(
+                'Project and/or user are set incorrect for setting '
+                'with {} scope'.format(scope)
+            )
 
     @classmethod
     def _check_scope(cls, scope):
@@ -277,6 +267,35 @@ class AppSettingAPI:
             # TODO: Also do conversion on input value here if necessary
             return bool(int(setting_obj.value)) == input_value
         return setting_obj.value == str(input_value)
+
+    @classmethod
+    def _log_set_debug(
+        cls, action, app_name, setting_name, value, project, user
+    ):
+        """
+        Helper method for logging setting changes in set() method.
+
+        :param action: Action string (string)
+        :param app_name: Plugin app name (string)
+        :param setting_name: Setting name (string)
+        :param value: Setting value (string)
+        :param project: Project object
+        :param user: User object
+        """
+        extra_data = []
+        if project:
+            extra_data.append('project={}'.format(project.sodar_uuid))
+        if user:
+            extra_data.append('user={}'.format(user.username))
+        logger.debug(
+            '{} app setting: {}.{} = "{}"{}'.format(
+                action,
+                app_name,
+                setting_name,
+                value,
+                ' ({})'.format('; '.join(extra_data)) if extra_data else '',
+            )
+        )
 
     @classmethod
     def get_default(
@@ -480,37 +499,11 @@ class AppSettingAPI:
         :raise: KeyError if setting name is not found in plugin specification
         """
 
-        def _log_debug(action, app_name, setting_name, value, project, user):
-            extra_data = []
-            if project:
-                extra_data.append('project={}'.format(project.sodar_uuid))
-            if user:
-                extra_data.append('user={}'.format(user.username))
-            logger.debug(
-                '{} app setting: {}.{} = "{}"{}'.format(
-                    action,
-                    app_name,
-                    setting_name,
-                    value,
-                    ' ({})'.format('; '.join(extra_data)) if extra_data else '',
-                )
-            )
-
         setting_def = cls.get_definition(name=setting_name, app_name=app_name)
-
-        if (
-            setting_def.get('scope') != APP_SETTING_SCOPE_SITE
-            and not project
-            and not user
-        ):
-            raise ValueError('Project and user are both unset')
-        elif (
-            setting_def.get('scope') == APP_SETTING_SCOPE_SITE
-            and project
-            or setting_def.get('scope') == APP_SETTING_SCOPE_SITE
-            and user
-        ):
-            raise ValueError('Project or user is set for site scope setting')
+        cls._check_scope(setting_def.get('scope', None))
+        cls._check_project_and_user(
+            setting_def.get('scope', None), project, user
+        )
 
         # Check project type
         if (
@@ -553,7 +546,9 @@ class AppSettingAPI:
             else:
                 setting.value = value
             setting.save()
-            _log_debug('Set', app_name, setting_name, value, project, user)
+            cls._log_set_debug(
+                'Set', app_name, setting_name, value, project, user
+            )
             return True
 
         except AppSetting.DoesNotExist:
@@ -570,16 +565,13 @@ class AppSettingAPI:
                         setting_name, app_name
                     )
                 )
-            s_def = app_settings[setting_name]
-            s_type = s_def['type']
+            s_type = setting_def['type']
             s_mod = (
-                bool(s_def['user_modifiable'])
-                if 'user_modifiable' in s_def
+                bool(setting_def['user_modifiable'])
+                if 'user_modifiable' in setting_def
                 else True
             )
 
-            cls._check_scope(s_def['scope'])
-            cls._check_project_and_user(s_def['scope'], project, user)
             if validate:
                 v = cls._get_json_value(value) if s_type == 'JSON' else value
                 cls.validate(
@@ -604,7 +596,9 @@ class AppSettingAPI:
                 s_vals['value'] = value
 
             AppSetting.objects.create(**s_vals)
-            _log_debug('Create', app_name, setting_name, value, project, user)
+            cls._log_set_debug(
+                'Create', app_name, setting_name, value, project, user
+            )
             return True
 
     @classmethod
@@ -618,11 +612,9 @@ class AppSettingAPI:
         :param user: User object to delete setting from (optional)
         """
         setting_def = cls.get_definition(setting_name, app_name=app_name)
-        scope = setting_def.get('scope')
-        if scope == 'USER' and project:
-            raise ValueError('App setting scope is USER but project is set.')
-        elif scope == 'PROJECT' and user:
-            raise ValueError('App setting scope is PROJECT but user is set.')
+        cls._check_project_and_user(
+            setting_def.get('scope', None), project, user
+        )
 
         q_kwargs = {'name': setting_name}
         if user:
