@@ -649,25 +649,12 @@ class AppSettingAPI:
         :param scope: Setting scope (string)
         :param project: Project object to delete setting from
         :param user: User object to delete setting from
+        :raise: ValueError if scope, project or user are incorrect
         """
         if not scope:
             raise ValueError('Scope must be set')
         cls._check_scope(scope)
-        if scope == APP_SETTING_SCOPE_USER and not user:
-            raise ValueError('App setting scope is USER but user is unset.')
-        elif scope == APP_SETTING_SCOPE_PROJECT and not project:
-            raise ValueError(
-                'App setting scope is PROJECT but project is unset.'
-            )
-        elif scope == APP_SETTING_SCOPE_PROJECT_USER and not (project and user):
-            raise ValueError(
-                'App setting scope is PROJECT_USER but project or user is unset.'
-            )
-        elif scope == APP_SETTING_SCOPE_SITE and (project or user):
-            raise ValueError(
-                'App setting scope is SITE but project or user is set.'
-            )
-
+        cls._check_project_and_user(scope, project, user)
         for app_name, app_settings in cls.get_all_defs().items():
             for setting_name, setting_def in app_settings.items():
                 if setting_def['scope'] == scope:

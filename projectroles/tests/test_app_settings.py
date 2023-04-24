@@ -441,13 +441,14 @@ class TestAppSettingAPI(
 
     def test_set_invalid_project_types(self):
         """Test set() with invalid project types scope"""
+        # Should fail because project_category_bool_setting has CATEGORY scope
         with self.assertRaises(ValueError):
             app_settings.set(
                 app_name=EXAMPLE_APP_NAME,
                 setting_name='project_category_bool_setting',
                 project=self.project,
                 value=True,
-            )  # Should fail because project_category_bool_setting is a CATEGORY setting
+            )
 
     def test_validator(self):
         """Test validate() with type BOOLEAN"""

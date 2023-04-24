@@ -341,10 +341,11 @@ Or, run the standard Django ``runserver`` command:
 
     $ ./manage.py runserver
 
-To enable periodic tasks, you need to start a Celery worker. This is done by
-running the ``make celery`` command in a separate terminal.
+To enable periodic tasks, you need to additionally start a Celery worker. This
+is done by running the ``make celery`` command:
 
 .. code-block:: console
+
     $ make celery
 
 You can now browse your site locally at ``http://127.0.0.1:8000``. You are

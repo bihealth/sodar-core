@@ -113,8 +113,9 @@ First, set up a second database called ``sodar_core_target`` using
 ``utility/setup_database.sh``.
 
 Next, migrate the new database and create a superuser using
-``make manage_target``. It is recommended to use a different admin user name
-than on your ``SOURCE`` site, to help debugging.
+``make manage_target``. The admin user name is hardcoded into ``admin_target``
+in ``config.settings.target``, so you are strongly recommended to use that
+name for your target site admin.
 
 .. code-block:: console
 

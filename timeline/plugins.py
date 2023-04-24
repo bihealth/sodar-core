@@ -104,10 +104,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :return: Dict
         """
         items = []
-
         if not search_type or search_type == 'timeline':
             events = ProjectEvent.objects.find(search_terms, keywords)
-
         if events:
             items = [
                 event

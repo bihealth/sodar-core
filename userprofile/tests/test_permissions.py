@@ -21,7 +21,7 @@ class TestUserProfilePermissions(TestPermissionBase):
         self.anonymous = None
 
     def test_profile(self):
-        """Test permissions for the user profile view"""
+        """Test permissions for user profile view"""
         url = reverse('userprofile:detail')
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
@@ -30,7 +30,7 @@ class TestUserProfilePermissions(TestPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_profile_anon(self):
-        """Test permissions for the user profile view with anonymous access"""
+        """Test permissions for user profile view with anonymous access"""
         url = reverse('userprofile:detail')
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
@@ -38,7 +38,7 @@ class TestUserProfilePermissions(TestPermissionBase):
         self.assert_response(url, bad_users, 302)
 
     def test_settings_update(self):
-        """Test permissions for the user settings updating view"""
+        """Test permissions for user settings update view"""
         url = reverse('userprofile:settings_update')
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
@@ -47,7 +47,7 @@ class TestUserProfilePermissions(TestPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_settings_update_anon(self):
-        """Test permissions for the user settings updating view with anonymous access"""
+        """Test permissions for update view with anonymous access"""
         url = reverse('userprofile:settings_update')
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]

@@ -16,7 +16,6 @@ def migrate_stars(apps, schema_editor):
         )
 
 
-
 class Migration(migrations.Migration):
 
     dependencies = [

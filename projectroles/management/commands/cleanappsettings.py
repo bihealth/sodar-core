@@ -1,3 +1,8 @@
+"""
+Cleanappsettings management command for cleaning up unused or invalid app
+settings
+"""
+
 from django.core.management.base import BaseCommand
 
 from projectroles.app_settings import AppSettingAPI

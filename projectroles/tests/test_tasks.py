@@ -1,8 +1,7 @@
-"""Tests for the tasks module"""
+"""Tests for tasks in the projectroles app"""
 
 from test_plus.test import TestCase
 
-# Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Role,

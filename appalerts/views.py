@@ -35,8 +35,7 @@ class AppAlertListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
         status = self.kwargs.get('status', 'active')
         if status == 'dismissed':
             return getattr(settings, 'DEFAULT_PAGINATION', 15)
-        else:
-            return None
+        return None
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -71,6 +71,28 @@ The following conventions should be adhered to in SODAR Core development:
       looked into.
 
 
+.. _dev_core_guide_template:
+
+Template Conventions
+====================
+
+A full style guide for templates will be provided in the future. Below are some
+general guidelines for templates.
+
+- Always use styles from ``projectroles.css`` and layouts similar to existing
+  views, except when they are explicitly not applicable to a use case. This
+  helps maintain a consistent style and allows for easy modifications of the
+  default styles in the future.
+- If you develop new styles which are expected to be generally applicable, add
+  them into ``projectroles.css`` and follow conventional class naming.
+- One-time usages of styles in a single view or apps other than projectroles
+  should not go into ``projectroles.css``. Instead, add them as inline CSS to
+  your template or create a separate static CSS file for the app.
+- Titles of views, page sections and other similar items are expected to be
+  formatted in
+  `title case <https://research.arizona.edu/faq/what-do-you-mean-when-you-say-use-title-case-proposalproject-titles>`_.
+
+
 .. _dev_core_guide_test:
 
 Testing Conventions

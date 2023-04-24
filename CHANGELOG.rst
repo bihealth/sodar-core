@@ -13,6 +13,8 @@ Added
 
 - **General**
     - Separate Chromedriver install script (#1127)
+    - Custom include path with ``PROJECTROLES_TEMPLATE_INCLUDE_PATH`` (#1049)
+    - Celery setup (#1198)
 - **Appalerts**
     - Dismissed alerts list view (#711)
     - ``add_alerts()`` API method (#1101)
@@ -25,12 +27,17 @@ Added
     - Full role inheritance (#638, #1103, #1172, #1173)
     - ``Project.get_roles_by_rank()`` helper (#638)
     - ``RoleMixin`` with ``init_roles()`` for tests
-    - App settings project type limiting (#1169)
+    - App settings project type restriction (#1169, #1170)
     - Validation for category delimiter in ``Project.title`` (#1163)
     - ``SODARUser.update_full_name()`` and ``update_ldap_username()`` helpers (#1056)
     - Project app alert dismissal on role assignment deletion (#703)
     - Project finder role (#1011)
     - ``is_project_finder()`` rule predicate (#1011)
+    - Site-wide timeline events for remote site operations (#746, #1209)
+    - Display app icon for settings in project and user forms (#947, #1187)
+    - Cleanup for ``PROJECT_USER`` scope app settings (#1128, #1129)
+    - ``SITE`` scope for app settings (#1184)
+    - Periodic remote project sync (#813)
 - **Siteinfo**
     - Add ``LDAP_ALT_DOMAINS`` to displayed settings (#1123)
 - **Sodarcache**
@@ -67,6 +74,10 @@ Changed
     - Replace ``PROJECTROLES_HIDE_APP_LINKS`` with ``PROJECTROLES_HIDE_PROJECT_APPS`` (#1142)
     - Deprecate ``PROJECTROLES_HIDE_APP_LINKS`` (#1142)
     - Move Django signals to ``signals.py`` (#1056)
+    - Disallow public guest access for categories (#897)
+    - Refactor ``AppSettingAPI`` (#1190)
+- **Timeline**
+    - Display event extra data to superusers, owners and delegates (#1171)
 
 Fixed
 -----
@@ -80,6 +91,8 @@ Fixed
     - Project and user update form JSON error handling (#1151)
     - ``Project`` API methods returning unexpected multiple ``RoleAssignment`` objects for user (#710)
     - ``ProjectListAPIView`` failure with inheritance and public guest access (#1176)
+    - Incorrect icon displayed in ``remoteproject_update.html`` (#1179)
+    - Long ``Project.full_title`` breaking ``remoteproject_update.html`` layout (#1188)
 
 Removed
 -------

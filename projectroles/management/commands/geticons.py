@@ -1,4 +1,7 @@
+"""Geticons management command for retrieving icons for iconify"""
+
 import os
+
 import urllib.request
 
 from django.conf import settings
@@ -88,7 +91,6 @@ class Command(BaseCommand):
             coll_path,
             'mdi.json',
         )
-
         # Download extra collections if set
         if colls:
             logger.info(
@@ -102,6 +104,5 @@ class Command(BaseCommand):
                     coll_path,
                     c + '.json',
                 )
-
         logger.info('Retrieval/update done')
         logger.info('Remember to run "collectstatic" after updating icons!')

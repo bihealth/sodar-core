@@ -431,7 +431,6 @@ class ProjectContextMixin(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         # Project
         if hasattr(self, 'object') and isinstance(self.object, Project):
             context['project'] = self.get_object()
@@ -439,7 +438,6 @@ class ProjectContextMixin(
             context['project'] = self.object.project
         else:
             context['project'] = self.get_project()
-
         # Project tagging/starring
         if 'project' in context and not getattr(
             settings, 'PROJECTROLES_KIOSK_MODE', False
@@ -1333,7 +1331,6 @@ class ProjectCreateView(
 
         if 'project' in self.kwargs:
             project = Project.objects.get(sodar_uuid=self.kwargs['project'])
-
             if project.type != PROJECT_TYPE_CATEGORY:
                 messages.error(
                     self.request,
@@ -1661,7 +1658,6 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         instance = form.instance if form.instance.pk else None
         action = 'update' if instance else 'create'
         project = self.get_project()
-
         try:
             self.object = self.modify_assignment(
                 data=form.cleaned_data,
@@ -1682,7 +1678,6 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
             messages.error(
                 self.request, 'Membership updating failed: {}'.format(ex)
             )
-
         return redirect(
             reverse(
                 'projectroles:roles',
@@ -1784,15 +1779,12 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             tl_event.set_status('OK')
         if app_alerts:
             self._update_app_alerts(app_alerts, project, user, inh_as)
-        if SEND_EMAIL:
-            if inh_as:
-                email.send_role_change_mail(
-                    'update', project, user, inh_as.role, request
-                )
-            else:
-                email.send_role_change_mail(
-                    'delete', project, user, None, request
-                )
+        if SEND_EMAIL and inh_as:
+            email.send_role_change_mail(
+                'update', project, user, inh_as.role, request
+            )
+        elif SEND_EMAIL:
+            email.send_role_change_mail('delete', project, user, None, request)
         return instance
 
 
@@ -2581,12 +2573,10 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not invite:
             return redirect(reverse('home'))
         timeline = get_backend_api('timeline_backend')
-
         # Check if local users are enabled
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             messages.error(self.request, MSG_INVITE_LOCAL_NOT_ALLOWED)
             return redirect(reverse('home'))
-
         # Check invite for correct type
         if self.get_invite_type(invite) == 'ldap':
             messages.error(self.request, MSG_INVITE_LDAP_LOCAL_VIEW)
@@ -2594,7 +2584,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
 
         # Check if invited user exists
         user = User.objects.filter(email=invite.email).first()
-
         # Check if invite has expired
         if self.is_invite_expired(invite, user):
             return redirect(reverse('home'))
@@ -2617,7 +2606,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 )
             # Show form if user doesn't exists and no user is logged in
             return super().get(*args, **kwargs)
-
         # Logged in but the invited user does not exist yet
         if not user:
             messages.error(
@@ -2625,7 +2613,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 MSG_INVITE_LOGGED_IN_ACCEPT,
             )
             return redirect(reverse('home'))
-
         # Logged in user is not invited user
         if not self.request.user == user:
             messages.error(
@@ -2633,12 +2620,10 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 MSG_INVITE_USER_NOT_EQUAL,
             )
             return redirect(reverse('home'))
-
         # User exists but is not local
         if not user.is_local():
             messages.error(self.request, 'User exists, but is not local.')
             return redirect(reverse('home'))
-
         # Create role if user exists
         if not self.create_assignment(invite, user, timeline=timeline):
             return redirect(reverse('home'))
@@ -2657,7 +2642,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             invite = ProjectInvite.objects.get(secret=self.kwargs['secret'])
         except ProjectInvite.DoesNotExist:
             return initial
-
         username_base = invite.email.split('@')[0]
         i = 0
         while True:
@@ -2667,7 +2651,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 i += 1
             except User.DoesNotExist:
                 break
-
         initial.update({'email': invite.email, 'username': username})
         return initial
 
@@ -2789,7 +2772,6 @@ class ProjectInviteRevokeView(
         invite = ProjectInvite.objects.filter(
             sodar_uuid=kwargs['projectinvite']
         ).first()
-
         if (
             invite
             and invite.role.name == PROJECT_ROLE_DELEGATE
@@ -2806,7 +2788,6 @@ class ProjectInviteRevokeView(
             messages.success(self.request, 'Invite revoked.')
         else:
             messages.error(self.request, 'Invite not found.')
-
         self.revoke_invite(invite, project, request)
         return redirect(
             reverse(
@@ -2884,6 +2865,7 @@ class RemoteSiteListView(
 
 class RemoteSiteModifyMixin(ModelFormMixin):
     def form_valid(self, form):
+        timeline = get_backend_api('timeline_backend')
         if self.object:
             form_action = 'updated'
         elif settings.PROJECTROLES_SITE_MODE == 'TARGET':
@@ -2891,14 +2873,11 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         else:
             form_action = 'created'
         self.object = form.save()
-
         # Create timeline event
-        timeline = get_backend_api('timeline_backend')
         if timeline:
             self.create_timeline_event(
                 self.object, self.request.user, form_action, timeline=timeline
             )
-
         messages.success(
             self.request,
             '{} site "{}" {}.'.format(
@@ -3046,7 +3025,6 @@ class RemoteProjectListView(
         context = super().get_context_data(*args, **kwargs)
         site = RemoteSite.objects.get(sodar_uuid=self.kwargs['remotesite'])
         context['site'] = site
-
         # Projects in SOURCE mode: all local projects of type PROJECT
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             projects = Project.objects.filter(type=PROJECT_TYPE_PROJECT)
@@ -3056,7 +3034,6 @@ class RemoteProjectListView(
             projects = Project.objects.filter(
                 type=PROJECT_TYPE_PROJECT, sodar_uuid__in=remote_uuids
             )
-
         if projects:
             context['projects'] = projects.order_by('full_title')
         return context
@@ -3091,7 +3068,6 @@ class RemoteProjectBatchUpdateView(
             'projectroles:remote_projects',
             kwargs={'remotesite': site.sodar_uuid},
         )
-
         # Ensure site is in SOURCE mode
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_SOURCE:
             messages.error(
@@ -3101,19 +3077,14 @@ class RemoteProjectBatchUpdateView(
                 ),
             )
             return redirect(redirect_url)
-
         access_fields = {
             k: v for k, v in post_data.items() if k.startswith('remote_access')
         }
 
-        ######################
         # Confirmation needed
-        ######################
-
         if not confirmed:
             # Pass on (only) changed projects to confirmation form
             modifying_access = []
-
             for k, v in access_fields.items():
                 project_uuid = k.split('_')[2]
                 remote_obj = RemoteProject.objects.filter(
@@ -3133,7 +3104,6 @@ class RemoteProjectBatchUpdateView(
                             'new_level': v,
                         }
                     )
-
             if not modifying_access:
                 messages.warning(
                     request,
@@ -3142,13 +3112,10 @@ class RemoteProjectBatchUpdateView(
                     ),
                 )
                 return redirect(redirect_url)
-
             context['modifying_access'] = modifying_access
             return super().render_to_response(context)
 
-        ############
         # Confirmed
-        ############
         modifying_access = []
         old_level = REMOTE_LEVEL_NONE
 
@@ -3294,7 +3261,6 @@ class RemoteProjectSyncView(
             ]
         )
         role_count = 0
-
         for p in [p for p in update_data['projects'].values() if 'roles' in p]:
             for _ in [r for r in p['roles'].values() if 'status' in r]:
                 role_count += 1

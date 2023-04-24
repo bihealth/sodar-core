@@ -31,15 +31,15 @@
          id="sodar-pr-role-delete-alert-child">
       Removing this role will also remove the user's access to the following
       child categories and/or projects:
-        <ul class="mt-2 mb-0">
-          {% for child in inherited_children %}
-            <li>
-              <a href="{% url 'projectroles:roles' project=child.sodar_uuid %}">
-                {{ child.full_title }}
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
+      <ul class="mt-2 mb-0">
+        {% for child in inherited_children %}
+          <li>
+            <a href="{% url 'projectroles:roles' project=child.sodar_uuid %}">
+              {{ child.full_title }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
     </div>
   {% endif %}
 

@@ -116,11 +116,6 @@ A SODAR site can be set by the user in either **source** or **target** mode.
   metadata about those other Target sites is included and stored in Peer mode
   site objects.
 
-.. note::
-
-    An automated synchronization using celery is implemented in ``projectroles.tasks``.
-
-
 Among the data which can be synchronized:
 
 - General project information such as title, description and readme
@@ -128,6 +123,11 @@ Among the data which can be synchronized:
 - User roles in projects
 - User accounts for LDAP/AD users (required for the previous step)
 - Information of other Target Sites linking a common project
+
+Target sites read remote project information from the source site. When
+deploying a target site, it is possible to enable automated synchronization of
+projects from the source site by running a Redis server and a Celery worker
+process.
 
 
 Rule System

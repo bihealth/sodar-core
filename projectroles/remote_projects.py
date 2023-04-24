@@ -337,7 +337,6 @@ class RemoteProjectAPI:
             if len(ex_str) >= 255:
                 ex_str = ex_str[:255]
             raise Exception(ex_str)
-
         return remote_data
 
     # Internal Target Site Functions -------------------------------------------

@@ -340,8 +340,8 @@ class TestGetSourceData(
                     'readme': self.category.readme.raw,
                     'roles': {
                         str(self.category_owner_as.sodar_uuid): {
-                            'user': self.category_owner_as.user.username,
-                            'role': self.category_owner_as.role.name,
+                            'user': self.user_source.username,
+                            'role': self.role_owner.name,
                         }
                     },
                 },
@@ -354,8 +354,8 @@ class TestGetSourceData(
                     'parent_uuid': str(self.category.sodar_uuid),
                     'roles': {
                         str(self.project_owner_as.sodar_uuid): {
-                            'user': self.project_owner_as.user.username,
-                            'role': self.project_owner_as.role.name,
+                            'user': self.user_source.username,
+                            'role': self.role_owner.name,
                         }
                     },
                     'remote_sites': [str(self.peer_site.sodar_uuid)],
@@ -455,8 +455,8 @@ class TestGetSourceData(
                     'parent_uuid': str(self.category.sodar_uuid),
                     'roles': {
                         str(self.project_owner_as.sodar_uuid): {
-                            'user': self.project_owner_as.user.username,
-                            'role': self.project_owner_as.role.name,
+                            'user': self.user_source.username,
+                            'role': self.role_owner.name,
                         }  # NOTE: Another user should not be synced
                     },
                     'remote_sites': [],

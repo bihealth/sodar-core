@@ -111,6 +111,12 @@ may contain a description and readme, but project apps are disabled for
 categories unless explicitly enabled. Projects can not be nested within each
 other.
 
+.. note::
+
+    Content displayed on the form varies depending on the type of container
+    (category or project) being edited. E.g. most app settings are only
+    available when creating or updating a project.
+
 Creating a Top Level Category
 -----------------------------
 
@@ -189,7 +195,8 @@ specifically granting it.
 
 .. note::
 
-    This feature is currently only available for projects and not for categories!
+    Public guest access can only be set for projects. Categories will be visible
+    for users with access to any category or project under them.
 
 App Settings
 ------------
@@ -202,6 +209,9 @@ updating form and can only be modified by users with sufficient project access.
 User specific settings will be displayed in the
 :ref:`Userprofile app <app_userprofile>`.
 
+Certain project app settings may appear only for categories, only for projects
+or for both container types.
+
 By defining the attribute ``user_modifiable=False``, project or user app
 settings will not be shown in the respective project/user update views. This is
 used e.g. in cases where a project app provides its own UI or updates some
@@ -211,13 +221,6 @@ settings in the Update Project view.
 Settings with the scope of user within a project do not currently have a
 separate UI of their own. Instead, project apps can produce their own user
 specific UIs for this functionality if manual user selection is needed.
-
-Project specific app settings may vary between different project types.
-This scopes are defined in the ``project_types`` attribute of the
-app_setting. The default value is ``[PROJECT_TYPE_PROJECT]``, which means that the setting
-will be available only for Projects. Currently there are 3 possible scopes:
-``[PROJECT_TYPE_PROJECT]``, ``[PROJECT_TYPE_CATEGORY]`` and
-``[PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY]``.
 
 The projectroles app provides the following built-in app settings with the
 project scope:

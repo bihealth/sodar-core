@@ -189,7 +189,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE - 2)
     def test_context_get_sidebar_icon_size_min(self):
-        """Test getting sidebar icon size in context with a value below minimum"""
+        """Test sidebar icon size with value below minimum"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
             self.assertEqual(
@@ -199,7 +199,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MAX_SIZE + 2)
     def test_context_get_sidebar_icon_size_max(self):
-        """Test get_sidebar_icon_size() with a value over max"""
+        """Test sidebar icon size with value over max"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
             self.assertEqual(
@@ -208,40 +208,40 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             )
 
     def test_context_get_sidebar_notch_pos(self):
-        """Test get_sidebar_notch_pos()"""
+        """Test siderbar notch position"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
             self.assertEqual(response.context['sidebar_notch_pos'], 12)
 
     def test_context_get_sidebar_notch_size(self):
-        """Test get_sidebar_notch_size()"""
+        """Test sidebar notch size"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
             self.assertEqual(response.context['sidebar_notch_size'], 12)
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE)
     def test_context_get_sidebar_notch_size_min(self):
-        """Test get_sidebar_notch_size() with minimum icon size"""
+        """Test sidebar notch size with minimum icon size"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
             self.assertEqual(response.context['sidebar_notch_size'], 9)
 
     def test_context_get_sidebar_padding(self):
-        """Test get_sidebar_padding()"""
+        """Test sidebar padding"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
             self.assertEqual(response.context['sidebar_padding'], 8)
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MAX_SIZE)
     def test_context_get_sidebar_padding_max(self):
-        """Test get_sidebar_padding() with maximum icon size"""
+        """Test sidebar padding with maximum icon size"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
             self.assertEqual(response.context['sidebar_padding'], 10)
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE)
     def test_context_get_sidebar_padding_min(self):
-        """Test get_sidebar_padding() with minimum icon size"""
+        """Test sidebar padding with minimum icon size"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
             self.assertEqual(response.context['sidebar_padding'], 4)
@@ -1721,13 +1721,14 @@ class TestProjectSettingsForm(
         values = {
             'settings.example_project_app.project_str_setting': 'updated',
             'settings.example_project_app.project_int_setting': 170,
-            'settings.example_project_app.project_str_setting_options': 'string2',
+            'settings.example_project_app.'
+            'project_str_setting_options': 'string2',
             'settings.example_project_app.project_int_setting_options': 1,
             'settings.example_project_app.project_bool_setting': True,
-            'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
-            'settings.example_project_app.project_callable_setting_options': str(
-                self.project.sodar_uuid
-            ),
+            'settings.example_project_app.'
+            'project_json_setting': '{"Test": "Updated"}',
+            'settings.example_project_app.'
+            'project_callable_setting_options': str(self.project.sodar_uuid),
             'settings.projectroles.ip_restrict': True,
             'settings.projectroles.ip_allowlist': '["192.168.1.1"]',
             'owner': self.user.sodar_uuid,
@@ -2018,14 +2019,16 @@ class TestProjectSettingsFormTarget(
         values = {
             'settings.example_project_app.project_str_setting': 'updated',
             'settings.example_project_app.project_int_setting': 170,
-            'settings.example_project_app.project_str_setting_options': 'string2',
+            'settings.example_project_app.'
+            'project_str_setting_options': 'string2',
             'settings.example_project_app.project_int_setting_options': 1,
             'settings.example_project_app.project_bool_setting': True,
-            'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
-            'settings.example_project_app.project_callable_setting': 'No project or user for callable',
-            'settings.example_project_app.project_callable_setting_options': str(
-                self.project.sodar_uuid
-            ),
+            'settings.example_project_app.'
+            'project_json_setting': '{"Test": "Updated"}',
+            'settings.example_project_app.'
+            'project_callable_setting': 'No project or user for callable',
+            'settings.example_project_app.'
+            'project_callable_setting_options': str(self.project.sodar_uuid),
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -2316,14 +2319,16 @@ class TestProjectSettingsFormTargetLocal(
         values = {
             'settings.example_project_app.project_str_setting': 'updated',
             'settings.example_project_app.project_int_setting': 170,
-            'settings.example_project_app.project_str_setting_options': 'string2',
+            'settings.example_project_app.'
+            'project_str_setting_options': 'string2',
             'settings.example_project_app.project_int_setting_options': 1,
             'settings.example_project_app.project_bool_setting': True,
-            'settings.example_project_app.project_json_setting': '{"Test": "Updated"}',
-            'settings.example_project_app.project_callable_setting': 'No project or user for callable',
-            'settings.example_project_app.project_callable_setting_options': str(
-                self.project.sodar_uuid
-            ),
+            'settings.example_project_app.'
+            'project_json_setting': '{"Test": "Updated"}',
+            'settings.example_project_app.'
+            'project_callable_setting': 'No project or user for callable',
+            'settings.example_project_app.'
+            'project_callable_setting_options': str(self.project.sodar_uuid),
             'settings.projectroles.test_setting_local': True,
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
@@ -3040,7 +3045,7 @@ class TestRoleAssignmentUpdateView(
         self.assertIsInstance(form.fields['project'].widget, HiddenInput)
         self.assertEqual(form.initial['project'], self.project.sodar_uuid)
         self.assertIsInstance(form.fields['user'].widget, HiddenInput)
-        self.assertEqual(form.initial['user'], self.role_as.user.sodar_uuid)
+        self.assertEqual(form.initial['user'], self.user_guest.sodar_uuid)
         # Assert owner role is not selectable
         self.assertNotIn(
             get_role_option(self.project, self.role_owner),
@@ -3112,7 +3117,7 @@ class TestRoleAssignmentUpdateView(
 
         values = {
             'project': self.role_as.project.sodar_uuid,
-            'user': self.role_as.user.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_contributor.pk,
         }
         with self.login(self.user):
@@ -3156,7 +3161,7 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         values = {
             'project': self.role_as.project.sodar_uuid,
-            'user': self.role_as.user.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
             'role': self.role_delegate.pk,
         }
         with self.login(self.user):
@@ -3588,7 +3593,7 @@ class TestRoleAssignmentDeleteView(
         )
 
     def test_delete_app_settings_inherit(self):
-        """Test deletion of project-user app settings after RoleAssignment deleting with remaining inherited role"""
+        """Test deleting project-user app setting after role delete with inherited role"""
         self.make_assignment(self.category, self.user_contrib, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         app_settings.set(
@@ -3625,7 +3630,7 @@ class TestRoleAssignmentDeleteView(
         )
 
     def test_delete_app_settings_children(self):
-        """Test deletion of project-user app settings after RoleAssignment deleting with child categories or projects"""
+        """Test deleting project-user app setting after role delete with child categories or projects"""
         new_as = self.make_assignment(
             self.category, self.user_new, self.role_guest
         )
@@ -3994,7 +3999,7 @@ class TestProjectInviteCreateView(
 
     def test_render(self):
         """Test rendering ProjectInvite creation form"""
-        with self.login(self.owner_as.user):
+        with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:invite_create',
@@ -4017,7 +4022,7 @@ class TestProjectInviteCreateView(
             'e': 'test@example.com',
             'r': self.role_contributor.pk,
         }
-        with self.login(self.owner_as.user):
+        with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:invite_create',
@@ -4042,7 +4047,7 @@ class TestProjectInviteCreateView(
 
     def test_render_not_found(self):
         """Test rendering with invalid project UUID"""
-        with self.login(self.owner_as.user):
+        with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:invite_create',
@@ -4056,7 +4061,7 @@ class TestProjectInviteCreateView(
         ENABLE_SAML=False,
     )
     def test_local_users_not_allowed(self):
-        """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS=False"""
+        """Test creation for local user with local users not allowed"""
         values = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,
@@ -4078,7 +4083,7 @@ class TestProjectInviteCreateView(
         ENABLE_SAML=False,
     )
     def test_local_users_allowed(self):
-        """Test ProjectInvite creation for local users with PROJECTROLES_ALLOW_LOCAL_USERS = True"""
+        """Test creation for local user with local users allowed"""
         values = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,
@@ -4105,7 +4110,7 @@ class TestProjectInviteCreateView(
         AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE',
     )
     def test_local_users_email_domain(self):
-        """Test ProjectInvite creation for local users with email domain in AUTH_LDAP_USERNAME_DOMAIN"""
+        """Test creation for local user with email domain in AUTH_LDAP_USERNAME_DOMAIN"""
         values = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,
@@ -4132,7 +4137,7 @@ class TestProjectInviteCreateView(
         LDAP_ALT_DOMAINS=['example.com'],
     )
     def test_local_users_email_domain_ldap(self):
-        """Test ProjectInvite creation for local users with email domain in LDAP_ALT_DOMAINS"""
+        """Test creation for local user with email domain in LDAP_ALT_DOMAINS"""
         values = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,
@@ -4788,7 +4793,7 @@ class TestProjectInviteListView(
 
     def test_render(self):
         """Test rendering ProjectInvite list form"""
-        with self.login(self.owner_as.user):
+        with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:invites',
@@ -4799,7 +4804,7 @@ class TestProjectInviteListView(
 
     def test_render_not_found(self):
         """Test rendering ProjectInvite list form with invalid project UUID"""
-        with self.login(self.owner_as.user):
+        with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:invites',
@@ -4832,7 +4837,7 @@ class TestProjectInviteRevokeView(
 
     def test_render(self):
         """Test rendering ProjectInvite revocation form"""
-        with self.login(self.owner_as.user):
+        with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:invite_revoke',
@@ -4843,7 +4848,7 @@ class TestProjectInviteRevokeView(
 
     def test_render_not_found(self):
         """Test rendering with invalid invite UUID"""
-        with self.login(self.owner_as.user):
+        with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:invite_revoke',

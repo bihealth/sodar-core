@@ -1,3 +1,5 @@
+"""Deletecache management command for deleting SODARCache data"""
+
 import sys
 
 from django.conf import settings

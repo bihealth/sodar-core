@@ -11,8 +11,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
-from pagedown.widgets import PagedownWidget
 from dal import autocomplete, forward as dal_forward
+from pagedown.widgets import PagedownWidget
+
 
 from projectroles.models import (
     Project,
@@ -94,16 +95,17 @@ class SODARFormMixin:
         """Return label for app setting key"""
         if plugin:
             return format_html(
-                '{} <i class="iconify" title="{}" data-icon="{}"></i>',
+                '{} <i class="iconify text-info" title="{}" data-icon="{}">'
+                '</i>',
                 label,
                 plugin.title,
                 plugin.icon,
             )
-        else:
-            return format_html(
-                '{} <i class="iconify" title="projectroles" data-icon="mdi-cube"></i>',
-                label,
-            )
+        return format_html(
+            '{} <i class="iconify text-info" title="projectroles" '
+            'data-icon="mdi-cube"></i>',
+            label,
+        )
 
 
 class SODARForm(SODARFormMixin, forms.Form):
@@ -186,7 +188,6 @@ def get_user_widget(
         )
     if widget_class:
         return widget_class(**wg)
-
     return SODARUserAutocompleteWidget(**wg)
 
 
@@ -374,29 +375,28 @@ class ProjectForm(SODARModelForm):
             self.initial[s_field] = json.dumps(json_data)
         else:
             if s_val.get('options'):
-                if callable(s_val['options']):
-                    if self.instance.pk:
-                        values = s_val['options'](project=self.instance)
-                        self.fields[s_field] = forms.ChoiceField(
-                            choices=[
-                                (str(value[0]), str(value[1]))
-                                if isinstance(value, tuple)
-                                else (str(value), str(value))
-                                for value in values
-                            ],
-                            **setting_kwargs
-                        )
-                    else:
-                        values = s_val['options'](project=None)
-                        self.fields[s_field] = forms.ChoiceField(
-                            choices=[
-                                (str(value[0]), str(value[1]))
-                                if isinstance(value, tuple)
-                                else (str(value), str(value))
-                                for value in values
-                            ],
-                            **setting_kwargs
-                        )
+                if callable(s_val['options']) and self.instance.pk:
+                    values = s_val['options'](project=self.instance)
+                    self.fields[s_field] = forms.ChoiceField(
+                        choices=[
+                            (str(value[0]), str(value[1]))
+                            if isinstance(value, tuple)
+                            else (str(value), str(value))
+                            for value in values
+                        ],
+                        **setting_kwargs
+                    )
+                elif callable(s_val['options']) and not self.instance.pk:
+                    values = s_val['options'](project=None)
+                    self.fields[s_field] = forms.ChoiceField(
+                        choices=[
+                            (str(value[0]), str(value[1]))
+                            if isinstance(value, tuple)
+                            else (str(value), str(value))
+                            for value in values
+                        ],
+                        **setting_kwargs
+                    )
                 else:
                     self.fields[s_field] = forms.ChoiceField(
                         choices=[
@@ -526,17 +526,14 @@ class ProjectForm(SODARModelForm):
                 plugin_app_settings[s_key] = cleaned_data.get(s_field)
 
                 if s_val['type'] == 'JSON':
-                    if s_val['type'] == 'JSON':
-                        if not cleaned_data.get(s_field):
-                            cleaned_data[s_field] = '{}'
-                        try:
-                            cleaned_data[s_field] = json.loads(
-                                cleaned_data.get(s_field)
-                            )
-                        except json.JSONDecodeError as err:
-                            errors.append(
-                                (s_field, 'Invalid JSON\n' + str(err))
-                            )
+                    if not plugin_app_settings[s_key]:
+                        cleaned_data[s_field] = '{}'
+                    try:
+                        cleaned_data[s_field] = json.loads(
+                            cleaned_data.get(s_field)
+                        )
+                    except json.JSONDecodeError as err:
+                        errors.append((s_field, 'Invalid JSON\n' + str(err)))
                 elif s_val['type'] == 'INTEGER':
                     # When the field is a select/dropdown the information of
                     # the datatype gets lost. We need to convert that here,
@@ -1061,10 +1058,9 @@ class ProjectInviteForm(SODARModelForm):
         self.fields['message'].widget.attrs['rows'] = 4
 
     def clean(self):
+        user_email = self.cleaned_data.get('email')
         # Check if user email is already in users
-        existing_user = User.objects.filter(
-            email=self.cleaned_data.get('email')
-        ).first()
+        existing_user = User.objects.filter(email=user_email).first()
         if existing_user:
             self.add_error(
                 'email',
@@ -1076,22 +1072,21 @@ class ProjectInviteForm(SODARModelForm):
         try:
             ProjectInvite.objects.get(
                 project=self.project,
-                email=self.cleaned_data.get('email'),
+                email=user_email,
                 active=True,
                 date_expire__gt=timezone.now(),
             )
             self.add_error(
                 'email',
                 'There is already an active invite for email {} in {}'.format(
-                    self.cleaned_data.get('email'), self.project.title
+                    user_email, self.project.title
                 ),
             )
         except ProjectInvite.DoesNotExist:
             pass
 
         # Local users check
-        try:
-            user_email = self.cleaned_data.get('email')
+        if user_email:
             domain = user_email[user_email.find('@') + 1 :]
             domain_list = [
                 getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', ''),
@@ -1112,8 +1107,6 @@ class ProjectInviteForm(SODARModelForm):
                     'Local users not allowed, email domain {} not recognized '
                     'for LDAP users'.format(domain),
                 )
-        except AttributeError:
-            pass
 
         # Delegate checks
         role = self.cleaned_data.get('role')
@@ -1189,9 +1182,6 @@ class RemoteSiteForm(SODARModelForm):
             # Generate secret token for target site
             if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
                 self.fields['secret'].initial = build_secret()
-        # Updating
-        else:
-            pass
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
@@ -1271,8 +1261,8 @@ def get_role_choices(
 
     :param project: Project in which role will be assigned
     :param current_user: User for whom the form is displayed
-    :param promote_as: Assignment for promoting inherited user or inactive
-    assignment overridden by inherited one (RoleAssignment or None)
+    :param promote_as: Assignment for promoting inherited user, or inactive
+                       overridden assignment (RoleAssignment or None)
     :param allow_delegate: Whether delegate should be allowed (bool)
     :return: List
     """

@@ -1,3 +1,5 @@
+"""Synccache management command for synchronizing SODARCache items"""
+
 import sys
 
 from django.conf import settings

@@ -260,9 +260,9 @@ The following projectroles settings are **optional**:
 * ``PROJECTROLES_SEARCH_OMIT_APPS``: List of apps to omit from search results
   (list)
 * ``PROJECTROLES_TARGET_SYNC_ENABLE``: Enable/disable remote project
-  synchronization with a source site (bool)
+  synchronization as a target site. Ignored for source sites (bool)
 * ``PROJECTROLES_TARGET_SYNC_INTERVAL``: Interval in minutes for remote project
-  synchronization with a source site (int)
+  synchronization as a target site. Ignored for source sites (int)
 
 Example:
 

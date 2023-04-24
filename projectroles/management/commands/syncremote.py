@@ -1,3 +1,5 @@
+"""Syncremote management command for synchronizing remote projects"""
+
 import json
 import ssl
 import sys
@@ -11,6 +13,7 @@ from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+
 
 logger = ManagementCommandLogger(__name__)
 
@@ -91,5 +94,4 @@ class Command(BaseCommand):
         except Exception as ex:
             logger.error('Remote sync cancelled with exception: {}'.format(ex))
             sys.exit(1)
-
         logger.info('Syncremote command OK')

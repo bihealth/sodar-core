@@ -44,12 +44,14 @@ class TestUserSettings(TestUIBase):
         WebDriverWait(self.selenium, 15).until(
             lambda x: x.find_element(
                 By.CSS_SELECTOR,
-                'div[id="div_id_settings.example_project_app.user_int_setting"] label',
+                'div[id="div_id_settings.example_project_app.'
+                'user_int_setting"] label',
             )
         )
         label = self.selenium.find_element(
             By.CSS_SELECTOR,
-            'div[id="div_id_settings.example_project_app.user_int_setting"] label',
+            'div[id="div_id_settings.example_project_app.'
+            'user_int_setting"] label',
         )
         # Wait before icon is rendered
         WebDriverWait(label, 15).until(

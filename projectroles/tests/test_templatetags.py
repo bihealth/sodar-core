@@ -483,7 +483,7 @@ class TestProjectrolesRoleTags(TestTemplateTagsBase):
             r_tags.display_role_buttons(
                 self.project,
                 self.owner_as,
-                r_tags.get_role_perms(self.project, self.owner_as.user),
+                r_tags.get_role_perms(self.project, self.user),
             ),
         )
         # Guest

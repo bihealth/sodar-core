@@ -1,7 +1,8 @@
-"""Batchupdateroles management command"""
+"""Batchupdateroles management command for updating user roles in batch"""
+
+import sys
 
 from email.utils import parseaddr
-import sys
 
 from django.conf import settings
 from django.contrib import auth
@@ -20,8 +21,8 @@ from projectroles.views import RoleAssignmentModifyMixin, ProjectInviteMixin
 from projectroles.utils import get_expiry_date, build_secret
 
 
-User = auth.get_user_model()
 logger = ManagementCommandLogger(__name__)
+User = auth.get_user_model()
 
 
 # SODAR constants

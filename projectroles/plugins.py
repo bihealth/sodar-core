@@ -265,7 +265,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'user_modifiable': True,  # Optional, show/hide in forms
     #:             'local': False,  # Optional, show/hide in forms on target
     #:             site, sync value from source to target site if false
-    #:             'project_types': [PROJECT_TYPE_PROJECT],  # Optional, list may
+    #:             'project_types': [PROJECT_TYPE_PROJECT],  # Optional, may
     #:             contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
     #:         }
     #:     }

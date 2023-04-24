@@ -582,16 +582,16 @@ class TestCleanAppSettings(
                 project=s['project'],
             )
 
-    def test_command_definition(self):
-        """Test the cleanappsetting commmand"""
-        ghost = AppSetting(
+    def test_command_undefined(self):
+        """Test cleanappsettings with undefined setting"""
+        undef_setting = AppSetting(
             app_plugin=self.plugin,
             project=self.project,
             name='ghost',
             type='BOOLEAN',
             value=True,
         )
-        ghost.save()
+        undef_setting.save()
         self.assertEqual(AppSetting.objects.count(), 6)
 
         with self.assertLogs(
@@ -620,15 +620,15 @@ class TestCleanAppSettings(
         )
 
     def test_command_project_types(self):
-        """Test the cleanappsettings command on the settings with wrong project types"""
-        cat_sett = AppSetting(
+        """Test cleanappsettings with invalid project types"""
+        cat_setting = AppSetting(
             app_plugin=self.plugin,
             project=self.category,
             name='project_user_bool_setting',
             type='BOOLEAN',
             value=True,
         )
-        cat_sett.save()
+        cat_setting.save()
         self.assertEqual(AppSetting.objects.count(), 6)
 
         with self.assertLogs(
@@ -642,7 +642,8 @@ class TestCleanAppSettings(
                     (
                         CLEAN_LOG_PREFIX
                         + DELETE_PREFIX_MSG.format(
-                            'settings.example_project_app.project_user_bool_setting',
+                            'settings.example_project_app.'
+                            'project_user_bool_setting',
                             self.category.title,
                         )
                         + DELETE_PROJECT_TYPE_MSG.format(
@@ -661,19 +662,18 @@ class TestCleanAppSettings(
             )
 
     def test_command_project_user_scope(self):
-        """Test the cleanappsettings command on the settings with PROJECT_USER scope"""
-        demouser = self.make_user('demouser')
-        demouser.email = 'demouser@example.com'
-        demouser.save()
-        project_user_sett = AppSetting(
+        """Test cleanappsettings with PROJECT_USER scope"""
+        user_new = self.make_user('user_new')
+        user_new.save()
+        pu_setting = AppSetting(
             app_plugin=self.plugin,
             project=self.project,
-            user=demouser,
+            user=user_new,
             name='project_user_bool_setting',
             type='BOOLEAN',
             value=True,
         )
-        project_user_sett.save()
+        pu_setting.save()
         self.assertEqual(AppSetting.objects.count(), 6)
 
         with self.assertLogs(
@@ -687,11 +687,12 @@ class TestCleanAppSettings(
                     (
                         CLEAN_LOG_PREFIX
                         + DELETE_PREFIX_MSG.format(
-                            'settings.example_project_app.project_user_bool_setting',
+                            'settings.example_project_app.'
+                            'project_user_bool_setting',
                             self.project.title,
                         )
                         + DELETE_SCOPE_MSG.format(
-                            demouser.username,
+                            user_new.username,
                         )
                     ),
                     CLEAN_LOG_PREFIX + END_MSG,

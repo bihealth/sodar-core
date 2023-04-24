@@ -18,12 +18,17 @@ Release Highlights
 
 - Extend role inheritance to all roles
 - Add project finder role
+- Add periodic remote project sync using Celery
 - Add custom method support for app settings defaults, options and validation
+- Add project type restriction to app settings
+- Add site-wide scope to app settings
 - Add dismissed alerts view to appalerts
 - Add sodarcache item deletion via API
 - Add omitting of apps in search
+- Add custom template include path
+- Disallow public guest access for categories
 - Replace ProjectUserTag model with app settings
-- Add project_types scope for app_settings
+- Change filesfolders app display name from "Small Files" to "Files"
 - General bug fixes and minor updates
 
 Breaking Changes
@@ -32,9 +37,8 @@ Breaking Changes
 New Context Processor Required
 ------------------------------
 
-Certain sidebar related functionality which was redundantly implemented as
-template tags has been moved into the new ``sidebar_processor`` context
-processor. You need to add this to the context processors on your site in
+Certain sidebar related functionality has been moved into the new
+``sidebar_processor`` context processor. You need to add this to your site in
 ``base.py`` under ``TEMPLATES``:
 
 .. code-block:: python
@@ -106,6 +110,13 @@ the updated roles.
 
 For populating ``Role`` objects in tests, it is recommended for you to use the
 ``RoleMixin.init_roles()`` helper.
+
+ProjectUserTag Model Removed
+----------------------------
+
+The ``ProjectUserTag`` model has been removed. To our knowledge, it was only
+used for project starring in SODAR Core. This functionality has been
+reimplemented using app settings.
 
 System Prerequisites
 --------------------

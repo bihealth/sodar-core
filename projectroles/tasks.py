@@ -6,12 +6,12 @@ from django.conf import settings
 
 from config.celery import app
 
-# Projectroles dependency
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
 
 
 logger = logging.getLogger(__name__)
+
 
 # SODAR constants
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']

@@ -189,7 +189,8 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             'settings.example_project_app.user_str_setting_options': 'string2',
             'settings.example_project_app.user_int_setting_options': 1,
             'settings.example_project_app.user_bool_setting': False,
-            'settings.example_project_app.user_json_setting': '{"Test": "Less"}',
+            'settings.example_project_app.'
+            'user_json_setting': '{"Test": "Less"}',
             'settings.example_project_app.user_callable_setting': 'Test',
             'settings.example_project_app.user_callable_setting_options': str(
                 self.user.sodar_uuid

@@ -440,7 +440,8 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
     def _validate_type(self, attrs):
         """Validate type field"""
-        if attrs.get('type') not in [
+        project_type = attrs.get('type')
+        if project_type not in [
             PROJECT_TYPE_CATEGORY,
             PROJECT_TYPE_PROJECT,
             None,
@@ -451,7 +452,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 )
             )
         if (
-            attrs.get('type')
+            project_type
             and self.instance
             and attrs['type'] != self.instance.type
         ):

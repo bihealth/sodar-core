@@ -8,7 +8,6 @@ import sys
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-# Projectroles dependency
 from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.views import ProjectModifyPluginViewMixin
