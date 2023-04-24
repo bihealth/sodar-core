@@ -124,6 +124,15 @@ Now might also be a good time to read up more on the
 :ref:`Projectroles <app_projectroles>` app as this is the fundamental app for
 most further development.
 
+To enable periodic tasks, you need to start a Celery worker. This is done by
+running the ``make celery`` command in a separate terminal.
+
+.. code-block:: bash
+    $ make celery
+    celery -A config worker -l info --beat
+    (...)
+    [tasks]
+
 
 The First Project
 =================

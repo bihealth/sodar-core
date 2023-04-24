@@ -100,3 +100,4 @@ flamegraph.pl
 
 # Celery
 celerybeat-schedule
+celerybeat-schedule.db
