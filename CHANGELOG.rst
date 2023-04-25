@@ -75,7 +75,7 @@ Changed
     - Deprecate ``PROJECTROLES_HIDE_APP_LINKS`` (#1142)
     - Move Django signals to ``signals.py`` (#1056)
     - Disallow public guest access for categories (#897)
-    - Refactor ``AppSettingAPI`` (#1190)
+    - Refactor ``AppSettingAPI`` (#1190, #1213)
 - **Timeline**
     - Display event extra data to superusers, owners and delegates (#1171)
 

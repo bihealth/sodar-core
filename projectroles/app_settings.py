@@ -24,7 +24,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 # Local constants
 APP_SETTING_LOCAL_DEFAULT = True
-VALID_SCOPES = [
+APP_SETTING_SCOPES = [
     APP_SETTING_SCOPE_PROJECT,
     APP_SETTING_SCOPE_USER,
     APP_SETTING_SCOPE_PROJECT_USER,
@@ -42,6 +42,7 @@ APP_SETTING_SCOPE_ARGS = {
     APP_SETTING_SCOPE_PROJECT_USER: {'project': True, 'user': True},
     APP_SETTING_SCOPE_SITE: {'project': False, 'user': False},
 }
+DELETE_SCOPE_ERR_MSG = 'Argument "{arg}" must be set for {scope} scope setting'
 
 # Define App Settings for projectroles app
 PROJECTROLES_APP_SETTINGS = {
@@ -131,7 +132,7 @@ class AppSettingAPI:
         :param scope: String
         :raise: ValueError if scope is not recognized
         """
-        if scope not in VALID_SCOPES:
+        if scope not in APP_SETTING_SCOPES:
             raise ValueError('Invalid scope "{}"'.format(scope))
 
     @classmethod
@@ -604,24 +605,31 @@ class AppSettingAPI:
     @classmethod
     def delete(cls, app_name, setting_name, project=None, user=None):
         """
-        Delete app setting.
+        Delete one or more app setting objects. In case of a PROJECT_USER
+        setting, can be used to delete all settings related to project.
 
         :param app_name: App name (string, must equal "name" in app plugin)
         :param setting_name: Setting name (string)
         :param project: Project object to delete setting from (optional)
         :param user: User object to delete setting from (optional)
+        :raise: ValueError with invalid project/user args
         """
         setting_def = cls.get_definition(setting_name, app_name=app_name)
-        cls._check_project_and_user(
-            setting_def.get('scope', None), project, user
-        )
-
+        if setting_def['scope'] != APP_SETTING_SCOPE_PROJECT_USER:
+            cls._check_project_and_user(
+                setting_def.get('scope', None), project, user
+            )
+        elif not project:
+            raise ValueError(
+                'Project must be set for {} scope settings'.format(
+                    APP_SETTING_SCOPE_PROJECT_USER
+                )
+            )
         q_kwargs = {'name': setting_name}
         if user:
             q_kwargs['user'] = user
         if project:
             q_kwargs['project'] = project
-
         logger.debug(
             'Delete app setting: {}.{} ({})'.format(
                 app_name, setting_name, '; '.join(q_kwargs)

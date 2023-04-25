@@ -883,81 +883,6 @@ class TestAppSettingAPI(
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_SITE)
         self.assertEqual(defaults[prefix + 'site_bool_setting'], False)
 
-    def test_delete_scope_user_params_none(self):
-        """Test delete() with USER scope and no params (should fail)"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        with self.assertRaises(ValueError):
-            app_settings.delete(EXAMPLE_APP_NAME, 'user_str_setting')
-
-    def test_delete_scope_user_params_user(self):
-        """Test delete() with USER scope and user param"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_user_params_project(self):
-        """Test delete() with USER scope and project param"""
-        with self.assertRaises(ValueError):
-            app_settings.delete(
-                EXAMPLE_APP_NAME, 'user_str_setting', project=self.project
-            )
-
-    def test_delete_scope_user_params_user_project(self):
-        """Test delete() with USER scope and project/user params"""
-        with self.assertRaises(ValueError):
-            app_settings.delete(
-                EXAMPLE_APP_NAME,
-                'user_str_setting',
-                project=self.project,
-                user=self.user,
-            )
-
-    def test_delete_scope_project_user_params_none(self):
-        """Test delete() with PROJECT_USER scope and no params"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME,
-            'project_user_str_setting',
-            self.project,
-            self.user,
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_project_user_params_user(self):
-        """Test delete() with PROJECT_USER scope and user param"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME,
-            'project_user_str_setting',
-            project=self.project,
-            user=self.user,
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_project_user_params_project(self):
-        """Test delete() with PROJECT_USER scope and project param"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME,
-            'project_user_str_setting',
-            project=self.project,
-            user=self.user,
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_project_user_params_user_project(self):
-        """Test delete() with PROJECT_USER scope and user/project params"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME,
-            'project_user_str_setting',
-            project=self.project,
-            user=self.user,
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
-
     def test_delete_scope_project_params_none(self):
         """Test delete() with PROJECT scope and no params (should fail)"""
         self.assertEqual(AppSetting.objects.count(), 16)
@@ -995,6 +920,82 @@ class TestAppSettingAPI(
                 project=self.project,
                 user=self.user,
             )
+
+    def test_delete_scope_user_params_none(self):
+        """Test delete() with USER scope and no params (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        with self.assertRaises(ValueError):
+            app_settings.delete(EXAMPLE_APP_NAME, 'user_str_setting')
+
+    def test_delete_scope_user_params_user(self):
+        """Test delete() with USER scope and user param"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete(
+            EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_scope_user_params_project(self):
+        """Test delete() with USER scope and project param"""
+        with self.assertRaises(ValueError):
+            app_settings.delete(
+                EXAMPLE_APP_NAME, 'user_str_setting', project=self.project
+            )
+
+    def test_delete_scope_user_params_user_project(self):
+        """Test delete() with USER scope and project/user params"""
+        with self.assertRaises(ValueError):
+            app_settings.delete(
+                EXAMPLE_APP_NAME,
+                'user_str_setting',
+                project=self.project,
+                user=self.user,
+            )
+
+    def test_delete_scope_project_user_params_none(self):
+        """Test delete() with PROJECT_USER scope and no params (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        with self.assertRaises(ValueError):
+            app_settings.delete(
+                EXAMPLE_APP_NAME,
+                'project_user_str_setting',
+                project=None,
+                user=None,
+            )
+        self.assertEqual(AppSetting.objects.count(), 16)
+
+    def test_delete_scope_project_user_params_user(self):
+        """Test delete() with PROJECT_USER scope and user param (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        with self.assertRaises(ValueError):
+            app_settings.delete(
+                EXAMPLE_APP_NAME,
+                'project_user_str_setting',
+                project=None,
+                user=self.user,
+            )
+        self.assertEqual(AppSetting.objects.count(), 16)
+
+    def test_delete_scope_project_user_params_project(self):
+        """Test delete() with PROJECT_USER scope and project param"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete(
+            EXAMPLE_APP_NAME,
+            'project_user_str_setting',
+            project=self.project,
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_scope_project_user_params_user_project(self):
+        """Test delete() with PROJECT_USER scope and user/project params"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete(
+            EXAMPLE_APP_NAME,
+            'project_user_str_setting',
+            project=self.project,
+            user=self.user,
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
 
     def test_delete_by_scope(self):
         """Test delete_by_scope() method"""
