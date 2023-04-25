@@ -347,6 +347,8 @@ class Project(models.Model):
                                (boolean, default=False)
         :return: RoleAssignment object or None
         """
+        if not user or user.is_anonymous:
+            return None
         projects = [self] if not inherited_only else []
         projects += list(self.get_parents())
         return (
