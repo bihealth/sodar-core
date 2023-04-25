@@ -53,6 +53,20 @@ Certain sidebar related functionality has been moved into the new
             }
         }
 
+New Mandatory Django Settings
+-----------------------------
+
+The mandatory ``PROJECTROLES_TEMPLATE_INCLUDE_PATH`` Django setting has been
+added in this release. Please add this in your ``base.py`` config, preferably
+with the following syntax:
+
+.. code-block:: python
+
+    PROJECTROLES_TEMPLATE_INCLUDE_PATH = env.path(
+        'PROJECTROLES_TEMPLATE_INCLUDE_PATH',
+        os.path.join(APPS_DIR, 'templates', 'include'),
+    )
+
 Role Inheritance Extended to All Roles
 --------------------------------------
 

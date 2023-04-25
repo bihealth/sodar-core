@@ -577,7 +577,7 @@ SODAR_API_DEFAULT_HOST = env.url(
 PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
 
 # Full path to the custom template includes
-PROJECTROLES_TEMPLATE_INCLUDE_PATH = env.str(
+PROJECTROLES_TEMPLATE_INCLUDE_PATH = env.path(
     'PROJECTROLES_TEMPLATE_INCLUDE_PATH',
     os.path.join(APPS_DIR, 'templates', 'include'),
 )
