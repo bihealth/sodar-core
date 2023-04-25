@@ -125,6 +125,9 @@ the updated roles.
 For populating ``Role`` objects in tests, it is recommended for you to use the
 ``RoleMixin.init_roles()`` helper.
 
+Additionally, ``TestPermissionMixin._send_request()`` has been renamed into
+``send_request()``.
+
 ProjectUserTag Model Removed
 ----------------------------
 

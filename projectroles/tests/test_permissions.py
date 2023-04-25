@@ -40,7 +40,7 @@ REMOTE_SITE_SECRET = build_secret()
 class TestPermissionMixin:
     """Helper class for permission tests"""
 
-    def _send_request(self, url, method, req_kwargs):
+    def send_request(self, url, method, req_kwargs):
         req_method = getattr(self.client, method.lower(), None)
         if not req_method:
             raise ValueError('Invalid method "{}"'.format(method))
@@ -90,7 +90,7 @@ class TestPermissionMixin:
             if user:  # Authenticated user
                 re_url = redirect_user if redirect_user else reverse('home')
                 with self.login(user):
-                    response = self._send_request(url, method, req_kwargs)
+                    response = self.send_request(url, method, req_kwargs)
             else:  # Anonymous
                 if redirect_anon:
                     re_url = redirect_anon
@@ -101,7 +101,7 @@ class TestPermissionMixin:
                     else:
                         next_url = url
                     re_url = reverse('login') + '?next=' + next_url
-                response = self._send_request(url, method, req_kwargs)
+                response = self.send_request(url, method, req_kwargs)
 
             msg = 'user={}'.format(user)
             self.assertEqual(response.status_code, status_code, msg=msg)
@@ -132,7 +132,7 @@ class TestProjectPermissionBase(
     NOTE: To use with DRF API views, you need to use APITestCase
     """
 
-    def _setup_ip_allowing(self, ip_list):
+    def setup_ip_allowing(self, ip_list):
         # Init IP restrict setting
         self.make_setting(
             app_name='projectroles',
@@ -531,7 +531,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_http_x_forwarded_for_block_all(self):
         """Test IP allow list with HTTP_X_FORWARDED_FOR and block all"""
-        self._setup_ip_allowing([])
+        self.setup_ip_allowing([])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -559,7 +559,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_x_forwarded_for_block_all(self):
         """Test IP allow list with X_FORWARDED_FOR and block all"""
-        self._setup_ip_allowing([])
+        self.setup_ip_allowing([])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -587,7 +587,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_forwarded_block_all(self):
         """Test IP allow list with FORWARDED and block all"""
-        self._setup_ip_allowing([])
+        self.setup_ip_allowing([])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -615,7 +615,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_remote_addr_block_all(self):
         """Test IP allow list with REMOTE_ADDR fwd and block all"""
-        self._setup_ip_allowing([])
+        self.setup_ip_allowing([])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -643,7 +643,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_http_x_forwarded_for_allow_ip(self):
         """Test IP allow list with HTTP_X_FORWARDED_FOR and allowed IP"""
-        self._setup_ip_allowing(['192.168.1.1'])
+        self.setup_ip_allowing(['192.168.1.1'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -671,7 +671,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_x_forwarded_for_allow_ip(self):
         """Test IP allow list with X_FORWARDED_FOR and allowed IP"""
-        self._setup_ip_allowing(['192.168.1.1'])
+        self.setup_ip_allowing(['192.168.1.1'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -699,7 +699,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_forwarded_allow_ip(self):
         """Test IP allow list with FORWARDED and allowed IP"""
-        self._setup_ip_allowing(['192.168.1.1'])
+        self.setup_ip_allowing(['192.168.1.1'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -727,7 +727,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_remote_addr_allow_ip(self):
         """Test IP allow list with REMOTE_ADDR and allowed IP"""
-        self._setup_ip_allowing(['192.168.1.1'])
+        self.setup_ip_allowing(['192.168.1.1'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -755,7 +755,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_remote_addr_allow_network(self):
         """Test IP allow list with REMOTE_ADDR and allowed network"""
-        self._setup_ip_allowing(['192.168.1.0/24'])
+        self.setup_ip_allowing(['192.168.1.0/24'])
 
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -784,7 +784,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_remote_addr_not_in_list_ip(self):
         """Test IP allow list with REMOTE_ADDR and IP not in list"""
-        self._setup_ip_allowing(['192.168.1.2'])
+        self.setup_ip_allowing(['192.168.1.2'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -812,7 +812,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
     def test_project_details_ip_remote_addr_not_in_list_network(self):
         """Test IP allow list with REMOTE_ADDR and network not in list"""
-        self._setup_ip_allowing(['192.168.2.0/24'])
+        self.setup_ip_allowing(['192.168.2.0/24'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1706,7 +1706,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_http_x_forwarded_for_block_all(self):
         """Test target site IP allow list with X_FORWARDED_FOR and block all"""
-        self._setup_ip_allowing([])
+        self.setup_ip_allowing([])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1732,7 +1732,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_x_forwarded_for_block_all(self):
         """Test target site IP allow list with FORWARDED and block all"""
-        self._setup_ip_allowing([])
+        self.setup_ip_allowing([])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1758,7 +1758,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_forwarded_block_all(self):
         """Test target site IP allow list with FORWARDED and block all"""
-        self._setup_ip_allowing([])
+        self.setup_ip_allowing([])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1784,7 +1784,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_remote_addr_block_all(self):
         """Test target site IP allow list with REMOTE_ADDR fwd and block all"""
-        self._setup_ip_allowing([])
+        self.setup_ip_allowing([])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1810,7 +1810,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_http_x_forwarded_for_allow_ip(self):
         """Test target site IP allow list with HTTP_X_FORWARDED_FOR and allowed IP"""
-        self._setup_ip_allowing(['192.168.1.1'])
+        self.setup_ip_allowing(['192.168.1.1'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1836,7 +1836,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_x_forwarded_for_allow_ip(self):
         """Test target site IP allow list with X_FORWARDED_FOR and allowed IP"""
-        self._setup_ip_allowing(['192.168.1.1'])
+        self.setup_ip_allowing(['192.168.1.1'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1862,7 +1862,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_allowing_forwarded_allow_ip(self):
         """Test target site IP allow list with FORWARDED and allowed IP"""
-        self._setup_ip_allowing(['192.168.1.1'])
+        self.setup_ip_allowing(['192.168.1.1'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1888,7 +1888,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_remote_addr_allow_ip(self):
         """Test target site IP allow list with REMOTE_ADDR and allowed IP"""
-        self._setup_ip_allowing(['192.168.1.1'])
+        self.setup_ip_allowing(['192.168.1.1'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1914,7 +1914,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_allowing_remote_addr_allow_network(self):
         """Test target site IP allow list with REMOTE_ADDR and allowed network"""
-        self._setup_ip_allowing(['192.168.1.0/24'])
+        self.setup_ip_allowing(['192.168.1.0/24'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1940,7 +1940,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_remote_addr_not_in_list_ip(self):
         """Test target site IP allow list with REMOTE_ADDR and IP not in list"""
-        self._setup_ip_allowing(['192.168.1.2'])
+        self.setup_ip_allowing(['192.168.1.2'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1966,7 +1966,7 @@ class TestTargetProjectViews(
 
     def test_project_details_ip_remote_addr_not_in_list_network(self):
         """Test target site IP allow list with REMOTE_ADDR and network not in list"""
-        self._setup_ip_allowing(['192.168.2.0/24'])
+        self.setup_ip_allowing(['192.168.2.0/24'])
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
