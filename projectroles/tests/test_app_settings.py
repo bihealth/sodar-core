@@ -4,17 +4,15 @@ from test_plus.test import TestCase
 
 from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin
-from projectroles.app_settings import AppSettingAPI
+from projectroles.app_settings import (
+    AppSettingAPI,
+    get_example_setting_default,
+    get_example_setting_options,
+)
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     AppSettingMixin,
-)
-
-# Callable function dependency for testing
-from example_project_app.plugins import (
-    get_example_setting_default,
-    get_example_setting_options,
 )
 
 
