@@ -93,6 +93,7 @@ Fixed
     - ``ProjectListAPIView`` failure with inheritance and public guest access (#1176)
     - Incorrect icon displayed in ``remoteproject_update.html`` (#1179)
     - Long ``Project.full_title`` breaking ``remoteproject_update.html`` layout (#1188)
+    - ``LDAP_ALT_DOMAINS`` check not working in ``get_invite_type()`` (#1217)
 
 Removed
 -------

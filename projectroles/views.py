@@ -2328,11 +2328,17 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
     def get_invite_type(cls, invite):
         """Return invite type ("ldap", "local" or "error")"""
         # Check if domain is associated with LDAP
-        domain = invite.email.split('@')[1].split('.')[0].lower()
-        if settings.ENABLE_LDAP and domain in (
+        domain = invite.email.split('@')[1].lower()
+        domain_no_tld = domain.split('.')[0].lower()
+        ldap_domains = [
             getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').lower(),
             getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').lower(),
-            *[a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])],
+        ]
+        alt_domains = [
+            a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])
+        ]
+        if settings.ENABLE_LDAP and (
+            domain_no_tld in ldap_domains or domain in alt_domains
         ):
             return 'ldap'
         elif settings.PROJECTROLES_ALLOW_LOCAL_USERS:
