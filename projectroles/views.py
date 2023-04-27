@@ -15,7 +15,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.db.models import QuerySet
 from django.http import Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.urls import resolve, reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -678,22 +678,33 @@ class ProjectSearchResultsView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
+        search_input = ''
         search_terms = []
         search_type = None
         keyword_input = []
         search_keywords = {}
 
-        search_input = self.request.GET.get('s').strip()
-        search_split = search_input.split(' ')
-        search_term = search_split[0].strip()
-        for i in range(1, len(search_split)):
-            s = search_split[i].strip()
-            if ':' in s:
-                keyword_input.append(s)
-            elif s != '':
-                search_term += ' ' + s.lower()
-        if search_term:
-            search_terms = [search_term]
+        if self.request.POST.get('m'):  # Multi search
+            search_terms = [
+                t.strip()
+                for t in self.request.POST['m'].strip().split('\r\n')
+                if len(t.strip()) >= 3
+            ]
+            if self.request.POST.get('k'):
+                keyword_input = self.request.POST['k'].strip().split(' ')
+        elif self.request.GET.get('s'):  # Single search
+            search_input = self.request.GET.get('s').strip()
+            search_split = search_input.split(' ')
+            search_term = search_split[0].strip()
+            for i in range(1, len(search_split)):
+                s = search_split[i].strip()
+                if ':' in s:
+                    keyword_input.append(s)
+                elif s != '':
+                    search_term += ' ' + s.lower()
+            if search_term:
+                search_terms = [search_term]
+
         search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
         for s in keyword_input:
@@ -743,6 +754,13 @@ class ProjectSearchResultsView(
             return redirect(reverse('home'))
         return super().render_to_response(context)
 
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(*args, **kwargs)
+        if not context['search_terms']:
+            messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        return super().render_to_response(context)
+
 
 class ProjectAdvancedSearchView(
     LoginRequiredMixin, ProjectSearchMixin, TemplateView
@@ -751,61 +769,8 @@ class ProjectAdvancedSearchView(
 
     template_name = 'projectroles/search_advanced.html'
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(**kwargs)
-        search_terms = []
-        search_type = None
-        keyword_input = []
-        search_keywords = {}
-
-        if self.request.POST.get('m'):  # Multi search
-            search_terms = [
-                t.strip()
-                for t in self.request.POST['m'].strip().split('\r\n')
-                if len(t.strip()) >= 3
-            ]
-            if self.request.POST.get('k'):
-                keyword_input = self.request.POST['k'].strip().split(' ')
-        search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
-
-        for s in keyword_input:
-            kw = s.split(':')[0].lower().strip()
-            val = s.split(':')[1].lower().strip()
-            if kw == 'type':
-                search_type = val
-            else:
-                search_keywords[kw] = val
-
-        context['search_terms'] = search_terms
-        context['search_type'] = search_type
-        context['search_keywords'] = search_keywords
-        # Get project results
-        if not search_type or search_type == 'project':
-            context['project_results'] = [
-                p
-                for p in Project.objects.find(
-                    search_terms, project_type='PROJECT'
-                )
-                if self.request.user.has_perm('projectroles.view_project', p)
-            ]
-        # Get app results
-        context['app_results'] = self._get_app_results(
-            self.request.user, search_terms, search_type, search_keywords
-        )
-        # List apps for which no results were found
-        context['not_found'] = self._get_not_found(
-            search_type,
-            context.get('project_results') or [],
-            context['app_results'],
-        )
-        return context
-
     def post(self, request, *args, **kwargs):
-        context = self.get_context_data(*args, **kwargs)
-        if not context['search_terms']:
-            messages.error(request, 'No search terms provided.')
-            return redirect(reverse('home'))
-        return render(request, 'projectroles/search_results.html', context)
+        return ProjectSearchResultsView.as_view()(request)
 
 
 # Project Editing Views --------------------------------------------------------
