@@ -1970,7 +1970,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                 project=project, user=new_owner, role=self.role_owner
             )
         # Call for additional actions for role creation/update in plugins
-        if not getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
+        if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             args = [
                 project,
                 new_owner,
