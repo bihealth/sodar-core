@@ -197,8 +197,9 @@ class Project(models.Model):
         self._validate_archive()
         # Update full title of self and children
         self.full_title = self._get_full_title()
-        for child in self.children.all():
-            child.save()
+        if self.type == PROJECT_TYPE_CATEGORY:
+            for child in self.children.all():
+                child.save()
         # Update public children
         # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
         self.has_public_children = self._has_public_children()
@@ -278,6 +279,8 @@ class Project(models.Model):
         """
         Return True if the project has any children with public guest access.
         """
+        if self.type != PROJECT_TYPE_CATEGORY:
+            return False
         for child in self.get_children():
             if child.public_guest_access:
                 return True
@@ -325,6 +328,8 @@ class Project(models.Model):
         :param flat: Return all children recursively as a flat list (bool)
         :return: QuerySet
         """
+        if self.type != PROJECT_TYPE_CATEGORY:
+            return Project.objects.none()
         if flat:
             return Project.objects.filter(
                 full_title__startswith=self.full_title + CAT_DELIMITER
@@ -575,6 +580,8 @@ class Project(models.Model):
         :param user: User object
         :return: Boolean
         """
+        if self.type != PROJECT_TYPE_CATEGORY:
+            return False
         # User with role in self has at least the same role in children
         if self.has_role(user):
             return True

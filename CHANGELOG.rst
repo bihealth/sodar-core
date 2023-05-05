@@ -66,7 +66,7 @@ Changed
     - Implement advanced search with POST (#712)
     - Remove category project list scrolling (#1141)
     - Move sidebar template tags to context processor (#969)
-    - Update ``Project`` model API methods (#638, #710, #1045, #1178, #1201)
+    - Update ``Project`` model API methods (#638, #710, #1045, #1178, #1201, #1222)
     - Update permission and UI test setup (#638)
     - Display roles consistently in member/owner update UI (#1027)
     - Reduce site app view top margin (#866)
