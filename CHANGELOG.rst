@@ -84,6 +84,7 @@ Fixed
 
 - **General**
     - ``django-autocomplete-light==3.9.5`` crash with ``whitenoise`` (#1224)
+    - Readthedocs build failing from using Python <3.8 (#1227)
 - **Appalerts**
     - ``AppAlert.__repr__()`` crash if project not set (#1150)
 - **Bgjobs**
