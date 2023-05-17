@@ -31,19 +31,28 @@
 
 <div class="row sodar-subtitle-container">
   {% if dismissed %}
-    <h2><i class="iconify" data-icon="mdi:alert-octagram-outline"></i>Dismissed App Alerts</h2>
+    <h2>
+      <i class="iconify" data-icon="mdi:alert-octagram-outline"></i>
+      Dismissed App Alerts
+    </h2>
   {% else %}
-    <h2><i class="iconify" data-icon="mdi:alert-octagram"></i>Active App Alerts</h2>
+    <h2>
+      <i class="iconify" data-icon="mdi:alert-octagram"></i>
+      Active App Alerts
+    </h2>
   {% endif %}
   {% if not dismissed %}
     <div class="btn-group ml-auto">
-      <button class="btn btn-primary dropdown-toggle" id="sodar-app-alert-btn-dropdown-operations"
-              type="button" data-toggle="dropdown" aria-expanded="false">Alert Operations
+      <button class="btn btn-primary dropdown-toggle"
+              id="sodar-app-alert-btn-dropdown-operations"
+              type="button" data-toggle="dropdown" aria-expanded="false">
+        Alert Operations
       </button>
       <div class="dropdown-menu dropdown-menu-right">
         <a class="dropdown-item" id="sodar-app-alert-btn-dismissed"
            href="{% url 'appalerts:list_dismissed' %}">
-          <i class="iconify" data-icon="mdi:alert-octagram-outline"></i> View Dismissed
+          <i class="iconify" data-icon="mdi:alert-octagram-outline"></i>
+          View Dismissed
         </a>
         <a class="dropdown-item sodar-app-alert-btn-dismiss
            {% if object_list.count == 0 %}disabled{% endif %}"
