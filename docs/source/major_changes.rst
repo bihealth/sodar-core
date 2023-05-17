@@ -72,7 +72,7 @@ Role Inheritance Extended to All Roles
 
 Inheriting roles from parent categories has been extended from the owner role to
 all roles. Access to inherited projects will be given automatically when
-updating your site to SODAR Core v0.12.
+updating your site to SODAR Core v0.13.
 
 Inherited roles override "local" roles assigned to a specific project based on
 the role rank. Local roles can still be assigned to projects, but only promoting
@@ -85,13 +85,21 @@ The following steps are recommended:
 2. Update the rules and permission tests in your site to ensure proper access
    for users to all views.
 
+If your site uses the project modify API to e.g. update user access on external
+services, you need to update your modify API calls according to the new
+inheritance policy. The ``syncmodifyapi`` management command should be used to
+update existing roles, which means implemented ``perform_project_sync()``
+methods should also be updated.
+
 Project Finder Role Added
 -------------------------
 
 The *project finder* role has been added. For more information on this role, see
 :ref:`app_projectroles_basics`. It is recommended to update permission tests and
 rules as applicable to ensure users with this role have proper access to your
-apps.
+apps. The ``RoleMixin.init_roles()`` helper should be used in tests to
+initialize built-in roles correctly, unless inherited from a SODAR Core base
+test class.
 
 Projectroles Models API Updated
 -------------------------------
@@ -99,7 +107,7 @@ Projectroles Models API Updated
 There have been multiple changes in the projectroles models API due to the role
 inheritance and ranking updates. Please consult
 :ref:`app_projectroles_api_django` to review specific changes and update any
-effected code accordingly.
+effected code.
 
 - ``RoleAssignmentManager`` along with the ``get_assignment()`` method have been
   removed. Instead, please use ``Project.get_role()`` or direct
@@ -122,8 +130,9 @@ users for all roles to help test extended role inheritance. This may cause some
 of your existing tests to fail. In that case, please update your tests to match
 the updated roles.
 
-For populating ``Role`` objects in tests, it is recommended for you to use the
-``RoleMixin.init_roles()`` helper.
+For manually populating ``Role`` objects in tests, it is **strongly**
+recommended for you to use the ``RoleMixin.init_roles()`` helper. This ensures
+roles and their ranks are correctly initialized.
 
 Additionally, ``TestPermissionMixin._send_request()`` has been renamed into
 ``send_request()``.
@@ -140,7 +149,7 @@ System Prerequisites
 
 Third party Python package dependencies have been upgraded. See the
 ``requirements`` directory for up-to-date package versions and upgrade your
-project accordingly.
+project.
 
 Note that the upgrade to ``django-crispy-forms>=2.0`` requires the separate
 installation of ``crispy-bootstrap4==2022.1``. You also need to add
@@ -159,8 +168,7 @@ Deprecated App Settings API Methods Removed
 
 The app settings API methods deprecated in v0.12 have been removed in this
 release. If you are still using deprecated methods, please refer to the list
-found in the v0.12.0 major changes notes below and update your API calls
-accordingly.
+found in the v0.12.0 major changes notes below and update your API calls.
 
 
 v0.12.0 (2023-02-03)
