@@ -1,18 +1,22 @@
-from django.conf.urls import url
+from django.urls import path
 
 from tokens import views
 
 app_name = 'tokens'
 
 urlpatterns = [
-    url(regex=r'^$', view=views.UserTokenListView.as_view(), name='list'),
-    url(
-        regex=r'^create/',
+    path(
+        route='',
+        view=views.UserTokenListView.as_view(),
+        name='list',
+    ),
+    path(
+        route='create/',
         view=views.UserTokenCreateView.as_view(),
         name='create',
     ),
-    url(
-        regex=r'^delete/(?P<pk>.+)$',
+    path(
+        route='delete/<str:pk>',
         view=views.UserTokenDeleteView.as_view(),
         name='delete',
     ),

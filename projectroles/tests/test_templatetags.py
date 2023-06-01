@@ -4,7 +4,6 @@ import mistune
 import uuid
 
 from importlib import import_module
-from math import ceil
 
 from django.conf import settings
 from django.test import override_settings, RequestFactory
@@ -15,25 +14,28 @@ from test_plus.test import TestCase
 import projectroles
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
-    Role,
-    SODAR_CONSTANTS,
-    PROJECT_TAG_STARRED,
     Project,
     RemoteProject,
     RemoteSite,
     AppSetting,
+    SODAR_CONSTANTS,
 )
 from projectroles.plugins import get_app_plugin, get_active_plugins
-from projectroles.project_tags import set_tag_state
 from projectroles.templatetags import (
     projectroles_common_tags as c_tags,
+    projectroles_role_tags as r_tags,
     projectroles_tags as tags,
 )
 from projectroles.tests.test_models import (
     ProjectMixin,
+    RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
 )
+
+
+app_settings = AppSettingAPI()
+site = import_module(settings.SITE_PACKAGE)
 
 
 # SODAR constants
@@ -48,44 +50,32 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
-
 # Local constants
 NON_EXISTING_UUID = uuid.uuid4()
 STATIC_FILE_PATH = 'images/logo_navbar.png'
 TEMPLATE_PATH = 'projectroles/home.html'
 
 
-site = import_module(settings.SITE_PACKAGE)
-
-
-# App settings API
-app_settings = AppSettingAPI()
-
-
 class TestTemplateTagsBase(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase
+    ProjectMixin, RoleMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase
 ):
     """Base class for testing template tags"""
 
     def setUp(self):
         # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-
+        self.init_roles()
         # Init users
         self.user = self.make_user('user_owner')
-
         # Init category
         self.category = self.make_project(
             title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
         )
-
         # Init project under category
         self.project = self.make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category,
         )
-
         # Init role assignments
         self.owner_as_cat = self.make_assignment(
             self.category, self.user, self.role_owner
@@ -93,8 +83,7 @@ class TestTemplateTagsBase(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
-        # Init app_setting
+        # Init app_settings
         app_settings.set(
             'filesfolders', 'allow_public_links', True, project=self.project
         )
@@ -108,7 +97,7 @@ class TestTemplateTagsBase(
         )
 
 
-class TestCommonTemplateTags(TestTemplateTagsBase):
+class TestProjectrolesCommonTags(TestTemplateTagsBase):
     """Test for template tags in projectroles_common_tags"""
 
     def test_site_version(self):
@@ -277,7 +266,7 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         )
         self.assertEqual(
             c_tags.get_history_dropdown(self.user, self.project),
-            '<a class="dropdown-item" href="{}">\n'
+            '<a class="dropdown-item sodar-pr-role-link-history" href="{}">\n'
             '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i> '
             'History</a>\n'.format(url),
         )
@@ -436,8 +425,99 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         )
 
 
-class TestProjectrolesTemplateTags(TestTemplateTagsBase):
-    """Test for template tags in projectroless_tags"""
+class TestProjectrolesRoleTags(TestTemplateTagsBase):
+    """Test for template tags in projectroles_role_tags"""
+
+    def test_get_role_icon(self):
+        """Test get_role_icon()"""
+        self.assertEqual(r_tags.get_role_icon(self.role_owner), 'mdi:star')
+        self.assertEqual(
+            r_tags.get_role_icon(self.role_delegate), 'mdi:star-half-full'
+        )
+        self.assertEqual(
+            r_tags.get_role_icon(self.role_contributor), 'mdi:account'
+        )
+        self.assertEqual(r_tags.get_role_icon(self.role_guest), 'mdi:account')
+
+    def test_get_role_perms(self):
+        """Test get_role_perms()"""
+        self.assertEqual(
+            r_tags.get_role_perms(self.project, self.user),
+            {
+                'can_update_owner': True,
+                'can_update_delegate': True,
+                'can_update_members': True,
+                'can_invite': True,
+            },
+        )
+        # Guest
+        user_guest = self.make_user('user_new')
+        self.make_assignment(self.project, user_guest, self.role_guest)
+        self.assertEqual(
+            r_tags.get_role_perms(self.project, user_guest),
+            {
+                'can_update_owner': False,
+                'can_update_delegate': False,
+                'can_update_members': False,
+                'can_invite': False,
+            },
+        )
+        # Inherited delegate
+        user_delegate_cat = self.make_user('user_delegate_cat')
+        self.make_assignment(
+            self.category, user_delegate_cat, self.role_delegate
+        )
+        self.assertEqual(
+            r_tags.get_role_perms(self.project, user_delegate_cat),
+            {
+                'can_update_owner': False,
+                'can_update_delegate': False,
+                'can_update_members': True,
+                'can_invite': True,
+            },
+        )
+
+    def test_display_role_buttons(self):
+        """Test display_role_buttons()"""
+        self.assertTrue(
+            r_tags.display_role_buttons(
+                self.project,
+                self.owner_as,
+                r_tags.get_role_perms(self.project, self.user),
+            ),
+        )
+        # Guest
+        user_guest = self.make_user('user_new')
+        guest_as = self.make_assignment(
+            self.project, user_guest, self.role_guest
+        )
+        self.assertFalse(
+            r_tags.display_role_buttons(
+                self.project,
+                guest_as,
+                r_tags.get_role_perms(self.project, guest_as.user),
+            ),
+        )
+
+    def test_get_inactive_role(self):
+        """Test get_inactive_role()"""
+        inh_user = self.make_user('inh_user')
+        self.owner_as_cat.user = inh_user
+        self.owner_as_cat.save()
+        self.assertEqual(
+            r_tags.get_inactive_role(self.project, self.owner_as_cat), None
+        )
+        inactive_as = self.make_assignment(
+            self.project, inh_user, self.role_contributor
+        )
+        self.assertEqual(
+            r_tags.get_inactive_role(self.project, self.owner_as_cat),
+            inactive_as,
+        )
+
+
+class TestProjectrolesTags(TestTemplateTagsBase):
+    """Test for template tags in projectroles_tags"""
 
     def test_sodar_constant(self):
         """Test sodar_constant()"""
@@ -452,17 +532,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         )
 
     # TODO: Test get_site_app_messages() (set up admin alert)
-
-    def test_has_star(self):
-        """Test has_star()"""
-        # Test with no star
-        self.assertEqual(tags.has_star(self.project, self.user), False)
-
-        # Set star and test again
-        set_tag_state(self.project, self.user, name=PROJECT_TAG_STARRED)
-        self.assertEqual(tags.has_star(self.project, self.user), True)
-
-    # TODO: Test get_remote_project_obj() (Set up remote projects)
 
     def test_allow_project_creation(self):
         """Test allow_project_creation()"""
@@ -497,7 +566,7 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             tags.is_app_visible(app_plugin, self.category, self.user), True
         )
 
-    @override_settings(PROJECTROLES_HIDE_APP_LINKS=['filesfolders'])
+    @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=['filesfolders'])
     def test_is_app_visible_hide(self):
         """Test is_app_visible() with a hidden app and normal/superuser"""
         app_plugin = get_app_plugin('filesfolders')
@@ -510,18 +579,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.project, superuser), False
         )
-
-    def test_is_inherited_owner(self):
-        """Test is_inherited_owner()"""
-        owner_cat = self.make_user('user_cat_owner')
-        self.owner_as_cat.user = owner_cat
-        self.owner_as_cat.save()
-        self.assertEqual(
-            tags.is_inherited_owner(self.project, self.user), False
-        )
-        self.assertEqual(tags.is_inherited_owner(self.project, owner_cat), True)
-        # Should work without crashing
-        self.assertEqual(tags.is_inherited_owner(None, None), False)
 
     def test_get_app_link_state(self):
         """Test get_app_link_state()"""
@@ -561,58 +618,3 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         self.assertEqual(
             tags.get_sidebar_app_legend('Update Project'), 'Update<br />Project'
         )
-
-    def test_get_sidebar_icon_size(self):
-        """Test get_sidebar_icon_size() with default value"""
-        self.assertEqual(tags.get_sidebar_icon_size(), 36)
-
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE - 2
-    )
-    def test_get_sidebar_icon_size_min(self):
-        """Test get_sidebar_icon_size() with a value below minimum"""
-        self.assertEqual(
-            tags.get_sidebar_icon_size(), tags.SIDEBAR_ICON_MIN_SIZE
-        )
-
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE + 2
-    )
-    def test_get_sidebar_icon_size_max(self):
-        """Test get_sidebar_icon_size() with a value over max"""
-        self.assertEqual(
-            tags.get_sidebar_icon_size(), tags.SIDEBAR_ICON_MAX_SIZE
-        )
-
-    def test_get_sidebar_notch_pos(self):
-        """Test get_sidebar_notch_pos()"""
-        self.assertEqual(tags.get_sidebar_notch_pos(), ceil(36 / 3))
-
-    def test_get_sidebar_notch_size(self):
-        """Test get_sidebar_notch_size()"""
-        self.assertEqual(tags.get_sidebar_notch_size(), 12)
-
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
-    )
-    def test_get_sidebar_notch_size_min(self):
-        """Test get_sidebar_notch_size() with minimum icon size"""
-        self.assertEqual(tags.get_sidebar_notch_size(), 9)
-
-    def test_get_sidebar_padding(self):
-        """Test get_sidebar_padding()"""
-        self.assertEqual(tags.get_sidebar_padding(), 8)
-
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE
-    )
-    def test_get_sidebar_padding_max(self):
-        """Test get_sidebar_padding() with maximum icon size"""
-        self.assertEqual(tags.get_sidebar_padding(), 10)
-
-    @override_settings(
-        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
-    )
-    def test_get_sidebar_padding_min(self):
-        """Test get_sidebar_padding() with minimum icon size"""
-        self.assertEqual(tags.get_sidebar_padding(), 4)

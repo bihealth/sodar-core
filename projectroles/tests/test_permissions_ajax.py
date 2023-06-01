@@ -20,14 +20,19 @@ class TestProjectViews(TestProjectPermissionBase):
     """Permission tests for Project Ajax views"""
 
     def test_project_list_ajax(self):
-        """Test permissions for ProjectListAjaxView"""
+        """Test ProjectListAjaxView permissions"""
         url = reverse('projectroles:ajax_project_list')
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -37,23 +42,28 @@ class TestProjectViews(TestProjectPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_project_list_ajax_anon(self):
-        """Test permissions for ProjectListAjaxView with anonymous access"""
+        """Test ProjectListAjaxView permissions with anonymous access"""
         url = reverse('projectroles:ajax_project_list')
         self.assert_response(url, self.anonymous, 200)
         self.project.set_public()
         self.assert_response(url, self.anonymous, 200)
 
     def test_project_list_column_ajax(self):
-        """Test permissions for ProjectListColumnAjaxView"""
+        """Test ProjectListColumnAjaxView permissions"""
         url = reverse('projectroles:ajax_project_list_columns')
         data = {'projects': [str(self.project.sodar_uuid)]}
         req_kwargs = {'content_type': 'application/json'}
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(
@@ -84,7 +94,7 @@ class TestProjectViews(TestProjectPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_project_list_column_ajax_anon(self):
-        """Test permissions for ProjectListColumnAjaxView with anonymous access"""
+        """Test ProjectListColumnAjaxView permissions with anonymous access"""
         url = reverse('projectroles:ajax_project_list_columns')
         data = {'projects': [str(self.project.sodar_uuid)]}
         req_kwargs = {'content_type': 'application/json'}
@@ -99,16 +109,21 @@ class TestProjectViews(TestProjectPermissionBase):
         )
 
     def test_project_list_role_ajax(self):
-        """Test permissions for ProjectListRoleAjaxView"""
+        """Test ProjectListRoleAjaxView permissions"""
         url = reverse('projectroles:ajax_project_list_roles')
         data = {'projects': [str(self.project.sodar_uuid)]}
         req_kwargs = {'content_type': 'application/json'}
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(
@@ -139,7 +154,7 @@ class TestProjectViews(TestProjectPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_project_list_role_ajax_anon(self):
-        """Test permissions for ProjectListRoleAjaxView with anonymous access"""
+        """Test ProjectListRoleAjaxView permissions with anonymous access"""
         url = reverse('projectroles:ajax_project_list_roles')
         data = {'projects': [str(self.project.sodar_uuid)]}
         req_kwargs = {'content_type': 'application/json'}
@@ -154,19 +169,23 @@ class TestProjectViews(TestProjectPermissionBase):
         )
 
     def test_starring_ajax(self):
-        """Test permissions for ProjectStarringAjaxView"""
+        """Test ProjectStarringAjaxView permissions"""
         url = reverse(
             'projectroles:ajax_star',
             kwargs={'project': self.project.sodar_uuid},
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
         # Test public project
@@ -175,7 +194,7 @@ class TestProjectViews(TestProjectPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_starring_ajax_anon(self):
-        """Test permissions for project starring Ajax view with anonymous access"""
+        """Test ProjectStarringAjaxView permissions with anonymous access"""
         url = reverse(
             'projectroles:ajax_star',
             kwargs={'project': self.project.sodar_uuid},
@@ -184,19 +203,24 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_response(url, self.anonymous, 401, method='POST')
 
     def test_starring_ajax_category(self):
-        """Test permissions for project starring Ajax view under category"""
+        """Test ProjectStarringAjaxView permissions with category"""
         url = reverse(
             'projectroles:ajax_star',
             kwargs={'project': self.category.sodar_uuid},
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
-        bad_users = [self.anonymous, self.user_no_roles]
+        bad_users = [self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
         # Test public project
@@ -205,7 +229,7 @@ class TestProjectViews(TestProjectPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_starring_ajax_category_anon(self):
-        """Test permissions for category starring Ajax view with anonymous access"""
+        """Test ProjectStarringAjaxView permissions with category and anon access"""
         url = reverse(
             'projectroles:ajax_star',
             kwargs={'project': self.category.sodar_uuid},
@@ -218,10 +242,15 @@ class TestProjectViews(TestProjectPermissionBase):
         url = reverse('projectroles:ajax_user_current')
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         bad_users = [self.anonymous]
@@ -234,10 +263,15 @@ class TestProjectViews(TestProjectPermissionBase):
         url = reverse('projectroles:ajax_autocomplete_user')
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         bad_users = [self.anonymous]

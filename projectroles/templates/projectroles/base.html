@@ -7,9 +7,6 @@
 
 {% block css %}
   {{ block.super }}
-  {% get_sidebar_notch_size as sidebar_notch_size %}
-  {% get_sidebar_notch_pos as sidebar_notch_pos %}
-  {% get_sidebar_padding as sidebar_padding %}
   <style type="text/css">
     /* Notch visualizaton for sidebar */
     .sodar-pr-sidebar-nav-ul li.active a span.sodar-pr-sidebar-icon:after {
@@ -34,7 +31,7 @@
 
 {% block content %}
   {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
-  {% get_sidebar_icon_size as sidebar_icon_size %}
+  {% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
 
   {# Ensure passing CSRF token to Ajax API views #}
   {% csrf_token %}
@@ -82,17 +79,18 @@
       {% include 'projectroles/_messages.html' %}
 
       {# Actual content #}
-      <div class="sodar-app-content" id="sodar-app-content">
+      <div class="sodar-app-content{% if project %}-project{% endif %}"
+           id="sodar-app-content">
         {% block projectroles %}
           Projectroles app content here
         {% endblock projectroles %}
       </div>
 
       {# Footer #}
-      {% template_exists 'include/_footer.html' as footer_exists %}
+      {% template_exists template_include_path|add:'/_footer.html' as footer_exists %}
       <footer class="sodar-footer">
         {% if footer_exists %}
-          {% include 'include/_footer.html' %}
+          {% include template_include_path|add:'/_footer.html' %}
         {% else %}
           {% include 'projectroles/_footer.html' %}
         {% endif %}

@@ -18,6 +18,7 @@ from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
 from rest_framework.test import APITestCase
 
+
 NEW_PROJECT_TITLE = 'New Project'
 
 
@@ -127,15 +128,19 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
     """Tests for projectroles API view permissions"""
 
     def test_project_list(self):
-        """Test permissions for ProjectListAPIView"""
+        """Test ProjectListAPIView permissions"""
         url = reverse('projectroles:api_project_list')
         good_users = [
             self.superuser,
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(url, good_users, 200)
@@ -143,20 +148,23 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, good_users, 200, knox=True)
 
     def test_project_retrieve(self):
-        """Test permissions for ProjectRetrieveAPIView"""
+        """Test ProjectRetrieveAPIView permissions"""
         url = reverse(
             'projectroles:api_project_retrieve',
             kwargs={'project': self.project.sodar_uuid},
         )
         good_users = [
             self.superuser,
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
-        bad_users = [self.user_no_roles]
+        bad_users = [self.user_finder_cat, self.user_no_roles]
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
@@ -168,7 +176,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_project_retrieve_anon(self):
-        """Test permissions for ProjectRetrieveAPIView with anonymous access"""
+        """Test ProjectRetrieveAPIView permissions with anonymous access"""
         url = reverse(
             'projectroles:api_project_retrieve',
             kwargs={'project': self.project.sodar_uuid},
@@ -177,7 +185,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, self.anonymous, 200)
 
     def test_project_create_root(self):
-        """Test permissions for ProjectCreateAPIView with no parent"""
+        """Test ProjectCreateAPIView permissions with no parent"""
         url = reverse('projectroles:api_project_create')
         post_data = {
             'title': NEW_PROJECT_TITLE,
@@ -185,15 +193,19 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'parent': '',
             'description': 'description',
             'readme': 'readme',
-            'owner': str(self.owner_as.user.sodar_uuid),
+            'owner': str(self.user_owner.sodar_uuid),
         }
         good_users = [self.superuser]
         bad_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -237,7 +249,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_project_create_root_anon(self):
-        """Test permissions for ProjectCreateAPIView with no parent with anonymous access"""
+        """Test ProjectCreateAPIView permission with no parent and anon access"""
         url = reverse('projectroles:api_project_create')
         post_data = {
             'title': NEW_PROJECT_TITLE,
@@ -245,7 +257,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'parent': '',
             'description': 'description',
             'readme': 'readme',
-            'owner': str(self.owner_as.user.sodar_uuid),
+            'owner': str(self.user_owner.sodar_uuid),
         }
         self.project.set_public()
         self.assert_response_api(
@@ -253,7 +265,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         )
 
     def test_project_create(self):
-        """Test permissions for ProjectCreateAPIView"""
+        """Test ProjectCreateAPIView permissions"""
         url = reverse('projectroles:api_project_create')
         post_data = {
             'title': NEW_PROJECT_TITLE,
@@ -261,7 +273,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'owner': str(self.owner_as.user.sodar_uuid),
+            'owner': str(self.user_owner.sodar_uuid),
         }
 
         def _cleanup():
@@ -269,12 +281,19 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             if p:
                 p.delete()
 
-        good_users = [self.superuser, self.owner_as_cat.user]
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+        ]
         bad_users = [
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -312,7 +331,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_project_create_anon(self):
-        """Test permissions for ProjectCreateAPIView with anonymous access"""
+        """Test ProjectCreateAPIView permissions with anonymous access"""
         url = reverse('projectroles:api_project_create')
         post_data = {
             'title': NEW_PROJECT_TITLE,
@@ -320,7 +339,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'owner': str(self.owner_as.user.sodar_uuid),
+            'owner': str(self.user_owner.sodar_uuid),
         }
         self.project.set_public()
         self.assert_response_api(
@@ -328,7 +347,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         )
 
     def test_project_update(self):
-        """Test permissions for ProjectUpdateAPIView"""
+        """Test ProjectUpdateAPIView permissions"""
         url = reverse(
             'projectroles:api_project_update',
             kwargs={'project': self.project.sodar_uuid},
@@ -339,16 +358,21 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'owner': str(self.owner_as.user.sodar_uuid),
+            'owner': str(self.user_owner.sodar_uuid),
         }
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -375,7 +399,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_project_update_anon(self):
-        """Test permissions for ProjectUpdateAPIView with anonymous access"""
+        """Test ProjectUpdateAPIView permissions with anonymous access"""
         url = reverse(
             'projectroles:api_project_update',
             kwargs={'project': self.project.sodar_uuid},
@@ -386,7 +410,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'owner': str(self.owner_as.user.sodar_uuid),
+            'owner': str(self.user_owner.sodar_uuid),
         }
         self.project.set_public()
         self.assert_response_api(
@@ -394,7 +418,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         )
 
     def test_role_create(self):
-        """Test permissions for RoleAssignmentCreateAPIView"""
+        """Test RoleAssignmentCreateAPIView permissions"""
         # Create user for assignments
         assign_user = self.make_user('assign_user')
         url = reverse(
@@ -406,13 +430,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'user': str(assign_user.sodar_uuid),
         }
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -460,7 +489,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_role_create_anon(self):
-        """Test permissions for RoleAssignmentCreateAPIView with anonymous access"""
+        """Test RoleAssignmentCreateAPIView permissions with anonymous access"""
         assign_user = self.make_user('assign_user')
         url = reverse(
             'projectroles:api_role_create',
@@ -476,7 +505,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         )
 
     def test_role_update(self):
-        """Test permissions for RoleAssignmentUpdateAPIView"""
+        """Test RoleAssignmentUpdateAPIView permissions"""
         # Create user and assignment
         assign_user = self.make_user('assign_user')
         update_as = self.make_assignment(
@@ -491,13 +520,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'user': str(assign_user.sodar_uuid),
         }
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -524,7 +558,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_role_update_anon(self):
-        """Test permissions for RoleAssignmentUpdateAPIView with anonymous access"""
+        """Test RoleAssignmentUpdateAPIView permissions with anonymous access"""
         # Create user and assignment
         assign_user = self.make_user('assign_user')
         update_as = self.make_assignment(
@@ -544,7 +578,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         )
 
     def test_role_delete(self):
-        """Test permissions for RoleAssignmentDestroyAPIView"""
+        """Test RoleAssignmentDestroyAPIView permissions"""
         # Create user and assignment
         assign_user = self.make_user('assign_user')
         role_uuid = uuid.uuid4()  # Ensure fixed uuid
@@ -561,13 +595,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             kwargs={'roleassignment': role_uuid},
         )
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         _cleanup()
@@ -594,7 +633,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_role_delete_anon(self):
-        """Test permissions for RoleAssignmentDestroyAPIView with anonymous access"""
+        """Test RoleAssignmentDestroyAPIView permissions with anon access"""
         # Create user and assignment
         assign_user = self.make_user('assign_user')
         role_uuid = uuid.uuid4()  # Ensure fixed uuid
@@ -611,7 +650,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, self.anonymous, 401, method='DELETE')
 
     def test_owner_transfer(self):
-        """Test permissions for RoleAssignmentOwnerTransferAPIView"""
+        """Test RoleAssignmentOwnerTransferAPIView permissions"""
         # Create user for assignments
         self.new_owner = self.make_user('new_owner')
         self.new_owner_as = self.make_assignment(
@@ -636,13 +675,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.owner_as.save()
 
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_owner,
         ]
         bad_users = [
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -680,7 +724,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_owner_transfer_anon(self):
-        """Test permissions for RoleAssignmentOwnerTransferAPIView with anonymous access"""
+        """Test RoleAssignmentOwnerTransferAPIView with anon access"""
         # Create user for assignments
         self.new_owner = self.make_user('new_owner')
         self.new_owner_as = self.make_assignment(
@@ -700,20 +744,24 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         )
 
     def test_invite_list(self):
-        """Test permissions for ProjectInviteListAPIView"""
+        """Test ProjectInviteListAPIView permissions"""
         url = reverse(
             'projectroles:api_invite_list',
             kwargs={'project': self.project.sodar_uuid},
         )
         good_users = [
             self.superuser,
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(url, good_users, 200)
@@ -726,7 +774,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_invite_list_anon(self):
-        """Test permissions for ProjectInviteListAPIView with anonymous access"""
+        """Test ProjectInviteListAPIView permissions with anonymous access"""
         url = reverse(
             'projectroles:api_invite_list',
             kwargs={'project': self.project.sodar_uuid},
@@ -735,7 +783,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, self.anonymous, 401)
 
     def test_invite_create(self):
-        """Test permissions for ProjectInviteCreateAPIView"""
+        """Test ProjectInviteCreateAPIView permissions"""
         email = 'new@example.com'
         url = reverse(
             'projectroles:api_invite_create',
@@ -746,13 +794,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'role': SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR'],
         }
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -798,7 +851,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_invite_create_anon(self):
-        """Test permissions for ProjectInviteCreateAPIView with anonymous access"""
+        """Test ProjectInviteCreateAPIView permissions with anonymous access"""
         email = 'new@example.com'
         url = reverse(
             'projectroles:api_invite_create',
@@ -814,7 +867,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         )
 
     def test_invite_revoke(self):
-        """Test permissions for ProjectInviteRevokeAPIView"""
+        """Test ProjectInviteRevokeAPIView permissions"""
         self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
@@ -826,13 +879,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             kwargs={'projectinvite': self.invite.sodar_uuid},
         )
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -875,7 +933,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_invite_revoke_anon(self):
-        """Test permissions for ProjectInviteRevokeAPIView with anonymous access"""
+        """Test ProjectInviteRevokeAPIView permissions with anonymous access"""
         self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
@@ -890,7 +948,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, self.anonymous, 401, method='POST')
 
     def test_invite_resend(self):
-        """Test permissions for ProjectInviteResendAPIView"""
+        """Test ProjectInviteResendAPIView permissions with anonymous access"""
         self.invite = self.make_invite(
             email='new@example.com',
             project=self.project,
@@ -902,13 +960,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             kwargs={'projectinvite': self.invite.sodar_uuid},
         )
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -969,13 +1032,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'setting_name': 'project_str_setting',
         }
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -1014,17 +1082,21 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         get_data = {
             'app_name': 'example_project_app',
             'setting_name': 'project_user_str_setting',
-            'user': str(self.owner_as.user.sodar_uuid),
+            'user': str(self.user_owner.sodar_uuid),
         }
         good_users = [
             self.superuser,
-            self.owner_as.user,
+            self.user_owner,
         ]
         bad_users = [
-            self.owner_as_cat.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -1085,13 +1157,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'value': 'value',
         }
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -1141,14 +1218,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'app_name': 'example_project_app',
             'setting_name': 'project_user_str_setting',
             'value': 'value',
-            'user': str(self.owner_as.user.sodar_uuid),
+            'user': str(self.user_owner.sodar_uuid),
         }
-        good_users = [self.superuser, self.owner_as.user]
+        good_users = [self.superuser, self.user_owner]
         bad_users = [
-            self.owner_as_cat.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -1217,11 +1298,15 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'setting_name': 'user_str_setting',
         }
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -1270,11 +1355,15 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'value': 'value',
         }
         good_users = [
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
 
@@ -1326,11 +1415,15 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         url = reverse('projectroles:api_user_list')
         good_users = [
             self.superuser,
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(url, good_users, 200)
@@ -1342,11 +1435,15 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         url = reverse('projectroles:api_user_current')
         good_users = [
             self.superuser,
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response_api(url, good_users, 200)

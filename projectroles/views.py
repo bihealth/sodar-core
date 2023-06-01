@@ -3,8 +3,6 @@
 import json
 import logging
 import re
-import ssl
-import urllib.request
 
 from ipaddress import ip_address, ip_network
 from urllib.parse import unquote_plus
@@ -52,14 +50,13 @@ from projectroles.models import (
     RemoteSite,
     RemoteProject,
     SODAR_CONSTANTS,
-    PROJECT_TAG_STARRED,
+    ROLE_RANKING,
 )
 from projectroles.plugins import (
     get_active_plugins,
     get_app_plugin,
     get_backend_api,
 )
-from projectroles.project_tags import get_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
 
@@ -75,6 +72,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
@@ -83,6 +81,9 @@ REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
 PROJECT_ACTION_CREATE = SODAR_CONSTANTS['PROJECT_ACTION_CREATE']
 PROJECT_ACTION_UPDATE = SODAR_CONSTANTS['PROJECT_ACTION_UPDATE']
 
@@ -430,7 +431,6 @@ class ProjectContextMixin(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         # Project
         if hasattr(self, 'object') and isinstance(self.object, Project):
             context['project'] = self.get_object()
@@ -438,13 +438,15 @@ class ProjectContextMixin(
             context['project'] = self.object.project
         else:
             context['project'] = self.get_project()
-
         # Project tagging/starring
         if 'project' in context and not getattr(
             settings, 'PROJECTROLES_KIOSK_MODE', False
         ):
-            context['project_starred'] = get_tag_state(
-                context['project'], self.request.user, PROJECT_TAG_STARRED
+            context['project_starred'] = app_settings.get(
+                'projectroles',
+                'project_star',
+                context['project'],
+                self.request.user,
             )
         return context
 
@@ -562,21 +564,9 @@ class ProjectDetailView(
 class ProjectSearchMixin:
     """Common functionalities for search views"""
 
-    def dispatch(self, request, *args, **kwargs):
-        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
-            messages.error(request, 'Search is not enabled.')
-            return redirect('home')
-        return super().dispatch(request, *args, **kwargs)
-
-
-class ProjectSearchResultsView(
-    LoginRequiredMixin, ProjectSearchMixin, TemplateView
-):
-    """View for displaying results of search within projects"""
-
-    template_name = 'projectroles/search_results.html'
-
-    def _get_app_results(self, search_terms, search_type, search_keywords):
+    def _get_app_results(
+        self, user, search_terms, search_type, search_keywords
+    ):
         """
         Return app plugin search results.
 
@@ -587,25 +577,23 @@ class ProjectSearchResultsView(
         """
         plugins = get_active_plugins(plugin_type='project_app')
         ret = []
+        omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
 
+        search_apps = sorted(
+            [
+                p
+                for p in plugins
+                if (p.search_enable and p.name not in omit_apps_list)
+            ],
+            key=lambda x: x.plugin_ordering,
+        )
         if search_type:
-            search_apps = sorted(
-                [
-                    p
-                    for p in plugins
-                    if (p.search_enable and search_type in p.search_types)
-                ],
-                key=lambda x: x.plugin_ordering,
-            )
-        else:
-            search_apps = sorted(
-                [p for p in plugins if p.search_enable],
-                key=lambda x: x.plugin_ordering,
-            )
-
+            search_apps = [
+                p for p in search_apps if search_type in p.search_types
+            ]
         for plugin in search_apps:
             search_kwargs = {
-                'user': self.request.user,
+                'user': user,
                 'search_type': search_type,
                 'search_terms': search_terms,
                 'keywords': search_keywords,
@@ -645,8 +633,7 @@ class ProjectSearchResultsView(
             ret.append(search_res)
         return ret
 
-    @classmethod
-    def _get_not_found(cls, search_type, project_results, app_results):
+    def _get_not_found(self, search_type, project_results, app_results):
         """
         Return list of apps for which objects were search for but not returned.
 
@@ -675,23 +662,37 @@ class ProjectSearchResultsView(
                     ret.append(result['title'])
         return ret
 
+    def dispatch(self, request, *args, **kwargs):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
+            messages.error(request, 'Search is not enabled.')
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ProjectSearchResultsView(
+    LoginRequiredMixin, ProjectSearchMixin, TemplateView
+):
+    """View for displaying results of search within projects"""
+
+    template_name = 'projectroles/search_results.html'
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
+        search_input = ''
         search_terms = []
         search_type = None
         keyword_input = []
         search_keywords = {}
 
-        if self.request.GET.get('m'):  # Multi search
+        if self.request.POST.get('m'):  # Multi search
             search_terms = [
                 t.strip()
-                for t in self.request.GET['m'].strip().split('\r\n')
+                for t in self.request.POST['m'].strip().split('\r\n')
                 if len(t.strip()) >= 3
             ]
-            if self.request.GET.get('k'):
-                keyword_input = self.request.GET['k'].strip().split(' ')
-            search_input = ''  # Clears input for basic search
-        else:  # Single term search
+            if self.request.POST.get('k'):
+                keyword_input = self.request.POST['k'].strip().split(' ')
+        elif self.request.GET.get('s'):  # Single search
             search_input = self.request.GET.get('s').strip()
             search_split = search_input.split(' ')
             search_term = search_split[0].strip()
@@ -703,6 +704,7 @@ class ProjectSearchResultsView(
                     search_term += ' ' + s.lower()
             if search_term:
                 search_terms = [search_term]
+
         search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
         for s in keyword_input:
@@ -719,16 +721,23 @@ class ProjectSearchResultsView(
         context['search_keywords'] = search_keywords
         # Get project results
         if not search_type or search_type == 'project':
-            context['project_results'] = [
-                p
-                for p in Project.objects.find(
-                    search_terms, project_type='PROJECT'
-                )
-                if self.request.user.has_perm('projectroles.view_project', p)
-            ]
+            context['project_results'] = []
+            for p in Project.objects.find(search_terms, project_type='PROJECT'):
+                if p.public_guest_access or self.request.user.has_perm(
+                    'projectroles.view_project', p
+                ):
+                    context['project_results'].append(p)
+                elif self.request.user.is_authenticated and p.parent:
+                    parent_as = p.parent.get_role(self.request.user)
+                    if (
+                        parent_as
+                        and parent_as.role.rank
+                        >= ROLE_RANKING[PROJECT_ROLE_FINDER]
+                    ):
+                        context['project_results'].append(p)
         # Get app results
         context['app_results'] = self._get_app_results(
-            search_terms, search_type, search_keywords
+            self.request.user, search_terms, search_type, search_keywords
         )
         # List apps for which no results were found
         context['not_found'] = self._get_not_found(
@@ -745,6 +754,13 @@ class ProjectSearchResultsView(
             return redirect(reverse('home'))
         return super().render_to_response(context)
 
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(*args, **kwargs)
+        if not context['search_terms']:
+            messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        return super().render_to_response(context)
+
 
 class ProjectAdvancedSearchView(
     LoginRequiredMixin, ProjectSearchMixin, TemplateView
@@ -752,6 +768,9 @@ class ProjectAdvancedSearchView(
     """View for displaying advanced search form"""
 
     template_name = 'projectroles/search_advanced.html'
+
+    def post(self, request, *args, **kwargs):
+        return ProjectSearchResultsView.as_view()(request)
 
 
 # Project Editing Views --------------------------------------------------------
@@ -831,7 +850,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         }
 
     @staticmethod
-    def _get_app_settings(data, instance):
+    def _get_app_settings(data, instance, project=None):
         """
         Return a dictionary of project app settings and their values.
 
@@ -857,8 +876,19 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             for s_key, s_val in p_settings.items():
                 s_name = 'settings.{}.{}'.format(name, s_key)
                 s_data = data.get(s_name)
+
+                if (
+                    not s_val.get('project_types', None)
+                    and not instance.type == PROJECT_TYPE_PROJECT
+                    or s_val.get('project_types', None)
+                    and instance.type not in s_val['project_types']
+                ):
+                    continue
+
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default(name, s_key)
+                    s_data = app_settings.get_default(
+                        name, s_key, project=project
+                    )
                 if s_val['type'] == 'JSON':
                     if s_data is None:
                         s_data = {}
@@ -957,8 +987,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 setting_name=k.split('.')[2],
                 value=v,
                 project=project,
-                validate=False,
-            )  # Already validated in form
+                validate=True,
+            )
 
     @classmethod
     def _notify_users(
@@ -970,7 +1000,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         """
         app_alerts = get_backend_api('appalerts_backend')
         # Create alerts and send emails
-        owner_as = RoleAssignment.objects.get_assignment(owner, project)
+        owner_as = RoleAssignment.objects.filter(
+            project=project, user=owner
+        ).first()
         # Owner change notification
         if request.user != owner and action == PROJECT_ACTION_CREATE:
             if app_alerts:
@@ -1093,7 +1125,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             owner = old_project.get_owner().user
 
         # Get settings
-        project_settings = self._get_app_settings(data, instance)
+        project_settings = self._get_app_settings(data, project)
         old_settings = None
         if action == PROJECT_ACTION_UPDATE:
             old_settings = json.loads(json.dumps(project_settings))  # Copy
@@ -1264,7 +1296,6 @@ class ProjectCreateView(
 
         if 'project' in self.kwargs:
             project = Project.objects.get(sodar_uuid=self.kwargs['project'])
-
             if project.type != PROJECT_TYPE_CATEGORY:
                 messages.error(
                     self.request,
@@ -1327,15 +1358,15 @@ class ProjectArchiveView(
             alert_msg = '{} data is now read-only.'.format(alert_p)
         else:
             alert_msg = '{} data can be modified.'.format(alert_p)
-        users = [a.user for a in project.get_all_roles() if a.user != user]
+        users = [a.user for a in project.get_roles() if a.user != user]
         users = list(set(users))  # Remove possible dupes (see issue #710)
         if not users:
             return
-        for u in users:
-            app_alerts.add_alert(
+        else:
+            app_alerts.add_alerts(
                 app_name=APP_NAME,
                 alert_name='project_{}'.format(action),
-                user=u,
+                users=users,
                 message='{} {}d by {}. {}'.format(
                     alert_p, action, user.get_full_name(), alert_msg
                 ),
@@ -1449,18 +1480,13 @@ class ProjectRoleView(
     def get_context_data(self, *args, **kwargs):
         project = self.get_project()
         context = super().get_context_data(*args, **kwargs)
-        context['owner'] = project.get_owner()
-        inherited_owners = project.get_owners(inherited_only=True)
-        context['inherited_owners'] = [
-            a for a in inherited_owners if a.user != context['owner'].user
-        ]
-        inherited_users = [a.user for a in inherited_owners]
-        context['delegates'] = [
-            a for a in project.get_delegates() if a.user not in inherited_users
-        ]
-        context['members'] = [
-            a for a in project.get_members() if a.user not in inherited_users
-        ]
+        context['roles'] = sorted(
+            project.get_roles(), key=lambda x: [x.role.rank, x.user.username]
+        )
+        owner_rank = ROLE_RANKING[PROJECT_ROLE_OWNER]
+        context['enable_owner_transfer'] = any(
+            [r.role.rank >= owner_rank for r in context['roles']]
+        )
         if project.is_remote():
             context[
                 'remote_roles_url'
@@ -1474,7 +1500,9 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
     """Mixin for RoleAssignment creation/updating in UI and API views"""
 
     @transaction.atomic
-    def modify_assignment(self, data, request, project, instance=None):
+    def modify_assignment(
+        self, data, request, project, instance=None, promote=False
+    ):
         """
         Create or update a RoleAssignment. This method should be called either
         in form_valid() in a Django form view or save() in a DRF serializer.
@@ -1485,6 +1513,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         :param request: Request initiating the action
         :param project: Project object
         :param instance: Existing RoleAssignment object or None
+        :param promote: Promoting an inherited user (boolean, default=False)
         :return: Created or updated RoleAssignment object
         """
         app_alerts = get_backend_api('appalerts_backend')
@@ -1551,7 +1580,11 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
                 )
             if SEND_EMAIL:
                 email.send_role_change_mail(
-                    action.lower(), project, user, role, request
+                    'update' if promote else action.lower(),
+                    project,
+                    user,
+                    role,
+                    request,
                 )
         return role_as
 
@@ -1561,7 +1594,10 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        change_type = self.request.resolver_match.url_name.split('_')[1]
+        if self.kwargs.get('promote_as'):
+            change_type = 'update'  # If promoting inherited role
+        else:
+            change_type = self.request.resolver_match.url_name.split('_')[1]
         project = self.get_project()
         if change_type != 'delete':
             context['preview_subject'] = email.get_role_change_subject(
@@ -1587,13 +1623,13 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         instance = form.instance if form.instance.pk else None
         action = 'update' if instance else 'create'
         project = self.get_project()
-
         try:
             self.object = self.modify_assignment(
                 data=form.cleaned_data,
                 request=self.request,
                 project=project,
                 instance=form.instance if instance else None,
+                promote=True if form.cleaned_data.get('promote') else False,
             )
             messages.success(
                 self.request,
@@ -1607,7 +1643,6 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
             messages.error(
                 self.request, 'Membership updating failed: {}'.format(ex)
             )
-
         return redirect(
             reverse(
                 'projectroles:roles',
@@ -1618,6 +1653,50 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 
 class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
+
+    @transaction.atomic
+    def _update_app_alerts(self, app_alerts, project, user, inh_as):
+        """
+        Update app alerts for user on role assignment deletion. Creates a new
+        alert as appropriate and dismisses alerts in projects the user can no
+        longer access.
+
+        :param app_alerts: AppAlertAPI object
+        :param project: Project object
+        :param user: SODARUser object
+        :param inh_as: RoleAssignment object for inherited assignment or None
+        """
+        if inh_as:
+            message = ALERT_MSG_ROLE_UPDATE.format(
+                project=project.title, role=inh_as.role.name
+            )
+        else:
+            message = 'Your membership in this {} has been removed.'.format(
+                get_display_name(project.type)
+            )
+            # Dismiss existing alerts
+            AppAlert = app_alerts.get_model()
+            dis_projects = [project]
+            if project.type == PROJECT_TYPE_CATEGORY:
+                for c in project.get_children(flat=True):
+                    c_role_as = RoleAssignment.objects.filter(
+                        project=c, user=user
+                    ).first()
+                    if not c.public_guest_access and not c_role_as:
+                        dis_projects.append(c)
+            for a in AppAlert.objects.filter(
+                user=user, project__in=dis_projects, active=True
+            ):
+                a.active = False
+                a.save()
+
+        app_alerts.add_alert(
+            app_name=APP_NAME,
+            alert_name='role_{}'.format('update' if inh_as else 'delete'),
+            user=user,
+            message=message,
+            project=project,
+        )
 
     def delete_assignment(self, request, instance):
         app_alerts = get_backend_api('appalerts_backend')
@@ -1647,22 +1726,29 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             )
         # Delete object itself
         instance.delete()
-        # Remove project star from user if it exists
-        remove_tag(project=project, user=user)
 
+        # Delete corresponding PROJECT_USER settings
+        if (
+            not project.get_role(user)
+            and project.type == PROJECT_TYPE_CATEGORY
+            and not RoleAssignment.objects.filter(
+                project__in=project.get_children(flat=True), user=user
+            ).exists()
+        ):
+            app_settings.delete_by_scope(
+                APP_SETTING_SCOPE_PROJECT_USER, project, user
+            )
+
+        inh_as = project.get_role(user, inherited_only=True)
         if tl_event:
             tl_event.set_status('OK')
         if app_alerts:
-            app_alerts.add_alert(
-                app_name=APP_NAME,
-                alert_name='role_delete',
-                user=user,
-                message='Your membership in this {} has been removed.'.format(
-                    get_display_name(project.type)
-                ),
-                project=project,
+            self._update_app_alerts(app_alerts, project, user, inh_as)
+        if SEND_EMAIL and inh_as:
+            email.send_role_change_mail(
+                'update', project, user, inh_as.role, request
             )
-        if SEND_EMAIL:
+        elif SEND_EMAIL:
             email.send_role_change_mail('delete', project, user, None, request)
         return instance
 
@@ -1681,11 +1767,44 @@ class RoleAssignmentCreateView(
     model = RoleAssignment
     form_class = RoleAssignmentForm
 
+    #: Promote assignment
+    promote_as = None
+
     def get_form_kwargs(self):
         """Pass URL arguments and current user to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context['promote_as'] = self.promote_as  # Queried in get()
+        return context
+
+    def get(self, request, *args, **kwargs):
+        # Validate inherited role promotion if set
+        if self.kwargs.get('promote_as'):
+            project = self.get_project()
+            self.promote_as = RoleAssignment.objects.filter(
+                sodar_uuid=self.kwargs['promote_as']
+            ).first()
+            if (
+                not self.promote_as
+                or self.promote_as.role.rank
+                <= ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+                or self.promote_as.project == project
+                or self.promote_as.project not in project.get_parents()
+            ):
+                messages.error(
+                    request, 'Invalid role assignment for promotion.'
+                )
+                return redirect(
+                    reverse(
+                        'projectroles:roles',
+                        kwargs={'project': project.sodar_uuid},
+                    )
+                )
+        return super().get(request, *args, **kwargs)
 
 
 class RoleAssignmentUpdateView(
@@ -1721,6 +1840,30 @@ class RoleAssignmentDeleteView(
     slug_url_kwarg = 'roleassignment'
     slug_field = 'sodar_uuid'
 
+    def _get_inherited_children(self, project, user, ret):
+        for child in project.get_children():
+            if not RoleAssignment.objects.filter(project=child, user=user):
+                ret.append(child)
+            else:
+                ret = self._get_inherited_children(child, user, ret)
+        return ret
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        project = self.get_project()
+        user = self.object.user
+        context['inherited_as'] = project.get_role(user, inherited_only=True)
+        context['inherited_children'] = None
+        if (
+            not context['inherited_as']
+            and self.object.role.rank < ROLE_RANKING[PROJECT_ROLE_FINDER]
+        ):
+            context['inherited_children'] = sorted(
+                self._get_inherited_children(project, user, []),
+                key=lambda x: x.full_title,
+            )
+        return context
+
     def post(self, *args, **kwargs):
         self.object = self.get_object()
         user = self.object.user
@@ -1754,7 +1897,6 @@ class RoleAssignmentDeleteView(
                         user.username, ex
                     ),
                 )
-
         return redirect(
             reverse(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
@@ -1765,12 +1907,14 @@ class RoleAssignmentDeleteView(
 class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     """Mixin for owner RoleAssignment transfer in UI and API views"""
 
+    #: Owner role object
+    role_owner = None
+
     def _create_timeline_event(self, old_owner, new_owner, project):
         timeline = get_backend_api('timeline_backend')
         # Init Timeline event
         if not timeline:
             return None
-
         tl_desc = 'transfer ownership from {{{}}} to {{{}}}'.format(
             'prev_owner', 'new_owner'
         )
@@ -1791,29 +1935,40 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
     @transaction.atomic
     def _handle_transfer(
-        self, project, old_owner_as, new_owner, old_owner_role
+        self,
+        project,
+        old_owner_as,
+        new_owner,
+        old_owner_role,
+        old_inh_owner,
     ):
-        # Update roles
-        old_owner_as.role = old_owner_role
-        old_owner_as.save()
-        role_as = RoleAssignment.objects.get_assignment(new_owner, project)
-        role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        """
+        Handle ownership transfer with atomic rollback.
 
-        if role_as:
-            role_as.role = role_owner
-            role_as.save()
-        elif new_owner in [
-            a.user for a in project.get_owners(inherited_only=True)
-        ]:
-            RoleAssignment.objects.create(
-                project=project, user=new_owner, role=role_owner
-            )
+        :param project: Project object
+        :param old_owner_as: RoleAssignment object for old owner
+        :param new_owner: User object for new user
+        :param old_owner_role: Role object to set for old owner
+        :param old_inh_owner: Whether old owner is inherited owner (boolean)
+        """
+        # Inherited owner, delete local role
+        if old_inh_owner:
+            old_owner_as.delete()
+        # Update old owner role
         else:
-            # We should already catch this earlier, but just in case..
-            raise Exception(
-                'New owner must have direct or inherited role in project'
+            old_owner_as.role = old_owner_role
+            old_owner_as.save()
+        # Update or create new owner role
+        new_role_as = RoleAssignment.objects.filter(
+            project=project, user=new_owner
+        ).first()
+        if new_role_as:
+            new_role_as.role = self.role_owner
+            new_role_as.save()
+        else:
+            RoleAssignment.objects.create(
+                project=project, user=new_owner, role=self.role_owner
             )
-
         # Call for additional actions for role creation/update in plugins
         if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             args = [
@@ -1840,13 +1995,23 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :return:
         """
         app_alerts = get_backend_api('appalerts_backend')
+        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
         old_owner = old_owner_as.user
-        owner_role = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        # Old owner inheritance
+        old_inh_as = project.get_role(old_owner, inherited_only=True)
+        old_inh_owner = (
+            True if old_inh_as and old_inh_as.role == self.role_owner else False
+        )
+        # New owner inheritance
+        new_inh_as = project.get_role(new_owner, inherited_only=True)
+        new_inh_owner = (
+            True if new_inh_as and new_inh_as.role == self.role_owner else False
+        )
         tl_event = self._create_timeline_event(old_owner, new_owner, project)
 
         try:
             self._handle_transfer(
-                project, old_owner_as, new_owner, old_owner_role
+                project, old_owner_as, new_owner, old_owner_role, old_inh_owner
             )
         except Exception as ex:
             if tl_event:
@@ -1855,8 +2020,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
         if tl_event:
             tl_event.set_status('OK')
-
-        if self.request.user != old_owner:
+        if not old_inh_owner and self.request.user != old_owner:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
@@ -1875,15 +2039,14 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                 email.send_role_change_mail(
                     'update', project, old_owner, old_owner_role, self.request
                 )
-
-        if self.request.user != new_owner:
+        if not new_inh_owner and self.request.user != new_owner:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
                     alert_name='role_update',
                     user=new_owner,
                     message=ALERT_MSG_ROLE_UPDATE.format(
-                        project=project.title, role=owner_role.name
+                        project=project.title, role=self.role_owner.name
                     ),
                     url=reverse(
                         'projectroles:detail',
@@ -1896,7 +2059,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                     'update',
                     project,
                     new_owner,
-                    owner_role,
+                    self.role_owner,
                     self.request,
                 )
 
@@ -1941,7 +2104,6 @@ class RoleAssignmentOwnerTransferView(
         redirect_url = reverse(
             'projectroles:roles', kwargs={'project': project.sodar_uuid}
         )
-
         try:
             self.transfer_owner(
                 project, new_owner, old_owner_as, old_owner_role
@@ -1951,14 +2113,17 @@ class RoleAssignmentOwnerTransferView(
             messages.error(
                 self.request, 'Unable to transfer ownership: {}'.format(ex)
             )
-
-        success_msg = (
-            'Successfully transferred ownership from '
-            '{} to {}.'.format(old_owner.username, new_owner.username)
-        )
-        if SEND_EMAIL:
-            success_msg += ' Notification(s) have been sent by email.'
-        messages.success(self.request, success_msg)
+            if settings.DEBUG:
+                raise ex
+            return redirect(redirect_url)
+        if old_owner.username != new_owner.username:
+            success_msg = (
+                'Successfully transferred ownership from '
+                '{} to {}.'.format(old_owner.username, new_owner.username)
+            )
+            if SEND_EMAIL:
+                success_msg += ' Notification(s) have been sent by email.'
+            messages.success(self.request, success_msg)
         return redirect(redirect_url)
 
 
@@ -2128,11 +2293,17 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
     def get_invite_type(cls, invite):
         """Return invite type ("ldap", "local" or "error")"""
         # Check if domain is associated with LDAP
-        domain = invite.email.split('@')[1].split('.')[0].lower()
-        if settings.ENABLE_LDAP and domain in (
+        domain = invite.email.split('@')[1].lower()
+        domain_no_tld = domain.split('.')[0].lower()
+        ldap_domains = [
             getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').lower(),
             getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').lower(),
-            *[a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])],
+        ]
+        alt_domains = [
+            a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])
+        ]
+        if settings.ENABLE_LDAP and (
+            domain_no_tld in ldap_domains or domain in alt_domains
         ):
             return 'ldap'
         elif settings.PROJECTROLES_ALLOW_LOCAL_USERS:
@@ -2373,12 +2544,10 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not invite:
             return redirect(reverse('home'))
         timeline = get_backend_api('timeline_backend')
-
         # Check if local users are enabled
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             messages.error(self.request, MSG_INVITE_LOCAL_NOT_ALLOWED)
             return redirect(reverse('home'))
-
         # Check invite for correct type
         if self.get_invite_type(invite) == 'ldap':
             messages.error(self.request, MSG_INVITE_LDAP_LOCAL_VIEW)
@@ -2386,7 +2555,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
 
         # Check if invited user exists
         user = User.objects.filter(email=invite.email).first()
-
         # Check if invite has expired
         if self.is_invite_expired(invite, user):
             return redirect(reverse('home'))
@@ -2409,7 +2577,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 )
             # Show form if user doesn't exists and no user is logged in
             return super().get(*args, **kwargs)
-
         # Logged in but the invited user does not exist yet
         if not user:
             messages.error(
@@ -2417,7 +2584,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 MSG_INVITE_LOGGED_IN_ACCEPT,
             )
             return redirect(reverse('home'))
-
         # Logged in user is not invited user
         if not self.request.user == user:
             messages.error(
@@ -2425,12 +2591,10 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 MSG_INVITE_USER_NOT_EQUAL,
             )
             return redirect(reverse('home'))
-
         # User exists but is not local
         if not user.is_local():
             messages.error(self.request, 'User exists, but is not local.')
             return redirect(reverse('home'))
-
         # Create role if user exists
         if not self.create_assignment(invite, user, timeline=timeline):
             return redirect(reverse('home'))
@@ -2449,7 +2613,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             invite = ProjectInvite.objects.get(secret=self.kwargs['secret'])
         except ProjectInvite.DoesNotExist:
             return initial
-
         username_base = invite.email.split('@')[0]
         i = 0
         while True:
@@ -2459,7 +2622,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 i += 1
             except User.DoesNotExist:
                 break
-
         initial.update({'email': invite.email, 'username': username})
         return initial
 
@@ -2581,7 +2743,6 @@ class ProjectInviteRevokeView(
         invite = ProjectInvite.objects.filter(
             sodar_uuid=kwargs['projectinvite']
         ).first()
-
         if (
             invite
             and invite.role.name == PROJECT_ROLE_DELEGATE
@@ -2598,7 +2759,6 @@ class ProjectInviteRevokeView(
             messages.success(self.request, 'Invite revoked.')
         else:
             messages.error(self.request, 'Invite not found.')
-
         self.revoke_invite(invite, project, request)
         return redirect(
             reverse(
@@ -2676,6 +2836,7 @@ class RemoteSiteListView(
 
 class RemoteSiteModifyMixin(ModelFormMixin):
     def form_valid(self, form):
+        timeline = get_backend_api('timeline_backend')
         if self.object:
             form_action = 'updated'
         elif settings.PROJECTROLES_SITE_MODE == 'TARGET':
@@ -2683,6 +2844,11 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         else:
             form_action = 'created'
         self.object = form.save()
+        # Create timeline event
+        if timeline:
+            self.create_timeline_event(
+                self.object, self.request.user, form_action, timeline=timeline
+            )
         messages.success(
             self.request,
             '{} site "{}" {}.'.format(
@@ -2690,6 +2856,42 @@ class RemoteSiteModifyMixin(ModelFormMixin):
             ),
         )
         return redirect(reverse('projectroles:remote_sites'))
+
+    def create_timeline_event(
+        self, remote_site, user, form_action, timeline=None
+    ):
+        """Create timeline event for remote site creation/update"""
+        status = form_action if form_action == 'set' else form_action[0:-1]
+        if remote_site.mode == SITE_MODE_SOURCE:
+            event_name = 'source_site_{}'.format(status)
+        else:
+            event_name = 'target_site_{}'.format(status)
+
+        tl_desc = '{} remote {} site "{{{}}}"'.format(
+            status,
+            remote_site.mode.lower(),
+            'remote_site',
+        )
+        tl_event = timeline.add_event(
+            project=None,
+            app_name=APP_NAME,
+            user=user,
+            event_name=event_name,
+            description=tl_desc,
+            classified=True,
+            extra_data={
+                'name': remote_site.name,
+                'url': remote_site.url,
+                'description': remote_site.description,
+                'mode': remote_site.mode,
+                'user display': remote_site.user_display,
+                'secret': remote_site.secret,
+            },
+            status_type='OK',
+        )
+        tl_event.add_object(
+            obj=remote_site, label='remote_site', name=remote_site.name
+        )
 
 
 class RemoteSiteCreateView(
@@ -2754,6 +2956,25 @@ class RemoteSiteDeleteView(
     slug_field = 'sodar_uuid'
 
     def get_success_url(self):
+        """Override get_success_url() to add message"""
+        timeline = get_backend_api('timeline_backend')
+        if timeline:
+            event_name = '{}_site_delete'.format(
+                'source' if self.object.mode == SITE_MODE_SOURCE else 'target'
+            )
+            tl_desc = 'delete remote site "{remote_site}"'
+            tl_event = timeline.add_event(
+                project=None,
+                app_name=APP_NAME,
+                user=self.request.user,
+                event_name=event_name,
+                description=tl_desc,
+                classified=True,
+                status_type='OK',
+            )
+            tl_event.add_object(
+                obj=self.object, label='remote_site', name=self.object.name
+            )
         messages.success(
             self.request,
             '{} site "{}" deleted'.format(
@@ -2775,7 +2996,6 @@ class RemoteProjectListView(
         context = super().get_context_data(*args, **kwargs)
         site = RemoteSite.objects.get(sodar_uuid=self.kwargs['remotesite'])
         context['site'] = site
-
         # Projects in SOURCE mode: all local projects of type PROJECT
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             projects = Project.objects.filter(type=PROJECT_TYPE_PROJECT)
@@ -2785,7 +3005,6 @@ class RemoteProjectListView(
             projects = Project.objects.filter(
                 type=PROJECT_TYPE_PROJECT, sodar_uuid__in=remote_uuids
             )
-
         if projects:
             context['projects'] = projects.order_by('full_title')
         return context
@@ -2820,7 +3039,6 @@ class RemoteProjectBatchUpdateView(
             'projectroles:remote_projects',
             kwargs={'remotesite': site.sodar_uuid},
         )
-
         # Ensure site is in SOURCE mode
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_SOURCE:
             messages.error(
@@ -2830,19 +3048,14 @@ class RemoteProjectBatchUpdateView(
                 ),
             )
             return redirect(redirect_url)
-
         access_fields = {
             k: v for k, v in post_data.items() if k.startswith('remote_access')
         }
 
-        ######################
         # Confirmation needed
-        ######################
-
         if not confirmed:
             # Pass on (only) changed projects to confirmation form
             modifying_access = []
-
             for k, v in access_fields.items():
                 project_uuid = k.split('_')[2]
                 remote_obj = RemoteProject.objects.filter(
@@ -2862,7 +3075,6 @@ class RemoteProjectBatchUpdateView(
                             'new_level': v,
                         }
                     )
-
             if not modifying_access:
                 messages.warning(
                     request,
@@ -2871,13 +3083,12 @@ class RemoteProjectBatchUpdateView(
                     ),
                 )
                 return redirect(redirect_url)
-
             context['modifying_access'] = modifying_access
             return super().render_to_response(context)
 
-        ############
         # Confirmed
-        ############
+        modifying_access = []
+        old_level = REMOTE_LEVEL_NONE
 
         for k, v in access_fields.items():
             project_uuid = k.split('_')[2]
@@ -2887,6 +3098,7 @@ class RemoteProjectBatchUpdateView(
                 rp = RemoteProject.objects.get(
                     site=site, project_uuid=project_uuid
                 )
+                old_level = rp.level
                 rp.level = v
             except RemoteProject.DoesNotExist:
                 rp = RemoteProject(
@@ -2897,10 +3109,20 @@ class RemoteProjectBatchUpdateView(
                 )
             rp.save()
 
+            modifying_access.append(
+                {
+                    'project': project.get_log_title(),
+                    'old_level': REMOTE_LEVEL_NONE
+                    if not old_level
+                    else old_level,
+                    'new_level': v,
+                }
+            )
+
             if timeline and project:
                 tl_desc = 'update remote access for site {{{}}} to "{}"'.format(
-                    'site',
                     SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower(),
+                    'remote_site',
                 )
                 tl_event = timeline.add_event(
                     project=project,
@@ -2911,7 +3133,21 @@ class RemoteProjectBatchUpdateView(
                     classified=True,
                     status_type='OK',
                 )
-                tl_event.add_object(site, 'site', site.name)
+                tl_event.add_object(site, 'remote_site', site.name)
+
+        if timeline:
+            tl_desc = 'update remote site "{remote_site}"'
+            tl_event = timeline.add_event(
+                project=None,
+                app_name=APP_NAME,
+                user=request.user,
+                event_name='batch_update_remote',
+                description=tl_desc,
+                extra_data={'modifying_access': modifying_access},
+                classified=True,
+                status_type='OK',
+            )
+            tl_event.add_object(obj=site, label='remote_site', name=site.name)
 
         # All OK
         messages.success(
@@ -2952,42 +3188,18 @@ class RemoteProjectSyncView(
             )
             return redirect(redirect_url)
 
-        from projectroles.views_api import (
-            CORE_API_MEDIA_TYPE,
-            CORE_API_DEFAULT_VERSION,
-        )
-
+        timeline = get_backend_api('timeline_backend')
         remote_api = RemoteProjectAPI()
         context = self.get_context_data(*args, **kwargs)
-        site = context['site']
-        api_url = site.get_url() + reverse(
-            'projectroles:api_remote_get', kwargs={'secret': site.secret}
-        )
+        source_site = context['site']
 
         try:
-            api_req = urllib.request.Request(api_url)
-            api_req.add_header(
-                'accept',
-                '{}; version={}'.format(
-                    CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
-                ),
-            )
-            response = urllib.request.urlopen(api_req)
-            remote_data = json.loads(response.read().decode('utf-8'))
+            remote_data = remote_api.get_remote_data(source_site)
         except Exception as ex:
-            ex_str = str(ex)
-            if (
-                isinstance(ex, urllib.error.URLError)
-                and isinstance(ex.reason, ssl.SSLError)
-                and ex.reason.reason == 'WRONG_VERSION_NUMBER'
-            ):
-                ex_str = 'Most likely server cannot handle HTTPS requests.'
-            if len(ex_str) >= 255:
-                ex_str = ex_str[:255]
             messages.error(
                 request,
                 'Unable to synchronize {}: {}'.format(
-                    get_display_name(PROJECT_TYPE_PROJECT, plural=True), ex_str
+                    get_display_name(PROJECT_TYPE_PROJECT, plural=True), ex
                 ),
             )
             return redirect(redirect_url)
@@ -2995,7 +3207,7 @@ class RemoteProjectSyncView(
         # Sync data
         try:
             update_data = remote_api.sync_remote_data(
-                site, remote_data, request
+                source_site, remote_data, request
             )
         except Exception as ex:
             messages.error(
@@ -3020,7 +3232,6 @@ class RemoteProjectSyncView(
             ]
         )
         role_count = 0
-
         for p in [p for p in update_data['projects'].values() if 'roles' in p]:
             for _ in [r for r in p['roles'].values() if 'status' in r]:
                 role_count += 1
@@ -3043,6 +3254,23 @@ class RemoteProjectSyncView(
         context['project_count'] = project_count
         context['role_count'] = role_count
         context['app_settings_count'] = app_settings_count
+
+        # Create timeline events for projects
+        if timeline:
+            tl_desc = 'synchronize remote site "{remote_site}"'
+            tl_event = timeline.add_event(
+                project=None,
+                app_name=APP_NAME,
+                user=request.user,
+                event_name='remote_project_sync',
+                description=tl_desc,
+                classified=True,
+                status_type='OK',
+            )
+            tl_event.add_object(
+                obj=source_site, label='remote_site', name=source_site.name
+            )
+
         messages.success(
             request,
             '{} data updated according to source site.'.format(

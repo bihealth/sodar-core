@@ -86,7 +86,7 @@ desired release tag or commit ID.
 .. code-block:: console
 
     -e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
-    django-sodar-core==0.12.0
+    django-sodar-core==0.13.0
 
 Install the requirements for development:
 
@@ -340,6 +340,13 @@ Or, run the standard Django ``runserver`` command:
 .. code-block:: console
 
     $ ./manage.py runserver
+
+To enable periodic tasks, you need to additionally start a Celery worker. This
+is done by running the ``make celery`` command:
+
+.. code-block:: console
+
+    $ make celery
 
 You can now browse your site locally at ``http://127.0.0.1:8000``. You are
 expected to log in to view the site. Use e.g. the superuser account you created

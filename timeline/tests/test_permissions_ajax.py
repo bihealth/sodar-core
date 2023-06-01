@@ -37,7 +37,6 @@ class TestTimelineAjaxPermissions(
 
     def test_detail_project(self):
         """Test ProjectEventDetailAjaxView permissions"""
-        """Test ProjectEventDetailAjaxView permissions"""
         url = reverse(
             'timeline:ajax_detail_project',
             kwargs={
@@ -46,12 +45,17 @@ class TestTimelineAjaxPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
         bad_users = [
+            self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -81,12 +85,17 @@ class TestTimelineAjaxPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -97,7 +106,7 @@ class TestTimelineAjaxPermissions(
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_detail_project_classified_anon(self):
-        """Test ProjectEventDetailAjaxView permissions with classified event and anonymous access"""
+        """Test ProjectEventDetailAjaxView with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
         url = reverse(
@@ -164,12 +173,17 @@ class TestTimelineAjaxPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -188,7 +202,7 @@ class TestTimelineAjaxPermissions(
         self.assert_response(url, self.anonymous, 403)
 
     def test_extra_data_project_classified(self):
-        """Test ProjectEventExtraDataAjaxView permissions with classified event"""
+        """Test ProjectEventExtraDataAjaxView with classified event"""
         self.event.classified = True
         self.event.save()
         url = reverse(
@@ -197,12 +211,17 @@ class TestTimelineAjaxPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -213,7 +232,7 @@ class TestTimelineAjaxPermissions(
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_extra_data_project_classified_anon(self):
-        """Test ProjectEventExtraDataAjaxView permissions with classified event and anonymous access"""
+        """Test ProjectEventExtraDataAjaxView with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
         url = reverse(
@@ -230,11 +249,7 @@ class TestTimelineAjaxPermissions(
             'timeline:ajax_extra_site',
             kwargs={'projectevent': self.site_event.sodar_uuid},
         )
-        good_users = [
-            self.superuser,
-            self.regular_user,
-        ]
-        self.assert_response(url, good_users, 200)
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -254,22 +269,19 @@ class TestTimelineAjaxPermissions(
             'timeline:ajax_extra_site',
             kwargs={'projectevent': self.site_event.sodar_uuid},
         )
-        good_users = [
-            self.superuser,
-            self.regular_user,
-        ]
-        self.assert_response(url, good_users, 200)
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_extra_data_site_classified_anon(self):
-        """Test SiteEventExtraDataAjaxView permissions with classified event and anonymous access"""
+        """Test SiteEventExtraDataAjaxView with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
         url = reverse(
             'timeline:ajax_extra_site',
             kwargs={'projectevent': self.site_event.sodar_uuid},
         )
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     def test_status_extra_data_project(self):
@@ -282,12 +294,17 @@ class TestTimelineAjaxPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -308,7 +325,7 @@ class TestTimelineAjaxPermissions(
         self.assert_response(url, self.anonymous, 403)
 
     def test_status_extra_data_project_classified(self):
-        """Test ProjectEventExtraDataAjaxView permissions with classified event"""
+        """Test ProjectEventExtraDataAjaxView with classified event"""
         self.event.classified = True
         self.event.save()
         url = reverse(
@@ -319,12 +336,17 @@ class TestTimelineAjaxPermissions(
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
         ]
         bad_users = [
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -335,7 +357,7 @@ class TestTimelineAjaxPermissions(
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_status_extra_data_project_classified_anon(self):
-        """Test ProjectEventExtraDataAjaxView permissions with classified event and anonymous access"""
+        """Test ProjectEventExtraDataAjaxView with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
         url = reverse(
@@ -356,11 +378,7 @@ class TestTimelineAjaxPermissions(
                 'eventstatus': self.site_event_status.sodar_uuid,
             },
         )
-        good_users = [
-            self.superuser,
-            self.regular_user,
-        ]
-        self.assert_response(url, good_users, 200)
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -384,16 +402,12 @@ class TestTimelineAjaxPermissions(
                 'eventstatus': self.site_event_status.sodar_uuid,
             },
         )
-        good_users = [
-            self.superuser,
-            self.regular_user,
-        ]
-        self.assert_response(url, good_users, 200)
+        self.assert_response(url, self.superuser, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_status_extra_data_site_classified_anon(self):
-        """Test SiteEventExtraDataAjaxView permissions with classified event and anonymous access"""
+        """Test SiteEventExtraDataAjaxView with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
         url = reverse(

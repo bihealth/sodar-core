@@ -9,9 +9,11 @@ from django.contrib import auth
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html
 
-from pagedown.widgets import PagedownWidget
 from dal import autocomplete, forward as dal_forward
+from pagedown.widgets import PagedownWidget
+
 
 from projectroles.models import (
     Project,
@@ -20,8 +22,10 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     SODAR_CONSTANTS,
+    ROLE_RANKING,
     APP_SETTING_VAL_MAXLENGTH,
     CAT_DELIMITER,
+    CAT_DELIMITER_ERROR_MSG,
 )
 
 from projectroles.plugins import get_active_plugins
@@ -86,6 +90,22 @@ class SODARFormMixin:
             log_msg += ' (user={})'.format(self.current_user.username)
         self.logger.error(log_msg)
         super().add_error(field, error)  # Call the error method in Django forms
+
+    def get_app_setting_label(self, plugin, label):
+        """Return label for app setting key"""
+        if plugin:
+            return format_html(
+                '{} <i class="iconify text-info" title="{}" data-icon="{}">'
+                '</i>',
+                label,
+                plugin.title,
+                plugin.icon,
+            )
+        return format_html(
+            '{} <i class="iconify text-info" title="projectroles" '
+            'data-icon="mdi-cube"></i>',
+            label,
+        )
 
 
 class SODARForm(SODARFormMixin, forms.Form):
@@ -168,7 +188,6 @@ def get_user_widget(
         )
     if widget_class:
         return widget_class(**wg)
-
     return SODARUserAutocompleteWidget(**wg)
 
 
@@ -258,10 +277,9 @@ class ProjectForm(SODARModelForm):
         categories = Project.objects.filter(type=PROJECT_TYPE_CATEGORY).exclude(
             pk=instance.pk
         )
-
         if not user.is_superuser:
             categories = categories.filter(
-                roles__in=RoleAssignment.objects.filter(
+                local_roles__in=RoleAssignment.objects.filter(
                     user=user,
                     role__name__in=[
                         PROJECT_ROLE_OWNER,
@@ -312,8 +330,20 @@ class ProjectForm(SODARModelForm):
         return sorted(ret, key=lambda x: x[1])
 
     def _set_app_setting_widget(self, app_name, s_field, s_key, s_val):
-        """Internal helper for setting app setting widget and value"""
+        """
+        Internal helper for setting app setting widget and value.
+
+        :param app_name: App name
+        :param s_field: Form field name
+        :param s_key: Setting key
+        :param s_val: Setting value
+        """
         s_widget_attrs = s_val.get('widget_attrs') or {}
+
+        # Set project type
+        s_project_types = s_val.get('project_types') or [PROJECT_TYPE_PROJECT]
+        s_widget_attrs['data-project-types'] = ','.join(s_project_types).lower()
+
         if 'placeholder' in s_val:
             s_widget_attrs['placeholder'] = s_val.get('placeholder')
         setting_kwargs = {
@@ -338,20 +368,45 @@ class ProjectForm(SODARModelForm):
                 )
             else:
                 json_data = self.app_settings.get_default(
-                    app_name=app_name, setting_name=s_key
+                    app_name=app_name,
+                    setting_name=s_key,
+                    project=None,
                 )
             self.initial[s_field] = json.dumps(json_data)
         else:
             if s_val.get('options'):
-                self.fields[s_field] = forms.ChoiceField(
-                    choices=[
-                        (int(option), int(option))
-                        if s_val['type'] == 'INTEGER'
-                        else (option, option)
-                        for option in s_val.get('options')
-                    ],
-                    **setting_kwargs
-                )
+                if callable(s_val['options']) and self.instance.pk:
+                    values = s_val['options'](project=self.instance)
+                    self.fields[s_field] = forms.ChoiceField(
+                        choices=[
+                            (str(value[0]), str(value[1]))
+                            if isinstance(value, tuple)
+                            else (str(value), str(value))
+                            for value in values
+                        ],
+                        **setting_kwargs
+                    )
+                elif callable(s_val['options']) and not self.instance.pk:
+                    values = s_val['options'](project=None)
+                    self.fields[s_field] = forms.ChoiceField(
+                        choices=[
+                            (str(value[0]), str(value[1]))
+                            if isinstance(value, tuple)
+                            else (str(value), str(value))
+                            for value in values
+                        ],
+                        **setting_kwargs
+                    )
+                else:
+                    self.fields[s_field] = forms.ChoiceField(
+                        choices=[
+                            (int(option), int(option))
+                            if s_val['type'] == 'INTEGER'
+                            else (option, option)
+                            for option in s_val['options']
+                        ],
+                        **setting_kwargs
+                    )
             elif s_val['type'] == 'STRING':
                 self.fields[s_field] = forms.CharField(
                     max_length=APP_SETTING_VAL_MAXLENGTH,
@@ -379,11 +434,19 @@ class ProjectForm(SODARModelForm):
                 )
             else:
                 self.initial[s_field] = self.app_settings.get_default(
-                    app_name=app_name, setting_name=s_key
+                    app_name=app_name,
+                    setting_name=s_key,
+                    project=None,
                 )
 
-    def _set_app_setting_notes(self, s_field, s_val):
-        """Internal helper for setting app setting label notes"""
+    def _set_app_setting_notes(self, s_field, s_val, plugin):
+        """
+        Internal helper for setting app setting label notes.
+
+        :param s_field: Form field name
+        :param s_val: Setting value
+        :param plugin: Plugin object
+        """
         if s_val.get('user_modifiable') is False:
             self.fields[s_field].label += ' [HIDDEN]'
             self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
@@ -398,6 +461,9 @@ class ProjectForm(SODARModelForm):
                 self.fields[
                     s_field
                 ].help_text += ' [Not editable on target sites]'
+        self.fields[s_field].label = self.get_app_setting_label(
+            plugin, self.fields[s_field].label
+        )
 
     def _init_app_settings(self):
         # Set up setting query kwargs
@@ -427,7 +493,76 @@ class ProjectForm(SODARModelForm):
                 # Set widget and value
                 self._set_app_setting_widget(app_name, s_field, s_key, s_val)
                 # Set label notes
-                self._set_app_setting_notes(s_field, s_val)
+                self._set_app_setting_notes(s_field, s_val, plugin)
+
+    @classmethod
+    def _validate_app_settings(
+        self,
+        cleaned_data,
+        app_plugins,
+        app_settings,
+        p_kwargs,
+        instance,
+        instance_owner_as,
+    ):
+        """Validate and clean app_settings form fields"""
+        errors = []
+
+        for plugin in app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_definitions(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_definitions(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
+                )
+
+            plugin_app_settings = {}
+            for s_key, s_val in p_settings.items():
+                s_field = 'settings.{}.{}'.format(name, s_key)
+                plugin_app_settings[s_key] = cleaned_data.get(s_field)
+
+                if s_val['type'] == 'JSON':
+                    if not plugin_app_settings[s_key]:
+                        cleaned_data[s_field] = '{}'
+                    try:
+                        cleaned_data[s_field] = json.loads(
+                            cleaned_data.get(s_field)
+                        )
+                    except json.JSONDecodeError as err:
+                        errors.append((s_field, 'Invalid JSON\n' + str(err)))
+                elif s_val['type'] == 'INTEGER':
+                    # When the field is a select/dropdown the information of
+                    # the datatype gets lost. We need to convert that here,
+                    # otherwise subsequent checks will fail.
+                    cleaned_data[s_field] = int(cleaned_data[s_field])
+
+                if not app_settings.validate(
+                    setting_type=s_val['type'],
+                    setting_value=cleaned_data.get(s_field),
+                    setting_options=s_val.get('options'),
+                    project=instance,
+                ):
+                    errors.append((s_field, 'Invalid value'))
+
+            # Custom validation for app settings
+            try:
+                app_settings_errors = plugin.validate_app_settings(
+                    plugin_app_settings,
+                    project=instance,
+                    user=instance_owner_as,
+                )
+                if app_settings_errors:
+                    for field, error in app_settings_errors.items():
+                        if error:
+                            errors.append((field, error))
+            except AttributeError:
+                # Plugin does not have a validate_form_app_settings method
+                pass
+        return cleaned_data, errors
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -457,10 +592,6 @@ class ProjectForm(SODARModelForm):
         )
         self.fields['description'].help_text = 'Short description'
         self.fields['readme'].help_text = 'README (optional, supports markdown)'
-
-        ####################
-        # Form modifications
-        ####################
 
         # Modify ModelChoiceFields to use sodar_uuid
         self.fields['parent'].to_field_name = 'sodar_uuid'
@@ -511,7 +642,7 @@ class ProjectForm(SODARModelForm):
                 self.initial['owner'] = self.current_user
             self.fields[
                 'owner'
-            ].label_from_instance = lambda x: x.get_form_label()
+            ].label_from_instance = lambda x: x.get_form_label(email=True)
             # Hide owner select widget for regular users
             if not self.current_user.is_superuser:
                 self.fields['owner'].widget = forms.HiddenInput()
@@ -543,117 +674,94 @@ class ProjectForm(SODARModelForm):
 
     def clean(self):
         """Function for custom form validation and cleanup"""
-        instance_owner_as = self.instance.get_owner() if self.instance else None
+        self.instance_owner_as = (
+            self.instance.get_owner() if self.instance else None
+        )
         disable_categories = getattr(
             settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
         )
         parent = self.cleaned_data.get('parent')
+        title = self.cleaned_data.get('title')
+        p_type = self.cleaned_data.get('type')
+        owner = self.cleaned_data.get('owner')
 
         # Check for category/project being placed in root
         if not parent and (not self.instance or self.instance.parent):
             if (
-                self.cleaned_data.get('type') == PROJECT_TYPE_CATEGORY
+                p_type == PROJECT_TYPE_CATEGORY
                 and not self.current_user.is_superuser
             ):
                 self.add_error(
                     'parent',
-                    'You do not have permission to place a {} under root'.format(
-                        get_display_name(PROJECT_TYPE_CATEGORY)
-                    ),
+                    'You do not have permission to place a {} under '
+                    'root'.format(get_display_name(PROJECT_TYPE_CATEGORY)),
                 )
-            elif (
-                self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
-                and not disable_categories
-            ):
+            elif p_type == PROJECT_TYPE_PROJECT and not disable_categories:
                 self.add_error(
                     'parent', 'Projects can not be placed under root'
                 )
 
+        # Ensure prohibited substrings are not found in title
+        if (
+            CAT_DELIMITER in title
+            or title.startswith(CAT_DELIMITER.strip())
+            or title.endswith(CAT_DELIMITER.strip())
+        ):
+            self.add_error('title', CAT_DELIMITER_ERROR_MSG)
         # Ensure title does not match parent
-        if parent and parent.title == self.cleaned_data.get('title'):
+        if parent and parent.title == title:
             self.add_error(
                 'title',
                 '{} and parent titles can not be equal'.format(
-                    get_display_name(self.cleaned_data.get('type'), title=True)
+                    get_display_name(p_type, title=True)
                 ),
             )
-
         # Ensure title is unique within parent
         existing_project = Project.objects.filter(
-            parent=self.cleaned_data.get('parent'),
-            title=self.cleaned_data.get('title'),
+            parent=parent,
+            title=title,
         ).first()
-
         if existing_project and (
             not self.instance or existing_project.pk != self.instance.pk
         ):
             self.add_error('title', 'Title must be unique within parent')
 
         # Ensure owner has been set
-        if not self.cleaned_data.get('owner'):
+        if not owner:
             self.add_error(
                 'owner',
-                'Owner must be set for {}'.format(
-                    get_display_name(self.cleaned_data.get('type'))
-                ),
+                'Owner must be set for {}'.format(get_display_name(p_type)),
             )
-
         # Ensure owner is not changed on update (must use ownership transfer)
-        if (
-            instance_owner_as
-            and self.cleaned_data.get('owner') != instance_owner_as.user
-        ):
+        if self.instance_owner_as and owner != self.instance_owner_as.user:
             self.add_error(
                 'owner',
                 'Owner update is not allowed in this form, use Ownership '
                 'Transfer instead',
             )
 
+        # Ensure public_guest_access is not set on a category
+        if p_type == PROJECT_TYPE_CATEGORY and self.cleaned_data.get(
+            'public_guest_access'
+        ):
+            self.add_error(
+                'public_guest_access',
+                'Public guest access is not allowed for categories',
+            )
+
         # Verify settings fields
-        for plugin in self.app_plugins + [None]:
-            if plugin:
-                name = plugin.name
-                p_settings = self.app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
-                )
-            else:
-                name = 'projectroles'
-                p_settings = self.app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
-                )
-
-            for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(name, s_key)
-
-                if s_val['type'] == 'JSON':
-                    # for some reason, there is a distinct possibility, that the
-                    # initial value has been discarded and we get '' as value.
-                    # Seems to only happen in automated tests. Will catch that
-                    # here.
-                    if not self.cleaned_data.get(s_field):
-                        self.cleaned_data[s_field] = '{}'
-                    try:
-                        self.cleaned_data[s_field] = json.loads(
-                            self.cleaned_data.get(s_field)
-                        )
-                    except json.JSONDecodeError as err:
-                        # TODO: Shouldn't we use add_error() instead?
-                        raise forms.ValidationError(
-                            'Couldn\'t encode JSON\n' + str(err)
-                        )
-                elif s_val['type'] == 'INTEGER':
-                    # When the field is a select/dropdown the information of
-                    # the datatype gets lost. We need to convert that here,
-                    # otherwise subsequent checks will fail.
-                    self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
-
-                if not self.app_settings.validate(
-                    setting_type=s_val['type'],
-                    setting_value=self.cleaned_data.get(s_field),
-                    setting_options=s_val.get('options'),
-                ):
-                    self.add_error(s_field, 'Invalid value')
-
+        cleaned_data, errors = self._validate_app_settings(
+            self.cleaned_data,
+            self.app_plugins,
+            self.app_settings,
+            self.p_kwargs,
+            self.instance,
+            self.instance_owner_as,
+        )
+        for key, value in cleaned_data.items():
+            self.cleaned_data[key] = value
+        for field, error in errors:
+            self.add_error(field, error)
         return self.cleaned_data
 
 
@@ -663,11 +771,15 @@ class ProjectForm(SODARModelForm):
 class RoleAssignmentForm(SODARModelForm):
     """Form for editing Project role assignments"""
 
+    promote = forms.BooleanField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = RoleAssignment
-        fields = ['project', 'user', 'role']
+        fields = ['project', 'user', 'role', 'promote']
 
-    def __init__(self, project=None, current_user=None, *args, **kwargs):
+    def __init__(
+        self, project=None, current_user=None, promote_as=None, *args, **kwargs
+    ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
         # Get current user for checking permissions for form items
@@ -675,30 +787,47 @@ class RoleAssignmentForm(SODARModelForm):
             self.current_user = current_user
         # Get the project for which role is being assigned
         self.project = None
-
         if self.instance.pk:
             self.project = self.instance.project
         else:
             self.project = Project.objects.filter(sodar_uuid=project).first()
-
-        ####################
-        # Form modifications
-        ####################
+        # Get promote assignment in case of promoting inherited user
+        # NOTE: This is already validated in get()
+        if promote_as:
+            promote_as = RoleAssignment.objects.filter(
+                sodar_uuid=promote_as
+            ).first()
 
         # Modify project field to use sodar_uuid
         self.fields['project'].to_field_name = 'sodar_uuid'
         # Set up user field
-        self.fields['user'] = SODARUserChoiceField(
-            scope='project_exclude',
-            project=self.project,
-            forward=['role'],
-            url=reverse('projectroles:ajax_autocomplete_user_redirect'),
-            widget_class=SODARUserRedirectWidget,
-        )
+        if promote_as:
+            self.initial['user'] = promote_as.user
+            self.fields['user'].widget = forms.HiddenInput()
+            self.initial['promote'] = True
+        else:
+            self.fields['user'] = SODARUserChoiceField(
+                scope='project_exclude',
+                project=self.project,
+                forward=['role'],
+                url=reverse('projectroles:ajax_autocomplete_user_redirect'),
+                widget_class=SODARUserRedirectWidget,
+            )
+            self.initial['promote'] = False
+
         # Limit role choices
-        self.fields['role'].choices = get_role_choices(
-            self.project, self.current_user
-        )
+        q_kwargs = {'project': self.project, 'current_user': self.current_user}
+        if promote_as:
+            q_kwargs['promote_as'] = promote_as
+        elif self.instance.pk:  # Restrict choices by overridden inactive role
+            active_as = self.project.get_role(self.instance.user)
+            if active_as and active_as.project != self.project:
+                inactive_as = RoleAssignment.objects.filter(
+                    project=self.project, user=self.instance.user
+                ).first()
+                if inactive_as and inactive_as.role.rank > active_as.role.rank:
+                    q_kwargs['promote_as'] = active_as
+        self.fields['role'].choices = get_role_choices(**q_kwargs)
 
         # Updating an existing assignment
         if self.instance.pk:
@@ -712,20 +841,26 @@ class RoleAssignmentForm(SODARModelForm):
             self.initial['role'] = self.instance.role
 
         # Creating a new assignment
-        elif self.project:
+        elif self.project:  # TODO: I think this could just be "else"
             # Limit project choice to self.project, hide widget
             self.initial['project'] = self.project.sodar_uuid
             self.fields['project'].widget = forms.HiddenInput()
-            self.fields['role'].initial = Role.objects.get(
-                name=PROJECT_ROLE_GUEST
-            ).pk
+            if promote_as:
+                self.fields['role'].initial = max(
+                    [c[0] for c in self.fields['role'].choices]
+                )
+            if not promote_as:
+                self.fields['role'].initial = Role.objects.get(
+                    name=PROJECT_ROLE_GUEST
+                ).pk
 
     def clean(self):
         """Function for custom form validation and cleanup"""
         role = self.cleaned_data.get('role')
-        existing_as = RoleAssignment.objects.get_assignment(
-            self.cleaned_data.get('user'), self.cleaned_data.get('project')
-        )
+        existing_as = RoleAssignment.objects.filter(
+            project=self.cleaned_data.get('project'),
+            user=self.cleaned_data.get('user'),
+        ).first()
 
         # Adding a new RoleAssignment
         if not self.instance.pk:
@@ -738,7 +873,6 @@ class RoleAssignmentForm(SODARModelForm):
                         get_user_display_name(self.cleaned_data.get('user')),
                     ),
                 )
-
         # Updating a RoleAssignment
         else:
             # Ensure not setting existing role again
@@ -748,7 +882,6 @@ class RoleAssignmentForm(SODARModelForm):
         # Delegate checks
         if role.name == PROJECT_ROLE_DELEGATE:
             del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
-
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
                 'projectroles.update_project_delegate', obj=self.project
@@ -756,11 +889,10 @@ class RoleAssignmentForm(SODARModelForm):
                 self.add_error(
                     'role', 'Insufficient permissions for altering delegate'
                 )
-
             # Ensure delegate limit is not exceeded
             if (
                 del_limit != 0
-                and self.project.get_delegates(exclude_inherited=True).count()
+                and len(self.project.get_delegates(inherited=False))
                 >= del_limit
             ):
                 self.add_error(
@@ -770,7 +902,6 @@ class RoleAssignmentForm(SODARModelForm):
                         del_limit, get_display_name(self.project.type)
                     ),
                 )
-
         return self.cleaned_data
 
 
@@ -779,6 +910,22 @@ class RoleAssignmentForm(SODARModelForm):
 
 class RoleAssignmentOwnerTransferForm(SODARForm):
     """Form for transferring owner role assignment between users"""
+
+    @classmethod
+    def _get_old_owner_choices(cls, project, old_owner_as):
+        q_kwargs = {'project_types__contains': [project.type]}
+        inh_role_as = project.get_role(old_owner_as.user, inherited_only=True)
+        if (
+            not inh_role_as
+            or inh_role_as.role.rank != ROLE_RANKING[PROJECT_ROLE_OWNER]
+        ):
+            q_kwargs['rank__gt'] = ROLE_RANKING[PROJECT_ROLE_OWNER]
+        if inh_role_as:
+            q_kwargs['rank__lte'] = inh_role_as.role.rank
+        return [
+            get_role_option(project, role)
+            for role in Role.objects.filter(**q_kwargs).order_by('rank')
+        ]
 
     def __init__(self, project, current_user, current_owner, *args, **kwargs):
         """Override for form initialization"""
@@ -792,45 +939,41 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         self.fields['new_owner'] = SODARUserChoiceField(
             label='New owner',
             help_text='Select a member of the {} to become owner.'.format(
-                get_display_name(self.project.type)
+                get_display_name(project.type)
             ),
             scope='project',
-            project=self.project,
-            exclude=[self.current_owner],
+            project=project,
+            exclude=[current_owner],
         )
 
-        self.selectable_roles = get_role_choices(
-            self.project, self.current_user
+        old_owner_as = RoleAssignment.objects.get(
+            project=project, user=current_owner, role__name=PROJECT_ROLE_OWNER
+        )
+        self.selectable_roles = self._get_old_owner_choices(
+            project, old_owner_as
         )
         self.fields['old_owner_role'] = forms.ChoiceField(
-            label='New role for {}'.format(self.current_owner.username),
-            help_text='New role for the current owner. Select "Remove" in the '
-            'member list to remove the user\'s membership.',
+            label='New role for {}'.format(current_owner.username),
+            help_text='New role for the current owner. Select "Remove" in '
+            'the member list to remove the user\'s membership.',
             choices=self.selectable_roles,
-            initial=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).pk,
+            initial=self.selectable_roles[0][0],
+            disabled=True if len(self.selectable_roles) == 1 else False,
         )
+
         self.fields['project'] = forms.Field(
-            widget=forms.HiddenInput(), initial=self.project.sodar_uuid
+            widget=forms.HiddenInput(), initial=project.sodar_uuid
         )
 
     def clean_old_owner_role(self):
-        role = next(
-            (
-                choice
-                for choice in self.selectable_roles
-                if choice[0] == int(self.cleaned_data['old_owner_role'])
-            ),
-            None,
-        )
-
-        try:
-            role = Role.objects.get(name=role[1])
-        except Role.DoesNotExist:
-            raise forms.ValidationError('Selected role does not exist')
+        role = Role.objects.filter(
+            pk=self.cleaned_data.get('old_owner_role')
+        ).first()
+        if not role:
+            raise forms.ValidationError('Selected role not found')
 
         if role.name == PROJECT_ROLE_DELEGATE:
             del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
-
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
                 'projectroles.update_project_delegate', obj=self.project
@@ -838,17 +981,15 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
                 raise forms.ValidationError(
                     'Insufficient permissions for assigning a delegate role'
                 )
-
             # Ensure delegate limit is not exceeded
             new_owner_role = RoleAssignment.objects.filter(
                 project=self.project, user=self.cleaned_data.get('new_owner')
             ).first()
-
             if (
                 del_limit != 0
                 and new_owner_role
                 and new_owner_role.role.name != PROJECT_ROLE_DELEGATE
-                and self.project.get_delegates(exclude_inherited=True).count()
+                and len(self.project.get_delegates(inherited=False))
                 >= del_limit
             ):
                 raise forms.ValidationError(
@@ -857,7 +998,6 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
                         del_limit, get_display_name(self.project.type)
                     )
                 )
-
         return role
 
     def clean_new_owner(self):
@@ -866,21 +1006,12 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             raise forms.ValidationError(
                 'The new owner shouldn\'t be the current owner.'
             )
-
-        role_as = RoleAssignment.objects.get_assignment(user, self.project)
-        inh_owners = [
-            a.user for a in self.project.get_owners(inherited_only=True)
-        ]
-
-        if (role_as and role_as.project != self.project) or (
-            not role_as and user not in inh_owners
-        ):
+        role_as = self.project.get_role(user)
+        if not role_as:
             raise forms.ValidationError(
-                'The new owner has no roles in the {}.'.format(
-                    get_display_name(self.project.type)
-                )
+                'The new owner has no inherited or local roles in the '
+                '{}.'.format(get_display_name(self.project.type))
             )
-
         return user
 
 
@@ -917,22 +1048,19 @@ class ProjectInviteForm(SODARModelForm):
         self.fields['role'].choices = get_role_choices(
             self.project, self.current_user, allow_delegate=True
         )
-
         if role:
             self.fields['role'].initial = role
         else:
             self.fields['role'].initial = Role.objects.get(
                 name=PROJECT_ROLE_GUEST
             ).pk
-
         # Limit textarea height
         self.fields['message'].widget.attrs['rows'] = 4
 
     def clean(self):
+        user_email = self.cleaned_data.get('email')
         # Check if user email is already in users
-        existing_user = User.objects.filter(
-            email=self.cleaned_data.get('email')
-        ).first()
+        existing_user = User.objects.filter(email=user_email).first()
         if existing_user:
             self.add_error(
                 'email',
@@ -944,18 +1072,41 @@ class ProjectInviteForm(SODARModelForm):
         try:
             ProjectInvite.objects.get(
                 project=self.project,
-                email=self.cleaned_data.get('email'),
+                email=user_email,
                 active=True,
                 date_expire__gt=timezone.now(),
             )
             self.add_error(
                 'email',
                 'There is already an active invite for email {} in {}'.format(
-                    self.cleaned_data.get('email'), self.project.title
+                    user_email, self.project.title
                 ),
             )
         except ProjectInvite.DoesNotExist:
             pass
+
+        # Local users check
+        if user_email:
+            domain = user_email[user_email.find('@') + 1 :]
+            domain_list = [
+                getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', ''),
+                getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', ''),
+            ]
+            if (
+                not settings.PROJECTROLES_ALLOW_LOCAL_USERS
+                and not settings.ENABLE_SAML
+                and domain
+                not in [
+                    x.lower() for x in getattr(settings, 'LDAP_ALT_DOMAINS', [])
+                ]
+                and domain.split('.')[0].lower()
+                not in [x.lower() for x in domain_list]
+            ):
+                self.add_error(
+                    'email',
+                    'Local users not allowed, email domain {} not recognized '
+                    'for LDAP users'.format(domain),
+                )
 
         # Delegate checks
         role = self.cleaned_data.get('role')
@@ -971,7 +1122,7 @@ class ProjectInviteForm(SODARModelForm):
             # Ensure delegate limit is not exceeded
             if (
                 del_limit != 0
-                and self.project.get_delegates(exclude_inherited=True).count()
+                and len(self.project.get_delegates(inherited=False))
                 >= del_limit
             ):
                 self.add_error(
@@ -981,7 +1132,6 @@ class ProjectInviteForm(SODARModelForm):
                         del_limit, get_display_name(self.project.type)
                     ),
                 )
-
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
@@ -1032,9 +1182,6 @@ class RemoteSiteForm(SODARModelForm):
             # Generate secret token for target site
             if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
                 self.fields['secret'].initial = build_secret()
-        # Updating
-        else:
-            pass
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
@@ -1092,28 +1239,44 @@ class LocalUserForm(SODARModelForm):
 # Helper functions -------------------------------------------------------------
 
 
+def get_role_option(project, role):
+    """
+    Return form option value for a Role object.
+
+    :param project: Project object
+    :param role: Role object
+    return: Role key and legend
+    """
+    return role.pk, '{} {}'.format(
+        get_display_name(project.type, title=True),
+        role.name.split(' ')[1].capitalize(),
+    )
+
+
 def get_role_choices(
-    project, current_user, allow_delegate=True, allow_owner=False
+    project, current_user, promote_as=None, allow_delegate=True
 ):
     """
     Return valid role choices according to permissions of current user.
 
     :param project: Project in which role will be assigned
     :param current_user: User for whom the form is displayed
-    :param allow_delegate: Whether delegate setting should be allowed (bool)
+    :param promote_as: Assignment for promoting inherited user, or inactive
+                       overridden assignment (RoleAssignment or None)
+    :param allow_delegate: Whether delegate should be allowed (bool)
+    :return: List
     """
-    # Owner cannot be changed in role assignment
-    role_excludes = []
-    if not allow_owner or not current_user.has_perm(
-        'projectroles.update_project_owner', obj=project
-    ):
-        role_excludes.append(PROJECT_ROLE_OWNER)
+    # Owner cannot be changed
+    role_excludes = [PROJECT_ROLE_OWNER]
     # Exclude delegate if not allowed or current user lacks perms
     if not allow_delegate or not current_user.has_perm(
         'projectroles.update_project_delegate', obj=project
     ):
         role_excludes.append(PROJECT_ROLE_DELEGATE)
+    qs = Role.objects.filter(project_types__contains=[project.type])
+    if promote_as:
+        qs = qs.filter(rank__lt=promote_as.role.rank)
     return [
-        (role.pk, role.name)
-        for role in Role.objects.exclude(name__in=role_excludes)
+        get_role_option(project, role)
+        for role in qs.exclude(name__in=role_excludes)
     ]

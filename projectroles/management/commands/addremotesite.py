@@ -1,3 +1,8 @@
+"""
+Addremotesite management command for creating remote sites for remote project
+sync
+"""
+
 import re
 import sys
 
@@ -7,10 +12,11 @@ from django.db import transaction
 
 from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
+from projectroles.plugins import get_backend_api
 
 
-User = auth.get_user_model()
 logger = ManagementCommandLogger(__name__)
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -23,9 +29,7 @@ class Command(BaseCommand):
     help = 'Creates a remote site from given arguments'
 
     def add_arguments(self, parser):
-        # ---------------------------
         # RemoteSite Model Argumments
-        # ---------------------------
         parser.add_argument(
             '-n',
             '--name',
@@ -77,9 +81,7 @@ class Command(BaseCommand):
             type=bool,
             help='User display of the remote site',
         )
-        # --------------------
         # Additional Arguments
-        # --------------------
         parser.add_argument(
             '-s',
             '--suppress-error',
@@ -141,6 +143,15 @@ class Command(BaseCommand):
             }
             site = RemoteSite.objects.create(**create_values)
 
+        timeline = get_backend_api('timeline_backend')
+        timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            event_name='remote_site_create',
+            description=description,
+            classified=True,
+            status_type='OK',
+        )
         logger.info(
             'Created remote site "{}" with mode {}'.format(site.name, site.mode)
         )

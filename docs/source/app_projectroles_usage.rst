@@ -41,12 +41,12 @@ User Interface
 Basics
 ------
 
-Upon loggin into a SODAR Core based Django site using default templates and CSS,
+Upon logging into a SODAR Core based Django site using default templates and CSS,
 the general view of your site is split into the following elements:
 
 - **Top navigation bar**: Contains the site logo and title, search element, link
   to advanced search, help link and the user dropdown menu.
-- **User dropown menu**: Contains links to user management, admin site and
+- **User dropdown menu**: Contains links to user management, admin site and
   site-wide apps the user has access to.
 - **Project sidebar**: Shortcuts to project apps and project management pages
 - **Project navigation**: Project structure breadcrumb (disabled for site apps)
@@ -72,6 +72,13 @@ As content within a SODAR Core based site is by default sorted into projects,
 the home view displays a tree view of categories and projects to choose from.
 You can filter the list with a search term or restrict display to your starred
 projects.
+
+.. hint::
+
+    If you have been granted a *finder* role to a category, projects under it
+    will be visible in the list as grayed out text instead of links. You can
+    navigate to the parent category and see the member roles there in order to
+    request access to a project from an owner or delegate.
 
 Project Detail View
 -------------------
@@ -104,6 +111,12 @@ may contain a description and readme, but project apps are disabled for
 categories unless explicitly enabled. Projects can not be nested within each
 other.
 
+.. note::
+
+    Content displayed on the form varies depending on the type of container
+    (category or project) being edited. E.g. most app settings are only
+    available when creating or updating a project.
+
 Creating a Top Level Category
 -----------------------------
 
@@ -133,8 +146,8 @@ may be modified later.
 
     Category/project creation form
 
-Creating Projects
------------------
+Creating Categories and Projects
+--------------------------------
 
 Once navigating into a category, a user with sufficient access will see the
 **Create Project or Category** link in the side bar. This opens up a form for
@@ -145,9 +158,8 @@ between creating a project or a category.
 Users with the role of *project contributor* or higher in a category are allowed
 to create a project within that category.
 
-
-Updating Projects
------------------
+Updating Categories and Projects
+--------------------------------
 
 An existing project or category can be updated from the
 **Update Project/Category** link in the side bar. Again, a similar form as
@@ -181,6 +193,11 @@ specifically granting it.
     make the project available to anyone who can access the site in your
     network! Please use this feature carefully.
 
+.. note::
+
+    Public guest access can only be set for projects. Categories will be visible
+    for users with access to any category or project under them.
+
 App Settings
 ------------
 
@@ -190,7 +207,10 @@ be either be set with the scope of *project*, *user* or *user within a project*.
 Widgets for project specific settings will show up in the project creation and
 updating form and can only be modified by users with sufficient project access.
 User specific settings will be displayed in the
-:ref:`Userpforile app <app_userprofile>`.
+:ref:`Userprofile app <app_userprofile>`.
+
+Certain project app settings may appear only for categories, only for projects
+or for both container types.
 
 By defining the attribute ``user_modifiable=False``, project or user app
 settings will not be shown in the respective project/user update views. This is
@@ -202,16 +222,10 @@ Settings with the scope of user within a project do not currently have a
 separate UI of their own. Instead, project apps can produce their own user
 specific UIs for this functionality if manual user selection is needed.
 
-.. note::
-
-    Currently, project specific app settings are also enabled for categories but
-    do not actually do anything. The behaviour regarding this (remove settings /
-    inherit by nested projects / etc) is TBD.
-
 The projectroles app provides the following built-in app settings with the
 project scope:
 
-- ``ip_restrict``: Restict project access by an allowed IP list if enabled.
+- ``ip_restrict``: Restrict project access by an allowed IP list if enabled.
 - ``ip_allowlist``: List of allowed IP addresses for project access.
 
 To clean up settings which have been stored in the database but have since
@@ -256,17 +270,14 @@ category (owner or delegate) or superuser status.
 
     Project member list view
 
-.. note::
+All members of categories automatically inherit identical access rights to
+subcategories and projects under those categories, starting in SODAR Core
+v0.13. Inherited member roles can be promoted to a higher local role, but
+demoting to a lesser role for child categories or projects is not allowed.
 
-    Owners of categories automatically inherit owner rights to projects
-    placed under those categories, starting in SODAR Core v0.8.0. Adding
-    separate roles for those users in the inherited projects is not allowed.
-
-.. note::
-
-    At this time, category memberships are not automatically propagated to
-    projects created under the category. An inheritance functionality may be
-    implemented at a later date.
+For inherited members, the member list displays a link to the category where
+the inheritance is derived from. Inherited members can not be removed or edited
+locally, with the exception of promoting a user to a higher role.
 
 Adding Members
 --------------
@@ -283,9 +294,8 @@ previewed in corresponding forms.
 
 .. hint::
 
-    As of SODAR Core v0.4.5, it is also possible to create an invite in the "add
-    member" form. Inviting is enabled when inputting an email address not found
-    among the system users.
+    It is also possible to create an invite in the Add Member form. Inviting is
+    enabled when inputting an email address not found among the system users.
 
 Modifying Members
 -----------------
@@ -371,7 +381,7 @@ three are currently implemented:
   user roles in order to synchronize project access remotely.
 - **Revoked access**: Previously available access which has been revoked. The
   project will still remain in the target site, but only superusers, the project
-  owner or the project delegate(s) can acesss it.
+  owner or the project delegate(s) can access it.
 
 .. note::
 
@@ -406,7 +416,7 @@ using the provided secret string as the access token.
 
 After creating the source site, remote project metadata and member roles (for
 which access has been granted) can be accessed using the *Synchronize* link.
-Additionaly if the remote Source site is synchronized with multiple Target Sites,
+Additionally if the remote Source site is synchronized with multiple Target Sites,
 information about those other Target sites will be synchronized as well an displayed
 as *Peer Sites*.
 

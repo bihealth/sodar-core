@@ -43,6 +43,8 @@ from projectroles.models import (
     RemoteSite,
     AppSetting,
     SODAR_CONSTANTS,
+    CAT_DELIMITER,
+    ROLE_PROJECT_TYPE_ERROR_MSG,
 )
 from projectroles.plugins import get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
@@ -75,6 +77,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
@@ -95,7 +98,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.11.0', '0.11.1', '0.12.0']
+CORE_API_ALLOWED_VERSIONS = ['0.13.0']
 
 # Local constants
 INVALID_PROJECT_TYPE_MSG = (
@@ -358,7 +361,7 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
 # API Views --------------------------------------------------------------------
 
 
-class ProjectListAPIView(ListAPIView):
+class ProjectListAPIView(APIView):
     """
     List all projects and categories for which the requesting user has access.
 
@@ -366,25 +369,39 @@ class ProjectListAPIView(ListAPIView):
 
     **Methods:** ``GET``
 
-    **Returns:** List of project details (see ``ProjectRetrieveAPIView``)
+    **Returns:** List of project details (see ``ProjectRetrieveAPIView``). For
+    project finder role, only lists title and UUID of projects.
     """
 
     permission_classes = [IsAuthenticated]
     renderer_classes = [CoreAPIRenderer]
-    serializer_class = ProjectSerializer
     versioning_class = CoreAPIVersioning
 
-    def get_queryset(self):
-        """
-        Override get_queryset() to return projects of type PROJECT for which the
-        requesting user has access.
-        """
-        qs = Project.objects.all().order_by('pk')
-        if self.request.user.is_superuser:
-            return qs
-        return qs.filter(
-            roles__in=RoleAssignment.objects.filter(user=self.request.user)
+    def get(self, request, *args, **kwargs):
+        projects_all = Project.objects.all().order_by('full_title')
+        if request.user.is_superuser:
+            ret = projects_all
+        else:
+            ret = []
+            role_cats = []
+            projects_local = [
+                a.project
+                for a in RoleAssignment.objects.filter(user=request.user)
+            ]
+            for p in projects_all:
+                local_role = p in projects_local
+                if (
+                    local_role
+                    or p.public_guest_access
+                    or any(p.full_title.startswith(c) for c in role_cats)
+                ):
+                    ret.append(p)
+                if local_role and p.type == PROJECT_TYPE_CATEGORY:
+                    role_cats.append(p.full_title + CAT_DELIMITER)
+        serializer = ProjectSerializer(
+            ret, many=True, context={'request': request}
         )
+        return Response(serializer.data, status=200)
 
 
 class ProjectRetrieveAPIView(
@@ -591,6 +608,7 @@ class RoleAssignmentOwnerTransferAPIView(
             name=request.data.get('old_owner_role')
         ).first()
         old_owner_as = project.get_owner()
+        old_owner = old_owner_as.user
 
         # Validate input
         if not new_owner or not old_owner_role:
@@ -601,18 +619,35 @@ class RoleAssignmentOwnerTransferAPIView(
             raise serializers.ValidationError(
                 'Unknown role "{}"'.format(request.data.get('old_owner_role'))
             )
+        if project.type not in old_owner_role.project_types:
+            raise serializers.ValidationError(
+                ROLE_PROJECT_TYPE_ERROR_MSG.format(
+                    project_type=project.type, role_name=old_owner_role.name
+                )
+            )
         if not old_owner_as:
             raise serializers.ValidationError('Existing owner role not found')
         if not new_owner:
             raise serializers.ValidationError(
                 'User "{}" not found'.format(request.data.get('new_owner'))
             )
-        if new_owner == old_owner_as.user:
+        if new_owner == old_owner:
             raise serializers.ValidationError('Owner role already set for user')
         if not project.has_role(new_owner):
             raise serializers.ValidationError(
                 'User {} is not a member of the project'.format(
                     new_owner.username
+                )
+            )
+        # Validate existing inherited role for old owner, do not allow demoting
+        inh_roles = RoleAssignment.objects.filter(
+            user=old_owner, project__in=project.get_parents()
+        ).order_by('role__rank')
+        if inh_roles and old_owner_role.rank > inh_roles.first().role.rank:
+            raise serializers.ValidationError(
+                'User {} has inherited role "{}", demoting is not '
+                'allowed'.format(
+                    old_owner.username, inh_roles.first().role.name
                 )
             )
 
@@ -869,7 +904,9 @@ class AppSettingMixin:
                 app_settings.set(
                     app_name=app_name,
                     setting_name=setting_name,
-                    value=app_settings.get_default(app_name, setting_name),
+                    value=app_settings.get_default(
+                        app_name, setting_name, project=project, user=user
+                    ),
                     project=project,
                     user=user,
                 )

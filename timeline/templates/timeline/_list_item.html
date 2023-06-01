@@ -1,9 +1,11 @@
+{% load rules %}
 {% load timeline_tags %}
 {# Projectroles dependency #}
 {% load projectroles_common_tags %}
 
 <tr id="sodar-tl-list-event-{{ event.sodar_uuid }}">
   <td>
+    {% has_perm 'timeline.view_event_extra_data' request.user event.project as can_view_extra_data %}
     {% get_timestamp event as event_time %}
     {% if event.project %}
       <a class="sodar-tl-link-detail text-primary"
@@ -37,12 +39,21 @@
     {% get_event_description event plugin_lookup request as event_desc %}
     {{ event_desc|safe }}
     {% if not details_card_mode and event.extra_data %}
-      <a class="sodar-tl-link-extra-data text-primary pull-right"
-         data-url="{% url 'timeline:ajax_extra_project' projectevent=event.sodar_uuid %}">
-        <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
-           data-toggle="tooltip" data-placement="right">
-        </i>
-      </a>
+      {% if event.project and can_view_extra_data %}
+        <a class="sodar-tl-link-extra-data text-primary pull-right"
+           data-url="{% url 'timeline:ajax_extra_project' projectevent=event.sodar_uuid %}">
+          <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
+             data-toggle="tooltip" data-placement="right">
+          </i>
+        </a>
+      {% elif not event.project and user.is_superuser %}
+        <a class="sodar-tl-link-extra-data text-primary pull-right"
+           data-url="{% url 'timeline:ajax_extra_site' projectevent=event.sodar_uuid %}">
+          <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
+             data-toggle="tooltip" data-placement="right">
+          </i>
+        </a>
+      {% endif %}
     {% endif %}
     {% if event.classified %}
       <span class="pull-right text-muted">

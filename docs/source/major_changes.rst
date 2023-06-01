@@ -10,6 +10,182 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.13.0 (2023-06-01)
+********************
+
+Release Highlights
+==================
+
+- Extend role inheritance to all roles
+- Add project finder role
+- Add periodic remote project sync using Celery
+- Add custom method support for app settings defaults, options and validation
+- Add project type restriction to app settings
+- Add site-wide scope to app settings
+- Add dismissed alerts view to appalerts
+- Add sodarcache item deletion via API
+- Add omitting of apps in search
+- Add custom template include path
+- Disallow public guest access for categories
+- Replace ProjectUserTag model with app settings
+- Change filesfolders app display name from "Small Files" to "Files"
+- General bug fixes and minor updates
+
+Breaking Changes
+================
+
+New Context Processor Required
+------------------------------
+
+Certain sidebar related functionality has been moved into the new
+``sidebar_processor`` context processor. You need to add this to your site in
+``base.py`` under ``TEMPLATES``:
+
+.. code-block:: python
+
+    TEMPLATES = [
+        {
+            'OPTIONS': {
+                'context_processors': {
+                    # ...
+                    'projectroles.context_processors.sidebar_processor',
+                }
+            }
+        }
+
+New Mandatory Django Settings
+-----------------------------
+
+The mandatory ``PROJECTROLES_TEMPLATE_INCLUDE_PATH`` Django setting has been
+added in this release. Please add this in your ``base.py`` config, preferably
+with the following syntax:
+
+.. code-block:: python
+
+    PROJECTROLES_TEMPLATE_INCLUDE_PATH = env.path(
+        'PROJECTROLES_TEMPLATE_INCLUDE_PATH',
+        os.path.join(APPS_DIR, 'templates', 'include'),
+    )
+
+Role Inheritance Extended to All Roles
+--------------------------------------
+
+Inheriting roles from parent categories has been extended from the owner role to
+all roles. Access to inherited projects will be given automatically when
+updating your site to SODAR Core v0.13.
+
+Inherited roles override "local" roles assigned to a specific project based on
+the role rank. Local roles can still be assigned to projects, but only promoting
+inherited users to a higher role is allowed.
+
+The following steps are recommended:
+
+1. Review your site's existing project hierarchy and roles before upgrading to
+   avoid unwanted inheritance.
+2. Update the rules and permission tests in your site to ensure proper access
+   for users to all views.
+
+If your site uses the project modify API to e.g. update user access on external
+services, you need to update your modify API calls according to the new
+inheritance policy. The ``syncmodifyapi`` management command should be used to
+update existing roles, which means implemented ``perform_project_sync()``
+methods should also be updated.
+
+Project Finder Role Added
+-------------------------
+
+The *project finder* role has been added. For more information on this role, see
+:ref:`app_projectroles_basics`. It is recommended to update permission tests and
+rules as applicable to ensure users with this role have proper access to your
+apps. The ``RoleMixin.init_roles()`` helper should be used in tests to
+initialize built-in roles correctly, unless inherited from a SODAR Core base
+test class.
+
+REST API Backwards Compatibility
+--------------------------------
+
+Due to changes in role inheritance, the REST API is no longer considered
+backwards compatible with older versions. Version ``0.13.0`` or higher must now
+be used. Note that target sites using a SODAR Core v0.12 source site or earlier
+have to be updated for remote project sync to work.
+
+Projectroles Models API Updated
+-------------------------------
+
+There have been multiple changes in the projectroles models API due to the role
+inheritance and ranking updates. Please consult
+:ref:`app_projectroles_api_django` to review specific changes and update any
+effected code.
+
+- ``RoleAssignmentManager`` along with the ``get_assignment()`` method have been
+  removed. Instead, please use ``Project.get_role()`` or direct
+  ``RoleAssignment`` model queries.
+- ``Project.get_all_roles()`` has been removed. ``Project.get_roles()`` should
+  be used in its place.
+- ``Project.get_delegates()`` returns a ``list`` instead of a ``QuerySet``. The
+  method signature has also been changed.
+- For ``RoleAssignment.project``, the ``related_name`` field has been renamed
+  from ``roles`` into ``local_roles``.
+- ``Project.get_children()`` returns projects sorted by ``full_title`` with the
+  argument ``flat=True``.
+
+Base Classes for Tests Updated
+------------------------------
+
+Base classes such as ``TestProjectPermissionBase`` and ``TestUIBase`` have been
+updated. The default test category and project are now set up with separate
+users for all roles to help test extended role inheritance. This may cause some
+of your existing tests to fail. In that case, please update your tests to match
+the updated roles.
+
+For manually populating ``Role`` objects in tests, it is **strongly**
+recommended for you to use the ``RoleMixin.init_roles()`` helper. This ensures
+roles and their ranks are correctly initialized.
+
+Additionally, ``TestPermissionMixin._send_request()`` has been renamed into
+``send_request()``.
+
+ProjectUserTag Model Removed
+----------------------------
+
+The ``ProjectUserTag`` model has been removed. To our knowledge, it was only
+used for project starring in SODAR Core. This functionality has been
+reimplemented using app settings.
+
+Advanced Search Uses POST Requests
+----------------------------------
+
+Advanced search has been updated to use POST requests. This should not require
+any changes in the plugin search implementation. However, if you have set up
+view tests for advanced search in your apps, they may have to be updated.
+
+System Prerequisites
+--------------------
+
+Third party Python package dependencies have been upgraded. See the
+``requirements`` directory for up-to-date package versions and upgrade your
+project.
+
+Note that the upgrade to ``django-crispy-forms>=2.0`` requires the separate
+installation of ``crispy-bootstrap4==2022.1``. You also need to add
+``crispy_bootstrap4`` under ``THIRD_PARTY_APPS`` in your base configuration.
+
+PROJECTROLES_HIDE_APP_LINKS Deprecated
+--------------------------------------
+
+The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting has been depreacted. Instead,
+you should use ``PROJECTROLES_HIDE_PROJECT_APPS`` which now handles the same
+functionality. Support for the ``PROJECTROLES_HIDE_APP_LINKS`` setting will be
+removed in v0.14.
+
+Deprecated App Settings API Methods Removed
+-------------------------------------------
+
+The app settings API methods deprecated in v0.12 have been removed in this
+release. If you are still using deprecated methods, please refer to the list
+found in the v0.12.0 major changes notes below and update your API calls.
+
+
 v0.12.0 (2023-02-03)
 ********************
 
@@ -1531,7 +1707,7 @@ from your project.
     are responsible of maintaining them and ensuring SODAR compatibility. Such
     site-wide template overrides are outside of the scope for SODAR Core
     components. Leaving the existing files in without maintenance may cause
-    undesireable effects in the future.
+    undesirable effects in the future.
 
 Database File Upload Widget
 ---------------------------

@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.forms.models import model_to_dict
 
 # Projectroles dependency
-from projectroles.models import Role, SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
 from sodarcache.models import JSONCacheItem
@@ -34,23 +34,11 @@ class TestViewsBase(JsonCacheItemMixin, TestJsonCacheItemBase):
     def setUp(self):
         super().setUp()
         self.cache_backend = get_backend_api('sodar_cache')
-
-        # Init roles
-        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
-        self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE
-        )[0]
-        self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR
-        )[0]
-        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
-
         # Init superuser
         self.user = self.make_user('superuser')
         self.user.is_staff = True
         self.user.is_superuser = True
         self.user.save()
-
         # Init project
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
@@ -58,7 +46,6 @@ class TestViewsBase(JsonCacheItemMixin, TestJsonCacheItemBase):
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Init cache item
         self.item = self.cache_backend.set_cache_item(
             project=self.project,

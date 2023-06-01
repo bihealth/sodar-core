@@ -53,6 +53,7 @@ DJANGO_APPS = [
 ]
 THIRD_PARTY_APPS = [
     'crispy_forms',  # Form layouts
+    'crispy_bootstrap4',  # Bootstrap4 theme for Crispy
     'rules.apps.AutodiscoverRulesConfig',  # Django rules engine
     'djangoplugins',  # Django plugins
     'pagedown',  # For markdown
@@ -207,6 +208,7 @@ TEMPLATES = [
                 'projectroles.context_processors.urls_processor',
                 'projectroles.context_processors.site_app_processor',
                 'projectroles.context_processors.app_alerts_processor',
+                'projectroles.context_processors.sidebar_processor',
             ],
         },
     }
@@ -286,7 +288,7 @@ LOGIN_URL = 'login'
 AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
 
 # Location of root django.contrib.admin URL, use {% url 'admin:index' %}
-ADMIN_URL = r'^admin/'
+ADMIN_URL = 'admin/'
 
 
 # Celery
@@ -574,6 +576,12 @@ SODAR_API_DEFAULT_HOST = env.url(
 # Remote access mode: SOURCE or TARGET
 PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
 
+# System path for custom template includes
+PROJECTROLES_TEMPLATE_INCLUDE_PATH = env.path(
+    'PROJECTROLES_TEMPLATE_INCLUDE_PATH',
+    os.path.join(APPS_DIR, 'templates', 'include'),
+)
+
 # Enable or disable project creation if site is in TARGET mode
 PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
 
@@ -608,6 +616,15 @@ PROJECTROLES_EMAIL_HEADER = env.str('PROJECTROLES_EMAIL_HEADER', None)
 PROJECTROLES_EMAIL_FOOTER = env.str('PROJECTROLES_EMAIL_FOOTER', None)
 
 PROJECTROLES_ENABLE_SEARCH = env.bool('PROJECTROLES_ENABLE_SEARCH', True)
+PROJECTROLES_SEARCH_OMIT_APPS = env.list(
+    'PROJECTROLES_SEARCH_OMIT_APPS', None, []
+)
+PROJECTROLES_TARGET_SYNC_ENABLE = env.bool(
+    'PROJECTROLES_TARGET_SYNC_ENABLE', default=False
+)
+PROJECTROLES_TARGET_SYNC_INTERVAL = env.int(
+    'PROJECTROLES_TARGET_SYNC_INTERVAL', default=5
+)
 
 # Optional projectroles settings
 # Sidebar icon size. Minimum=18, maximum=42.
@@ -620,6 +637,11 @@ PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 # Scroll project navigation with page content if set False
 # PROJECTROLES_BREADCRUMB_STICKY = True
 
+# Hide project apps from the UI (sidebar, dropdown menus and project details)
+PROJECTROLES_HIDE_PROJECT_APPS = env.list(
+    'PROJECTROLES_HIDE_PROJECT_APPS', None, []
+)
+# NOTE: This setting has been deprecated and will be removed in v0.14
 PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 
 # Set limit for delegate roles per project (if 0, no limit is applied)
@@ -656,6 +678,7 @@ BGJOBS_PAGINATION = env.int('BGJOBS_PAGINATION', 15)
 
 # Timeline app settings
 TIMELINE_PAGINATION = env.int('TIMELINE_PAGINATION', 15)
+TIMELINE_SEARCH_LIMIT = env.int('TIMELINE_SEARCH_LIMIT', 250)
 
 
 # Filesfolders app settings

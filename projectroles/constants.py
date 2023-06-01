@@ -8,6 +8,7 @@ SODAR_CONSTANTS = {
     'PROJECT_ROLE_DELEGATE': 'project delegate',
     'PROJECT_ROLE_CONTRIBUTOR': 'project contributor',
     'PROJECT_ROLE_GUEST': 'project guest',
+    'PROJECT_ROLE_FINDER': 'project finder',
     # Project types
     'PROJECT_TYPE_CATEGORY': 'CATEGORY',
     'PROJECT_TYPE_PROJECT': 'PROJECT',
@@ -15,6 +16,7 @@ SODAR_CONSTANTS = {
     'APP_SETTING_SCOPE_PROJECT': 'PROJECT',
     'APP_SETTING_SCOPE_USER': 'USER',
     'APP_SETTING_SCOPE_PROJECT_USER': 'PROJECT_USER',
+    'APP_SETTING_SCOPE_SITE': 'SITE',
     # RemoteSite mode
     'SITE_MODE_SOURCE': 'SOURCE',
     'SITE_MODE_TARGET': 'TARGET',

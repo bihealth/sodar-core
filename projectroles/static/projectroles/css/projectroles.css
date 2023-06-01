@@ -75,6 +75,12 @@ html,
 
 .sodar-app-content {
   padding: 28px;
+  padding-top: 14px;
+  flex: auto;
+}
+
+.sodar-app-content-project {
+  padding: 28px;
   flex: auto;
 }
 
@@ -307,11 +313,6 @@ table.sodar-card-table-bordered tbody tr:last-child td {
 
 /* Project list table ------------------------------------------------------- */
 
-
-.sodar-pr-project-list-body-parent {
-  max-height: 300px;
-  overflow-y: auto;
-}
 
 table.sodar-pr-project-list-table {
   table-layout: fixed;

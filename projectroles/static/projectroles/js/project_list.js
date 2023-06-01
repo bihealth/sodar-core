@@ -75,13 +75,6 @@ function updateRoleColumn (uuids) {
                     var roleCol = item.find('.sodar-pr-project-list-role');
                     roleCol.attr('class', colData['class'])
                         .text(colData['name']);
-                    if (colData['info']) {
-                        roleCol.append($('<i>')
-                            .attr('class', 'iconify text-info ml-1')
-                            .attr('data-icon', 'mdi:information')
-                            .attr('title', colData['info'])
-                        );
-                    }
                 });
             });
         });
@@ -109,6 +102,8 @@ $(document).ready(function () {
         customColAlign.push($(this).attr('data-align'));
     });
     var colCount = customColAlign.length + 2;
+    var allUuids = [];
+    var projectUuids = [];
     var tableBody = $('#sodar-pr-project-list-table tbody');
     tableBody.append($('<tr>')
         .hide()
@@ -160,6 +155,14 @@ $(document).ready(function () {
             var row = tableBody.find('tr:last');
 
             // Title column
+            var p_elem = '<a>';
+            var p_href = '/project/' + p['uuid'];
+            var p_class = 'sodar-pr-project-link';
+            if (!p['access']) {
+                p_elem = '<span>';
+                p_href = '';
+                p_class = 'text-muted sodar-pr-project-link-disabled';
+            }
             row.append($('<td>')
                 .append($('<div>')
                 .attr('class', 'sodar-overflow-container')
@@ -173,9 +176,9 @@ $(document).ready(function () {
                         .attr('data-icon', 'mdi:' + icon))
                     .append($('<span>')
                         .attr('class', 'sodar-pr-project-title ' + titleClass)
-                        .append($('<a>')
-                            .attr('class', 'sodar-pr-project-link')
-                            .attr('href', '/project/' + p['uuid'])
+                        .append($(p_elem)
+                            .attr('class', p_class)
+                            .attr('href', p_href)
                             .text(p['title'])
                         )
                     )
@@ -216,14 +219,28 @@ $(document).ready(function () {
             // Starred icon
             if (p['starred']) {
                 titleSpan.append($('<i>')
-                    .attr('class', 'iconify text-warning ml-2 sodar-tag-starred')
+                    .attr('class', 'iconify text-warning ml-2 sodar-pr-project-starred')
                     .attr('data-icon', 'mdi:star')
+                );
+            }
+            // Finder link
+            if (!p['access'] && p['finder_url']) {
+                titleSpan.append($('<a>')
+                    .attr('href', p['finder_url'])
+                    .attr('class', 'sodar-pr-project-findable')
+                    .attr('title', 'Findable project: Request access from ' +
+                                   'category owner or delegate')
+                    .append($('<i>')
+                        .attr('class', 'iconify ml-2')
+                        .attr('data-icon', 'mdi:account-supervisor')
+
+                    )
                 );
             }
 
             // Fill project custom columns with spinners
             for (var j = 1; j < colCount - 1; j++) {
-                if (p['type'] === 'PROJECT') {
+                if (p['type'] === 'PROJECT' && p['access']) {
                     row.append($('<td>')
                         .attr('class',
                             'sodar-pr-project-list-custom text-' +
@@ -236,13 +253,28 @@ $(document).ready(function () {
                 } else row.append($('<td>'));
             }
             // Add user role column
-            row.append($('<td>')
-                .attr('class', 'sodar-pr-project-list-role')
-                .append($('<i>')
-                    .attr('class', 'iconify spin text-muted')
-                    .attr('data-icon', 'mdi:loading')
-                )
-            );
+            if (p['type'] === 'PROJECT' && p['access']) {
+                row.append($('<td>')
+                    .attr('class', 'sodar-pr-project-list-role')
+                    .append($('<i>')
+                        .attr('class', 'iconify spin text-muted')
+                        .attr('data-icon', 'mdi:loading')
+                    )
+                );
+            } else {
+                row.append($('<td>')
+                    .attr('class', 'sodar-pr-project-list-role text-muted')
+                    .html('N/A')
+                );
+            }
+
+            // Add categories and projects with access for further queries
+            if (p['access']) {
+                allUuids.push(p['uuid']);
+                if (p['type'] === 'PROJECT') {
+                    projectUuids.push(p['uuid']);
+                }
+            }
         }
 
         // Enable starred button and filter
@@ -253,16 +285,6 @@ $(document).ready(function () {
             $('#sodar-pr-project-list-filter').prop('disabled', false);
         }
 
-        // Get UUIDs
-        var allUuids = [];
-        var projectUuids = [];
-        $('.sodar-pr-project-list-item').each(function () {
-            var uuid = $(this).attr('data-uuid');
-            allUuids.push(uuid);
-            if ($(this).hasClass('sodar-pr-project-list-item-project')) {
-                projectUuids.push($(this).attr('data-uuid'));
-            }
-        });
         if (projectUuids.length > 0) {
             // Update custom columns
             updateCustomColumns(projectUuids);
@@ -382,4 +404,3 @@ $(document).ready(function () {
         modifyCellOverflow();
     });
 });
-

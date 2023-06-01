@@ -176,6 +176,22 @@ class SodarCacheAPI:
         return item
 
     @classmethod
+    def delete_cache_item(cls, app_name, name, project=None):
+        """
+        Method for deleting a cache item.
+
+        :param app_name: Name of the app which sets the item (string)
+        :param name: Item name (string)
+        :param project: Project object (optional)
+        """
+        item = cls.get_cache_item(app_name, name, project)
+        if item:
+            item.delete()
+            logger.info(
+                'Deleted item "{}:{}" from cache'.format(app_name, name)
+            )
+
+    @classmethod
     def get_update_time(cls, app_name, name, project=None):
         """
         Return the time of the last update of a cache object as seconds since

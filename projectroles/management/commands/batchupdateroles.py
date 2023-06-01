@@ -1,5 +1,8 @@
-from email.utils import parseaddr
+"""Batchupdateroles management command for updating user roles in batch"""
+
 import sys
+
+from email.utils import parseaddr
 
 from django.conf import settings
 from django.contrib import auth
@@ -11,7 +14,6 @@ from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import (
     Project,
     Role,
-    RoleAssignment,
     ProjectInvite,
     SODAR_CONSTANTS,
 )
@@ -19,8 +21,8 @@ from projectroles.views import RoleAssignmentModifyMixin, ProjectInviteMixin
 from projectroles.utils import get_expiry_date, build_secret
 
 
-User = auth.get_user_model()
 logger = ManagementCommandLogger(__name__)
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -67,22 +69,24 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         logger.info(
             'Updating role of user {} to {}..'.format(user.username, role.name)
         )
-        if user in [a.user for a in project.get_owners(inherited_only=True)]:
-            logger.info('Skipping as user has inherited ownership')
-            return
-
-        role_as = RoleAssignment.objects.filter(
-            project=project, user=user
-        ).first()
-        if role_as and role_as.role == role:
-            logger.info('Skipping as role already exists for user')
-            return
-        elif role_as and role_as.role == self.owner_role:
+        role_as = project.get_role(user)
+        if role_as and role_as.role == self.owner_role:
             logger.warning(
                 'Skipping as ownership transfer is not permitted here'
             )
             return
-
+        elif role_as and role_as.role == role:
+            logger.info('Skipping as role already exists for user')
+            return
+        elif (
+            role_as
+            and role_as.project != project
+            and role_as.role.rank > role.rank
+        ):
+            logger.warning(
+                'Skipping as demoting an inherited role is not permitted'
+            )
+            return
         self.modify_assignment(
             data={'user': user, 'role': role},
             request=self.request,
@@ -128,7 +132,6 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
                 'use appropriate UI or REST API endpoint'
             )
         role = self.roles[role_name]
-
         if not parseaddr(email)[1]:
             raise Exception('Invalid email: "{}"'.format(email))
 
@@ -145,8 +148,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         if (
             role == self.del_role
             and del_limit != 0
-            and project.get_delegates(exclude_inherited=True).count()
-            >= del_limit
+            and len(project.get_delegates(inherited=False)) >= del_limit
         ):
             raise Exception(
                 'Delegate limit of {} has been reached'.format(del_limit)
@@ -167,7 +169,6 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
                 raise Exception(
                     'Exception raised by _update_role(): ' '{}'.format(ex)
                 )
-
         # Invite user not yet in the system
         else:
             try:
@@ -202,7 +203,6 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         logger.info('Batch updating project roles and/or sending invites..')
         logger.debug('File = {}'.format(options['file']))
         logger.debug('Issuer = {}'.format(options['issuer']))
-
         if (
             settings.PROJECTROLES_SITE_MODE == 'TARGET'
             and not settings.PROJECTROLES_TARGET_CREATE
@@ -281,7 +281,6 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
                     project.type.lower(), project.get_log_title()
                 )
             )
-
             for ds in [
                 d.split(';') for d in file_data if d.split(';')[0] == p_uuid
             ]:

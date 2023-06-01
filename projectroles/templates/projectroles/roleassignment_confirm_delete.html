@@ -2,6 +2,7 @@
 
 {% load rules %}
 {% load projectroles_tags %}
+{% load projectroles_common_tags %}
 
 {% block title %}
   Confirm Removal of Member {{ object.user.username }} from {{ object.project.title }}
@@ -16,6 +17,31 @@
     Do you really want to remove the role of "{{ object.role.name }}"
     from user {{ object.user.username }} in {{ object.project.title }}?
   </div>
+  {# Notify of inherited role which will remain #}
+  {% if inherited_as %}
+    <div class="alert alert-info" role="alert"
+         id="sodar-pr-role-delete-alert-inherit">
+      This will remove the local role of the user in this
+      {% get_display_name object.project.type %}. The user will retain role of
+      "{{ inherited_as.role.name }}" from
+      <a href="{% url 'projectroles:detail' project=object.project.sodar_uuid %}">{{ inherited_as.project.title }}</a>.
+    </div>
+  {% elif inherited_children %}
+    <div class="alert alert-danger" role="alert"
+         id="sodar-pr-role-delete-alert-child">
+      Removing this role will also remove the user's access to the following
+      child categories and/or projects:
+      <ul class="mt-2 mb-0">
+        {% for child in inherited_children %}
+          <li>
+            <a href="{% url 'projectroles:roles' project=child.sodar_uuid %}">
+              {{ child.full_title }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
 
   <form method="post">
     {% csrf_token %}

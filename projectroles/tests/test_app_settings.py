@@ -4,7 +4,11 @@ from test_plus.test import TestCase
 
 from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin
-from projectroles.app_settings import AppSettingAPI
+from projectroles.app_settings import (
+    AppSettingAPI,
+    get_example_setting_default,
+    get_example_setting_options,
+)
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -27,6 +31,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 
 # Local constants
 EXISTING_SETTING = 'project_bool_setting'
@@ -401,7 +406,7 @@ class TestAppSettingAPI(
 
     def test_set_undefined(self):
         """Test set() with an undefined setting (should fail)"""
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             app_settings.set(
                 app_name=EXAMPLE_APP_NAME,
                 setting_name='new_setting',
@@ -431,6 +436,17 @@ class TestAppSettingAPI(
             value=True,
         )
         self.assertEqual(ret, True)
+
+    def test_set_invalid_project_types(self):
+        """Test set() with invalid project types scope"""
+        # Should fail because project_category_bool_setting has CATEGORY scope
+        with self.assertRaises(ValueError):
+            app_settings.set(
+                app_name=EXAMPLE_APP_NAME,
+                setting_name='project_category_bool_setting',
+                project=self.project,
+                value=True,
+            )
 
     def test_validator(self):
         """Test validate() with type BOOLEAN"""
@@ -616,6 +632,31 @@ class TestAppSettingAPI(
                 'description': 'Example hidden JSON project setting',
                 'user_modifiable': False,
             },
+            'project_callable_setting': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'STRING',
+                'label': 'Callable project setting',
+                'default': get_example_setting_default,
+                'description': 'Example callable project setting',
+            },
+            'project_callable_setting_options': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'STRING',
+                'label': 'Callable setting with options',
+                'default': get_example_setting_default,
+                'options': get_example_setting_options,
+                'description': 'Example callable project setting with options',
+                'user_modifiable': True,
+            },
+            'project_category_bool_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+                'type': 'BOOLEAN',
+                'label': 'Category boolean setting',
+                'default': False,
+                'description': 'Example boolean project category setting',
+                'user_modifiable': True,
+                'project_types': [PROJECT_TYPE_CATEGORY],
+            },
         }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
@@ -691,6 +732,22 @@ class TestAppSettingAPI(
                 'description': 'Example hidden user setting',
                 'user_modifiable': False,
             },
+            'user_callable_setting': {
+                'scope': APP_SETTING_SCOPE_USER,
+                'type': 'STRING',
+                'label': 'Callable user setting',
+                'default': get_example_setting_default,
+                'description': 'Example callable user setting',
+            },
+            'user_callable_setting_options': {
+                'scope': APP_SETTING_SCOPE_USER,
+                'type': 'STRING',
+                'label': 'Callable setting with options',
+                'default': get_example_setting_default,
+                'options': get_example_setting_options,
+                'description': 'Example callable user setting with options',
+                'user_modifiable': True,
+            },
         }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_USER, app_name=EXAMPLE_APP_NAME
@@ -709,24 +766,58 @@ class TestAppSettingAPI(
             'project_user_int_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'INTEGER',
-                'default': '',
+                'default': 0,
                 'description': 'Example int project user setting',
             },
             'project_user_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'BOOLEAN',
-                'default': '',
+                'default': False,
                 'description': 'Example bool project user setting',
             },
             'project_user_json_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'JSON',
-                'default': '',
+                'default': {
+                    'Example': 'Value',
+                    'list': [1, 2, 3, 4, 5],
+                    'level_6': False,
+                },
                 'description': 'Example json project user setting',
+            },
+            'project_user_callable_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+                'type': 'STRING',
+                'default': get_example_setting_default,
+                'description': 'Example callable project user setting',
+            },
+            'project_user_callable_setting_options': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+                'type': 'STRING',
+                'default': get_example_setting_default,
+                'options': get_example_setting_options,
+                'description': 'Example callable project user setting with options',
             },
         }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT_USER, app_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(defs, expected)
+
+    def test_get_defs_site(self):
+        """Test get_defs() with the SITE scope"""
+        expected = {
+            'site_bool_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
+                'label': 'Site boolean setting',
+                'type': 'BOOLEAN',
+                'default': False,
+                'description': 'Example boolean site setting',
+                'user_modifiable': True,
+            }
+        }
+        defs = app_settings.get_definitions(
+            APP_SETTING_SCOPE_SITE, app_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
@@ -735,13 +826,13 @@ class TestAppSettingAPI(
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 9)
+        self.assertEqual(len(defs), 12)
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT,
             app_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
-        self.assertEqual(len(defs), 7)
+        self.assertEqual(len(defs), 10)
 
     def test_get_defs_invalid_scope(self):
         """Test get_defs() with an invalid scope"""
@@ -774,84 +865,32 @@ class TestAppSettingAPI(
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
 
-    def test_delete_scope_user_params_none(self):
-        """Test delete() with USER scope and no params"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(EXAMPLE_APP_NAME, 'user_str_setting')
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_user_params_user(self):
-        """Test delete() with USER scope and user param"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
+    def test_get_defaults_project_user(self):
+        """Test get_defaults() with the PROJECT_USER scope"""
+        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        defaults = app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT_USER)
+        self.assertEqual(defaults[prefix + 'project_user_str_setting'], '')
+        self.assertEqual(defaults[prefix + 'project_user_int_setting'], 0)
+        self.assertEqual(defaults[prefix + 'project_user_bool_setting'], False)
+        self.assertEqual(
+            defaults[prefix + 'project_user_json_setting'],
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
-        self.assertEqual(AppSetting.objects.count(), 15)
 
-    def test_delete_scope_user_params_project(self):
-        """Test delete() with USER scope and project param"""
-        with self.assertRaises(ValueError):
-            app_settings.delete(
-                EXAMPLE_APP_NAME, 'user_str_setting', project=self.project
-            )
+    def test_get_defaults_site(self):
+        """Test get_defaults() with the SITE scope"""
+        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        defaults = app_settings.get_defaults(APP_SETTING_SCOPE_SITE)
+        self.assertEqual(defaults[prefix + 'site_bool_setting'], False)
 
-    def test_delete_scope_user_params_user_project(self):
-        """Test delete() with USER scope and project/user params"""
+    def test_delete_scope_project_params_none(self):
+        """Test delete() with PROJECT scope and no params (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 16)
         with self.assertRaises(ValueError):
             app_settings.delete(
                 EXAMPLE_APP_NAME,
-                'user_str_setting',
-                project=self.project,
-                user=self.user,
+                'project_str_setting',
             )
-
-    def test_delete_scope_project_user_params_none(self):
-        """Test delete() with PROJECT_USER scope and no params"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(EXAMPLE_APP_NAME, 'project_user_str_setting')
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_project_user_params_user(self):
-        """Test delete() with PROJECT_USER scope and user param"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME,
-            'project_user_str_setting',
-            project=self.project,
-            user=self.user,
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_project_user_params_project(self):
-        """Test delete() with PROJECT_USER scope and project param"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME,
-            'project_user_str_setting',
-            project=self.project,
-            user=self.user,
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_project_user_params_user_project(self):
-        """Test delete() with PROJECT_USER scope and user/project params"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME,
-            'project_user_str_setting',
-            project=self.project,
-            user=self.user,
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
-
-    def test_delete_scope_project_params_none(self):
-        """Test delete() with PROJECT scope and no params"""
-        self.assertEqual(AppSetting.objects.count(), 16)
-        app_settings.delete(
-            EXAMPLE_APP_NAME,
-            'project_str_setting',
-        )
-        self.assertEqual(AppSetting.objects.count(), 15)
 
     def test_delete_scope_project_params_user(self):
         """Test delete() with PROJECT scope and user param"""
@@ -881,3 +920,141 @@ class TestAppSettingAPI(
                 project=self.project,
                 user=self.user,
             )
+
+    def test_delete_scope_user_params_none(self):
+        """Test delete() with USER scope and no params (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        with self.assertRaises(ValueError):
+            app_settings.delete(EXAMPLE_APP_NAME, 'user_str_setting')
+
+    def test_delete_scope_user_params_user(self):
+        """Test delete() with USER scope and user param"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete(
+            EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_scope_user_params_project(self):
+        """Test delete() with USER scope and project param"""
+        with self.assertRaises(ValueError):
+            app_settings.delete(
+                EXAMPLE_APP_NAME, 'user_str_setting', project=self.project
+            )
+
+    def test_delete_scope_user_params_user_project(self):
+        """Test delete() with USER scope and project/user params"""
+        with self.assertRaises(ValueError):
+            app_settings.delete(
+                EXAMPLE_APP_NAME,
+                'user_str_setting',
+                project=self.project,
+                user=self.user,
+            )
+
+    def test_delete_scope_project_user_params_none(self):
+        """Test delete() with PROJECT_USER scope and no params (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        with self.assertRaises(ValueError):
+            app_settings.delete(
+                EXAMPLE_APP_NAME,
+                'project_user_str_setting',
+                project=None,
+                user=None,
+            )
+        self.assertEqual(AppSetting.objects.count(), 16)
+
+    def test_delete_scope_project_user_params_user(self):
+        """Test delete() with PROJECT_USER scope and user param (should fail)"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        with self.assertRaises(ValueError):
+            app_settings.delete(
+                EXAMPLE_APP_NAME,
+                'project_user_str_setting',
+                project=None,
+                user=self.user,
+            )
+        self.assertEqual(AppSetting.objects.count(), 16)
+
+    def test_delete_scope_project_user_params_project(self):
+        """Test delete() with PROJECT_USER scope and project param"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete(
+            EXAMPLE_APP_NAME,
+            'project_user_str_setting',
+            project=self.project,
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_scope_project_user_params_user_project(self):
+        """Test delete() with PROJECT_USER scope and user/project params"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete(
+            EXAMPLE_APP_NAME,
+            'project_user_str_setting',
+            project=self.project,
+            user=self.user,
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_by_scope(self):
+        """Test delete_by_scope() method"""
+        self.assertEqual(AppSetting.objects.count(), 16)
+        # Delete PROJECT_USER scope settings
+        app_settings.delete_by_scope(
+            APP_SETTING_SCOPE_PROJECT_USER,
+            project=self.project,
+            user=self.user,
+        )
+        self.assertEqual(AppSetting.objects.count(), 12)
+        # Delete PROJECT scope settings
+        app_settings.delete_by_scope(
+            APP_SETTING_SCOPE_USER,
+            user=self.user,
+        )
+        self.assertEqual(AppSetting.objects.count(), 6)
+        # Delete USER scope settings
+        app_settings.delete_by_scope(
+            APP_SETTING_SCOPE_PROJECT,
+            project=self.project,
+        )
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_delete_by_scope_param_project(self):
+        """Test delete_by_scope() method with invalid Project params"""
+        with self.assertRaises(ValueError):
+            app_settings.delete_by_scope(
+                APP_SETTING_SCOPE_PROJECT,
+                project=self.project,
+                user=self.user,
+            )
+
+    def test_delete_by_scope_param_user(self):
+        """Test delete_by_scope() method with invalid User params"""
+        with self.assertRaises(ValueError):
+            app_settings.delete_by_scope(
+                APP_SETTING_SCOPE_USER,
+                project=self.project,
+                user=self.user,
+            )
+
+    def test_validate_form_app_settings(self):
+        """Test validate_form_app_settings() method on valid app_setting"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        valid_setting = {'valid_setting': True}
+        errors = app_plugin.validate_form_app_settings(
+            valid_setting, project=self.project, user=self.user
+        )
+        self.assertEqual(errors, None)
+
+    def test_validate_form_app_settings_user_scope_error(self):
+        """Test validate_form_app_settings() method on invalid app_setting"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        settings = {'project_hidden_setting': 'Example project hidden setting'}
+        errors = app_plugin.validate_form_app_settings(
+            settings, project=self.project
+        )
+        self.assertIsNotNone(errors)
+        self.assertIn(
+            'Invalid value for a custom validation method', errors.values()
+        )

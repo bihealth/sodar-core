@@ -18,19 +18,31 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 # Local constants
 APP_SETTING_LOCAL_DEFAULT = True
-VALID_SCOPES = [
+APP_SETTING_SCOPES = [
     APP_SETTING_SCOPE_PROJECT,
     APP_SETTING_SCOPE_USER,
     APP_SETTING_SCOPE_PROJECT_USER,
+    APP_SETTING_SCOPE_SITE,
 ]
-# Deprecation message for renamed methods, see issue #539
-DEPRECATION_MSG = (
-    '{}() is deprecated and will be removed in SODAR Core v0.13: Use '
-    '{}() instead'
-)
+APP_SETTING_DEFAULT_VALUES = {
+    'STRING': '',
+    'INTEGER': 0,
+    'BOOLEAN': False,
+    'JSON': {},
+}
+APP_SETTING_SCOPE_ARGS = {
+    APP_SETTING_SCOPE_PROJECT: {'project': True, 'user': False},
+    APP_SETTING_SCOPE_USER: {'project': False, 'user': True},
+    APP_SETTING_SCOPE_PROJECT_USER: {'project': True, 'user': True},
+    APP_SETTING_SCOPE_SITE: {'project': False, 'user': False},
+}
+DELETE_SCOPE_ERR_MSG = 'Argument "{arg}" must be set for {scope} scope setting'
 
 # Define App Settings for projectroles app
 PROJECTROLES_APP_SETTINGS = {
@@ -39,8 +51,8 @@ PROJECTROLES_APP_SETTINGS = {
     #: Example ::
     #:
     #:     'example_setting': {
-    #:         'scope': 'PROJECT',  # PROJECT/USER
-    #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+    #:         'scope': 'PROJECT',  # PROJECT/USER/PROJECT-USER/SITE
+    #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN/JSON
     #:         'default': 'example',
     #:         'label': 'Project setting',  # Optional, defaults to name/key
     #:         'placeholder': 'Enter example setting here',  # Optional
@@ -49,6 +61,8 @@ PROJECTROLES_APP_SETTINGS = {
     #:                    settings of type STRING or INTEGER
     #:         'user_modifiable': True,  # Optional, show/hide in forms
     #:         'local': False,  # Allow editing in target site forms if True
+    #:         'project_types': [PROJECT_TYPE_PROJECT],  # Optional, list may
+    #:          contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
     #:     }
     'ip_restrict': {
         'scope': APP_SETTING_SCOPE_PROJECT,
@@ -78,6 +92,14 @@ PROJECTROLES_APP_SETTINGS = {
         'multiple emails with semicolon.',
         'user_modifiable': True,
         'local': False,
+        'project_types': [PROJECT_TYPE_PROJECT],
+    },
+    'project_star': {
+        'scope': APP_SETTING_SCOPE_PROJECT_USER,
+        'type': 'BOOLEAN',
+        'default': False,
+        'local': False,
+        'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
     },
 }
 
@@ -86,32 +108,21 @@ class AppSettingAPI:
     @classmethod
     def _check_project_and_user(cls, scope, project, user):
         """
-        Ensure one of the project and user parameters is set.
+        Ensure project and user parameters are set according to scope.
 
-        :param scope: Scope of Setting (USER, PROJECT, PROJECT_USER)
+        :param scope: Scope of Setting (USER, PROJECT, PROJECT_USER, SITE)
         :param project: Project object
         :param user: User object
         :raise: ValueError if none or both objects exist
         """
-        if scope == APP_SETTING_SCOPE_PROJECT:
-            if not project:
-                raise ValueError('Project unset for setting with project scope')
-            if user:
-                raise ValueError('User set for setting with project scope')
-        elif scope == APP_SETTING_SCOPE_USER:
-            if project:
-                raise ValueError('Project set for setting with user scope')
-            if not user:
-                raise ValueError('User unset for setting with user scope')
-        elif scope == APP_SETTING_SCOPE_PROJECT_USER:
-            if not project:
-                raise ValueError(
-                    'Project unset for setting with project_user scope'
-                )
-            if not user:
-                raise ValueError(
-                    'User unset for setting with project_user scope'
-                )
+        if not APP_SETTING_SCOPE_ARGS[scope] == {
+            'project': project is not None,
+            'user': user is not None,
+        }:
+            raise ValueError(
+                'Project and/or user are set incorrect for setting '
+                'with {} scope'.format(scope)
+            )
 
     @classmethod
     def _check_scope(cls, scope):
@@ -121,7 +132,7 @@ class AppSettingAPI:
         :param scope: String
         :raise: ValueError if scope is not recognized
         """
-        if scope not in VALID_SCOPES:
+        if scope not in APP_SETTING_SCOPES:
             raise ValueError('Invalid scope "{}"'.format(scope))
 
     @classmethod
@@ -151,15 +162,35 @@ class AppSettingAPI:
             )
 
     @classmethod
-    def _check_value_in_options(cls, setting_value, setting_options):
+    def _check_value_in_options(
+        cls, setting_value, setting_options, project=None, user=None
+    ):
         """
         Ensure setting_value is present in setting_options.
 
         :param setting_value: String
         :param setting_options: List of options (String or Integers)
+        :param project: Project object
+        :param user: User object
         :raise: ValueError if type is not recognized
         """
-        if setting_options and setting_value not in setting_options:
+        if callable(setting_options):
+            valid_options = [
+                val[0] if isinstance(val, tuple) else val
+                for val in setting_options(project, user)
+            ]
+            if setting_value not in valid_options:
+                raise ValueError(
+                    'Choice "{}" not found in options ({})'.format(
+                        setting_value,
+                        ', '.join(map(str, valid_options)),
+                    )
+                )
+        elif (
+            setting_options
+            and not callable(setting_options)
+            and setting_value not in setting_options
+        ):
             raise ValueError(
                 'Choice "{}" not found in options ({})'.format(
                     setting_value, ', '.join(map(str, setting_options))
@@ -239,12 +270,45 @@ class AppSettingAPI:
         return setting_obj.value == str(input_value)
 
     @classmethod
-    def get_default(cls, app_name, setting_name, post_safe=False):
+    def _log_set_debug(
+        cls, action, app_name, setting_name, value, project, user
+    ):
+        """
+        Helper method for logging setting changes in set() method.
+
+        :param action: Action string (string)
+        :param app_name: Plugin app name (string)
+        :param setting_name: Setting name (string)
+        :param value: Setting value (string)
+        :param project: Project object
+        :param user: User object
+        """
+        extra_data = []
+        if project:
+            extra_data.append('project={}'.format(project.sodar_uuid))
+        if user:
+            extra_data.append('user={}'.format(user.username))
+        logger.debug(
+            '{} app setting: {}.{} = "{}"{}'.format(
+                action,
+                app_name,
+                setting_name,
+                value,
+                ' ({})'.format('; '.join(extra_data)) if extra_data else '',
+            )
+        )
+
+    @classmethod
+    def get_default(
+        cls, app_name, setting_name, project=None, user=None, post_safe=False
+    ):
         """
         Get default setting value from an app plugin.
 
         :param app_name: App name (string, must equal "name" in app plugin)
         :param setting_name: Setting name (string)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: Setting value (string, integer or boolean)
         :raise: ValueError if app plugin is not found
@@ -259,7 +323,20 @@ class AppSettingAPI:
             app_settings = app_plugin.app_settings
 
         if setting_name in app_settings:
-            if app_settings[setting_name]['type'] == 'JSON':
+            if callable(app_settings[setting_name].get('default')):
+                try:
+                    callable_setting = app_settings[setting_name]['default']
+                    return callable_setting(project, user)
+                except Exception:
+                    logger.error(
+                        'Error in callable setting "{}" for app "{}"'.format(
+                            setting_name, app_name
+                        )
+                    )
+                    return APP_SETTING_DEFAULT_VALUES[
+                        app_settings[setting_name]['type']
+                    ]
+            elif app_settings[setting_name]['type'] == 'JSON':
                 json_default = app_settings[setting_name].get('default')
                 if not json_default:
                     if isinstance(json_default, dict):
@@ -278,31 +355,11 @@ class AppSettingAPI:
         )
 
     @classmethod
-    def get_default_setting(cls, *args, **kwargs):
-        """
-        Get default setting value from an app plugin.
-
-        DEPRECATED: Use get_default() instead. Will be removed in SODAR Core
-        v0.13.
-
-        :param app_name: App name (string, must equal "name" in app plugin)
-        :param setting_name: Setting name (string)
-        :param post_safe: Whether a POST safe value should be returned (bool)
-        :return: Setting value (string, integer or boolean)
-        :raise: ValueError if app plugin is not found
-        :raise: KeyError if nothing is found with setting_name
-        """
-        logger.warning(
-            DEPRECATION_MSG.format('get_default_setting', 'get_default')
-        )
-        return cls.get_default(*args, **kwargs)
-
-    @classmethod
     def get(
         cls, app_name, setting_name, project=None, user=None, post_safe=False
     ):
         """
-        Return app setting value for a project or an user. If not set, return
+        Return app setting value for a project or a user. If not set, return
         default.
 
         :param app_name: App name (string, must equal "name" in app plugin)
@@ -319,32 +376,25 @@ class AppSettingAPI:
                     app_name, setting_name, project=project, user=user
                 )
             except AppSetting.DoesNotExist:
-                val = cls.get_default(app_name, setting_name, post_safe)
+                val = cls.get_default(
+                    app_name,
+                    setting_name,
+                    project=project,
+                    user=user,
+                    post_safe=post_safe,
+                )
         else:  # Anonymous user
-            val = cls.get_default(app_name, setting_name, post_safe)
+            val = cls.get_default(
+                app_name,
+                setting_name,
+                project=project,
+                user=user,
+                post_safe=post_safe,
+            )
         # Handle post_safe for dict values (JSON)
         if post_safe and isinstance(val, (dict, list)):
             return json.dumps(val)
         return val
-
-    @classmethod
-    def get_app_setting(cls, *args, **kwargs):
-        """
-        Return app setting value for a project or an user. If not set, return
-        default.
-
-        DEPRECATED: Use get() instead. Will be removed in SODAR Core v0.13.
-
-        :param app_name: App name (string, must equal "name" in app plugin)
-        :param setting_name: Setting name (string)
-        :param project: Project object (optional)
-        :param user: User object (optional)
-        :param post_safe: Whether a POST safe value should be returned (bool)
-        :return: String or None
-        :raise: KeyError if nothing is found with setting_name
-        """
-        logger.warning(DEPRECATION_MSG.format('get_app_setting', 'get'))
-        return cls.get(*args, **kwargs)
 
     @classmethod
     def get_all(cls, project=None, user=None, post_safe=False):
@@ -383,28 +433,13 @@ class AppSettingAPI:
         return ret
 
     @classmethod
-    def get_all_settings(cls, *args, **kwargs):
-        """
-        Return all setting values. If the value is not found, return
-        the default.
-
-        DEPRECATED: Use get_all() instead. Will be removed in SODAR Core v0.13.
-
-        :param project: Project object (optional)
-        :param user: User object (optional)
-        :param post_safe: Whether POST safe values should be returned (bool)
-        :return: Dict
-        :raise: ValueError if neither project nor user are set
-        """
-        logger.warning(DEPRECATION_MSG.format('get_all_settings', 'get_all'))
-        return cls.get_all(*args, **kwargs)
-
-    @classmethod
-    def get_defaults(cls, scope, post_safe=False):
+    def get_defaults(cls, scope, project=None, user=None, post_safe=False):
         """
         Get all default settings for a scope.
 
         :param scope: Setting scope (PROJECT, USER or PROJECT_USER)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param post_safe: Whether POST safe values should be returned (bool)
         :return: Dict
         """
@@ -417,31 +452,26 @@ class AppSettingAPI:
             for s_key in p_settings:
                 ret[
                     'settings.{}.{}'.format(plugin.name, s_key)
-                ] = cls.get_default(plugin.name, s_key, post_safe)
+                ] = cls.get_default(
+                    plugin.name,
+                    s_key,
+                    project=project,
+                    user=user,
+                    post_safe=post_safe,
+                )
 
         p_settings = cls.get_definitions(scope, app_name='projectroles')
         for s_key in p_settings:
             ret[
                 'settings.{}.{}'.format('projectroles', s_key)
-            ] = cls.get_default('projectroles', s_key, post_safe)
+            ] = cls.get_default(
+                'projectroles',
+                s_key,
+                project=project,
+                user=user,
+                post_safe=post_safe,
+            )
         return ret
-
-    @classmethod
-    def get_all_defaults(cls, *args, **kwargs):
-        """
-        Get all default settings for a scope.
-
-        DEPRECATED: Use get_defaults() instead. Will be removed in SODAR Core
-        v0.13.
-
-        :param scope: Setting scope (PROJECT, USER or PROJECT_USER)
-        :param post_safe: Whether POST safe values should be returned (bool)
-        :return: Dict
-        """
-        logger.warning(
-            DEPRECATION_MSG.format('get_all_defaults', 'get_defaults')
-        )
-        return cls.get_defaults(*args, **kwargs)
 
     @classmethod
     def set(
@@ -470,24 +500,26 @@ class AppSettingAPI:
         :raise: KeyError if setting name is not found in plugin specification
         """
 
-        def _log_debug(action, app_name, setting_name, value, project, user):
-            extra_data = []
-            if project:
-                extra_data.append('project={}'.format(project.sodar_uuid))
-            if user:
-                extra_data.append('user={}'.format(user.username))
-            logger.debug(
-                '{} app setting: {}.{} = "{}"{}'.format(
-                    action,
-                    app_name,
-                    setting_name,
-                    value,
-                    ' ({})'.format('; '.join(extra_data)) if extra_data else '',
+        setting_def = cls.get_definition(name=setting_name, app_name=app_name)
+        cls._check_scope(setting_def.get('scope', None))
+        cls._check_project_and_user(
+            setting_def.get('scope', None), project, user
+        )
+
+        # Check project type
+        if (
+            project
+            and not setting_def.get('project_types', None)
+            and not project.type == PROJECT_TYPE_PROJECT
+            or project
+            and setting_def.get('project_types', None)
+            and project.type not in setting_def['project_types']
+        ):
+            raise ValueError(
+                'Project type {} not allowed for setting {}'.format(
+                    project.type, setting_name
                 )
             )
-
-        if not project and not user:
-            raise ValueError('Project and user are both unset')
 
         try:
             q_kwargs = {
@@ -502,17 +534,22 @@ class AppSettingAPI:
                 return False
 
             if validate:
-                setting_def = cls.get_definition(
-                    name=setting_name, app_name=app_name
+                cls.validate(
+                    setting.type,
+                    value,
+                    setting_def.get('options'),
+                    project=project,
+                    user=user,
                 )
-                cls.validate(setting.type, value, setting_def.get('options'))
 
             if setting.type == 'JSON':
                 setting.value_json = cls._get_json_value(value)
             else:
                 setting.value = value
             setting.save()
-            _log_debug('Set', app_name, setting_name, value, project, user)
+            cls._log_set_debug(
+                'Set', app_name, setting_name, value, project, user
+            )
             return True
 
         except AppSetting.DoesNotExist:
@@ -529,22 +566,22 @@ class AppSettingAPI:
                         setting_name, app_name
                     )
                 )
-            s_def = app_settings[setting_name]
-            s_type = s_def['type']
+            s_type = setting_def['type']
             s_mod = (
-                bool(s_def['user_modifiable'])
-                if 'user_modifiable' in s_def
+                bool(setting_def['user_modifiable'])
+                if 'user_modifiable' in setting_def
                 else True
             )
 
-            cls._check_scope(s_def['scope'])
-            cls._check_project_and_user(s_def['scope'], project, user)
             if validate:
                 v = cls._get_json_value(value) if s_type == 'JSON' else value
-                setting_def = cls.get_definition(
-                    name=setting_name, app_name=app_name
+                cls.validate(
+                    s_type,
+                    v,
+                    setting_def.get('options'),
+                    project=project,
+                    user=user,
                 )
-                cls.validate(s_type, v, setting_def.get('options'))
 
             s_vals = {
                 'app_plugin': app_plugin_model,
@@ -560,55 +597,39 @@ class AppSettingAPI:
                 s_vals['value'] = value
 
             AppSetting.objects.create(**s_vals)
-            _log_debug('Create', app_name, setting_name, value, project, user)
+            cls._log_set_debug(
+                'Create', app_name, setting_name, value, project, user
+            )
             return True
-
-    @classmethod
-    def set_app_setting(cls, *args, **kwargs):
-        """
-        Set value of an existing project or user settings. Creates the object if
-        not found.
-
-        DEPRECATED: Use set() instead. Will be removed in SODAR Core v0.13.
-
-        :param app_name: App name (string, must equal "name" in app plugin)
-        :param setting_name: Setting name (string)
-        :param value: Value to be set
-        :param project: Project object (optional)
-        :param user: User object (optional)
-        :param validate: Validate value (bool, default=True)
-        :return: True if changed, False if not changed
-        :raise: ValueError if validating and value is not accepted for setting
-                type
-        :raise: ValueError if neither project nor user are set
-        :raise: KeyError if setting name is not found in plugin specification
-        """
-        logger.warning(DEPRECATION_MSG.format('set_app_setting', 'set'))
-        return cls.set(*args, **kwargs)
 
     @classmethod
     def delete(cls, app_name, setting_name, project=None, user=None):
         """
-        Delete app setting.
+        Delete one or more app setting objects. In case of a PROJECT_USER
+        setting, can be used to delete all settings related to project.
 
         :param app_name: App name (string, must equal "name" in app plugin)
         :param setting_name: Setting name (string)
         :param project: Project object to delete setting from (optional)
         :param user: User object to delete setting from (optional)
+        :raise: ValueError with invalid project/user args
         """
         setting_def = cls.get_definition(setting_name, app_name=app_name)
-        scope = setting_def.get('scope')
-        if scope == 'USER' and project:
-            raise ValueError('App setting scope is USER but project is set.')
-        elif scope == 'PROJECT' and user:
-            raise ValueError('App setting scope is PROJECT but user is set.')
-
+        if setting_def['scope'] != APP_SETTING_SCOPE_PROJECT_USER:
+            cls._check_project_and_user(
+                setting_def.get('scope', None), project, user
+            )
+        elif not project:
+            raise ValueError(
+                'Project must be set for {} scope settings'.format(
+                    APP_SETTING_SCOPE_PROJECT_USER
+                )
+            )
         q_kwargs = {'name': setting_name}
         if user:
             q_kwargs['user'] = user
         if project:
             q_kwargs['project'] = project
-
         logger.debug(
             'Delete app setting: {}.{} ({})'.format(
                 app_name, setting_name, '; '.join(q_kwargs)
@@ -624,33 +645,62 @@ class AppSettingAPI:
         )
 
     @classmethod
-    def delete_setting(cls, *args, **kwargs):
+    def delete_by_scope(
+        cls,
+        scope,
+        project=None,
+        user=None,
+    ):
         """
-        Delete app setting.
+        Delete all app settings within a given scope for a project and/or user.
 
-        DEPRECATED: Use delete() instead. Will be removed in SODAR Core v0.13.
-
-        :param app_name: App name (string, must equal "name" in app plugin)
-        :param setting_name: Setting name (string)
-        :param project: Project object to delete setting from (optional)
-        :param user: User object to delete setting from (optional)
+        :param scope: Setting scope (string)
+        :param project: Project object to delete setting from
+        :param user: User object to delete setting from
+        :raise: ValueError if scope, project or user are incorrect
         """
-        logger.warning(DEPRECATION_MSG.format('delete_setting', 'delete'))
-        return cls.delete(*args, **kwargs)
+        if not scope:
+            raise ValueError('Scope must be set')
+        cls._check_scope(scope)
+        cls._check_project_and_user(scope, project, user)
+        for app_name, app_settings in cls.get_all_defs().items():
+            for setting_name, setting_def in app_settings.items():
+                if setting_def['scope'] == scope:
+                    cls.delete(
+                        app_name,
+                        setting_name,
+                        project=project,
+                        user=user,
+                    )
 
     @classmethod
-    def validate(cls, setting_type, setting_value, setting_options):
+    def validate(
+        cls,
+        setting_type,
+        setting_value,
+        setting_options,
+        project=None,
+        user=None,
+    ):
         """
         Validate setting value according to its type.
 
         :param setting_type: Setting type
         :param setting_value: Setting value
         :param setting_options: Setting options (can be None)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :raise: ValueError if setting_type or setting_value is invalid
         """
         cls._check_type(setting_type)
         cls._check_type_options(setting_type, setting_options)
-        cls._check_value_in_options(setting_value, setting_options)
+        cls._check_value_in_options(
+            setting_value, setting_options, project=project, user=user
+        )
+
+        # Check callable
+        if callable(setting_value):
+            setting_value(project, user)
 
         if setting_type == 'BOOLEAN':
             if not isinstance(setting_value, bool):
@@ -679,21 +729,6 @@ class AppSettingAPI:
         return True
 
     @classmethod
-    def validate_setting(cls, *args, **kwargs):
-        """
-        Validate setting value according to its type.
-
-        DEPRECATED: Use validate() instead. Will be removed in SODAR Core v0.13.
-
-        :param setting_type: Setting type
-        :param setting_value: Setting value
-        :param setting_options: Setting options (can be None)
-        :raise: ValueError if setting_type or setting_value is invalid
-        """
-        logger.warning(DEPRECATION_MSG.format('validate_setting', 'validate'))
-        return cls.validate(*args, **kwargs)
-
-    @classmethod
     def get_definition(cls, name, plugin=None, app_name=None):
         """
         Return definition for a single app setting, either based on an app name
@@ -703,7 +738,7 @@ class AppSettingAPI:
         :param plugin: Plugin object extending ProjectAppPluginPoint or None
         :param app_name: Name of the app plugin (string or None)
         :return: Dict
-        :raise: ValueError if neither app_name or plugin are set or if setting
+        :raise: ValueError if neither app_name nor plugin are set or if setting
                 is not found in plugin
         """
         defs = cls._get_defs(plugin, app_name)
@@ -717,25 +752,6 @@ class AppSettingAPI:
         cls._check_type(ret['type'])
         cls._check_type_options(ret['type'], ret.get('options'))
         return ret
-
-    @classmethod
-    def get_setting_def(cls, *args, **kwargs):
-        """
-        Return definition for a single app setting, either based on an app name
-        or the plugin object.
-
-        DEPRECATED: Use get_definition() instead. Will be removed in SODAR Core
-        v0.13.
-
-        :param name: Setting name
-        :param plugin: Plugin object extending ProjectAppPluginPoint or None
-        :param app_name: Name of the app plugin (string or None)
-        :return: Dict
-        :raise: ValueError if neither app_name or plugin are set or if setting
-                is not found in plugin
-        """
-        logger.warning(DEPRECATION_MSG.format('get_setting_def', 'get_def'))
-        return cls.get_definition(*args, **kwargs)
 
     @classmethod
     def get_definitions(
@@ -754,7 +770,7 @@ class AppSettingAPI:
         :param user_modifiable: Only return modifiable settings if True
                                 (boolean)
         :return: Dict
-        :raise: ValueError if scope is invalid or if if neither app_name or
+        :raise: ValueError if scope is invalid or if neither app_name nor
                 plugin are set
         """
         cls._check_scope(scope)
@@ -779,26 +795,6 @@ class AppSettingAPI:
             cls._check_type(v['type'])
             cls._check_type_options(v['type'], v.get('options'))
         return ret
-
-    @classmethod
-    def get_setting_defs(cls, *args, **kwargs):
-        """
-        Return app setting definitions of a specific scope from a plugin.
-
-        DEPRECATED: Use get_definitions() instead. Will be removed in SODAR Core
-        v0.13.
-
-        :param scope: PROJECT, USER or PROJECT_USER
-        :param plugin: Plugin object extending ProjectAppPluginPoint or None
-        :param app_name: Name of the app plugin (string or None)
-        :param user_modifiable: Only return modifiable settings if True
-                                (boolean)
-        :return: Dict
-        :raise: ValueError if scope is invalid or if if neither app_name or
-                plugin are set
-        """
-        logger.warning(DEPRECATION_MSG.format('get_setting_defs', 'get_defs'))
-        return cls.get_definitions(*args, **kwargs)
 
     @classmethod
     def get_projectroles_defs(cls):
@@ -840,3 +836,56 @@ class AppSettingAPI:
         for p in plugins:
             ret[p.name] = p.app_settings
         return ret
+
+
+def get_example_setting_default(project=None, user=None):
+    """
+    Example method for callable default value retrieval for app settings.
+
+    :param project: Project object
+    :param user: User object
+    :return: String with project and user info or 'No project'
+    """
+    response = 'N/A'
+    if project and user:
+        response = '{}:{}'.format(project.title, user.username)
+    elif project:
+        response = str(project.sodar_uuid)
+    elif user:
+        response = str(user.sodar_uuid)
+    return response
+
+
+def get_example_setting_options(project=None, user=None):
+    """
+    Example method for callable option list retrieval for app settings.
+
+    :param project: Project object
+    :param user: User object
+    :return: List of tuples for ChoiceField
+    """
+    response = [
+        ('N/A', 'No project or user for callable'),
+        'Example string option',
+    ]
+    if project and user:
+        response.append(
+            (
+                str(project.sodar_uuid),
+                'Project UUID {} by {}'.format(
+                    project.sodar_uuid, user.username
+                ),
+            )
+        )
+    elif project:
+        response.append(
+            (
+                str(project.sodar_uuid),
+                'Project UUID: {}'.format(project.sodar_uuid),
+            )
+        )
+    elif user:
+        response.append(
+            (str(user.sodar_uuid), 'User UUID: {}'.format(user.sodar_uuid))
+        )
+    return response

@@ -5,6 +5,112 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.13.0 (2023-06-01)
+====================
+
+Added
+-----
+
+- **General**
+    - Separate Chromedriver install script (#1127)
+    - Custom include path with ``PROJECTROLES_TEMPLATE_INCLUDE_PATH`` (#1049)
+    - Celery setup (#1198)
+- **Appalerts**
+    - Dismissed alerts list view (#711)
+    - ``add_alerts()`` API method (#1101)
+- **Projectroles**
+    - ``project_star`` app setting (#321)
+    - Search app omitting with ``PROJECTROLES_SEARCH_OMIT_APPS`` (#1119)
+    - Inherited roles in project list and retrieve REST API views (#1121)
+    - App settings validation by plugin method (#860)
+    - App settings callable default value and options support (#1050)
+    - Full role inheritance (#638, #1103, #1172, #1173)
+    - ``Project.get_roles_by_rank()`` helper (#638)
+    - ``RoleMixin`` with ``init_roles()`` for tests
+    - App settings project type restriction (#1169, #1170)
+    - Validation for category delimiter in ``Project.title`` (#1163)
+    - ``SODARUser.update_full_name()`` and ``update_ldap_username()`` helpers (#1056)
+    - Project app alert dismissal on role assignment deletion (#703)
+    - Project finder role (#1011)
+    - ``is_project_finder()`` rule predicate (#1011)
+    - Site-wide timeline events for remote site operations (#746, #1209)
+    - Display app icon for settings in project and user forms (#947, #1187)
+    - Cleanup for ``PROJECT_USER`` scope app settings (#1128, #1129)
+    - ``SITE`` scope for app settings (#1184)
+    - Periodic remote project sync (#813)
+- **Siteinfo**
+    - Add ``LDAP_ALT_DOMAINS`` to displayed settings (#1123)
+- **Sodarcache**
+    - ``delete_cache_item()`` method (#1068)
+- **Timeline**
+    - Search result limiting with ``TIMELINE_SEARCH_LIMIT`` (#1124)
+
+Changed
+-------
+
+- **General**
+    - Use path instead of regex for URL patterns (#1116)
+    - Upgrade minimum Django version to v3.2.19 (#1117, #1122)
+    - Upgrade general Python dependencies (#1117)
+    - Update ``env.example`` (#1065)
+- **Appalerts**
+    - Handle alerts with no project access in UI (#1177)
+- **Filesfolders**
+    - Change app display name to "Files" (#828)
+- **Projectroles**
+    - Display full user name in role update form (#1147)
+    - Make email optional in ``SODARUser.get_form_label()`` (#1148)
+    - Move user model tests to projectroles model tests (#1149)
+    - Replace ``ProjectUserTag`` project starring with app setting (#321)
+    - Prevent sending invites to local users with local users disabled (#616)
+    - Implement advanced search with POST (#712)
+    - Remove category project list scrolling (#1141)
+    - Move sidebar template tags to context processor (#969)
+    - Update ``Project`` model API methods (#638, #710, #1045, #1178, #1201, #1222)
+    - Update permission and UI test setup (#638)
+    - Display roles consistently in member/owner update UI (#1027)
+    - Reduce site app view top margin (#866)
+    - Rename ``RoleAssignment.project`` related name to ``local_roles`` (#1175)
+    - Replace ``PROJECTROLES_HIDE_APP_LINKS`` with ``PROJECTROLES_HIDE_PROJECT_APPS`` (#1142)
+    - Deprecate ``PROJECTROLES_HIDE_APP_LINKS`` (#1142)
+    - Move Django signals to ``signals.py`` (#1056)
+    - Disallow public guest access for categories (#897)
+    - Refactor ``AppSettingAPI`` (#1190, #1213)
+- **Timeline**
+    - Display event extra data to superusers, owners and delegates (#1171)
+
+Fixed
+-----
+
+- **General**
+    - ``django-autocomplete-light==3.9.5`` crash with ``whitenoise`` (#1224)
+    - Readthedocs build failing from using Python <3.8 (#1227)
+- **Appalerts**
+    - ``AppAlert.__repr__()`` crash if project not set (#1150)
+- **Bgjobs**
+    - Non-standard URL paths (#1139)
+- **Projectroles**
+    - ``get_form_label()`` displaying user without full name in parenthesis (#1140)
+    - Project and user update form JSON error handling (#1151)
+    - ``Project`` API methods returning unexpected multiple ``RoleAssignment`` objects for user (#710)
+    - ``ProjectListAPIView`` failure with inheritance and public guest access (#1176)
+    - Incorrect icon displayed in ``remoteproject_update.html`` (#1179)
+    - Long ``Project.full_title`` breaking ``remoteproject_update.html`` layout (#1188)
+    - ``LDAP_ALT_DOMAINS`` check not working in ``get_invite_type()`` (#1217)
+
+Removed
+-------
+
+- **General**
+    - User model tests from ``example_site`` (#1149)
+- **Projectroles**
+    - Deprecated ``AppSettingAPI`` methods (#1039)
+    - ``ProjectUserTag`` model (#321)
+    - ``RoleAssignmentManager`` (#638)
+    - ``Project.get_all_roles()`` method (#638, #710)
+    - ``is_inherited_owner()`` template tag (#1172)
+
+
 v0.12.0 (2023-02-03)
 ====================
 

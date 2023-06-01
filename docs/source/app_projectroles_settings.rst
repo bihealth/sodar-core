@@ -91,6 +91,8 @@ projectroles processors:
 
     'projectroles.context_processors.urls_processor',
     'projectroles.context_processors.site_app_processor',
+    'projectroles.context_processors.app_alerts_processor',
+    'projectroles.context_processors.sidebar_processor',
 
 
 Email
@@ -181,23 +183,29 @@ Projectroles Settings
 
 **Mandatory** projectroles app settings are explained below:
 
-* ``PROJECTROLES_SITE_MODE``: Site mode for remote project metadata
-  synchronization, either ``SOURCE`` (allow others to read local projects) or
-  ``TARGET`` (read projects from another site)
-* ``PROJECTROLES_TARGET_CREATE``: Whether or not local projects can be created
-  if site is in ``TARGET`` mode. If your site is in ``SOURCE`` mode, this
-  setting has no effect.
-* ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire
-  (int)
-* ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
-* ``PROJECTROLES_EMAIL_SENDER_REPLY``: Whether replies are expected to the
-  sender address (bool). If set ``False`` and nothing is set in the ``reply-to``
-  header, a "do not reply" note is added to the email body.
-* ``PROJECTROLES_ENABLE_SEARCH``: Whether you want to enable SODAR search on
-  your site (boolean)
-* ``PROJECTROLES_DEFAULT_ADMIN``: User name of the default superuser account
-  used in e.g. replacing an unavailable user or performing backend admin
-  commands (string)
+``PROJECTROLES_SITE_MODE``
+    Site mode for remote project metadata synchronization, either ``SOURCE``
+    (allow others to read local projects) or ``TARGET`` (read projects from
+    another site)
+``PROJECTROLES_TARGET_CREATE``
+    Whether or not local projects can be created if site is in ``TARGET`` mode.
+    If your site is in ``SOURCE`` mode, this setting has no effect.
+``PROJECTROLES_INVITE_EXPIRY_DAYS``
+    Days until project email invites expire (int)
+``PROJECTROLES_SEND_EMAIL``
+    Enable/disable email sending (bool)
+``PROJECTROLES_EMAIL_SENDER_REPLY``
+    Whether replies are expected to the sender address (bool). If set ``False``
+    and nothing is set in the ``reply-to`` header, a "do not reply" note is
+    added to the email body.
+``PROJECTROLES_ENABLE_SEARCH``
+    Whether you want to enable SODAR search on your site (boolean)
+``PROJECTROLES_DEFAULT_ADMIN``
+    User name of the default superuser account used in e.g. replacing an
+    unavailable user or performing backend admin commands (string)
+``PROJECTROLES_TEMPLATE_INCLUDE_PATH``
+    Full system path for custom template includes. The default path is
+    ``{APPS_DIR}/templates/include`` (string)
 
 Example:
 
@@ -218,41 +226,60 @@ Optional Projectroles Settings
 
 The following projectroles settings are **optional**:
 
-* ``PROJECTROLES_EMAIL_HEADER``: Custom email header (string)
-* ``PROJECTROLES_EMAIL_FOOTER``: Custom email footer (string)
-* ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
-  projectroles (int)
-* ``PROJECTROLES_SEARCH_PAGINATION``: Amount of search results per each app to
-  display on one page (int)
-* ``PROJECTROLES_HELP_HIGHLIGHT_DAYS``: Days for highlighting tour help for new
-  users (int)
-* ``PROJECTROLES_DISABLE_CATEGORIES``: If set True, disable categories and only
-  allow a list of projects on the root level (boolean) (see note)
-* ``PROJECTROLES_HIDE_APP_LINKS``: Apps hidden from the project sidebar and
-  dropdown menus for all users. The app views and URLs are still accessible via
-  other links or knowing the URL. The names should correspond to the ``name``
-  property in project app plugins (list)
-* ``PROJECTROLES_DELEGATE_LIMIT``: The number of delegate roles allowed per
-  project. The amount is limited to 1 per project if not set, unlimited if set
-  to 0. Will be ignored for remote projects synchronized from a source site
-  (int)
-* ``PROJECTROLES_BROWSER_WARNING``: If true, display a warning to users using
-  Internet Explorer (bool)
-* ``PROJECTROLES_ALLOW_LOCAL_USERS``: If true, roles for local non-LDAP users
-  can be synchronized from a source during remote project sync if they exist on
-  the target site. Similarly, local users will be selectable in member dropdowns
-  when selecting users (bool)
-* ``PROJECTROLES_KIOSK_MODE``: If true, allow accessing certain project views
-  *without* user authentication in order to e.g. demonstrate features in a
-  kiosk-style deployment. Also hides and/or disables views not intended to be
-  used in this mode (bool)
-* ``PROJECTROLES_BREADCRUMB_STICKY``: Set this false to make project breadcrumb
-  navigation scroll along page content. If true, maintain a sticky breadcrumb
-  below the titlebar instead. Assumed true if not set (bool)
-* ``PROJECTROLES_ALLOW_ANONYMOUS``: If true, allow anonymous users to access the
-  site and all projects where ``public_guest_access`` is set true (bool)
-* ``PROJECTROLES_SIDEBAR_ICON_SIZE``: Set the icon size for the project sidebar.
-  Minimum=18, maximum=42, default=36 (int)
+``PROJECTROLES_EMAIL_HEADER``
+    Custom email header (string)
+``PROJECTROLES_EMAIL_FOOTER``
+    Custom email footer (string)
+``PROJECTROLES_SECRET_LENGTH``
+    Character length of secret token used in projectroles (int)
+``PROJECTROLES_SEARCH_PAGINATION``
+    Amount of search results per each app to display on one page (int)
+``PROJECTROLES_HELP_HIGHLIGHT_DAYS``
+    Days for highlighting tour help for new users (int)
+``PROJECTROLES_DISABLE_CATEGORIES``
+    If set True, disable categories and only allow a list of projects on the
+    root level (boolean) (see note)
+``PROJECTROLES_HIDE_PROJECT_APPS``
+    Apps hidden from the project sidebar and dropdown menus for all users. The
+    app views and URLs are still accessible via other links or knowing the URL.
+    The names should correspond to the ``name`` property in project app plugins
+    (list)
+``PROJECTROLES_HIDE_APP_LINKS``
+    **DEPRECATED**, use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead. This will be
+    emoved in v0.14
+``PROJECTROLES_DELEGATE_LIMIT``
+    The number of delegate roles allowed per project. The amount is limited to 1
+    per project if not set, unlimited if set to 0. Will be ignored for remote
+    projects synchronized from a source site (int)
+``PROJECTROLES_BROWSER_WARNING``
+    If true, display a warning to users using Internet Explorer (bool)
+``PROJECTROLES_ALLOW_LOCAL_USERS``
+    If true, roles for local non-LDAP users can be synchronized from a source
+    during remote project sync if they exist on the target site. Similarly,
+    local users will be selectable in member dropdowns when selecting users
+    (bool)
+``PROJECTROLES_KIOSK_MODE``
+    If true, allow accessing certain project views *without* user authentication
+    in order to e.g. demonstrate features in a kiosk-style deployment. Also
+    hides and/or disables views not intended to be used in this mode (bool)
+``PROJECTROLES_BREADCRUMB_STICKY``
+    Set this false to make project breadcrumb navigation scroll along page
+    content. If true, maintain a sticky breadcrumb below the titlebar instead.
+    Assumed true if not set (bool)
+``PROJECTROLES_ALLOW_ANONYMOUS``
+    If true, allow anonymous users to access the site and all projects where
+    ``public_guest_access`` is set true (bool)
+``PROJECTROLES_SIDEBAR_ICON_SIZE``
+    Set the icon size for the project sidebar. Minimum=18, maximum=42,
+    default=36 (int)
+``PROJECTROLES_SEARCH_OMIT_APPS``
+    List of apps to omit from search results (list)
+``PROJECTROLES_TARGET_SYNC_ENABLE``
+    Enable/disable remote project synchronization as a target site. Ignored for
+    source sites (bool)
+``PROJECTROLES_TARGET_SYNC_INTERVAL``
+    Interval in minutes for remote project synchronization as a target site.
+    Ignored for source sites (int)
 
 Example:
 
@@ -266,7 +293,7 @@ Example:
     PROJECTROLES_SEARCH_PAGINATION = 5
     PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
     PROJECTROLES_DISABLE_CATEGORIES = True
-    PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
+    PROJECTROLES_HIDE_PROJECT_APPS = ['filesfolders']
     PROJECTROLES_DELEGATE_LIMIT = 1
     PROJECTROLES_BROWSER_WARNING = True
     PROJECTROLES_ALLOW_LOCAL_USERS = True
@@ -511,7 +538,7 @@ configuration:
         },
         # Custom target redirect URL after the user get logged in.
         # Defaults to /admin if not set. This setting will be overwritten if you
-        # have parameter ?next= specificed in the login URL.
+        # have parameter ?next= specified in the login URL.
         'DEFAULT_NEXT_URL': '/',
         # # Optional settings below
         # 'NEW_USER_PROFILE': {

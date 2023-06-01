@@ -142,22 +142,104 @@ For fields supporting markdown, it is recommended to use the
 ``SODARPagedownWidget`` found in ``projectroles.models``.
 
 
-App Setting API
-===============
+App Settings
+============
 
-For accessing and modifying app settings for project or site apps, you should
-use the ``AppSettingAPI``. Below is an example of invoking the API. For the full
-API docs, see :ref:`app_projectroles_api_django`.
+SODAR Core offers a common framework and API for defining, setting and accessing
+modifiable settings from your apps. This makes it possible to introduce
+variables changeable in runtime for different purposes and scopes without the
+need to manage additional Django models in your apps. App settings are supported
+for plugins in project and site apps.
+
+The settings are defined as Python dictionaries in your project or site app's
+plugin. An example of a definition can be seen below:
+
+.. code-block:: python
+
+    class ProjectAppPlugin(ProjectAppPluginPoint):
+        # ...
+        app_settings = {
+            'allow_public_links': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'BOOLEAN',
+                'default': False,
+                'label': 'Allow public links',
+                'description': 'Allow generation of public links for files',
+                'user_modifiable': True,
+            }
+        }
+
+Each setting must define a ``scope``. The options for this are as follows, as
+defined in ``SODAR_CONSTANTS``:
+
+``APP_SETTING_SCOPE_PROJECT``
+    Setting related to a project and displayed in the project create/update
+    form.
+``APP_SETTING_SCOPE_USER``
+    Site-wide setting related to a user and displayed in the user profile form.
+``APP_SETTING_SCOPE_PROJECT_USER``
+    User setting related to a project, managed by your project app.
+``APP_SETTING_SCOPE_SITE``
+    Site-wide setting similar to Django settings but modifiable in runtime.
+
+The rest of the attributes are listed below:
+
+``type``
+    Value type for the settings. Available options are ``BOOLEAN``,
+    ``INTEGER``, ``STRING`` and ``JSON``.
+``default``
+    Default value for the setting. This is returned if no value has been set.
+    Can alternatively be a callable with the signature
+    ``callable(project=None, user=None)``.
+``local``
+    Boolean for allowing/disallowing editing in target sites for synchronized
+    projects.
+``label``
+    Label string to be displayed in forms for ``PROJECT`` and ``USER`` scope
+    settings (optional).
+``placeholder``
+    Placeholder string to be displayed in forms for ``PROJECT`` and ``USER``
+    scope settings (optional).
+``description``
+    Description string shown in forms for ``PROJECT`` and ``USER`` scope
+    settings (optional).
+``options``
+    List of selectable options for ``INTEGER`` and ``STRING`` type settings. Can
+    alternatively be a callable with the signature
+    ``callable(project=None, user=None)`` returning a list of strings or
+    key/label tuples (optional).
+``user_modifiable``
+    Boolean value for whether this setting should be displayed in project or
+    user forms. If false, will be displayed only to superusers. Set to true if
+    your app is expected to manage this setting. Applicable for ``PROJECT`` and
+    ``USER`` scope settings (optional).
+``project_types``
+    List of project types this setting is allowed to be set for. Defaults to
+    ``[PROJECT_TYPE_PROJECT]`` (optional).
+
+The settings are retrieved using ``AppSettingAPI`` provided by the
+projectroles app. Below is an example of invoking the API. For the full API
+docs, see
+:ref:`app settings API documentation <app_projectroles_api_django_settings>`.
 
 .. code-block:: python
 
     from projectroles.app_settings import AppSettingAPI
     app_settings = AppSettingAPI()
-    app_settings.get_app_setting('app_name', 'setting_name', project_object)  # Etc..
+    app_settings.get('app_name', 'setting_name', project_object)  # Etc..
 
-See the
-:ref:`app settings API documentation <app_projectroles_api_django_settings>` for
-detailed instructions for using the API.
+There is no need to separately generate settings for projects or users. If the
+setting object does not exist in the Django database when
+``AppSettingAPI.get()`` is first called on the setting and argument combination,
+it is created based on the default value and the default value is returned.
+
+If you modify definitions during development or retire a setting, run the
+``cleanappsettings`` management command to delete unneeded app settings from
+the Django database:
+
+.. code-block:: console
+
+    $ ./manage.py cleanappsettings
 
 
 Pagination Template
@@ -180,7 +262,7 @@ Tour Help
 SODAR Core uses `Shepherd <https://shipshapecode.github.io/shepherd/docs/welcome/>`_
 to present an optional interactive tour for a rendered page. To enable the tour
 in your template, set it up inside the ``javascript`` template block. Within an
-inline javascript strucure, set the ``tourEnabled`` variable to ``true`` and add
+inline javascript structure, set the ``tourEnabled`` variable to ``true`` and add
 steps according to the `Shepherd documentation <https://shipshapecode.github.io/shepherd>`_.
 
 Example:
@@ -298,7 +380,7 @@ to access the actual Python logger being used, you can access it via
 
 .. note::
 
-    The use of this logger class assumes your site sets up logging simlarly to
+    The use of this logger class assumes your site sets up logging similarly to
     the example site and the SODAR Django Site template, including the use of a
     ``LOGGING_LEVEL`` Django settings variable.
 
@@ -321,7 +403,7 @@ Test Settings
 
 SODAR Core provides settings for configuring your UI tests, if using the base
 UI test classes found in ``projectroles.tests.test_ui``. Default values for
-these settings can be found in ``config/settings/test.py``. The settins are as
+these settings can be found in ``config/settings/test.py``. The settings are as
 follows:
 
 - ``PROJECTROLES_TEST_UI_CHROME_OPTIONS``: Options for Chrome through Selenium.

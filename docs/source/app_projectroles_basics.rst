@@ -31,17 +31,14 @@ in a n:m relation. For example, user "alice" might be assigned the
 second project. Users can only have one role in a given project at any given
 time.
 
-Owner roles are inherited, so an owner of a category will always have ownership
-to subcategories and projects below it.
+Roles are inherited to categories and projects from parent categories. Inherited
+roles can be promoted to higher ranking local roles for specific categories and
+projects. In the case of a category, this promotion will apply to all child
+categories below it.
 
-New types of roles can be defined for third party by extending the default
-model's database table in the projectroles app. Existing SODAR Core apps do not
-fully support custom roles at the moment, but extended support is planned in a
-future release.
-
-The roles also specify a numeric rank for determining their level of priority in
-e.g. cases of promoting inherited roles or defining custom roles when that
-feature is included in the future.
+Demoting inherited roles is not allowed. In practice, this means that if a user
+has a certain role for a category, they will either have the same or higher
+level of user access for all of its child categories and projects.
 
 The built-in roles in SODAR Core are as follows:
 
@@ -64,10 +61,20 @@ The built-in roles in SODAR Core are as follows:
 - **Project Guest**
     - Read only access to project data
     - Rank = 40
+- **Project Finder**
+    - Role can only been given for categories
+    - User can see categories and their member roles
+    - User can see titles of projects under categories in UI home view project
+      list, the corresponding REST API view and project search results
+    - User can not access projects, project apps or project data without a
+      greater role
+    - Used for e.g. staff for ensuring relevant categories and projects are
+      discoverable without granting superuser status
+    - Rank = 50
 
 .. note::
 
-    Django **superuser** status overrides project role access.
+    Django **superuser** status overrides all project role access checks.
 
 The projectroles app provides the following features for managing user roles in
 projects:
@@ -80,6 +87,11 @@ projects:
 .. note::
 
     Currently, only superusers can assign owner roles for top-level categories.
+
+New types of roles can be defined for third party apps by extending the default
+model's database table in the projectroles app. Existing SODAR Core apps do not
+fully support custom roles at the moment, but extended support is planned in a
+future release.
 
 
 Remote Project Sync
@@ -111,6 +123,11 @@ Among the data which can be synchronized:
 - User roles in projects
 - User accounts for LDAP/AD users (required for the previous step)
 - Information of other Target Sites linking a common project
+
+Target sites read remote project information from the source site. When
+deploying a target site, it is possible to enable automated synchronization of
+projects from the source site by running a Redis server and a Celery worker
+process.
 
 
 Rule System
@@ -168,7 +185,7 @@ Other features in the projectroles app:
 Templates and Styles
 ====================
 
-Projectoles provides views and templates for all GUI-related functionalities
+Projectroles provides views and templates for all GUI-related functionalities
 described above. The templates utilize the plugin framework to provide content
 under projects dynamically. The project also provides default CSS stylings, base
 templates and a base layout which can be used or adapted as needed. See the

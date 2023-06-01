@@ -113,3 +113,17 @@ You are now able to run the server:
 .. code-block:: console
 
     $ make serve
+
+To enable periodic tasks, you need to start a Celery worker in addition to the
+Django server. This is done by running the ``make celery`` command in a separate
+terminal.
+
+.. code-block:: console
+
+    $ make celery
+
+.. note::
+
+    SODAR Core itself currently uses Celery tasks only for remote project
+    synchronization for target sites. If developing a source site, running this
+    process is not necessary.

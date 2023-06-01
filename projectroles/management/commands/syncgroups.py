@@ -1,3 +1,5 @@
+"""Syncgroups management command for synchronizing user groups"""
+
 from django.contrib import auth
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -5,8 +7,8 @@ from django.db import transaction
 from projectroles.management.logging import ManagementCommandLogger
 
 
-User = auth.get_user_model()
 logger = ManagementCommandLogger(__name__)
+User = auth.get_user_model()
 
 
 class Command(BaseCommand):

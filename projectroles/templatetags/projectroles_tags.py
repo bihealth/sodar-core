@@ -1,29 +1,28 @@
 """Template tags for internal use within the projectroles app"""
 
-from math import ceil
-
 from django import template
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     RoleAssignment,
     RemoteProject,
     SODAR_CONSTANTS,
-    PROJECT_TAG_STARRED,
 )
 from projectroles.plugins import get_active_plugins
-from projectroles.project_tags import get_tag_state
 
 
 register = template.Library()
+app_settings = AppSettingAPI()
 
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
@@ -33,8 +32,6 @@ ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
     SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
 ]
-SIDEBAR_ICON_MIN_SIZE = 18
-SIDEBAR_ICON_MAX_SIZE = 42
 
 
 # SODAR and site operations ----------------------------------------------------
@@ -64,14 +61,6 @@ def get_site_app_messages(user):
 
 
 @register.simple_tag
-def has_star(project, user):
-    """Return True/False for project star tag state"""
-    return user.has_perm(
-        'projectroles.view_project', project
-    ) and get_tag_state(project, user, PROJECT_TAG_STARRED)
-
-
-@register.simple_tag
 def get_remote_project_obj(site, project):
     """Return RemoteProject object for RemoteSite and Project"""
     try:
@@ -98,7 +87,10 @@ def is_app_visible(plugin, project, user):
     """Check if app should be visible for user in a specific project"""
     can_view_app = user.has_perm(plugin.app_permission, project)
     app_hidden = False
-    if plugin.name in getattr(settings, 'PROJECTROLES_HIDE_APP_LINKS', []):
+    if plugin.name in getattr(settings, 'PROJECTROLES_HIDE_PROJECT_APPS', []):
+        app_hidden = True
+    # TODO: Remove this in SODAR Core v0.14 (see issue #1143)
+    elif plugin.name in getattr(settings, 'PROJECTROLES_HIDE_APP_LINKS', []):
         app_hidden = True
     if (
         can_view_app
@@ -110,18 +102,6 @@ def is_app_visible(plugin, project, user):
 
 
 # Template rendering -----------------------------------------------------------
-
-
-@register.simple_tag
-def is_inherited_owner(project, user):
-    """Return True if user is inherited owner"""
-    if (
-        project
-        and user
-        and user in [r.user for r in project.get_owners(inherited_only=True)]
-    ):
-        return True
-    return False
 
 
 @register.simple_tag
@@ -198,7 +178,7 @@ def get_login_info():
             ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
         ret += (
             ' account. Enter your user name as <code>username@{}'
-            '</code>'.format(settings.AUTH_LDAP_USERNAME_DOMAIN)
+            '</code>'.format(getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', ''))
         )
         if (
             settings.ENABLE_LDAP_SECONDARY
@@ -279,36 +259,6 @@ def get_remote_access_legend(level):
 def get_sidebar_app_legend(title):
     """Return sidebar link legend HTML"""
     return '<br />'.join(title.split(' '))
-
-
-@register.simple_tag
-def get_sidebar_icon_size():
-    """Return sidebar icon size with a min/max limit"""
-    return sorted(
-        [
-            SIDEBAR_ICON_MIN_SIZE,
-            getattr(settings, 'PROJECTROLES_SIDEBAR_ICON_SIZE', 32),
-            SIDEBAR_ICON_MAX_SIZE,
-        ]
-    )[1]
-
-
-@register.simple_tag
-def get_sidebar_notch_pos():
-    """Return sidebar notch position"""
-    return ceil(get_sidebar_icon_size() / 3)
-
-
-@register.simple_tag
-def get_sidebar_notch_size():
-    """Return sidebar notch size"""
-    return min(ceil(get_sidebar_icon_size() / 2), 12)
-
-
-@register.simple_tag
-def get_sidebar_padding():
-    """Return sidebar padding"""
-    return ceil(get_sidebar_icon_size() / 4.5)
 
 
 @register.simple_tag

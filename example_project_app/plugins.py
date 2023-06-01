@@ -4,6 +4,10 @@ from django.contrib import messages
 from django.urls import reverse
 
 # Projectroles dependency
+from projectroles.app_settings import (
+    get_example_setting_default,
+    get_example_setting_options,
+)
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import (
     ProjectAppPluginPoint,
@@ -15,8 +19,10 @@ from example_project_app.urls import urlpatterns
 
 
 EXAMPLE_MODIFY_API_MSG = (
-    'Example project app plugin API called from ' '{project_type} {action}.'
+    'Example project app plugin API called from {project_type} {action}.'
 )
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 
 class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
@@ -196,20 +202,86 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
         'project_user_int_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'INTEGER',
-            'default': '',
+            'default': 0,
             'description': 'Example int project user setting',
         },
         'project_user_bool_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'BOOLEAN',
-            'default': '',
+            'default': False,
             'description': 'Example bool project user setting',
         },
         'project_user_json_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
             'type': 'JSON',
-            'default': '',
+            'default': {
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
             'description': 'Example json project user setting',
+        },
+        'project_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'STRING',
+            'label': 'Callable project setting',
+            'default': get_example_setting_default,
+            'description': 'Example callable project setting',
+        },
+        'user_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'STRING',
+            'label': 'Callable user setting',
+            'default': get_example_setting_default,
+            'description': 'Example callable user setting',
+        },
+        'project_user_callable_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'STRING',
+            'default': get_example_setting_default,
+            'description': 'Example callable project user setting',
+        },
+        'project_callable_setting_options': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'STRING',
+            'label': 'Callable setting with options',
+            'default': get_example_setting_default,
+            'options': get_example_setting_options,
+            'description': 'Example callable project setting with options',
+            'user_modifiable': True,
+        },
+        'user_callable_setting_options': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'STRING',
+            'label': 'Callable setting with options',
+            'default': get_example_setting_default,
+            'options': get_example_setting_options,
+            'description': 'Example callable user setting with options',
+            'user_modifiable': True,
+        },
+        'project_user_callable_setting_options': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'STRING',
+            'default': get_example_setting_default,
+            'options': get_example_setting_options,
+            'description': 'Example callable project user setting with options',
+        },
+        'project_category_bool_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'BOOLEAN',
+            'label': 'Category boolean setting',
+            'default': False,
+            'description': 'Example boolean project category setting',
+            'user_modifiable': True,
+            'project_types': [PROJECT_TYPE_CATEGORY],
+        },
+        'site_bool_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
+            'type': 'BOOLEAN',
+            'label': 'Site boolean setting',
+            'default': False,
+            'description': 'Example boolean site setting',
+            'user_modifiable': True,
         },
     }
 
@@ -275,3 +347,18 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
                     action=action.lower(),
                 ),
             )
+
+    def validate_form_app_settings(self, app_settings, project=None, user=None):
+        """Example implementation for app setting validation plugin API"""
+        errors = {}
+        for setting_name, setting_value in app_settings.items():
+            if (
+                setting_name == 'project_hidden_setting'
+                and setting_value == 'Example project hidden setting'
+            ):
+                errors[
+                    setting_name
+                ] = 'Invalid value for a custom validation method'
+        if errors == {}:
+            return None
+        return errors

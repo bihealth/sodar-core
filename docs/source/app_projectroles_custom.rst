@@ -78,9 +78,11 @@ Additional Title Bar Links
 ==========================
 
 If you want to add additional links *not* related to apps in the title bar, you
-can implement in the template file
-``{SITE_NAME}/templates/include/_titlebar_nav.html``. This can be done for e.g.
-documentation links or linking to external sites. Example:
+can implement in the template file ``_titlebar_nav.html`` in the site's template
+include directory. By default the directory is
+``{SITE_NAME}/templates/include/``. A custom path can be provided using the
+``PROJECTROLES_TEMPLATE_INCLUDE_PATH`` Django setting and environment variable.
+Example of an extra link template:
 
 .. code-block:: django
 
@@ -96,9 +98,9 @@ Extra Login View Content
 ========================
 
 If you want to provide extra content in your site's login view, you can add
-custom HTML into the template file
-``{SITE_NAME}/templates/include/_login_extend.html``. The content will appear
-below the login form and its format is not restricted.
+custom HTML into the template file ``_login_extend.html`` in the site's template
+include directory. The content will appear below the login form and its
+formatting is not restricted.
 
 
 Site Logo
@@ -111,11 +113,12 @@ be displayed in the default Projectroles title bar.
 Custom Icon Collections
 =======================
 
-To use icons other than the default `Material Design Icons <https://materialdesignicons.com>`_
+To use icons other than the default
+`Material Design Icons <https://materialdesignicons.com>`_
 collection, download the corresponding collection JSON file from the
 `Iconify JSON repository <https://github.com/iconify/collections-json/tree/master/json>`_
-into `{SITE_NAME}/static/iconify/json`. After that run `collectstatic` and the
-icons will be available using the collection identifier.
+into ``{SITE_NAME}/static/iconify/json``. After that run ``collectstatic`` and
+the icons will be available using the collection identifier.
 
 
 Project Breadcrumb
@@ -132,7 +135,9 @@ Footer
 ======
 
 Footer content can be specified in the optional template file
-``{SITE_NAME}/templates/include/_footer.html``.
+``{SITE_NAME}/templates/include/_footer.html``. Alternatively,
+you can provide a full path to a ``_footer.html`` template directory
+in the ``PROJECTROLES_TEMPLATE_INCLUDE_PATH`` in the environment file.
 
 
 Project and Category Display Names

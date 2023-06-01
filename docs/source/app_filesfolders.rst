@@ -4,11 +4,11 @@
 Filesfolders App
 ^^^^^^^^^^^^^^^^
 
-The ``filesfolders`` app enables uploading small files into the Django database
+The ``filesfolders`` app enables uploading files into the Django database
 and organizing them in folders. It also permits creating hyperlinks, providing
 public links to files and automated unpacking of ZIP archives.
 
-The app is displayed as *"Small Files"* on the SODAR site.
+The app is displayed as *"Files"* on the SODAR site.
 
 .. toctree::
    :maxdepth: 3

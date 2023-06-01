@@ -11,6 +11,7 @@
 {% get_django_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
 {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 {% get_django_setting 'PROJECTROLES_ALLOW_ANONYMOUS' as allow_anon %}
+{% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
 {% static_file_exists 'images/logo_navbar.png' as logo_exists %}
 {% check_backend 'appalerts_backend' as appalerts_active %}
 
@@ -98,9 +99,9 @@
         {% endif %}
 
         {# Optional template for additional links #}
-        {% template_exists 'include/_titlebar_nav.html' as add_links_exist %}
+        {% template_exists template_include_path|add:'/_titlebar_nav.html' as add_links_exist %}
         {% if add_links_exist %}
-          {% include 'include/_titlebar_nav.html' %}
+          {% include template_include_path|add:'/_titlebar_nav.html' %}
         {% endif %}
 
         {# Help link #}

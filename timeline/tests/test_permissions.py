@@ -17,12 +17,16 @@ class TestTimelinePermissions(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -44,10 +48,15 @@ class TestTimelinePermissions(TestProjectPermissionBase):
         url = reverse('timeline:list_site')
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -66,12 +75,17 @@ class TestTimelinePermissions(TestProjectPermissionBase):
             self.superuser,
         ]
         bad_users = [
-            self.anonymous,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
+            self.anonymous,
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
@@ -94,12 +108,16 @@ class TestTimelinePermissions(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         # Test public project
@@ -132,10 +150,15 @@ class TestTimelinePermissions(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.owner_as.user,
-            self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)

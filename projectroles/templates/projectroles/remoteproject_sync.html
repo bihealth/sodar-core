@@ -177,7 +177,6 @@
                 {% for r_uuid, r in p.roles.items %}
                   {% get_project_by_uuid p_uuid as p_obj %}
                   {% get_user_by_username r.user as user_obj %}
-                  {% is_inherited_owner project=p_obj user=user_obj as inh_user %}
                   {% if r.status %}
                     <tr>
                       <td>
@@ -196,18 +195,8 @@
                           {{ r.user }}
                         {% endif %}
                       </td>
-                      <td
-                        {% if r.status == 'deleted' %}
-                          class="text-strikethrough"
-                        {% elif inh_user %}
-                          class="text-muted"
-                        {% endif %}
-                      >
+                      <td {% if r.status == 'deleted' %}class="text-strikethrough"{% endif %}>
                         {{ r.role }}
-                        {% if inh_user %}
-                          {% get_info_link content='Existing role for inherited owner' as i_link %}
-                          {{ i_link | safe }}
-                        {% endif %}
                       </td>
                       <td class="text-nowrap {% if r.status == 'error' %}text-danger{% else %}text-success{% endif %}">
                         {{ r.status | title }}

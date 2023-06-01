@@ -9,6 +9,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -29,19 +30,16 @@ def is_project_owner(user, obj):
 @rules.predicate
 def is_project_delegate(user, obj):
     """Whether or not the user has the role of project delegate"""
-    assignment = RoleAssignment.objects.get_assignment(user, obj)
-    if assignment:
-        return assignment.role.name == PROJECT_ROLE_DELEGATE
-    return False
+    return obj.is_delegate(user) if obj else False
 
 
 @rules.predicate
 def is_project_contributor(user, obj):
     """Whether or not the user has the role of project contributor"""
-    assignment = RoleAssignment.objects.get_assignment(user, obj)
-    if assignment:
-        return assignment.role.name == PROJECT_ROLE_CONTRIBUTOR
-    return False
+    if not obj or not user or not user.is_authenticated:
+        return False
+    role_as = obj.get_role(user=user)
+    return role_as and role_as.role.name == PROJECT_ROLE_CONTRIBUTOR
 
 
 @rules.predicate
@@ -52,17 +50,27 @@ def is_project_guest(user, obj):
     """
     if obj.public_guest_access:
         return True
-    assignment = RoleAssignment.objects.get_assignment(user, obj)
-    if assignment:
-        return assignment.role.name == PROJECT_ROLE_GUEST
-    return False
+    if not obj or not user or not user.is_authenticated:
+        return False
+    role_as = obj.get_role(user)
+    return role_as and role_as.role.name == PROJECT_ROLE_GUEST
 
 
 @rules.predicate
-def has_project_role(user, obj):
+def is_project_finder(user, obj):
     """
-    Whether or not the user has any role in the project. Also returns true if
-    project has public guest access.
+    Whether or not the user has the role of project finder.
+    """
+    if not obj or not user or not user.is_authenticated:
+        return False
+    role_as = obj.get_role(user)
+    return role_as and role_as.role.name == PROJECT_ROLE_GUEST
+
+
+@rules.predicate
+def can_view_project(user, obj):
+    """
+    Whether or not user can view the project.
     """
     if obj.public_guest_access:
         return True
@@ -75,11 +83,14 @@ def has_project_role(user, obj):
 def has_category_child_role(user, obj):
     """
     Whether or not the user has any role in any child project under the
-    current one, if the current project is a category. Also returns true if
+    current one, if the current project is a category. Also returns True if
     user is anonymous and category includes children with public guest access.
     """
     return obj.type == PROJECT_TYPE_CATEGORY and (
-        (user.is_authenticated and obj.has_role(user, include_children=True))
+        (
+            user.is_authenticated
+            and (obj.has_role(user) or obj.has_role_in_children(user))
+        )
         or (
             user.is_anonymous
             and getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)
@@ -157,7 +168,7 @@ is_role_update_user = is_project_owner | is_project_delegate
 
 # Allow viewing project/category details
 rules.add_perm(
-    'projectroles.view_project', has_project_role | has_category_child_role
+    'projectroles.view_project', can_view_project | has_category_child_role
 )
 
 # Allow project updating
@@ -180,10 +191,7 @@ rules.add_perm(
 # Allow viewing project roles
 rules.add_perm(
     'projectroles.view_project_roles',
-    is_project_owner
-    | is_project_delegate
-    | is_project_contributor
-    | is_project_guest,
+    can_view_project,
 )
 
 # Allow updating project owner

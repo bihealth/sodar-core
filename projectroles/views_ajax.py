@@ -18,17 +18,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rules.contrib.views import PermissionRequiredMixin
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
-    Role,
     RoleAssignment,
-    ProjectUserTag,
-    PROJECT_TAG_STARRED,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
+    ROLE_RANKING,
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
-from projectroles.project_tags import get_tag_state, set_tag_state
 from projectroles.utils import get_display_name
 from projectroles.views import (
     ProjectAccessMixin,
@@ -42,16 +40,15 @@ from projectroles.views_api import (
 
 
 logger = logging.getLogger(__name__)
+app_settings = AppSettingAPI()
 
 
 # SODAR consants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
-
-# Local constants
-INHERITED_OWNER_INFO = 'Ownership inherited from parent category'
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -118,9 +115,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_project_list(cls, user, parent=None):
+    def _get_projects(cls, user, parent=None):
         """
-        Return a flat list of categories and projects.
+        Return a flat list of categories and projects the user can view.
 
         :param user: User for which the projects are visible
         :param parent: Project object of type CATEGORY or None
@@ -132,22 +129,22 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             )
         elif not user.is_superuser:
             # Quick and dirty filtering for inheritance using full_title
-            role_owner = Role.objects.filter(name=PROJECT_ROLE_OWNER).first()
-            owned_cats = [
+            # role_owner = Role.objects.filter(name=PROJECT_ROLE_OWNER).first()
+            role_cats = [
                 r.project.full_title + CAT_DELIMITER
                 for r in RoleAssignment.objects.filter(
                     project__type=PROJECT_TYPE_CATEGORY,
                     user=user,
-                    role=role_owner,
                 )
             ]
+            # NOTE: Not using get_role() here as that would exclude finder role
             project_list = [
                 p
                 for p in project_list
                 if p.public_guest_access
                 or p.has_public_children
-                or any(p.full_title.startswith(c) for c in owned_cats)
-                or p.roles.filter(user=user).count() > 0
+                or any(p.full_title.startswith(c) for c in role_cats)
+                or p.local_roles.filter(user=user).count() > 0
             ]
 
         # Populate final list
@@ -170,6 +167,42 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         # Sort by full title
         return sorted(ret, key=lambda x: x.full_title.lower())
 
+    @classmethod
+    def _get_access(cls, project, user, finder_cats, depth):
+        """
+        Return whether user has access to a project for the project list.
+
+        :param project: Project object
+        :param user: SODARUser object
+        :param finder_cats: List of category names where user has finder role
+        :param depth: Project depth in category structure (int)
+        :return: Boolean
+        """
+        # Disable categories for anonymous users if anonymous access is enabled
+        if not user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY:
+            return False
+        # Cases which are always true if we get this far
+        if (
+            user.is_superuser
+            or (user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY)
+            or project.public_guest_access
+        ):
+            return True
+        # If user has finder role in a parent category, we need to check role
+        if finder_cats and depth > 0:
+            for i in range(0, depth + 1):
+                c = ' / '.join(project.full_title.split(' / ')[:i])
+                if c in finder_cats:
+                    role_as = project.get_role(user)
+                    if (
+                        role_as
+                        and role_as.role.rank
+                        < ROLE_RANKING[PROJECT_ROLE_FINDER]
+                    ):
+                        return True
+            return False
+        return True
+
     def get(self, request, *args, **kwargs):
         parent_uuid = request.GET.get('parent', None)
         parent = (
@@ -184,33 +217,56 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 status=400,
             )
 
-        project_list = self._get_project_list(request.user, parent)
+        projects = self._get_projects(request.user, parent)
         starred_projects = []
         if request.user.is_authenticated:
             starred_projects = [
-                t.project
-                for t in ProjectUserTag.objects.filter(
-                    user=request.user, name=PROJECT_TAG_STARRED
+                project
+                for project in Project.objects.all()
+                if app_settings.get(
+                    'projectroles', 'project_star', project, request.user
+                )
+            ]
+        finder_cats = []
+        if request.user.is_authenticated:
+            finder_cats = [
+                a.project.full_title
+                for a in RoleAssignment.objects.filter(
+                    project__type=PROJECT_TYPE_CATEGORY,
+                    role__rank=ROLE_RANKING[PROJECT_ROLE_FINDER],
+                    user=request.user,
                 )
             ]
         full_title_idx = len(parent.full_title) + 3 if parent else 0
 
+        ret_projects = []
+        for p in projects:
+            p_depth = p.get_depth()
+            p_access = self._get_access(p, request.user, finder_cats, p_depth)
+            p_finder_url = None
+            if not p_access and p.parent:
+                p_finder_url = reverse(
+                    'projectroles:roles',
+                    kwargs={'project': p.parent.sodar_uuid},
+                )
+
+            rp = {
+                'title': p.title,
+                'type': p.type,
+                'full_title': p.full_title[full_title_idx:],
+                'public_guest_access': p.public_guest_access,
+                'archive': p.archive,
+                'remote': p.is_remote(),
+                'revoked': p.is_revoked(),
+                'starred': p in starred_projects,
+                'depth': p_depth,
+                'access': p_access,
+                'finder_url': p_finder_url,
+                'uuid': str(p.sodar_uuid),
+            }
+            ret_projects.append(rp)
         ret = {
-            'projects': [
-                {
-                    'title': p.title,
-                    'type': p.type,
-                    'full_title': p.full_title[full_title_idx:],
-                    'public_guest_access': p.public_guest_access,
-                    'archive': p.archive,
-                    'remote': p.is_remote(),
-                    'revoked': p.is_revoked(),
-                    'starred': p in starred_projects,
-                    'depth': p.get_depth(),
-                    'uuid': str(p.sodar_uuid),
-                }
-                for p in project_list
-            ],
+            'projects': ret_projects,
             'parent_depth': parent.get_depth() + 1 if parent else 0,
             'messages': {},
             'user': {'superuser': request.user.is_superuser},
@@ -314,19 +370,12 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
     @classmethod
     def _get_user_role(cls, project, user):
         """Return user role for project"""
-        ret = {'name': None, 'class': None, 'info': None}
+        ret = {'name': None, 'class': None}
         role_as = None
         if user.is_authenticated:
-            role_as = RoleAssignment.objects.filter(
-                project=project, user=user
-            ).first()
+            role_as = project.get_role(user)
             if role_as:
                 ret['name'] = role_as.role.name.split(' ')[1].capitalize()
-            elif project.is_owner(user):
-                ret['name'] = 'Owner'
-                if not role_as or role_as.role.name != PROJECT_ROLE_OWNER:
-                    ret['class'] = 'text-muted'
-                    ret['info'] = INHERITED_OWNER_INFO
         if project.public_guest_access and not role_as:
             ret['name'] = 'Guest'
         if not ret['name']:
@@ -368,9 +417,21 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         user = request.user
         timeline = get_backend_api('timeline_backend')
-        tag_state = get_tag_state(project, user)
-        action_str = '{}star'.format('un' if tag_state else '')
-        set_tag_state(project, user, PROJECT_TAG_STARRED)
+        project_star = app_settings.get(
+            'projectroles', 'project_star', project, user
+        )
+        action_str = '{}star'.format('un' if project_star else '')
+        if project_star:
+            app_settings.delete('projectroles', 'project_star', project, user)
+        else:
+            app_settings.set(
+                app_name='projectroles',
+                setting_name='project_star',
+                value=True,
+                project=project,
+                user=user,
+                validate=False,
+            )
 
         # Add event in Timeline
         if timeline:
@@ -383,7 +444,7 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
                 classified=True,
                 status_type='INFO',
             )
-        return Response(0 if tag_state else 1, status=200)
+        return Response(0 if project_star else 1, status=200)
 
 
 class CurrentUserRetrieveAjaxView(
@@ -422,7 +483,7 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
                 'projectroles.view_project', project
             ):
                 return User.objects.none()
-            project_users = [a.user.pk for a in project.get_all_roles()]
+            project_users = [a.user.pk for a in project.get_roles()]
             if scope == 'project':  # Limit choices to current project users
                 qs = User.objects.filter(pk__in=project_users)
             elif scope == 'project_exclude':  # Exclude project users
@@ -453,7 +514,7 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
 
     def get_result_label(self, user):
         """Display options with name, username and email address"""
-        return user.get_form_label()
+        return user.get_form_label(email=True)
 
     def get_result_value(self, user):
         """Use sodar_uuid in the User model instead of pk"""

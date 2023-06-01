@@ -959,7 +959,6 @@ class BatchEditView(
 
             # Deletion checks
             elif self.batch_action == 'delete':
-
                 # Can't delete a non-empty folder
                 if isinstance(item, Folder) and not item.is_empty():
                     self.failed.append(item)

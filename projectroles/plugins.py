@@ -254,7 +254,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:
     #:     app_settings = {
     #:         'example_setting': {
-    #:             'scope': 'PROJECT',  # PROJECT/USER
+    #:             'scope': 'PROJECT',  # PROJECT/USER/SITE
     #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
     #:             'default': 'example',
     #:             'label': 'Project setting',  # Optional, defaults to name/key
@@ -265,6 +265,8 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'user_modifiable': True,  # Optional, show/hide in forms
     #:             'local': False,  # Optional, show/hide in forms on target
     #:             site, sync value from source to target site if false
+    #:             'project_types': [PROJECT_TYPE_PROJECT],  # Optional, may
+    #:             contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
     #:         }
     #:     }
     # TODO: Define project specific settings in your app plugin, example above
@@ -424,6 +426,17 @@ class ProjectAppPluginPoint(PluginPoint):
         :param project: Project object
         :param user: User object (current user)
         :return: String (may contain HTML), integer or None
+        """
+        # TODO: Implement this in your app plugin (optional)
+        return None
+
+    def validate_form_app_settings(self, app_settings, project=None, user=None):
+        """
+        Validate app settings form data and return a dict of errors.
+        :param app_settings: Dict of app settings
+        :param project: Project object
+        :param user: User object
+        :return: dict in format of {'setting_name': 'Error string' or None}
         """
         # TODO: Implement this in your app plugin (optional)
         return None
@@ -606,6 +619,16 @@ class SiteAppPluginPoint(PluginPoint):
     def get_extra_data_link(self, _extra_data, _name):
         """Return a link for timeline label starting with 'extra-'"""
         # TODO: Implement this in your app plugin
+        return None
+
+    def validate_form_app_settings(self, app_settings, user=None):
+        """
+        Validate app settings form data and return a dict of errors.
+        :param app_settings: Dict of app settings
+        :param user: User object
+        :return: dict in format of {'setting_name': 'Error string' or None}
+        """
+        # TODO: Implement this in your app plugin (optional)
         return None
 
 

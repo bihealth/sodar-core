@@ -15,6 +15,10 @@ from projectroles.models import (
     ProjectInvite,
     AppSetting,
     SODAR_CONSTANTS,
+    ROLE_RANKING,
+    CAT_DELIMITER,
+    CAT_DELIMITER_ERROR_MSG,
+    ROLE_PROJECT_TYPE_ERROR_MSG,
 )
 from projectroles.utils import build_secret, get_expiry_date
 from projectroles.views import (
@@ -34,12 +38,13 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 REMOTE_MODIFY_MSG = (
-    'Modification of remote projects is not allowed, modify on '
-    'the SOURCE site instead'
+    'Modification of remote projects is not allowed, modify on the SOURCE site '
+    'instead'
 )
 
 
@@ -180,8 +185,7 @@ class RoleAssignmentValidateMixin:
         if (
             attrs['role'].name == PROJECT_ROLE_DELEGATE
             and del_limit != 0
-            and project.get_delegates(exclude_inherited=True).count()
-            >= del_limit
+            and len(project.get_delegates(inherited=False)) >= del_limit
         ):
             raise serializers.ValidationError(
                 'Project delegate limit of {} has been reached'.format(
@@ -212,6 +216,9 @@ class RoleAssignmentSerializer(
     def validate(self, attrs):
         attrs = super().validate(attrs)
         project = self.context['project']
+        # Add user to instance for PATCH requests
+        if self.instance and not attrs.get('user'):
+            attrs['user'] = self.instance.user
 
         # Do not allow updating user
         if (
@@ -224,6 +231,13 @@ class RoleAssignmentSerializer(
                 'assignment instead'
             )
 
+        # Validate project type
+        if project.type not in attrs['role'].project_types:
+            raise serializers.ValidationError(
+                ROLE_PROJECT_TYPE_ERROR_MSG.format(
+                    project_type=project.type, role_name=attrs['role'].name
+                )
+            )
         # Check for existing role if creating
         if not self.instance:
             old_as = RoleAssignment.objects.filter(
@@ -234,10 +248,15 @@ class RoleAssignmentSerializer(
                     'User already has the role of "{}" in project '
                     '(UUID={})'.format(old_as.role.name, old_as.sodar_uuid)
                 )
-
-        # Add user to instance for PATCH requests
-        if self.instance and not attrs.get('user'):
-            attrs['user'] = self.instance.user
+        # Prevent demoting if inherited role exists
+        for old_role_as in RoleAssignment.objects.filter(
+            project__in=project.get_parents(), user=attrs['user']
+        ):
+            if attrs['role'].rank > old_role_as.role.rank:
+                raise serializers.ValidationError(
+                    'User inherits role "{}", demoting from inherited role is '
+                    'not allowed'.format(old_role_as.role.name)
+                )
         return attrs
 
     def save(self, **kwargs):
@@ -334,7 +353,9 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     )
     readme = serializers.CharField(required=False, allow_blank=True)
     archive = serializers.BooleanField(read_only=True)
-    roles = RoleAssignmentNestedListSerializer(read_only=True, many=True)
+    roles = RoleAssignmentNestedListSerializer(
+        read_only=True, many=True, source='get_roles'
+    )
 
     class Meta:
         model = Project
@@ -350,6 +371,114 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'roles',
             'sodar_uuid',
         ]
+
+    def _validate_parent(self, parent, attrs, current_user, disable_categories):
+        """Validate parent field"""
+        # Attempting to move project under category without perms
+        if (
+            parent
+            and not current_user.is_superuser
+            and not current_user.has_perm('projectroles.create_project', parent)
+            and (not self.instance or self.instance.parent != parent)
+        ):
+            raise exceptions.PermissionDenied(
+                'User lacks permission to place project under given category'
+            )
+        if parent and parent.type != PROJECT_TYPE_CATEGORY:
+            raise serializers.ValidationError('Parent is not a category')
+        elif (
+            'parent' in attrs
+            and not parent
+            and self.instance
+            and self.instance.parent
+            and not current_user.is_superuser
+        ):
+            raise exceptions.PermissionDenied(
+                'Only superusers are allowed to place categories in root'
+            )
+
+        # Attempting to create/move project in root
+        if (
+            'parent' in attrs
+            and not parent
+            and attrs.get('type') == PROJECT_TYPE_PROJECT
+            and not disable_categories
+        ):
+            raise serializers.ValidationError(
+                'Project must be placed under a category'
+            )
+        # Ensure we are not moving a category under one of its children
+        if (
+            parent
+            and self.instance
+            and self.instance.type == PROJECT_TYPE_CATEGORY
+            and parent in self.instance.get_children(flat=True)
+        ):
+            raise serializers.ValidationError(
+                'Moving a category under its own child is not allowed'
+            )
+
+    def _validate_title(self, parent, attrs):
+        """Validate title field"""
+        title = attrs.get('title')
+        if title and (
+            CAT_DELIMITER in title
+            or title.startswith(CAT_DELIMITER.strip())
+            or title.endswith(CAT_DELIMITER.strip())
+        ):
+            raise serializers.ValidationError(CAT_DELIMITER_ERROR_MSG)
+        if parent and title == parent.title:
+            raise serializers.ValidationError('Title can\'t match with parent')
+        if (
+            title
+            and not self.instance
+            and Project.objects.filter(title=attrs['title'], parent=parent)
+        ):
+            raise serializers.ValidationError(
+                'Title must be unique within parent'
+            )
+
+    def _validate_type(self, attrs):
+        """Validate type field"""
+        project_type = attrs.get('type')
+        if project_type not in [
+            PROJECT_TYPE_CATEGORY,
+            PROJECT_TYPE_PROJECT,
+            None,
+        ]:  # None is ok for PATCH (will be updated in modify_project())
+            raise serializers.ValidationError(
+                'Type is not {} or {}'.format(
+                    PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT
+                )
+            )
+        if (
+            project_type
+            and self.instance
+            and attrs['type'] != self.instance.type
+        ):
+            raise serializers.ValidationError(
+                'Changing the project type is not allowed'
+            )
+
+    def _validate_owner(self, attrs):
+        """Validate owner field"""
+        if attrs.get('owner'):
+            if (
+                self.partial
+                and attrs['owner'] != self.instance.get_owner().user.sodar_uuid
+            ):
+                raise serializers.ValidationError(
+                    'Modifying owner not allowed here, '
+                    'use ownership transfer API view instead'
+                )
+            owner = User.objects.filter(sodar_uuid=attrs['owner']).first()
+            if not owner:
+                raise serializers.ValidationError('Owner not found')
+            attrs['owner'] = owner
+        elif not self.instance:
+            raise serializers.ValidationError(
+                'The "owner" parameter must be supplied for project creation'
+            )
 
     def validate(self, attrs):
         site_mode = getattr(
@@ -374,108 +503,21 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             raise serializers.ValidationError(
                 'Creation of local projects not allowed on this target site'
             )
-
         # Validate parent
         parent = attrs.get('parent')
-
-        # Attempting to move project under category without perms
-        if (
-            parent
-            and not current_user.is_superuser
-            and not current_user.has_perm('projectroles.create_project', parent)
-            and (not self.instance or self.instance.parent != parent)
-        ):
-            raise exceptions.PermissionDenied(
-                'User lacks permission to place project under given category'
-            )
-
-        if parent and parent.type != PROJECT_TYPE_CATEGORY:
-            raise serializers.ValidationError('Parent is not a category')
-        elif (
-            'parent' in attrs
-            and not parent
-            and self.instance
-            and self.instance.parent
-            and not current_user.is_superuser
-        ):
-            raise exceptions.PermissionDenied(
-                'Only superusers are allowed to place categories in root'
-            )
-
-        # Attempting to create/move project in root
-        if (
-            'parent' in attrs
-            and not parent
-            and attrs.get('type') == PROJECT_TYPE_PROJECT
-            and not disable_categories
-        ):
-            raise serializers.ValidationError(
-                'Project must be placed under a category'
-            )
-
-        # Ensure we are not moving a category under one of its children
-        if (
-            parent
-            and self.instance
-            and self.instance.type == PROJECT_TYPE_CATEGORY
-            and parent in self.instance.get_children(flat=True)
-        ):
-            raise serializers.ValidationError(
-                'Moving a category under its own child is not allowed'
-            )
-
-        # Validate type
-        if (
-            attrs.get('type')
-            and self.instance
-            and attrs['type'] != self.instance.type
-        ):
-            raise serializers.ValidationError(
-                'Changing the project type is not allowed'
-            )
-
+        self._validate_parent(parent, attrs, current_user, disable_categories)
         # Validate title
-        if parent and attrs.get('title') == parent.title:
-            raise serializers.ValidationError('Title can\'t match with parent')
-
-        if (
-            attrs.get('title')
-            and not self.instance
-            and Project.objects.filter(title=attrs['title'], parent=parent)
+        self._validate_title(parent, attrs)
+        # Validate type
+        self._validate_type(attrs)
+        # Validate and set owner
+        self._validate_owner(attrs)
+        # Validate public_guest_access for categories
+        if attrs.get('type') == PROJECT_TYPE_CATEGORY and attrs.get(
+            'public_guest_access'
         ):
             raise serializers.ValidationError(
-                'Title must be unique within parent'
-            )
-
-        # Validate type
-        if attrs.get('type') not in [
-            PROJECT_TYPE_CATEGORY,
-            PROJECT_TYPE_PROJECT,
-            None,
-        ]:  # None is ok for PATCH (will be updated in modify_project())
-            raise serializers.ValidationError(
-                'Type is not {} or {}'.format(
-                    PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT
-                )
-            )
-
-        # Validate and set owner
-        if attrs.get('owner'):
-            if (
-                self.partial
-                and attrs['owner'] != self.instance.get_owner().user.sodar_uuid
-            ):
-                raise serializers.ValidationError(
-                    'Modifying owner not allowed here, '
-                    'use ownership transfer API view instead'
-                )
-            owner = User.objects.filter(sodar_uuid=attrs['owner']).first()
-            if not owner:
-                raise serializers.ValidationError('Owner not found')
-            attrs['owner'] = owner
-        elif not self.instance:
-            raise serializers.ValidationError(
-                'The "owner" parameter must be supplied for project creation'
+                'Public guest access is not allowed for categories'
             )
 
         # Set readme
@@ -493,17 +535,46 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         )
 
     def to_representation(self, instance):
-        """Override to make sure fields are correctly returned"""
+        """
+        Override to make sure fields are correctly returned.
+        NOTE: Requires request in context object!
+        """
         ret = super().to_representation(instance)
+        # Set up project to get instance with UUID
         parent = ret.get('parent')
         project = Project.objects.get(
             title=ret['title'],
             **{'parent__sodar_uuid': parent} if parent else {},
         )
-        # TODO: Better way to ensure this?
+        # Return only title and UUID for projects with finder role
+        user = self.context['request'].user
+        if (
+            project.type == PROJECT_TYPE_PROJECT
+            and project.parent
+            and not project.has_role(user)
+        ):
+            parent_as = project.parent.get_role(user)
+            if (
+                parent_as
+                and parent_as.role.rank >= ROLE_RANKING[PROJECT_ROLE_FINDER]
+            ):
+                return {
+                    'title': project.title,
+                    'sodar_uuid': str(project.sodar_uuid),
+                }
+        # Else return full serialization
+        # Proper rendering of readme
         ret['readme'] = project.readme.raw or ''
+        # Force project UUID
         if not ret.get('sodar_uuid'):
             ret['sodar_uuid'] = str(project.sodar_uuid)
+        # Add "inherited" info to roles
+        if ret.get('roles'):
+            for k, v in ret['roles'].items():
+                role_as = RoleAssignment.objects.get(sodar_uuid=k)
+                ret['roles'][k]['inherited'] = (
+                    True if role_as.project != project else False
+                )
         return ret
 
 
