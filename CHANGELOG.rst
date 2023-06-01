@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v0.13.0 (2023-06-01)
+====================
 
 Added
 -----
@@ -50,7 +50,7 @@ Changed
 
 - **General**
     - Use path instead of regex for URL patterns (#1116)
-    - Upgrade minimum Django version to v3.2.18 (#1117)
+    - Upgrade minimum Django version to v3.2.19 (#1117, #1122)
     - Upgrade general Python dependencies (#1117)
     - Update ``env.example`` (#1065)
 - **Appalerts**
@@ -97,7 +97,6 @@ Fixed
     - Incorrect icon displayed in ``remoteproject_update.html`` (#1179)
     - Long ``Project.full_title`` breaking ``remoteproject_update.html`` layout (#1188)
     - ``LDAP_ALT_DOMAINS`` check not working in ``get_invite_type()`` (#1217)
-    - ``perform_owner_transfer()`` not called in ``RoleAssignmentOwnerTransferMixin`` (#1218)
 
 Removed
 -------

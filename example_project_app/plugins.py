@@ -19,7 +19,7 @@ from example_project_app.urls import urlpatterns
 
 
 EXAMPLE_MODIFY_API_MSG = (
-    'Example project app plugin API called from ' '{project_type} {action}.'
+    'Example project app plugin API called from {project_type} {action}.'
 )
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']

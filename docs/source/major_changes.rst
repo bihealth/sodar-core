@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.13.0 (WIP)
-*************
+v0.13.0 (2023-06-01)
+********************
 
 Release Highlights
 ==================
@@ -101,6 +101,14 @@ apps. The ``RoleMixin.init_roles()`` helper should be used in tests to
 initialize built-in roles correctly, unless inherited from a SODAR Core base
 test class.
 
+REST API Backwards Compatibility
+--------------------------------
+
+Due to changes in role inheritance, the REST API is no longer considered
+backwards compatible with older versions. Version ``0.13.0`` or higher must now
+be used. Note that target sites using a SODAR Core v0.12 source site or earlier
+have to be updated for remote project sync to work.
+
 Projectroles Models API Updated
 -------------------------------
 
@@ -143,6 +151,13 @@ ProjectUserTag Model Removed
 The ``ProjectUserTag`` model has been removed. To our knowledge, it was only
 used for project starring in SODAR Core. This functionality has been
 reimplemented using app settings.
+
+Advanced Search Uses POST Requests
+----------------------------------
+
+Advanced search has been updated to use POST requests. This should not require
+any changes in the plugin search implementation. However, if you have set up
+view tests for advanced search in your apps, they may have to be updated.
 
 System Prerequisites
 --------------------

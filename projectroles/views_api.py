@@ -98,7 +98,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.11.0', '0.11.1', '0.12.0']
+CORE_API_ALLOWED_VERSIONS = ['0.13.0']
 
 # Local constants
 INVALID_PROJECT_TYPE_MSG = (
