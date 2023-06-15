@@ -40,6 +40,11 @@ REMOTE_SITE_SECRET = build_secret()
 class TestPermissionMixin:
     """Helper class for permission tests"""
 
+    # Special attribute for dynamic URL changing
+    # for use-cases where the URL depends on the object
+    # that is being changed in cleanup_method.
+    dynamic_url = None
+
     def send_request(self, url, method, req_kwargs):
         req_method = getattr(self.client, method.lower(), None)
         if not req_method:
@@ -81,6 +86,10 @@ class TestPermissionMixin:
             users = [users]
 
         for user in users:
+            if cleanup_method and self.dynamic_url:
+                send_url = self.dynamic_url
+            else:
+                send_url = url
             req_kwargs = req_kwargs if req_kwargs else {}
             if data:
                 req_kwargs.update({'data': data})
@@ -90,18 +99,18 @@ class TestPermissionMixin:
             if user:  # Authenticated user
                 re_url = redirect_user if redirect_user else reverse('home')
                 with self.login(user):
-                    response = self.send_request(url, method, req_kwargs)
+                    response = self.send_request(send_url, method, req_kwargs)
             else:  # Anonymous
                 if redirect_anon:
                     re_url = redirect_anon
                 else:
-                    url_split = url.split('?')
+                    url_split = send_url.split('?')
                     if len(url_split) > 1:
                         next_url = url_split[0] + quote('?' + url_split[1])
                     else:
-                        next_url = url
+                        next_url = send_url
                     re_url = reverse('login') + '?next=' + next_url
-                response = self.send_request(url, method, req_kwargs)
+                response = self.send_request(send_url, method, req_kwargs)
 
             msg = 'user={}'.format(user)
             self.assertEqual(response.status_code, status_code, msg=msg)
