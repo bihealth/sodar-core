@@ -4,23 +4,16 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestPermissionBase
+from projectroles.tests.test_permissions import TestSiteAppPermissionBase
 
 from adminalerts.tests.test_models import AdminAlertMixin
 
 
-class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
+class TestAdminAlertPermissions(AdminAlertMixin, TestSiteAppPermissionBase):
     """Tests for AdminAlert views"""
 
     def setUp(self):
-        # Create users
-        self.superuser = self.make_user('superuser')
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user')
-        # No user
-        self.anonymous = None
+        super().setUp()
         # Create alert
         self.alert = self.make_alert(
             message='alert',
@@ -30,7 +23,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         )
 
     def test_active_toggle(self):
-        """Test permissions for AdminAlert activation API view"""
+        """Test permissions for activation Ajax view"""
         url = reverse(
             'adminalerts:ajax_active_toggle',
             kwargs={'adminalert': self.alert.sodar_uuid},
@@ -42,7 +35,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_active_toggle_anon(self):
-        """Test permissions for AdminAlert activation API view with anonymous access"""
+        """Test permissions for activation Ajax view with anonymous access"""
         url = reverse(
             'adminalerts:ajax_active_toggle',
             kwargs={'adminalert': self.alert.sodar_uuid},

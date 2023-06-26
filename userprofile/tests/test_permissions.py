@@ -4,21 +4,11 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestPermissionBase
+from projectroles.tests.test_permissions import TestSiteAppPermissionBase
 
 
-class TestUserProfilePermissions(TestPermissionBase):
+class TestUserProfilePermissions(TestSiteAppPermissionBase):
     """Tests for userprofile view permissions"""
-
-    def setUp(self):
-        # Create users
-        self.superuser = self.make_user('superuser')
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user')
-        # No user
-        self.anonymous = None
 
     def test_profile(self):
         """Test permissions for user profile view"""

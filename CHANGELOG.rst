@@ -5,6 +5,22 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - ``TestSiteAppPermissionBase`` base test class (#1236)
+
+Changed
+-------
+
+- **Projectroles**
+    - Move ``setup_ip_allowing()`` to ``IPAllowMixin`` (#1237)
+
+
 v0.13.0 (2023-06-01)
 ====================
 

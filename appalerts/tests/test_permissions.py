@@ -4,24 +4,18 @@ from django.urls import reverse
 
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestPermissionBase
+from projectroles.tests.test_permissions import TestSiteAppPermissionBase
 
 from appalerts.tests.test_models import AppAlertMixin
 
 
-class TestAppAlertPermissions(AppAlertMixin, TestPermissionBase):
+class TestAppAlertPermissions(AppAlertMixin, TestSiteAppPermissionBase):
     """Tests for AppAlert permissions"""
 
     def setUp(self):
-        # Create users
-        self.superuser = self.make_user('superuser')
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user')
+        super().setUp()
+        # Create user with no alerts
         self.no_alert_user = self.make_user('no_alert_user')
-        # No user
-        self.anonymous = None
         # Create alert
         self.alert = self.make_app_alert(
             user=self.regular_user, url=reverse('home')

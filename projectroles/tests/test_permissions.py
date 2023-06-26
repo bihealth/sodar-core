@@ -111,26 +111,8 @@ class TestPermissionMixin:
                 cleanup_method()
 
 
-class TestPermissionBase(TestPermissionMixin, TestCase):
-    """
-    Base class for permission tests for UI views.
-
-    NOTE: To use with DRF API views, you need to use APITestCase
-    """
-
-
-class TestProjectPermissionBase(
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
-    ProjectInviteMixin,
-    TestPermissionBase,
-):
-    """
-    Base class for testing project permissions.
-
-    NOTE: To use with DRF API views, you need to use APITestCase
-    """
+class IPAllowMixin(AppSettingMixin):
+    """Mixin for IP allowing test helpers"""
 
     def setup_ip_allowing(self, ip_list):
         # Init IP restrict setting
@@ -150,6 +132,28 @@ class TestProjectPermissionBase(
             value_json=ip_list,
             project=self.project,
         )
+
+
+class TestPermissionBase(TestPermissionMixin, TestCase):
+    """
+    Base class for permission tests for UI views.
+
+    NOTE: For REST API views, you need to use APITestCase
+    """
+
+
+class TestProjectPermissionBase(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    ProjectInviteMixin,
+    TestPermissionBase,
+):
+    """
+    Base class for testing project permissions.
+
+    NOTE: For REST API views, you need to use APITestCase.
+    """
 
     def setUp(self):
         # Init roles
@@ -214,6 +218,26 @@ class TestProjectPermissionBase(
         self.guest_as = self.make_assignment(
             self.project, self.user_guest, self.role_guest
         )
+
+
+class TestSiteAppPermissionBase(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    ProjectInviteMixin,
+    TestPermissionBase,
+):
+    """Base class for testing site app permissions"""
+
+    def setUp(self):
+        # Create users
+        self.superuser = self.make_user('superuser')
+        self.superuser.is_superuser = True
+        self.superuser.is_staff = True
+        self.superuser.save()
+        self.regular_user = self.make_user('regular_user')
+        # No user
+        self.anonymous = None
 
 
 class TestBaseViews(TestProjectPermissionBase):
@@ -435,7 +459,7 @@ class TestBaseViews(TestProjectPermissionBase):
         )
 
 
-class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
+class TestProjectViews(IPAllowMixin, TestProjectPermissionBase):
     """Permission tests for Project UI views"""
 
     def test_category_details(self):
@@ -1653,7 +1677,7 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestTargetProjectViews(
-    AppSettingMixin,
+    IPAllowMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
     TestProjectPermissionBase,
@@ -2336,18 +2360,11 @@ class TestRevokedRemoteProject(
         self.assert_response(url, bad_users, 302)
 
 
-class TestRemoteSiteApp(RemoteSiteMixin, TestPermissionBase):
+class TestRemoteSiteApp(RemoteSiteMixin, TestSiteAppPermissionBase):
     """Tests for remote site management views"""
 
     def setUp(self):
-        # Create users
-        self.superuser = self.make_user('superuser')
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user')
-        # No user
-        self.anonymous = None
+        super().setUp()
         # Create site
         self.site = self.make_site(
             name=REMOTE_SITE_NAME,
