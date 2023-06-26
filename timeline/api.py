@@ -3,6 +3,7 @@
 import logging
 import re
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils.text import Truncator
@@ -162,7 +163,14 @@ class TimelineAPI:
                 link_data = app_plugin.get_object_link(
                     ref_obj.object_model, ref_obj.object_uuid
                 )
-            except Exception:
+            except Exception as ex:
+                logger.error(
+                    'Exception in {}.get_object_link(): {}'.format(
+                        app_plugin.name, ex
+                    )
+                )
+                if settings.DEBUG:
+                    raise ex
                 link_data = None
             if link_data:
                 return '<a href="{}" {}>{}</a> {}'.format(

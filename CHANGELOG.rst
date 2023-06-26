@@ -22,6 +22,8 @@ Changed
     - Move ``setup_ip_allowing()`` to ``IPAllowMixin`` (#1237)
     - Improve ``syncmodifyapi`` project logging (#1228)
     - Do not exit ``syncmodifyapi`` on failure (#1229)
+- **Timeline**
+    - Handle app plugin exceptions in ``get_object_link()`` (#1232)
 
 
 v0.13.0 (2023-06-01)
