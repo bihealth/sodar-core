@@ -13,12 +13,15 @@ Added
 
 - **Projectroles**
     - ``TestSiteAppPermissionBase`` base test class (#1236)
+    - ``full_title`` arg in ``Project.get_log_title()`` (#1238)
 
 Changed
 -------
 
 - **Projectroles**
     - Move ``setup_ip_allowing()`` to ``IPAllowMixin`` (#1237)
+    - Improve ``syncmodifyapi`` project logging (#1228)
+    - Do not exit ``syncmodifyapi`` on failure (#1229)
 
 
 v0.13.0 (2023-06-01)

@@ -458,6 +458,17 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         with self.assertRaises(ValidationError):
             self.category.set_archive()
 
+    def test_get_log_title(self):
+        """Test Project.get_log_title()"""
+        expected = '"{}" ({})'.format(
+            self.project.title, self.project.sodar_uuid
+        )
+        self.assertEqual(self.project.get_log_title(), expected)
+        expected = '"{}" ({})'.format(
+            self.project.full_title, self.project.sodar_uuid
+        )
+        self.assertEqual(self.project.get_log_title(full_title=True), expected)
+
     def test_get_role(self):
         """Test get_role()"""
         project_as = self.make_assignment(
@@ -921,13 +932,6 @@ class TestProjectInvite(
             'TestProject: test@example.com (project contributor) ' '[ACTIVE]'
         )
         self.assertEqual(str(self.invite), expected)
-
-    def test_get_log_title(self):
-        """Test get_log_title() results"""
-        expected = '"{}" ({})'.format(
-            self.project.title, self.project.sodar_uuid
-        )
-        self.assertEqual(str(self.project.get_log_title()), expected)
 
     def test__repr__(self):
         """Test ProjectInvite __repr__()"""

@@ -3,8 +3,6 @@ Syncmodifyapi management command for synchronizing existing projects using the
 project modify API
 """
 
-import sys
-
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
@@ -53,12 +51,23 @@ class Command(ProjectModifyPluginViewMixin, BaseCommand):
         logger.debug(
             'Found {} projects and categories'.format(len(project_list))
         )
-        try:
-            for p in project_list:
-                logger.debug('Synchronizing project: {}'.format(p.full_title))
+        sync_count = 0
+        err_count = 0
+        for p in project_list:
+            p_title = p.get_log_title(full_title=True)
+            logger.debug('Synchronizing project: {}'.format(p_title))
+            try:
                 self.call_project_modify_api('perform_project_sync', None, [p])
-        except Exception as ex:
-            logger.error('Exception in project sync: {}'.format(ex))
-            logger.error('Project sync failed! Unable to continue, exiting..')
-            sys.exit(1)
-        logger.info('Project data synchronized.')
+                sync_count += 1
+            except Exception as ex:
+                logger.error(
+                    'Exception in project sync for project {}: {}'.format(
+                        p_title, ex
+                    )
+                )
+                err_count += 1
+        logger.info(
+            'Project data synchronized ({} OK, {} error{})'.format(
+                sync_count, err_count, 's' if err_count != 1 else ''
+            )
+        )
