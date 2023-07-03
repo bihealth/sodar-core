@@ -40,11 +40,6 @@ REMOTE_SITE_SECRET = build_secret()
 class TestPermissionMixin:
     """Helper class for permission tests"""
 
-    # Special attribute for dynamic URL changing
-    # for use-cases where the URL depends on the object
-    # that is being changed in cleanup_method.
-    dynamic_url = None
-
     def send_request(self, url, method, req_kwargs):
         req_method = getattr(self.client, method.lower(), None)
         if not req_method:
@@ -86,8 +81,9 @@ class TestPermissionMixin:
             users = [users]
 
         for user in users:
-            if cleanup_method and self.dynamic_url:
-                send_url = self.dynamic_url
+            # Refresh url
+            if cleanup_method and self.url:
+                send_url = self.url
             else:
                 send_url = url
             req_kwargs = req_kwargs if req_kwargs else {}

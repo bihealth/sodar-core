@@ -28,11 +28,6 @@ NEW_PROJECT_TITLE = 'New Project'
 class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
     """Mixin for permission testing with knox auth"""
 
-    # Special attribute for dynamic URL changing
-    # for use-cases where the URL depends on the object
-    # that is being changed in cleanup_method.
-    dynamic_url = None
-
     def assert_response_api(
         self,
         url,
@@ -82,8 +77,8 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
             users = [users]
 
         for user in users:
-            if cleanup_method and self.dynamic_url:
-                send_url = self.dynamic_url
+            if cleanup_method and self.url:
+                send_url = self.url
             else:
                 send_url = url
             r_kwargs = {'format': format}
