@@ -123,6 +123,10 @@ class TestPermissionBase(TestPermissionMixin, TestCase):
     NOTE: To use with DRF API views, you need to use APITestCase
     """
 
+    def setUp(self):
+        super().setUp()
+        self.url = None
+
 
 class TestProjectPermissionBase(
     ProjectMixin,
@@ -157,6 +161,7 @@ class TestProjectPermissionBase(
         )
 
     def setUp(self):
+        super().setUp()
         # Init roles
         self.init_roles()
         # Init users
