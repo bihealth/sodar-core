@@ -19,6 +19,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Update ``django-plugins`` and ``drf-keyed-list`` dev dependencies to PyPI packages (#1241)
 - **Projectroles**
     - Move ``setup_ip_allowing()`` to ``IPAllowMixin`` (#1237)
     - Improve ``syncmodifyapi`` project logging (#1228)

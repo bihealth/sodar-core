@@ -49,7 +49,7 @@ versioneer==0.28
 ######################
 
 # Django-plugins (with Django v3.0+ support)
--e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
+django-plugins-bihealth==0.4.0
 
 # Rules for permissions
 rules>=3.3, <3.4
@@ -58,7 +58,7 @@ rules>=3.3, <3.4
 djangorestframework>=3.14.0, <3.15
 
 # Keyed list addon for DRF
--e git+https://github.com/mikkonie/drf-keyed-list.git@b03607b866c5706b0e1ea46a7eeaab6527030734#egg=drf-keyed-list
+drf-keyed-list-bihealth==0.1.1
 
 # Token authentication
 django-rest-knox>=4.2.0, <4.3

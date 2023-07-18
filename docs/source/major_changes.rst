@@ -18,6 +18,18 @@ Release Highlights
 
 TODO
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The ``django-plugins`` and ``drf-keyed-list`` dependencies have been upgraded
+from development installs to PyPI packages. In your site's
+``requirements/base.txt`` file, you should remove the existing dependencies for
+the aforementioned packages, as they will be automatically installed with
+the ``django-sodar-core`` package.
+
 
 v0.13.0 (2023-06-01)
 ********************
