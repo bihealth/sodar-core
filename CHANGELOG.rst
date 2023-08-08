@@ -34,6 +34,8 @@ Fixed
 
 - **General**
     - Search in Sphinx docs build (#1245)
+- **Userprofile**
+    - Template padding (#1244)
 
 
 v0.13.0 (2023-06-01)

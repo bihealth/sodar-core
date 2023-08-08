@@ -5,7 +5,8 @@
 {% block title %}User Profile for {{ request.user.get_full_name }}{% endblock %}
 
 {% block projectroles %}
-<div class="row sodar-pr-content-title">
+
+<div class="row sodar-pr-content-title pt-2">
   <h2 class="sodar-pr-content-title">{{ request.user.get_full_name }}</h2>
   <div class="sodar-pr-content-title-secondary text-muted">
     User Profile
@@ -13,7 +14,6 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
-
   <div class="card" id="sodar-user-details-card">
     <div class="card-header">
       <h4>
@@ -86,6 +86,6 @@
       </dl>
     </div>
   </div>
-
 </div>
+
 {% endblock projectroles %}
