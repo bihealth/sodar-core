@@ -21,12 +21,19 @@ Changed
 
 - **General**
     - Update ``django-plugins`` and ``drf-keyed-list`` dev dependencies to PyPI packages (#1241)
+    - Upgrade general Python dependencies (#1239)
 - **Projectroles**
     - Move ``setup_ip_allowing()`` to ``IPAllowMixin`` (#1237)
     - Improve ``syncmodifyapi`` project logging (#1228)
     - Do not exit ``syncmodifyapi`` on failure (#1229)
 - **Timeline**
     - Handle app plugin exceptions in ``get_object_link()`` (#1232)
+
+Fixed
+-----
+
+- **General**
+    - Search in Sphinx docs build (#1245)
 
 
 v0.13.0 (2023-06-01)
