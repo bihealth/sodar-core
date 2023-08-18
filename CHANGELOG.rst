@@ -38,6 +38,8 @@ Fixed
     - Search in Sphinx docs build (#1245)
     - All utility scripts not set as executable (#1254)
     - Local Chromedriver install failure (#1255)
+- **Projectroles**
+    - Hardcoded ``appalerts`` dependency in ``test_views`` (#1252)
 - **Userprofile**
     - Template padding (#1244)
 
