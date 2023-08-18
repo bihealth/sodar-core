@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - ``get_chromedriver_url.sh`` utility helper (#1255)
 - **Projectroles**
     - ``TestSiteAppPermissionBase`` base test class (#1236)
     - ``full_title`` arg in ``Project.get_log_title()`` (#1238)
@@ -34,6 +36,8 @@ Fixed
 
 - **General**
     - Search in Sphinx docs build (#1245)
+    - All utility scripts not set as executable (#1254)
+    - Local Chromedriver install failure (#1255)
 - **Userprofile**
     - Template padding (#1244)
 
