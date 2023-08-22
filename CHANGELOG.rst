@@ -40,6 +40,7 @@ Fixed
     - Local Chromedriver install failure (#1255)
 - **Projectroles**
     - Hardcoded ``appalerts`` dependency in ``test_views`` (#1252)
+    - Remote sync crash in `_add_parent_categories()` (#1258)
 - **Userprofile**
     - Template padding (#1244)
 

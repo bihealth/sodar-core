@@ -84,11 +84,11 @@ class RemoteProjectAPI:
     @classmethod
     def _add_parent_categories(cls, sync_data, category, project_level):
         """
-        Add parent categories of a category to source site sync data.
+        Add parent categories of a project to source site sync data.
 
         :param sync_data: Sync data to be updated (dict)
         :param category: Project object for category
-        :param project_level: Access level for project (string)
+        :param project_level: Access level for the project being synced (string)
         :return: Updated sync_data (dict)
         """
         if category.parent:
@@ -96,11 +96,10 @@ class RemoteProjectAPI:
                 sync_data, category.parent, project_level
             )
         # Add if not added yet OR if a READ_ROLES project is encountered
-        if (
-            str(category.sodar_uuid) not in sync_data['projects'].keys()
-            or sync_data['projects'][str(category.sodar_uuid)]['level']
+        if str(category.sodar_uuid) not in sync_data['projects'].keys() or (
+            sync_data['projects'][str(category.sodar_uuid)]['level']
             != REMOTE_LEVEL_READ_ROLES
-            and sync_data[project_level] == REMOTE_LEVEL_READ_ROLES
+            and project_level == REMOTE_LEVEL_READ_ROLES
         ):
             cat_data = {
                 'title': category.title,
