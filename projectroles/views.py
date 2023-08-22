@@ -2867,7 +2867,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         else:
             event_name = 'target_site_{}'.format(status)
 
-        tl_desc = '{} remote {} site "{{{}}}"'.format(
+        tl_desc = '{} remote {} site {{{}}}'.format(
             status,
             remote_site.mode.lower(),
             'remote_site',
@@ -2962,7 +2962,7 @@ class RemoteSiteDeleteView(
             event_name = '{}_site_delete'.format(
                 'source' if self.object.mode == SITE_MODE_SOURCE else 'target'
             )
-            tl_desc = 'delete remote site "{remote_site}"'
+            tl_desc = 'delete remote site {remote_site}'
             tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
@@ -3120,15 +3120,15 @@ class RemoteProjectBatchUpdateView(
             )
 
             if timeline and project:
-                tl_desc = 'update remote access for site {{{}}} to "{}"'.format(
-                    SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower(),
+                tl_desc = 'update remote access on site {{{}}} to "{}"'.format(
                     'remote_site',
+                    SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower(),
                 )
                 tl_event = timeline.add_event(
                     project=project,
                     app_name=APP_NAME,
                     user=request.user,
-                    event_name='update_remote',
+                    event_name='remote_project_update',
                     description=tl_desc,
                     classified=True,
                     status_type='OK',
@@ -3136,12 +3136,12 @@ class RemoteProjectBatchUpdateView(
                 tl_event.add_object(site, 'remote_site', site.name)
 
         if timeline:
-            tl_desc = 'update remote site "{remote_site}"'
+            tl_desc = 'update remote projects for {remote_site}'
             tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,
                 user=request.user,
-                event_name='batch_update_remote',
+                event_name='remote_batch_update',
                 description=tl_desc,
                 extra_data={'modifying_access': modifying_access},
                 classified=True,
@@ -3257,7 +3257,7 @@ class RemoteProjectSyncView(
 
         # Create timeline events for projects
         if timeline:
-            tl_desc = 'synchronize remote site "{remote_site}"'
+            tl_desc = 'synchronize remote site {remote_site}'
             tl_event = timeline.add_event(
                 project=None,
                 app_name=APP_NAME,

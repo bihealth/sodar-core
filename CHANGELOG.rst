@@ -41,6 +41,7 @@ Fixed
 - **Projectroles**
     - Hardcoded ``appalerts`` dependency in ``test_views`` (#1252)
     - Remote sync crash in ``_add_parent_categories()`` (#1258)
+    - Remote sync timeline event description notation (#1260)
 - **Userprofile**
     - Template padding (#1244)
 

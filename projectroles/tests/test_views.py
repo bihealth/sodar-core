@@ -5447,7 +5447,7 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(
             0,
             ProjectEvent.objects.filter(
-                event_name='batch_update_remote'
+                event_name='remote_batch_update'
             ).count(),
         )
         self.assertEqual(RemoteProject.objects.all().count(), 0)
@@ -5478,16 +5478,16 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
         tl_event = ProjectEvent.objects.filter(
-            event_name='batch_update_remote'
+            event_name='remote_batch_update'
         ).first()
-        self.assertEqual(tl_event.event_name, 'batch_update_remote')
+        self.assertEqual(tl_event.event_name, 'remote_batch_update')
 
     def test_post_update(self):
         """Test updating by modifying an existing RemoteProject"""
         self.assertEqual(
             0,
             ProjectEvent.objects.filter(
-                event_name='batch_update_remote'
+                event_name='remote_batch_update'
             ).count(),
         )
         rp = self.make_remote_project(
@@ -5524,9 +5524,9 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
         tl_event = ProjectEvent.objects.filter(
-            event_name='batch_update_remote'
+            event_name='remote_batch_update'
         ).first()
-        self.assertEqual(tl_event.event_name, 'batch_update_remote')
+        self.assertEqual(tl_event.event_name, 'remote_batch_update')
 
 
 # SODAR User view tests --------------------------------------------------------
