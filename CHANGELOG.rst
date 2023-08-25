@@ -17,6 +17,7 @@ Added
     - ``TestSiteAppPermissionBase`` base test class (#1236)
     - ``full_title`` arg in ``Project.get_log_title()`` (#1238)
     - ``MultipleFileInput`` and ``MultipleFileField`` form helpers (#1226)
+    - ``syncmodifyapi`` project limiting option (#1263)
 
 Changed
 -------

@@ -3,6 +3,8 @@ Syncmodifyapi management command for synchronizing existing projects using the
 project modify API
 """
 
+import sys
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
@@ -37,20 +39,37 @@ class Command(ProjectModifyPluginViewMixin, BaseCommand):
         return project_list
 
     def add_arguments(self, parser):
-        pass
+        parser.add_argument(
+            '-p',
+            '--project',
+            metavar='UUID',
+            type=str,
+            help='Limit sync to a project',
+        )
 
     def handle(self, *args, **options):
         """Run management command"""
-        logger.info('Synchronizing projects..')
-        project_list = []
-        top_cats = Project.objects.filter(
-            type=PROJECT_TYPE_CATEGORY, parent=None
-        )
-        for c in top_cats:
-            self._get_projects(c, project_list)
-        logger.debug(
-            'Found {} projects and categories'.format(len(project_list))
-        )
+        project_uuid = options.get('project')
+        if project_uuid:
+            logger.info(
+                'Synchronizing project with UUID "{}"..'.format(project_uuid)
+            )
+            project = Project.objects.filter(sodar_uuid=project_uuid).first()
+            if not project:
+                logger.error('Project not found')
+                sys.exit(1)
+            project_list = [project]
+        else:
+            logger.info('Synchronizing all projects..')
+            project_list = []
+            top_cats = Project.objects.filter(
+                type=PROJECT_TYPE_CATEGORY, parent=None
+            )
+            for c in top_cats:
+                self._get_projects(c, project_list)
+            logger.debug(
+                'Found {} projects and categories'.format(len(project_list))
+            )
         sync_count = 0
         err_count = 0
         for p in project_list:
