@@ -1,10 +1,10 @@
 from django.conf import settings
-from django.conf.urls import include, url
-from django.urls import path
+from django.conf.urls import include
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.urls import path
 from django.views import defaults as default_views
 
 import django_saml2_auth.views
@@ -30,26 +30,26 @@ urlpatterns = [
     path('icons/', include('dj_iconify.urls')),
     # Projectroles URLs
     path('project/', include('projectroles.urls')),
-    # Timeline URLs
-    path('timeline/', include('timeline.urls')),
-    # Filesfolders URLs
-    path('files/', include('filesfolders.urls')),
-    # django-db-file-storage URLs (obfuscated for users)
-    path('DJANGO-DB-FILE-STORAGE-CHANGE-ME/', include('db_file_storage.urls')),
-    # User Profile URLs
-    path('user/', include('userprofile.urls')),
     # Admin Alerts URLs
     path('alerts/adm/', include('adminalerts.urls')),
     # App Alerts URLs
     path('alerts/app/', include('appalerts.urls')),
-    # Site Info URLs
-    path('siteinfo/', include('siteinfo.urls')),
-    # API Tokens URLs
-    path('tokens/', include('tokens.urls')),
     # Background Jobs URLs
     path('bgjobs/', include('bgjobs.urls')),
-    # Data Cache app
+    # Filesfolders URLs
+    path('files/', include('filesfolders.urls')),
+    # django-db-file-storage URLs (obfuscated for users)
+    path('DJANGO-DB-FILE-STORAGE-CHANGE-ME/', include('db_file_storage.urls')),
+    # Site Info URLs
+    path('siteinfo/', include('siteinfo.urls')),
+    # SODAR Cache app
     path('cache/', include('sodarcache.urls')),
+    # Timeline URLs
+    path('timeline/', include('timeline.urls')),
+    # API Tokens URLs
+    path('tokens/', include('tokens.urls')),
+    # User Profile URLs
+    path('user/', include('userprofile.urls')),
     # Example project app URLs
     path('examples/project/', include('example_project_app.urls')),
     # Example site app URLs
@@ -91,10 +91,7 @@ if settings.DEBUG:
             view=default_views.page_not_found,
             kwargs={'exception': Exception('Page not Found')},
         ),
-        path(
-            route='500/',
-            view=default_views.server_error,
-        ),
+        path(route='500/', view=default_views.server_error),
     ]
 
     urlpatterns += staticfiles_urlpatterns()

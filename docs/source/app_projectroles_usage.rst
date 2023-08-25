@@ -344,13 +344,8 @@ In the current implementation, your django site must either be in **source** or
 project data can be provided. A target site can define exactly one source site,
 from which project data can be retrieved from.
 
-.. note::
-
-    These are arbitrary restrictions which may be relaxed in the future, if use
-    cases warrant it.
-
-To enable remote project data reading, you must first set up either a target
-or a source site depending on the role of your own SODAR site.
+To enable remote project data and member synchronization, you must first set up
+either a target or a source site depending on the role of your own SODAR site.
 
 .. figure:: _static/app_projectroles/sodar_remote_sites.png
     :align: center
@@ -362,26 +357,29 @@ As Source Site
 --------------
 
 Navigate to the **Remote Site Access** site app and click on the
-*Add Target Site* link. You will be provided with a form for specifying the
-remote site. A secret string is generated automatically and you need to provide
-this to the administrator of the target site in question for accessing your
-site.
+:guilabel:`Add Target Site` button. You will be directed to a form for
+specifying the remote site. A secret string is generated automatically. You
+need to provide this to the administrator of the target site in question for
+accessing your site.
 
 Here you also have the option to hide the remote project link from your users.
 Users viewing the project on the source site then won't see a link to the target
-site. Owners and Superusers will still see the link (greyed out). This is most
+site. Owners and superusers will still see the link (greyed out). This is most
 commonly used for internal test sites which only needs to be used by admins.
 
 Once created, you can access the list of projects on your site in regards to the
 created target site. For each project, you may select an access level, of which
 three are currently implemented:
 
-- **No access**: No access on the remote site (default)
-- **Read roles**: This allows for the target site to read project metadata *and*
-  user roles in order to synchronize project access remotely.
-- **Revoked access**: Previously available access which has been revoked. The
-  project will still remain in the target site, but only superusers, the project
-  owner or the project delegate(s) can access it.
+No Access
+    No access on the remote site (default).
+Read Roles
+    This allows for the target site to read project metadata *and* user roles in
+    order to synchronize project access remotely.
+Revoked Access
+    Previously available access which has been revoked. The project will still
+    remain in the target site, but only superusers, the project owner or the
+    project delegate(s) can access it.
 
 .. note::
 
@@ -411,14 +409,21 @@ target site will sync the data by sending a request to the source site.
 As Target Site
 --------------
 
-The source site should be set up as above using the *Set Source Site* link,
-using the provided secret string as the access token.
+The source site should be set up as above by cllicking on the
+:guilabel:`Set Source Site` button and filling out the corresponding form. Use
+the secret string provided by the source site as the access token.
 
-After creating the source site, remote project metadata and member roles (for
-which access has been granted) can be accessed using the *Synchronize* link.
-Additionally if the remote Source site is synchronized with multiple Target Sites,
-information about those other Target sites will be synchronized as well an displayed
-as *Peer Sites*.
+After creating the source site, remote project metadata and member roles can be
+retrieve the :guilabel:`Synchronize` option in the site dropdown found in the
+*Remote Sites* view on the target site. Additionally, if the remote source site
+is synchronized with multiple target Sites, information about those other target
+sites will be synchronized as well an displayed as *Peer Sites*.
+
+To set up automated project and member sync from the source site, you will need
+to run a Celery worker with Celerybeat enable. Then, set the Django setting
+``PROJECTROLES_TARGET_SYNC_ENABLE`` to ``True`` and optionally set the value for
+``PROJECTROLES_TARGET_SYNC_INTERVAL``. For more information, see
+:ref:`app_projectroles_settings`.
 
 Alternatively, the following management command can be used:
 
@@ -429,8 +434,8 @@ Alternatively, the following management command can be used:
 .. note::
 
     Creating local projects under a category synchronized from a remote source
-    site is **not** allowed from v0.8.3 onwards. For having local projects on a
-    target site, you should create and use a local root category.
+    site is **not** allowed. For having local projects on a target site, you
+    should create and use a local root category.
 
 .. note::
 

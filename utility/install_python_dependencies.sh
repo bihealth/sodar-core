@@ -22,7 +22,7 @@ if [ -z "$VIRTUAL_ENV" ]; then
     echo >&2 -e "\n"
     exit 1;
 else
-    pip install "wheel>=0.38.4, <0.39"
+    pip install "wheel>=0.40.0, <0.41"
     pip install -r $PROJECT_DIR/requirements/local.txt
     pip install -r $PROJECT_DIR/requirements/test.txt
     pip install -r $PROJECT_DIR/requirements.txt

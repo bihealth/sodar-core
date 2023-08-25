@@ -114,9 +114,9 @@ NO_VALUE_MSG = 'Value not set in request data'
 
 class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
     """
-    Mixin for providing a basic project permission checking for API views
-    with a single permission_required attribute. Also works with Knox token
-    based views.
+    Mixin for providing basic project permission checking for API views with a
+    single permission_required attribute. Also works with Knox token based
+    views.
 
     This must be used in the permission_classes attribute in order for token
     authentication to work.
@@ -214,7 +214,7 @@ class SODARAPIVersioning(AcceptHeaderVersioning):
 class SODARAPIRenderer(JSONRenderer):
     """
     SODAR API JSON renderer with a site-specific media type retrieved from
-    Django settings
+    Django settings.
     """
 
     media_type = SODAR_API_MEDIA_TYPE
@@ -264,11 +264,11 @@ class SODARAPIGenericProjectMixin(
     APIProjectContextMixin, SODARAPIBaseProjectMixin
 ):
     """
-    API view mixin for generic DRF API views with serializers, SODAR
-    project context and permission checkin.
+    API view mixin for generic DRF API views with serializers, SODAR project
+    context and permission checkin.
 
-    Unless overriding permission_classes with their own implementation,
-    the user MUST supply a permission_required attribute.
+    Unless overriding permission_classes with their own implementation, the user
+    MUST supply a permission_required attribute.
 
     Replace lookup_url_kwarg with your view's url kwarg (SODAR project
     compatible model name in lowercase)
@@ -369,8 +369,10 @@ class ProjectListAPIView(APIView):
 
     **Methods:** ``GET``
 
-    **Returns:** List of project details (see ``ProjectRetrieveAPIView``). For
-    project finder role, only lists title and UUID of projects.
+    **Returns:**
+
+    List of project details (see ``ProjectRetrieveAPIView``). For project finder
+    role, only lists title and UUID of projects.
     """
 
     permission_classes = [IsAuthenticated]
@@ -443,7 +445,7 @@ class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
     - ``title``: Project title (string)
     - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
     - ``parent``: Parent category UUID (string)
-    - ``description``: Projcet description (string, optional)
+    - ``description``: Project description (string, optional)
     - ``readme``: Project readme (string, optional, supports markdown)
     - ``public_guest_access``: Guest access for all users (boolean)
     - ``owner``: User UUID of the project owner (string)
@@ -476,7 +478,7 @@ class ProjectUpdateAPIView(
     - ``title``: Project title (string)
     - ``type``: Project type (string, can not be modified)
     - ``parent``: Parent category UUID (string)
-    - ``description``: Projcet description (string, optional)
+    - ``description``: Project description (string, optional)
     - ``readme``: Project readme (string, optional, supports markdown)
     - ``public_guest_access``: Guest access for all users (boolean)
     """
@@ -577,8 +579,8 @@ class RoleAssignmentOwnerTransferAPIView(
     RoleAssignmentOwnerTransferMixin, CoreAPIBaseProjectMixin, APIView
 ):
     """
-    Trensfer project ownership to another user with a role in
-    the project. Reassign a different role to the previous owner.
+    Trensfer project ownership to another user with a role in the project.
+    Reassign a different role to the previous owner.
 
     The new owner must already have a role assigned in the project.
 
@@ -1175,21 +1177,14 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
 
 class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
     """
-    List users in the system.
+    Return a list of all users on the site. Excludes system users, unless called
+    with superuser access.
 
     **URL:** ``/project/api/users/list``
 
     **Methods:** ``GET``
 
-    **Returns**:
-
-    For each user:
-
-    - ``email``: Email address of the user (string)
-    - ``is_superuser``: Superuser status (boolean)
-    - ``name``: Full name of the user (string)
-    - ``sodar_uuid``: User UUID (string)
-    - ``username``: Username of the user (string)
+    **Returns**: List of serializers users (see ``CurrentUserRetrieveAPIView``)
     """
 
     lookup_field = 'project__sodar_uuid'

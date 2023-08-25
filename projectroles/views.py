@@ -312,11 +312,10 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             )
         elif hasattr(qs.model, 'project') or hasattr(qs.model, 'get_project'):
             return qs.filter(project=self.get_project())
-        else:
-            raise AttributeError(
-                'Model does not have "project" member, get_project() function '
-                'or "get_project_filter_key()" function'
-            )
+        raise AttributeError(
+            'Model does not have "project" member, get_project() method or '
+            'get_project_filter_key() method'
+        )
 
 
 class ProjectModifyPermissionMixin(
