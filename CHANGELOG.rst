@@ -24,6 +24,7 @@ Changed
 - **General**
     - Update ``django-plugins`` and ``drf-keyed-list`` dev dependencies to PyPI packages (#1241)
     - Upgrade general Python dependencies (#1239)
+    - Update tour help (#1102)
 - **Projectroles**
     - Move ``setup_ip_allowing()`` to ``IPAllowMixin`` (#1237)
     - Improve ``syncmodifyapi`` project logging (#1228)
@@ -42,6 +43,8 @@ Fixed
     - Hardcoded ``appalerts`` dependency in ``test_views`` (#1252)
     - Remote sync crash in ``_add_parent_categories()`` (#1258)
     - Remote sync timeline event description notation (#1260)
+    - Django settings not working in login view (#1250)
+    - Template extension not working in login view (#1250)
 - **Userprofile**
     - Template padding (#1244)
 

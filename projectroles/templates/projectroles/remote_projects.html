@@ -2,7 +2,9 @@
 
 {% load projectroles_common_tags %}
 
-{% block title %}Remote {% get_display_name 'PROJECT' title=True plural=True %} for {{ site.name }} {% endblock %}
+{% block title %}
+  Remote {% get_display_name 'PROJECT' title=True plural=True %} for {{ site.name }}
+{% endblock %}
 
 {% block css %}
   {{ block.super }}
@@ -10,19 +12,16 @@
     .table#sodar-pr-remote-project-table {
         table-layout: fixed;
     }
-
     .table#sodar-pr-remote-project-table thead tr th:last-child,
     .table#sodar-pr-remote-project-table tbody tr td:last-child {
       width: 250px;
       min-width: 250px;
     }
-
     .table#sodar-pr-remote-project-table thead tr th:nth-child(2),
     .table#sodar-pr-remote-project-table tbody tr td:nth-child(2) {
       width: 170px;
       min-width: 170px;
     }
-
     @media screen and (max-width: 900px) {
       .table#sodar-pr-remote-project-table thead tr th:nth-child(2),
       .table#sodar-pr-remote-project-table tbody tr td:nth-child(2) {
@@ -37,35 +36,41 @@
 {% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
 
 <div class="row sodar-subtitle-container">
-  <h2><i class="iconify" data-icon="mdi:cloud-{% if site_mode == 'SOURCE' %}upload{% else %}download{% endif %}"></i>
-      {{ site.name }}</h2>
-  <a role="button" class="btn btn-secondary ml-auto"
-     href="{% url 'projectroles:remote_sites' %}">
-    <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back to Site List
-  </a>
+  <h2>
+    <i class="iconify" data-icon="mdi:cloud-{% if site_mode == 'SOURCE' %}upload{% else %}download{% endif %}"></i>
+    {{ site.name }}
+  </h2>
+  {% if site_mode == 'TARGET' %}
+    <a role="button" class="btn btn-secondary ml-auto"
+       href="{% url 'projectroles:remote_sites' %}">
+      <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back to Site List
+    </a>
+  {% endif %}
 </div>
 
 <div class="container-fluid sodar-page-container">
-
   {% if projects|length == 0 %}
     <div class="alert alert-info">
       No projects are available.
       {% if site_mode == 'TARGET' %}
         To retrieve remote {% get_display_name 'PROJECT' %} data,
-        <a href="{% url 'projectroles:remote_projects_sync' remotesite=site.sodar_uuid %}">synchronize with the source site</a>
+        run a Celery worker to enable automated sync,
+        <a href="{% url 'projectroles:remote_projects_sync' remotesite=site.sodar_uuid %}">
+          synchronize with the source site manually
+        </a>
         or use the <code>syncremote</code> management command.
       {% endif %}
     </div>
-
   {% else %}
-    <form method="post" action="{% url 'projectroles:remote_projects_update' remotesite=site.sodar_uuid %}">
+    <form method="post"
+          action="{% url 'projectroles:remote_projects_update' remotesite=site.sodar_uuid %}">
       {% csrf_token %}
-
       <div class="card mb-3">
         <div class="card-header">
           <h4>
             <i class="iconify" data-icon="mdi:rhombus-split"></i>
-            {% if site_mode == 'SOURCE' %}Target{% else %}Source{% endif %} {% get_display_name 'PROJECT' title=True plural=True %}
+            {% if site_mode == 'SOURCE' %}Target{% else %}Source{% endif %}
+             {% get_display_name 'PROJECT' title=True plural=True %}
           </h4>
         </div>
         <div class="card-body p-0">
@@ -86,19 +91,92 @@
           </table>
         </div>
       </div>
-
       {% if site_mode == 'SOURCE' %}
         <div class="container-fluid text-right">
-          <button type="submit" class="btn btn-primary">
+          <div class="btn-group">
+          <a role="button" class="btn btn-secondary"
+             href="{% url 'projectroles:remote_sites' %}">
+            <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
+          </a>
+          <button type="submit" class="btn btn-primary"
+                  id="sodar-pr-remote-sync-submit-btn">
             <i class="iconify" data-icon="mdi:lead-pencil"></i>
             Update {% get_display_name 'PROJECT' title=True %} Access
           </button>
+          </div>
         </div>
       {% endif %}
-
     </form>
   {% endif %}
-
 </div>
 
 {% endblock projectroles %}
+
+{% block javascript %}
+  {{ block.super }}
+  <!-- Tour content -->
+  {% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
+  <script type="text/javascript">
+    tourEnabled = true;
+    tour.addStep('remote_projects', {
+        title: 'Remote Projects',
+        text: 'This view enables you to allow or revoke access to specific ' +
+              '{% get_display_name 'PROJECT' plural=True %} on the selected ' +
+              'target site.',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+    });
+    if ($('#sodar-pr-remote-project-table').length) {
+        tour.addStep('remote_project_table', {
+            title: 'Remote Project Table',
+            text: 'The {% get_display_name 'PROJECT' plural=True %} ' +
+                  'available for synchronizing are listed in this table. ' +
+                  '{% get_display_name 'CATEGORY' title=True plural=True %} ' +
+                  'are excluded.',
+            attachTo: '#sodar-pr-remote-project-table top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+    if ($('.sodar-pr-remote-project-access').length) {
+        tour.addStep('remote_project_table', {
+            title: 'Last Accessed Date',
+            text: 'This column displays the date and time the ' +
+                  '{% get_display_name 'PROJECT' %} was accessed, or "Never" ' +
+                  'if sync is yet to be performed.',
+            attachTo: '.sodar-pr-remote-project-access top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+    if ($('.sodar-pr-remote-project-level').length) {
+        tour.addStep('remote_project_level', {
+            title: '{% get_display_name 'PROJECT' title=True %} Access Level',
+            {% if site_mode == 'SOURCE' %}
+            text: 'This column allows you to select the access level for ' +
+                  'each {% get_display_name 'PROJECT' %}. Currently two ' +
+                  'levels are available: "No access" and "Read members". The ' +
+                  'latter synchronizes member access to the target site.',
+            {% else %}
+            text: 'The current access level for each ' +
+                  '{% get_display_name 'PROJECT' %} is displayed in this ' +
+                  'column.',
+            {% endif %}
+            attachTo: '.sodar-pr-remote-project-level left',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+    if ($('#sodar-pr-remote-sync-submit-btn').length) {
+        tour.addStep('remote_project_submit', {
+            title: 'Submit Access Updates',
+            text: 'To submit your access updates, click on this button. It ' +
+                  'will take you to a view where you have to review and ' +
+                  'confirm the changes.',
+            attachTo: '#sodar-pr-remote-sync-submit-btn left',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+  </script>
+{% endblock javascript %}

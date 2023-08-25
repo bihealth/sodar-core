@@ -1,11 +1,11 @@
-<div class="btn-group ml-auto" id="sodar-ff-buttons-list">
+<div class="ml-auto">
   <button class="btn btn-primary dropdown-toggle"
+          id="sodar-ff-file-ops-btn"
           type="button" data-toggle="dropdown"
           aria-haspopup="true" aria-expanded="false">
     File Operations
   </button>
-  <div class="dropdown-menu dropdown-menu-right">
-
+  <div class="dropdown-menu dropdown-menu-right" id="sodar-ff-file-ops-dropdown">
     {# Folder #}
     <a class="dropdown-item"
       {% if folder %}
@@ -15,7 +15,6 @@
       {% endif %}
         <i class="iconify" data-icon="mdi:folder-plus"></i> Add Folder
       </a>
-
     {# Hyperlink #}
     <a class="dropdown-item"
       {% if folder %}
@@ -25,7 +24,6 @@
       {% endif %}
         <i class="iconify" data-icon="mdi:link-plus"></i> Add Link
       </a>
-
     {# File #}
     <a class="dropdown-item"
       {% if folder %}
@@ -35,7 +33,6 @@
       {% endif %}
         <i class="iconify" data-icon="mdi:upload"></i> Upload File
       </a>
-
     {# Move Selected #}
     <a class="dropdown-item"
        href="javascript:{}"
@@ -45,7 +42,6 @@
          return false;">
       <i class="iconify" data-icon="mdi:arrow-right-thick"></i> Move Selected
     </a>
-
     {# Delete Selected #}
     <a class="dropdown-item text-danger"
        href="javascript:{}"

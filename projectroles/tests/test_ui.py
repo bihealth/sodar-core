@@ -1768,17 +1768,20 @@ class TestProjectArchiveView(TestUIBase):
 class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
     """Tests for ProjectRoleView UI"""
 
-    def _get_role_dropdown(self, user):
-        """Return role dropdown for a user"""
+    def _get_role_dropdown(self, user, owner=False):
+        """Return role dropdown for a role"""
         row = self.selenium.find_element(
             By.XPATH,
             '//tr[@class="sodar-pr-role-list-row" and '
             '@data-user-uuid="{}"]'.format(user.sodar_uuid),
         )
-        return row.find_element(By.CLASS_NAME, 'sodar-pr-role-dropdown')
+        class_name = 'sodar-pr-role-dropdown'
+        if owner:
+            class_name += '-owner'
+        return row.find_element(By.CLASS_NAME, class_name)
 
-    def _get_role_links(self, user):
-        """Return role dropdown links for a user"""
+    def _get_role_items(self, user):
+        """Return role dropdown items for a role"""
         dropdown = self._get_role_dropdown(user)
         return dropdown.find_elements(By.CLASS_NAME, 'dropdown-item')
 
@@ -1789,21 +1792,20 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
 
-    def test_list_buttons(self):
-        """Test visibility of role list button group"""
+    def test_role_ops(self):
+        """Test rendering role operations dropdown"""
         good_users = [self.superuser, self.user_owner, self.user_delegate]
         bad_users = [self.user_contributor, self.user_guest]
         self.assert_element_exists(
-            good_users, self.url, 'sodar-pr-btn-role-op', True
+            good_users, self.url, 'sodar-pr-role-ops-dropdown', True
         )
         self.assert_element_exists(
-            bad_users, self.url, 'sodar-pr-btn-role-op', False
+            bad_users, self.url, 'sodar-pr-role-ops-dropdown', False
         )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_list_buttons_target(self):
-        """Test visibility of role list button group as target"""
-        # Set up site as target
+    def test_role_ops_target(self):
+        """Test rendering role operations dropdown as target"""
         self.set_up_as_target(projects=[self.category, self.project])
         non_superusers = [
             self.user_owner,
@@ -1817,14 +1819,14 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
             self.user_guest,
         ]
         self.login_and_redirect(self.superuser, self.url)
-        btn = self.selenium.find_element(By.ID, 'sodar-pr-btn-role-op')
+        btn = self.selenium.find_element(By.ID, 'sodar-pr-role-ops-btn')
         self.assertEqual(btn.is_enabled(), False)
         self.assert_element_exists(
-            non_superusers, self.url, 'sodar-pr-btn-role-op', False
+            non_superusers, self.url, 'sodar-pr-role-ops-dropdown', False
         )
 
-    def test_role_list_invite_button(self):
-        """Test visibility of role invite button"""
+    def test_role_ops_invite(self):
+        """Test visibility of role operations invite item"""
         expected_true = [
             self.superuser,
             self.user_owner_cat,
@@ -1840,14 +1842,14 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
             self.user_guest,
         ]
         self.assert_element_exists(
-            expected_true, self.url, 'sodar-pr-btn-role-list-invite', True
+            expected_true, self.url, 'sodar-pr-role-ops-invite', True
         )
         self.assert_element_exists(
-            expected_false, self.url, 'sodar-pr-btn-role-list-invite', False
+            expected_false, self.url, 'sodar-pr-role-ops-invite', False
         )
 
-    def test_role_list_add_button(self):
-        """Test visibility of role invite button"""
+    def test_role_ops_create(self):
+        """Test visibility of role operations create item"""
         expected_true = [
             self.superuser,
             self.user_owner_cat,
@@ -1863,14 +1865,14 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
             self.user_guest,
         ]
         self.assert_element_exists(
-            expected_true, self.url, 'sodar-pr-btn-role-list-create', True
+            expected_true, self.url, 'sodar-pr-role-ops-create', True
         )
         self.assert_element_exists(
-            expected_false, self.url, 'sodar-pr-btn-role-list-create', False
+            expected_false, self.url, 'sodar-pr-role-ops-create', False
         )
 
-    def test_role_buttons(self):
-        """Test visibility of role management buttons"""
+    def test_role_dropdown(self):
+        """Test visibility of role management dropdown"""
         expected = [
             (self.superuser, 6),
             (self.user_owner_cat, 6),
@@ -1883,92 +1885,94 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
             (self.user_contributor, 0),
             (self.user_guest, 0),
         ]
-        self.assert_element_count(expected, self.url, 'sodar-pr-btn-grp-role')
+        self.assert_element_count(
+            expected, self.url, 'sodar-pr-role-dropdown', attribute='class'
+        )
 
-    def test_role_links_owner_local(self):
-        """Test role dropdown links for local owner"""
+    def test_role_dropdown_owner_local(self):
+        """Test role dropdown items for local owner"""
         self.login_and_redirect(self.superuser, self.url)
-        elem = self._get_role_dropdown(self.user_owner)
+        elem = self._get_role_dropdown(self.user_owner, owner=True)
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-transfer')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-transfer')
         )
         # TODO: Assert link enabling/disabling after updating owner transfer
 
-    def test_role_links_owner_inherited(self):
-        """Test role dropdown links for inherited owner"""
+    def test_role_dropdown_owner_inherited(self):
+        """Test role dropdown items for inherited owner"""
         # Set category owner to new user
         self.owner_as_cat.user = self.user_assign
         self.owner_as_cat.save()
         self.login_and_redirect(self.superuser, self.url)
         with self.assertRaises(NoSuchElementException):
-            self._get_role_dropdown(self.user_assign)
+            self._get_role_dropdown(self.user_assign, owner=True)
 
-    def test_role_links_delegate_local(self):
-        """Test role dropdown links for local delegate"""
+    def test_role_dropdown_delegate_local(self):
+        """Test role dropdown items for local delegate"""
         self.login_and_redirect(self.superuser, self.url)
         elem = self._get_role_dropdown(self.user_delegate)
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-update')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
         )
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-delete')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-delete')
         )
 
-    def test_role_links_delegate_inherited(self):
-        """Test role dropdown links for inherited delegate"""
+    def test_role_dropdown_delegate_inherited(self):
+        """Test role dropdown items for inherited delegate"""
         self.login_and_redirect(self.superuser, self.url)
         with self.assertRaises(NoSuchElementException):
             self._get_role_dropdown(self.user_delegate_cat)
 
-    def test_role_links_contrib_local(self):
-        """Test role dropdown links for local contributor"""
+    def test_role_dropdown_contrib_local(self):
+        """Test role dropdown items for local contributor"""
         self.login_and_redirect(self.superuser, self.url)
         elem = self._get_role_dropdown(self.user_contributor)
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-update')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
         )
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-delete')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-delete')
         )
 
-    def test_role_links_contrib_inherited(self):
-        """Test role dropdown links for inherited contributor"""
+    def test_role_dropdown_contrib_inherited(self):
+        """Test role dropdown items for inherited contributor"""
         self.make_assignment(
             self.category, self.user_assign, self.role_contributor
         )
         self.login_and_redirect(self.superuser, self.url)
         elem = self._get_role_dropdown(self.user_assign)
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-promote')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-promote')
         )
         with self.assertRaises(NoSuchElementException):
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-update')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
         with self.assertRaises(NoSuchElementException):
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-delete')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-delete')
 
-    def test_role_links_guest_local(self):
-        """Test role dropdown links for local guest"""
+    def test_role_dropdown_guest_local(self):
+        """Test role dropdown items for local guest"""
         self.login_and_redirect(self.superuser, self.url)
         elem = self._get_role_dropdown(self.user_guest)
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-update')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
         )
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-delete')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-delete')
         )
 
-    def test_role_links_guest_inherited(self):
-        """Test role dropdown links for inherited guest"""
+    def test_role_dropdown_guest_inherited(self):
+        """Test role dropdown items for inherited guest"""
         self.make_assignment(self.category, self.user_assign, self.role_guest)
         self.login_and_redirect(self.superuser, self.url)
         elem = self._get_role_dropdown(self.user_assign)
         self.assertIsNotNone(
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-promote')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-promote')
         )
         with self.assertRaises(NoSuchElementException):
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-update')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
         with self.assertRaises(NoSuchElementException):
-            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-link-delete')
+            elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-delete')
 
 
 class TestRoleAssignmentCreateView(TestUIBase):
@@ -2105,8 +2109,8 @@ class TestRoleAssignmentDeleteView(TestUIBase):
 class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
     """Tests for ProjectInviteView UI"""
 
-    def test_list_buttons(self):
-        """Test visibility of invite list button group"""
+    def test_invite_ops(self):
+        """Test visibility of invite operations dropdown"""
         expected_true = [
             self.superuser,
             self.user_owner_cat,
@@ -2118,11 +2122,11 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
             'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
         )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list', True
+            expected_true, url, 'sodar-pr-role-ops-dropdown', True
         )
 
-    def test_role_list_invite_button(self):
-        """Test visibility of role invite button"""
+    def test_invite_ops_invite(self):
+        """Test visibility of invite operations invite item"""
         expected_true = [
             self.superuser,
             self.user_owner_cat,
@@ -2134,11 +2138,11 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
             'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
         )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list-invite', True
+            expected_true, url, 'sodar-pr-role-ops-invite', True
         )
 
-    def test_role_list_add_button(self):
-        """Test visibility of role invite button"""
+    def test_invite_ops_create(self):
+        """Test visibility of invite operations create item"""
         expected_true = [
             self.superuser,
             self.user_owner_cat,
@@ -2150,11 +2154,11 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
             'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
         )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list-create', True
+            expected_true, url, 'sodar-pr-role-ops-create', True
         )
 
-    def test_invite_buttons(self):
-        """Test visibility of invite management buttons"""
+    def test_invite_dropdown(self):
+        """Test visibility of invite dropdowns"""
         self.make_invite(
             email='test@example.com',
             project=self.project,
@@ -2172,7 +2176,9 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
         url = reverse(
             'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
         )
-        self.assert_element_count(expected, url, 'sodar-pr-btn-grp-invite')
+        self.assert_element_count(
+            expected, url, 'sodar-pr-invite-dropdown', attribute='class'
+        )
 
 
 class TestProjectInviteCreateView(TestUIBase):

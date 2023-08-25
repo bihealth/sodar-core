@@ -1,0 +1,17 @@
+<button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
+        type="button" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+  <i class="iconify" data-icon="mdi:gear"></i>
+</button>
+<div class="dropdown-menu dropdown-menu-right sodar-pr-invite-dropdown">
+  <a class="dropdown-item"
+     href="{% url 'projectroles:invite_resend' projectinvite=invite_uuid %}">
+    <i class="iconify" data-icon="mdi:send"></i> Resend Invite
+  </a>
+  {% if invite.role.name != 'project delegate' or can_update_delegate %}
+    <a class="dropdown-item text-danger"
+       href="{% url 'projectroles:invite_revoke' projectinvite=invite_uuid %}">
+      <i class="iconify" data-icon="mdi:close-thick"></i> Revoke Invite
+    </a>
+  {% endif %}
+</div>

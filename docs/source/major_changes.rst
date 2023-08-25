@@ -16,7 +16,8 @@ v0.13.1 (WIP)
 Release Highlights
 ==================
 
-TODO
+- General bug fixes and minor updates
+- Revise tour help
 
 Breaking Changes
 ================
@@ -29,6 +30,13 @@ from development installs to PyPI packages. In your site's
 ``requirements/base.txt`` file, you should remove the existing dependencies for
 the aforementioned packages, as they will be automatically installed with
 the ``django-sodar-core`` package.
+
+Login Template Updated
+----------------------
+
+The default login template ``login.html`` has been updated with bug fixes and
+revised tour help. If you have overridden the login template with your own,
+ensure to update it accordingly to enable this new functionality.
 
 
 v0.13.0 (2023-06-01)

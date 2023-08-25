@@ -4,15 +4,11 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
-{% get_django_setting 'SITE_INSTANCE_TITLE' as site_title %}
-{% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
-
 {% block title %}Login{% endblock title %}
 
 {% block content %}
 
 <div class="container-fluid">
-
   {# Django messages / site app messages #}
   {% include 'projectroles/_messages.html' %}
 
@@ -61,26 +57,27 @@
   </div>
 
   {# Optional template for additional login page HTML #}
+  {% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
   {% template_exists template_include_path|add:'/_login_extend.html' as login_extend %}
   {% if login_extend %}
     {% include template_include_path|add:'/_login_extend.html' %}
   {% endif %}
-
 </div>
 
 {% endblock content %}
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Projectroles Javascript -->
   <script type="text/javascript" src="{% static 'projectroles/js/projectroles.js' %}"></script>
 
   <!-- Tour content -->
+  {% get_django_setting 'SITE_INSTANCE_TITLE' as site_title %}
+  {% get_django_setting 'ENABLE_LDAP' as enable_ldap %}
+  {% get_django_setting 'PROJECTROLES_ALLOW_LOCAL_USERS' as allow_local_users %}
   <script type="text/javascript">
     tourEnabled = true;
-
-    tour.addStep('login_username1', {
+    tour.addStep('login_account', {
         title: 'Log in to {{ site_title }}',
         text: 'To use {{ site_title }}, you must log in. For ' +
               'this, you need to use an existing account.',
@@ -88,19 +85,19 @@
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
-    tour.addStep('login_username2', {
+    {% if enable_ldap %}
+    tour.addStep('login_domain', {
         title: 'User Name and Domain',
-        text: 'The user name must be supplied in the format ' +
-              '"username@DOMAIN" depending on the account used.',
+        text: 'For external accounts via LDAP, the user name must be ' +
+              'supplied in the format of "username@DOMAIN" when using an ' +
+              'external account.',
         attachTo: '#sodar-login-username bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
-    tour.addStep('login_username2', {
+    tour.addStep('login_multiple', {
         title: 'Note on Multiple Accounts',
-        text: 'IMPORTANT: if you have user accounts for multiple supported ' +
+        text: 'IMPORTANT: If you have external accounts for multiple ' +
               'domains, note that these user accounts will not be ' +
               'connected. Please choose one of your accounts and always ' +
               'use the same one to log in to {{ site_title }}. Also note ' +
@@ -110,5 +107,17 @@
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
+    {% endif %} {# if enable_ldap #}
+    {% if allow_local_users %}
+    tour.addStep('login_local', {
+        title: 'Local User Accounts',
+        text: 'This site allows local users. If you are using a local user ' +
+              'account created specifically for {{ site_title }}, providing ' +
+              'a domain name is not required.',
+        attachTo: '#sodar-login-username bottom',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+    });
+    {% endif %}
   </script>
 {% endblock javascript %}

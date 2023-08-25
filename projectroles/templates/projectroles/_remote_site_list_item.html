@@ -1,28 +1,34 @@
 {% load projectroles_common_tags %}
 
-<tr>
-  <td>
+<tr class="sodar-pr-remote-site-row">
+  <td class="sodar-pr-remote-site-title">
     <a href="{% url 'projectroles:remote_projects' remotesite=site.sodar_uuid %}">
       {{ site.name }}
     </a>
     {% if site.description %}
-      {% get_info_link site.description as info_link %}
-      {{ info_link | safe }}
+      <span class="sodar-pr-remote-site-desc">
+        {% get_info_link site.description as info_link %}
+        {{ info_link | safe }}
+      </span>
     {% endif %}
   </td>
-  <td><a href="{{ site.get_url }}" target="_blank">{{ site.get_url }}</a></td>
-  <td class="text-right">{{ site.projects.all.count }}</td>
-  <td class="text-nowrap">
+  <td class="sodar-pr-remote-site-url">
+    <a href="{{ site.get_url }}" target="_blank">{{ site.get_url }}</a>
+  </td>
+  <td class="text-right sodar-pr-remote-site-count">
+    {{ site.projects.all.count }}
+  </td>
+  <td class="text-nowrap sodar-pr-remote-site-secret">
     <code>{{ site.secret }}</code>
     <button
-       class="btn btn-secondary sodar-list-btn sodar-pr-btn-copy-secret sodar-copy-btn ml-1"
-       id="sodar-pr-btn-copy-secret"
+       class="btn btn-secondary ml-1 sodar-list-btn sodar-copy-btn
+              sodar-pr-btn-copy-secret"
        data-clipboard-text="{{ site.secret }}"
        title="Copy to clipboard" data-toggle="tooltip" data-placement="top">
       <i class="iconify" data-icon="mdi:clipboard-multiple-outline"></i>
     </button>
   </td>
-  <td class="text-nowrap">
+  <td class="text-nowrap sodar-pr-remote-site-access">
     {% if site.get_access_date %}
       {{ site.get_access_date|date:'Y-m-d H:i' }}
     {% else %}
@@ -30,9 +36,9 @@
     {% endif %}
   </td>
   {% if site_mode == 'SOURCE' %}
-    <td class="text-nowrap">{% if site.user_display %}Yes{% else %}No{% endif %}</td>
+    <td class="text-nowrap sodar-pr-remote-site-visible">
+      {% if site.user_display %}Yes{% else %}No{% endif %}
+    </td>
   {% endif %}
-  <td>
-    {% include 'projectroles/_remote_site_buttons.html' %}
-  </td>
+  <td>{% include 'projectroles/_remote_site_dropdown.html' %}</td>
 </tr>

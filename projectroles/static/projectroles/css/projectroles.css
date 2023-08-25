@@ -423,7 +423,7 @@ a.sodar-pr-btn-title {
   padding: 0;
 }
 
-a.sodar-pr-btn-copy-uuid i {
+a#sodar-pr-btn-copy-uuid i {
   padding-top: 3px;
   font-size: 24px;
 }

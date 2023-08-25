@@ -3,8 +3,9 @@
 {# Projectroles dependency #}
 {% load projectroles_common_tags %}
 
-<tr id="sodar-tl-list-event-{{ event.sodar_uuid }}">
-  <td>
+<tr class="sodar-tl-item"
+    id="sodar-tl-list-event-{{ event.sodar_uuid }}">
+  <td class="sodar-tl-item-details">
     {% has_perm 'timeline.view_event_extra_data' request.user event.project as can_view_extra_data %}
     {% get_timestamp event as event_time %}
     {% if event.project %}
@@ -19,12 +20,12 @@
       </a>
     {% endif %}
   </td>
-  <td>
+  <td class="sodar-tl-item-name">
     {% get_app_icon_html event plugin_lookup as event_icon %}
     {{ event_icon|safe }}
     {{ event.event_name }}
   </td>
-  <td {% if not event.user %}class="text-muted"{% endif %}>
+  <td class="sodar-tl-item-user {% if not event.user %}text-muted{% endif %}">
     {% if event.user %}
       {% get_user_html event.user as user_html %}
       {{ user_html|safe }}
@@ -32,7 +33,7 @@
       N/A
     {% endif %}
   </td>
-  <td>
+  <td class="sodar-tl-item-desc">
     {% if event.project and user.is_superuser and timeline_mode == 'admin' %}
       {% include 'timeline/_project_badge.html' %}
     {% endif %}
@@ -56,14 +57,15 @@
       {% endif %}
     {% endif %}
     {% if event.classified %}
-      <span class="pull-right text-muted">
+      <span class="pull-right text-muted sodar-tl-item-classified">
         <i class="iconify" data-icon="mdi:lock" title="Classified"
            data-toggle="tooltip" data-placement="left">
         </i>
       </span>
     {% endif %}
   </td>
-  <td class="{% get_status_style event.get_status %} text-light">
+  <td class="{% get_status_style event.get_status %} text-light
+             sodar-tl-item-status">
     {{ event.get_status.status_type }}
   </td>
 </tr>

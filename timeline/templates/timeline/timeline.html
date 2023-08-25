@@ -6,7 +6,8 @@
 {% load projectroles_common_tags %}
 
 {% block title %}
-  {{ timeline_title }} {% if timeline_mode == 'project' %}for{% else %}in{% endif %}
+  {{ timeline_title }}
+  {% if timeline_mode == 'project' %}for{% else %}in{% endif %}
   {{ project.title }}
 {% endblock title %}
 
@@ -22,11 +23,14 @@
 {% get_plugin_lookup as plugin_lookup %}
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
-  <h3><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h3>
+  <h3>
+    <i class="iconify" data-icon="mdi:clock-time-eight"></i>
+    {{ timeline_title }}
+  </h3>
   {% if timeline_mode == 'object' %}
     <div class="ml-auto">
       <a href="{{ request.META.HTTP_REFERER }}"
-         class="btn btn-secondary ml-auto" role="button">
+         class="btn btn-secondary ml-auto" id="sodar-tl-back-btn" role="button">
         <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back
       </a>
     </div>
@@ -34,7 +38,6 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
-  {% if object_list.count > 0 %}
     <div class="card mb-3" id="sodar-tl-event-list">
       <div class="card-body p-0">
         <table class="table table-striped sodar-card-table" id="sodar-tl-table">
@@ -42,9 +45,20 @@
             {% include 'timeline/_list_header.html' %}
           </thead>
           <tbody>
-            {% for event in object_list %}
-              {% include 'timeline/_list_item.html' %}
-            {% endfor %}
+            {% if object_list.count > 0 %}
+              {% for event in object_list %}
+                {% include 'timeline/_list_item.html' %}
+              {% endfor %}
+            {% else %}
+              <td class="bg-faded font-italic text-center" colspan="5">
+                No timeline events found for this
+                {% if timeline_mode == 'project' %}
+                  {% get_display_name 'PROJECT' %}.
+                {% else %}
+                  object.
+                {% endif %}
+              </td>
+            {% endif %}
           </tbody>
         </table>
       </div>
@@ -52,54 +66,26 @@
     {% if is_paginated %}
       {% include 'projectroles/_pagination.html' with pg_small=False %}
     {% endif %}
-  {% else %}
-    <div class="alert alert-info" role="alert">
-      No timeline events found for this
-      {% if timeline_mode == 'project' %}{% get_display_name 'PROJECT' %}{% else %}object{% endif %}.
-    </div>
-  {% endif %}
-</div> <!-- sodar-page-container -->
+</div> {# sodar-page-container #}
 
 {% endblock projectroles_extend %}
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Event list -->
   <script type="text/javascript" src="{% static 'timeline/js/timeline.js' %}"></script>
 
   <!-- Tour content -->
   <script type="text/javascript">
       tourEnabled = true;
-
-      tour.addStep('event_list', {
-          title: 'Project Event List',
-          text: 'This is the list of events for the ' +
-              '{% get_display_name "PROJECT" %}' + ' or object, sorted by ' +
-              'newest first.',
-          attachTo: '#sodar-tl-event-list top',
+      tour.addStep('timeline_events', {
+          title: '{% get_display_name 'PROJECT' title=True %} Timeline',
+          text: 'In this view you can browse the timeline events for this ' +
+              '{% get_display_name 'PROJECT' %}, ' +
+              '{% get_display_name 'CATEGORY' %} or object.',
           advanceOn: '.docs-link click',
           showCancelLink: true
       });
-
-      tour.addStep('event_details', {
-          title: 'Event Details',
-          text: 'Click an event timestamp to open a popup with details ' +
-                'regarding each event.',
-          attachTo: '#sodar-tl-header-timestamp right',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-
-      if ($('.sodar-pr-pagination').length) {
-          tour.addStep('timeline_nav', {
-             title: 'Timeline Navigation',
-              text: 'Use these buttons to navigate through project events.',
-              attachTo: '.sodar-pr-pagination top',
-              advanceOn: '.docs-link click',
-              showCancelLink: true,
-              scrollTo: true
-           });
-       }
-    </script>
+  </script>
+  {% include 'timeline/_list_tour.html' %} {# Common tour help items #}
 {% endblock javascript %}

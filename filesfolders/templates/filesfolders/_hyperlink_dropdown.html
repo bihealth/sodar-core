@@ -1,0 +1,19 @@
+{# Projectroles dependency #}
+{% load projectroles_common_tags %}
+
+<button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
+        type="button" data-toggle="dropdown" aria-expanded="false">
+  <i class="iconify" data-icon="mdi:cog"></i>
+</button>
+<div class="dropdown-menu dropdown-menu-right sodar-ff-hyperlink-dropdown">
+  <a href="{% url 'filesfolders:hyperlink_update' item=link.sodar_uuid %}"
+     class="dropdown-item">
+    <i class="iconify" data-icon="mdi:lead-pencil"></i> Update Link
+  </a>
+  <a href="{% url 'filesfolders:hyperlink_delete' item=link.sodar_uuid %}"
+     class="dropdown-item text-danger">
+    <i class="iconify" data-icon="mdi:close-thick"></i> Delete Link
+  </a>
+  {% get_history_dropdown obj=link project=link.project as history_item %}
+  {{ history_item|safe }}
+</div>

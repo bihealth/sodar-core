@@ -1,0 +1,38 @@
+{% load rules %}
+{% load projectroles_common_tags %}
+{% load projectroles_role_tags %}
+
+<button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
+        type="button" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+  <i class="iconify" data-icon="mdi:gear"></i>
+</button>
+<div class="dropdown-menu dropdown-menu-right sodar-pr-role-dropdown">
+  {% if role_as.project == project %} {# Local member role #}
+    <a class="dropdown-item sodar-pr-role-item-update"
+       href="{% url 'projectroles:role_update' roleassignment=role_as_uuid %}">
+      <i class="iconify" data-icon="mdi:lead-pencil"></i> Update Member
+    </a>
+    <a class="dropdown-item text-danger sodar-pr-role-item-delete"
+       href="{% url 'projectroles:role_delete' roleassignment=role_as_uuid %}">
+      <i class="iconify" data-icon="mdi:account-remove"></i> Remove Member
+    </a>
+  {% else %} {# Inherited member role #}
+    {# Query for possible inactive (lower rank) role in the project #}
+    {# If found, link to update form instead #}
+    {% get_inactive_role project role_as as inactive_as %}
+    {% if inactive_as %}
+      <a class="dropdown-item sodar-pr-role-item-update"
+         href="{% url 'projectroles:role_update' roleassignment=inactive_as.sodar_uuid %}">
+        <i class="iconify" data-icon="mdi:lead-pencil"></i> Update Member
+      </a>
+    {% else %}
+      <a class="dropdown-item sodar-pr-role-item-promote"
+         href="{% url 'projectroles:role_create_promote' project=project.sodar_uuid promote_as=role_as.sodar_uuid %}">
+        <i class="iconify" data-icon="mdi:account-arrow-up"></i> Promote Member
+      </a>
+    {% endif %}
+  {% endif %}
+  {% get_history_dropdown obj=user project=project as history_item %}
+  {{ history_item|safe }}
+</div>

@@ -22,7 +22,7 @@
           <span class="sodar-header-input-group pull-right">
             <a role="button"
                class="btn btn-primary"
-               id="sodar-user-update-btn"
+               id="sodar-user-btn-update"
                href="{% url 'projectroles:user_update' %}">
               <i class="iconify" data-icon="mdi:lead-pencil"></i> Update User
             </a>
@@ -40,7 +40,9 @@
         <dd class="col-md-10">{{ request.user.username }}</dd>
         {% if request.user.email %}
           <dt class="col-md-2">Email</dt>
-          <dd class="col-md-10"><a href="mailto:{{ request.user.email }}">{{ request.user.email }}</a></dd>
+          <dd class="col-md-10">
+            <a href="mailto:{{ request.user.email }}">{{ request.user.email }}</a>
+          </dd>
         {% endif %}
         <dt class="col-md-2">UUID</dt>
         <dd class="col-md-10"><code>{{ request.user.sodar_uuid }}</code></dd>
@@ -57,7 +59,8 @@
         <span class="sodar-header-input-group pull-right">
         <a role="button"
            class="btn btn-primary {% if not user_settings or user_settings|length == 0 %}disabled{% endif %}"
-           href="{% url 'userprofile:settings_update' %}">
+           href="{% url 'userprofile:settings_update' %}"
+           id="sodar-user-btn-settings">
           <i class="iconify" data-icon="mdi:lead-pencil"></i> Update Settings
         </a>
         </span>
@@ -81,7 +84,9 @@
             {% endif %}
           </dd>
         {% empty %}
-          <dd class="col-12 text-center text-muted font-italic">No user settings available.</dd>
+          <dd class="col-12 text-center text-muted font-italic">
+            No user settings available.
+          </dd>
         {% endfor %}
       </dl>
     </div>
@@ -89,3 +94,54 @@
 </div>
 
 {% endblock projectroles %}
+
+{% block javascript %}
+  {{ block.super }}
+  <!-- Tour content -->
+  <script type="text/javascript">
+      tourEnabled = true;
+      tour.addStep('user_profile', {
+          title: 'User Profile',
+          text: 'In this app you can see your user profile and alter user ' +
+                'settings.',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+      tour.addStep('user_details', {
+          title: 'User Details Card',
+          text: 'This card displays details of your user account.',
+          attachTo: '#sodar-user-details-card top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+      if ($('#sodar-user-btn-update').length) {
+          tour.addStep('user_details_update', {
+              title: 'Update User Details',
+              text: 'Click on this button to open a form to edit your user ' +
+                    'details. This feature is only available for local user ' +
+                    'accounts.',
+              attachTo: '#sodar-user-btn-update left',
+              advanceOn: '.docs-link click',
+              showCancelLink: true
+          });
+      }
+      tour.addStep('user_settings', {
+          title: 'User Settings Card',
+          text: 'This card displays site-wide user level settings and how ' +
+                'they are currently set for your user account.',
+          attachTo: '#sodar-user-settings-card top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+      if ($('#sodar-user-btn-settings').length) {
+          tour.addStep('user_settings_update', {
+              title: 'Update User Settings',
+              text: 'Click on this button to open a form for editing your ' +
+                    'user settings.',
+              attachTo: '#sodar-user-btn-settings left',
+              advanceOn: '.docs-link click',
+              showCancelLink: true
+          });
+      }
+  </script>
+{% endblock javascript %}

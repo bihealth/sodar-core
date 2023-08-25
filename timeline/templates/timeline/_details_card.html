@@ -20,12 +20,13 @@
         {% endfor %}
       {% else %}
         <tr>
-          <td class="bg-faded font-italic text-center" colspan="5">No events found.</td>
+          <td class="bg-faded font-italic text-center" colspan="5">
+            No events found
+          </td>
         </tr>
       {% endif %}
     </tbody>
   </table>
-
   {# Event list JQuery #}
   <script type="text/javascript" src="{% static 'timeline/js/timeline.js' %}"></script>
 {% endif %}

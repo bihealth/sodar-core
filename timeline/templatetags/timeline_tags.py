@@ -104,7 +104,8 @@ def get_app_icon_html(event, plugin_lookup):
                 icon = plugin.icon
 
     return (
-        '<a {} title="{}" data-toggle="tooltip" data-placement="top">'
+        '<a {} class="sodar-tl-item-app-icon" title="{}" data-toggle="tooltip" '
+        'data-placement="top">'
         '<i class="iconify" data-icon="{}"></i></a>'.format(
             'href="{}"'.format(url) if url else '', title, icon
         )

@@ -47,7 +47,6 @@
 <div class="container-fluid sodar-page-container">
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-
     {{ form.file | as_crispy_field }}
     {{ form.unpack_archive | as_crispy_field }}
     {{ form.folder | as_crispy_field }}
@@ -90,7 +89,6 @@
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Filesfolders Javascript -->
   <script type="text/javascript" src="{% static 'filesfolders/js/filesfolders.js' %}"></script>
 {% endblock javascript %}

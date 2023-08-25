@@ -37,47 +37,47 @@
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Project list -->
   <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
 
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true;
-
     tour.addStep('home_project', {
-        title: 'Available {% get_display_name "PROJECT" title=True plural=True %}',
-        text: '{% get_display_name 'PROJECT' title=True plural=True %}' +
-              ' available to you are listed in this table.',
+        title: 'Available ' +
+               '{% get_display_name 'PROJECT' title=True plural=True %}',
+        text: '{% get_display_name 'PROJECT' title=True plural=True %} and ' +
+              '{% get_display_name 'CATEGORY' plural=True %} ' +
+              'available to you are listed in this table.',
         attachTo: '#sodar-pr-project-list-header top',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
     tour.addStep('home_filter', {
-        title: 'Filter {% get_display_name "PROJECT" title=True plural=True %} List',
-        text: 'Type here to filter the {% get_display_name "PROJECT" %} list ' +
+        title: 'Filter ' +
+               '{% get_display_name 'PROJECT' title=True plural=True %} List',
+        text: 'Type here to filter the {% get_display_name 'PROJECT' %} list ' +
               'according to a search term.',
         attachTo: '#sodar-pr-project-list-filter left',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
     tour.addStep('home_star', {
-        title: 'View Starred {% get_display_name "PROJECT" title=True plural=True %}',
+        title: 'View Starred ' +
+               '{% get_display_name 'PROJECT' title=True plural=True %}',
         text: 'Click here to enable/disable viewing only ' +
-              '{% get_display_name "PROJECT" plural=True %} you have ' +
+              '{% get_display_name 'PROJECT' plural=True %} you have ' +
               '"starred" for your favourites in the project page. ',
         attachTo: '#sodar-pr-project-list-link-star bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
     if ($('#sodar-pr-home-link-create').length) {
         tour.addStep('home_create', {
-            title: 'Create {% get_display_name "PROJECT" title=True %}',
-            text: 'Click here to create a new {% get_display_name "PROJECT" %} ' +
-                  'or {% get_display_name "CATEGORY" %}.',
+            title: 'Create {% get_display_name 'PROJECT' title=True %}',
+            text: 'Click here to create a new ' +
+                  '{% get_display_name 'PROJECT' %} or ' +
+                  '{% get_display_name 'CATEGORY' %}.',
             attachTo: '#sodar-pr-home-link-create left',
             advanceOn: '.docs-link click',
             showCancelLink: true

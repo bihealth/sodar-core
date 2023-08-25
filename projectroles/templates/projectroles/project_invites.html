@@ -16,7 +16,6 @@
         display: none;
       }
     }
-
     @media screen and (max-width: 600px) {
       .table#sodar-pr-role-invite-table thead tr th:nth-child(4),
       .table#sodar-pr-role-invite-table tbody tr td:nth-child(4) {
@@ -33,14 +32,15 @@
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h3><i class="iconify" data-icon="mdi:email"></i> Member Invites</h3>
   {% if role_perms.can_invite %}
-    {% include 'projectroles/_role_list_buttons.html' with project=project %}
+    {% include 'projectroles/_project_role_ops.html' with project=project %}
   {% endif %}
 </div>
 
 <div class="container-fluid sodar-page-container">
   <div class="card" id="sodar-pr-invite-list">
     <div class="card-body p-0">
-     <table class="table table-striped sodar-card-table" id="sodar-pr-role-invite-table">
+     <table class="table table-striped sodar-card-table"
+            id="sodar-pr-role-invite-table">
        <thead>
          <tr>
            <th>Email</th>
@@ -57,10 +57,10 @@
                <td><a href="mailto:{{ invite.email }}">{{ invite.email }}</a></td>
                <td>{{ invite.role.name }}</td>
                <td><a href="{{ invite.issuer.email }}">{{ invite.issuer.username }}</a></td>
-               <td>{{ invite.date_expire|date:'Y-m-d H:i' }}</td>
+               <td class="sodar-pr-invite-item-expire">{{ invite.date_expire|date:'Y-m-d H:i' }}</td>
                <td class="text-right">
                  {% if role_perms.can_invite %}
-                   {% include 'projectroles/_project_invites_buttons.html' with project=project invite_uuid=invite.sodar_uuid %}
+                   {% include 'projectroles/_project_invite_dropdown.html' with project=project invite_uuid=invite.sodar_uuid %}
                  {% endif %}
                </td>
              </tr>
@@ -83,38 +83,55 @@
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true;
-
+    tour.addStep('role_invites', {
+        title: 'Member Invites',
+        text: 'In this view you can invite people who are not yet users of ' +
+              'the site to become members in the ' +
+              '{% get_display_name 'PROJECT' %}. For people who are already ' +
+              'users on the site, you should use "Add Member" instead.',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+    });
     tour.addStep('invite_list', {
         title: 'Invite List',
         text: 'List of existing invites for this ' +
-              '{% get_display_name "PROJECT" %} can be seen here.',
+              '{% get_display_name 'PROJECT' %} can be seen here.',
         attachTo: '#sodar-pr-invite-list top',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
-    tour.addStep('role_actions', {
-        title: 'Role Actions Menu',
-        text: 'Use this menu to add roles, send invites or view existing ' +
-              'invites.',
-        attachTo: '#sodar-pr-btn-role-list left',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
-
-    if ($('div.pr_invite_buttons').length) {
+    if ($('.sodar-pr-invite-item-expire').length) {
+        tour.addStep('invite_expire', {
+            title: 'Invite Expiry Date',
+            text: 'Invites will expire after a time set by the site' +
+                  'administration. The expiry date for each invite is ' +
+                  'displayed in this column.',
+            attachTo: '.sodar-pr-invite-item-expire top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+    if ($('.sodar-pr-invite-dropdown').length) {
         tour.addStep('role_menu', {
-            title: 'Role Editing Menu',
-            text: 'Individual invites can be resent or revoked from ' +
-                  'these menues.',
-            attachTo: 'div.sodar-pr-btn-grp-invite left',
+            title: 'Invite Dropdown',
+            text: 'The invite can be resent or revoked through this dropdown.',
+            attachTo: '.sodar-pr-invite-dropdown left',
             advanceOn: '.docs-link click',
             showCancelLink: true,
-            scrollTo: true
+        });
+    }
+    if ($('#sodar-pr-role-ops-dropdown').length) {
+        tour.addStep('role_ops', {
+            title: 'Member Operations Dropdown',
+            text: 'From this dropdown you can access operations for adding ' +
+                  'new members to the {% get_display_name 'PROJECT' %} and ' +
+                  'inviting users not yet on the site.',
+            attachTo: '#sodar-pr-role-ops-dropdown left',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
         });
     }
   </script>
