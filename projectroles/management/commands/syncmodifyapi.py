@@ -25,19 +25,6 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 class Command(ProjectModifyPluginViewMixin, BaseCommand):
     help = 'Synchronizes existing projects using the project modify API'
 
-    def _get_projects(self, project, project_list):
-        """
-        Retrieve projects recursively in inheritance order.
-
-        :param project: Current project
-        :param project_list: List of Project objects
-        """
-        project_list.append(project)
-        logger.debug('Added: {}'.format(project.full_title))
-        for c in Project.objects.filter(parent=project):
-            self._get_projects(c, project_list)
-        return project_list
-
     def add_arguments(self, parser):
         parser.add_argument(
             '-p',
@@ -61,14 +48,9 @@ class Command(ProjectModifyPluginViewMixin, BaseCommand):
             project_list = [project]
         else:
             logger.info('Synchronizing all projects..')
-            project_list = []
-            top_cats = Project.objects.filter(
-                type=PROJECT_TYPE_CATEGORY, parent=None
-            )
-            for c in top_cats:
-                self._get_projects(c, project_list)
+            project_list = Project.objects.all().order_by('full_title')
             logger.debug(
-                'Found {} projects and categories'.format(len(project_list))
+                'Found {} projects and categories'.format(project_list.count())
             )
         sync_count = 0
         err_count = 0
