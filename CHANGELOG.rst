@@ -26,11 +26,14 @@ Changed
     - Update ``django-plugins`` and ``drf-keyed-list`` dev dependencies to PyPI packages (#1241)
     - Upgrade general Python dependencies (#1239)
     - Update tour help (#1102)
+    - Template refactoring (#1102, #1249)
 - **Projectroles**
     - Move ``setup_ip_allowing()`` to ``IPAllowMixin`` (#1237)
     - Improve ``syncmodifyapi`` project logging (#1228)
     - Do not exit ``syncmodifyapi`` on failure (#1229)
     - Simplify ``syncmodifyapi`` project querying (#1264)
+    - Update ``get_role_display_name()`` to receive ``Role`` as first argument (#1265)
+    - Improve member invite templates (#1246, #1247, #1248)
 - **Timeline**
     - Handle app plugin exceptions in ``get_object_link()`` (#1232)
 

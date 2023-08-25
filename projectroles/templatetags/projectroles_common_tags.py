@@ -125,15 +125,15 @@ def get_display_name(key, title=False, count=1, plural=False):
 
 
 @register.simple_tag
-def get_role_display_name(role_as, project, title=False):
+def get_role_display_name(role, project, title=False):
     """
     Return display name for role assignment.
 
-    :param role_as: Role assignment
+    :param role: Role object
     :param project: Project object for context (to support inheritance)
     :param title: Return in title case if True (boolean)
     """
-    role_suffix = role_as.role.name.split(' ')[1]
+    role_suffix = role.name.split(' ')[1]
     if title:
         role_suffix = role_suffix.title()
     return '{} {}'.format(

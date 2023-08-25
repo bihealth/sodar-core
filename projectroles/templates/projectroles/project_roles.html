@@ -76,7 +76,7 @@
               <td>{{ role_as.user.name }}</td>
               <td><a href="mailto:{{ role_as.user.email }}">{{ role_as.user.email }}</a></td>
               <td class="sodar-pr-role-item-role">
-                {% get_role_display_name role_as project title=True as role_display %}
+                {% get_role_display_name role_as.role project title=True as role_display %}
                 {% if role_as.project != project %}
                   <i class="iconify text-primary" data-icon="mdi:arrow-down-circle"></i>
                   <a href="{% url 'projectroles:roles' project=role_as.project.sodar_uuid %}"

@@ -16,8 +16,10 @@ v0.13.1 (WIP)
 Release Highlights
 ==================
 
-- General bug fixes and minor updates
+- Improve member invite view
+- Improve syncmodifyapi management command
 - Revise tour help
+- General bug fixes and minor updates
 
 Breaking Changes
 ================
@@ -37,6 +39,13 @@ Login Template Updated
 The default login template ``login.html`` has been updated with bug fixes and
 revised tour help. If you have overridden the login template with your own,
 ensure to update it accordingly to enable this new functionality.
+
+Template Tag get_role_display_name() Updated
+--------------------------------------------
+
+The signature of the ``get_role_display_name()`` template tag in
+``projectroles_common_tags`` has been updated. The first argument is now
+expected as a ``Role`` object instead of a ``RoleAssignment``.
 
 
 v0.13.0 (2023-06-01)

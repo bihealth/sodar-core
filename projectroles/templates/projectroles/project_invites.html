@@ -9,6 +9,14 @@
 {% block css %}
   {{ block.super }}
   <style type="text/css">
+    .table#sodar-pr-role-invite-table thead tr th:nth-child(4),
+    .table#sodar-pr-role-invite-table tbody tr td:nth-child(4) {
+      width: 170px;
+    }
+    .table#sodar-pr-role-invite-table thead tr th:nth-child(5),
+    .table#sodar-pr-role-invite-table tbody tr td:nth-child(5) {
+      width: 80px;
+    }
     /* Responsive modifications */
     @media screen and (max-width: 800px) {
       .table#sodar-pr-role-invite-table thead tr th:nth-child(3),
@@ -51,21 +59,26 @@
          </tr>
        </thead>
        <tbody>
-         {% if invites.count > 0 %}
-           {% for invite in invites %}
-             <tr>
-               <td><a href="mailto:{{ invite.email }}">{{ invite.email }}</a></td>
-               <td>{{ invite.role.name }}</td>
-               <td><a href="{{ invite.issuer.email }}">{{ invite.issuer.username }}</a></td>
-               <td class="sodar-pr-invite-item-expire">{{ invite.date_expire|date:'Y-m-d H:i' }}</td>
-               <td class="text-right">
-                 {% if role_perms.can_invite %}
-                   {% include 'projectroles/_project_invite_dropdown.html' with project=project invite_uuid=invite.sodar_uuid %}
-                 {% endif %}
-               </td>
-             </tr>
-           {% endfor %}
-         {% else %}
+         {% for invite in invites %}
+           <tr>
+             <td><a href="mailto:{{ invite.email }}">{{ invite.email }}</a></td>
+             <td>{% get_role_display_name invite.role project title=True %}</td>
+             <td>
+               <a href="{{ invite.issuer.email }}">
+                 {{ invite.issuer.username }}
+               </a>
+             </td>
+             <td class="sodar-pr-invite-item-expire">
+               {{ invite.date_expire|date:'Y-m-d H:i' }}
+             </td>
+             <td class="text-right">
+               {% if role_perms.can_invite %}
+                 {% include 'projectroles/_project_invite_dropdown.html' with project=project invite_uuid=invite.sodar_uuid %}
+               {% endif %}
+             </td>
+           </tr>
+         {% endfor %}
+         {% if not invites %}
            <tr>
              <td class="bg-faded font-italic text-center" colspan="5">
                No active invites.
@@ -76,7 +89,6 @@
      </table>
     </div>
   </div>
-
 </div>
 
 {% endblock projectroles_extend %}

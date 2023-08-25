@@ -12,6 +12,13 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
+  <div class="alert alert-info">
+    Email invites are intended for people who do not yet have a user account on
+    this site. To add members who already have an active user account, use the
+    <a href="{% url 'projectroles:role_create' project=project.sodar_uuid %}">
+      Add Member
+    </a> form.
+  </div>
   <form method="post">
     {% csrf_token %}
     {{ form | crispy }}
@@ -39,31 +46,25 @@
 {% block javascript %}
   {{ block.super }}
   <script type="text/javascript">
-      // TODO: Move to js file and unify with roleassignment_form js
-      $(document).ready(function() {
-          $('#sodar-pr-invite-preview-link').click(function () {
-              $('.modal-title').text('Invite Preview');
-
-              var body = '{{ preview_body }}';
-              var roleName = $('#id_role').find('option:selected').text();
-              var message = $('#id_message').val();
-              body = body.replace('{role_name}', roleName);
-
-              var htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>';
-              htmlData += '<strong>To:</strong><pre>' + $('#id_email').val() + '</pre>';
-              htmlData += '<strong>Body:</strong>';
-              htmlData += '<pre id="sodar-email-body">' + body;
-
-              if (message !== '') {
-                  htmlData += '{{ preview_message }}'.replace('{message}', message);
-              }
-
-              htmlData += '{{ preview_footer }}';
-              htmlData += '</pre>';
-
-              $('.modal-body').html(htmlData);
-          });
-      });
+    // TODO: Move to js file and unify with roleassignment_form js
+    $(document).ready(function() {
+        $('#sodar-pr-invite-preview-link').click(function () {
+            $('.modal-title').text('Invite Preview');
+            var body = '{{ preview_body }}';
+            var roleName = $('#id_role').find('option:selected').text();
+            var message = $('#id_message').val();
+            body = body.replace('{role_name}', roleName);
+            var htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>';
+            htmlData += '<strong>To:</strong><pre>' + $('#id_email').val() + '</pre>';
+            htmlData += '<strong>Body:</strong>';
+            htmlData += '<pre id="sodar-email-body">' + body;
+            if (message !== '') {
+                htmlData += '{{ preview_message }}'.replace('{message}', message);
+            }
+            htmlData += '{{ preview_footer }}';
+            htmlData += '</pre>';
+            $('.modal-body').html(htmlData);
+        });
+    });
   </script>
-
 {% endblock javascript %}
