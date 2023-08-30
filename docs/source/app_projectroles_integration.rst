@@ -79,14 +79,13 @@ chapter.
     `1.11 release of cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
     Some details such as directory structures and settings variables may differ.
 
-First, add the ``django-plugins`` and ``django-sodar-core`` package requirements
-into your ``requirements/base.txt`` file. Make sure you are pointing to the
-desired release tag or commit ID.
+First, add the ``django-sodar-core`` dependency into your
+``requirements/base.txt`` file. Make sure you are pointing to the desired
+release tag or commit ID.
 
 .. code-block:: console
 
-    -e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
-    django-sodar-core==0.13.0
+    django-sodar-core==0.13.1
 
 Install the requirements for development:
 

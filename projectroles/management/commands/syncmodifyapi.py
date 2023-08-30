@@ -1,6 +1,6 @@
 """
 Syncmodifyapi management command for synchronizing existing projects using the
-project modify API
+project modify API.
 """
 
 import sys
@@ -39,7 +39,7 @@ class Command(ProjectModifyPluginViewMixin, BaseCommand):
         project_uuid = options.get('project')
         if project_uuid:
             logger.info(
-                'Synchronizing project with UUID "{}"..'.format(project_uuid)
+                'Limiting sync to project with UUID "{}"..'.format(project_uuid)
             )
             project = Project.objects.filter(sodar_uuid=project_uuid).first()
             if not project:
@@ -56,16 +56,12 @@ class Command(ProjectModifyPluginViewMixin, BaseCommand):
         err_count = 0
         for p in project_list:
             p_title = p.get_log_title(full_title=True)
-            logger.debug('Synchronizing project: {}'.format(p_title))
+            logger.debug('Synchronizing project {}'.format(p_title))
             try:
                 self.call_project_modify_api('perform_project_sync', None, [p])
                 sync_count += 1
             except Exception as ex:
-                logger.error(
-                    'Exception in project sync for project {}: {}'.format(
-                        p_title, ex
-                    )
-                )
+                logger.error('Exception for project {}: {}'.format(p_title, ex))
                 err_count += 1
         logger.info(
             'Project data synchronized ({} OK, {} error{})'.format(

@@ -10,13 +10,13 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.13.1 (WIP)
-*************
+v0.13.1 (2023-08-30)
+********************
 
 Release Highlights
 ==================
 
-- Improve member invite view
+- Improve member invite views
 - Improve syncmodifyapi management command
 - Revise tour help
 - General bug fixes and minor updates
