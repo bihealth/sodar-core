@@ -3,6 +3,7 @@
 import logging
 import re
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils.text import Truncator
@@ -162,7 +163,14 @@ class TimelineAPI:
                 link_data = app_plugin.get_object_link(
                     ref_obj.object_model, ref_obj.object_uuid
                 )
-            except Exception:
+            except Exception as ex:
+                logger.error(
+                    'Exception in {}.get_object_link(): {}'.format(
+                        app_plugin.name, ex
+                    )
+                )
+                if settings.DEBUG:
+                    raise ex
                 link_data = None
             if link_data:
                 return '<a href="{}" {}>{}</a> {}'.format(
@@ -250,7 +258,6 @@ class TimelineAPI:
         # Add additional status if set (use if e.g. event is immediately "OK")
         if status_type:
             event.set_status(status_type, status_desc, status_extra_data)
-
         return event
 
     @classmethod
@@ -281,7 +288,6 @@ class TimelineAPI:
         ref_ids = re.findall('{\'?(.*?)\'?}', desc)
         if len(ref_ids) == 0:
             return event.description
-
         refs = {}
         app_plugin = None
 
@@ -302,7 +308,6 @@ class TimelineAPI:
         # Get links for object references
         for r in ref_ids:
             refs[r] = cls._get_ref_description(event, r, app_plugin, request)
-
         try:
             return event.description.format(**refs)
         except Exception as ex:  # Dispaly exception instead of crashing

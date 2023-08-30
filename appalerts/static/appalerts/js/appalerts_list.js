@@ -12,7 +12,7 @@ function updateEmptyAlertsElement () {
 
 $(document).ready(function () {
     // Handle alert dismissal
-    $('.sodar-app-alert-btn-dismiss').click(function () {
+    $('.sodar-ap-btn-dismiss').click(function () {
         var uuid = $(this).attr('data-uuid');
         var clearCount = 1;
         $.post({
@@ -37,7 +37,7 @@ $(document).ready(function () {
           if (alertCountInt <= 0) {
               $(document).find('#sodar-app-alert-badge').fadeOut(250);
               $(document).find('#sodar-app-alert-empty').delay(300).fadeIn(250);
-              $(document).find('#sodar-app-alert-btn-dismiss-all').addClass('disabled');
+              $(document).find('#sodar-ap-ops-dismiss-all').addClass('disabled');
           } else {
               alertCount.html(alertCountInt.toString());
               if (alertCountInt === 1) {

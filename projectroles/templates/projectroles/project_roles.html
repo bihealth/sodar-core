@@ -4,30 +4,29 @@
 {% load projectroles_tags %}
 {% load projectroles_role_tags %}
 {% load projectroles_common_tags %}
+
 {% block title %}Members of {{ project.title }}{% endblock title %}
 
 {% block css %}
-
-{{ block.super }}
-<style type="text/css">
-  table#sodar-pr-role-list-table tbody td:nth-child(5) {
-    width: 3em;
-  }
-  /* Responsive modifications */
-  @media screen and (max-width: 1000px) {
-    .table#sodar-pr-role-list-table thead tr th:nth-child(2),
-    .table#sodar-pr-role-list-table tbody tr td:nth-child(2) {
-        display: none;
+  {{ block.super }}
+  <style type="text/css">
+    table#sodar-pr-role-list-table tbody td:nth-child(5) {
+      width: 3em;
     }
-  }
-  @media screen and (max-width: 750px) {
+    /* Responsive modifications */
+    @media screen and (max-width: 1000px) {
+      .table#sodar-pr-role-list-table thead tr th:nth-child(2),
+      .table#sodar-pr-role-list-table tbody tr td:nth-child(2) {
+        display: none;
+      }
+    }
+    @media screen and (max-width: 750px) {
       .table#sodar-pr-role-list-table thead tr th:nth-child(3),
       .table#sodar-pr-role-list-table tbody tr td:nth-child(3) {
-          display: none;
+        display: none;
       }
-  }
-</style>
-
+    }
+  </style>
 {% endblock css %}
 
 {% block projectroles_extend %}
@@ -40,7 +39,7 @@
     {% get_display_name project.type title=True %} Members
   </h3>
   {% if role_perms.can_update_members or role_perms.can_invite %}
-    {% include 'projectroles/_role_list_buttons.html' %}
+    {% include 'projectroles/_project_role_ops.html' %}
   {% endif %}
 </div>
 
@@ -76,8 +75,8 @@
               <td>{{ role_as.user.username }}</td>
               <td>{{ role_as.user.name }}</td>
               <td><a href="mailto:{{ role_as.user.email }}">{{ role_as.user.email }}</a></td>
-              <td>
-                {% get_role_display_name role_as project title=True as role_display %}
+              <td class="sodar-pr-role-item-role">
+                {% get_role_display_name role_as.role project title=True as role_display %}
                 {% if role_as.project != project %}
                   <i class="iconify text-primary" data-icon="mdi:arrow-down-circle"></i>
                   <a href="{% url 'projectroles:roles' project=role_as.project.sodar_uuid %}"
@@ -94,9 +93,9 @@
                 {% display_role_buttons project role_as role_perms as can_display_buttons %}
                 {% if can_display_buttons %}
                   {% if role_as.role.name == 'project owner' %}
-                    {% include 'projectroles/_project_roles_buttons_owner.html' with user=role_as.user role_as_uuid=role_as.sodar_uuid %}
+                    {% include 'projectroles/_project_role_dropdown_owner.html' with user=role_as.user role_as_uuid=role_as.sodar_uuid %}
                   {% else %}
-                    {% include 'projectroles/_project_roles_buttons.html' with user=role_as.user role_as_uuid=role_as.sodar_uuid %}
+                    {% include 'projectroles/_project_role_dropdown.html' with user=role_as.user role_as_uuid=role_as.sodar_uuid %}
                   {% endif %}
                 {% endif %}
               </td>
@@ -112,40 +111,65 @@
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true;
-
     tour.addStep('role_list', {
-        title: 'Members List',
+        title: 'Member List',
         text: 'List of users given access for this ' +
-            '{% get_display_name "PROJECT" %} can be seen here.',
+            '{% get_display_name 'PROJECT' %} can be seen here.',
         attachTo: '#sodar-pr-role-list top',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
-    if ($('#sodar-pr-btn-role-list').length) {
-        tour.addStep('role_actions', {
-            title: 'Member Operations Menu',
-            text: 'Use this menu to add members, send invites or view existing ' +
-                'invites.',
-            attachTo: '#sodar-pr-btn-role-list left',
+    if ($('.sodar-pr-role-item-role').length) {
+        tour.addStep('role_item_role', {
+            title: 'Member Role',
+            text: 'The role of each member is displayed in this column. A ' +
+                  'member can have one role in a project. Roles can be ' +
+                  'inherited from parent ' +
+                  '{% get_display_name 'CATEGORY' plural=True %}. In that ' +
+                  'case, the role label links to from where it was ' +
+                  'Inherited. To learn more about different roles, see the ' +
+                  'user manual of this site or the SODAR Core documentation.',
+            attachTo: '.sodar-pr-role-item-role top',
             advanceOn: '.docs-link click',
             showCancelLink: true
         });
     }
-
-    if ($('div.pr_role_buttons').length) {
-        tour.addStep('role_menu', {
-            title: 'Member Editing Menu',
-            text: 'Individual memberships can be updated or removed from these ' +
-                'menues.',
-            attachTo: 'div.sodar-pr-btn-grp-role left',
+    if ($('.sodar-pr-role-dropdown-owner').length) {
+        tour.addStep('role_dropdown_owner', {
+            title: 'Owner Dropdown',
+            text: 'Ownership can be transferred to another user from this ' +
+                  'dropdown.',
+            attachTo: '.sodar-pr-role-dropdown-owner left',
             advanceOn: '.docs-link click',
             showCancelLink: true,
-            scrollTo: true
+        });
+    }
+    if ($('.sodar-pr-role-dropdown').length) {
+        tour.addStep('role_dropdown', {
+            title: 'Member Dropdown',
+            text: 'For a non-owner member, you can update or remove the ' +
+                  'member role through this dropdown. Note that for ' +
+                  'inherited users, only promoting the inherited role is ' +
+                  'allowed. To remove such a role, navigate to the parent ' +
+                  '{% get_display_name 'CATEGORY' %} and remove the ' +
+                  'membership there.',
+            attachTo: '.sodar-pr-role-dropdown left',
+            advanceOn: '.docs-link click',
+            showCancelLink: true,
+        });
+    }
+    if ($('#sodar-pr-role-ops-dropdown').length) {
+        tour.addStep('role_ops', {
+            title: 'Member Operations Dropdown',
+            text: 'From this dropdown you can access operations for adding ' +
+                  'new members to the {% get_display_name 'PROJECT' %} and ' +
+                  'inviting users not yet on the site.',
+            attachTo: '#sodar-pr-role-ops-dropdown left',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
         });
     }
   </script>

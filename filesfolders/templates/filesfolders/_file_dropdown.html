@@ -1,0 +1,26 @@
+{% load rules %}
+
+{# Projectroles dependency #}
+{% load projectroles_common_tags %}
+
+{% has_perm 'filesfolders.update_data_own' request.user file.project as can_update_own %}
+{% has_perm 'filesfolders.update_data_all' request.user file.project as can_update_all %}
+
+<button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
+        type="button" data-toggle="dropdown" aria-expanded="false">
+  <i class="iconify" data-icon="mdi:cog"></i>
+</button>
+<div class="dropdown-menu dropdown-menu-right sodar-ff-file-dropdown">
+  {% if can_update_all or file.owner == request.user and can_update_own %}
+    <a href="{% url 'filesfolders:file_update' item=file.sodar_uuid %}"
+       class="dropdown-item" >
+      <i class="iconify" data-icon="mdi:lead-pencil"></i> Update File
+    </a>
+    <a href="{% url 'filesfolders:file_delete' item=file.sodar_uuid %}"
+       class="dropdown-item text-danger">
+      <i class="iconify" data-icon="mdi:close-thick"></i> Delete File
+    </a>
+    {% get_history_dropdown obj=file project=file.project as history_item %}
+    {{ history_item|safe }}
+  {% endif %}
+</div>

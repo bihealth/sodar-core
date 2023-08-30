@@ -23,12 +23,10 @@
     <strong>Warning:</strong> Anyone with this URL can access the file,
       including users without permissions in the {% get_display_name 'PROJECT' %}.
   </div>
-
   <dl class="row">
     <dt class="col-2">Link</dt>
     <dd class="col-10"><a href="{{ public_url }}">{{ public_url }}</a></dd>
   </dl>
-
   <div class="btn-group pull-right">
     <a role="button" class="btn btn-secondary"
        href="{{ request.session.real_referer }}">

@@ -6,21 +6,11 @@ from django.urls import reverse
 from knox.models import AuthToken
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestPermissionBase
+from projectroles.tests.test_permissions import TestSiteAppPermissionBase
 
 
-class TestTokenPermissions(TestPermissionBase):
+class TestTokenPermissions(TestSiteAppPermissionBase):
     """Tests for token view permissions"""
-
-    def setUp(self):
-        # Create users
-        self.superuser = self.make_user('superuser')
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user')
-        # No user
-        self.anonymous = None
 
     def test_list(self):
         """Test permissions for token list"""

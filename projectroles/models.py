@@ -665,9 +665,16 @@ class Project(models.Model):
             self.archive = status
             self.save()
 
-    def get_log_title(self):
-        """Return a log title for the project"""
-        return '"{}" ({})'.format(self.title, self.sodar_uuid)
+    def get_log_title(self, full_title=False):
+        """
+        Return a logger-friendly title for the project.
+
+        :param full_title: Display full title if True (boolean)
+        :return: String
+        """
+        return '"{}" ({})'.format(
+            self.full_title if full_title else self.title, self.sodar_uuid
+        )
 
 
 # Role -------------------------------------------------------------------------

@@ -1,0 +1,134 @@
+{# Common tour help items for timeline list views #}
+
+{# Projectroles dependency #}
+{% load projectroles_common_tags %}
+
+<script type="text/javascript">
+  tour.addStep('event_table', {
+      title: 'Event Table',
+      text: 'Events are listed in this table. They are presented in a ' +
+            'descending chronological order.',
+      attachTo: '#sodar-tl-table top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+  });
+  if ($('.sodar-tl-item-details').length) {
+      tour.addStep('event_details', {
+          title: 'Event Timestamp and Details',
+          text: 'The creation timestamp for each event is displayed in this ' +
+                'column. Click on the timestamp to open a modal which ' +
+                'contains details regarding event execution. This is mostly ' +
+                'relevant for asynchronous events.',
+          attachTo: '.sodar-tl-item-details top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-tl-item-name').length) {
+      tour.addStep('event_name', {
+          title: 'Event Name',
+          text: 'The event name is displayed in this column. Event with the ' +
+                'name may be searched using the site search.',
+          attachTo: '.sodar-tl-item-name top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-tl-item-app-icon').length) {
+      tour.addStep('event_app', {
+          title: 'Event App',
+          text: 'The application from which the event was created is ' +
+                'displayed here as its corresponding icon. The icon links to ' +
+                'the associated application.',
+          attachTo: '.sodar-tl-item-app-icon top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-tl-item-desc').length) {
+      tour.addStep('event_desc', {
+          title: 'Event Description',
+          text: 'This column displays a human readable description of the ' +
+                'event. It may also link to related objects.',
+          attachTo: '.sodar-tl-item-desc top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-tl-item-project-badge').length) {
+      tour.addStep('event_desc', {
+          title: '{% get_display_name 'PROJECT' title=True %} Badge',
+          text: 'This badge links to the {% get_display_name 'PROJECT' %} to ' +
+                'which the event is related.',
+          attachTo: '.sodar-tl-item-project-badge top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-tl-object-link').length) {
+      tour.addStep('event_desc_object_link', {
+          title: 'Object Link',
+          text: 'This is an example of an object link. The text label takes ' +
+                'you to where the related object resides in its app. The ' +
+                'clock icon displays the timeline history for the object.',
+          attachTo: '.sodar-tl-object-link right',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-tl-link-extra-data').length) {
+      tour.addStep('event_desc_extra', {
+          title: 'Extra Data',
+          text: 'Extra data for the event can be viewed here. This may ' +
+                'include e.g. specific values for modified variables.',
+          attachTo: '.sodar-tl-link-extra-data left',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-tl-item-classified').length) {
+      tour.addStep('event_classified', {
+          title: 'Classified Event',
+          text: 'This icon denotes that the event is classified. Only ' +
+                'owners, delegates and superusers can view the event in the ' +
+                'list.',
+          attachTo: '.sodar-tl-item-classified left',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-tl-item-status').length) {
+      tour.addStep('event_status', {
+          title: 'Event Status',
+          text: 'This column displays the most recent status of the event. ' +
+                'Details of the status and preceeding phases of the event ' +
+                'can be found by opening the modal from the timestamp ' +
+                'link.',
+          attachTo: '.sodar-tl-item-status left',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  }
+  if ($('.sodar-pr-pagination').length) {
+      tour.addStep('timeline_pagination', {
+         title: 'Timeline Pagination',
+          text: 'Here you can navigate through the subpages of this timeline ' +
+                'event list.',
+          attachTo: '.sodar-pr-pagination top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true,
+          scrollTo: true
+       });
+   }
+  if ($('#sodar-tl-back-btn').length) {
+      tour.addStep('timeline_back', {
+         title: 'Back to Event Table',
+          text: 'You can return to the general event table by clicking on ' +
+                'this button.',
+          attachTo: '#sodar-tl-back-btn left',
+          advanceOn: '.docs-link click',
+          showCancelLink: true,
+          scrollTo: true
+       });
+   }
+</script>

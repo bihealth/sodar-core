@@ -9,10 +9,7 @@
 {% load filesfolders_tags %}
 
 {% block title %}
-  Files for {{ project.title }}
-  {% if folder %}
-    / {{ folder.name }}
-  {% endif %}
+  Files for {{ project.title }}{% if folder %} / {{ folder.name }}{% endif %}
 {% endblock title %}
 
 {% block css %}
@@ -22,19 +19,15 @@
       padding-right: 0;
       width: 20px;
     }
-
     .table#sodar-ff-list-table tr td:nth-child(2) {
       padding-left: 4px;
     }
-
     .table#sodar-ff-list-table tr td:nth-child(6) {
       white-space: nowrap;
     }
-
     .table#sodar-ff-list-table tr td:nth-child(7) {
       width: 25px !important;
     }
-
     .table#sodar-ff-list-table tr td:nth-child(8) {
       width: 15px !important;
     }
@@ -46,21 +39,18 @@
         display: none;
       }
     }
-
     @media screen and (max-width: 900px) {
       .table#sodar-ff-list-table tr th:nth-child(5),
       .table#sodar-ff-list-table tr td:nth-child(6) {
         display: none;
       }
     }
-
     @media screen and (max-width: 750px) {
       .table#sodar-ff-list-table tr th:nth-child(3),
       .table#sodar-ff-list-table tr td:nth-child(4){
         display: none;
       }
     }
-
     @media screen and (max-width: 500px) {
       .table#sodar-ff-list-table tr th:nth-child(2),
       .table#sodar-ff-list-table tr td:nth-child(3) {
@@ -85,7 +75,7 @@
   <div class="row sodar-subtitle-container bg-white sticky-top">
     <h3><i class="iconify" data-icon="mdi:file"></i> Files</h3>
     {% if can_add_data %}
-      {% include 'filesfolders/_list_buttons.html' with project=project folder=folder up=False %}
+      {% include 'filesfolders/_file_ops.html' with project=project folder=folder up=False %}
     {% endif %}
   </div>
 
@@ -95,14 +85,11 @@
     {% else %}
       <form method="post" action="{% url 'filesfolders:batch_edit' project=project.sodar_uuid %}" id="sodar-ff-batch-form">
     {% endif %}
-
       {% csrf_token %}
       <input type="hidden" id="sodar-ff-batch-form-action" name="batch-action" value="" />
       <input type="hidden" id="sodar-ff-user-confirmed" name="user-confirmed" value="0" />
-
       <div class="card" id="sodar-ff-file-list">
-        <div class="card-body p-0">
-
+        <div class="card-body p-0" id="sodar-ff-breadcrumb-card">
           <!-- Breadcrumb -->
           <ol id="sodar-ff-breadcrumb" class="breadcrumb sodar-breadcrumb-table">
             {% if not folder %}
@@ -125,24 +112,17 @@
               {% endfor %}
             {% endif %}
           </ol>
-
         </div>
         <div class="card-body p-0">
           <table class="table table-striped sodar-card-table" id="sodar-ff-list-table">
             <thead>
               {% include 'filesfolders/_list_header.html' with details_card_mode=False %}
             </thead>
-
-            <!-- Content -->
             <tbody id="sodar-ff-list-content">
-
               <!-- Folders -->
-              <!-- Print this if current folder is not root -->
-              {% if folder %}
+              {% if folder %} {# Display if current folder is not root #}
                 <tr>
-                  <td>
-                    <i class="iconify" data-icon="mdi:folder"></i>
-                  </td>
+                  <td><i class="iconify" data-icon="mdi:folder"></i></td>
                   <td>
                     {% if folder.folder %}
                       <a href="{% url 'filesfolders:list' folder=folder.folder.sodar_uuid %}">.. /</a>
@@ -151,43 +131,38 @@
                     {% endif %}
                   </td>
                   <td></td>
-                  <td>Parent folder</td>
+                  <td>Parent Folder</td>
                   <td></td>
                   <td></td>
                   <td></td>
                   <td></td>
                 </tr>
               {% endif %}
-
               {% for folder in folders %}
                 {% include 'filesfolders/_file_item.html' with item=folder %}
               {% endfor %}
-
-              <!-- External links -->
+              {# External links #}
               {% for link in links %}
                 {% include 'filesfolders/_file_item.html' with item=link %}
               {% endfor %}
-
-              <!-- Files -->
+              {# Files #}
               {% if files.count > 0 %}
                 {% for file in files %}
                   {% include 'filesfolders/_file_item.html' with item=file %}
                 {% endfor %}
               {% endif %}
-
               {% if folders.count == 0 and links.count == 0 and files.count == 0 %}
                 <tr>
-                  <td class="bg-faded font-italic text-center" colspan="8">Empty folder</td>
+                  <td class="bg-faded font-italic text-center" colspan="8">
+                    Empty folder
+                  </td>
                 </tr>
               {% endif %}
-
              </tbody>
           </table>
-        </div> <!-- End table card block -->
-      </div> <!-- End card -->
-
+        </div> {# Table card block #}
+      </div> {# Card #}
     </form>
-
     {# Folder ReadMe #}
     {% if readme_data %}
       <div class="card" id="sodar-ff-readme-card">
@@ -213,15 +188,7 @@
         </div>
       </div>
     {% endif %}
-
-    {% comment %}
-    {% if can_add_data %}
-      {% include 'filesfolders/_list_buttons.html' with project=project folder=folder up=True %}
-    {% endif %}
-    {% endcomment %}
-
-  </div> <!-- End row -->
-
+  </div>
 {% else %}
   <div class="alert alert-danger" role="alert">
     Insufficient permissions for viewing {% get_display_name 'PROJECT' %} files!
@@ -232,63 +199,98 @@
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Filesfolders Javascript -->
   <script type="text/javascript" src="{% static 'filesfolders/js/filesfolders.js' %}"></script>
 
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true;
-
-    tour.addStep('files_list', {
-        title: 'File List',
-        text: 'Here you can browse the files in the current folder and ' +
-              'navigate between folders.',
-        attachTo: '#sodar-ff-file-list top',
+    tour.addStep('files', {
+        title: 'The Files App',
+        text: 'In this app you can browse and manage files and hyperlinks in ' +
+              'a folder structure. The files are stored in the database of ' +
+              'the site.',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
     tour.addStep('files_breadcrumb', {
-        title: 'Breadcrumb',
-        text: 'This element displays the path to the current folder for ' +
-              'quick navigation.',
-        attachTo: '#sodar-ff-breadcrumb-icon right',
+        title: 'Files Breadcrumb',
+        text: 'This element displays the path breadcrumb for the current ' +
+              'folder for quick navigation. Click on parent folders to ' +
+              'navigate to them.',
+        attachTo: '#sodar-ff-breadcrumb-card top',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
-    tour.addStep('file_actions', {
-        title: 'File Actions Menu',
-        text: 'From this menu you can upload small files, create new ' +
-              'folders, define links to external resources and manage batch ' +
-              'moving or deletion of files.',
-        attachTo: '#sodar-ff-buttons-list left',
+    tour.addStep('files_table', {
+        title: 'Files Table',
+        text: 'In this table you see the files, hyperlinks and folders ' +
+              'contained in the current folder. Through this table you can ' +
+              'browse between categories, access files and hyperlinks and ' +
+              'manage them.',
+        attachTo: '#sodar-ff-list-table top',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-
-    if ($('td.sodar-ff-action-column').length) {
-        tour.addStep('item_menu', {
-            title: 'Item Menu',
+    tour.addStep('file_item', {
+        title: 'File Items',
+        text: 'This column contains the folders, files and hyperlinks ' +
+              'contained in the current folder. To access the file, open the ' +
+              'hyperlink or navigate to the subfolder, click on the item link.',
+        attachTo: '.sodar-ff-header-item top',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+    });
+    if ($('.sodar-ff-link-public').length) {
+        tour.addStep('item_public', {
+            title: 'Public File Link',
+            text: 'A public link for this file has been enabled. Through ' +
+                  'this link, anyone with access to the site can retrieve ' +
+                  'this file regardress of their ' +
+                  '{% get_display_name 'PROJECT' %} membership.',
+            attachTo: '.sodar-ff-link-public right',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+    if ($('.sodar-ff-flag-icon').length) {
+        tour.addStep('item_flag', {
+            title: 'Item Flag',
+            text: 'An optional flag set for an item is displayed here.',
+            attachTo: '.sodar-ff-flag-icon right',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+    if ($('td.sodar-ff-item-dropdown').length) {
+        tour.addStep('item_dropdown', {
+            title: 'Item Dropdown',
             text: 'For each file, folder or hyperlink you are allowed to ' +
-                  'edit, functions for updating and deleting them can be ' +
-                  'found in this menu.',
-            attachTo: '.sodar-ff-action-column left',
+                  'edit, functions for updating and deleting the specific ' +
+                  'item can be found in this dropdown.',
+            attachTo: '.sodar-ff-item-dropdown left',
             advanceOn: '.docs-link click',
             showCancelLink: true
         });
     }
-
-    if ($('#sodar-ff-list-header-select').length) {
-        tour.addStep('project_app_details', {
-            title: 'Item Selection Column',
+    if ($('.sodar-ff-checkbox-item').length) {
+        tour.addStep('item_select', {
+            title: 'Item Selecting',
             text: 'Select files, folders and hyperlinks in this column for ' +
-                  'batch moving from the File Actions menu.',
-            attachTo: '#sodar-ff-list-header-select left',
+                  'batch operations in the File Operations dropdown.',
+            attachTo: '.sodar-ff-checkbox-item left',
             advanceOn: '.docs-link click',
             showCancelLink: true
         });
     }
+    tour.addStep('file_ops', {
+        title: 'File Operations Dropdown',
+        text: 'In this dropdown you can upload files, create new folders ' +
+              'under the current folder and define hyperlinks to external ' +
+              'resources. It also allows batch moving or deletion.',
+        attachTo: '#sodar-ff-file-ops-btn left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+    });
   </script>
 {% endblock javascript %}

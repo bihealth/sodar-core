@@ -5,6 +5,55 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.13.1 (2023-08-30)
+====================
+
+Added
+-----
+
+- **General**
+    - ``get_chromedriver_url.sh`` utility helper (#1255)
+- **Projectroles**
+    - ``TestSiteAppPermissionBase`` base test class (#1236)
+    - ``full_title`` arg in ``Project.get_log_title()`` (#1238)
+    - ``MultipleFileInput`` and ``MultipleFileField`` form helpers (#1226)
+    - ``syncmodifyapi`` project limiting option (#1263)
+
+Changed
+-------
+
+- **General**
+    - Update ``django-plugins`` and ``drf-keyed-list`` dev dependencies to PyPI packages (#1241)
+    - Upgrade general Python dependencies (#1239)
+    - Update tour help (#1102)
+    - Template refactoring (#1102, #1249)
+- **Projectroles**
+    - Move ``setup_ip_allowing()`` to ``IPAllowMixin`` (#1237)
+    - Improve ``syncmodifyapi`` project logging (#1228)
+    - Do not exit ``syncmodifyapi`` on failure (#1229)
+    - Simplify ``syncmodifyapi`` project querying (#1264)
+    - Update ``get_role_display_name()`` to receive ``Role`` as first argument (#1265)
+    - Improve member invite templates (#1246, #1247, #1248)
+- **Timeline**
+    - Handle app plugin exceptions in ``get_object_link()`` (#1232)
+
+Fixed
+-----
+
+- **General**
+    - Search in Sphinx docs build (#1245)
+    - All utility scripts not set as executable (#1254)
+    - Local Chromedriver install failure (#1255)
+- **Projectroles**
+    - Hardcoded ``appalerts`` dependency in ``test_views`` (#1252)
+    - Remote sync crash in ``_add_parent_categories()`` (#1258)
+    - Remote sync timeline event description notation (#1260)
+    - Django settings not working in login view (#1250)
+    - Template extension not working in login view (#1250)
+- **Userprofile**
+    - Template padding (#1244)
+
+
 v0.13.0 (2023-06-01)
 ====================
 

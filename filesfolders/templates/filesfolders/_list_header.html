@@ -1,12 +1,12 @@
 <tr>
-  <th colspan="2">Name</th>
+  <th colspan="2" class="sodar-ff-header-item">Item</th>
   <th class="text-right">Size</th>
   <th>Description</th>
   <th>Owner</th>
   <th>Updated</th>
   {% if not details_card_mode %}
     <th></th>
-    <th id="sodar-ff-list-header-select">
+    <th id="sodar-ff-header-select">
       {% if can_update_own or can_update_all %}
         <input class="sodar-checkbox" type="checkbox"
                onchange="checkAll(this)" name="check_all"

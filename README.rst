@@ -115,7 +115,7 @@ and breaking changes are possible.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.13.0
+    pip install django-sodar-core==0.13.1
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.
@@ -135,12 +135,12 @@ Repository
 
 The branches of the SODAR Core repository are organized as follows:
 
-- ``main``: The latest stable release.
-- ``dev``: The current development branch. Most recent features go here, but
-  stability is not guaranteed.
+``main``
+    The latest stable release.
+``dev``
+    The current development branch. Most recent features go here, but stability
+    is not guaranteed. Pull requests should always be based on this branch.
 
 When including SODAR Core in your Django project, it is highly recommended to
 freeze your dependency to a specific release tag or commit ID. The project is
 under development and breaking changes may be introduced frequently.
-
-Contributions should always be based on the ``dev`` branch.

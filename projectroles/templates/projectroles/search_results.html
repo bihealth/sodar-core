@@ -17,7 +17,6 @@
 
 {% block css %}
   {{ block.super }}
-
   <!-- DataTables -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.css" />
 
@@ -25,12 +24,10 @@
     div.sodar-search-card {
         display: none;  /* Will be enabled after DataTables init */
     }
-
     div.sodar-search-card-body {
         padding: 0;
         overflow-x: hidden; /* Fix possible overflow when resizing window */
     }
-
     table.sodar-search-table {
       display: inline-table;
       min-width: 100%;
@@ -39,29 +36,24 @@
       border-bottom: 0 !important;
       margin: 0 !important;
     }
-
     table.sodar-search-table thead tr th {
       padding: 12px !important;
       padding-right: 22px !important; /* Avoid covering sort icons */
       max-width: 250px !important;
     }
-
     table.sodar-search-table tbody tr td {
       padding: 12px !important;
       max-width: 250px !important;
     }
-
     .sodar-header-input-group-search {
         max-width: 250px;
     }
-
     select.sodar-search-page-length {
         height: 32px;
         padding-top: 5px;
     }
 
     /* DataTables modifications */
-
     .dataTables_paginate {
       width: 100%;
       padding: 12px !important;
@@ -69,37 +61,27 @@
       text-align: right;
       border-top: 1px solid #dfdfdf !important;
     }
-
     .dataTables_paginate .pagination .active .page-link {
         background-color: #007bff;
         color: #ffffff;
     }
-
     th.sorting {
       padding-left: 10px !important;
       border-bottom: 0 !important;
     }
-
     th.sorting::after {
       padding-top: 7px !important;
     }
-
-    .previous::before {
-        display: none !important;
-    }
-
-    .next::after {
+    .previous::before, .next::after {
         display: none !important;
     }
 
     /* Responsive modifications */
-
     @media screen and (max-width: 1000px) {
     .sodar-header-input-group-search {
       display: none;
     }
   }
-
   </style>
 {% endblock css %}
 
@@ -176,64 +158,94 @@
       </ul>
     </div>
   {% endif %}
-
 </div>
 
 {% endblock projectroles %}
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Settings for Javascript -->
   <script type="text/javascript">
     {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' default=5 as search_pagination %}
     window.searchPagination = {{ search_pagination }};
     window.refreshCellOverflow = true;
   </script>
-
   <!-- DataTables -->
   <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
-
   <!-- Project search -->
   <script type="text/javascript" src="{% static 'projectroles/js/search.js' %}"></script>
 
   <!-- Tour content -->
   <script type="text/javascript">
-
     tourEnabled = true;
-
     $(document).ready(function() {
-        if ($('.sodar-search-card').length) {
+        tour.addStep('search_results', {
+            title: 'Search Results',
+            text: 'Search results are displayed in this view. Found search ' +
+                  'items are displayed in cards specific to different ' +
+                  'applications and data types.',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+        if ($('.sodar-search-card-body').length) {
             tour.addStep('search_card', {
-                title: 'Matching Items',
-                text: 'Matching {% get_display_name "PROJECT" plural=True %} ' +
-                      'and items are listed in cards separated by data type.',
+                title: 'Search Results Card',
+                text: 'This is a search results card for specific data types ' +
+                      'from an application.',
+                attachTo: '.sodar-search-card-body top',
                 advanceOn: '.docs-link click',
                 showCancelLink: true
             });
         }
-
+        if ($('.sodar-search-page-length').length) {
+            tour.addStep('search_card_page_length', {
+                title: 'Search Results Display Amount',
+                text: 'The maximum results to be displayed on each page of ' +
+                      'the results card can be set here.',
+                attachTo: '.sodar-search-page-length left',
+                advanceOn: '.docs-link click',
+                showCancelLink: true
+            });
+        }
+        if ($('.sodar-search-filter').length) {
+            tour.addStep('search_card_filter', {
+                title: 'Search Results Filtering',
+                text: 'The search results displayed in this results card can ' +
+                      'be filtered by typing into this input box.',
+                attachTo: '.sodar-search-filter left',
+                advanceOn: '.docs-link click',
+                showCancelLink: true
+            });
+        }
+        if ($('th.sorting').length) {
+            tour.addStep('search_card_sort', {
+                title: 'Search Result Sorting',
+                text: 'Results can be sorted by each column in an ascending ' +
+                      'or descending order by clicking on these icons.',
+                attachTo: 'th.sorting right',
+                advanceOn: '.docs-link click',
+                showCancelLink: true
+            });
+        }
         if ($('.sodar-search-highlight').length) {
             tour.addStep('search_highlight', {
                 title: 'Search Highlight',
-                text: 'Search terms are highlighted for each matching object.',
+                text: 'Search terms are highlighted for each found object.',
                 attachTo: '.sodar-search-highlight right',
                 advanceOn: '.docs-link click',
                 showCancelLink: true
             });
         }
-
         if ($('.sodar-paginate-button').length) {
             tour.addStep('search_paginate', {
                 title: 'Search Pagination',
-                text: 'In case of a large number of results, they can be browsed ' +
-                      'using this sub-page navigation.',
+                text: 'In case of a large number of results, they can be ' +
+                      'browsed using this sub-page navigation.',
                 attachTo: '.sodar-paginate-button left',
                 advanceOn: '.docs-link click',
                 showCancelLink: true
             });
         }
-
         if ($('#sodar-search-not-found-alert').length) {
             tour.addStep('search_not_found', {
                 title: 'Data Not Found',

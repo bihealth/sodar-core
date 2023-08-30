@@ -47,7 +47,7 @@ $(document).ready(function () {
                   $(this).fadeOut(250);
               });
               $(document).find('#sodar-app-alert-empty').delay(300).fadeIn(250);
-              $(document).find('#sodar-app-alert-btn-dismiss-all').addClass('disabled');
+              $(document).find('#sodar-ap-ops-dismiss-all').addClass('disabled');
           }
           // Fade the badge itself
           $(document).find('#sodar-app-alert-badge').fadeOut(250);

@@ -15,9 +15,6 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
-# Appalerts dependency
-from appalerts.models import AppAlert
-
 # Timeline dependency
 from timeline.models import ProjectEvent
 from timeline.tests.test_models import (
@@ -522,9 +519,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def setUp(self):
         super().setUp()
-        app_alerts = get_backend_api('appalerts_backend')
-        if app_alerts:
-            self.app_alert_model = app_alerts.get_model()
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
 
     def test_render_top(self):
         """Test rendering top level category creation form"""
@@ -914,9 +909,8 @@ class TestProjectUpdateView(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-        app_alerts = get_backend_api('appalerts_backend')
-        if app_alerts:
-            self.app_alert_model = app_alerts.get_model()
+        # Get AppAlert model
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
 
     def test_render_project(self):
         """Test rendering of Project updating form with an existing project"""
@@ -1353,13 +1347,13 @@ class TestProjectArchiveView(
     def _get_tl_un(cls):
         return ProjectEvent.objects.filter(event_name='project_unarchive')
 
-    @classmethod
-    def _get_alerts(cls):
-        return AppAlert.objects.filter(alert_name='project_archive')
+    def _get_alerts(self):
+        return self.app_alert_model.objects.filter(alert_name='project_archive')
 
-    @classmethod
-    def _get_alerts_un(cls):
-        return AppAlert.objects.filter(alert_name='project_unarchive')
+    def _get_alerts_un(self):
+        return self.app_alert_model.objects.filter(
+            alert_name='project_unarchive'
+        )
 
     def setUp(self):
         super().setUp()
@@ -1380,6 +1374,8 @@ class TestProjectArchiveView(
         self.contributor_as = self.make_assignment(
             self.project, self.user_contributor, self.role_contributor
         )
+        # Get AppAlert model
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
 
     def test_render(self):
         """Test rendering ProjectArchiveView with a project"""
@@ -2524,10 +2520,8 @@ class TestRoleAssignmentCreateView(
             self.project, self.user_owner, self.role_owner
         )
         self.user_new = self.make_user('user_new')
-
-        app_alerts = get_backend_api('appalerts_backend')
-        if app_alerts:
-            self.app_alert_model = app_alerts.get_model()
+        # Get AppAlert model
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
 
     def test_render(self):
         """Test rendering of RoleAssignment creation form"""
@@ -3025,9 +3019,8 @@ class TestRoleAssignmentUpdateView(
         self.role_as = self.make_assignment(
             self.project, self.user_guest, self.role_guest
         )
-        app_alerts = get_backend_api('appalerts_backend')
-        if app_alerts:
-            self.app_alert_model = app_alerts.get_model()
+        # Get AppAlert model
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
 
     def test_render(self):
         """Test rendering of RoleAssignment updating form"""
@@ -3335,6 +3328,7 @@ class TestRoleAssignmentDeleteView(
             self.project, self.user_contrib, self.role_contributor
         )
         self.user_new = self.make_user('user_new')
+        # Set up appalerts
         self.app_alerts = get_backend_api('appalerts_backend')
         self.app_alert_model = self.app_alerts.get_model()
 
@@ -3696,8 +3690,8 @@ class TestRoleAssignmentOwnerTransferView(
         )
         # User without roles
         self.user_new = self.make_user('user_new')
-        app_alerts = get_backend_api('appalerts_backend')
-        self.app_alert_model = app_alerts.get_model()
+        # Get AppAlert model
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
 
     def test_render(self):
         """Test rendering ownership transfer form"""
@@ -5453,7 +5447,7 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(
             0,
             ProjectEvent.objects.filter(
-                event_name='batch_update_remote'
+                event_name='remote_batch_update'
             ).count(),
         )
         self.assertEqual(RemoteProject.objects.all().count(), 0)
@@ -5484,16 +5478,16 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
         tl_event = ProjectEvent.objects.filter(
-            event_name='batch_update_remote'
+            event_name='remote_batch_update'
         ).first()
-        self.assertEqual(tl_event.event_name, 'batch_update_remote')
+        self.assertEqual(tl_event.event_name, 'remote_batch_update')
 
     def test_post_update(self):
         """Test updating by modifying an existing RemoteProject"""
         self.assertEqual(
             0,
             ProjectEvent.objects.filter(
-                event_name='batch_update_remote'
+                event_name='remote_batch_update'
             ).count(),
         )
         rp = self.make_remote_project(
@@ -5530,9 +5524,9 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
         tl_event = ProjectEvent.objects.filter(
-            event_name='batch_update_remote'
+            event_name='remote_batch_update'
         ).first()
-        self.assertEqual(tl_event.event_name, 'batch_update_remote')
+        self.assertEqual(tl_event.event_name, 'remote_batch_update')
 
 
 # SODAR User view tests --------------------------------------------------------

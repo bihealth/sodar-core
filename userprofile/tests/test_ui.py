@@ -23,7 +23,7 @@ class TestUserDetails(TestUIBase):
         """Test existence of user update button"""
         url = reverse('userprofile:detail')
         expected = [(self.local_user, 1), (self.ldap_user, 0)]
-        self.assert_element_count(expected, url, 'sodar-user-update-btn')
+        self.assert_element_count(expected, url, 'sodar-user-btn-update')
 
 
 class TestUserSettings(TestUIBase):

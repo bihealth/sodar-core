@@ -3,5 +3,5 @@
   <td class="text-nowrap">{{ item.created|date:'Y-m-d H:i' }}</td>
   <td class="text-nowrap">{{ token.expiry|date:'Y-m-d H:i'|default:'Never' }}</td>
   <td class="text-nowrap"><code>{{ item.token_key }}</code></td>
-  <td>{% include 'tokens/_token_item_buttons.html' %}</td>
+  <td class="text-right">{% include 'tokens/_token_dropdown.html' %}</td>
 </tr>

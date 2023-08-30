@@ -36,7 +36,6 @@
 <div class="container-fluid sodar-page-container">
   <form method="post">
     {% csrf_token %}
-
     {{ form.name | as_crispy_field }}
     {{ form.folder | as_crispy_field }}
     {{ form.description | as_crispy_field }}

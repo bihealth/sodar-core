@@ -87,8 +87,10 @@ class TestListView(TestAlertUIBase):
         url = reverse('adminalerts:list')
         self.assert_element_count(expected, url, 'sodar-aa-alert-item', 'id')
 
-    def test_list_buttons(self):
-        """Test existence of buttons in list"""
+    def test_list_dropdown(self):
+        """Test existence of alert dropdown in list"""
         expected = [(self.superuser, 1)]
         url = reverse('adminalerts:list')
-        self.assert_element_count(expected, url, 'sodar-aa-alert-buttons', 'id')
+        self.assert_element_count(
+            expected, url, 'sodar-aa-alert-dropdown', 'class'
+        )
