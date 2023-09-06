@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - User account update signals not triggered on login (#1274)
+
+
 v0.13.1 (2023-08-30)
 ====================
 
