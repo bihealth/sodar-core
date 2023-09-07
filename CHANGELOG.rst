@@ -8,6 +8,13 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``queryset_project_field`` override in ``APIProjectContextMixin`` (#1273)
+
+
 Fixed
 -----
 

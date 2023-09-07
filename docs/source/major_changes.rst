@@ -16,6 +16,7 @@ v0.13.2 (WIP)
 Release Highlights
 ==================
 
+- Add REST API project context queryset field override
 - General bug fixes and minor updates
 
 
