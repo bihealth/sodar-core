@@ -20,6 +20,7 @@ Fixed
 
 - **Projectroles**
     - User account update signals not triggered on login (#1274)
+    - Project list rendering failure with finder role (#1276)
 
 
 v0.13.1 (2023-08-30)

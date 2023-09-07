@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add REST API project context queryset field override
+- Fix project list view rendering issues with finder role
 - General bug fixes and minor updates
 
 
