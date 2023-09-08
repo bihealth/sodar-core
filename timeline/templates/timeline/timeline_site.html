@@ -26,10 +26,10 @@
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h2>
-    {% if timeline_mode == 'site' %}
-      <i class="iconify" data-icon="mdi:clock-time-eight"></i>
+    {% if timeline_mode == 'site' or timeline_mode == 'object' %}
+      <i class="iconify" data-icon="mdi:clock-time-eight-outline"></i>
     {% else %}
-      <i class="iconify" data-icon="mdi:cog-counterclockwise"></i>
+      <i class="iconify" data-icon="mdi:web-clock"></i>
     {% endif %}
     {{ timeline_title }}
   </h2>

@@ -14,6 +14,12 @@ Added
 - **Projectroles**
     - ``queryset_project_field`` override in ``APIProjectContextMixin`` (#1273)
 
+Changed
+-------
+
+- **Timeline**
+    - Update column width and responsiveness handling (#1721)
+    - View icon display for site views (#1720)
 
 Fixed
 -----

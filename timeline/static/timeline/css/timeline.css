@@ -1,10 +1,20 @@
 /* Main table */
+table#sodar-tl-table {
+  display: inline-table;
+}
 table#sodar-tl-table tbody tr td:nth-child(1),
 table#sodar-tl-table tbody tr td:nth-child(2),
 table#sodar-tl-table tbody tr td:nth-child(3) {
   white-space: nowrap;
 }
-
+table#sodar-tl-table tbody tr td:nth-child(2) {
+  width: 200px;
+  max-width: 200px;
+}
+table#sodar-tl-table tbody tr td:nth-child(3) {
+  width: 220px;
+  max-width: 220px;
+}
 table#sodar-tl-table tbody tr td:nth-child(4) {
   width: 100%;
 }
@@ -14,11 +24,9 @@ table#sodar-tl-table-detail tbody tr td:nth-child(1),
 table#sodar-tl-table-detail tbody tr td:nth-child(3) {
   white-space: nowrap;
 }
-
 table#sodar-tl-table-detail tbody tr td:nth-child(2) {
   width: 100%;
 }
-
 table#sodar-tl-table-extra-data tbody tr td:nth-child(1) {
   white-space: nowrap;
   width: 100%;
@@ -27,44 +35,37 @@ table#sodar-tl-table-extra-data tbody tr td:nth-child(1) {
 a.sodar-tl-link-detail:hover {
   text-decoration: underline;
 }
-
 a.sodar-tl-link-extra-data:hover {
   text-decoration: underline;
   cursor: pointer;
 }
-
 a.sodar-tl-link-extra {
   cursor: pointer;
 }
-
 a.sodar-tl-link-status-extra-data:hover {
   cursor: pointer;
 }
-
 .popover {
   font-size: 100%; /* Fix for Bootstrap 4.4 */
 }
 
 /* Responsive modifications */
-@media screen and (max-width: 1100px) {
+@media screen and (max-width: 1300px) {
   .table#sodar-tl-table thead tr th:nth-child(2),
   .table#sodar-tl-table tbody tr td:nth-child(2) {
     display: none;
   }
 }
-
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 1100px) {
   .table#sodar-tl-table tbody tr td:nth-child(1) {
     white-space: normal;
   }
-
   .table#sodar-tl-table thead tr th:nth-child(3),
   .table#sodar-tl-table tbody tr td:nth-child(3) {
     display: none;
   }
 }
-
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 700px) {
   .table#sodar-tl-table thead tr th:nth-child(5),
   .table#sodar-tl-table tbody tr td:nth-child(5) {
       display: none;
@@ -75,24 +76,19 @@ a.sodar-tl-link-status-extra-data:hover {
   max-width: 75% !important;
   font-family: monospace;
 }
-
 pre.sodar-tl-json {
   font-family: monospace;
   font-size: 85%;
 }
-
 .json-open-bracket, .json-close-bracket {
   color: #CC0011;
 }
-
 .json-property {
   color: #1A5988;
 }
-
 .json-semi-colon {
   color: #14171A;
 }
-
 .json-value {
   color: #222222;
 }
@@ -104,7 +100,6 @@ pre.sodar-tl-json {
   flex-wrap: wrap;
   border-bottom: 1px solid #dee2e6;
 }
-
 .sodar-tl-copy-btn {
   position: absolute;
   top: 10px;
