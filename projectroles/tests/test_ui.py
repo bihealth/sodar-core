@@ -1688,6 +1688,24 @@ class TestProjectCreateView(TestUIBase):
         ).find_element(By.TAG_NAME, 'svg')
         self.assertTrue(logo.is_displayed())
 
+    def test_submit_button(self):
+        """Test rendering of submit button"""
+        url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        element = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-pr-btn-submit-once'
+        )
+        self.assertEqual(element.text, 'Create')
+
+        self.assertTrue(element.is_enabled())
+        element.click()
+        # self.assertFalse(element.is_enabled())
+        # self.assertIsNotNone(element.find_element(By.CLASS_NAME, 'spinner-border'))
+
 
 class TestProjectUpdateView(TestUIBase):
     """Tests for ProjectUpdateView UI"""
