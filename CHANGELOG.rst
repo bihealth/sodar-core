@@ -17,6 +17,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Refactor and cleanup permission tests (#1267)
 - **Timeline**
     - Update column width and responsiveness handling (#1721)
     - View icon display for site views (#1720)
@@ -27,6 +29,8 @@ Fixed
 - **Projectroles**
     - User account update signals not triggered on login (#1274)
     - Project list rendering failure with finder role (#1276)
+- **Timeline**
+    - Ajax view permission test issues (#1267)
 
 
 v0.13.1 (2023-08-30)

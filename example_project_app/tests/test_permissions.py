@@ -1,5 +1,6 @@
-"""UI view permission tests for example_project_app"""
+"""Test for UI view permissions in example_project_app"""
 
+from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
@@ -10,11 +11,11 @@ from projectroles.tests.test_models import AppSettingMixin
 from filesfolders.tests.test_models import FolderMixin
 
 
-class TestExampleViews(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
-    """Permission tests for example UI views"""
+class TestExampleView(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
+    """Permission tests for ExampleView"""
 
-    def test_example_project(self):
-        """Test permissions for example view with project"""
+    def test_get(self):
+        """Test ExampleView GET"""
         url = reverse(
             'example_project_app:example',
             kwargs={'project': self.project.sodar_uuid},
@@ -36,8 +37,17 @@ class TestExampleViews(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
         self.project.set_public()
         self.assert_response(url, self.user_no_roles, 200)
 
-    def test_example_ext_model(self):
-        """Test permissions for example view with model from another app"""
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        url = reverse(
+            'example_project_app:example',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.assert_response(url, self.anonymous, 302)
+
+    def test_get_ext_model(self):
+        """Test GET with model from another app"""
         # Create object from filesfolders app model
         folder = self.make_folder(
             name='TestFolder',
@@ -66,3 +76,19 @@ class TestExampleViews(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
         self.assert_response(url, bad_users, 302)
         self.project.set_public()
         self.assert_response(url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_ext_model_anon(self):
+        """Test GET with model from another app and anonymous access"""
+        folder = self.make_folder(
+            name='TestFolder',
+            project=self.project,
+            folder=None,
+            owner=self.user_owner,
+            description='',
+        )
+        url = reverse(
+            'example_project_app:example_ext_model',
+            kwargs={'filesfolders__folder': folder.sodar_uuid},
+        )
+        self.assert_response(url, self.anonymous, 302)

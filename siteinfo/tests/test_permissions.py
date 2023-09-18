@@ -1,4 +1,4 @@
-"""Permission tests for the siteinfo app"""
+"""Tests for UI view permissions in the siteinfo app"""
 
 from django.test import override_settings
 from django.urls import reverse
@@ -7,19 +7,21 @@ from django.urls import reverse
 from projectroles.tests.test_permissions import TestSiteAppPermissionBase
 
 
-class TestSiteInfoPermissions(TestSiteAppPermissionBase):
-    """Tests for siteinfo view permissions"""
+class TestSiteInfoViewPermissions(TestSiteAppPermissionBase):
+    """Tests for SiteInfoView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('siteinfo:info')
 
     def test_site_info(self):
-        """Test site info view"""
-        url = reverse('siteinfo:info')
+        """Test SiteInfoView GET"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_site_info_anon(self):
-        """Test site info view with anonymous access"""
-        url = reverse('siteinfo:info')
-        self.assert_response(url, self.anonymous, 302)
+        """Test GET with anonymous access"""
+        self.assert_response(self.url, self.anonymous, 302)

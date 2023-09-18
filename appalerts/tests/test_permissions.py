@@ -1,7 +1,7 @@
-"""Permission tests for the appalerts app"""
+"""Test for view permissions in the appalerts app"""
 
+from django.test import override_settings
 from django.urls import reverse
-
 
 # Projectroles dependency
 from projectroles.tests.test_permissions import TestSiteAppPermissionBase
@@ -9,8 +9,8 @@ from projectroles.tests.test_permissions import TestSiteAppPermissionBase
 from appalerts.tests.test_models import AppAlertMixin
 
 
-class TestAppAlertPermissions(AppAlertMixin, TestSiteAppPermissionBase):
-    """Tests for AppAlert permissions"""
+class AppalertsPermissionTestBase(AppAlertMixin, TestSiteAppPermissionBase):
+    """Base test class for appalerts view permission tests"""
 
     def setUp(self):
         super().setUp()
@@ -21,46 +21,96 @@ class TestAppAlertPermissions(AppAlertMixin, TestSiteAppPermissionBase):
             user=self.regular_user, url=reverse('home')
         )
 
-    def test_list(self):
-        """Test permissions for the alert list view"""
-        url = reverse('appalerts:list')
+
+class TestAppAlertListView(AppalertsPermissionTestBase):
+    """Permission tests for AppAlertListView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('appalerts:list')
+
+    def test_get(self):
+        """Test AppAlertListView GET"""
         good_users = [
             self.superuser,
             self.regular_user,
             self.no_alert_user,
         ]
-        bad_users = [self.anonymous]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, self.anonymous, 302)
 
-    def test_redirect(self):
-        """Test permissions for the alert list view"""
-        url = reverse(
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.assert_response(self.url, self.anonymous, 302)
+
+
+class TestAppAlertRedirectView(AppalertsPermissionTestBase):
+    """Permission tests for AppAlertLinkRedirectView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
             'appalerts:redirect', kwargs={'appalert': self.alert.sodar_uuid}
         )
-        bad_url = reverse('appalerts:list')
+        self.bad_redirect_url = reverse('appalerts:list')
+
+    def test_get(self):
+        """Test AppAlertLinkRedirectView GET"""
         good_users = [self.regular_user]
         bad_users = [self.superuser, self.no_alert_user, self.anonymous]
         self.assert_response(
-            url, good_users, 302, redirect_user=reverse('home')
+            self.url, good_users, 302, redirect_user=reverse('home')
         )
-        self.assert_response(url, bad_users, 302, redirect_user=bad_url)
+        self.assert_response(
+            self.url, bad_users, 302, redirect_user=self.bad_redirect_url
+        )
 
-    def test_ajax_status(self):
-        """Test permissions for the alert status ajax view"""
-        url = reverse('appalerts:ajax_status')
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.assert_response(
+            self.url, self.anonymous, 302, redirect_user=self.bad_redirect_url
+        )
+
+
+class TestAppAlertStatusAjaxView(AppalertsPermissionTestBase):
+    """Permission tests for AppAlertStatusAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('appalerts:ajax_status')
+
+    def test_get(self):
+        """Test AppAlertStatusAjaxView GET"""
         good_users = [self.superuser, self.regular_user, self.no_alert_user]
-        bad_users = [self.anonymous]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 403)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, self.anonymous, 403)
 
-    def test_ajax_dismiss(self):
-        """Test permissions for the alert dismiss ajax view"""
-        url = reverse(
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.assert_response(self.url, self.anonymous, 403)
+
+
+class TestAppAlertDismissAjaxView(AppalertsPermissionTestBase):
+    """Permission tests for AppAlertDismissAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
             'appalerts:ajax_dismiss', kwargs={'appalert': self.alert.sodar_uuid}
         )
+
+    def test_post(self):
+        """Test AppAlertDismissAjaxView POST"""
         good_users = [self.regular_user]
         bad_users = [self.superuser, self.no_alert_user]
-        self.assert_response(url, good_users, 200, method='POST')
-        self.assert_response(url, bad_users, 404, method='POST')
-        self.assert_response(url, self.anonymous, 403, method='POST')
+        self.assert_response(self.url, good_users, 200, method='POST')
+        self.assert_response(self.url, bad_users, 404, method='POST')
+        self.assert_response(self.url, self.anonymous, 403, method='POST')
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_post_anon(self):
+        """Test POST with anonymous access"""
+        self.assert_response(self.url, self.anonymous, 403, method='POST')
