@@ -19,6 +19,7 @@ Changed
 
 - **General**
     - Refactor and cleanup permission tests (#1267)
+    - Enable setting ``ADMINS`` Django setting via env (#1280)
 - **Timeline**
     - Update column width and responsiveness handling (#1721)
     - View icon display for site views (#1720)
