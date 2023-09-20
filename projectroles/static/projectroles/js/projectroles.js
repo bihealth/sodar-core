@@ -319,7 +319,7 @@ $(window).on('resize', function () {
 });
 
 
-/* Disable button once they clicked ----------------------------------------- */
+/* Disable submit button once clicked --------------------------------------- */
 
 
 $(document).ready(function () {

@@ -1,6 +1,8 @@
 """UI tests for the projectroles app"""
 
 import socket
+import time
+
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -15,7 +17,10 @@ from django.test import LiveServerTestCase, override_settings
 from django.urls import reverse
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait, Select
@@ -1702,9 +1707,22 @@ class TestProjectCreateView(TestUIBase):
         self.assertEqual(element.text, 'Create')
 
         self.assertTrue(element.is_enabled())
+
+        # Define timeout and retry interval
+        timeout = 10  # Maximum time to wait in seconds
+        retry_interval = 0.5  # Time between retries in seconds
+
+        start_time = time.time()
         element.click()
-        # self.assertFalse(element.is_enabled())
-        # self.assertIsNotNone(element.find_element(By.CLASS_NAME, 'spinner-border'))
+        while True:
+            try:
+                if element.is_enabled() and time.time() - start_time >= timeout:
+                    self.fail(
+                        "Element did not become enabled within the timeout"
+                    )
+                time.sleep(retry_interval)
+            except StaleElementReferenceException:
+                break
 
 
 class TestProjectUpdateView(TestUIBase):
