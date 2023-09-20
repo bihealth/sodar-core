@@ -1705,22 +1705,19 @@ class TestProjectCreateView(TestUIBase):
             By.CLASS_NAME, 'sodar-pr-btn-submit-once'
         )
         self.assertEqual(element.text, 'Create')
-
         self.assertTrue(element.is_enabled())
-
-        # Define timeout and retry interval
-        timeout = 10  # Maximum time to wait in seconds
-        retry_interval = 0.5  # Time between retries in seconds
-
-        start_time = time.time()
+        # Define maximum number of retries and retry interval
+        max_retries = 50
+        retry_interval = 0.2
         element.click()
-        while True:
+        for i in range(max_retries):
             try:
-                if element.is_enabled() and time.time() - start_time >= timeout:
+                if element.is_enabled() and i < max_retries - 1:
+                    time.sleep(retry_interval)
+                else:
                     self.fail(
                         "Element did not become enabled within the timeout"
                     )
-                time.sleep(retry_interval)
             except StaleElementReferenceException:
                 break
 
