@@ -30,6 +30,7 @@ Fixed
 - **Projectroles**
     - User account update signals not triggered on login (#1274)
     - Project list rendering failure with finder role (#1276)
+    - Crash in ``email`` module with empty ``ADMINS`` setting (#1287)
 - **Timeline**
     - Ajax view permission test issues (#1267)
 

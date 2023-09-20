@@ -23,7 +23,6 @@ SUBJECT_PREFIX = settings.EMAIL_SUBJECT_PREFIX.strip() + ' '
 EMAIL_SENDER = settings.EMAIL_SENDER
 DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
-ADMIN_RECIPIENT = settings.ADMINS[0]
 
 # Local constants
 EMAIL_RE = re.compile(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)')
@@ -285,11 +284,14 @@ def get_email_footer():
     custom_footer = getattr(settings, 'PROJECTROLES_EMAIL_FOOTER', None)
     if custom_footer:
         return '\n' + custom_footer
-    return MESSAGE_FOOTER.format(
-        site_title=SITE_TITLE,
-        admin_name=ADMIN_RECIPIENT[0],
-        admin_email=ADMIN_RECIPIENT[1],
-    )
+    admin_recipient = settings.ADMINS[0] if settings.ADMINS else None
+    if admin_recipient:
+        return MESSAGE_FOOTER.format(
+            site_title=SITE_TITLE,
+            admin_name=admin_recipient[0],
+            admin_email=admin_recipient[1],
+        )
+    return ''
 
 
 def get_invite_subject(project):
