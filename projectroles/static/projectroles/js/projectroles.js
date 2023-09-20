@@ -317,3 +317,18 @@ $(document).ready(function () {
 $(window).on('resize', function () {
     toggleSidebar();
 });
+
+
+/* Disable submit button once clicked --------------------------------------- */
+
+
+$(document).ready(function () {
+    $('.sodar-pr-btn-submit-once').click(function () {
+        $(this).attr('disabled', true);
+        $(this).find('svg').remove();
+        $(this).prepend('<span class="spinner-border spinner-border-sm" ' +
+            'role="status" aria-hidden="true"></span>');
+        $("body").css("cursor", "progress");
+        $(this).closest('form').submit();
+    });
+});
