@@ -1716,7 +1716,7 @@ class TestProjectCreateView(TestUIBase):
                     time.sleep(retry_interval)
                 else:
                     self.fail(
-                        "Element did not become enabled within the timeout"
+                        'Element did not become enabled within the timeout'
                     )
             except StaleElementReferenceException:
                 break
