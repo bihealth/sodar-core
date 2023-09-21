@@ -323,7 +323,7 @@ $(window).on('resize', function () {
 
 
 $(document).ready(function () {
-    $('.sodar-pr-btn-submit-once').click(function () {
+    $('.sodar-btn-submit-once').click(function () {
         $(this).attr('disabled', true);
         $(this).find('svg').remove();
         $(this).prepend('<span class="spinner-border spinner-border-sm" ' +

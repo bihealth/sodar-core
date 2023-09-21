@@ -192,7 +192,9 @@ member variables and functions as instructed in comments and docstrings.
 The following variables and functions are **mandatory**:
 
 ``name``
-    App name. In most cases this should match the app package name.
+    App name. If only introducing a single plugin in your app, it is recommended
+    to have this match the app name. Note that the name variables of plugins are
+    expected to be unique, although not currently strictly enforced.
 ``title``
     Printable app title.
 ``urls``

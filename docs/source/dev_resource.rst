@@ -141,6 +141,15 @@ Markdown
 For fields supporting markdown, it is recommended to use the
 ``SODARPagedownWidget`` found in ``projectroles.models``.
 
+Submit Multi-Click Protection
+-----------------------------
+
+To avoid unwanted effects from a user clicking the submit button on a form
+multiple times, it is recommended to use the ``sodar-btn-submit-once`` class on
+the submit button in your server-side form templates. Introducing this class
+will disable the button after the initial click while the form is submitted.
+This is especially recommended for forms responsible for creating objects.
+
 
 App Settings
 ============

@@ -5,16 +5,18 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v0.13.2 (2023-09-21)
+====================
 
 Added
 -----
 
 - **General**
     - Release cleanup issue template (#1289)
+    - Use ``sodar-btn-submit-once`` in object create forms (#1233)
 - **Projectroles**
     - ``queryset_project_field`` override in ``APIProjectContextMixin`` (#1273)
+    - ``sodar-btn-submit-once`` class for forms (#1233)
 
 Changed
 -------

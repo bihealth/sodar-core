@@ -1702,7 +1702,7 @@ class TestProjectCreateView(TestUIBase):
             self.superuser, url, wait_elem=None, wait_loc='ID'
         )
         element = self.selenium.find_element(
-            By.CLASS_NAME, 'sodar-pr-btn-submit-once'
+            By.CLASS_NAME, 'sodar-btn-submit-once'
         )
         self.assertEqual(element.text, 'Create')
         self.assertTrue(element.is_enabled())
