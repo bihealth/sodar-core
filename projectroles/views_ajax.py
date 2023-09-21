@@ -189,7 +189,12 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         ):
             return True
         # If user has finder role in a parent category, we need to check role
-        if finder_cats and depth > 0:
+        p_ft = project.full_title
+        if (
+            finder_cats
+            and depth > 0
+            and any([p_ft.startswith(c + CAT_DELIMITER) for c in finder_cats])
+        ):
             for i in range(0, depth + 1):
                 c = ' / '.join(project.full_title.split(' / ')[:i])
                 if c in finder_cats:

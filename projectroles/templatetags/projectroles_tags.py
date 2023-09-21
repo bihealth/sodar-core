@@ -89,7 +89,7 @@ def is_app_visible(plugin, project, user):
     app_hidden = False
     if plugin.name in getattr(settings, 'PROJECTROLES_HIDE_PROJECT_APPS', []):
         app_hidden = True
-    # TODO: Remove this in SODAR Core v0.14 (see issue #1143)
+    # TODO: Remove this in SODAR Core v1.0 (see issue #1143)
     elif plugin.name in getattr(settings, 'PROJECTROLES_HIDE_APP_LINKS', []):
         app_hidden = True
     if (

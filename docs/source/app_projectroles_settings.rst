@@ -246,7 +246,7 @@ The following projectroles settings are **optional**:
     (list)
 ``PROJECTROLES_HIDE_APP_LINKS``
     **DEPRECATED**, use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead. This will be
-    emoved in v0.14
+    removed in v1.0
 ``PROJECTROLES_DELEGATE_LIMIT``
     The number of delegate roles allowed per project. The amount is limited to 1
     per project if not set, unlimited if set to 0. Will be ignored for remote

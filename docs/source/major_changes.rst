@@ -10,6 +10,18 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.13.2 (2023-09-21)
+********************
+
+Release Highlights
+==================
+
+- Add REST API project context queryset field override
+- Add sodar-btn-submit-once class for forms with usage
+- Fix project list view rendering issues with finder role
+- General bug fixes and minor updates
+
+
 v0.13.1 (2023-08-30)
 ********************
 
@@ -197,6 +209,15 @@ Advanced search has been updated to use POST requests. This should not require
 any changes in the plugin search implementation. However, if you have set up
 view tests for advanced search in your apps, they may have to be updated.
 
+Base Template Content Element Changed
+-------------------------------------
+
+The behaviour of the ``sodar-app-content`` element in the projectroles base
+template has changed. The element can now be assigned the
+``sodar-app-content-project`` class if a project context is present. If you are
+referring to this element in custom Javascript, it is recommended to refer to
+the element with the ID ``#sodar-app-content`` instead of the class name.
+
 System Prerequisites
 --------------------
 
@@ -214,7 +235,7 @@ PROJECTROLES_HIDE_APP_LINKS Deprecated
 The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting has been depreacted. Instead,
 you should use ``PROJECTROLES_HIDE_PROJECT_APPS`` which now handles the same
 functionality. Support for the ``PROJECTROLES_HIDE_APP_LINKS`` setting will be
-removed in v0.14.
+removed in v1.0.
 
 Deprecated App Settings API Methods Removed
 -------------------------------------------

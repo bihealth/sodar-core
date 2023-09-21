@@ -5,6 +5,40 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.13.2 (2023-09-21)
+====================
+
+Added
+-----
+
+- **General**
+    - Release cleanup issue template (#1289)
+    - Use ``sodar-btn-submit-once`` in object create forms (#1233)
+- **Projectroles**
+    - ``queryset_project_field`` override in ``APIProjectContextMixin`` (#1273)
+    - ``sodar-btn-submit-once`` class for forms (#1233)
+
+Changed
+-------
+
+- **General**
+    - Refactor and cleanup permission tests (#1267)
+    - Enable setting ``ADMINS`` Django setting via env (#1280)
+- **Timeline**
+    - Update column width and responsiveness handling (#1721)
+    - View icon display for site views (#1720)
+
+Fixed
+-----
+
+- **Projectroles**
+    - User account update signals not triggered on login (#1274)
+    - Project list rendering failure with finder role (#1276)
+    - Crash in ``email`` module with empty ``ADMINS`` setting (#1287)
+- **Timeline**
+    - Ajax view permission test issues (#1267)
+
+
 v0.13.1 (2023-08-30)
 ====================
 

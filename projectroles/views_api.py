@@ -98,7 +98,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.13.0', '0.13.1']
+CORE_API_ALLOWED_VERSIONS = ['0.13.0', '0.13.1', '0.13.2']
 
 # Local constants
 INVALID_PROJECT_TYPE_MSG = (
@@ -118,14 +118,15 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
     single permission_required attribute. Also works with Knox token based
     views.
 
-    This must be used in the permission_classes attribute in order for token
+    This must be used in the ``permission_classes`` attribute in order for token
     authentication to work.
 
-    Requires implementing either permission_required or
-    get_permission_required() in the view.
+    Requires implementing either ``permission_required`` or
+    ``get_permission_required()`` in the view.
 
-    Project type can be restricted to PROJECT_TYPE_CATEGORY or
-    PROJECT_TYPE_PROJECT by setting the project_type attribute in the view.
+    Project type can be restricted to ``PROJECT_TYPE_CATEGORY`` or
+    ``PROJECT_TYPE_PROJECT``, as defined in SODAR constants, by setting the
+    ``project_type`` attribute in the view.
     """
 
     def has_permission(self, request, view):
@@ -232,11 +233,12 @@ class SODARAPIBaseMixin:
 
 class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     """
-    API view mixin for the base DRF APIView class with project permission
+    API view mixin for the base DRF ``APIView`` class with project permission
     checking, but without serializers and other generic view functionality.
 
-    Project type can be restricted to PROJECT_TYPE_CATEGORY or
-    PROJECT_TYPE_PROJECT by setting the project_type attribute in the view.
+    Project type can be restricted to ``PROJECT_TYPE_CATEGORY`` or
+    ``PROJECT_TYPE_PROJECT``, as defined in SODAR constants, by setting the
+    ``project_type`` attribute in the view.
     """
 
     permission_classes = [SODARAPIProjectPermission]
@@ -247,6 +249,10 @@ class APIProjectContextMixin(ProjectAccessMixin):
     """
     Mixin to provide project context and queryset for generic API views. Can
     be used both in SODAR and SODAR Core API base views.
+
+    If your model doesn't have a direct "project" relation, set
+    ``queryset_project_field`` in the implementing class to query based on e.g.
+    a nested foreignkey relation.
     """
 
     def get_serializer_context(self, *args, **kwargs):
@@ -255,8 +261,9 @@ class APIProjectContextMixin(ProjectAccessMixin):
         return context
 
     def get_queryset(self):
+        project_field = getattr(self, 'queryset_project_field', 'project')
         return self.__class__.serializer_class.Meta.model.objects.filter(
-            project=self.get_project()
+            **{project_field: self.get_project()}
         )
 
 
@@ -267,18 +274,24 @@ class SODARAPIGenericProjectMixin(
     API view mixin for generic DRF API views with serializers, SODAR project
     context and permission checkin.
 
-    Unless overriding permission_classes with their own implementation, the user
-    MUST supply a permission_required attribute.
+    Unless overriding ``permission_classes`` with their own implementation, the
+    user MUST supply a ``permission_required`` attribute.
 
-    Replace lookup_url_kwarg with your view's url kwarg (SODAR project
-    compatible model name in lowercase)
+    Replace ``lookup_url_kwarg`` with your view's url kwarg (SODAR project
+    compatible model name in lowercase).
 
-    If the lookup is done via the project object, change lookup_field into
-    "sodar_uuid"
+    If the lookup is done via a foreign key, change the ``lookup_field``
+    attribute of your class into ``foreignkey__sodar_uuid``, e.g.
+    ``project__sodar_uuid`` for lists.
+
+    If your object(s) don't have a direct ``project`` relation, update the
+    ``queryset_project_field`` to point to the field, e.g.
+    ``someothermodel__project``.
     """
 
     lookup_field = 'sodar_uuid'  # Use project__sodar_uuid for lists
     lookup_url_kwarg = 'project'  # Replace with relevant model
+    queryset_project_field = 'project'  # Replace if no direct project relation
 
 
 class ProjectQuerysetMixin:
@@ -316,7 +329,7 @@ class CoreAPIBaseMixin:
 
 class CoreAPIBaseProjectMixin(ProjectAccessMixin, CoreAPIBaseMixin):
     """
-    SODAR Core API view mixin for the base DRF APIView class with project
+    SODAR Core API view mixin for the base DRF ``APIView`` class with project
     permission checking, but without serializers and other generic view
     functionality.
     """
@@ -331,6 +344,7 @@ class CoreAPIGenericProjectMixin(
 
     lookup_field = 'sodar_uuid'  # Use project__sodar_uuid for lists
     lookup_url_kwarg = 'project'  # Replace with relevant model
+    queryset_project_field = 'project'  # Replace if no direct project relation
 
 
 # Projectroles Specific Base Views and Mixins ----------------------------------

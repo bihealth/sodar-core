@@ -1,4 +1,4 @@
-"""Permission tests for the adminalerts app"""
+"""Test for UI view permissions in the adminalerts app"""
 
 from django.test import override_settings
 from django.urls import reverse
@@ -9,8 +9,8 @@ from projectroles.tests.test_permissions import TestSiteAppPermissionBase
 from adminalerts.tests.test_models import AdminAlertMixin
 
 
-class TestAdminAlertPermissions(AdminAlertMixin, TestSiteAppPermissionBase):
-    """Tests for AdminAlert permissions"""
+class AdminalertsPermissionTestBase(AdminAlertMixin, TestSiteAppPermissionBase):
+    """Base test class for adminalerts UI view permission tests"""
 
     def setUp(self):
         super().setUp()
@@ -22,99 +22,123 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestSiteAppPermissionBase):
             active=True,
         )
 
-    def test_alert_list(self):
-        """Test permissions for AdminAlert list"""
-        url = reverse('adminalerts:list')
+
+class TestAdminAlertListView(AdminalertsPermissionTestBase):
+    """Permission tests for AdminAlertListView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('adminalerts:list')
+
+    def test_get(self):
+        """Test AdminAlertListView GET"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_alert_list_anon(self):
-        """Test permissions for AdminAlert list with anonymous access"""
-        url = reverse('adminalerts:list')
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
-    def test_alert_detail(self):
-        """Test permissions for AdminAlert details"""
-        url = reverse(
+
+class TestAdminAlertDetailView(AdminalertsPermissionTestBase):
+    """Permission tests for dminAlertDetailView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
             'adminalerts:detail', kwargs={'adminalert': self.alert.sodar_uuid}
         )
+
+    def test_get(self):
+        """Test AdminAlertDetailView GET"""
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_alert_detail_anon(self):
-        """Test permissions for AdminAlert details with anonymous access"""
-        url = reverse(
-            'adminalerts:detail', kwargs={'adminalert': self.alert.sodar_uuid}
-        )
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
-    def test_alert_create(self):
-        """Test permissions for AdminAlert creation"""
-        url = reverse('adminalerts:create')
+
+class TestAdminAlertCreateView(AdminalertsPermissionTestBase):
+    """Permission tests for AdminAlertCreateView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('adminalerts:create')
+
+    def test_get(self):
+        """Test AdminAlertCreateView GET"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_alert_create_anon(self):
-        """Test permissions for AdminAlert creation with anonymous access"""
-        url = reverse('adminalerts:create')
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
-    def test_alert_update(self):
-        """Test permissions for AdminAlert updating"""
-        url = reverse(
+
+class TestAdminAlertUpdateView(AdminalertsPermissionTestBase):
+    """Permission tests for AdminAlertUpdateView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
             'adminalerts:update', kwargs={'adminalert': self.alert.sodar_uuid}
         )
+
+    def test_get(self):
+        """Test AdminAlertUpdateView GET"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_alert_update_anon(self):
-        """Test permissions for AdminAlert updating with anonymous access"""
-        url = reverse(
-            'adminalerts:update', kwargs={'adminalert': self.alert.sodar_uuid}
-        )
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
-    def test_alert_delete(self):
-        """Test permissions for AdminAlert deletion"""
-        url = reverse(
+
+class TestAdminAlertDeleteView(AdminalertsPermissionTestBase):
+    """Permission tests for AdminAlertDeleteView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
             'adminalerts:delete', kwargs={'adminalert': self.alert.sodar_uuid}
         )
+
+    def test_get(self):
+        """Test AdminAlertDeleteView GET"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_alert_delete_anon(self):
-        """Test permissions for AdminAlert deletion with anonymous access"""
-        url = reverse(
-            'adminalerts:delete', kwargs={'adminalert': self.alert.sodar_uuid}
-        )
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_response(url, good_users, 200)
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)

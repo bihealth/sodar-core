@@ -154,7 +154,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     urls = urlpatterns
 
     #: Iconify icon
-    icon = 'mdi:clock-time-eight'
+    icon = 'mdi:clock-time-eight-outline'
 
     #: Description string
     description = 'Timeline of Site-Wide Events'
@@ -179,10 +179,11 @@ class AdminSiteAppPlugin(SiteAppPluginPoint):
     urls = urlpatterns
 
     #: Iconify icon
-    icon = 'mdi:cog-counterclockwise'
+    # icon = 'mdi:clock-star-four-points-outline'
+    icon = 'mdi:web-clock'
 
     #: Description string
-    description = 'Admin view for all site events'
+    description = 'Admin view for all timeline events on the site'
 
     #: Entry point URL ID
     entry_point_url_id = 'timeline:timeline_site_admin'

@@ -21,14 +21,18 @@
     {% endif %}
   </td>
   <td class="sodar-tl-item-name">
-    {% get_app_icon_html event plugin_lookup as event_icon %}
-    {{ event_icon|safe }}
-    {{ event.event_name }}
+    <div class="sodar-overflow-container">
+      {% get_app_icon_html event plugin_lookup as event_icon %}
+      {{ event_icon|safe }}
+      {{ event.event_name }}
+    </div>
   </td>
   <td class="sodar-tl-item-user {% if not event.user %}text-muted{% endif %}">
     {% if event.user %}
-      {% get_user_html event.user as user_html %}
-      {{ user_html|safe }}
+      <div class="sodar-overflow-container">
+        {% get_user_html event.user as user_html %}
+        {{ user_html|safe }}
+      </div>
     {% else %}
       N/A
     {% endif %}

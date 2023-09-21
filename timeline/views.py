@@ -70,10 +70,7 @@ class ProjectTimelineView(
 
 
 class SiteTimelineView(
-    LoginRequiredMixin,
-    LoggedInPermissionMixin,
-    EventTimelineMixin,
-    ListView,
+    LoginRequiredMixin, LoggedInPermissionMixin, EventTimelineMixin, ListView
 ):
     """View for displaying timeline events for site-wide events"""
 
@@ -83,11 +80,7 @@ class SiteTimelineView(
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
 
-class AdminTimelineView(
-    LoginRequiredMixin,
-    LoggedInPermissionMixin,
-    ListView,
-):
+class AdminTimelineView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
     """View for displaying timeline events for admin site view"""
 
     def get_context_data(self, *args, **kwargs):

@@ -1,6 +1,8 @@
 """UI tests for the projectroles app"""
 
 import socket
+import time
+
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -15,7 +17,10 @@ from django.test import LiveServerTestCase, override_settings
 from django.urls import reverse
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait, Select
@@ -1687,6 +1692,34 @@ class TestProjectCreateView(TestUIBase):
             'div[id="div_id_settings.example_project_app.project_int_setting"]',
         ).find_element(By.TAG_NAME, 'svg')
         self.assertTrue(logo.is_displayed())
+
+    def test_submit_button(self):
+        """Test rendering of submit button"""
+        url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.login_and_redirect(
+            self.superuser, url, wait_elem=None, wait_loc='ID'
+        )
+        element = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-btn-submit-once'
+        )
+        self.assertEqual(element.text, 'Create')
+        self.assertTrue(element.is_enabled())
+        # Define maximum number of retries and retry interval
+        max_retries = 50
+        retry_interval = 0.2
+        element.click()
+        for i in range(max_retries):
+            try:
+                if element.is_enabled() and i < max_retries - 1:
+                    time.sleep(retry_interval)
+                else:
+                    self.fail(
+                        'Element did not become enabled within the timeout'
+                    )
+            except StaleElementReferenceException:
+                break
 
 
 class TestProjectUpdateView(TestUIBase):

@@ -1,5 +1,6 @@
 """Tests for email sending in the projectroles Django app"""
 
+from django.conf import settings
 from django.core import mail
 from django.test import override_settings
 from django.urls import reverse
@@ -14,6 +15,7 @@ from projectroles.email import (
     send_project_create_mail,
     get_email_user,
     get_user_addr,
+    get_email_footer,
 )
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -325,6 +327,17 @@ class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
             )
             self.assertEqual(email_sent, 2)
             self.assertEqual(len(mail.outbox), 2)
+
+    def test_get_email_footer(self):
+        """Test get_email_footer() with default admin"""
+        footer = get_email_footer()
+        self.assertIn(settings.ADMINS[0][0], footer)
+        self.assertIn(settings.ADMINS[0][1], footer)
+
+    @override_settings(ADMINS=[])
+    def test_get_email_footer_no_admin(self):
+        """Test get_email_footer() with empty admin list"""
+        self.assertEqual(get_email_footer(), '')
 
     @override_settings(PROJECTROLES_EMAIL_HEADER=CUSTOM_HEADER)
     def test_custom_header(self):
