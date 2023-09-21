@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Release cleanup issue template (#1289)
 - **Projectroles**
     - ``queryset_project_field`` override in ``APIProjectContextMixin`` (#1273)
 
