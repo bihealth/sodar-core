@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - Browser-specific ``sodar-btn-submit-once`` spinner padding (#1291)
+
+
 v0.13.2 (2023-09-21)
 ====================
 

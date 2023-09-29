@@ -593,6 +593,16 @@ span.select2-selection__rendered {
   color: #495057 !important;
 }
 
+/* Fix browser-specific submit button spinner alignment (#1291) */
+.sodar-btn-spinner {
+    margin-bottom: 1px;
+  }
+@supports (-moz-appearance:none) {
+  .sodar-btn-spinner {
+    margin-bottom: 2px;
+  }
+}
+
 
 /* Text --------------------------------------------------------------------- */
 

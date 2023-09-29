@@ -10,6 +10,12 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.13.3 (WIP)
+*************
+
+TBA
+
+
 v0.13.2 (2023-09-21)
 ********************
 
