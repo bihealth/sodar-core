@@ -13,7 +13,8 @@ releases, see the :ref:`full changelog<changelog>`.
 v0.13.3 (WIP)
 *************
 
-TBA
+- Fix hidden JSON project setting reset on non-superuser project update
+- General bug fixes and minor updates
 
 
 v0.13.2 (2023-09-21)

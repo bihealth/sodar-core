@@ -492,14 +492,12 @@ class ProjectForm(SODARModelForm):
     def _init_app_settings(self):
         # Set up setting query kwargs
         self.p_kwargs = {}
+        # Show unmodifiable settings to superusers
         if not self.current_user.is_superuser:
             self.p_kwargs['user_modifiable'] = True
         self.app_settings = AppSettingAPI()
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
-
-        # plugin == 'None' refers to projectroles app
-        for plugin in self.app_plugins + [None]:
-            # Show non-modifiable settings to superusers
+        for plugin in self.app_plugins + [None]:  # Projectroles has no plugin
             if plugin:
                 app_name = plugin.name
                 p_settings = self.app_settings.get_definitions(
@@ -531,7 +529,6 @@ class ProjectForm(SODARModelForm):
     ):
         """Validate and clean app_settings form fields"""
         errors = []
-
         for plugin in app_plugins + [None]:
             if plugin:
                 name = plugin.name

@@ -767,8 +767,8 @@ class AppSettingAPI:
         :param scope: PROJECT, USER or PROJECT_USER
         :param plugin: Plugin object extending ProjectAppPluginPoint or None
         :param app_name: Name of the app plugin (string or None)
-        :param user_modifiable: Only return modifiable settings if True
-                                (boolean)
+        :param user_modifiable: Only return non-superuser modifiable settings if
+                                True (boolean)
         :return: Dict
         :raise: ValueError if scope is invalid or if neither app_name nor
                 plugin are set

@@ -103,6 +103,13 @@ REMOTE_SITE_NEW_SECRET = build_secret()
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
+HIDDEN_PROJECT_SETTINGS = [
+    'settings.example_project_app.project_hidden_setting',
+    'settings.example_project_app.project_hidden_json_setting',
+]
+UPDATED_HIDDEN_SETTING = 'Updated value'
+UPDATED_HIDDEN_JSON_SETTING = {'updated': 'value'}
+
 PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
     'test_setting': {
         'scope': APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER
@@ -895,6 +902,49 @@ class TestProjectUpdateView(
 ):
     """Tests for Project updating view"""
 
+    @classmethod
+    def _get_post_app_settings(cls, project, user):
+        """Get postable app settings for project of type PROJECT"""
+        if project.type != PROJECT_TYPE_PROJECT:
+            raise ValueError('Can only be called for a project')
+        ps = app_settings.get_all(project=project, post_safe=True)
+        # Omit hidden settings for regular user
+        if user and not user.is_superuser:
+            ps = {k: ps[k] for k in ps if k not in HIDDEN_PROJECT_SETTINGS}
+        # Edit settings to non-default values
+        ps['settings.example_project_app.project_int_setting'] = 1
+        ps['settings.example_project_app.project_str_setting'] = 'test'
+        ps['settings.example_project_app.project_bool_setting'] = True
+        ps['settings.example_project_app.project_json_setting'] = '{}'
+        ps[
+            'settings.example_project_app.project_callable_setting'
+        ] = 'No project or user for callable'
+        ps[
+            'settings.example_project_app.project_callable_setting_options'
+        ] = str(project.sodar_uuid)
+        ps['settings.projectroles.ip_restrict'] = True
+        ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
+        return ps
+
+    def _assert_app_settings(self, post_settings):
+        """Assert app settings values to match data after POST"""
+        for k, v in post_settings.items():
+            v_json = None
+            try:
+                v_json = json.loads(v)
+            except Exception:
+                pass
+            s = app_settings.get(
+                k.split('.')[1],
+                k.split('.')[2],
+                project=self.project,
+                post_safe=True,
+            )
+            if isinstance(v_json, (dict, list)):
+                self.assertEqual(json.loads(s), v_json)
+            else:
+                self.assertEqual(s, v)
+
     def setUp(self):
         super().setUp()
         self.category = self.make_project(
@@ -954,8 +1004,8 @@ class TestProjectUpdateView(
         self.assertEqual(form.initial['parent'], self.category.sodar_uuid)
         self.assertEqual(len(form.fields['parent'].choices), 2)
 
-    def test_update_project(self):
-        """Test Project updating"""
+    def test_update_project_superuser(self):
+        """Test project updating as superuser"""
         timeline = get_backend_api('timeline_backend')
         new_category = self.make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
         self.make_assignment(new_category, self.user, self.role_owner)
@@ -967,20 +1017,7 @@ class TestProjectUpdateView(
         values['parent'] = new_category.sodar_uuid  # NOTE: Updated parent
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         # Add settings values
-        ps = app_settings.get_all(project=self.project, post_safe=True)
-        # Edit settings to non-default values
-        ps['settings.example_project_app.project_int_setting'] = 1
-        ps['settings.example_project_app.project_str_setting'] = 'test'
-        ps['settings.example_project_app.project_bool_setting'] = True
-        ps['settings.example_project_app.project_json_setting'] = '{}'
-        ps[
-            'settings.example_project_app.project_callable_setting'
-        ] = 'No project or user for callable'
-        ps[
-            'settings.example_project_app.project_callable_setting_options'
-        ] = str(self.project.sodar_uuid)
-        ps['settings.projectroles.ip_restrict'] = True
-        ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
+        ps = self._get_post_app_settings(self.project, self.user)
         values.update(ps)
 
         with self.login(self.user):
@@ -994,7 +1031,6 @@ class TestProjectUpdateView(
 
         self.assertEqual(Project.objects.all().count(), 3)
         self.project.refresh_from_db()
-        self.assertIsNotNone(self.project)
         # No alert or mail, because the owner has not changed
         self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
@@ -1007,7 +1043,7 @@ class TestProjectUpdateView(
             'description': 'updated description',
             'public_guest_access': False,
             'archive': False,
-            'full_title': new_category.title + ' / ' + 'updated title',
+            'full_title': new_category.title + CAT_DELIMITER + 'updated title',
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
@@ -1016,22 +1052,20 @@ class TestProjectUpdateView(
         self.assertEqual(model_dict, expected)
 
         # Assert settings
-        for k, v in ps.items():
-            v_json = None
-            try:
-                v_json = json.loads(v)
-            except Exception:
-                pass
-            s = app_settings.get(
-                k.split('.')[1],
-                k.split('.')[2],
-                project=self.project,
-                post_safe=True,
-            )
-            if isinstance(v_json, (dict, list)):
-                self.assertEqual(json.loads(s), v_json)
-            else:
-                self.assertEqual(s, v)
+        self._assert_app_settings(ps)
+        # Assert hidden settings
+        hidden_val = app_settings.get(
+            'example_project_app',
+            'project_hidden_setting',
+            project=self.project,
+        )
+        self.assertEqual(hidden_val, '')
+        hidden_json = app_settings.get(
+            'example_project_app',
+            'project_hidden_json_setting',
+            project=self.project,
+        )
+        self.assertEqual(hidden_json, {})
 
         # Assert redirect
         with self.login(self.user):
@@ -1050,6 +1084,80 @@ class TestProjectUpdateView(
         self.assertIn('title', tl_event.extra_data)
         self.assertIn('description', tl_event.extra_data)
         self.assertIn('parent', tl_event.extra_data)
+
+    def test_update_project_regular_user(self):
+        """Test project updating as regular user"""
+        # Create new user and set as self.project owner
+        user_new = self.make_user('user_new')
+        self.owner_as.user = user_new
+        self.owner_as.save()
+        # Set hidden setting values
+        app_settings.set(
+            'example_project_app',
+            'project_hidden_setting',
+            UPDATED_HIDDEN_SETTING,
+            project=self.project,
+        )
+        app_settings.set(
+            'example_project_app',
+            'project_hidden_json_setting',
+            UPDATED_HIDDEN_JSON_SETTING,
+            project=self.project,
+        )
+        # Make new category
+        new_category = self.make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
+        self.make_assignment(new_category, user_new, self.role_owner)
+        self.assertEqual(Project.objects.all().count(), 3)
+
+        values = model_to_dict(self.project)
+        values['title'] = 'updated title'
+        values['description'] = 'updated description'
+        values['parent'] = new_category.sodar_uuid
+        values['owner'] = user_new.sodar_uuid
+        ps = self._get_post_app_settings(self.project, user_new)
+        values.update(ps)
+
+        with self.login(user_new):
+            self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        self.assertEqual(Project.objects.all().count(), 3)
+        self.project.refresh_from_db()
+        expected = {
+            'id': self.project.pk,
+            'title': 'updated title',
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': new_category.pk,
+            'description': 'updated description',
+            'public_guest_access': False,
+            'archive': False,
+            'full_title': new_category.title + CAT_DELIMITER + 'updated title',
+            'has_public_children': False,
+            'sodar_uuid': self.project.sodar_uuid,
+        }
+        model_dict = model_to_dict(self.project)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        self._assert_app_settings(ps)
+        # Hidden settings should remain as they were not changed
+        hidden_val = app_settings.get(
+            'example_project_app',
+            'project_hidden_setting',
+            project=self.project,
+        )
+        self.assertEqual(hidden_val, UPDATED_HIDDEN_SETTING)
+        hidden_json = app_settings.get(
+            'example_project_app',
+            'project_hidden_json_setting',
+            project=self.project,
+        )
+        self.assertEqual(hidden_json, UPDATED_HIDDEN_JSON_SETTING)
 
     def test_update_project_title_delimiter(self):
         """Test Project updating with category delimiter in title (should fail)"""

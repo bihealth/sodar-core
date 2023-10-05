@@ -849,27 +849,32 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         }
 
     @staticmethod
-    def _get_app_settings(data, instance, project=None):
+    def _get_app_settings(data, instance, user):
         """
         Return a dictionary of project app settings and their values.
 
-        :param data: Cleaned data from a form or serializer
+        :param data: Cleaned form data
         :param instance: Existing Project object or None
+        :param user: User initiating the project update
         :return: Dict
         """
         app_plugins = [p for p in get_active_plugins() if p.app_settings]
         project_settings = {}
+        p_kwargs = {}
+        # Show unmodifiable settings to superusers
+        if user and not user.is_superuser:
+            p_kwargs['user_modifiable'] = True
 
         for plugin in app_plugins + [None]:
             if plugin:
                 name = plugin.name
                 p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, plugin=plugin
+                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **p_kwargs
                 )
             else:
                 name = 'projectroles'
                 p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
                 )
 
             for s_key, s_val in p_settings.items():
@@ -883,11 +888,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     and instance.type not in s_val['project_types']
                 ):
                     continue
-
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default(
-                        name, s_key, project=project
-                    )
+                    s_data = app_settings.get_default(name, s_key)
                 if s_val['type'] == 'JSON':
                     if s_data is None:
                         s_data = {}
@@ -1123,8 +1125,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if not owner and old_project:  # In case of a PATCH request
             owner = old_project.get_owner().user
 
-        # Get settings
-        project_settings = self._get_app_settings(data, project)
+        project_settings = self._get_app_settings(data, project, request.user)
         old_settings = None
         if action == PROJECT_ACTION_UPDATE:
             old_settings = json.loads(json.dumps(project_settings))  # Copy
