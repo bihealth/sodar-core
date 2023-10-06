@@ -34,7 +34,10 @@ STATUS_STYLES = {
 @register.simple_tag
 def get_timestamp(event):
     """Return printable timestamp of event in local timezone"""
-    return localtime(event.get_timestamp()).strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        return localtime(event.get_timestamp()).strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:  # Handle error cases where ProjectEventStatus is missing
+        return 'N/A'
 
 
 @register.simple_tag

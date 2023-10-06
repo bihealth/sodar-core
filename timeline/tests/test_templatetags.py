@@ -1,6 +1,7 @@
 """Tests for template tags in the timeline app"""
 
 from django.urls import reverse
+from django.utils.timezone import localtime
 
 from djangoplugins.models import Plugin
 
@@ -53,6 +54,20 @@ class TestTemplateTags(
         self.plugin_lookup = tags.get_plugin_lookup()
         # Get timeline API
         self.timeline = get_backend_api('timeline_backend')
+
+    def test_get_timestamp(self):
+        """Test get_timestamp()"""
+        self.assertEqual(
+            tags.get_timestamp(self.event),
+            localtime(self.event_status.timestamp).strftime(
+                '%Y-%m-%d %H:%M:%S'
+            ),
+        )
+
+    def test_get_timestamp_no_status(self):
+        """Test get_timestamp() with missing status object"""
+        self.event_status.delete()
+        self.assertEqual(tags.get_timestamp(self.event), 'N/A')
 
     def test_get_event_description(self):
         """Test get_event_description()"""

@@ -14,6 +14,8 @@ Fixed
 - **Projectroles**
     - Browser-specific ``sodar-btn-submit-once`` spinner padding (#1291)
     - Hidden JSON app settings reset on non-superuser project update (#1295)
+- **Timeline**
+    - ``get_timestamp()`` template tag crash from missing ``ProjectEventStatus`` (#1297)
 
 
 v0.13.2 (2023-09-21)
