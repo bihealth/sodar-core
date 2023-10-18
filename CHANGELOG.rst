@@ -8,6 +8,21 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``_project_badge.html`` template (#1300)
+
+Changed
+-------
+
+- **Appalerts**
+    - Use projectroles project badge templage (#1300)
+- **Timeline**
+    - Truncate long project titles in badge (#1299)
+    - Use projectroles project badge templage (#1300)
+
 Fixed
 -----
 
@@ -16,6 +31,12 @@ Fixed
     - Hidden JSON app settings reset on non-superuser project update (#1295)
 - **Timeline**
     - ``get_timestamp()`` template tag crash from missing ``ProjectEventStatus`` (#1297)
+
+Removed
+-------
+
+- **Timeline**
+    - ``_project_badge.html`` template (#1300)
 
 
 v0.13.2 (2023-09-21)

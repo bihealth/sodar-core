@@ -30,7 +30,7 @@
     <td>
       <div class="sodar-overflow-container">
         {% if event.project %}
-          {% include 'timeline/_project_badge.html' %}
+          {% include 'projectroles/_project_badge.html' with project=event.project color='info' can_view=True %}
         {% endif %}
         {% get_event_description t plugin_lookup request as event_desc %}
           {{ event_desc|safe }}

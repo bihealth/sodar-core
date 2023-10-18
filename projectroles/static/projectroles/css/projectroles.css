@@ -525,6 +525,18 @@ a.sodar-pr-btn-copy-secret i {
   margin-left: 0;
 }
 
+/* Project badge */
+span.sodar-project-badge {
+  vertical-align: top;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+span.sodar-project-badge a {
+  color: inherit;
+}
+
 /* NOTE: Notch visualizaton for sidebar moved into base.html */
 
 .sodar-pr-sidebar-nav-ul li i {

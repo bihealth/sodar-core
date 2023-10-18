@@ -13,6 +13,7 @@ releases, see the :ref:`full changelog<changelog>`.
 v0.13.3 (WIP)
 *************
 
+- Add common project badge template
 - Fix hidden JSON project setting reset on non-superuser project update
 - General bug fixes and minor updates
 

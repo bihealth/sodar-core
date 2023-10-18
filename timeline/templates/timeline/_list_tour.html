@@ -55,12 +55,12 @@
           showCancelLink: true
       });
   }
-  if ($('.sodar-tl-item-project-badge').length) {
+  if ($('.sodar-project-badge').length) {
       tour.addStep('event_desc', {
           title: '{% get_display_name 'PROJECT' title=True %} Badge',
           text: 'This badge links to the {% get_display_name 'PROJECT' %} to ' +
                 'which the event is related.',
-          attachTo: '.sodar-tl-item-project-badge top',
+          attachTo: '.sodar-project-badge top',
           advanceOn: '.docs-link click',
           showCancelLink: true
       });

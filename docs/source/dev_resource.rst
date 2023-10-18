@@ -151,6 +151,97 @@ will disable the button after the initial click while the form is submitted.
 This is especially recommended for forms responsible for creating objects.
 
 
+Template Includes and Helpers
+=============================
+
+This section details general template includes and helpers provided by SODAR
+Core. Unless otherwise mentioned, these can be imported from the projectroles
+app.
+
+For common template tags, see :ref:`app_projectroles_api_django_tags`.
+
+Pagination Template
+-------------------
+
+A common template for adding navigation for list pagination can be found in
+``projectroles/_pagination.html``. This can be included to any Django
+``ListView`` template which provides the ``paginate_by`` definition, enabling
+pagination. If a smaller layout is desired, the ``pg_small`` argument can be
+used. An example can be seen below:
+
+.. code-block:: django
+
+    {% include 'projectroles/_pagination.html' with pg_small=True %}
+
+Project Badge
+-------------
+
+Projectroles provides a project badge which can be used to display a fixed-size
+link to a category or a project among text. It can be included in your template
+as follows:
+
+.. code-block:: django
+
+    {% include 'projectroles/_project_badge.html' with project=project color='info' can_view=True %}
+
+The following arguments are expected:
+
+``project``
+    Project object for the related project or category.
+``color``
+    String for the badge color (must correspond to bootstrap classes, e.g.
+    "info" or "success").
+``can_view``
+    Boolean for whether the current user should have access to view the project.
+
+Tour Help
+---------
+
+SODAR Core uses `Shepherd <https://shipshapecode.github.io/shepherd/docs/welcome/>`_
+to present an optional interactive tour for a rendered page. To enable the tour
+in your template, set it up inside the ``javascript`` template block. Within an
+inline javascript structure, set the ``tourEnabled`` variable to ``true`` and
+add steps according to the
+`Shepherd documentation <https://shipshapecode.github.io/shepherd>`_.
+
+Example:
+
+.. code-block:: django
+
+    {% block javascript %}
+      {{ block.super }}
+      {# Tour content #}
+      <script type="text/javascript">
+        tourEnabled = true;
+        /* Normal step */
+        tour.addStep('id_of_step', {
+            title: 'Step Title',
+            text: 'Description of the step',
+            attachTo: '#some-element top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+        /* Conditional step */
+        if ($('.potentially-existing-element').length) {
+            tour.addStep('id_of_another_step', {
+                title: 'Another Title',
+                text: 'Another description here',
+                attachTo: '.potentially-existing-element right',
+                advanceOn: '.docs-link click',
+                showCancelLink: true
+            });
+        }
+      </script>
+    {% endblock javascript %}
+
+
+.. warning::
+
+    Make sure you call ``{{ block.super }}`` at the start of the declared
+    ``javascript`` block or you will overwrite the site's default Javascript
+    setup!
+
+
 App Settings
 ============
 
@@ -249,71 +340,6 @@ the Django database:
 .. code-block:: console
 
     $ ./manage.py cleanappsettings
-
-
-Pagination Template
-===================
-
-A common template for adding navigation for list pagination can be found in
-``projectroles/_pagination.html``. This can be included to any Django
-``ListView`` template which provides the ``paginate_by`` definition, enabling
-pagination. If a smaller layout is desired, the ``pg_small`` argument can be
-used. An example can be seen below:
-
-.. code-block:: django
-
-    {% include 'projectroles/_pagination.html' with pg_small=True %}
-
-
-Tour Help
-=========
-
-SODAR Core uses `Shepherd <https://shipshapecode.github.io/shepherd/docs/welcome/>`_
-to present an optional interactive tour for a rendered page. To enable the tour
-in your template, set it up inside the ``javascript`` template block. Within an
-inline javascript structure, set the ``tourEnabled`` variable to ``true`` and add
-steps according to the `Shepherd documentation <https://shipshapecode.github.io/shepherd>`_.
-
-Example:
-
-.. code-block:: django
-
-    {% block javascript %}
-      {{ block.super }}
-
-      {# Tour content #}
-      <script type="text/javascript">
-        tourEnabled = true;
-
-        /* Normal step */
-        tour.addStep('id_of_step', {
-            title: 'Step Title',
-            text: 'Description of the step',
-            attachTo: '#some-element top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-
-        /* Conditional step */
-        if ($('.potentially-existing-element').length) {
-            tour.addStep('id_of_another_step', {
-                title: 'Another Title',
-                text: 'Another description here',
-                attachTo: '.potentially-existing-element right',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-
-      </script>
-    {% endblock javascript %}
-
-
-.. warning::
-
-    Make sure you call ``{{ block.super }}`` at the start of the declared
-    ``javascript`` block or you will overwrite the site's default Javascript
-    setup!
 
 
 Project Modifying API
