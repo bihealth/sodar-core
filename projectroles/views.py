@@ -1157,8 +1157,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             args = [project, action, project_settings]
             if action == PROJECT_ACTION_UPDATE:
-                args.append(old_data)
-                args.append(old_settings)
+                args += [old_data, old_settings]
+            else:
+                args += [None, None]
             args.append(request)
             self.call_project_modify_api(
                 'perform_project_modify', 'revert_project_modify', args
