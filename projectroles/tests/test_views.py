@@ -57,6 +57,7 @@ from projectroles.tests.test_models import (
     RemoteTargetMixin,
 )
 from projectroles.views import (
+    MSG_FORM_INVALID,
     MSG_PROJECT_WELCOME,
     MSG_USER_PROFILE_LDAP,
     MSG_INVITE_LDAP_LOCAL_VIEW,
@@ -1205,6 +1206,10 @@ class TestProjectUpdateView(
                 values,
             )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            MSG_FORM_INVALID,
+        )
         self.assertEqual(
             app_settings.get(
                 EXAMPLE_APP_NAME, 'project_str_setting', project=self.project

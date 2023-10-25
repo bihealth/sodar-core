@@ -150,6 +150,14 @@ the submit button in your server-side form templates. Introducing this class
 will disable the button after the initial click while the form is submitted.
 This is especially recommended for forms responsible for creating objects.
 
+Invalid Form View Mixin
+-----------------------
+
+Adding ``projectroles.views.InvalidFormMixin`` to your create or update view
+displays a standardized Django message notifying the user of form submission
+failure. This is recommended to be used especially for long scrolling forms,
+where errors pinned to specific fields may be initially invisible to the user.
+
 
 Template Includes and Helpers
 =============================

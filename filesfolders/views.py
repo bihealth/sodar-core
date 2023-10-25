@@ -40,6 +40,7 @@ from projectroles.views import (
     HTTPRefererMixin,
     ProjectPermissionMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
 )
 
 
@@ -315,6 +316,7 @@ class BaseCreateView(
     ProjectContextMixin,
     ProjectPermissionMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """Base File/Folder/HyperLink creation view"""
@@ -439,6 +441,7 @@ class FolderUpdateView(
     FormValidMixin,
     ViewActionMixin,
     ProjectContextMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """Folder updating view"""
@@ -592,6 +595,7 @@ class FileUpdateView(
     FormValidMixin,
     ViewActionMixin,
     ProjectContextMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """File updating view"""
@@ -735,6 +739,7 @@ class HyperLinkUpdateView(
     FormValidMixin,
     ViewActionMixin,
     ProjectContextMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """HyperLink updating view"""

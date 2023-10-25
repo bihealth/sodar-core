@@ -18,6 +18,7 @@ from projectroles.views import (
     LoggedInPermissionMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
 )
 
 from adminalerts.forms import AdminAlertForm
@@ -74,6 +75,7 @@ class AdminAlertCreateView(
     AdminAlertModifyMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """AdminAlert creation view"""
@@ -88,6 +90,7 @@ class AdminAlertUpdateView(
     AdminAlertModifyMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """AdminAlert updating view"""

@@ -93,6 +93,7 @@ SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 PROJECT_COLUMN_COUNT = 2  # Default columns
 MSG_NO_AUTH = 'User not authorized for requested action'
 MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in.'
+MSG_FORM_INVALID = 'Form submission failed, see the form for details.'
 MSG_PROJECT_WELCOME = (
     'Welcome to {project_type} "{project_title}". You have been assigned the '
     'role of {role}.'
@@ -448,6 +449,15 @@ class ProjectContextMixin(
                 self.request.user,
             )
         return context
+
+
+class InvalidFormMixin:
+    """Mixin for create/update form view UI improvements"""
+
+    def form_invalid(self, form, **kwargs):
+        """Override form_invalid to add Django message on form failure"""
+        messages.error(self.request, MSG_FORM_INVALID)
+        return super().form_invalid(form, **kwargs)
 
 
 class CurrentUserFormMixin:
@@ -1238,6 +1248,7 @@ class ProjectCreateView(
     ProjectContextMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """Project creation view"""
@@ -1319,6 +1330,7 @@ class ProjectUpdateView(
     ProjectContextMixin,
     ProjectModifyFormMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """Project updating view"""
@@ -1760,6 +1772,7 @@ class RoleAssignmentCreateView(
     ProjectContextMixin,
     CurrentUserFormMixin,
     RoleAssignmentModifyFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """RoleAssignment creation view"""
@@ -1814,6 +1827,7 @@ class RoleAssignmentUpdateView(
     ProjectContextMixin,
     RoleAssignmentModifyFormMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """RoleAssignment updating view"""
@@ -2071,6 +2085,7 @@ class RoleAssignmentOwnerTransferView(
     CurrentUserFormMixin,
     ProjectContextMixin,
     RoleAssignmentOwnerTransferMixin,
+    InvalidFormMixin,
     FormView,
 ):
     """Project owner RoleAssignment transfer view"""
@@ -2239,6 +2254,7 @@ class ProjectInviteCreateView(
     ProjectModifyPermissionMixin,
     ProjectInviteMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """ProjectInvite creation view"""
@@ -2771,7 +2787,9 @@ class ProjectInviteRevokeView(
 # User management views --------------------------------------------------------
 
 
-class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
+class UserUpdateView(
+    LoginRequiredMixin, HTTPRefererMixin, InvalidFormMixin, UpdateView
+):
     """Display and process the user update view"""
 
     form_class = LocalUserForm
@@ -2901,6 +2919,7 @@ class RemoteSiteCreateView(
     RemoteSiteModifyMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """RemoteSite creation view"""
@@ -2929,6 +2948,7 @@ class RemoteSiteUpdateView(
     RemoteSiteModifyMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """RemoteSite updating view"""

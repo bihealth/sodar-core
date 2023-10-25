@@ -14,6 +14,7 @@ v0.13.3 (WIP)
 *************
 
 - Add common project badge template
+- Add InvalidFormMixin helper mixin
 - Fix hidden JSON project setting reset on non-superuser project update
 - Fix custom app setting validation calls in forms
 - General bug fixes and minor updates

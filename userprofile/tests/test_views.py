@@ -9,6 +9,7 @@ from test_plus.test import TestCase
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import EXAMPLE_APP_NAME, AppSettingMixin
+from projectroles.views import MSG_FORM_INVALID
 
 # example_project_app dependency
 from example_project_app.plugins import INVALID_SETTING_VALUE
@@ -198,7 +199,8 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
     def test_post_custom_validation(self):
         """Test POST with custom validation and invalid value"""
         values = {
-            'settings.example_project_app.user_str_setting': INVALID_SETTING_VALUE,
+            'settings.example_project_app.'
+            'user_str_setting': INVALID_SETTING_VALUE,
             'settings.example_project_app.user_int_setting': '170',
             'settings.example_project_app.user_str_setting_options': 'string1',
             'settings.example_project_app.user_int_setting_options': '0',
@@ -215,4 +217,8 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
                 reverse('userprofile:settings_update'), values
             )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            MSG_FORM_INVALID,
+        )
         self.assertEqual(self._get_setting('user_str_setting'), 'test')

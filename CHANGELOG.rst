@@ -13,6 +13,7 @@ Added
 
 - **Projectroles**
     - ``_project_badge.html`` template (#1300)
+    - ``InvalidFormMixin`` helper mixin (#1310)
 
 Changed
 -------

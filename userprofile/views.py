@@ -12,6 +12,7 @@ from projectroles.plugins import get_active_plugins
 from projectroles.views import (
     LoggedInPermissionMixin,
     HTTPRefererMixin,
+    InvalidFormMixin,
 )
 
 from userprofile.forms import UserSettingsForm
@@ -66,7 +67,11 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
 
 
 class UserSettingsView(
-    LoginRequiredMixin, LoggedInPermissionMixin, HTTPRefererMixin, FormView
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    HTTPRefererMixin,
+    InvalidFormMixin,
+    FormView,
 ):
     """User settings update view"""
 
