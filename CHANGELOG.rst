@@ -30,8 +30,15 @@ Fixed
     - Browser-specific ``sodar-btn-submit-once`` spinner padding (#1291)
     - Hidden JSON app settings reset on non-superuser project update (#1295)
     - Request object not provided to ``perform_project_modify()`` on create (#1301)
+    - ``validate_form_app_settings()`` not called in ``ProjectForm`` (#1305)
+    - Unhandled exceptions in ``validate_form_app_settings()`` calls (#1306)
+    - ``validate_form_app_settings()`` results handling crash in ``ProjectForm`` (#1307)
+    - ``RoleAssignment`` provided to ``validate_form_app_settings()`` in ``ProjectForm`` (#1308)
 - **Timeline**
     - ``get_timestamp()`` template tag crash from missing ``ProjectEventStatus`` (#1297)
+- **Userprofile**
+    - Unhandled exceptions in ``validate_form_app_settings()`` calls (#1306)
+    - ``validate_form_app_settings()`` results handling crash in ``UserSettingForm`` (#1307)
 
 Removed
 -------

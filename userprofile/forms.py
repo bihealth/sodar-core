@@ -4,7 +4,7 @@ from django import forms
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.forms import SODARForm
+from projectroles.forms import SODARForm, SETTING_CUSTOM_VALIDATE_ERROR
 from projectroles.models import APP_SETTING_VAL_MAXLENGTH, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
 
@@ -26,7 +26,6 @@ class UserSettingsForm(SODARForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('current_user')
         super().__init__(*args, **kwargs)
-
         # Add settings fields
         self.app_plugins = get_active_plugins(plugin_type='project_app')
         self.user_plugins = get_active_plugins(plugin_type='site_app')
@@ -138,21 +137,21 @@ class UserSettingsForm(SODARForm):
     def clean(self):
         """Function for custom form validation and cleanup"""
         for plugin in self.app_plugins + [None]:
+            p_kwargs = {'user_modifiable': True}
             if plugin:
-                name = plugin.name
-                p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
-                )
+                p_name = plugin.name
+                p_kwargs['plugin'] = plugin
             else:
-                name = 'projectroles'
-                p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
-                )
-            plugin_app_settings = {}
+                p_name = 'projectroles'
+                p_kwargs['app_name'] = p_name
+            p_defs = app_settings.get_definitions(
+                APP_SETTING_SCOPE_USER, **p_kwargs
+            )
+            p_settings = {}
 
-            for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(name, s_key)
-                plugin_app_settings[s_key] = self.cleaned_data.get(s_field)
+            for s_key, s_val in p_defs.items():
+                s_field = '.'.join(['settings', p_name, s_key])
+                p_settings[s_key] = self.cleaned_data.get(s_field)
 
                 if s_val['type'] == 'JSON':
                     if not self.cleaned_data.get(s_field):
@@ -163,11 +162,8 @@ class UserSettingsForm(SODARForm):
                         )
                     except json.JSONDecodeError as err:
                         self.add_error(s_field, 'Invalid JSON\n' + str(err))
-
                 elif s_val['type'] == 'INTEGER':
-                    # When field is a select/dropdown, the information of the
-                    # data type gets lost. We need to convert that here,
-                    # otherwise subsequent checks will fail.
+                    # Convert integers from select fields
                     self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
 
                 if not app_settings.validate(
@@ -177,16 +173,22 @@ class UserSettingsForm(SODARForm):
                     user=self.user,
                 ):
                     self.add_error(s_field, 'Invalid value')
-            try:
-                app_settings_errors = plugin.validate_form_app_settings(
-                    plugin_app_settings, user=self.user
-                )
-                if app_settings_errors:
-                    for field, error in app_settings_errors.items():
-                        if error:
-                            self.add_error(field, error)
-            except AttributeError:
-                # Plugin does not have a validate_form_app_settings method
-                pass
 
+            # Custom plugin validation for app settings
+            if plugin and hasattr(plugin, 'validate_form_app_settings'):
+                try:
+                    p_errors = plugin.validate_form_app_settings(
+                        p_settings, user=self.user
+                    )
+                    if p_errors:
+                        for field, error in p_errors.items():
+                            f_name = '.'.join(['settings', p_name, field])
+                            self.add_error(f_name, error)
+                except Exception as ex:
+                    self.add_error(
+                        None,
+                        SETTING_CUSTOM_VALIDATE_ERROR.format(
+                            plugin=p_name, exception=ex
+                        ),
+                    )
         return self.cleaned_data

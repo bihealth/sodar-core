@@ -15,6 +15,12 @@ from projectroles.tests.test_models import (
     AppSettingMixin,
 )
 
+# example_project_app dependency
+from example_project_app.plugins import (
+    INVALID_SETTING_VALUE,
+    INVALID_SETTING_MSG,
+)
+
 
 app_settings = AppSettingAPI()
 
@@ -1039,22 +1045,37 @@ class TestAppSettingAPI(
             )
 
     def test_validate_form_app_settings(self):
-        """Test validate_form_app_settings() method on valid app_setting"""
+        """Test validate_form_app_settings() with valid project setting value"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
-        valid_setting = {'valid_setting': True}
+        app_settings = {'project_str_setting': 'String'}
         errors = app_plugin.validate_form_app_settings(
-            valid_setting, project=self.project, user=self.user
+            app_settings, project=self.project
         )
-        self.assertEqual(errors, None)
+        self.assertEqual(errors, {})
 
-    def test_validate_form_app_settings_user_scope_error(self):
-        """Test validate_form_app_settings() method on invalid app_setting"""
+    def test_validate_form_app_settings_invalid(self):
+        """Test validate_form_app_settings() with invalid project setting value"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
-        settings = {'project_hidden_setting': 'Example project hidden setting'}
+        app_settings = {'project_str_setting': INVALID_SETTING_VALUE}
         errors = app_plugin.validate_form_app_settings(
-            settings, project=self.project
+            app_settings, project=self.project
         )
-        self.assertIsNotNone(errors)
-        self.assertIn(
-            'Invalid value for a custom validation method', errors.values()
+        self.assertEqual(errors, {'project_str_setting': INVALID_SETTING_MSG})
+
+    def test_validate_form_app_settings_user(self):
+        """Test validate_form_app_settings() with valid user setting value"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        app_settings = {'user_str_setting': 'String'}
+        errors = app_plugin.validate_form_app_settings(
+            app_settings, user=self.user
         )
+        self.assertEqual(errors, {})
+
+    def test_validate_form_app_settings_user_invalid(self):
+        """Test validate_form_app_settings() with invalid user setting value"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        app_settings = {'user_str_setting': INVALID_SETTING_VALUE}
+        errors = app_plugin.validate_form_app_settings(
+            app_settings, user=self.user
+        )
+        self.assertEqual(errors, {'user_str_setting': INVALID_SETTING_MSG})

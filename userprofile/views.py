@@ -65,7 +65,7 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         return result
 
 
-class UserSettingUpdateView(
+class UserSettingsView(
     LoginRequiredMixin, LoggedInPermissionMixin, HTTPRefererMixin, FormView
 ):
     """User settings update view"""

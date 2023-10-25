@@ -2,7 +2,6 @@
 
 from django.contrib import auth
 from django.contrib.messages import get_messages
-from django.test import RequestFactory
 from django.urls import reverse
 
 from test_plus.test import TestCase
@@ -11,6 +10,9 @@ from test_plus.test import TestCase
 from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import EXAMPLE_APP_NAME, AppSettingMixin
 
+# example_project_app dependency
+from example_project_app.plugins import INVALID_SETTING_VALUE
+
 from userprofile.views import SETTING_UPDATE_MSG
 
 
@@ -18,11 +20,10 @@ app_settings = AppSettingAPI()
 User = auth.get_user_model()
 
 
-class TestViewsBase(TestCase):
+class UserViewsTestBase(TestCase):
     """Base class for view testing"""
 
     def setUp(self):
-        self.req_factory = RequestFactory()
         # Init superuser
         self.user = self.make_user('superuser')
         self.user.is_staff = True
@@ -33,25 +34,25 @@ class TestViewsBase(TestCase):
 # View tests -------------------------------------------------------------------
 
 
-class TestUserDetailView(TestViewsBase):
-    """Tests for the user profile detail view"""
+class TestUserDetailView(UserViewsTestBase):
+    """Tests for UserDetailView"""
 
-    def test_render(self):
-        """Test to ensure the user profile detail view renders correctly"""
+    def test_get(self):
+        """Test UserDetailView GET"""
         with self.login(self.user):
             response = self.client.get(reverse('userprofile:detail'))
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.context['user_settings'])
 
 
-class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
-    """Tests for the user settings form."""
+class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
+    """Tests for UserSettingsView"""
 
-    # NOTE: This assumes an example app is available
+    def _get_setting(self, name):
+        return app_settings.get(EXAMPLE_APP_NAME, name, user=self.user)
+
     def setUp(self):
-        # Init user & role
-        self.user = self.make_user('owner')
-
+        super().setUp()
         # Init test setting
         self.setting_str = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -60,7 +61,6 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             value='test',
             user=self.user,
         )
-
         # Init integer setting
         self.setting_int = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -69,7 +69,6 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             value=170,
             user=self.user,
         )
-
         # Init test setting with options
         self.setting_str_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -78,7 +77,6 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             value='string1',
             user=self.user,
         )
-
         # Init integer setting with options
         self.setting_int_options = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -87,7 +85,6 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             value=0,
             user=self.user,
         )
-
         # Init boolean setting
         self.setting_bool = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -96,7 +93,6 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             value=True,
             user=self.user,
         )
-
         # Init json setting
         self.setting_json = self.make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -108,7 +104,7 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
         )
 
     def test_get(self):
-        """Test GET request on settings update form"""
+        """Test UserSettingsView GET"""
         with self.login(self.user):
             response = self.client.get(reverse('userprofile:settings_update'))
         self.assertEqual(response.status_code, 200)
@@ -145,42 +141,16 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
         )
 
     def test_post(self):
-        """Test POST request on settings update form"""
+        """Test UserSettingsView POST"""
+        self.assertEqual(self._get_setting('user_str_setting'), 'test')
+        self.assertEqual(self._get_setting('user_int_setting'), 170)
         self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
-            ),
-            'test',
+            self._get_setting('user_str_setting_options'), 'string1'
         )
+        self.assertEqual(self._get_setting('user_int_setting_options'), 0)
+        self.assertEqual(self._get_setting('user_bool_setting'), True)
         self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_int_setting', user=self.user
-            ),
-            170,
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_str_setting_options', user=self.user
-            ),
-            'string1',
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_int_setting_options', user=self.user
-            ),
-            0,
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_bool_setting', user=self.user
-            ),
-            True,
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_json_setting', user=self.user
-            ),
-            {'Test': 'More'},
+            self._get_setting('user_json_setting'), {'Test': 'More'}
         )
 
         values = {
@@ -196,7 +166,6 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
                 self.user.sodar_uuid
             ),
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse('userprofile:settings_update'), values
@@ -209,55 +178,41 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             list(get_messages(response.wsgi_request))[0].message,
             SETTING_UPDATE_MSG,
         )
-
         # Assert settings state after update
+        self.assertEqual(self._get_setting('user_str_setting'), 'another-text')
+        self.assertEqual(self._get_setting('user_int_setting'), 123)
         self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
-            ),
-            'another-text',
+            self._get_setting('user_str_setting_options'), 'string2'
         )
+        self.assertEqual(self._get_setting('user_int_setting_options'), 1)
+        self.assertEqual(self._get_setting('user_bool_setting'), False)
         self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_int_setting', user=self.user
-            ),
-            123,
+            self._get_setting('user_json_setting'), {'Test': 'Less'}
         )
+        self.assertEqual(self._get_setting('user_callable_setting'), 'Test')
         self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_str_setting_options', user=self.user
-            ),
-            'string2',
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_int_setting_options', user=self.user
-            ),
-            1,
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_bool_setting', user=self.user
-            ),
-            False,
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_json_setting', user=self.user
-            ),
-            {'Test': 'Less'},
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME, 'user_callable_setting', user=self.user
-            ),
-            'Test',
-        )
-        self.assertEqual(
-            app_settings.get(
-                EXAMPLE_APP_NAME,
-                'user_callable_setting_options',
-                user=self.user,
-            ),
+            self._get_setting('user_callable_setting_options'),
             str(self.user.sodar_uuid),
         )
+
+    def test_post_custom_validation(self):
+        """Test POST with custom validation and invalid value"""
+        values = {
+            'settings.example_project_app.user_str_setting': INVALID_SETTING_VALUE,
+            'settings.example_project_app.user_int_setting': '170',
+            'settings.example_project_app.user_str_setting_options': 'string1',
+            'settings.example_project_app.user_int_setting_options': '0',
+            'settings.example_project_app.user_bool_setting': True,
+            'settings.example_project_app.'
+            'user_json_setting': '{"Test": "More"}',
+            'settings.example_project_app.user_callable_setting': 'Test',
+            'settings.example_project_app.user_callable_setting_options': str(
+                self.user.sodar_uuid
+            ),
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('userprofile:settings_update'), values
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._get_setting('user_str_setting'), 'test')

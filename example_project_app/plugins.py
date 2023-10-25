@@ -18,11 +18,17 @@ from projectroles.utils import get_display_name
 from example_project_app.urls import urlpatterns
 
 
+# SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+
+# Local constants
 EXAMPLE_MODIFY_API_MSG = (
     'Example project app plugin API called from {project_type} {action}.'
 )
-PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+# Invalid app setting value for testing custom validation
+INVALID_SETTING_VALUE = 'ieDeequ6Eizohxi7Eebiliu6shou5aiT'
+INVALID_SETTING_MSG = 'INVALID_SETTING_VALUE detected'
 
 
 class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
@@ -349,16 +355,16 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             )
 
     def validate_form_app_settings(self, app_settings, project=None, user=None):
-        """Example implementation for app setting validation plugin API"""
-        errors = {}
-        for setting_name, setting_value in app_settings.items():
-            if (
-                setting_name == 'project_hidden_setting'
-                and setting_value == 'Example project hidden setting'
-            ):
-                errors[
-                    setting_name
-                ] = 'Invalid value for a custom validation method'
-        if errors == {}:
-            return None
-        return errors
+        """Example implementation for custom form app setting validation"""
+        ret = {}
+        if (
+            project
+            and app_settings.get('project_str_setting') == INVALID_SETTING_VALUE
+        ):
+            ret['project_str_setting'] = INVALID_SETTING_MSG
+        if (
+            user
+            and app_settings.get('user_str_setting') == INVALID_SETTING_VALUE
+        ):
+            ret['user_str_setting'] = INVALID_SETTING_MSG
+        return ret

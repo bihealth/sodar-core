@@ -15,6 +15,9 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
+# example_project_app dependency
+from example_project_app.plugins import INVALID_SETTING_VALUE
+
 # Timeline dependency
 from timeline.models import ProjectEvent
 from timeline.tests.test_models import (
@@ -1161,7 +1164,10 @@ class TestProjectUpdateView(
 
     def test_update_project_title_delimiter(self):
         """Test Project updating with category delimiter in title (should fail)"""
+        # TODO: Add values getter as a helper
         values = model_to_dict(self.project)
+        values['parent'] = self.category.sodar_uuid
+        values['owner'] = self.user.sodar_uuid
         values['title'] = 'Project{}Title'.format(CAT_DELIMITER)
         # Add settings values
         values.update(
@@ -1178,6 +1184,33 @@ class TestProjectUpdateView(
         self.assertEqual(response.status_code, 200)
         self.project.refresh_from_db()
         self.assertEqual(self.project.title, 'TestProject')
+
+    def test_update_project_custom_validation(self):
+        """Test updating with custom validation and invalid value (should fail)"""
+        values = model_to_dict(self.project)
+        values['parent'] = self.category.sodar_uuid
+        values['owner'] = self.user.sodar_uuid
+        values.update(
+            app_settings.get_all(project=self.project, post_safe=True)
+        )
+        values[
+            'settings.example_project_app.project_str_setting'
+        ] = INVALID_SETTING_VALUE
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            app_settings.get(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            '',
+        )
 
     def test_render_category(self):
         """Test rendering with existing category"""
