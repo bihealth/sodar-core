@@ -15,12 +15,6 @@ from projectroles.tests.test_models import (
     AppSettingMixin,
 )
 
-# example_project_app dependency
-from example_project_app.plugins import (
-    INVALID_SETTING_VALUE,
-    INVALID_SETTING_MSG,
-)
-
 
 app_settings = AppSettingAPI()
 
@@ -42,6 +36,8 @@ APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 # Local constants
 EXISTING_SETTING = 'project_bool_setting'
 EXAMPLE_APP_NAME = 'example_project_app'
+INVALID_SETTING_VALUE = 'INVALID VALUE'
+INVALID_SETTING_MSG = 'INVALID_SETTING_VALUE detected'
 
 
 class AppSettingInitMixin:

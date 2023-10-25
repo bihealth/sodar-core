@@ -15,9 +15,6 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
-# example_project_app dependency
-from example_project_app.plugins import INVALID_SETTING_VALUE
-
 # Timeline dependency
 from timeline.models import ProjectEvent
 from timeline.tests.test_models import (
@@ -106,6 +103,7 @@ REMOTE_SITE_NEW_DESC = 'New description'
 REMOTE_SITE_NEW_SECRET = build_secret()
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
+INVALID_SETTING_VALUE = 'INVALID VALUE'
 
 HIDDEN_PROJECT_SETTINGS = [
     'settings.example_project_app.project_hidden_setting',

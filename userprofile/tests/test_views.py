@@ -11,14 +11,14 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import EXAMPLE_APP_NAME, AppSettingMixin
 from projectroles.views import MSG_FORM_INVALID
 
-# example_project_app dependency
-from example_project_app.plugins import INVALID_SETTING_VALUE
-
 from userprofile.views import SETTING_UPDATE_MSG
 
 
 app_settings = AppSettingAPI()
 User = auth.get_user_model()
+
+
+INVALID_SETTING_VALUE = 'INVALID VALUE'
 
 
 class UserViewsTestBase(TestCase):

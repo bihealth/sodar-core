@@ -27,7 +27,7 @@ EXAMPLE_MODIFY_API_MSG = (
     'Example project app plugin API called from {project_type} {action}.'
 )
 # Invalid app setting value for testing custom validation
-INVALID_SETTING_VALUE = 'ieDeequ6Eizohxi7Eebiliu6shou5aiT'
+INVALID_SETTING_VALUE = 'INVALID VALUE'
 INVALID_SETTING_MSG = 'INVALID_SETTING_VALUE detected'
 
 
