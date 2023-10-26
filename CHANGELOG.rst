@@ -18,6 +18,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade general Python dependencies (#1312)
 - **Appalerts**
     - Use projectroles project badge templage (#1300)
 - **Timeline**
