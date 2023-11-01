@@ -14,6 +14,7 @@ Added
 - **Projectroles**
     - ``_project_badge.html`` template (#1300)
     - ``InvalidFormMixin`` helper mixin (#1310)
+    - Temporary ``user_name`` param in remote sync app settings (#1320)
 
 Changed
 -------
@@ -37,6 +38,7 @@ Fixed
     - Unhandled exceptions in ``validate_form_app_settings()`` calls (#1306)
     - ``validate_form_app_settings()`` results handling crash in ``ProjectForm`` (#1307)
     - ``RoleAssignment`` provided to ``validate_form_app_settings()`` in ``ProjectForm`` (#1308)
+    - ``PROJECT_USER`` app settings remote sync failure (#1315)
 - **Timeline**
     - ``get_timestamp()`` template tag crash from missing ``ProjectEventStatus`` (#1297)
 - **Userprofile**
