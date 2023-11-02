@@ -1,5 +1,7 @@
 """Tests for the project settings API in the projectroles app"""
 
+from django.test import override_settings
+
 from test_plus.test import TestCase
 
 from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
@@ -12,6 +14,8 @@ from projectroles.app_settings import (
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
     AppSettingMixin,
 )
 
@@ -26,6 +30,9 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
@@ -45,9 +52,7 @@ class AppSettingInitMixin:
 
     def init_app_settings(self):
         """Init test app settings"""
-
         # TODO: Rename these to match the settings in example_project_app
-
         # Init test project settings
         self.project_str_setting = {
             'app_name': EXAMPLE_APP_NAME,
@@ -253,13 +258,13 @@ class AppSettingInitMixin:
 class TestAppSettingAPI(
     ProjectMixin,
     RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
     AppSettingMixin,
     AppSettingInitMixin,
     TestCase,
 ):
     """Tests for AppSettingAPI"""
-
-    # NOTE: This assumes an example app is available
 
     def setUp(self):
         # Init project
@@ -302,7 +307,7 @@ class TestAppSettingAPI(
         self.assertEqual(val, default_val)
 
     def test_get_with_nonexisting(self):
-        """Test get_() with an non-existing setting"""
+        """Test get_() with non-existing setting"""
         with self.assertRaises(KeyError):
             app_settings.get(
                 app_name=EXAMPLE_APP_NAME,
@@ -322,7 +327,6 @@ class TestAppSettingAPI(
 
     def test_set(self):
         """Test set()"""
-
         for setting in self.settings:
             data = {
                 'app_name': setting['app_name'],
@@ -336,14 +340,12 @@ class TestAppSettingAPI(
             update_data['value'] = setting['update_value']
 
             ret = app_settings.set(**update_data)
-
             self.assertEqual(ret, True)
             val = app_settings.get(**data)
             self.assertEqual(val, setting['update_value'])
 
     def test_set_unchanged(self):
-        """Test set() with an unchanged value"""
-
+        """Test set() with unchanged value"""
         for setting in self.settings:
             data = {
                 'app_name': setting['app_name'],
@@ -365,7 +367,6 @@ class TestAppSettingAPI(
                     setting['app_name'], setting['name']
                 ),
             )
-
             val = app_settings.get(**data)
             self.assertEqual(
                 val,
@@ -376,7 +377,7 @@ class TestAppSettingAPI(
             )
 
     def test_set_new(self):
-        """Test set() with a new but defined setting"""
+        """Test set() with new but defined setting"""
         val = AppSetting.objects.get(
             app_plugin=get_app_plugin(EXAMPLE_APP_NAME).get_model(),
             project=self.project,
@@ -390,7 +391,6 @@ class TestAppSettingAPI(
             value=True,
             project=self.project,
         )
-
         self.assertEqual(ret, True)
         val = app_settings.get(
             app_name=EXAMPLE_APP_NAME,
@@ -398,7 +398,6 @@ class TestAppSettingAPI(
             project=self.project,
         )
         self.assertEqual(True, val)
-
         setting = AppSetting.objects.get(
             app_plugin=get_app_plugin(EXAMPLE_APP_NAME).get_model(),
             project=self.project,
@@ -407,7 +406,7 @@ class TestAppSettingAPI(
         self.assertIsInstance(setting, AppSetting)
 
     def test_set_undefined(self):
-        """Test set() with an undefined setting (should fail)"""
+        """Test set() with undefined setting (should fail)"""
         with self.assertRaises(ValueError):
             app_settings.set(
                 app_name=EXAMPLE_APP_NAME,
@@ -417,10 +416,9 @@ class TestAppSettingAPI(
             )
 
     def test_set_multi_project_user(self):
-        """Test set() with multiple instances of a PROJECT_USER setting"""
+        """Test set() with multiple instances of PROJECT_USER setting"""
         # Set up second user
         new_user = self.make_user('new_user')
-
         ret = app_settings.set(
             app_name=EXAMPLE_APP_NAME,
             setting_name='project_user_str_setting',
@@ -429,7 +427,6 @@ class TestAppSettingAPI(
             value=True,
         )
         self.assertEqual(ret, True)
-
         ret = app_settings.set(
             app_name=EXAMPLE_APP_NAME,
             setting_name='project_user_str_setting',
@@ -450,7 +447,67 @@ class TestAppSettingAPI(
                 value=True,
             )
 
-    def test_validator(self):
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_set_target_local(self):
+        """Test setting local setting on target site"""
+        n = 'project_str_setting'
+        v = 'updated'
+        args = {'name': n, 'value': v}
+        self.assertEqual(AppSetting.objects.filter(**args).count(), 0)
+        app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
+        self.assertEqual(AppSetting.objects.filter(**args).count(), 1)
+
+    # TODO: Test local setting on remote project
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_set_target_local_remote(self):
+        """Test setting local setting on target site and remote project"""
+        remote_site = self.make_site(
+            name='Test source site',
+            url='https://sodar.example.com',
+            mode=SITE_MODE_SOURCE,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        n = 'project_str_setting'
+        v = 'updated'
+        args = {'name': n, 'value': v}
+        self.assertEqual(AppSetting.objects.filter(**args).count(), 0)
+        app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
+        self.assertEqual(AppSetting.objects.filter(**args).count(), 1)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_set_target_global(self):
+        """Test setting global setting on target site and local project"""
+        n = 'project_global_setting'
+        self.assertEqual(AppSetting.objects.filter(name=n, value=1).count(), 0)
+        app_settings.set(EXAMPLE_APP_NAME, n, True, project=self.project)
+        self.assertEqual(AppSetting.objects.filter(name=n, value=1).count(), 1)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_set_target_global_remote(self):
+        """Test setting global setting on target site and remote project"""
+        remote_site = self.make_site(
+            name='Test source site',
+            url='https://sodar.example.com',
+            mode=SITE_MODE_SOURCE,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        n = 'project_global_setting'
+        self.assertEqual(AppSetting.objects.filter(name=n, value=1).count(), 0)
+        with self.assertRaises(ValueError):
+            app_settings.set(EXAMPLE_APP_NAME, n, True, project=self.project)
+        self.assertEqual(AppSetting.objects.filter(name=n, value=1).count(), 0)
+
+    def test_validate_boolean(self):
         """Test validate() with type BOOLEAN"""
         for setting in self.settings:
             self.assertEqual(
@@ -475,17 +532,16 @@ class TestAppSettingAPI(
         self.assertEqual(app_settings.validate('INTEGER', 170, None), True)
         # NOTE: String is also OK if it corresponds to an int
         self.assertEqual(app_settings.validate('INTEGER', '170', None), True)
-
         with self.assertRaises(ValueError):
             app_settings.validate('INTEGER', 'not an integer', None)
 
     def test_validate_invalid(self):
-        """Test validate() with an invalid type"""
+        """Test validate() with invalid type"""
         with self.assertRaises(ValueError):
             app_settings.validate('INVALID_TYPE', 'value', None)
 
     def test_get_def_plugin(self):
-        """Test get_def() with a plugin"""
+        """Test get_def() with plugin"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
@@ -502,7 +558,7 @@ class TestAppSettingAPI(
         self.assertEqual(s_def, expected)
 
     def test_get_def_app_name(self):
-        """Test get_def() with an app name"""
+        """Test get_def() with app name"""
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': 'STRING',
@@ -518,7 +574,7 @@ class TestAppSettingAPI(
         self.assertEqual(s_def, expected)
 
     def test_get_def_user(self):
-        """Test get_def() with a user setting"""
+        """Test get_def() with user setting"""
         expected = {
             'scope': APP_SETTING_SCOPE_USER,
             'type': 'STRING',
@@ -539,7 +595,6 @@ class TestAppSettingAPI(
             app_settings.get_definition(
                 'non_existing_setting', app_name=EXAMPLE_APP_NAME
             )
-
         with self.assertRaises(ValueError):
             app_settings.get_definition(
                 'project_str_setting', app_name='non_existing_app_name'
@@ -549,7 +604,7 @@ class TestAppSettingAPI(
             app_settings.get_definition('project_str_setting')
 
     def test_get_defs_project(self):
-        """Test get_defs() with the PROJECT scope"""
+        """Test get_defs() with PROJECT scope"""
         expected = {
             'project_str_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
@@ -666,7 +721,7 @@ class TestAppSettingAPI(
         self.assertEqual(defs, expected)
 
     def test_get_defs_user(self):
-        """Test get_defs() with the USER scope"""
+        """Test get_defs() with USER scope"""
         expected = {
             'user_str_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
@@ -757,7 +812,7 @@ class TestAppSettingAPI(
         self.assertEqual(defs, expected)
 
     def test_get_defs_project_user(self):
-        """Test get_defs() with the PROJECT_USER scope"""
+        """Test get_defs() with PROJECT_USER scope"""
         expected = {
             'project_user_str_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
@@ -807,7 +862,7 @@ class TestAppSettingAPI(
         self.assertEqual(defs, expected)
 
     def test_get_defs_site(self):
-        """Test get_defs() with the SITE scope"""
+        """Test get_defs() with SITE scope"""
         expected = {
             'site_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
@@ -824,7 +879,7 @@ class TestAppSettingAPI(
         self.assertEqual(defs, expected)
 
     def test_get_defs_modifiable(self):
-        """Test get_defs() with the user_modifiable arg"""
+        """Test get_defs() with user_modifiable arg"""
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
@@ -837,14 +892,14 @@ class TestAppSettingAPI(
         self.assertEqual(len(defs), 10)
 
     def test_get_defs_invalid_scope(self):
-        """Test get_defs() with an invalid scope"""
+        """Test get_defs() with invalid scope"""
         with self.assertRaises(ValueError):
             app_settings.get_definitions(
                 'Ri4thai8aez5ooRa', app_name=EXAMPLE_APP_NAME
             )
 
     def test_get_defaults_project(self):
-        """Test get_defaults() with the PROJECT scope"""
+        """Test get_defaults() with PROJECT scope"""
         prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT)
         self.assertEqual(defaults[prefix + 'project_str_setting'], '')
@@ -856,7 +911,7 @@ class TestAppSettingAPI(
         )
 
     def test_get_defaults_user(self):
-        """Test get_defaults() with the USER scope"""
+        """Test get_defaults() with USER scope"""
         prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_USER)
         self.assertEqual(defaults[prefix + 'user_str_setting'], '')
@@ -868,7 +923,7 @@ class TestAppSettingAPI(
         )
 
     def test_get_defaults_project_user(self):
-        """Test get_defaults() with the PROJECT_USER scope"""
+        """Test get_defaults() with PROJECT_USER scope"""
         prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT_USER)
         self.assertEqual(defaults[prefix + 'project_user_str_setting'], '')
@@ -880,7 +935,7 @@ class TestAppSettingAPI(
         )
 
     def test_get_defaults_site(self):
-        """Test get_defaults() with the SITE scope"""
+        """Test get_defaults() with SITE scope"""
         prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_SITE)
         self.assertEqual(defaults[prefix + 'site_bool_setting'], False)
@@ -1000,7 +1055,7 @@ class TestAppSettingAPI(
         self.assertEqual(AppSetting.objects.count(), 15)
 
     def test_delete_by_scope(self):
-        """Test delete_by_scope() method"""
+        """Test delete_by_scope()"""
         self.assertEqual(AppSetting.objects.count(), 16)
         # Delete PROJECT_USER scope settings
         app_settings.delete_by_scope(
@@ -1023,7 +1078,7 @@ class TestAppSettingAPI(
         self.assertEqual(AppSetting.objects.count(), 0)
 
     def test_delete_by_scope_param_project(self):
-        """Test delete_by_scope() method with invalid Project params"""
+        """Test delete_by_scope() with invalid project params"""
         with self.assertRaises(ValueError):
             app_settings.delete_by_scope(
                 APP_SETTING_SCOPE_PROJECT,
@@ -1032,7 +1087,7 @@ class TestAppSettingAPI(
             )
 
     def test_delete_by_scope_param_user(self):
-        """Test delete_by_scope() method with invalid User params"""
+        """Test delete_by_scope() with invalid user params"""
         with self.assertRaises(ValueError):
             app_settings.delete_by_scope(
                 APP_SETTING_SCOPE_USER,

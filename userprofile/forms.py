@@ -9,12 +9,12 @@ from projectroles.models import APP_SETTING_VAL_MAXLENGTH, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
 
 
-# SODAR Constants
-APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
-
-
-# App settings API
 app_settings = AppSettingAPI()
+
+
+# SODAR Constants
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 
 # User Settings Form -----------------------------------------------------------
@@ -34,16 +34,16 @@ class UserSettingsForm(SODARForm):
         for plugin in self.app_plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_definitions(
+                p_defs = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_definitions(
+                p_defs = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
                 )
 
-            for s_key, s_val in p_settings.items():
+            for s_key, s_val in p_defs.items():
                 s_field = 'settings.{}.{}'.format(name, s_key)
                 s_widget_attrs = s_val.get('widget_attrs') or {}
                 if 'placeholder' in s_val:
@@ -82,7 +82,6 @@ class UserSettingsForm(SODARForm):
                             widget=forms.TextInput(attrs=s_widget_attrs),
                             **setting_kwargs,
                         )
-
                 elif s_val['type'] == 'INTEGER':
                     if 'options' in s_val:
                         self.fields[s_field] = forms.ChoiceField(
@@ -97,10 +96,8 @@ class UserSettingsForm(SODARForm):
                             widget=forms.NumberInput(attrs=s_widget_attrs),
                             **setting_kwargs,
                         )
-
                 elif s_val['type'] == 'BOOLEAN':
                     self.fields[s_field] = forms.BooleanField(**setting_kwargs)
-
                 elif s_val['type'] == 'JSON':
                     # NOTE: Attrs MUST be supplied here (#404)
                     if 'class' in s_widget_attrs:
@@ -121,7 +118,6 @@ class UserSettingsForm(SODARForm):
                     self.initial[s_field] = app_settings.get(
                         app_name=name, setting_name=s_key, user=self.user
                     )
-
                 else:
                     self.initial[s_field] = json.dumps(
                         app_settings.get(
@@ -133,6 +129,7 @@ class UserSettingsForm(SODARForm):
                 self.fields[s_field].label = self.get_app_setting_label(
                     plugin, self.fields[s_field].label
                 )
+                # TODO: Disable editing global USER settings (#1329)
 
     def clean(self):
         """Function for custom form validation and cleanup"""

@@ -15,6 +15,7 @@ v0.13.3 (WIP)
 
 - Add common project badge template
 - Add InvalidFormMixin helper mixin
+- Prevent updating global app settings for remote projects
 - Fix hidden JSON project setting reset on non-superuser project update
 - Fix custom app setting validation calls in forms
 - Fix remote sync PROJECT_USER app settings updating

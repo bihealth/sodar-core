@@ -23,6 +23,8 @@ Changed
     - Upgrade general Python dependencies (#1312)
 - **Appalerts**
     - Use projectroles project badge templage (#1300)
+- **Projectroles**
+    - Prevent updating global settings for remote projects in ``AppSettingAPI`` (#1318)
 - **Timeline**
     - Truncate long project titles in badge (#1299)
     - Use projectroles project badge templage (#1300)

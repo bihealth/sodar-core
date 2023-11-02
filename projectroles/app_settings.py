@@ -21,6 +21,7 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 # Local constants
 APP_SETTING_LOCAL_DEFAULT = True
@@ -43,6 +44,8 @@ APP_SETTING_SCOPE_ARGS = {
     APP_SETTING_SCOPE_SITE: {'project': False, 'user': False},
 }
 DELETE_SCOPE_ERR_MSG = 'Argument "{arg}" must be set for {scope} scope setting'
+OVERRIDE_ERR_MSG = 'Overriding global settings for remote projects not allowed'
+
 
 # Define App Settings for projectroles app
 PROJECTROLES_APP_SETTINGS = {
@@ -256,7 +259,8 @@ class AppSettingAPI:
     @classmethod
     def _compare_value(cls, setting_obj, input_value):
         """
-        Compare input value to value in an AppSetting object
+        Compare input value to value in an AppSetting object. Return True if
+        values match, False if there is a mismatch.
 
         :param setting_obj: AppSetting object
         :param input_value: Input value (string, int, bool or dict)
@@ -429,7 +433,6 @@ class AppSettingAPI:
             ret['settings.{}.{}'.format('projectroles', s_key)] = cls.get(
                 'projectroles', s_key, post_safe
             )
-
         return ret
 
     @classmethod
@@ -499,49 +502,47 @@ class AppSettingAPI:
         :raise: ValueError if neither project nor user are set
         :raise: KeyError if setting name is not found in plugin specification
         """
-
-        setting_def = cls.get_definition(name=setting_name, app_name=app_name)
-        cls._check_scope(setting_def.get('scope', None))
-        cls._check_project_and_user(
-            setting_def.get('scope', None), project, user
-        )
-
+        s_def = cls.get_definition(name=setting_name, app_name=app_name)
+        cls._check_scope(s_def.get('scope', None))
+        cls._check_project_and_user(s_def.get('scope', None), project, user)
         # Check project type
         if (
             project
-            and not setting_def.get('project_types', None)
+            and not s_def.get('project_types', None)
             and not project.type == PROJECT_TYPE_PROJECT
             or project
-            and setting_def.get('project_types', None)
-            and project.type not in setting_def['project_types']
+            and s_def.get('project_types', None)
+            and project.type not in s_def['project_types']
         ):
             raise ValueError(
                 'Project type {} not allowed for setting {}'.format(
                     project.type, setting_name
                 )
             )
+        # Prevent updating global setting on remote project
+        # TODO: Prevent editing global USER settings (#1329)
+        if (
+            not s_def.get('local', APP_SETTING_LOCAL_DEFAULT)
+            and project
+            and project.is_remote()
+        ):
+            raise ValueError(OVERRIDE_ERR_MSG)
 
-        try:
-            q_kwargs = {
-                'name': setting_name,
-                'project': project,
-                'user': user,
-            }
+        try:  # Update existing setting
+            q_kwargs = {'name': setting_name, 'project': project, 'user': user}
             if not app_name == 'projectroles':
                 q_kwargs['app_plugin__name'] = app_name
             setting = AppSetting.objects.get(**q_kwargs)
             if cls._compare_value(setting, value):
                 return False
-
             if validate:
                 cls.validate(
                     setting.type,
                     value,
-                    setting_def.get('options'),
+                    s_def.get('options'),
                     project=project,
                     user=user,
                 )
-
             if setting.type == 'JSON':
                 setting.value_json = cls._get_json_value(value)
             else:
@@ -552,37 +553,27 @@ class AppSettingAPI:
             )
             return True
 
-        except AppSetting.DoesNotExist:
+        except AppSetting.DoesNotExist:  # Create new
+            s_type = s_def['type']
             if app_name == 'projectroles':
-                app_settings = cls.get_projectroles_defs()
                 app_plugin_model = None
             else:
                 app_plugin = get_app_plugin(app_name)
-                app_settings = app_plugin.app_settings
                 app_plugin_model = app_plugin.get_model()
-            if setting_name not in app_settings:
-                raise KeyError(
-                    'Setting "{}" not found in app plugin "{}"'.format(
-                        setting_name, app_name
-                    )
-                )
-            s_type = setting_def['type']
-            s_mod = (
-                bool(setting_def['user_modifiable'])
-                if 'user_modifiable' in setting_def
-                else True
-            )
-
             if validate:
                 v = cls._get_json_value(value) if s_type == 'JSON' else value
                 cls.validate(
                     s_type,
                     v,
-                    setting_def.get('options'),
+                    s_def.get('options'),
                     project=project,
                     user=user,
                 )
-
+            s_mod = (
+                bool(s_def['user_modifiable'])
+                if 'user_modifiable' in s_def
+                else True
+            )
             s_vals = {
                 'app_plugin': app_plugin_model,
                 'project': project,
@@ -595,7 +586,6 @@ class AppSettingAPI:
                 s_vals['value_json'] = cls._get_json_value(value)
             else:
                 s_vals['value'] = value
-
             AppSetting.objects.create(**s_vals)
             cls._log_set_debug(
                 'Create', app_name, setting_name, value, project, user

@@ -33,7 +33,7 @@ from django.views.generic.detail import ContextMixin
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
 from projectroles import email
-from projectroles.app_settings import AppSettingAPI
+from projectroles.app_settings import AppSettingAPI, APP_SETTING_LOCAL_DEFAULT
 from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
@@ -992,7 +992,17 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
     @classmethod
     def _update_settings(cls, project, project_settings):
         """Update project settings"""
+        is_remote = project.is_remote()
         for k, v in project_settings.items():
+            _, app_name, setting_name = k.split('.', 3)
+            # Skip updating global settings on target site
+            if is_remote:
+                # TODO: Optimize (this can require a lot of queries)
+                s_def = app_settings.get_definition(
+                    setting_name, app_name=app_name
+                )
+                if not s_def.get('local', APP_SETTING_LOCAL_DEFAULT):
+                    continue
             app_settings.set(
                 app_name=k.split('.')[1],
                 setting_name=k.split('.')[2],
