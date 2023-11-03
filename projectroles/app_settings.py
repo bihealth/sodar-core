@@ -101,7 +101,7 @@ PROJECTROLES_APP_SETTINGS = {
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
         'type': 'BOOLEAN',
         'default': False,
-        'local': False,
+        'local': True,
         'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
     },
 }

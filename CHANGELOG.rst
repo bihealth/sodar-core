@@ -25,6 +25,7 @@ Changed
     - Use projectroles project badge templage (#1300)
 - **Projectroles**
     - Prevent updating global settings for remote projects in ``AppSettingAPI`` (#1318)
+    - Change ``project_star`` app setting to ``local`` (#1321)
 - **Timeline**
     - Truncate long project titles in badge (#1299)
     - Use projectroles project badge templage (#1300)

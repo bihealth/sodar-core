@@ -518,7 +518,7 @@ class TestGetSourceData(
             'project_uuid': self.project.sodar_uuid,
             'user_uuid': self.user_source.sodar_uuid,
             'user_name': self.user_source.username,
-            'local': False,
+            'local': True,
         }
         self.assertEqual(set_data, expected)
 
