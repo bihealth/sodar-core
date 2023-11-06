@@ -42,6 +42,8 @@ Fixed
     - ``validate_form_app_settings()`` results handling crash in ``ProjectForm`` (#1307)
     - ``RoleAssignment`` provided to ``validate_form_app_settings()`` in ``ProjectForm`` (#1308)
     - ``PROJECT_USER`` app settings remote sync failure (#1315)
+    - Local app settings overridden by remote sync (#1324)
+    - Local app setting value comparison failing in remote sync (#1330)
 - **Timeline**
     - ``get_timestamp()`` template tag crash from missing ``ProjectEventStatus`` (#1297)
 - **Userprofile**

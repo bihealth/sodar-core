@@ -239,13 +239,13 @@ class RemoteProjectAPI:
             ]
 
             # Get and add app settings for project
-            # NOTE: Default setting values are not synced
+            # NOTE: Also provide global settings in case they are not yet set
             for a in AppSetting.objects.filter(project=project):
                 try:
                     sync_data = self._add_app_setting(sync_data, a, all_defs)
                 except Exception as ex:
                     logger.error(
-                        'Failed to sync app setting "{}.settings.{}" '
+                        'Failed to add app setting "{}.settings.{}" '
                         '(UUID={}): {} '.format(
                             a.app_plugin.name
                             if a.app_plugin
@@ -1073,18 +1073,21 @@ class RemoteProjectAPI:
                 project=project,
                 user=user,
             )
+            # Keep target instance of local app setting if available
+            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
+                logger.info('Keeping local setting {}'.format(ad['name']))
+                set_data['status'] = 'skipped'
+                return
             # Skip if value is identical
-            if obj.value == ad['value'] and obj.value_json == ad['value_json']:
+            if app_settings._compare_value(
+                obj, ad['value_json'] if obj.type == 'JSON' else ad['value']
+            ):
                 logger.info(
                     'Skipping setting {}: value unchanged'.format(str(obj))
                 )
                 set_data['status'] = 'skipped'
                 return
-            # Keep local app setting if available
-            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
-                logger.info('Keeping local setting {}'.format(ad['name']))
-                return
-            # If setting is global, update existing value by recreating object
+            # Else update existing value by recreating object
             action_str = 'updating'
             obj.delete()
         except ObjectDoesNotExist:

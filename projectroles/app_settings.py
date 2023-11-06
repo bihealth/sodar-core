@@ -257,21 +257,22 @@ class AppSettingAPI:
             raise ValueError('Value is not valid JSON: {}'.format(value))
 
     @classmethod
-    def _compare_value(cls, setting_obj, input_value):
+    def _compare_value(cls, obj, input_value):
         """
         Compare input value to value in an AppSetting object. Return True if
         values match, False if there is a mismatch.
 
-        :param setting_obj: AppSetting object
+        :param obj: AppSetting object
         :param input_value: Input value (string, int, bool or dict)
         :return: Bool
         """
-        if setting_obj.type == 'JSON':
-            return setting_obj.value_json == cls._get_json_value(input_value)
-        elif setting_obj.type == 'BOOLEAN':
-            # TODO: Also do conversion on input value here if necessary
-            return bool(int(setting_obj.value)) == input_value
-        return setting_obj.value == str(input_value)
+        if obj.type == 'JSON':
+            return (
+                not obj.value_json and not input_value
+            ) or obj.value_json == cls._get_json_value(input_value)
+        elif obj.type == 'BOOLEAN':
+            return bool(int(obj.value)) == input_value
+        return obj.value == str(input_value)
 
     @classmethod
     def _log_set_debug(

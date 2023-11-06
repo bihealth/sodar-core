@@ -701,7 +701,7 @@ class SyncRemoteDataTestBase(
                     'project_uuid': SOURCE_PROJECT_UUID,
                     'user_uuid': SOURCE_USER_UUID,
                     'user_name': SOURCE_USER_USERNAME,
-                    'local': False,
+                    'local': True,
                 },
             },
         }
@@ -1695,6 +1695,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         self.assertEqual(peer_project_dict, expected)
 
         # Assert app settings
+        # NOTE: Global app settings should not be updated
         expected = {
             'name': 'ip_restrict',
             'type': 'BOOLEAN',
@@ -1720,7 +1721,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         expected = {
             'name': 'project_star',
             'type': 'BOOLEAN',
-            'value': '1',
+            'value': '0',
             'value_json': {},
             'app_plugin': None,
             'project': self.project_obj.id,
@@ -1744,7 +1745,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         ]
         expected['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'updated'
         expected['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'updated'
-        expected['app_settings'][SET_STAR_UUID]['status'] = 'updated'
+        expected['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
         self.assertEqual(remote_data, expected)
 
     def test_update_inherited(self):
@@ -1777,11 +1778,9 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
             self.role_contributor,
         )
 
-    # TODO: Update once local settings updating is fixed
-    def test_update_app_setting_local(self):
-        """Test update with local app settings"""
+    def test_update_app_settings_local(self):
+        """Test update with local app settings (should not be updated)"""
         remote_data = self.default_data
-        # Change projectroles app settings
         remote_data['app_settings'][SET_IP_RESTRICT_UUID]['local'] = True
         remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['local'] = True
         remote_data['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
@@ -1816,7 +1815,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         expected = {
             'name': 'project_star',
             'type': 'BOOLEAN',
-            'value': '1',
+            'value': '0',
             'value_json': {},
             'app_plugin': None,
             'project': self.project_obj.id,
@@ -1825,13 +1824,13 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         }
         self.assert_app_setting(SET_STAR_UUID, expected)
 
-        # Assert update_data changes
-        expected = og_data
-        expected['users'][SOURCE_USER_UUID]['status'] = 'updated'
-        expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
-        expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
-        expected['app_settings'][SET_STAR_UUID]['status'] = 'updated'
-        self.assertEqual(remote_data, expected)
+        og_data['users'][SOURCE_USER_UUID]['status'] = 'updated'
+        og_data['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
+        og_data['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
+        og_data['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
+        self.assertEqual(remote_data, og_data)
 
     def test_update_app_setting_no_app(self):
         """Test update with app setting for app not present on target site"""
@@ -1931,16 +1930,15 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
                 role__name=PROJECT_ROLE_CONTRIBUTOR,
             )
 
-        expected = og_data
-        expected['projects'][SOURCE_PROJECT_UUID]['roles'][new_role_uuid] = {
+        og_data['projects'][SOURCE_PROJECT_UUID]['roles'][new_role_uuid] = {
             'user': new_user_username,
             'role': PROJECT_ROLE_CONTRIBUTOR,
             'status': 'deleted',
         }
-        expected['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'updated'
-        expected['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'updated'
-        expected['app_settings'][SET_STAR_UUID]['status'] = 'updated'
-        self.assertEqual(remote_data, expected)
+        og_data['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
+        self.assertEqual(remote_data, og_data)
 
     def test_update_no_changes(self):
         """Test sync with existing project data and no changes"""
@@ -2071,9 +2069,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         peer_project_dict.pop('date_access')
         self.assertEqual(peer_project_dict, expected)
 
-        # Assert no changes between update_data and remote_data
-        # except global app settings, they are always updated
-        og_data['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'updated'
-        og_data['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'updated'
-        og_data['app_settings'][SET_STAR_UUID]['status'] = 'updated'
+        og_data['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
         self.assertEqual(og_data, remote_data)
