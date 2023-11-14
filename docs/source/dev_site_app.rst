@@ -115,6 +115,11 @@ Implementing the following is **optional**:
 ``get_extra_data_link()``
     Return extra data link for a Timeline event.
 
+.. hint::
+
+    If you want to define multiple plugins within a single app, see the
+    :ref:`dev_resource_multi_plugin` documentation.
+
 
 Views
 =====

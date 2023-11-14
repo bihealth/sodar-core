@@ -201,11 +201,7 @@ class TestAdminEventListView(TestViewsBase):
     def test_render(self):
         """Test rendering the admin list view"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'timeline:timeline_site_admin',
-                )
-            )
+            response = self.client.get(reverse('timeline:list_admin'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['object_list']), 2)
         self.assertEqual(

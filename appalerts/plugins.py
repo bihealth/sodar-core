@@ -5,6 +5,7 @@
 from projectroles.plugins import SiteAppPluginPoint, BackendPluginPoint
 
 from appalerts.api import AppAlertAPI
+from appalerts.urls import urlpatterns
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -17,7 +18,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     title = 'App Alerts'
 
     #: App URLs (will be included in settings by djangoplugins)
-    urls = []
+    urls = urlpatterns
 
     #: Iconify icon
     icon = 'mdi:alert-octagram'

@@ -33,8 +33,8 @@ Project App Basics
 - Use provided mixins, keyword arguments and conventions in views.
 - Extend projectroles base templates in your templates.
 - Implement specific templates for dynamic inclusion by Projectroles.
-- Implement ``plugins.py`` with definitions and function implementations.
-- Implement ``rules.py`` with access permissions.
+- Create ``plugins.py`` with a project app plugin implementation.
+- Create ``rules.py`` with rules for access permissions.
 
 Fulfilling these requirements is detailed further in this document.
 
@@ -275,6 +275,11 @@ registered:
 
 For info on how to implement the specific required views/templates, see the rest
 of this document.
+
+.. hint::
+
+    If you want to define multiple plugins within a single app, see the
+    :ref:`dev_resource_multi_plugin` documentation.
 
 
 Views

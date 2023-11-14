@@ -1,12 +1,19 @@
+"""Plugins for the tokens app"""
+
+# Projectroles dependency
 from projectroles.plugins import SiteAppPluginPoint
+
+from tokens.urls import urlpatterns
 
 
 class ProjectAppPlugin(SiteAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
-    name = 'token'
+    name = 'tokens'
 
     title = 'API Tokens'
+
+    urls = urlpatterns
 
     #: Iconify icon
     icon = 'mdi:key-chain-variant'

@@ -100,7 +100,7 @@ class TestAdminTimelineView(TestProjectPermissionBase):
 
     def setUp(self):
         super().setUp()
-        self.url = reverse('timeline:timeline_site_admin')
+        self.url = reverse('timeline:list_admin')
 
     def test_get(self):
         """Test AdminTimelineView GET"""

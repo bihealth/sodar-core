@@ -24,16 +24,24 @@ Changed
     - Upgrade general Python dependencies (#1312)
 - **Appalerts**
     - Use projectroles project badge templage (#1300)
+- **Bgjobs**
+    - Provide correct URL patterns to plugins (#1331)
+    - Rename ``bgjobs_site`` plugin (#1332)
 - **Projectroles**
     - Prevent updating global settings for remote projects in ``AppSettingAPI`` (#1318)
     - Change ``project_star`` app setting to ``local`` (#1321)
 - **Timeline**
     - Truncate long project titles in badge (#1299)
     - Use projectroles project badge templage (#1300)
+    - Provide correct URL patterns to plugins (#1331)
+- **Tokens**
+    - Rename ``tokens`` plugin (#1334)
 
 Fixed
 -----
 
+- **Appalerts**
+    - Missing URL patterns in app plugin (#1331)
 - **Projectroles**
     - Browser-specific ``sodar-btn-submit-once`` spinner padding (#1291)
     - Hidden JSON app settings reset on non-superuser project update (#1295)
@@ -45,8 +53,12 @@ Fixed
     - ``PROJECT_USER`` app settings remote sync failure (#1315)
     - Local app settings overridden by remote sync (#1324)
     - Local app setting value comparison failing in remote sync (#1330)
+    - Active app highlight failing for multi-plugin apps (#1331)
+    - Active app highlight failing for remote site views (#1331)
 - **Timeline**
     - ``get_timestamp()`` template tag crash from missing ``ProjectEventStatus`` (#1297)
+- **Tokens**
+    - Missing URL patterns in app plugin (#1331)
 - **Userprofile**
     - Unhandled exceptions in ``validate_form_app_settings()`` calls (#1306)
     - ``validate_form_app_settings()`` results handling crash in ``UserSettingForm`` (#1307)

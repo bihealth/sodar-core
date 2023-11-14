@@ -5,7 +5,7 @@ from djangoplugins.point import PluginPoint
 # Projectroles dependency
 from projectroles.plugins import ProjectAppPluginPoint, SiteAppPluginPoint
 
-from bgjobs.urls import urlpatterns
+from bgjobs.urls import urls_ui_project, urls_ui_site
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -13,7 +13,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     name = 'bgjobs'
     title = 'Background Jobs'
-    urls = urlpatterns
+    urls = urls_ui_project
 
     #: Iconify icon
     icon = 'mdi:server'
@@ -62,13 +62,13 @@ class SiteAppPlugin(SiteAppPluginPoint):
     """Projectroles plugin for registering the app"""
 
     #: Name (slug-safe, used in URLs)
-    name = 'sitebgjobs'
+    name = 'bgjobs_site'
 
     #: Title (used in templates)
     title = 'Site Background Jobs'
 
     #: App URLs (will be included in settings by djangoplugins)
-    urls = urlpatterns
+    urls = urls_ui_site
 
     #: Iconify icon
     icon = 'mdi:server'

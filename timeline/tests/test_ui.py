@@ -248,7 +248,7 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
     def setUp(self):
         super().setUp()
         self.timeline = get_backend_api('timeline_backend')
-
+        self.url = reverse('timeline:list_admin')
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,
@@ -259,7 +259,6 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             extra_data={'test_key': 'test_val'},
             status_type='OK',
         )
-
         # Init default site event
         self.site_event = self.timeline.add_event(
             project=None,
@@ -270,7 +269,6 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             extra_data={'test_key': 'test_val'},
             status_type='OK',
         )
-
         # Init classified event
         self.classified_event = self.timeline.add_event(
             project=None,
@@ -284,17 +282,13 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
 
     def test_render(self):
         """Test visibility of events in the admin event list"""
-        expected = [
-            (self.superuser, 3),
-        ]
-        url = reverse('timeline:timeline_site_admin')
-        self.assert_element_count(expected, url, 'sodar-tl-list-event')
+        expected = [(self.superuser, 3)]
+        self.assert_element_count(expected, self.url, 'sodar-tl-list-event')
 
     def test_badge(self):
         """Test visibility of badges in description of event"""
-        url = reverse('timeline:timeline_site_admin')
         self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
+            self.superuser, self.url, wait_elem=None, wait_loc='ID'
         )
         self.assertIsNotNone(self.selenium.find_element(By.CLASS_NAME, 'badge'))
 

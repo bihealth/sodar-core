@@ -404,6 +404,34 @@ To synchronize data for existing projects in development, you can implement the
 ``perform_project_sync()`` method.
 
 
+.. _dev_resource_multi_plugin:
+
+Multi-Plugin Apps
+=================
+
+In many cases, you may want to declare multiple app plugins within a single
+SODAR Core app. For example, you may want your app to have both project specific
+and site specific views and maybe also a backend API to be used by other apps.
+
+For an example of a multi-plugin app in SODAR Core itself, see the
+:ref:`app_timeline`.
+
+There is no limit on how many plugins you can define for a SODAR Core app and
+they may be of different types. However, certain conditions should be followed
+when creating multi-plugin apps:
+
+- Plugin names are expected to be unique. Not adhering to this may cause
+  unexpected side-effects.
+- For plugins with related UI views, it is strongly recommended to name all your
+  plugins starting with the app name. For example, if your project app plugin is
+  named ``yourapp``, it is recommended to name the secondary site app plugin
+  e.g. ``yourapp_site``. This ensures the SODAR Core UI can detect your app and
+  higlight active apps correctly.
+- If your app includes multiple plugins with UI views, it is recommended to
+  provide only the UI views relevant to that plugin in the ``urls`` attribute.
+  This, again, ensures apps are correctly detected and highlighted in the UI.
+
+
 Management Command Logger
 =========================
 

@@ -90,11 +90,9 @@ Implementing the following is **optional**:
 
 .. hint::
 
-    If you want to implement a backend API which is closely tied to a project
-    app, there's no requirement to declare your backend as a separate Django
-    app. You can just include the ``BackendAppPlugin`` in your app's
-    ``plugins.py`` along with your ``ProjectAppPlugin``. See the
-    :ref:`timeline app <app_timeline>` for an example of this.
+    If you want to define multiple plugins within a single app, see the
+    :ref:`dev_resource_multi_plugin` documentation.
+
 
 Using the Plugin
 ----------------

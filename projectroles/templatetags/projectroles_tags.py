@@ -110,9 +110,16 @@ def get_app_link_state(app_plugin, app_name, url_name):
     Return "active" if plugin matches app_name and url_name is found in
     app_plugin.urls.
     """
-    if app_name == app_plugin.name and url_name in [
-        u.name for u in app_plugin.urls
+    if app_plugin.name.startswith(app_name) and url_name in [
+        u.name for u in getattr(app_plugin, 'urls', [])
     ]:
+        return 'active'
+    # HACK for remote site views, see issue #1336
+    if (
+        app_name == 'projectroles'
+        and app_plugin.name == 'remotesites'
+        and url_name.startswith('remote_')
+    ):
         return 'active'
     return ''
 
