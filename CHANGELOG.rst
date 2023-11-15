@@ -16,6 +16,8 @@ Added
     - ``InvalidFormMixin`` helper mixin (#1310)
     - Temporary ``user_name`` param in remote sync app settings (#1320)
     - User login/logout logging signals (#1326)
+- **Timeline**
+    - Empty object reference name handling in ``add_object()`` (#1338)
 
 Changed
 -------

@@ -10,7 +10,9 @@ from django.db.models import Q
 # Projectroles dependency
 from projectroles.models import Project
 
+
 logger = logging.getLogger(__name__)
+
 
 # Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
@@ -24,6 +26,7 @@ DEFAULT_MESSAGES = {
     'INFO': 'Info level action',
     'CANCEL': 'Action cancelled',
 }
+OBJ_REF_UNNAMED = '(Unnamed)'
 
 
 class ProjectEventManager(models.Manager):
@@ -182,13 +185,18 @@ class ProjectEvent(models.Model):
         ref = ProjectEventObjectRef()
         ref.event = self
         ref.label = label
+        if not name:
+            logger.warning(
+                'Adding object reference with no name: {} ({})'.format(
+                    obj, getattr(obj, 'sodar_uuid')
+                )
+            )
+            name = OBJ_REF_UNNAMED
         ref.name = name
         ref.object_model = obj.__class__.__name__
         ref.object_uuid = obj.sodar_uuid
-
         if extra_data:
             ref.extra_data = extra_data
-
         ref.save()
         return ref
 

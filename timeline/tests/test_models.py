@@ -16,6 +16,7 @@ from timeline.models import (
     ProjectEvent,
     ProjectEventObjectRef,
     ProjectEventStatus,
+    OBJ_REF_UNNAMED,
 )
 
 
@@ -284,6 +285,36 @@ class TestProjectEvent(
         expected = "ProjectEvent('N/A', 'test_event', 'N/A')"
         self.assertEqual(repr(self.event), expected)
 
+    def test_add_object(self):
+        """Test add_object()"""
+        # Init new user and role
+        new_user = self.make_user('new_user')
+        new_as = self.make_assignment(
+            self.project, new_user, self.role_delegate
+        )
+        new_obj = self.event.add_object(
+            obj=new_as, label='new_label', name='new_name'
+        )
+        expected = {
+            'id': new_obj.pk,
+            'event': self.event.pk,
+            'label': 'new_label',
+            'name': 'new_name',
+            'object_uuid': new_as.sodar_uuid,
+            'object_model': 'RoleAssignment',
+            'extra_data': {},
+        }
+        self.assertEqual(model_to_dict(new_obj), expected)
+
+    def test_add_object_no_name(self):
+        """Test add_object() with no name for object"""
+        new_user = self.make_user('new_user')
+        new_as = self.make_assignment(
+            self.project, new_user, self.role_delegate
+        )
+        new_obj = self.event.add_object(obj=new_as, label='new_label', name='')
+        self.assertEqual(new_obj.name, OBJ_REF_UNNAMED)
+
     def test_find_name(self):
         """Test ProjectEvent.find() with event name"""
         objects = ProjectEvent.objects.find(['test_event'])
@@ -313,7 +344,6 @@ class TestProjectEventObjectRef(
 ):
     def setUp(self):
         super().setUp()
-
         self.event = self.make_event(
             project=self.project,
             app='projectroles',
@@ -323,7 +353,6 @@ class TestProjectEventObjectRef(
             classified=False,
             extra_data={'test_key': 'test_val'},
         )
-
         self.obj_ref = self.make_object_ref(
             event=self.event,
             obj=self.assignment_owner,
@@ -344,7 +373,6 @@ class TestProjectEventObjectRef(
             'object_uuid': self.assignment_owner.sodar_uuid,
             'extra_data': {'test_key': 'test_val'},
         }
-
         self.assertEqual(model_to_dict(self.obj_ref), expected)
 
     def test__str__(self):
@@ -360,31 +388,6 @@ class TestProjectEventObjectRef(
         )
         self.assertEqual(repr(self.obj_ref), expected)
 
-    def test_add_object(self):
-        """Test the add_object() function of ProjectEvent"""
-
-        # Init new user and role
-        new_user = self.make_user('new_user')
-        new_as = self.make_assignment(
-            self.project, new_user, self.role_delegate
-        )
-
-        new_obj = self.event.add_object(
-            obj=new_as, label='new_label', name='new_name'
-        )
-
-        expected = {
-            'id': new_obj.pk,
-            'event': self.event.pk,
-            'label': 'new_label',
-            'name': 'new_name',
-            'object_uuid': new_as.sodar_uuid,
-            'object_model': 'RoleAssignment',
-            'extra_data': {},
-        }
-
-        self.assertEqual(model_to_dict(new_obj), expected)
-
     def test_get_object_events(self):
         """Test get_object_events() in ProjectEventManager"""
         events = ProjectEvent.objects.get_object_events(
@@ -392,7 +395,6 @@ class TestProjectEventObjectRef(
             object_model=self.obj_ref.object_model,
             object_uuid=self.obj_ref.object_uuid,
         )
-
         self.assertEqual(events.count(), 1)
         self.assertEqual(events[0], self.event)
 
@@ -402,7 +404,6 @@ class TestProjectEventStatus(
 ):
     def setUp(self):
         super().setUp()
-
         self.event = self.make_event(
             project=self.project,
             app='projectroles',
@@ -412,14 +413,12 @@ class TestProjectEventStatus(
             classified=False,
             extra_data={'test_key': 'test_val'},
         )
-
         self.event_status_submit = self.make_event_status(
             event=self.event,
             status_type='SUBMIT',
             description='SUBMIT',
             extra_data={'test_key': 'test_val'},
         )
-
         self.event_status_ok = self.make_event_status(
             event=self.event,
             status_type='OK',
@@ -524,7 +523,6 @@ class TestProjectEventStatus(
         new_status = self.event.set_status(
             'FAILED', status_desc='FAILED', extra_data={'test_key': 'test_val'}
         )
-
         expected = {
             'id': new_status.pk,
             'sodar_uuid': new_status.sodar_uuid,
@@ -533,5 +531,4 @@ class TestProjectEventStatus(
             'description': 'FAILED',
             'extra_data': {'test_key': 'test_val'},
         }
-
         self.assertEqual(model_to_dict(new_status), expected)
