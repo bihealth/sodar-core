@@ -4,6 +4,7 @@ import os
 from tempfile import NamedTemporaryFile
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
 from django.test import override_settings
@@ -11,6 +12,9 @@ from djangoplugins.models import Plugin
 
 from test_plus.test import TestCase
 
+from projectroles.management.commands.batchupdateroles import (
+    Command as BatchUpdateRolesCommand,
+)
 from projectroles.management.commands.cleanappsettings import (
     START_MSG,
     END_MSG,
@@ -20,9 +24,8 @@ from projectroles.management.commands.cleanappsettings import (
     DELETE_PROJECT_TYPE_MSG,
     DELETE_SCOPE_MSG,
 )
-from projectroles.management.commands.batchupdateroles import (
-    Command as BatchUpdateRolesCommand,
-)
+from projectroles.management.commands.createdevusers import DEV_USER_NAMES
+
 from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
@@ -37,6 +40,10 @@ from projectroles.tests.test_models import (
     AppSettingMixin,
 )
 
+
+User = get_user_model()
+
+
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
@@ -45,6 +52,7 @@ PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
+# Local constants
 EXAMPLE_APP_NAME = 'example_project_app'
 CLEAN_LOG_PREFIX = 'INFO:projectroles.management.commands.cleanappsettings:'
 
@@ -703,3 +711,45 @@ class TestCleanAppSettings(
                 AppSetting.objects.filter(name='project_user_bool_setting'),
                 [],
             )
+
+
+@override_settings(DEBUG=True)
+class TestCreateDevUsers(TestCase):
+    """Tests for createdevusers command"""
+
+    def test_create(self):
+        """Test creating users"""
+        self.assertEqual(User.objects.count(), 0)
+        call_command('createdevusers')
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
+        for u in DEV_USER_NAMES:
+            user = User.objects.filter(
+                username=u,
+                name='{} Example'.format(u.capitalize()),
+                first_name=u.capitalize(),
+                last_name='Example',
+                email='{}@example.com'.format(u),
+            ).first()
+            self.assertIsNotNone(user)
+
+    def test_create_existing(self):
+        """Test creating users with existing user in list"""
+        self.make_user(DEV_USER_NAMES[0])
+        self.assertEqual(User.objects.count(), 1)
+        call_command('createdevusers')
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
+
+    def test_create_existing_not_in_list(self):
+        """Test creating users with existing user not in list"""
+        self.make_user('user_new')
+        self.assertEqual(User.objects.count(), 1)
+        call_command('createdevusers')
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES) + 1)
+
+    @override_settings(DEBUG=False)
+    def test_create_no_debug(self):
+        """Test creating users with debug mode disabled (should fail)"""
+        self.assertEqual(User.objects.count(), 0)
+        with self.assertRaises(SystemExit):
+            call_command('createdevusers')
+        self.assertEqual(User.objects.count(), 0)
