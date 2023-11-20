@@ -17,6 +17,7 @@ v0.13.3 (WIP)
 - Add InvalidFormMixin helper mixin
 - Add user login/logout logging signals
 - Add createdevusers management command
+- Add LDAP TLS and user filter settings for example site
 - Prevent updating global app settings for remote projects
 - Fix hidden JSON project setting reset on non-superuser project update
 - Fix custom app setting validation calls in forms

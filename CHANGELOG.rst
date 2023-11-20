@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - LDAP settings for TLS and user filter (#1340)
 - **Projectroles**
     - ``_project_badge.html`` template (#1300)
     - ``InvalidFormMixin`` helper mixin (#1310)
