@@ -27,6 +27,7 @@ Changed
 -------
 
 - **General**
+    - Upgrade minimum Django version to v3.2.23 (#1312)
     - Upgrade general Python dependencies (#1312)
 - **Appalerts**
     - Use projectroles project badge templage (#1300)

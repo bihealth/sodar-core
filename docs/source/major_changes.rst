@@ -25,6 +25,14 @@ v0.13.3 (WIP)
 - Fix request object not provided to perform_project_modify() on create
 - General bug fixes and minor updates
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.23.
+
 
 v0.13.2 (2023-09-21)
 ********************
