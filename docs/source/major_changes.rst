@@ -13,6 +13,9 @@ releases, see the :ref:`full changelog<changelog>`.
 v0.13.3 (WIP)
 *************
 
+Release Highlights
+==================
+
 - Add common project badge template
 - Add InvalidFormMixin helper mixin
 - Add user login/logout logging signals
