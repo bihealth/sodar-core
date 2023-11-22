@@ -80,15 +80,22 @@ arguments in its init function, with the exception of ``queryset``,
 
 The init function also takes new arguments which are specified below:
 
-- ``scope``: Scope of users to include (string)
-    * ``all``: All users on the site
-    * ``project``: Limit search to users in given project
-    * ``project_exclude`` Exclude existing users of given project
-- ``project``: Project object or project UUID string (optional)
-- ``exclude``: List of User objects or User UUIDs to exclude (optional)
-- ``forward``: Parameters to forward to autocomplete view (optional)
-- ``url``: Autocomplete ajax class override (optional)
-- ``widget_class``: Widget class override (optional)
+``scope``
+    Scope of users to include (string). Options:
+
+    - ``all``: All users on the site
+    - ``project``: Limit search to users in given project
+    - ``project_exclude`` Exclude existing users of given project
+``project``
+    Project object or project UUID string (optional)
+``exclude``
+    List of User objects or User UUIDs to exclude (optional)
+``forward``
+    Parameters to forward to autocomplete view (optional)
+``url``
+    Autocomplete ajax class override (optional)
+``widget_class``
+    Widget class override (optional)
 
 Below is an example of the classes usage. Note that you can also define the
 field as a form class member, but the ``project`` or ``exclude`` values are
@@ -477,13 +484,17 @@ UI test classes found in ``projectroles.tests.test_ui``. Default values for
 these settings can be found in ``config/settings/test.py``. The settings are as
 follows:
 
-- ``PROJECTROLES_TEST_UI_CHROME_OPTIONS``: Options for Chrome through Selenium.
-  Can be used to e.g. enable/disable headless testing mode.
-- ``PROJECTROLES_TEST_UI_WINDOW_SIZE``: Custom browser window size.
-- ``PROJECTROLES_TEST_UI_WAIT_TIME``: Maximum wait time for UI test operations
-- ``PROJECTROLES_TEST_UI_LEGACY_LOGIN``: If set ``True``, use the legacy UI
-  login and redirect function for testing with different users. This can be used
-  if e.g. issues with cookie-based logins are encountered.
+``PROJECTROLES_TEST_UI_CHROME_OPTIONS``
+    Options for Chrome through Selenium. Can be used to e.g. enable/disable
+    headless testing mode.
+``PROJECTROLES_TEST_UI_WINDOW_SIZE``
+    Custom browser window size.
+``PROJECTROLES_TEST_UI_WAIT_TIME``
+    Maximum wait time for UI test operations
+``PROJECTROLES_TEST_UI_LEGACY_LOGIN``
+    If set ``True``, use the legacy UI login and redirect function for testing
+    with different users. This can be used if e.g. issues with cookie-based
+    logins are encountered.
 
 Base Test Classes and Helpers
 -----------------------------

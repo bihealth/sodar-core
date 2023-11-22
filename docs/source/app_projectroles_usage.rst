@@ -397,6 +397,14 @@ Revoked Access
     reading project metadata (title, description..) without member roles are
     implemented in the data model and backend, but currently disabled in the UI.
 
+.. note::
+
+    If synchronizing a project with *public guest access* enabled, this setting
+    is **not** automatically set on the target site. If you wish to make the
+    project also publicly accessible on the target site, it needs to be
+    explicitly set by the project owner, delegate or a superuser in the
+    :guilabel:`Update Project` form.
+
 Once desired access to specific projects has been granted and confirmed, the
 target site will sync the data by sending a request to the source site.
 

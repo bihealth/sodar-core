@@ -19,13 +19,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties required by django-plugins ------------------------------
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'timeline'
 
     #: Title (used in templates)
     title = 'Timeline'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = urls_ui_project
 
     # Properties defined in ProjectAppPluginPoint -----------------------
@@ -124,7 +124,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 class BackendPlugin(BackendPluginPoint):
     """Plugin for registering backend app with Projectroles"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'timeline_backend'
 
     #: Title (used in templates)
@@ -144,13 +144,13 @@ class BackendPlugin(BackendPluginPoint):
 class SiteAppPlugin(SiteAppPluginPoint):
     """Projectroles plugin for registering the app"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'timeline_site'
 
     #: Title (used in templates)
     title = 'Site-Wide Events'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = urls_ui_site
 
     #: Iconify icon
@@ -169,13 +169,13 @@ class SiteAppPlugin(SiteAppPluginPoint):
 class AdminSiteAppPlugin(SiteAppPluginPoint):
     """Projectroles plugin for registering the app"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'timeline_site_admin'
 
     #: Title (used in templates)
     title = 'All Timeline Events'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = urls_ui_admin
 
     #: Iconify icon

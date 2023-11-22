@@ -36,13 +36,13 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
 
     # Properties required by django-plugins ------------------------------
 
-    #: Name (slug-safe)
+    #: Name (used as plugin ID)
     name = 'example_project_app'
 
     #: Title (used in templates)
     title = 'Example Project App'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = urlpatterns
 
     # Properties defined in ProjectAppPluginPoint -----------------------

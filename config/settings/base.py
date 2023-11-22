@@ -339,6 +339,7 @@ BASICAUTH_DISABLE = False
 # Enable LDAP if configured
 ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
 ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
+LDAP_DEBUG = env.bool('LDAP_DEBUG', False)
 
 # Alternative domains for detecting LDAP access by email address
 LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, [])
@@ -348,6 +349,8 @@ if ENABLE_LDAP:
     import ldap
     from django_auth_ldap.config import LDAPSearch
 
+    if LDAP_DEBUG:
+        ldap.set_option(ldap.OPT_DEBUG_LEVEL, 255)
     # Default values
     LDAP_DEFAULT_CONN_OPTIONS = {ldap.OPT_REFERRALS: 0}
     LDAP_DEFAULT_ATTR_MAP = {

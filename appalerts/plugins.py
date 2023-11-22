@@ -11,13 +11,13 @@ from appalerts.urls import urlpatterns
 class SiteAppPlugin(SiteAppPluginPoint):
     """Site plugin for application alerts"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'appalerts'
 
     #: Title (used in templates)
     title = 'App Alerts'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = urlpatterns
 
     #: Iconify icon
@@ -36,7 +36,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
 class BackendPlugin(BackendPluginPoint):
     """Backend plugin for application alerts"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'appalerts_backend'
 
     #: Title (used in templates)

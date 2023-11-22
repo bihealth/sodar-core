@@ -7,7 +7,7 @@ from example_backend_app.api import ExampleAPI
 class BackendPlugin(BackendPluginPoint):
     """Plugin for registering backend app with Projectroles"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'example_backend_app'
 
     #: Title (used in templates)

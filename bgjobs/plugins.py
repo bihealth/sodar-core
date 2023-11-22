@@ -11,8 +11,13 @@ from bgjobs.urls import urls_ui_project, urls_ui_site
 class ProjectAppPlugin(ProjectAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
+    #: Name (used as plugin ID)
     name = 'bgjobs'
+
+    #: Title (used in templates)
     title = 'Background Jobs'
+
+    #: UI URLs
     urls = urls_ui_project
 
     #: Iconify icon
@@ -61,13 +66,13 @@ class BackgroundJobsPluginPoint(PluginPoint):
 class SiteAppPlugin(SiteAppPluginPoint):
     """Projectroles plugin for registering the app"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'bgjobs_site'
 
     #: Title (used in templates)
     title = 'Site Background Jobs'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = urls_ui_site
 
     #: Iconify icon

@@ -9,7 +9,7 @@ from sodarcache.api import SodarCacheAPI
 class BackendPlugin(BackendPluginPoint):
     """Plugin for registering backend app with Projectroles"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'sodar_cache'
 
     #: Title (used in templates)

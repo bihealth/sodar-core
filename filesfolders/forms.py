@@ -36,11 +36,9 @@ class FilesfoldersItemForm(SODARModelForm):
     ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
-
         self.current_user = None
         self.project = None
         self.folder = None
-
         # Get current user for checking permissions for form items
         if current_user:
             self.current_user = current_user
@@ -49,7 +47,6 @@ class FilesfoldersItemForm(SODARModelForm):
             self.project = self.folder.project
         elif project:
             self.project = Project.objects.get(sodar_uuid=project)
-
         # Modify ModelChoiceFields to use sodar_uuid
         self.fields['folder'].to_field_name = 'sodar_uuid'
 
@@ -122,7 +119,6 @@ class FolderForm(FilesfoldersItemForm):
                 old_folder = Folder.objects.get(pk=self.instance.pk)
             except Folder.DoesNotExist:
                 pass
-
             if old_folder and (
                 old_folder.name != self.cleaned_data['name']
                 or old_folder.folder != self.cleaned_data['folder']
@@ -136,7 +132,6 @@ class FolderForm(FilesfoldersItemForm):
                     self.add_error('name', 'Folder already exists')
                 except Folder.DoesNotExist:
                     pass
-
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
@@ -275,13 +270,11 @@ class FileForm(FilesfoldersItemForm):
             # Ensure max archive size is not exceeded
             if not self._check_size(size, MAX_ARCHIVE_SIZE):
                 return self.cleaned_data
-
             try:
                 zip_file = ZipFile(file)
             except Exception as ex:
                 self.add_error('file', 'Unable to open zip file: {}'.format(ex))
                 return self.cleaned_data
-
             archive_files = [f for f in zip_file.infolist() if not f.is_dir()]
             if len(archive_files) == 0:
                 self.add_error(
@@ -296,13 +289,11 @@ class FileForm(FilesfoldersItemForm):
                 # Check if any of the files exist
                 path_split = f.filename.split('/')
                 check_folder = folder
-
                 for p in path_split[:-1]:
                     # Advance in path
                     check_folder = Folder.objects.filter(
                         name=p, folder=check_folder
                     ).first()
-
                 # Once reached the correct path, check if file exists
                 if File.objects.filter(
                     name=path_split[-1], folder=check_folder
@@ -331,7 +322,6 @@ class FileForm(FilesfoldersItemForm):
                 folder=self.instance.folder,
                 name=self.instance.name,
             ).first()
-
             if (
                 old_file
                 and self.instance.name != str(file)
@@ -340,7 +330,6 @@ class FileForm(FilesfoldersItemForm):
                 ).first()
             ):
                 self.add_error('file', 'File already exists')
-
             # Moving:
             # If moving, ensure an identical file doesn't exist in the
             # target folder
@@ -357,13 +346,11 @@ class FileForm(FilesfoldersItemForm):
                     'folder',
                     'File with identical name already exists in folder',
                 )
-
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
         obj = super().save(commit=False)
-
         # Creation
         if not self.instance.pk:
             obj.name = obj.file.name
@@ -372,7 +359,6 @@ class FileForm(FilesfoldersItemForm):
             if self.folder:
                 obj.folder = self.folder
             obj.secret = build_secret()  # Secret string created here
-
         # Updating
         else:
             old_file = File.objects.get(pk=self.instance.pk)
@@ -392,7 +378,6 @@ class FileForm(FilesfoldersItemForm):
                 obj.public_url = self.instance.public_url
             else:
                 obj.public_url = False
-
         obj.save()
         return obj
 
@@ -415,7 +400,6 @@ class HyperLinkForm(FilesfoldersItemForm):
             *args,
             **kwargs
         )
-
         # Creation
         if not self.instance.pk:
             # Don't allow changing folder if we are creating a new object
@@ -448,7 +432,6 @@ class HyperLinkForm(FilesfoldersItemForm):
                 self.add_error('name', 'Link already exists')
             except HyperLink.DoesNotExist:
                 pass
-
         # Updating
         else:
             # Ensure a link with the same name does not exist in the location
@@ -457,7 +440,6 @@ class HyperLinkForm(FilesfoldersItemForm):
                 old_link = HyperLink.objects.get(pk=self.instance.pk)
             except HyperLink.DoesNotExist:
                 pass
-
             if old_link and (
                 old_link.name != self.cleaned_data['name']
                 or old_link.folder != self.cleaned_data['folder']
@@ -471,7 +453,6 @@ class HyperLinkForm(FilesfoldersItemForm):
                     self.add_error('name', 'Link already exists')
                 except HyperLink.DoesNotExist:
                     pass
-
         return self.cleaned_data
 
     def save(self, *args, **kwargs):

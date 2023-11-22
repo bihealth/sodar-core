@@ -56,6 +56,11 @@ your commit(s).
 Code Conventions
 ================
 
+This section lists code conventions when contributing to the SODAR Core project.
+
+General Conventions
+-------------------
+
 The following conventions should be adhered to in SODAR Core development:
 
 - Limit line length to 80 characters.
@@ -69,6 +74,32 @@ The following conventions should be adhered to in SODAR Core development:
 - No type hints should be used at the moment.
     * Possibility to expand the entire project into using type hints will be
       looked into.
+
+Module Imports
+--------------
+
+Import order of python modules is as follows. Use alphabetical order within each
+of the groups.
+
+- Full imports of Python standard library or general purpose packages
+    * E.g. ``import io``
+- Submodule imports of Python standard library or general purpose packages
+    * E.g. ``from math import ceil``
+- Django imports
+    * E.g. ``from django.conf import settings``
+- Imports from packages extending Django
+    * Such as ``rules``, ``django-rest-framework`` or Django testing specific
+      requirements
+    * E.g. ``from rest_framework import serializers``
+- SODAR Core ``projectroles`` imports
+    * E.g. ``from projectroles.plugins import get_backend_api``
+    * Prefix these with ``# Projectroles dependency``
+    * Hardcoded imports from other SODAR Core apps should be avoided, use
+      ``get_backend_api()`` instead.
+- Imports from within the current app
+    * E.g. ``from yourapp.forms import YourForm``
+    * For consistency and clarity, give the full module path for imports. E.g.
+      ``from yourapp.views import x`` instead of ``from views import x``
 
 
 .. _dev_core_guide_template:

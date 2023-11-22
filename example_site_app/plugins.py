@@ -7,13 +7,13 @@ from example_site_app.urls import urlpatterns
 class SiteAppPlugin(SiteAppPluginPoint):
     """Projectroles plugin for registering the app"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'example_site_app'
 
     #: Title (used in templates)
     title = 'Example Site App'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = urlpatterns
 
     #: Iconify icon

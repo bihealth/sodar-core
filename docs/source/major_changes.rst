@@ -22,6 +22,7 @@ v0.13.3 (WIP)
 - Fix hidden JSON project setting reset on non-superuser project update
 - Fix custom app setting validation calls in forms
 - Fix multiple remote sync app settings updating issues
+- Fix request object not provided to perform_project_modify() on create
 - General bug fixes and minor updates
 
 

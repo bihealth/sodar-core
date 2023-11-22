@@ -1012,9 +1012,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             )
 
     @classmethod
-    def _notify_users(
-        cls, project, action, owner, old_data, old_parent, request
-    ):
+    def _notify_users(cls, project, action, owner, old_parent, request):
         """
         Notify users about project creation and update. Displays app alerts
         and/or sends emails depending on the site configuration.
@@ -1201,9 +1199,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         # Once all is done, update timeline event, create alerts and emails
         if tl_event:
             tl_event.set_status('OK')
-        self._notify_users(
-            project, action, owner, old_data, old_parent, request
-        )
+        self._notify_users(project, action, owner, old_parent, request)
         return project
 
 

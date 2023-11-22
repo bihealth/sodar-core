@@ -221,7 +221,7 @@ class AppSettingAPI:
         """
         Ensure valid argument values for a settings def query.
 
-        :param plugin: Plugin object extending ProjectAppPluginPoint or None
+        :param plugin: Plugin object or None
         :param app_name: Name of the app plugin (string or None)
         :return: Dict
         :raise: ValueError if args are not valid or plugin is not found
@@ -726,7 +726,7 @@ class AppSettingAPI:
         or the plugin object.
 
         :param name: Setting name
-        :param plugin: Plugin object extending ProjectAppPluginPoint or None
+        :param plugin: Plugin object or None
         :param app_name: Name of the app plugin (string or None)
         :return: Dict
         :raise: ValueError if neither app_name nor plugin are set or if setting
@@ -756,7 +756,7 @@ class AppSettingAPI:
         Return app setting definitions of a specific scope from a plugin.
 
         :param scope: PROJECT, USER or PROJECT_USER
-        :param plugin: Plugin object extending ProjectAppPluginPoint or None
+        :param plugin: Plugin object or None
         :param app_name: Name of the app plugin (string or None)
         :param user_modifiable: Only return non-superuser modifiable settings if
                                 True (boolean)

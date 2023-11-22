@@ -9,7 +9,7 @@ from filesfolders.models import File, Folder, HyperLink
 from filesfolders.urls import urlpatterns
 
 
-# SODAR Constants
+# SODAR constants
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
@@ -21,13 +21,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties required by django-plugins ------------------------------
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'filesfolders'
 
     #: Title (used in templates)
     title = 'Files'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = urlpatterns
 
     # Properties defined in ProjectAppPluginPoint -----------------------
