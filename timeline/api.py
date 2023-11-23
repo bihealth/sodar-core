@@ -180,7 +180,7 @@ class TimelineAPI:
                     logger.warning(
                         'Empty label returned by plugin "{}" for object '
                         'reference "{}" ({})"'.format(
-                            app_plugin.name, ref_obj, ref_obj.sodar_uuid
+                            app_plugin.name, ref_obj, ref_obj.object_uuid
                         )
                     )
                 return '<a href="{}" {}>{}</a> {}'.format(
