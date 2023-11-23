@@ -26,7 +26,7 @@ DEFAULT_MESSAGES = {
     'INFO': 'Info level action',
     'CANCEL': 'Action cancelled',
 }
-OBJ_REF_UNNAMED = '(Unnamed)'
+OBJ_REF_UNNAMED = '(unnamed)'
 
 
 class ProjectEventManager(models.Manager):
@@ -187,7 +187,7 @@ class ProjectEvent(models.Model):
         ref.label = label
         if not name:
             logger.warning(
-                'Adding object reference with no name: {} ({})'.format(
+                'Adding object reference with no name: "{}" ({})'.format(
                     obj, getattr(obj, 'sodar_uuid')
                 )
             )

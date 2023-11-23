@@ -21,7 +21,7 @@ Added
     - User login/logout logging signals (#1326)
     - ``createdevusers`` management command (#1339)
 - **Timeline**
-    - Empty object reference name handling in ``add_object()`` (#1338)
+    - Empty object reference name handling in ``add_object()`` (#1338, #1341)
 
 Changed
 -------

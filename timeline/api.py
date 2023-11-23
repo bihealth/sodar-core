@@ -18,6 +18,7 @@ from timeline.models import (
     ProjectEvent,
     ProjectEventObjectRef,
     EVENT_STATUS_TYPES,
+    OBJ_REF_UNNAMED,
 )
 
 
@@ -38,8 +39,10 @@ class TimelineAPI:
     # Internal Helpers ---------------------------------------------------------
 
     @classmethod
-    def _get_label(cls, label):
-        """Format label to be displayed"""
+    def _get_ref_label(cls, label):
+        """Return reference object name in displayable form"""
+        if not label:
+            return OBJ_REF_UNNAMED
         if not {' ', '-'}.intersection(label):
             return Truncator(label).chars(LABEL_MAX_WIDTH)
         return label
@@ -68,7 +71,7 @@ class TimelineAPI:
     def _get_not_found_label(cls, ref_obj):
         """Get label for object which is not found in the database"""
         return '<span class="text-danger">{}</span> {}'.format(
-            cls._get_label(ref_obj.name), cls._get_history_link(ref_obj)
+            cls._get_ref_label(ref_obj.name), cls._get_history_link(ref_obj)
         )
 
     @classmethod
@@ -85,11 +88,11 @@ class TimelineAPI:
                     'projectroles:detail',
                     kwargs={'project': project.sodar_uuid},
                 ),
-                cls._get_label(project.title),
+                cls._get_ref_label(project.title),
             )
         elif project:
             return '<span class="text-danger">{}</span>'.format(
-                cls._get_label(project.title)
+                cls._get_ref_label(project.title)
             )
         return ref_obj.name
 
@@ -173,6 +176,13 @@ class TimelineAPI:
                     raise ex
                 link_data = None
             if link_data:
+                if not link_data['label']:
+                    logger.warning(
+                        'Empty label returned by plugin "{}" for object '
+                        'reference "{}" ({})"'.format(
+                            app_plugin.name, ref_obj, ref_obj.sodar_uuid
+                        )
+                    )
                 return '<a href="{}" {}>{}</a> {}'.format(
                     link_data['url'],
                     (
@@ -180,7 +190,7 @@ class TimelineAPI:
                         if 'blank' in link_data and link_data['blank'] is True
                         else ''
                     ),
-                    cls._get_label(link_data['label']),
+                    cls._get_ref_label(link_data['label']),
                     cls._get_history_link(ref_obj),
                 )
             else:
