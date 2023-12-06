@@ -24,10 +24,6 @@ from django.views.generic.edit import ModelFormMixin, DeletionMixin
 
 from db_file_storage.storage import DatabaseFileStorage
 
-from filesfolders.forms import FolderForm, FileForm, HyperLinkForm
-from filesfolders.models import Folder, File, FileData, HyperLink
-from filesfolders.utils import build_public_url
-
 # Projectroles dependency
 from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
@@ -40,7 +36,12 @@ from projectroles.views import (
     HTTPRefererMixin,
     ProjectPermissionMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
 )
+
+from filesfolders.forms import FolderForm, FileForm, HyperLinkForm
+from filesfolders.models import Folder, File, FileData, HyperLink
+from filesfolders.utils import build_public_url
 
 
 app_settings = AppSettingAPI()
@@ -72,10 +73,9 @@ class ObjectPermissionMixin(LoggedInPermissionMixin):
                 return self.request.user.has_perm(
                     'filesfolders.update_data_own', self.get_permission_object()
                 )
-            else:
-                return self.request.user.has_perm(
-                    'filesfolders.update_data_all', self.get_permission_object()
-                )
+            return self.request.user.has_perm(
+                'filesfolders.update_data_all', self.get_permission_object()
+            )
         except type(self.get_object()).DoesNotExist:
             return False
 
@@ -159,7 +159,6 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
         view_action = self.get_view_action()
         old_data = {}
         update_attrs = ['name', 'folder', 'description', 'flag']
-
         if view_action == 'update':
             old_item = self.get_object()
             if old_item.__class__.__name__ == 'HyperLink':
@@ -169,7 +168,6 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
             # Get old fields
             for a in update_attrs:
                 old_data[a] = getattr(old_item, a)
-
         self.object = form.save()
 
         # Add event in Timeline
@@ -180,20 +178,17 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
             update_attrs=update_attrs,
             old_data=old_data,
         )
-
         messages.success(
             self.request,
             '{} "{}" successfully {}d.'.format(
                 self.object.__class__.__name__, self.object.name, view_action
             ),
         )
-
         # TODO: Repetition, put this in a mixin?
         if self.object.folder:
             re_kwargs = {'folder': self.object.folder.sodar_uuid}
         else:
             re_kwargs = {'project': self.object.project.sodar_uuid}
-
         return redirect(reverse('filesfolders:list', kwargs=re_kwargs))
 
 
@@ -202,7 +197,6 @@ class DeleteSuccessMixin(DeletionMixin):
 
     def get_success_url(self):
         timeline = get_backend_api('timeline_backend')
-
         # Add event in Timeline
         if timeline:
             obj_type = TL_OBJ_TYPES[self.object.__class__.__name__]
@@ -229,13 +223,11 @@ class DeleteSuccessMixin(DeletionMixin):
                 self.object.__class__.__name__, self.object.name
             ),
         )
-
         # TODO: Repetition, put this in a mixin?
         if self.object.folder:
             re_kwargs = {'folder': self.object.folder.sodar_uuid}
         else:
             re_kwargs = {'project': self.object.project.sodar_uuid}
-
         return reverse('filesfolders:list', kwargs=re_kwargs)
 
 
@@ -245,39 +237,31 @@ class FileServeMixin:
     def get(self, *args, **kwargs):
         """GET request to return the file as attachment"""
         timeline = get_backend_api('timeline_backend')
+        if kwargs.get('project'):
+            redirect_url = reverse(
+                'filesfolders:list', kwargs={'project': kwargs['project']}
+            )
+        else:
+            redirect_url = reverse('home')
 
         # Get File object
         try:
             file = File.objects.get(sodar_uuid=kwargs['file'])
         except File.DoesNotExist:
             messages.error(self.request, 'File object not found.')
-            return redirect(
-                reverse(
-                    'filesfolders:list', kwargs={'project': kwargs['project']}
-                )
-            )
-
+            return redirect(redirect_url)
         # Get corresponding FileData object with file content
         try:
             file_data = FileData.objects.get(file_name=file.file.name)
         except FileData.DoesNotExist:
             messages.error(self.request, 'File data not found.')
-            return redirect(
-                reverse(
-                    'filesfolders:list', kwargs={'project': kwargs['project']}
-                )
-            )
-
+            return redirect(redirect_url)
         # Open file for serving
         try:
             file_content = storage.open(file_data.file_name)
         except Exception:
             messages.error(self.request, 'Error opening file.')
-            return redirect(
-                reverse(
-                    'filesfolders:list', kwargs={'project': kwargs['project']}
-                )
-            )
+            return redirect(redirect_url)
 
         # Return file as attachment
         response = HttpResponse(
@@ -287,7 +271,6 @@ class FileServeMixin:
             response['Content-Disposition'] = 'attachment; filename={}'.format(
                 file.name
             )
-
         if self.request.user.is_authenticated:
             # Add event in Timeline
             if timeline:
@@ -301,7 +284,6 @@ class FileServeMixin:
                     status_type='INFO',
                 )
                 tl_event.add_object(file, 'file', file.name)
-
         return response
 
 
@@ -315,6 +297,7 @@ class BaseCreateView(
     ProjectContextMixin,
     ProjectPermissionMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """Base File/Folder/HyperLink creation view"""
@@ -373,7 +356,6 @@ class ProjectFileView(
                     breadcrumb.insert(0, f.folder)
                     f = f.folder
                 context['folder_breadcrumb'] = breadcrumb
-
         context['folders'] = Folder.objects.filter(
             project=project, folder=root_folder
         )
@@ -417,7 +399,6 @@ class ProjectFileView(
                     'Exception in accessing readme file data (UUID={}): '
                     '{}'.format(readme_file.sodar_uuid, ex)
                 )
-
         return context
 
 
@@ -439,6 +420,7 @@ class FolderUpdateView(
     FormValidMixin,
     ViewActionMixin,
     ProjectContextMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """Folder updating view"""
@@ -479,17 +461,11 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
         """Override form_valid() for zip file unpacking"""
         timeline = get_backend_api('timeline_backend')
 
-        ######################
         # Regular file upload
-        ######################
-
         if not form.cleaned_data.get('unpack_archive'):
             return super().form_valid(form)
 
-        #####################
         # Zip file unpacking
-        #####################
-
         file = form.cleaned_data.get('file')
         folder = form.cleaned_data.get('folder')
         project = self.get_project(self.request, self.kwargs)
@@ -552,12 +528,10 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
             self.add_item_modify_event(
                 obj=new_folder, request=self.request, view_action='create'
             )
-
         for new_file in new_files:
             self.add_item_modify_event(
                 obj=new_file, request=self.request, view_action='create'
             )
-
         if timeline:
             timeline.add_event(
                 project=project,
@@ -592,6 +566,7 @@ class FileUpdateView(
     FormValidMixin,
     ViewActionMixin,
     ProjectContextMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """File updating view"""
@@ -634,7 +609,6 @@ class FileServePublicView(FileServeMixin, View):
 
     def get(self, *args, **kwargs):
         """Override of GET for checking request URL"""
-
         try:
             file = File.objects.get(secret=kwargs['secret'])
             # Check if sharing public files is not allowed in project settings
@@ -648,7 +622,6 @@ class FileServePublicView(FileServeMixin, View):
         # If public URL serving is disabled, don't serve file
         if not file.public_url:
             return HttpResponseBadRequest(LINK_BAD_REQUEST_MSG)
-
         # Update kwargs with file and project uuid:s
         kwargs.update(
             {'file': file.sodar_uuid, 'project': file.project.sodar_uuid}
@@ -676,7 +649,6 @@ class FilePublicLinkView(
         except File.DoesNotExist:
             messages.error(self.request, 'File not found.')
             return redirect(reverse('home'))
-
         if not app_settings.get(APP_NAME, 'allow_public_links', file.project):
             messages.error(
                 self.request,
@@ -690,19 +662,16 @@ class FilePublicLinkView(
                     kwargs={'project': file.project.sodar_uuid},
                 )
             )
-
         return super().get(*args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         """Provide URL to context"""
         context = super().get_context_data(*args, **kwargs)
-
         try:
             file = File.objects.get(sodar_uuid=self.kwargs['file'])
         except File.DoesNotExist:
             messages.error(self.request, 'File not found.')
             return redirect(reverse('home'))
-
         if not file.public_url:
             messages.error(self.request, 'Public URL for file not enabled.')
             return redirect(
@@ -711,7 +680,6 @@ class FilePublicLinkView(
                     kwargs={'project': file.project.sodar_uuid},
                 )
             )
-
         context['file'] = file
         context['public_url'] = build_public_url(file, self.request)
         return context
@@ -735,6 +703,7 @@ class HyperLinkUpdateView(
     FormValidMixin,
     ViewActionMixin,
     ProjectContextMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """HyperLink updating view"""
@@ -811,7 +780,6 @@ class BatchEditView(
             exclude_list = [
                 x.sodar_uuid for x in self.items if isinstance(x, Folder)
             ]
-
             # Exclude folders under folders to be moved
             for i in self.items:
                 exclude_list += [
@@ -821,19 +789,15 @@ class BatchEditView(
                     )
                     if x.has_in_path(i)
                 ]
-
             # Exclude current folder
             if 'folder' in kwargs:
                 exclude_list.append(kwargs['folder'])
-
             folder_choices = Folder.objects.filter(
                 project=self.project
             ).exclude(sodar_uuid__in=exclude_list)
             context['folder_choices'] = folder_choices
-
             if folder_choices.count() == 0:
                 context['folder_check'] = False
-
         return super().render_to_response(context)
 
     def _finalize_edit(self, edit_count, target_folder, **kwargs):
@@ -852,7 +816,6 @@ class BatchEditView(
                     ', '.join(f.name for f in self.failed),
                 ),
             )
-
         if edit_count > 0:
             messages.success(
                 self.request,
@@ -869,7 +832,6 @@ class BatchEditView(
                 'items': [x.name for x in self.items],
                 'failed': [x.name for x in self.failed],
             }
-
             tl_event = timeline.add_event(
                 project=Project.objects.filter(
                     sodar_uuid=self.project.sodar_uuid
@@ -891,7 +853,6 @@ class BatchEditView(
                 extra_data=extra_data,
                 status_type='OK' if edit_count > 0 else 'FAILED',
             )
-
             if self.batch_action == 'move' and target_folder:
                 tl_event.add_object(
                     target_folder, 'target_folder', target_folder.get_path()
@@ -901,7 +862,6 @@ class BatchEditView(
             re_kwargs = {'folder': kwargs['folder']}
         else:
             re_kwargs = {'project': kwargs['project']}
-
         return redirect(reverse('filesfolders:list', kwargs=re_kwargs))
 
     def post(self, request, **kwargs):
@@ -938,14 +898,10 @@ class BatchEditView(
             #: Item permission
             perm_ok = can_update_all | (item.owner == request.user)
 
-            #########
             # Checks
-            #########
-
             # Perm check
             if not perm_ok:
                 self.failed.append(item)
-
             # Moving checks (after user has selected target folder)
             elif self.batch_action == 'move' and user_confirmed:
                 # Can't move if item with same name in target
@@ -956,17 +912,13 @@ class BatchEditView(
                 }
                 if cls.objects.filter(**get_kwargs):
                     self.failed.append(item)
-
             # Deletion checks
             elif self.batch_action == 'delete':
                 # Can't delete a non-empty folder
                 if isinstance(item, Folder) and not item.is_empty():
                     self.failed.append(item)
 
-            ##############
             # Modify item
-            ##############
-
             if perm_ok and item not in self.failed:
                 if not user_confirmed:
                     self.items.append(item)
@@ -979,10 +931,7 @@ class BatchEditView(
                     item.delete()
                     edit_count += 1
 
-        ##################
         # Render/redirect
-        ##################
-
         # Confirmation needed
         if not user_confirmed:
             return self._render_confirmation(**kwargs)

@@ -18,6 +18,7 @@ from timeline.models import (
     ProjectEvent,
     ProjectEventObjectRef,
     EVENT_STATUS_TYPES,
+    OBJ_REF_UNNAMED,
 )
 
 
@@ -38,23 +39,25 @@ class TimelineAPI:
     # Internal Helpers ---------------------------------------------------------
 
     @classmethod
-    def _get_label(cls, label):
-        """Format label to be displayed"""
+    def _get_ref_label(cls, label):
+        """Return reference object name in displayable form"""
+        if not label:
+            return OBJ_REF_UNNAMED
         if not {' ', '-'}.intersection(label):
             return Truncator(label).chars(LABEL_MAX_WIDTH)
         return label
 
     @classmethod
-    def _get_history_link(cls, ref_obj):
+    def _get_history_link(cls, obj_ref):
         """Return history link HTML for event object reference"""
         url_name = 'timeline:list_object_site'
         url_kwargs = {
-            'object_model': ref_obj.object_model,
-            'object_uuid': ref_obj.object_uuid,
+            'object_model': obj_ref.object_model,
+            'object_uuid': obj_ref.object_uuid,
         }
-        if ref_obj.event.project:
+        if obj_ref.event.project:
             url_name = 'timeline:list_object'
-            url_kwargs['project'] = ref_obj.event.project.sodar_uuid
+            url_kwargs['project'] = obj_ref.event.project.sodar_uuid
         history_url = reverse(url_name, kwargs=url_kwargs)
         return (
             '<a href="{}" class="sodar-tl-object-link">'
@@ -65,16 +68,16 @@ class TimelineAPI:
         )
 
     @classmethod
-    def _get_not_found_label(cls, ref_obj):
+    def _get_not_found_label(cls, obj_ref):
         """Get label for object which is not found in the database"""
         return '<span class="text-danger">{}</span> {}'.format(
-            cls._get_label(ref_obj.name), cls._get_history_link(ref_obj)
+            cls._get_ref_label(obj_ref.name), cls._get_history_link(obj_ref)
         )
 
     @classmethod
-    def _get_project_desc(cls, ref_obj, request=None):
+    def _get_project_desc(cls, obj_ref, request=None):
         """Get description HTML for special case: Project model"""
-        project = Project.objects.filter(sodar_uuid=ref_obj.object_uuid).first()
+        project = Project.objects.filter(sodar_uuid=obj_ref.object_uuid).first()
         if (
             project
             and request
@@ -85,18 +88,18 @@ class TimelineAPI:
                     'projectroles:detail',
                     kwargs={'project': project.sodar_uuid},
                 ),
-                cls._get_label(project.title),
+                cls._get_ref_label(project.title),
             )
         elif project:
             return '<span class="text-danger">{}</span>'.format(
-                cls._get_label(project.title)
+                cls._get_ref_label(project.title)
             )
-        return ref_obj.name
+        return obj_ref.name
 
     @classmethod
-    def _get_remote_site_desc(cls, ref_obj, request=None):
+    def _get_remote_site_desc(cls, obj_ref, request=None):
         """Get description HTML for special case: RemoteSite model"""
-        site = RemoteSite.objects.filter(sodar_uuid=ref_obj.object_uuid).first()
+        site = RemoteSite.objects.filter(sodar_uuid=obj_ref.object_uuid).first()
         if site and request and request.user.is_superuser:
             return '<a href="{}">{}</a> {}'.format(
                 reverse(
@@ -104,11 +107,11 @@ class TimelineAPI:
                     kwargs={'remotesite': site.sodar_uuid},
                 ),
                 site.name,
-                cls._get_history_link(ref_obj),
+                cls._get_history_link(obj_ref),
             )
         elif site:
             return site.name
-        return cls._get_not_found_label(ref_obj)
+        return cls._get_not_found_label(obj_ref)
 
     @classmethod
     def _get_ref_description(cls, event, ref_label, app_plugin, request):
@@ -129,39 +132,39 @@ class TimelineAPI:
 
         # Get object reference
         try:
-            ref_obj = ProjectEventObjectRef.objects.get(
+            obj_ref = ProjectEventObjectRef.objects.get(
                 event=event, label=ref_label
             )
         except ProjectEventObjectRef.DoesNotExist:
             return UNKNOWN_LABEL
 
         # Special case: User model
-        if ref_obj.object_model == 'User':
+        if obj_ref.object_model == 'User':
             try:
-                user = User.objects.get(sodar_uuid=ref_obj.object_uuid)
+                user = User.objects.get(sodar_uuid=obj_ref.object_uuid)
                 return '{} {}'.format(
-                    get_user_html(user), cls._get_history_link(ref_obj)
+                    get_user_html(user), cls._get_history_link(obj_ref)
                 )
             except User.DoesNotExist:
                 return UNKNOWN_LABEL
 
         # Special case: Project model
-        elif ref_obj.object_model == 'Project':
-            return cls._get_project_desc(ref_obj, request)
+        elif obj_ref.object_model == 'Project':
+            return cls._get_project_desc(obj_ref, request)
 
         # Special case: RemoteSite model
-        elif ref_obj.object_model == 'RemoteSite':
-            return cls._get_remote_site_desc(ref_obj, request)
+        elif obj_ref.object_model == 'RemoteSite':
+            return cls._get_remote_site_desc(obj_ref, request)
 
         # Special case: projectroles app
         elif event.app == 'projectroles':
-            return cls._get_not_found_label(ref_obj)
+            return cls._get_not_found_label(obj_ref)
 
         # Apps with plugins
         else:
             try:
                 link_data = app_plugin.get_object_link(
-                    ref_obj.object_model, ref_obj.object_uuid
+                    obj_ref.object_model, obj_ref.object_uuid
                 )
             except Exception as ex:
                 logger.error(
@@ -173,6 +176,13 @@ class TimelineAPI:
                     raise ex
                 link_data = None
             if link_data:
+                if not link_data['label']:
+                    logger.warning(
+                        'Empty label returned by plugin "{}" for object '
+                        'reference "{}" ({})"'.format(
+                            app_plugin.name, obj_ref, obj_ref.object_uuid
+                        )
+                    )
                 return '<a href="{}" {}>{}</a> {}'.format(
                     link_data['url'],
                     (
@@ -180,11 +190,11 @@ class TimelineAPI:
                         if 'blank' in link_data and link_data['blank'] is True
                         else ''
                     ),
-                    cls._get_label(link_data['label']),
-                    cls._get_history_link(ref_obj),
+                    cls._get_ref_label(link_data['label']),
+                    cls._get_history_link(obj_ref),
                 )
             else:
-                return cls._get_not_found_label(ref_obj)
+                return cls._get_not_found_label(obj_ref)
 
     # API functions ------------------------------------------------------------
 

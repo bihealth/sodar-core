@@ -184,6 +184,7 @@ class RemoteProjectAPI:
             .get(app_setting.name, {})
             .get('local', APP_SETTING_LOCAL_DEFAULT)
         )
+        # TODO: Remove user_name once #1316 and #1317 are implemented
         sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
             'name': app_setting.name,
             'type': app_setting.type,
@@ -196,6 +197,9 @@ class RemoteProjectAPI:
             if app_setting.project
             else None,
             'user_uuid': app_setting.user.sodar_uuid
+            if app_setting.user
+            else None,
+            'user_name': app_setting.user.username
             if app_setting.user
             else None,
             'local': local,
@@ -235,12 +239,13 @@ class RemoteProjectAPI:
             ]
 
             # Get and add app settings for project
+            # NOTE: Also provide global settings in case they are not yet set
             for a in AppSetting.objects.filter(project=project):
                 try:
                     sync_data = self._add_app_setting(sync_data, a, all_defs)
                 except Exception as ex:
                     logger.error(
-                        'Failed to sync app setting "{}.settings.{}" '
+                        'Failed to add app setting "{}.settings.{}" '
                         '(UUID={}): {} '.format(
                             a.app_plugin.name
                             if a.app_plugin
@@ -1044,8 +1049,22 @@ class RemoteProjectAPI:
 
         if ad['project_uuid']:
             project = Project.objects.get(sodar_uuid=ad['project_uuid'])
-        if ad['user_uuid']:
-            user = User.objects.get(sodar_uuid=ad['user_uuid'])
+        # TODO: Use UUID for LDAP users once #1316 and #1317 are implemented
+        if ad.get('user_name'):
+            # User may not be found if e.g. local users allowed but not created
+            user = User.objects.filter(username=ad['user_name']).first()
+            if not user:
+                logger.info(
+                    'Skipping setting {}: User not found'.format(ad['name'])
+                )
+                return
+        # Skip for now, as UUIDs have not been correctly synced
+        # TODO: Remove skip after #1316 and #1317
+        elif ad['user_uuid']:
+            logger.info(
+                'Skipping setting {}: user_name not present'.format(ad['name'])
+            )
+            return
 
         try:
             obj = AppSetting.objects.get(
@@ -1054,18 +1073,21 @@ class RemoteProjectAPI:
                 project=project,
                 user=user,
             )
+            # Keep target instance of local app setting if available
+            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
+                logger.info('Keeping local setting {}'.format(ad['name']))
+                set_data['status'] = 'skipped'
+                return
             # Skip if value is identical
-            if obj.value == ad['value'] and obj.value_json == ad['value_json']:
+            if app_settings._compare_value(
+                obj, ad['value_json'] if obj.type == 'JSON' else ad['value']
+            ):
                 logger.info(
                     'Skipping setting {}: value unchanged'.format(str(obj))
                 )
                 set_data['status'] = 'skipped'
                 return
-            # Keep local app setting if available
-            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
-                logger.info('Keeping local setting {}'.format(ad['name']))
-                return
-            # If setting is global, update existing value by recreating object
+            # Else update existing value by recreating object
             action_str = 'updating'
             obj.delete()
         except ObjectDoesNotExist:
@@ -1074,6 +1096,7 @@ class RemoteProjectAPI:
         # Remove keys that are not available in the model
         ad.pop('local', None)
         ad.pop('project_uuid', None)
+        ad.pop('user_name', None)  # TODO: Remove once user UUID support added
         ad.pop('user_uuid', None)
         # Add keys required for the model
         ad['project'] = project

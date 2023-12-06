@@ -80,15 +80,22 @@ arguments in its init function, with the exception of ``queryset``,
 
 The init function also takes new arguments which are specified below:
 
-- ``scope``: Scope of users to include (string)
-    * ``all``: All users on the site
-    * ``project``: Limit search to users in given project
-    * ``project_exclude`` Exclude existing users of given project
-- ``project``: Project object or project UUID string (optional)
-- ``exclude``: List of User objects or User UUIDs to exclude (optional)
-- ``forward``: Parameters to forward to autocomplete view (optional)
-- ``url``: Autocomplete ajax class override (optional)
-- ``widget_class``: Widget class override (optional)
+``scope``
+    Scope of users to include (string). Options:
+
+    - ``all``: All users on the site
+    - ``project``: Limit search to users in given project
+    - ``project_exclude`` Exclude existing users of given project
+``project``
+    Project object or project UUID string (optional)
+``exclude``
+    List of User objects or User UUIDs to exclude (optional)
+``forward``
+    Parameters to forward to autocomplete view (optional)
+``url``
+    Autocomplete ajax class override (optional)
+``widget_class``
+    Widget class override (optional)
 
 Below is an example of the classes usage. Note that you can also define the
 field as a form class member, but the ``project`` or ``exclude`` values are
@@ -149,6 +156,105 @@ multiple times, it is recommended to use the ``sodar-btn-submit-once`` class on
 the submit button in your server-side form templates. Introducing this class
 will disable the button after the initial click while the form is submitted.
 This is especially recommended for forms responsible for creating objects.
+
+Invalid Form View Mixin
+-----------------------
+
+Adding ``projectroles.views.InvalidFormMixin`` to your create or update view
+displays a standardized Django message notifying the user of form submission
+failure. This is recommended to be used especially for long scrolling forms,
+where errors pinned to specific fields may be initially invisible to the user.
+
+
+Template Includes and Helpers
+=============================
+
+This section details general template includes and helpers provided by SODAR
+Core. Unless otherwise mentioned, these can be imported from the projectroles
+app.
+
+For common template tags, see :ref:`app_projectroles_api_django_tags`.
+
+Pagination Template
+-------------------
+
+A common template for adding navigation for list pagination can be found in
+``projectroles/_pagination.html``. This can be included to any Django
+``ListView`` template which provides the ``paginate_by`` definition, enabling
+pagination. If a smaller layout is desired, the ``pg_small`` argument can be
+used. An example can be seen below:
+
+.. code-block:: django
+
+    {% include 'projectroles/_pagination.html' with pg_small=True %}
+
+Project Badge
+-------------
+
+Projectroles provides a project badge which can be used to display a fixed-size
+link to a category or a project among text. It can be included in your template
+as follows:
+
+.. code-block:: django
+
+    {% include 'projectroles/_project_badge.html' with project=project color='info' can_view=True %}
+
+The following arguments are expected:
+
+``project``
+    Project object for the related project or category.
+``color``
+    String for the badge color (must correspond to bootstrap classes, e.g.
+    "info" or "success").
+``can_view``
+    Boolean for whether the current user should have access to view the project.
+
+Tour Help
+---------
+
+SODAR Core uses `Shepherd <https://shipshapecode.github.io/shepherd/docs/welcome/>`_
+to present an optional interactive tour for a rendered page. To enable the tour
+in your template, set it up inside the ``javascript`` template block. Within an
+inline javascript structure, set the ``tourEnabled`` variable to ``true`` and
+add steps according to the
+`Shepherd documentation <https://shipshapecode.github.io/shepherd>`_.
+
+Example:
+
+.. code-block:: django
+
+    {% block javascript %}
+      {{ block.super }}
+      {# Tour content #}
+      <script type="text/javascript">
+        tourEnabled = true;
+        /* Normal step */
+        tour.addStep('id_of_step', {
+            title: 'Step Title',
+            text: 'Description of the step',
+            attachTo: '#some-element top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+        /* Conditional step */
+        if ($('.potentially-existing-element').length) {
+            tour.addStep('id_of_another_step', {
+                title: 'Another Title',
+                text: 'Another description here',
+                attachTo: '.potentially-existing-element right',
+                advanceOn: '.docs-link click',
+                showCancelLink: true
+            });
+        }
+      </script>
+    {% endblock javascript %}
+
+
+.. warning::
+
+    Make sure you call ``{{ block.super }}`` at the start of the declared
+    ``javascript`` block or you will overwrite the site's default Javascript
+    setup!
 
 
 App Settings
@@ -251,71 +357,6 @@ the Django database:
     $ ./manage.py cleanappsettings
 
 
-Pagination Template
-===================
-
-A common template for adding navigation for list pagination can be found in
-``projectroles/_pagination.html``. This can be included to any Django
-``ListView`` template which provides the ``paginate_by`` definition, enabling
-pagination. If a smaller layout is desired, the ``pg_small`` argument can be
-used. An example can be seen below:
-
-.. code-block:: django
-
-    {% include 'projectroles/_pagination.html' with pg_small=True %}
-
-
-Tour Help
-=========
-
-SODAR Core uses `Shepherd <https://shipshapecode.github.io/shepherd/docs/welcome/>`_
-to present an optional interactive tour for a rendered page. To enable the tour
-in your template, set it up inside the ``javascript`` template block. Within an
-inline javascript structure, set the ``tourEnabled`` variable to ``true`` and add
-steps according to the `Shepherd documentation <https://shipshapecode.github.io/shepherd>`_.
-
-Example:
-
-.. code-block:: django
-
-    {% block javascript %}
-      {{ block.super }}
-
-      {# Tour content #}
-      <script type="text/javascript">
-        tourEnabled = true;
-
-        /* Normal step */
-        tour.addStep('id_of_step', {
-            title: 'Step Title',
-            text: 'Description of the step',
-            attachTo: '#some-element top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-
-        /* Conditional step */
-        if ($('.potentially-existing-element').length) {
-            tour.addStep('id_of_another_step', {
-                title: 'Another Title',
-                text: 'Another description here',
-                attachTo: '.potentially-existing-element right',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-
-      </script>
-    {% endblock javascript %}
-
-
-.. warning::
-
-    Make sure you call ``{{ block.super }}`` at the start of the declared
-    ``javascript`` block or you will overwrite the site's default Javascript
-    setup!
-
-
 Project Modifying API
 =====================
 
@@ -370,6 +411,34 @@ To synchronize data for existing projects in development, you can implement the
 ``perform_project_sync()`` method.
 
 
+.. _dev_resource_multi_plugin:
+
+Multi-Plugin Apps
+=================
+
+In many cases, you may want to declare multiple app plugins within a single
+SODAR Core app. For example, you may want your app to have both project specific
+and site specific views and maybe also a backend API to be used by other apps.
+
+For an example of a multi-plugin app in SODAR Core itself, see the
+:ref:`app_timeline`.
+
+There is no limit on how many plugins you can define for a SODAR Core app and
+they may be of different types. However, certain conditions should be followed
+when creating multi-plugin apps:
+
+- Plugin names are expected to be unique. Not adhering to this may cause
+  unexpected side-effects.
+- For plugins with related UI views, it is strongly recommended to name all your
+  plugins starting with the app name. For example, if your project app plugin is
+  named ``yourapp``, it is recommended to name the secondary site app plugin
+  e.g. ``yourapp_site``. This ensures the SODAR Core UI can detect your app and
+  higlight active apps correctly.
+- If your app includes multiple plugins with UI views, it is recommended to
+  provide only the UI views relevant to that plugin in the ``urls`` attribute.
+  This, again, ensures apps are correctly detected and highlighted in the UI.
+
+
 Management Command Logger
 =========================
 
@@ -415,13 +484,17 @@ UI test classes found in ``projectroles.tests.test_ui``. Default values for
 these settings can be found in ``config/settings/test.py``. The settings are as
 follows:
 
-- ``PROJECTROLES_TEST_UI_CHROME_OPTIONS``: Options for Chrome through Selenium.
-  Can be used to e.g. enable/disable headless testing mode.
-- ``PROJECTROLES_TEST_UI_WINDOW_SIZE``: Custom browser window size.
-- ``PROJECTROLES_TEST_UI_WAIT_TIME``: Maximum wait time for UI test operations
-- ``PROJECTROLES_TEST_UI_LEGACY_LOGIN``: If set ``True``, use the legacy UI
-  login and redirect function for testing with different users. This can be used
-  if e.g. issues with cookie-based logins are encountered.
+``PROJECTROLES_TEST_UI_CHROME_OPTIONS``
+    Options for Chrome through Selenium. Can be used to e.g. enable/disable
+    headless testing mode.
+``PROJECTROLES_TEST_UI_WINDOW_SIZE``
+    Custom browser window size.
+``PROJECTROLES_TEST_UI_WAIT_TIME``
+    Maximum wait time for UI test operations
+``PROJECTROLES_TEST_UI_LEGACY_LOGIN``
+    If set ``True``, use the legacy UI login and redirect function for testing
+    with different users. This can be used if e.g. issues with cookie-based
+    logins are encountered.
 
 Base Test Classes and Helpers
 -----------------------------

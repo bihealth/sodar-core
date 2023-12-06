@@ -62,6 +62,10 @@ PROJECT_TYPE_CHOICES = [
     ),
     (PROJECT_TYPE_PROJECT, get_display_name(PROJECT_TYPE_PROJECT, title=True)),
 ]
+SETTING_CUSTOM_VALIDATE_ERROR = (
+    'Exception in custom app setting validation for plugin "{plugin}": '
+    '{exception}'
+)
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -492,14 +496,12 @@ class ProjectForm(SODARModelForm):
     def _init_app_settings(self):
         # Set up setting query kwargs
         self.p_kwargs = {}
+        # Show unmodifiable settings to superusers
         if not self.current_user.is_superuser:
             self.p_kwargs['user_modifiable'] = True
         self.app_settings = AppSettingAPI()
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
-
-        # plugin == 'None' refers to projectroles app
-        for plugin in self.app_plugins + [None]:
-            # Show non-modifiable settings to superusers
+        for plugin in self.app_plugins + [None]:  # Projectroles has no plugin
             if plugin:
                 app_name = plugin.name
                 p_settings = self.app_settings.get_definitions(
@@ -527,30 +529,27 @@ class ProjectForm(SODARModelForm):
         app_settings,
         p_kwargs,
         instance,
-        instance_owner_as,
     ):
         """Validate and clean app_settings form fields"""
         errors = []
-
         for plugin in app_plugins + [None]:
             if plugin:
-                name = plugin.name
-                p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
-                )
+                p_name = plugin.name
+                def_kwarg = {'plugin': plugin}
             else:
-                name = 'projectroles'
-                p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
-                )
+                p_name = 'projectroles'
+                def_kwarg = {'app_name': p_name}
+            p_defs = app_settings.get_definitions(
+                APP_SETTING_SCOPE_PROJECT, **{**p_kwargs, **def_kwarg}
+            )
+            p_settings = {}
 
-            plugin_app_settings = {}
-            for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(name, s_key)
-                plugin_app_settings[s_key] = cleaned_data.get(s_field)
+            for s_key, s_val in p_defs.items():
+                s_field = '.'.join(['settings', p_name, s_key])
+                p_settings[s_key] = cleaned_data.get(s_field)
 
                 if s_val['type'] == 'JSON':
-                    if not plugin_app_settings[s_key]:
+                    if not p_settings[s_key]:
                         cleaned_data[s_field] = '{}'
                     try:
                         cleaned_data[s_field] = json.loads(
@@ -559,9 +558,7 @@ class ProjectForm(SODARModelForm):
                     except json.JSONDecodeError as err:
                         errors.append((s_field, 'Invalid JSON\n' + str(err)))
                 elif s_val['type'] == 'INTEGER':
-                    # When the field is a select/dropdown the information of
-                    # the datatype gets lost. We need to convert that here,
-                    # otherwise subsequent checks will fail.
+                    # Convert integers from select fields
                     cleaned_data[s_field] = int(cleaned_data[s_field])
 
                 if not app_settings.validate(
@@ -572,20 +569,21 @@ class ProjectForm(SODARModelForm):
                 ):
                     errors.append((s_field, 'Invalid value'))
 
-            # Custom validation for app settings
-            try:
-                app_settings_errors = plugin.validate_app_settings(
-                    plugin_app_settings,
-                    project=instance,
-                    user=instance_owner_as,
-                )
-                if app_settings_errors:
-                    for field, error in app_settings_errors.items():
-                        if error:
-                            errors.append((field, error))
-            except AttributeError:
-                # Plugin does not have a validate_form_app_settings method
-                pass
+            # Custom plugin validation for app settings
+            if plugin and hasattr(plugin, 'validate_form_app_settings'):
+                try:
+                    p_errors = plugin.validate_form_app_settings(
+                        p_settings, project=instance
+                    )
+                    if p_errors:
+                        for field, error in p_errors.items():
+                            f_name = '.'.join(['settings', p_name, field])
+                            errors.append((f_name, error))
+                except Exception as ex:
+                    err_msg = SETTING_CUSTOM_VALIDATE_ERROR.format(
+                        plugin=p_name, exception=ex
+                    )
+                    errors.append((None, err_msg))
         return cleaned_data, errors
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
@@ -780,7 +778,6 @@ class ProjectForm(SODARModelForm):
             self.app_settings,
             self.p_kwargs,
             self.instance,
-            self.instance_owner_as,
         )
         for key, value in cleaned_data.items():
             self.cleaned_data[key] = value

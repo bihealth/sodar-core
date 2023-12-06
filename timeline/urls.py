@@ -7,28 +7,36 @@ from timeline import views, views_ajax
 
 app_name = 'timeline'
 
-# UI views
-urls_ui = [
+# UI views for project plugin
+urls_ui_project = [
     path(
         route='<uuid:project>',
         view=views.ProjectTimelineView.as_view(),
         name='list_project',
-    ),
-    path(route='site', view=views.SiteTimelineView.as_view(), name='list_site'),
-    path(
-        route='site/all',
-        view=views.AdminTimelineView.as_view(),
-        name='timeline_site_admin',
     ),
     path(
         route='<uuid:project>/<str:object_model>/<uuid:object_uuid>',
         view=views.ProjectObjectTimelineView.as_view(),
         name='list_object',
     ),
+]
+
+# UI views for site app plugin
+urls_ui_site = [
+    path(route='site', view=views.SiteTimelineView.as_view(), name='list_site'),
     path(
         route='site/<str:object_model>/<uuid:object_uuid>',
         view=views.SiteObjectTimelineView.as_view(),
         name='list_object_site',
+    ),
+]
+
+# UI views for admin site app plugin
+urls_ui_admin = [
+    path(
+        route='site/all',
+        view=views.AdminTimelineView.as_view(),
+        name='list_admin',
     ),
 ]
 
@@ -61,4 +69,4 @@ urls_ajax = [
     ),
 ]
 
-urlpatterns = urls_ui + urls_ajax
+urlpatterns = urls_ui_project + urls_ui_site + urls_ui_admin + urls_ajax

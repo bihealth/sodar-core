@@ -5,6 +5,77 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.13.3 (2023-12-06)
+====================
+
+Added
+-----
+
+- **General**
+    - LDAP settings for TLS and user filter (#1340)
+    - ``LDAP_DEBUG`` Django setting
+- **Projectroles**
+    - ``_project_badge.html`` template (#1300)
+    - ``InvalidFormMixin`` helper mixin (#1310)
+    - Temporary ``user_name`` param in remote sync app settings (#1320)
+    - User login/logout logging signals (#1326)
+    - ``createdevusers`` management command (#1339)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.23 (#1312)
+    - Upgrade general Python dependencies (#1312)
+- **Appalerts**
+    - Use projectroles project badge templage (#1300)
+- **Bgjobs**
+    - Provide correct URL patterns to plugins (#1331)
+    - Rename ``bgjobs_site`` plugin (#1332)
+- **Projectroles**
+    - Prevent updating global settings for remote projects in ``AppSettingAPI`` (#1318)
+    - Change ``project_star`` app setting to ``local`` (#1321)
+- **Timeline**
+    - Truncate long project titles in badge (#1299)
+    - Use projectroles project badge templage (#1300)
+    - Provide correct URL patterns to plugins (#1331)
+- **Tokens**
+    - Rename ``tokens`` plugin (#1334)
+
+Fixed
+-----
+
+- **Appalerts**
+    - Missing URL patterns in app plugin (#1331)
+- **Projectroles**
+    - Browser-specific ``sodar-btn-submit-once`` spinner padding (#1291)
+    - Hidden JSON app settings reset on non-superuser project update (#1295)
+    - Request object not provided to ``perform_project_modify()`` on create (#1301)
+    - ``validate_form_app_settings()`` not called in ``ProjectForm`` (#1305)
+    - Unhandled exceptions in ``validate_form_app_settings()`` calls (#1306)
+    - ``validate_form_app_settings()`` results handling crash in ``ProjectForm`` (#1307)
+    - ``RoleAssignment`` provided to ``validate_form_app_settings()`` in ``ProjectForm`` (#1308)
+    - ``PROJECT_USER`` app settings remote sync failure (#1315)
+    - Local app settings overridden by remote sync (#1324)
+    - Local app setting value comparison failing in remote sync (#1330)
+    - Active app highlight failing for multi-plugin apps (#1331)
+    - Active app highlight failing for remote site views (#1331)
+- **Timeline**
+    - ``get_timestamp()`` template tag crash from missing ``ProjectEventStatus`` (#1297)
+    - Empty object reference name handling in ``add_object()`` (#1338, #1341)
+- **Tokens**
+    - Missing URL patterns in app plugin (#1331)
+- **Userprofile**
+    - Unhandled exceptions in ``validate_form_app_settings()`` calls (#1306)
+    - ``validate_form_app_settings()`` results handling crash in ``UserSettingForm`` (#1307)
+
+Removed
+-------
+
+- **Timeline**
+    - ``_project_badge.html`` template (#1300)
+
+
 v0.13.2 (2023-09-21)
 ====================
 

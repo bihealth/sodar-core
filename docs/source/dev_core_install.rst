@@ -127,3 +127,22 @@ terminal.
     SODAR Core itself currently uses Celery tasks only for remote project
     synchronization for target sites. If developing a source site, running this
     process is not necessary.
+
+
+Optional Steps
+==============
+
+For creating a group of example users for your development site, you can run the
+``createdevusers`` management command. This creates the users "alice", "bob",
+"carol", "dan" and "erin", all with the password "password".
+
+.. code-block:: console
+
+    $ ./manage.py createdevusers
+
+.. note::
+
+    Having multiple non-admin user accounts is useful for developing and trying
+    out project and member access management features. It is recommended to log
+    in to a dev server as a regular user whenever developing non-admin features,
+    as this is enables quickly noting possible user access issues.

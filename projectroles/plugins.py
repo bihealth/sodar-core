@@ -245,7 +245,7 @@ class ProjectModifyPluginMixin:
 class ProjectAppPluginPoint(PluginPoint):
     """Projectroles plugin point for registering project specific apps"""
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = []
 
     #: App settings definition
@@ -433,10 +433,11 @@ class ProjectAppPluginPoint(PluginPoint):
     def validate_form_app_settings(self, app_settings, project=None, user=None):
         """
         Validate app settings form data and return a dict of errors.
+
         :param app_settings: Dict of app settings
-        :param project: Project object
-        :param user: User object
-        :return: dict in format of {'setting_name': 'Error string' or None}
+        :param project: Project object or None
+        :param user: User object or None
+        :return: dict in format of {setting_name: 'Error string'}
         """
         # TODO: Implement this in your app plugin (optional)
         return None
@@ -624,9 +625,10 @@ class SiteAppPluginPoint(PluginPoint):
     def validate_form_app_settings(self, app_settings, user=None):
         """
         Validate app settings form data and return a dict of errors.
+
         :param app_settings: Dict of app settings
-        :param user: User object
-        :return: dict in format of {'setting_name': 'Error string' or None}
+        :param user: User object or None
+        :return: dict in format of {setting_name: 'Error string'}
         """
         # TODO: Implement this in your app plugin (optional)
         return None
@@ -650,27 +652,25 @@ def get_active_plugins(plugin_type='project_app', custom_order=False):
                 ', '.join(PLUGIN_TYPES.keys())
             )
         )
-
     plugins = eval(PLUGIN_TYPES[plugin_type]).get_plugins()
-
     if plugins:
-        return sorted(
-            [
-                p
-                for p in plugins
-                if (
-                    p.is_active()
-                    and (
-                        plugin_type in ['project_app', 'site_app']
-                        or p.name in settings.ENABLED_BACKEND_PLUGINS
-                    )
+        ret = [
+            p
+            for p in plugins
+            if (
+                p.is_active()
+                and (
+                    plugin_type in ['project_app', 'site_app']
+                    or p.name in settings.ENABLED_BACKEND_PLUGINS
                 )
-            ],
+            )
+        ]
+        return sorted(
+            ret,
             key=lambda x: x.plugin_ordering
             if custom_order and plugin_type == 'project_app'
             else x.name,
         )
-
     return None
 
 
@@ -692,14 +692,12 @@ def change_plugin_status(name, status, plugin_type='app'):
         plugin = SiteAppPluginPoint.get_plugin(name)
     else:
         raise ValueError('Invalid plugin_type: "{}"'.format(plugin_type))
-
     if not plugin:
         raise ValueError(
             'Plugin of type "{}" not found with name "{}"'.format(
                 plugin_type, name
             )
         )
-
     plugin = plugin.get_model()
     plugin.status = status
     plugin.save()
@@ -748,13 +746,13 @@ def get_backend_api(plugin_name, force=False, **kwargs):
 class RemoteSiteAppPlugin(SiteAppPluginPoint):
     """Site plugin for remote site and project management"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'remotesites'
 
     #: Title (used in templates)
     title = 'Remote Site Access'
 
-    #: App URLs (will be included in settings by djangoplugins)
+    #: UI URLs
     urls = []
 
     #: Iconify icon

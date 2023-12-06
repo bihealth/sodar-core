@@ -12,6 +12,7 @@ from projectroles.plugins import get_active_plugins
 from projectroles.views import (
     LoggedInPermissionMixin,
     HTTPRefererMixin,
+    InvalidFormMixin,
 )
 
 from userprofile.forms import UserSettingsForm
@@ -22,6 +23,7 @@ app_settings = AppSettingAPI()
 
 
 # SODAR Constants
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 # Local Constants
@@ -49,13 +51,11 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
                 p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
                 )
-            for s_key, s_val in p_settings.items():
+            for k, v in p_settings.items():
                 yield {
-                    'label': s_val.get('label') or '{}.{}'.format(name, s_key),
-                    'value': app_settings.get(
-                        name, s_key, user=self.request.user
-                    ),
-                    'description': s_val.get('description'),
+                    'label': v.get('label') or '{}.{}'.format(name, k),
+                    'value': app_settings.get(name, k, user=self.request.user),
+                    'description': v.get('description'),
                 }
 
     def get_context_data(self, **kwargs):
@@ -65,8 +65,12 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         return result
 
 
-class UserSettingUpdateView(
-    LoginRequiredMixin, LoggedInPermissionMixin, HTTPRefererMixin, FormView
+class UserSettingsView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    HTTPRefererMixin,
+    InvalidFormMixin,
+    FormView,
 ):
     """User settings update view"""
 
@@ -82,11 +86,12 @@ class UserSettingUpdateView(
 
     def form_valid(self, form):
         result = super().form_valid(form)
-        for key, value in form.cleaned_data.items():
-            if key.startswith('settings.'):
-                _, app_name, setting_name = key.split('.', 3)
+        for k, v in form.cleaned_data.items():
+            if k.startswith('settings.'):
+                _, app_name, setting_name = k.split('.', 3)
+                # TODO: Omit global USER settings (#1329)
                 app_settings.set(
-                    app_name, setting_name, value, user=self.request.user
+                    app_name, setting_name, v, user=self.request.user
                 )
         messages.success(self.request, SETTING_UPDATE_MSG)
         return result

@@ -339,6 +339,7 @@ BASICAUTH_DISABLE = False
 # Enable LDAP if configured
 ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
 ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
+LDAP_DEBUG = env.bool('LDAP_DEBUG', False)
 
 # Alternative domains for detecting LDAP access by email address
 LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, [])
@@ -348,9 +349,10 @@ if ENABLE_LDAP:
     import ldap
     from django_auth_ldap.config import LDAPSearch
 
+    if LDAP_DEBUG:
+        ldap.set_option(ldap.OPT_DEBUG_LEVEL, 255)
     # Default values
     LDAP_DEFAULT_CONN_OPTIONS = {ldap.OPT_REFERRALS: 0}
-    LDAP_DEFAULT_FILTERSTR = '(sAMAccountName=%(user)s)'
     LDAP_DEFAULT_ATTR_MAP = {
         'first_name': 'givenName',
         'last_name': 'sn',
@@ -361,12 +363,22 @@ if ENABLE_LDAP:
     AUTH_LDAP_SERVER_URI = env.str('AUTH_LDAP_SERVER_URI', None)
     AUTH_LDAP_BIND_DN = env.str('AUTH_LDAP_BIND_DN', None)
     AUTH_LDAP_BIND_PASSWORD = env.str('AUTH_LDAP_BIND_PASSWORD', None)
-    AUTH_LDAP_CONNECTION_OPTIONS = LDAP_DEFAULT_CONN_OPTIONS
+    AUTH_LDAP_START_TLS = env.str('AUTH_LDAP_START_TLS', False)
+    AUTH_LDAP_CA_CERT_FILE = env.str('AUTH_LDAP_CA_CERT_FILE', None)
+    AUTH_LDAP_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
+    if AUTH_LDAP_CA_CERT_FILE is not None:
+        AUTH_LDAP_CONNECTION_OPTIONS[
+            ldap.OPT_X_TLS_CACERTFILE
+        ] = AUTH_LDAP_CA_CERT_FILE
+        AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
+    AUTH_LDAP_USER_FILTER = env.str(
+        'AUTH_LDAP_USER_FILTER', '(sAMAccountName=%(user)s)'
+    )
 
     AUTH_LDAP_USER_SEARCH = LDAPSearch(
         env.str('AUTH_LDAP_USER_SEARCH_BASE', None),
         ldap.SCOPE_SUBTREE,
-        LDAP_DEFAULT_FILTERSTR,
+        AUTH_LDAP_USER_FILTER,
     )
     AUTH_LDAP_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
     AUTH_LDAP_USERNAME_DOMAIN = env.str('AUTH_LDAP_USERNAME_DOMAIN', None)
@@ -386,12 +398,22 @@ if ENABLE_LDAP:
         AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
         AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
         AUTH_LDAP2_BIND_PASSWORD = env.str('AUTH_LDAP2_BIND_PASSWORD', None)
-        AUTH_LDAP2_CONNECTION_OPTIONS = LDAP_DEFAULT_CONN_OPTIONS
+        AUTH_LDAP2_START_TLS = env.str('AUTH_LDAP2_START_TLS', False)
+        AUTH_LDAP2_CA_CERT_FILE = env.str('AUTH_LDAP2_CA_CERT_FILE', None)
+        AUTH_LDAP2_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
+        if AUTH_LDAP2_CA_CERT_FILE is not None:
+            AUTH_LDAP2_CONNECTION_OPTIONS[
+                ldap.OPT_X_TLS_CACERTFILE
+            ] = AUTH_LDAP2_CA_CERT_FILE
+            AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
+        AUTH_LDAP2_USER_FILTER = env.str(
+            'AUTH_LDAP2_USER_FILTER', '(sAMAccountName=%(user)s)'
+        )
 
         AUTH_LDAP2_USER_SEARCH = LDAPSearch(
             env.str('AUTH_LDAP2_USER_SEARCH_BASE', None),
             ldap.SCOPE_SUBTREE,
-            LDAP_DEFAULT_FILTERSTR,
+            AUTH_LDAP2_USER_FILTER,
         )
         AUTH_LDAP2_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
         AUTH_LDAP2_USERNAME_DOMAIN = env.str('AUTH_LDAP2_USERNAME_DOMAIN')

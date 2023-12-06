@@ -525,6 +525,18 @@ a.sodar-pr-btn-copy-secret i {
   margin-left: 0;
 }
 
+/* Project badge */
+span.sodar-project-badge {
+  vertical-align: top;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+span.sodar-project-badge a {
+  color: inherit;
+}
+
 /* NOTE: Notch visualizaton for sidebar moved into base.html */
 
 .sodar-pr-sidebar-nav-ul li i {
@@ -591,6 +603,16 @@ span.select2-selection__arrow {
 span.select2-selection__rendered {
   padding-left: 12px !important;
   color: #495057 !important;
+}
+
+/* Fix browser-specific submit button spinner alignment (#1291) */
+.sodar-btn-spinner {
+    margin-bottom: 1px;
+  }
+@supports (-moz-appearance:none) {
+  .sodar-btn-spinner {
+    margin-bottom: 2px;
+  }
 }
 
 

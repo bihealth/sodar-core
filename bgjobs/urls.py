@@ -10,7 +10,7 @@ from bgjobs import views
 
 app_name = 'bgjobs'
 
-urlpatterns = [
+urls_ui_project = [
     # List jobs that the user has access to
     path(
         route='list/<uuid:project>',
@@ -29,10 +29,15 @@ urlpatterns = [
         view=views.BackgroundJobClearAllView.as_view(),
         name='clear_all',
     ),
-    # List global background jobs
+]
+
+urls_ui_site = [
+    # List site background jobs
     path(
         route='list',
         view=views.GlobalBackgroundJobView.as_view(),
         name='site_list',
     ),
 ]
+
+urlpatterns = urls_ui_project + urls_ui_site

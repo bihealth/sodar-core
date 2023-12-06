@@ -11,7 +11,7 @@ assignees: 'mikkonie'
 
 TBA
 
-## Issues to add to CHANGELOG
+## Issues to Add in CHANGELOG
 
 TBA
 

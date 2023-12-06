@@ -83,11 +83,19 @@ member variables and functions as instructed in comments and docstrings.
 The following variables and functions are **mandatory**:
 
 ``name``
-    App name. In most cases this should match the app package name.
+    Plugin name. If only introducing a single plugin in your app, this should
+    match the app name. For multiple plugins within a single app, additional
+    plugins should start with the app name, e.g. ``yourapp_site`` for an
+    additional site app plugin for a project app. This ensures the correct
+    highlighting of active apps in the UI. Note that the name variables of
+    plugins are expected to be unique, although not currently strictly enforced.
 ``title``
-    Printable app title.
+    Plugin title to be displayed in the UI.
 ``urls``
-    Urlpatterns, usually imported from the app's ``urls.py`` file.
+    URL patterns, usually imported from the app's ``urls.py`` file. For
+    multiple plugins within the same app providing UI views, it is recommended
+    to only provide the UI view URLs relevant to the plugin in question. This
+    ensures the correct highlighting of active apps in the UI.
 ``icon``
     Iconify collection and icon name (e.g. ``mdi:home``).
 ``entry_point_url_id``
@@ -114,6 +122,11 @@ Implementing the following is **optional**:
     Return object link for a Timeline event.
 ``get_extra_data_link()``
     Return extra data link for a Timeline event.
+
+.. hint::
+
+    If you want to define multiple plugins within a single app, see the
+    :ref:`dev_resource_multi_plugin` documentation.
 
 
 Views

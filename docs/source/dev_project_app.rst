@@ -33,8 +33,8 @@ Project App Basics
 - Use provided mixins, keyword arguments and conventions in views.
 - Extend projectroles base templates in your templates.
 - Implement specific templates for dynamic inclusion by Projectroles.
-- Implement ``plugins.py`` with definitions and function implementations.
-- Implement ``rules.py`` with access permissions.
+- Create ``plugins.py`` with a project app plugin implementation.
+- Create ``rules.py`` with rules for access permissions.
 
 Fulfilling these requirements is detailed further in this document.
 
@@ -192,13 +192,19 @@ member variables and functions as instructed in comments and docstrings.
 The following variables and functions are **mandatory**:
 
 ``name``
-    App name. If only introducing a single plugin in your app, it is recommended
-    to have this match the app name. Note that the name variables of plugins are
-    expected to be unique, although not currently strictly enforced.
+    Plugin name. If only introducing a single plugin in your app, this should
+    match the app name. For multiple plugins within a single app, additional
+    plugins should start with the app name, e.g. ``yourapp_xxx``. This ensures
+    the correct highlighting of active apps in the UI. Note that the name
+    variables of plugins are expected to be unique, although not currently
+    strictly enforced.
 ``title``
-    Printable app title.
+    Plugin title to be displayed in the UI.
 ``urls``
-    Urlpatterns, usually imported from the app's ``urls.py`` file.
+    URL patterns, usually imported from the app's ``urls.py`` file. For
+    multiple plugins within the same app providing UI views, it is recommended
+    to only provide the UI view URLs relevant to the plugin in question. This
+    ensures the correct highlighting of active apps in the UI.
 ``icon``
     Iconify collection and icon name (e.g. ``mdi:home``).
 ``entry_point_url_id``
@@ -275,6 +281,11 @@ registered:
 
 For info on how to implement the specific required views/templates, see the rest
 of this document.
+
+.. hint::
+
+    If you want to define multiple plugins within a single app, see the
+    :ref:`dev_resource_multi_plugin` documentation.
 
 
 Views

@@ -11,7 +11,7 @@ from projectroles.utils import get_display_name
 
 from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
-from timeline.urls import urlpatterns
+from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -19,14 +19,14 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties required by django-plugins ------------------------------
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'timeline'
 
     #: Title (used in templates)
     title = 'Timeline'
 
-    #: App URLs (will be included in settings by djangoplugins)
-    urls = urlpatterns
+    #: UI URLs
+    urls = urls_ui_project
 
     # Properties defined in ProjectAppPluginPoint -----------------------
 
@@ -124,7 +124,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 class BackendPlugin(BackendPluginPoint):
     """Plugin for registering backend app with Projectroles"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'timeline_backend'
 
     #: Title (used in templates)
@@ -144,14 +144,14 @@ class BackendPlugin(BackendPluginPoint):
 class SiteAppPlugin(SiteAppPluginPoint):
     """Projectroles plugin for registering the app"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'timeline_site'
 
     #: Title (used in templates)
     title = 'Site-Wide Events'
 
-    #: App URLs (will be included in settings by djangoplugins)
-    urls = urlpatterns
+    #: UI URLs
+    urls = urls_ui_site
 
     #: Iconify icon
     icon = 'mdi:clock-time-eight-outline'
@@ -169,14 +169,14 @@ class SiteAppPlugin(SiteAppPluginPoint):
 class AdminSiteAppPlugin(SiteAppPluginPoint):
     """Projectroles plugin for registering the app"""
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (used as plugin ID)
     name = 'timeline_site_admin'
 
     #: Title (used in templates)
     title = 'All Timeline Events'
 
-    #: App URLs (will be included in settings by djangoplugins)
-    urls = urlpatterns
+    #: UI URLs
+    urls = urls_ui_admin
 
     #: Iconify icon
     # icon = 'mdi:clock-star-four-points-outline'
@@ -186,7 +186,7 @@ class AdminSiteAppPlugin(SiteAppPluginPoint):
     description = 'Admin view for all timeline events on the site'
 
     #: Entry point URL ID
-    entry_point_url_id = 'timeline:timeline_site_admin'
+    entry_point_url_id = 'timeline:list_admin'
 
     #: Required permission for displaying the app
     app_permission = 'timeline.view_site_admin'

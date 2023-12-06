@@ -1,0 +1,19 @@
+{# Badge to display a project/category link #}
+{# Parameters: #}
+{# project (Project object) #}
+{# color (string) #}
+{# can_view (boolean) #}
+<span class="badge sodar-project-badge mr-1
+             badge-{% if not can_view %}secondary{% else %}{{ color|lower }}{% endif %}"
+      title="{{ project.full_title }}" data-toggle="tooltip" data-delay="500">
+  <i class="iconify"
+     data-icon="{% if project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
+  </i>
+  {% if can_view %}
+    <a href="{% url 'projectroles:detail' project=project.sodar_uuid %}">
+      {{ project.title }}
+    </a>
+  {% else %}
+    {{ project.title }}
+  {% endif %}
+</span>

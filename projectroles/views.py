@@ -33,7 +33,7 @@ from django.views.generic.detail import ContextMixin
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
 from projectroles import email
-from projectroles.app_settings import AppSettingAPI
+from projectroles.app_settings import AppSettingAPI, APP_SETTING_LOCAL_DEFAULT
 from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
@@ -93,6 +93,7 @@ SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 PROJECT_COLUMN_COUNT = 2  # Default columns
 MSG_NO_AUTH = 'User not authorized for requested action'
 MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in.'
+MSG_FORM_INVALID = 'Form submission failed, see the form for details.'
 MSG_PROJECT_WELCOME = (
     'Welcome to {project_type} "{project_title}". You have been assigned the '
     'role of {role}.'
@@ -448,6 +449,15 @@ class ProjectContextMixin(
                 self.request.user,
             )
         return context
+
+
+class InvalidFormMixin:
+    """Mixin for create/update form view UI improvements"""
+
+    def form_invalid(self, form, **kwargs):
+        """Override form_invalid to add Django message on form failure"""
+        messages.error(self.request, MSG_FORM_INVALID)
+        return super().form_invalid(form, **kwargs)
 
 
 class CurrentUserFormMixin:
@@ -849,27 +859,32 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         }
 
     @staticmethod
-    def _get_app_settings(data, instance, project=None):
+    def _get_app_settings(data, instance, user):
         """
         Return a dictionary of project app settings and their values.
 
-        :param data: Cleaned data from a form or serializer
+        :param data: Cleaned form data
         :param instance: Existing Project object or None
+        :param user: User initiating the project update
         :return: Dict
         """
         app_plugins = [p for p in get_active_plugins() if p.app_settings]
         project_settings = {}
+        p_kwargs = {}
+        # Show unmodifiable settings to superusers
+        if user and not user.is_superuser:
+            p_kwargs['user_modifiable'] = True
 
         for plugin in app_plugins + [None]:
             if plugin:
                 name = plugin.name
                 p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, plugin=plugin
+                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **p_kwargs
                 )
             else:
                 name = 'projectroles'
                 p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
                 )
 
             for s_key, s_val in p_settings.items():
@@ -883,11 +898,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     and instance.type not in s_val['project_types']
                 ):
                     continue
-
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default(
-                        name, s_key, project=project
-                    )
+                    s_data = app_settings.get_default(name, s_key)
                 if s_val['type'] == 'JSON':
                     if s_data is None:
                         s_data = {}
@@ -980,7 +992,17 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
     @classmethod
     def _update_settings(cls, project, project_settings):
         """Update project settings"""
+        is_remote = project.is_remote()
         for k, v in project_settings.items():
+            _, app_name, setting_name = k.split('.', 3)
+            # Skip updating global settings on target site
+            if is_remote:
+                # TODO: Optimize (this can require a lot of queries)
+                s_def = app_settings.get_definition(
+                    setting_name, app_name=app_name
+                )
+                if not s_def.get('local', APP_SETTING_LOCAL_DEFAULT):
+                    continue
             app_settings.set(
                 app_name=k.split('.')[1],
                 setting_name=k.split('.')[2],
@@ -990,9 +1012,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             )
 
     @classmethod
-    def _notify_users(
-        cls, project, action, owner, old_data, old_parent, request
-    ):
+    def _notify_users(cls, project, action, owner, old_parent, request):
         """
         Notify users about project creation and update. Displays app alerts
         and/or sends emails depending on the site configuration.
@@ -1123,8 +1143,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if not owner and old_project:  # In case of a PATCH request
             owner = old_project.get_owner().user
 
-        # Get settings
-        project_settings = self._get_app_settings(data, project)
+        project_settings = self._get_app_settings(data, project, request.user)
         old_settings = None
         if action == PROJECT_ACTION_UPDATE:
             old_settings = json.loads(json.dumps(project_settings))  # Copy
@@ -1156,8 +1175,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             args = [project, action, project_settings]
             if action == PROJECT_ACTION_UPDATE:
-                args.append(old_data)
-                args.append(old_settings)
+                args += [old_data, old_settings]
+            else:
+                args += [None, None]
             args.append(request)
             self.call_project_modify_api(
                 'perform_project_modify', 'revert_project_modify', args
@@ -1179,9 +1199,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         # Once all is done, update timeline event, create alerts and emails
         if tl_event:
             tl_event.set_status('OK')
-        self._notify_users(
-            project, action, owner, old_data, old_parent, request
-        )
+        self._notify_users(project, action, owner, old_parent, request)
         return project
 
 
@@ -1236,6 +1254,7 @@ class ProjectCreateView(
     ProjectContextMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """Project creation view"""
@@ -1317,6 +1336,7 @@ class ProjectUpdateView(
     ProjectContextMixin,
     ProjectModifyFormMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """Project updating view"""
@@ -1758,6 +1778,7 @@ class RoleAssignmentCreateView(
     ProjectContextMixin,
     CurrentUserFormMixin,
     RoleAssignmentModifyFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """RoleAssignment creation view"""
@@ -1812,6 +1833,7 @@ class RoleAssignmentUpdateView(
     ProjectContextMixin,
     RoleAssignmentModifyFormMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """RoleAssignment updating view"""
@@ -2069,6 +2091,7 @@ class RoleAssignmentOwnerTransferView(
     CurrentUserFormMixin,
     ProjectContextMixin,
     RoleAssignmentOwnerTransferMixin,
+    InvalidFormMixin,
     FormView,
 ):
     """Project owner RoleAssignment transfer view"""
@@ -2237,6 +2260,7 @@ class ProjectInviteCreateView(
     ProjectModifyPermissionMixin,
     ProjectInviteMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """ProjectInvite creation view"""
@@ -2769,7 +2793,9 @@ class ProjectInviteRevokeView(
 # User management views --------------------------------------------------------
 
 
-class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
+class UserUpdateView(
+    LoginRequiredMixin, HTTPRefererMixin, InvalidFormMixin, UpdateView
+):
     """Display and process the user update view"""
 
     form_class = LocalUserForm
@@ -2899,6 +2925,7 @@ class RemoteSiteCreateView(
     RemoteSiteModifyMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     CreateView,
 ):
     """RemoteSite creation view"""
@@ -2927,6 +2954,7 @@ class RemoteSiteUpdateView(
     RemoteSiteModifyMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
+    InvalidFormMixin,
     UpdateView,
 ):
     """RemoteSite updating view"""
