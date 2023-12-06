@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v0.13.3 (2023-12-06)
+====================
 
 Added
 -----
@@ -20,8 +20,6 @@ Added
     - Temporary ``user_name`` param in remote sync app settings (#1320)
     - User login/logout logging signals (#1326)
     - ``createdevusers`` management command (#1339)
-- **Timeline**
-    - Empty object reference name handling in ``add_object()`` (#1338, #1341)
 
 Changed
 -------
@@ -64,6 +62,7 @@ Fixed
     - Active app highlight failing for remote site views (#1331)
 - **Timeline**
     - ``get_timestamp()`` template tag crash from missing ``ProjectEventStatus`` (#1297)
+    - Empty object reference name handling in ``add_object()`` (#1338, #1341)
 - **Tokens**
     - Missing URL patterns in app plugin (#1331)
 - **Userprofile**

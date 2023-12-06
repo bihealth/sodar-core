@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.13.3 (WIP)
-*************
+v0.13.3 (2023-12-06)
+********************
 
 Release Highlights
 ==================
@@ -35,6 +35,25 @@ System Prerequisites
 --------------------
 
 The minimum Django version has been bumped to v3.2.23.
+
+App Plugin UI Highlighting Changes
+----------------------------------
+
+To fix issues in highlighting active project and site plugin views in the UI,
+app plugin detection has been updated. This may have adverse effects on your
+site if certain guidelines are not followed. To ensure the app highlighting in
+the UI works as expected, it is recommended to review the following:
+
+- The ``name`` attribute of each primary plugin in an app is expected to be
+  named identically to the app, e.g. ``yourapp``.
+- In case of multiple plugins within an app, additional plugins should be named
+  starting with the app name, e.g. ``yourapp_site`` for an additional site app
+  plugin for a project app.
+- In case of multiple plugins within an app, the ``urls`` attribute should
+  **only** contain the views used within that plugin.
+
+For more information on multi-plugin app development, see
+:ref:`dev_resource_multi_plugin`.
 
 
 v0.13.2 (2023-09-21)

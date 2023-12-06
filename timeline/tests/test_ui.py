@@ -100,10 +100,10 @@ class TestProjectListView(
     def test_render_object(self):
         """Test visibility of object related events in project list"""
         # Add user as an object reference
-        self.ref_obj = self.event.add_object(
+        self.obj_ref = self.event.add_object(
             obj=self.superuser, label='user', name=self.superuser.username
         )
-        self.classified_ref_obj = self.classified_event.add_object(
+        self.classified_obj_ref = self.classified_event.add_object(
             obj=self.superuser, label='user', name=self.superuser.username
         )
         expected = [
@@ -121,8 +121,8 @@ class TestProjectListView(
             'timeline:list_object',
             kwargs={
                 'project': self.project.sodar_uuid,
-                'object_model': self.ref_obj.object_model,
-                'object_uuid': self.ref_obj.object_uuid,
+                'object_model': self.obj_ref.object_model,
+                'object_uuid': self.obj_ref.object_uuid,
             },
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
@@ -194,10 +194,10 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
     def test_render_object(self):
         """Test visibility of object related events in site-wide event list"""
         # Add user as an object reference
-        self.ref_obj = self.event.add_object(
+        self.obj_ref = self.event.add_object(
             obj=self.superuser, label='user', name=self.superuser.username
         )
-        self.classified_ref_obj = self.classified_event.add_object(
+        self.classified_obj_ref = self.classified_event.add_object(
             obj=self.superuser, label='user', name=self.superuser.username
         )
         expected = [
@@ -214,8 +214,8 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         url = reverse(
             'timeline:list_object_site',
             kwargs={
-                'object_model': self.ref_obj.object_model,
-                'object_uuid': self.ref_obj.object_uuid,
+                'object_model': self.obj_ref.object_model,
+                'object_uuid': self.obj_ref.object_uuid,
             },
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
@@ -223,14 +223,14 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
     def test_object_button(self):
         """Test visibility of the return button in event's object view"""
         # Add user as an object reference
-        self.ref_obj = self.event.add_object(
+        self.obj_ref = self.event.add_object(
             obj=self.superuser, label='user', name=self.superuser.username
         )
         url = reverse(
             'timeline:list_object_site',
             kwargs={
-                'object_model': self.ref_obj.object_model,
-                'object_uuid': self.ref_obj.object_uuid,
+                'object_model': self.obj_ref.object_model,
+                'object_uuid': self.obj_ref.object_uuid,
             },
         )
         self.login_and_redirect(

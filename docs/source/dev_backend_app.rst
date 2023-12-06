@@ -60,9 +60,15 @@ member variables and functions as instructed in comments and docstrings.
 The following variables and functions are **mandatory**:
 
 ``name``
-    App name. In most cases this should match the app package name.
+    Plugin name. If only introducing a single plugin in your app, this should
+    match the app name. For multiple plugins within a single app, additional
+    plugins should start with the app name, e.g. ``yourapp_xxx``. This ensures
+    the correct highlighting of active apps in the UI. Note that the name
+    variables of plugins are expected to be unique, although not currently
+    strictly enforced.
 ``title``
-    Printable app title.
+    Plugin title to be displayed in the UI. In the case of a backend plugin,
+    this will be mostly visible in the :ref:`app_siteinfo` views.
 ``icon``
     Iconify collection and icon name (e.g. ``mdi:home``).
 ``description``

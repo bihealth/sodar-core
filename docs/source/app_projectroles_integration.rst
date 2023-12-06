@@ -85,7 +85,7 @@ release tag or commit ID.
 
 .. code-block:: console
 
-    django-sodar-core==0.13.2
+    django-sodar-core==0.13.3
 
 Install the requirements for development:
 

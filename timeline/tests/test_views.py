@@ -96,9 +96,8 @@ class TestProjectObjectListView(TestViewsBase):
 
     def setUp(self):
         super().setUp()
-
         # Add user as an object reference
-        self.ref_obj = self.event.add_object(
+        self.obj_ref = self.event.add_object(
             obj=self.user, label='user', name=self.user.username
         )
 
@@ -110,8 +109,8 @@ class TestProjectObjectListView(TestViewsBase):
                     'timeline:list_object',
                     kwargs={
                         'project': self.project.sodar_uuid,
-                        'object_model': self.ref_obj.object_model,
-                        'object_uuid': self.ref_obj.object_uuid,
+                        'object_model': self.obj_ref.object_model,
+                        'object_uuid': self.obj_ref.object_uuid,
                     },
                 )
             )
@@ -161,7 +160,7 @@ class TestSiteObjectListView(TestViewsBase):
             extra_data={'test_key': 'test_val'},
         )
         # Add user as an object reference
-        self.ref_obj = self.event_site.add_object(
+        self.obj_ref = self.event_site.add_object(
             obj=self.user, label='user', name=self.user.username
         )
 
@@ -172,8 +171,8 @@ class TestSiteObjectListView(TestViewsBase):
                 reverse(
                     'timeline:list_object_site',
                     kwargs={
-                        'object_model': self.ref_obj.object_model,
-                        'object_uuid': self.ref_obj.object_uuid,
+                        'object_model': self.obj_ref.object_model,
+                        'object_uuid': self.obj_ref.object_uuid,
                     },
                 )
             )
