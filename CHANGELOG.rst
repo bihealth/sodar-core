@@ -8,6 +8,13 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.24 (#1348)
+    - Upgrade LDAP dependencies (#1348)
+
 Fixed
 -----
 

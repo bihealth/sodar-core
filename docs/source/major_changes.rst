@@ -18,6 +18,15 @@ Release Highlights
 
 - General bug fixes and minor updates
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.24. Optional LDAP
+requirements in ``requirements/ldap.txt`` have also been upgraded.
+
 
 v0.13.3 (2023-12-06)
 ********************
