@@ -20,6 +20,8 @@ Changed
 - **General**
     - Upgrade minimum Django version to v3.2.24 (#1348)
     - Upgrade LDAP dependencies (#1348)
+- **Projectroles**
+    - Improve remote site deletion UI text labels (#1349)
 
 Fixed
 -----
