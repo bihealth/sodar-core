@@ -16,6 +16,7 @@ v0.13.4 (WIP)
 Release Highlights
 ==================
 
+- Add missing LDAP settings in siteinfo
 - General bug fixes and minor updates
 
 Breaking Changes

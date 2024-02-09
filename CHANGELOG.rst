@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Siteinfo**
+    - Missing LDAP Django settings (#1347)
+
 Changed
 -------
 
