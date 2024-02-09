@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **General**
+    - Invalid env var retrieval for ``AUTH_LDAP*_START_TLS`` (#1351)
+
+
 v0.13.3 (2023-12-06)
 ====================
 
