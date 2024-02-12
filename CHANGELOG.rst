@@ -22,12 +22,16 @@ Changed
     - Upgrade LDAP dependencies (#1348)
 - **Projectroles**
     - Improve remote site deletion UI text labels (#1349)
+    - Store remote sync app setting foreign key UUIDs as strings (#1356)
 
 Fixed
 -----
 
 - **General**
     - Invalid env var retrieval for ``AUTH_LDAP*_START_TLS`` (#1351)
+    - Versioneer version not available in CI (#1357)
+- **Projectroles**
+    - Remote sync ``user_name`` crash with <0.13.3 target sites (#1355)
 
 
 v0.13.3 (2023-12-06)

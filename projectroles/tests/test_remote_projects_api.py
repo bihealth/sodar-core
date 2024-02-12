@@ -489,7 +489,7 @@ class TestGetSourceData(
             'value': set_ip_restrict.value,
             'value_json': {},
             'app_plugin': None,
-            'project_uuid': self.project.sodar_uuid,
+            'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': None,
             'user_name': None,
             'local': False,
@@ -502,7 +502,7 @@ class TestGetSourceData(
             'value': None,
             'value_json': set_ip_allowlist.value_json,
             'app_plugin': None,
-            'project_uuid': self.project.sodar_uuid,
+            'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': None,
             'user_name': None,
             'local': False,
@@ -515,12 +515,47 @@ class TestGetSourceData(
             'value': '1',
             'value_json': {},
             'app_plugin': None,
-            'project_uuid': self.project.sodar_uuid,
-            'user_uuid': self.user_source.sodar_uuid,
+            'project_uuid': str(self.project.sodar_uuid),
+            'user_uuid': str(self.user_source.sodar_uuid),
             'user_name': self.user_source.username,
             'local': True,
         }
         self.assertEqual(set_data, expected)
+
+    def test_get_settings_legacy(self):
+        """Test getting data with legacy SODAR Core version"""
+        # See issue #1355
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        set_star = self.make_setting(
+            app_name='projectroles',
+            name='project_star',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+            user=self.user_source,
+        )
+        sync_data = self.remote_api.get_source_data(
+            self.target_site, req_version='0.13.2'
+        )
+
+        self.assertEqual(len(sync_data['app_settings']), 1)
+        set_data = sync_data['app_settings'][str(set_star.sodar_uuid)]
+        expected = {
+            'name': set_star.name,
+            'type': set_star.type,
+            'value': '1',
+            'value_json': {},
+            'app_plugin': None,
+            'project_uuid': str(self.project.sodar_uuid),
+            'user_uuid': str(self.user_source.sodar_uuid),
+            'local': True,
+        }
+        self.assertEqual(set_data, expected)
+        self.assertNotIn('user_name', set_data)  # No user_name here
 
     def test_get_revoked(self):
         """Test getting data with REVOKED level"""
