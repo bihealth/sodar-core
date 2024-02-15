@@ -7,6 +7,7 @@ from django.utils.timezone import localtime
 from djangoplugins.models import Plugin
 
 from projectroles.plugins import ProjectAppPluginPoint
+
 from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
 
@@ -69,6 +70,9 @@ def get_plugin_lookup():
     return ret
 
 
+# Template rendering -----------------------------------------------------------
+
+
 @register.simple_tag
 def get_app_icon_html(event, plugin_lookup):
     """Return icon link HTML for app by plugin lookup"""
@@ -115,9 +119,6 @@ def get_app_icon_html(event, plugin_lookup):
     )
 
 
-# Template rendering -----------------------------------------------------------
-
-
 @register.simple_tag
 def get_status_style(status):
     """Retrn status style class"""
@@ -126,19 +127,3 @@ def get_status_style(status):
         if status.status_type in STATUS_STYLES
         else 'bg-light'
     )
-
-
-# Filters ----------------------------------------------------------------------
-
-
-@register.filter
-def collect_extra_data(event):
-    ls = []
-    if event.extra_data is not None and len(event.extra_data) > 0:
-        ls.append(('extra-data', 'Extra Data', event))
-    for status in event.get_status_changes():
-        if status.extra_data is not None and len(status.extra_data) > 0:
-            ls.append(
-                ('status-extra-data', 'Status: ' + status.status_type, status)
-            )
-    return ls

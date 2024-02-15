@@ -33,6 +33,12 @@ Fixed
 - **Projectroles**
     - Remote sync ``user_name`` crash with <0.13.3 target sites (#1355)
 
+Removed
+-------
+
+- **Timeline**
+    - Unused ``collect_extra_data()`` template tag (#1359)
+
 
 v0.13.3 (2023-12-06)
 ====================
