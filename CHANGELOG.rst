@@ -23,6 +23,9 @@ Changed
 - **Projectroles**
     - Improve remote site deletion UI text labels (#1349)
     - Store remote sync app setting foreign key UUIDs as strings (#1356)
+    - Do not create timeline event for re-accepting project invite (#1352)
+    - Improve user message for re-accepting project invite (#1354)
+    - Redirect to ``ProjectDetailView`` from re-accepting project invite (#1361)
 
 Fixed
 -----

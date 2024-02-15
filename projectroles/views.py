@@ -2359,16 +2359,18 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
         except ProjectInvite.DoesNotExist:
             messages.error(self.request, 'Invite does not exist.')
 
-    def user_role_exists(self, invite, user, timeline=None):
+    def user_role_exists(self, invite, user):
         """
-        Display message and revoke invite if user already has roles in project.
+        Display message if user already has roles in project. Also revoke the
+        invite if necessary.
         """
         if invite.project.has_role(user):
             messages.warning(
                 self.request,
                 mark_safe(
-                    'You already have roles set in the {project}. You can '
-                    'access the {project} <a href="{url}">here</a>.'.format(
+                    'You are already a member of this {project}. '
+                    '<a href="{url}">Please use this URL to access the '
+                    '{project}</a>.'.format(
                         project=get_display_name(invite.project.type),
                         url=reverse(
                             'projectroles:detail',
@@ -2377,15 +2379,8 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                     )
                 ),
             )
-            self.revoke_invite(
-                invite,
-                user,
-                failed=True,
-                fail_desc='User already has roles in {}'.format(
-                    get_display_name(invite.project.type)
-                ),
-                timeline=timeline,
-            )
+            if invite.active:  # Only revoke if active
+                self.revoke_invite(invite, user)
             return True
         return False
 
@@ -2482,16 +2477,20 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
         invite = self.get_invite(secret=kwargs['secret'])
         if not invite:
             return redirect(reverse('home'))
-        timeline = get_backend_api('timeline_backend')
         user = self.request.user
 
         if (
             not user.is_anonymous
             and user.is_authenticated
             and user.email == invite.email
-            and self.user_role_exists(invite, user, timeline)
+            and self.user_role_exists(invite, user)
         ):
-            return redirect(reverse('home'))
+            return redirect(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': invite.project.sodar_uuid},
+                )
+            )
 
         invite_type = self.get_invite_type(invite)
         if invite_type == 'ldap':
@@ -2525,8 +2524,7 @@ class ProjectInviteProcessLDAPView(
         if not invite:
             return redirect(reverse('home'))
         timeline = get_backend_api('timeline_backend')
-
-        # Check invite has correct type
+        # Check if invite has correct type
         if self.get_invite_type(invite) == 'local':
             messages.error(
                 self.request,
@@ -2534,15 +2532,17 @@ class ProjectInviteProcessLDAPView(
                 'requested.',
             )
             return redirect(reverse('home'))
-
         # Check if user already accepted the invite
-        if self.user_role_exists(invite, self.request.user, timeline=timeline):
-            return redirect(reverse('home'))
-
+        if self.user_role_exists(invite, self.request.user):
+            return redirect(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': invite.project.sodar_uuid},
+                )
+            )
         # Check if invite expired
         if self.is_invite_expired(invite, self.request.user):
             return redirect(reverse('home'))
-
         # If we get this far, create RoleAssignment..
         if not self.create_assignment(
             invite, self.request.user, timeline=timeline
@@ -2683,7 +2683,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name'],
         )
-        if self.user_role_exists(invite, user, timeline=timeline):
+        if self.user_role_exists(invite, user):
             return redirect(
                 reverse(
                     'projectroles:detail',

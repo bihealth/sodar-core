@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add missing LDAP settings in siteinfo
+- Improve project invite accept link reuse handling
 - Fix remote sync crash with target sites using SODAR Core <0.13.3
 - General bug fixes and minor updates
 

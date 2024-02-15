@@ -4347,6 +4347,9 @@ class TestProjectInviteAcceptView(
         )
         self.make_assignment(self.project, invited_user, self.role_guest)
         self.assertTrue(invite.active)
+        self.assertIsNone(
+            ProjectEvent.objects.filter(event_name='invite_accept').first()
+        )
 
         with self.login(invited_user):
             response = self.client.get(
@@ -4356,9 +4359,19 @@ class TestProjectInviteAcceptView(
                 ),
                 follow=True,
             )
-        self.assertRedirects(response, reverse('home'))
+        self.assertRedirects(
+            response,
+            reverse(
+                'projectroles:detail',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         invite.refresh_from_db()
         self.assertFalse(invite.active)
+        # No timeline event should be created
+        self.assertIsNone(
+            ProjectEvent.objects.filter(event_name='invite_accept').first()
+        )
 
 
 class TestProjectInviteListView(
