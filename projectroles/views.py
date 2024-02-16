@@ -124,13 +124,13 @@ ALERT_MSG_ROLE_CREATE = 'Membership granted with the role of "{role}".'
 ALERT_MSG_ROLE_UPDATE = 'Member role changed to "{role}".'
 
 
-# General mixins ---------------------------------------------------------------
+# General UI view mixins -------------------------------------------------------
 
 
 class LoginRequiredMixin(AccessMixin):
     """
-    Customized variant of the one from django.contrib.auth.mixins.
-    Allows disabling by overriding method is_login_required().
+    Override of Django LoginRequiredMixin to handle anonymous access and kiosk
+    mode.
     """
 
     def is_login_required(self):
@@ -345,6 +345,88 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         )
 
 
+class HTTPRefererMixin:
+    """
+    Mixin for updating a correct referer url in session cookie regardless of
+    page reload.
+    """
+
+    def get(self, request, *args, **kwargs):
+        if 'HTTP_REFERER' in request.META:
+            referer = request.META['HTTP_REFERER']
+            if (
+                'real_referer' not in request.session
+                or referer != request.build_absolute_uri()
+            ):
+                request.session['real_referer'] = referer
+        return super().get(request, *args, **kwargs)
+
+
+class PluginContextMixin(ContextMixin):
+    """Mixin for adding plugin list to context data"""
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['app_plugins'] = get_active_plugins(
+            plugin_type='project_app', custom_order=True
+        )
+        return context
+
+
+class ProjectContextMixin(
+    HTTPRefererMixin, PluginContextMixin, ProjectAccessMixin
+):
+    """
+    Mixin for adding context data to Project base view and other views
+    extending it. Includes HTTPRefererMixin for correct referer URL.
+    """
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        # Project
+        if hasattr(self, 'object') and isinstance(self.object, Project):
+            context['project'] = self.get_object()
+        elif hasattr(self, 'object') and hasattr(self.object, 'project'):
+            context['project'] = self.object.project
+        else:
+            context['project'] = self.get_project()
+        # Project tagging/starring
+        if 'project' in context and not getattr(
+            settings, 'PROJECTROLES_KIOSK_MODE', False
+        ):
+            context['project_starred'] = app_settings.get(
+                'projectroles',
+                'project_star',
+                context['project'],
+                self.request.user,
+            )
+        return context
+
+
+class CurrentUserFormMixin:
+    """Mixin for passing current user to form as current_user"""
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'current_user': self.request.user})
+        return kwargs
+
+
+class InvalidFormMixin:
+    """
+    Mixin for UI improvements in invalid form failure. Recommended to be used
+    with long forms spanning multiple screen heights.
+    """
+
+    def form_invalid(self, form, **kwargs):
+        """Override form_invalid() to add Django message on form failure"""
+        messages.error(self.request, MSG_FORM_INVALID)
+        return super().form_invalid(form, **kwargs)
+
+
+# Projectroles Internal UI view mixins -----------------------------------------
+
+
 class ProjectModifyPermissionMixin(
     LoggedInPermissionMixin, ProjectPermissionMixin
 ):
@@ -419,85 +501,6 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
         return self.get_project()
 
 
-class HTTPRefererMixin:
-    """
-    Mixin for updating a correct referer url in session cookie regardless of
-    page reload.
-    """
-
-    def get(self, request, *args, **kwargs):
-        if 'HTTP_REFERER' in request.META:
-            referer = request.META['HTTP_REFERER']
-            if (
-                'real_referer' not in request.session
-                or referer != request.build_absolute_uri()
-            ):
-                request.session['real_referer'] = referer
-        return super().get(request, *args, **kwargs)
-
-
-class PluginContextMixin(ContextMixin):
-    """Mixin for adding plugin list to context data"""
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        context['app_plugins'] = get_active_plugins(
-            plugin_type='project_app', custom_order=True
-        )
-        return context
-
-
-class ProjectContextMixin(
-    HTTPRefererMixin, PluginContextMixin, ProjectAccessMixin
-):
-    """
-    Mixin for adding context data to Project base view and other views
-    extending it. Includes HTTPRefererMixin for correct referer URL.
-    """
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        # Project
-        if hasattr(self, 'object') and isinstance(self.object, Project):
-            context['project'] = self.get_object()
-        elif hasattr(self, 'object') and hasattr(self.object, 'project'):
-            context['project'] = self.object.project
-        else:
-            context['project'] = self.get_project()
-        # Project tagging/starring
-        if 'project' in context and not getattr(
-            settings, 'PROJECTROLES_KIOSK_MODE', False
-        ):
-            context['project_starred'] = app_settings.get(
-                'projectroles',
-                'project_star',
-                context['project'],
-                self.request.user,
-            )
-        return context
-
-
-class InvalidFormMixin:
-    """Mixin for create/update form view UI improvements"""
-
-    def form_invalid(self, form, **kwargs):
-        """Override form_invalid to add Django message on form failure"""
-        messages.error(self.request, MSG_FORM_INVALID)
-        return super().form_invalid(form, **kwargs)
-
-
-class CurrentUserFormMixin:
-    """Mixin for passing current user to form as current_user"""
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
-        return kwargs
-
-
-# Base Project Views -----------------------------------------------------------
-
-
 class ProjectListContextMixin:
     """Mixin for adding context data for displaying the project list."""
 
@@ -540,6 +543,9 @@ class ProjectListContextMixin:
         return context
 
 
+# General Views ----------------------------------------------------------------
+
+
 class HomeView(
     LoginRequiredMixin,
     PluginContextMixin,
@@ -549,6 +555,9 @@ class HomeView(
     """Home view"""
 
     template_name = 'projectroles/home.html'
+
+
+# General Project Views --------------------------------------------------------
 
 
 class ProjectDetailView(
@@ -610,6 +619,9 @@ class ProjectDetailView(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
             ).order_by('site__name')
         return context
+
+
+# Search Views -----------------------------------------------------------------
 
 
 class ProjectSearchMixin:

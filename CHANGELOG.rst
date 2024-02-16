@@ -13,6 +13,7 @@ Added
 
 - **Projectroles**
     - ``LoggedInPermissionMixin`` login message customization (#1360)
+    - Base UI classses in Django API documentation (#1363)
 - **Siteinfo**
     - Missing LDAP Django settings (#1347)
 
