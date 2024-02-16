@@ -62,6 +62,7 @@ from projectroles.views import (
     MSG_INVITE_LOGGED_IN_ACCEPT,
     MSG_INVITE_USER_NOT_EQUAL,
     MSG_INVITE_USER_EXISTS,
+    MSG_LOGIN,
 )
 from projectroles.context_processors import (
     SIDEBAR_ICON_MIN_SIZE,
@@ -3727,6 +3728,10 @@ class TestProjectInviteAcceptView(
             self.project, self.user, self.role_owner
         )
         self.user_new = self.make_user('user_new')
+        self.project_url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid},
+        )
 
     @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
     def test_get_ldap(self):
@@ -3766,14 +3771,16 @@ class TestProjectInviteAcceptView(
                     ),
                     302,
                 ),
-                (
-                    reverse(
-                        'projectroles:detail',
-                        kwargs={'project': self.project.sodar_uuid},
-                    ),
-                    302,
-                ),
+                (self.project_url, 302),
             ],
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            MSG_PROJECT_WELCOME.format(
+                project_type='project',
+                project_title='TestProject',
+                role='project contributor',
+            ),
         )
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
         self.assertEqual(
@@ -3829,13 +3836,7 @@ class TestProjectInviteAcceptView(
                     ),
                     302,
                 ),
-                (
-                    reverse(
-                        'projectroles:detail',
-                        kwargs={'project': self.project.sodar_uuid},
-                    ),
-                    302,
-                ),
+                (self.project_url, 302),
             ],
         )
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
@@ -3984,6 +3985,7 @@ class TestProjectInviteAcceptView(
         self.assertEqual(username, invite.email.split('@')[0])
         self.assertEqual(User.objects.count(), 2)
 
+        # NOTE: We must face HTTP_REFERER here for it to be included
         response = self.client.post(
             reverse(
                 'projectroles:invite_process_local',
@@ -3998,27 +4000,20 @@ class TestProjectInviteAcceptView(
                 'password_confirm': 'asd',
             },
             follow=True,
+            HTTP_REFERER=reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
         )
         self.assertListEqual(
             response.redirect_chain,
             [
-                (
-                    reverse(
-                        'projectroles:detail',
-                        kwargs={'project': self.project.sodar_uuid},
-                    ),
-                    302,
-                ),
-                (
-                    reverse('login')
-                    + '?next='
-                    + reverse(
-                        'projectroles:detail',
-                        kwargs={'project': self.project.sodar_uuid},
-                    ),
-                    302,
-                ),
+                (self.project_url, 302),
+                (reverse('login') + '?next=' + self.project_url, 302),
             ],
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[1].message, MSG_LOGIN
         )
         user = User.objects.get(username=username)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
@@ -4030,14 +4025,8 @@ class TestProjectInviteAcceptView(
             ).count(),
             1,
         )
-
         with self.login(user, password='asd'):
-            response = self.client.get(
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
+            response = self.client.get(self.project_url)
         self.assertEqual(response.status_code, 200)
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -4280,13 +4269,7 @@ class TestProjectInviteAcceptView(
                 ),
                 follow=True,
             )
-        self.assertRedirects(
-            response,
-            reverse(
-                'projectroles:detail',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
-        )
+        self.assertRedirects(response, self.project_url)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             MSG_PROJECT_WELCOME.format(
@@ -4359,13 +4342,7 @@ class TestProjectInviteAcceptView(
                 ),
                 follow=True,
             )
-        self.assertRedirects(
-            response,
-            reverse(
-                'projectroles:detail',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
-        )
+        self.assertRedirects(response, self.project_url)
         invite.refresh_from_db()
         self.assertFalse(invite.active)
         # No timeline event should be created

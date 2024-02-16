@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **Projectroles**
+    - ``LoggedInPermissionMixin`` login message customization (#1360)
 - **Siteinfo**
     - Missing LDAP Django settings (#1347)
 
@@ -26,6 +28,8 @@ Changed
     - Do not create timeline event for re-accepting project invite (#1352)
     - Improve user message for re-accepting project invite (#1354)
     - Redirect to ``ProjectDetailView`` from re-accepting project invite (#1361)
+    - Do not display login error on invite accept (#1360)
+    - Clarify login error message for unauthenticated user (#1362)
 
 Fixed
 -----

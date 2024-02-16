@@ -372,7 +372,8 @@ The most commonly used mixins:
     your site, you **must** use this mixing instead of the original one in
     Django.
 ``LoggedInPermissionMixin``
-    Ensure correct redirection of users on no permissions.
+    Ensure correct redirection of users on no permissions. Can also be used to
+    customize messages displayed to the user.
 ``ProjectPermissionMixin``
     Provides a ``Project`` object for permission checking based on URL kwargs.
 ``ProjectContextMixin``

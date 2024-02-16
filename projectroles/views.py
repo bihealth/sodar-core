@@ -5,7 +5,7 @@ import logging
 import re
 
 from ipaddress import ip_address, ip_network
-from urllib.parse import unquote_plus
+from urllib.parse import unquote_plus, urlparse
 
 from django.apps import apps
 from django.conf import settings
@@ -91,8 +91,9 @@ PROJECT_ACTION_UPDATE = SODAR_CONSTANTS['PROJECT_ACTION_UPDATE']
 APP_NAME = 'projectroles'
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 PROJECT_COLUMN_COUNT = 2  # Default columns
-MSG_NO_AUTH = 'User not authorized for requested action'
-MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in.'
+MSG_LOGIN = 'Please log in.'
+MSG_NO_AUTH = 'User not authorized for requested action.'
+MSG_NO_AUTH_LOGIN = 'Authentication required, please log in.'
 MSG_FORM_INVALID = 'Form submission failed, see the form for details.'
 MSG_PROJECT_WELCOME = (
     'Welcome to {project_type} "{project_title}". You have been assigned the '
@@ -129,7 +130,7 @@ ALERT_MSG_ROLE_UPDATE = 'Member role changed to "{role}".'
 class LoginRequiredMixin(AccessMixin):
     """
     Customized variant of the one from django.contrib.auth.mixins.
-    Allows disabling by overriding function is_login_required().
+    Allows disabling by overriding method is_login_required().
     """
 
     def is_login_required(self):
@@ -151,6 +152,12 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
     users without permissions.
     """
 
+    #: No permission message custom override
+    no_perm_message = None
+
+    #: No permission message Django messages level
+    no_perm_message_level = 'error'
+
     def has_permission(self):
         """
         Override for this mixin also to work with admin users without a
@@ -165,14 +172,33 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
                 return True
         return False
 
-    def handle_no_permission(self):
-        """Override to redirect user"""
-        if self.request.user.is_authenticated:
-            messages.error(self.request, MSG_NO_AUTH + '.')
-            return redirect(reverse('home'))
+    def add_no_perm_message(self):
+        """
+        Add Django in the UI if handle_no_permission() fails. This can be
+        overridden to implement specific logic in a view if e.g. a different
+        message should be displayed depending on the referring view.
+        """
+        level = self.no_perm_message_level.lower()
+        msg_method = getattr(messages, level, None)
+        if not msg_method:
+            raise ValueError('Unknown message level "{}"'.format(level))
+        if self.no_perm_message:
+            msg = self.no_perm_message
+        elif self.request.user.is_authenticated:
+            msg = MSG_NO_AUTH + '.'
         else:
-            messages.error(self.request, MSG_NO_AUTH_LOGIN)
-            return redirect_to_login(self.request.get_full_path())
+            msg = MSG_NO_AUTH_LOGIN
+        msg_method(self.request, msg)
+
+    def handle_no_permission(self):
+        """
+        Handle no permission and redirect user. If custom message is specified
+        using self.login_message, it will be displayed.
+        """
+        self.add_no_perm_message()
+        if self.request.user.is_authenticated:
+            return redirect(reverse('home'))
+        return redirect_to_login(self.request.get_full_path())
 
 
 class ProjectAccessMixin:
@@ -539,6 +565,22 @@ class ProjectDetailView(
     model = Project
     slug_url_kwarg = 'project'
     slug_field = 'sodar_uuid'
+
+    def add_no_perm_message(self):
+        """
+        Override add_login_message() to display a different message when
+        redirected from invite accept view as a new user.
+        """
+        referer_url = self.request.META.get('HTTP_REFERER')
+        if not referer_url:
+            super().add_no_perm_message()
+            return
+        referer_path = urlparse(referer_url).path
+        resolved_path = resolve(referer_path)
+        if resolved_path.url_name.startswith('invite_process_'):
+            messages.info(self.request, MSG_LOGIN)
+            return
+        super().add_no_perm_message()
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
