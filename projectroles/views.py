@@ -185,7 +185,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         if self.no_perm_message:
             msg = self.no_perm_message
         elif self.request.user.is_authenticated:
-            msg = MSG_NO_AUTH + '.'
+            msg = MSG_NO_AUTH
         else:
             msg = MSG_NO_AUTH_LOGIN
         msg_method(self.request, msg)
