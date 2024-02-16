@@ -5,6 +5,49 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.13.4 (2024-02-16)
+====================
+
+Added
+-----
+
+- **Projectroles**
+    - ``LoggedInPermissionMixin`` login message customization (#1360)
+    - Base UI classses in Django API documentation (#1363)
+- **Siteinfo**
+    - Missing LDAP Django settings (#1347)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.24 (#1348)
+    - Upgrade LDAP dependencies (#1348)
+- **Projectroles**
+    - Improve remote site deletion UI text labels (#1349)
+    - Store remote sync app setting foreign key UUIDs as strings (#1356)
+    - Do not create timeline event for re-accepting project invite (#1352)
+    - Improve user message for re-accepting project invite (#1354)
+    - Redirect to ``ProjectDetailView`` from re-accepting project invite (#1361)
+    - Do not display login error on invite accept (#1360)
+    - Clarify login error message for unauthenticated user (#1362)
+
+Fixed
+-----
+
+- **General**
+    - Invalid env var retrieval for ``AUTH_LDAP*_START_TLS`` (#1351)
+    - Versioneer version not available in CI (#1357)
+- **Projectroles**
+    - Remote sync ``user_name`` crash with <0.13.3 target sites (#1355)
+
+Removed
+-------
+
+- **Timeline**
+    - Unused ``collect_extra_data()`` template tag (#1359)
+
+
 v0.13.3 (2023-12-06)
 ====================
 

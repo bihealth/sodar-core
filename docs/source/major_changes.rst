@@ -10,6 +10,29 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.13.4 (2024-02-16)
+********************
+
+Release Highlights
+==================
+
+- Add login message customization
+- Add missing LDAP settings in siteinfo
+- Improve project invite accept link reuse handling
+- Fix remote sync crash with target sites using SODAR Core <0.13.3
+- Fix LDAP settings on example site
+- General bug fixes and minor updates
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.24. Optional LDAP
+requirements in ``requirements/ldap.txt`` have also been upgraded.
+
+
 v0.13.3 (2023-12-06)
 ********************
 

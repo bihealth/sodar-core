@@ -4,22 +4,26 @@
 {% load crispy_forms_filters %}
 {% load projectroles_common_tags %}
 
-{% block title %}Confirm Removal of Remote Site{% endblock %}
+{% block title %}Confirm Deletion of Remote Site{% endblock %}
 
 {% block projectroles %}
 
 {% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
 
 <div class="row sodar-subtitle-container">
-  <h2>Confirm Removal of Remote Site</h2>
+  <h2>Confirm Deletion of Remote Site</h2>
 </div>
 
 <div class="container-fluid sodar-page-container">
   <div class="alert alert-warning" role="alert">
-    Do you really want to remove the remote {{ object.mode | lower }} site
+    Do you really want to remove the delete {{ object.mode | lower }} site
     "<strong>{{ object.name }}</strong>"? Please note that this will also
-    remove all {% get_display_name 'PROJECT' %} access rules associated
+    delete all {% get_display_name 'PROJECT' %} access rules associated
     with the site!
+  </div>
+  <div class="alert alert-warning" role="alert">
+    If the remote site is still in use, once its entry is deleted it will no
+    longer be able to sync projects to/from this site.
   </div>
 
   <form method="post">
@@ -30,7 +34,7 @@
         <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
       </a>
       <button type="submit" class="btn btn-danger">
-        <i class="iconify" data-icon="mdi:close-thick"></i> Remove
+        <i class="iconify" data-icon="mdi:close-thick"></i> Delete
       </button>
     </div>
   </form>

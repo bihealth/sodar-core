@@ -6,6 +6,7 @@ import ssl
 import urllib
 
 from copy import deepcopy
+from packaging import version
 
 from django.conf import settings
 from django.contrib import auth
@@ -166,13 +167,14 @@ class RemoteProjectAPI:
         return sync_data
 
     @classmethod
-    def _add_app_setting(cls, sync_data, app_setting, all_defs):
+    def _add_app_setting(cls, sync_data, app_setting, all_defs, add_user_name):
         """
         Add app setting to sync data on source site.
 
         :param sync_data: Sync data to be updated (dict)
         :param app_setting: AppSetting object
         :param all_defs: All settings defs
+        :param add_user_name: Add user_name to sync data (boolean)
         :return: Updated sync_data (dict)
         """
         if app_setting.app_plugin:
@@ -193,29 +195,38 @@ class RemoteProjectAPI:
             'app_plugin': app_setting.app_plugin.name
             if app_setting.app_plugin
             else None,
-            'project_uuid': app_setting.project.sodar_uuid
+            'project_uuid': str(app_setting.project.sodar_uuid)
             if app_setting.project
             else None,
-            'user_uuid': app_setting.user.sodar_uuid
-            if app_setting.user
-            else None,
-            'user_name': app_setting.user.username
+            'user_uuid': str(app_setting.user.sodar_uuid)
             if app_setting.user
             else None,
             'local': local,
         }
+        if add_user_name:
+            sync_data['app_settings'][str(app_setting.sodar_uuid)][
+                'user_name'
+            ] = (app_setting.user.username if app_setting.user else None)
         return sync_data
 
     # Source Site API functions ------------------------------------------------
 
-    def get_source_data(self, target_site):
+    def get_source_data(self, target_site, req_version=None):
         """
         Get user and project data on a source site to be synchronized into a
         target site.
 
         :param target_site: RemoteSite object for target site
+        :param req_version: Request version (string)
         :return: Dict
         """
+        # TODO: Remove user_name workaround when API backwards compatibility to
+        #       <0.13.3 is removed
+        if not req_version:
+            from projectroles.views_api import CORE_API_DEFAULT_VERSION
+
+            req_version = CORE_API_DEFAULT_VERSION
+        add_user_name = version.parse(req_version) >= version.parse('0.13.3')
         sync_data = {
             'users': {},
             'projects': {},
@@ -242,7 +253,9 @@ class RemoteProjectAPI:
             # NOTE: Also provide global settings in case they are not yet set
             for a in AppSetting.objects.filter(project=project):
                 try:
-                    sync_data = self._add_app_setting(sync_data, a, all_defs)
+                    sync_data = self._add_app_setting(
+                        sync_data, a, all_defs, add_user_name
+                    )
                 except Exception as ex:
                     logger.error(
                         'Failed to add app setting "{}.settings.{}" '

@@ -5,7 +5,7 @@ import logging
 import re
 
 from ipaddress import ip_address, ip_network
-from urllib.parse import unquote_plus
+from urllib.parse import unquote_plus, urlparse
 
 from django.apps import apps
 from django.conf import settings
@@ -91,8 +91,9 @@ PROJECT_ACTION_UPDATE = SODAR_CONSTANTS['PROJECT_ACTION_UPDATE']
 APP_NAME = 'projectroles'
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 PROJECT_COLUMN_COUNT = 2  # Default columns
-MSG_NO_AUTH = 'User not authorized for requested action'
-MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in.'
+MSG_LOGIN = 'Please log in.'
+MSG_NO_AUTH = 'User not authorized for requested action.'
+MSG_NO_AUTH_LOGIN = 'Authentication required, please log in.'
 MSG_FORM_INVALID = 'Form submission failed, see the form for details.'
 MSG_PROJECT_WELCOME = (
     'Welcome to {project_type} "{project_title}". You have been assigned the '
@@ -123,13 +124,13 @@ ALERT_MSG_ROLE_CREATE = 'Membership granted with the role of "{role}".'
 ALERT_MSG_ROLE_UPDATE = 'Member role changed to "{role}".'
 
 
-# General mixins ---------------------------------------------------------------
+# General UI view mixins -------------------------------------------------------
 
 
 class LoginRequiredMixin(AccessMixin):
     """
-    Customized variant of the one from django.contrib.auth.mixins.
-    Allows disabling by overriding function is_login_required().
+    Override of Django LoginRequiredMixin to handle anonymous access and kiosk
+    mode.
     """
 
     def is_login_required(self):
@@ -151,6 +152,12 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
     users without permissions.
     """
 
+    #: No permission message custom override
+    no_perm_message = None
+
+    #: No permission message Django messages level
+    no_perm_message_level = 'error'
+
     def has_permission(self):
         """
         Override for this mixin also to work with admin users without a
@@ -165,14 +172,33 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
                 return True
         return False
 
-    def handle_no_permission(self):
-        """Override to redirect user"""
-        if self.request.user.is_authenticated:
-            messages.error(self.request, MSG_NO_AUTH + '.')
-            return redirect(reverse('home'))
+    def add_no_perm_message(self):
+        """
+        Add Django in the UI if handle_no_permission() fails. This can be
+        overridden to implement specific logic in a view if e.g. a different
+        message should be displayed depending on the referring view.
+        """
+        level = self.no_perm_message_level.lower()
+        msg_method = getattr(messages, level, None)
+        if not msg_method:
+            raise ValueError('Unknown message level "{}"'.format(level))
+        if self.no_perm_message:
+            msg = self.no_perm_message
+        elif self.request.user.is_authenticated:
+            msg = MSG_NO_AUTH
         else:
-            messages.error(self.request, MSG_NO_AUTH_LOGIN)
-            return redirect_to_login(self.request.get_full_path())
+            msg = MSG_NO_AUTH_LOGIN
+        msg_method(self.request, msg)
+
+    def handle_no_permission(self):
+        """
+        Handle no permission and redirect user. If custom message is specified
+        using self.login_message, it will be displayed.
+        """
+        self.add_no_perm_message()
+        if self.request.user.is_authenticated:
+            return redirect(reverse('home'))
+        return redirect_to_login(self.request.get_full_path())
 
 
 class ProjectAccessMixin:
@@ -319,6 +345,88 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         )
 
 
+class HTTPRefererMixin:
+    """
+    Mixin for updating a correct referer url in session cookie regardless of
+    page reload.
+    """
+
+    def get(self, request, *args, **kwargs):
+        if 'HTTP_REFERER' in request.META:
+            referer = request.META['HTTP_REFERER']
+            if (
+                'real_referer' not in request.session
+                or referer != request.build_absolute_uri()
+            ):
+                request.session['real_referer'] = referer
+        return super().get(request, *args, **kwargs)
+
+
+class PluginContextMixin(ContextMixin):
+    """Mixin for adding plugin list to context data"""
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['app_plugins'] = get_active_plugins(
+            plugin_type='project_app', custom_order=True
+        )
+        return context
+
+
+class ProjectContextMixin(
+    HTTPRefererMixin, PluginContextMixin, ProjectAccessMixin
+):
+    """
+    Mixin for adding context data to Project base view and other views
+    extending it. Includes HTTPRefererMixin for correct referer URL.
+    """
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        # Project
+        if hasattr(self, 'object') and isinstance(self.object, Project):
+            context['project'] = self.get_object()
+        elif hasattr(self, 'object') and hasattr(self.object, 'project'):
+            context['project'] = self.object.project
+        else:
+            context['project'] = self.get_project()
+        # Project tagging/starring
+        if 'project' in context and not getattr(
+            settings, 'PROJECTROLES_KIOSK_MODE', False
+        ):
+            context['project_starred'] = app_settings.get(
+                'projectroles',
+                'project_star',
+                context['project'],
+                self.request.user,
+            )
+        return context
+
+
+class CurrentUserFormMixin:
+    """Mixin for passing current user to form as current_user"""
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'current_user': self.request.user})
+        return kwargs
+
+
+class InvalidFormMixin:
+    """
+    Mixin for UI improvements in invalid form failure. Recommended to be used
+    with long forms spanning multiple screen heights.
+    """
+
+    def form_invalid(self, form, **kwargs):
+        """Override form_invalid() to add Django message on form failure"""
+        messages.error(self.request, MSG_FORM_INVALID)
+        return super().form_invalid(form, **kwargs)
+
+
+# Projectroles Internal UI view mixins -----------------------------------------
+
+
 class ProjectModifyPermissionMixin(
     LoggedInPermissionMixin, ProjectPermissionMixin
 ):
@@ -393,85 +501,6 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
         return self.get_project()
 
 
-class HTTPRefererMixin:
-    """
-    Mixin for updating a correct referer url in session cookie regardless of
-    page reload.
-    """
-
-    def get(self, request, *args, **kwargs):
-        if 'HTTP_REFERER' in request.META:
-            referer = request.META['HTTP_REFERER']
-            if (
-                'real_referer' not in request.session
-                or referer != request.build_absolute_uri()
-            ):
-                request.session['real_referer'] = referer
-        return super().get(request, *args, **kwargs)
-
-
-class PluginContextMixin(ContextMixin):
-    """Mixin for adding plugin list to context data"""
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        context['app_plugins'] = get_active_plugins(
-            plugin_type='project_app', custom_order=True
-        )
-        return context
-
-
-class ProjectContextMixin(
-    HTTPRefererMixin, PluginContextMixin, ProjectAccessMixin
-):
-    """
-    Mixin for adding context data to Project base view and other views
-    extending it. Includes HTTPRefererMixin for correct referer URL.
-    """
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        # Project
-        if hasattr(self, 'object') and isinstance(self.object, Project):
-            context['project'] = self.get_object()
-        elif hasattr(self, 'object') and hasattr(self.object, 'project'):
-            context['project'] = self.object.project
-        else:
-            context['project'] = self.get_project()
-        # Project tagging/starring
-        if 'project' in context and not getattr(
-            settings, 'PROJECTROLES_KIOSK_MODE', False
-        ):
-            context['project_starred'] = app_settings.get(
-                'projectroles',
-                'project_star',
-                context['project'],
-                self.request.user,
-            )
-        return context
-
-
-class InvalidFormMixin:
-    """Mixin for create/update form view UI improvements"""
-
-    def form_invalid(self, form, **kwargs):
-        """Override form_invalid to add Django message on form failure"""
-        messages.error(self.request, MSG_FORM_INVALID)
-        return super().form_invalid(form, **kwargs)
-
-
-class CurrentUserFormMixin:
-    """Mixin for passing current user to form as current_user"""
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
-        return kwargs
-
-
-# Base Project Views -----------------------------------------------------------
-
-
 class ProjectListContextMixin:
     """Mixin for adding context data for displaying the project list."""
 
@@ -514,6 +543,9 @@ class ProjectListContextMixin:
         return context
 
 
+# General Views ----------------------------------------------------------------
+
+
 class HomeView(
     LoginRequiredMixin,
     PluginContextMixin,
@@ -523,6 +555,9 @@ class HomeView(
     """Home view"""
 
     template_name = 'projectroles/home.html'
+
+
+# General Project Views --------------------------------------------------------
 
 
 class ProjectDetailView(
@@ -539,6 +574,22 @@ class ProjectDetailView(
     model = Project
     slug_url_kwarg = 'project'
     slug_field = 'sodar_uuid'
+
+    def add_no_perm_message(self):
+        """
+        Override add_login_message() to display a different message when
+        redirected from invite accept view as a new user.
+        """
+        referer_url = self.request.META.get('HTTP_REFERER')
+        if not referer_url:
+            super().add_no_perm_message()
+            return
+        referer_path = urlparse(referer_url).path
+        resolved_path = resolve(referer_path)
+        if resolved_path.url_name.startswith('invite_process_'):
+            messages.info(self.request, MSG_LOGIN)
+            return
+        super().add_no_perm_message()
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -568,6 +619,9 @@ class ProjectDetailView(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
             ).order_by('site__name')
         return context
+
+
+# Search Views -----------------------------------------------------------------
 
 
 class ProjectSearchMixin:
@@ -2359,16 +2413,18 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
         except ProjectInvite.DoesNotExist:
             messages.error(self.request, 'Invite does not exist.')
 
-    def user_role_exists(self, invite, user, timeline=None):
+    def user_role_exists(self, invite, user):
         """
-        Display message and revoke invite if user already has roles in project.
+        Display message if user already has roles in project. Also revoke the
+        invite if necessary.
         """
         if invite.project.has_role(user):
             messages.warning(
                 self.request,
                 mark_safe(
-                    'You already have roles set in the {project}. You can '
-                    'access the {project} <a href="{url}">here</a>.'.format(
+                    'You are already a member of this {project}. '
+                    '<a href="{url}">Please use this URL to access the '
+                    '{project}</a>.'.format(
                         project=get_display_name(invite.project.type),
                         url=reverse(
                             'projectroles:detail',
@@ -2377,15 +2433,8 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                     )
                 ),
             )
-            self.revoke_invite(
-                invite,
-                user,
-                failed=True,
-                fail_desc='User already has roles in {}'.format(
-                    get_display_name(invite.project.type)
-                ),
-                timeline=timeline,
-            )
+            if invite.active:  # Only revoke if active
+                self.revoke_invite(invite, user)
             return True
         return False
 
@@ -2482,16 +2531,20 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
         invite = self.get_invite(secret=kwargs['secret'])
         if not invite:
             return redirect(reverse('home'))
-        timeline = get_backend_api('timeline_backend')
         user = self.request.user
 
         if (
             not user.is_anonymous
             and user.is_authenticated
             and user.email == invite.email
-            and self.user_role_exists(invite, user, timeline)
+            and self.user_role_exists(invite, user)
         ):
-            return redirect(reverse('home'))
+            return redirect(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': invite.project.sodar_uuid},
+                )
+            )
 
         invite_type = self.get_invite_type(invite)
         if invite_type == 'ldap':
@@ -2525,8 +2578,7 @@ class ProjectInviteProcessLDAPView(
         if not invite:
             return redirect(reverse('home'))
         timeline = get_backend_api('timeline_backend')
-
-        # Check invite has correct type
+        # Check if invite has correct type
         if self.get_invite_type(invite) == 'local':
             messages.error(
                 self.request,
@@ -2534,15 +2586,17 @@ class ProjectInviteProcessLDAPView(
                 'requested.',
             )
             return redirect(reverse('home'))
-
         # Check if user already accepted the invite
-        if self.user_role_exists(invite, self.request.user, timeline=timeline):
-            return redirect(reverse('home'))
-
+        if self.user_role_exists(invite, self.request.user):
+            return redirect(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': invite.project.sodar_uuid},
+                )
+            )
         # Check if invite expired
         if self.is_invite_expired(invite, self.request.user):
             return redirect(reverse('home'))
-
         # If we get this far, create RoleAssignment..
         if not self.create_assignment(
             invite, self.request.user, timeline=timeline
@@ -2683,7 +2737,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name'],
         )
-        if self.user_role_exists(invite, user, timeline=timeline):
+        if self.user_role_exists(invite, user):
             return redirect(
                 reverse(
                     'projectroles:detail',

@@ -9,6 +9,45 @@ app. Included are functionalities and classes intended to be used by other
 applications when building a SODAR Core based Django site.
 
 
+.. _app_projectroles_api_django_ui:
+
+Base UI View Classes
+====================
+
+Base mixins and classes for building UI views can be found in
+``projectroles.views``.
+
+.. currentmodule:: projectroles.views
+
+.. autoclass:: LoginRequiredMixin
+    :members:
+    :show-inheritance:
+
+.. autoclass:: LoggedInPermissionMixin
+    :members:
+    :show-inheritance:
+
+.. autoclass:: ProjectAccessMixin
+    :members:
+    :show-inheritance:
+
+.. autoclass:: ProjectPermissionMixin
+    :members:
+    :show-inheritance:
+
+.. autoclass:: ProjectContextMixin
+    :members:
+    :show-inheritance:
+
+.. autoclass:: PluginContextMixin
+    :members:
+    :show-inheritance:
+
+.. autoclass:: InvalidFormMixin
+    :members:
+    :show-inheritance:
+
+
 Plugins
 =======
 

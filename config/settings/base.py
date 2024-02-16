@@ -340,9 +340,8 @@ BASICAUTH_DISABLE = False
 ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
 ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
 LDAP_DEBUG = env.bool('LDAP_DEBUG', False)
-
 # Alternative domains for detecting LDAP access by email address
-LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, [])
+LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, default=[])
 
 if ENABLE_LDAP:
     import itertools
@@ -363,10 +362,10 @@ if ENABLE_LDAP:
     AUTH_LDAP_SERVER_URI = env.str('AUTH_LDAP_SERVER_URI', None)
     AUTH_LDAP_BIND_DN = env.str('AUTH_LDAP_BIND_DN', None)
     AUTH_LDAP_BIND_PASSWORD = env.str('AUTH_LDAP_BIND_PASSWORD', None)
-    AUTH_LDAP_START_TLS = env.str('AUTH_LDAP_START_TLS', False)
+    AUTH_LDAP_START_TLS = env.bool('AUTH_LDAP_START_TLS', False)
     AUTH_LDAP_CA_CERT_FILE = env.str('AUTH_LDAP_CA_CERT_FILE', None)
     AUTH_LDAP_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
-    if AUTH_LDAP_CA_CERT_FILE is not None:
+    if AUTH_LDAP_CA_CERT_FILE:
         AUTH_LDAP_CONNECTION_OPTIONS[
             ldap.OPT_X_TLS_CACERTFILE
         ] = AUTH_LDAP_CA_CERT_FILE
@@ -374,7 +373,6 @@ if ENABLE_LDAP:
     AUTH_LDAP_USER_FILTER = env.str(
         'AUTH_LDAP_USER_FILTER', '(sAMAccountName=%(user)s)'
     )
-
     AUTH_LDAP_USER_SEARCH = LDAPSearch(
         env.str('AUTH_LDAP_USER_SEARCH_BASE', None),
         ldap.SCOPE_SUBTREE,
@@ -385,7 +383,6 @@ if ENABLE_LDAP:
     AUTH_LDAP_DOMAIN_PRINTABLE = env.str(
         'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN
     )
-
     AUTHENTICATION_BACKENDS = tuple(
         itertools.chain(
             ('projectroles.auth_backends.PrimaryLDAPBackend',),
@@ -398,10 +395,10 @@ if ENABLE_LDAP:
         AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
         AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
         AUTH_LDAP2_BIND_PASSWORD = env.str('AUTH_LDAP2_BIND_PASSWORD', None)
-        AUTH_LDAP2_START_TLS = env.str('AUTH_LDAP2_START_TLS', False)
+        AUTH_LDAP2_START_TLS = env.bool('AUTH_LDAP2_START_TLS', False)
         AUTH_LDAP2_CA_CERT_FILE = env.str('AUTH_LDAP2_CA_CERT_FILE', None)
         AUTH_LDAP2_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
-        if AUTH_LDAP2_CA_CERT_FILE is not None:
+        if AUTH_LDAP2_CA_CERT_FILE:
             AUTH_LDAP2_CONNECTION_OPTIONS[
                 ldap.OPT_X_TLS_CACERTFILE
             ] = AUTH_LDAP2_CA_CERT_FILE
@@ -409,7 +406,6 @@ if ENABLE_LDAP:
         AUTH_LDAP2_USER_FILTER = env.str(
             'AUTH_LDAP2_USER_FILTER', '(sAMAccountName=%(user)s)'
         )
-
         AUTH_LDAP2_USER_SEARCH = LDAPSearch(
             env.str('AUTH_LDAP2_USER_SEARCH_BASE', None),
             ldap.SCOPE_SUBTREE,
@@ -420,7 +416,6 @@ if ENABLE_LDAP:
         AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
             'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP2_USERNAME_DOMAIN
         )
-
         AUTHENTICATION_BACKENDS = tuple(
             itertools.chain(
                 ('projectroles.auth_backends.SecondaryLDAPBackend',),

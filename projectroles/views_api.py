@@ -98,7 +98,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.13.0', '0.13.1', '0.13.2', '0.13.3']
+CORE_API_ALLOWED_VERSIONS = ['0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4']
 
 # Local constants
 INVALID_PROJECT_TYPE_MSG = (
@@ -1246,7 +1246,7 @@ class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
 class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
     """API view for retrieving remote projects from a source site"""
 
-    permission_classes = (AllowAny,)  # We check the secret in get()/post()
+    permission_classes = (AllowAny,)  # We check the secret in get()
 
     def get(self, request, *args, **kwargs):
         remote_api = RemoteProjectAPI()
@@ -1257,7 +1257,13 @@ class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
             )
         except RemoteSite.DoesNotExist:
             return Response('Remote site not found, unauthorized', status=401)
-        sync_data = remote_api.get_source_data(target_site)
+        # Pass request version to get_source_data()
+        accept_header = request.headers.get('Accept')
+        if accept_header and 'version=' in accept_header:
+            req_version = accept_header[accept_header.find('version=') + 8 :]
+        else:
+            req_version = CORE_API_DEFAULT_VERSION
+        sync_data = remote_api.get_source_data(target_site, req_version)
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())
         return Response(sync_data, status=200)

@@ -3614,6 +3614,7 @@ class TestRemoteProjectGetAPIView(
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
+    AppSettingMixin,
     SODARAPIViewTestMixin,
     TestViewsBase,
 ):
@@ -3661,11 +3662,12 @@ class TestRemoteProjectGetAPIView(
             reverse(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
-            )
+            ),
+            **self.get_accept_header()
         )
         self.assertEqual(response.status_code, 200)
-        expected = self.remote_api.get_source_data(self.target_site)
         response_dict = json.loads(response.content.decode('utf-8'))
+        expected = self.remote_api.get_source_data(self.target_site)
         self.assertEqual(response_dict, expected)
 
     def test_get_invalid_secret(self):
@@ -3673,9 +3675,50 @@ class TestRemoteProjectGetAPIView(
         response = self.client.get(
             reverse(
                 'projectroles:api_remote_get', kwargs={'secret': build_secret()}
-            )
+            ),
+            **self.get_accept_header()
         )
         self.assertEqual(response.status_code, 401)
+
+    def test_get_legacy_version(self):
+        """Test retrieving project data with legacy target site version"""
+        # See issue #1355
+        set_star = self.make_setting(
+            app_name='projectroles',
+            name='project_star',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+            user=self.user,
+        )
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET},
+            ),
+            **self.get_accept_header(version='0.13.2')
+        )
+        self.assertEqual(response.status_code, 200)
+        response_dict = json.loads(response.content.decode('utf-8'))
+        expected = self.remote_api.get_source_data(
+            self.target_site, req_version='0.13.2'
+        )
+        self.assertEqual(response_dict, expected)
+        # Assert user_name is not present in PROJECT_USER setting
+        set_data = response_dict['app_settings'][str(set_star.sodar_uuid)]
+        self.assertNotIn('user_name', set_data)
+
+    def test_get_unsupported_version(self):
+        """Test retrieving project data with legacy target site version"""
+        # See issue #1355
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET},
+            ),
+            **self.get_accept_header(version='0.12.0')
+        )
+        self.assertEqual(response.status_code, 406)
 
 
 # IP Allowing Tests ------------------------------------------------------------
