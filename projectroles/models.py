@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from djangoplugins.models import Plugin
 from markupfield.fields import MarkupField
@@ -197,13 +197,16 @@ class Project(models.Model):
         self._validate_archive()
         # Update full title of self and children
         self.full_title = self._get_full_title()
+        # TODO: Save with commit=False with other args to avoid double save()?
+        super().save(*args, **kwargs)
         if self.type == PROJECT_TYPE_CATEGORY:
             for child in self.children.all():
                 child.save()
         # Update public children
         # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
-        self.has_public_children = self._has_public_children()
-        super().save(*args, **kwargs)
+        if self._has_public_children():
+            self.has_public_children = True
+            super().save(*args, **kwargs)
 
     def _validate_parent(self):
         """

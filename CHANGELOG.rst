@@ -5,6 +5,24 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **General**
+    - Python v3.11 support (#1157)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v4.2 (#880)
+    - Upgrade minimum PostgreSQL version to v12 (#1074)
+    - Upgrade to PostgreSQL v16 in CI (#1074)
+
+
 v0.13.4 (2024-02-16)
 ====================
 

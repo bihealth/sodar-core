@@ -478,6 +478,13 @@ This part of the setup is **optional**.
 SAML SSO Configuration (Optional)
 =================================
 
+.. danger::
+
+    In the current dev version of SODAR Core (v1.1.0-WIP), SAML support has been
+    temporarily disabled. The repository must be upgraded to a new SAML library
+    with support for Django v4.2+. This may also cause changes for configuring
+    SAML authentication.
+
 Optional Single Sign-On (SSO) authorization via SAML is also available. To
 enable this feature, set ``ENABLE_SAML=1`` in your environment. Configuring SAML
 for SSO requires proper configuration of the Keycloak SSO server and the SAML

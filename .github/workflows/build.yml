@@ -10,9 +10,10 @@ jobs:
           - '3.8'
           - '3.9'
           - '3.10'
+          - '3.11'
     services:
       postgres:
-        image: postgres:11
+        image: postgres:16
         env:
           POSTGRES_DB: sodar_core
           POSTGRES_USER: sodar_core
@@ -44,7 +45,7 @@ jobs:
         run: git fetch --prune --unshallow
       - name: Install project Python dependencies
         run: |
-          pip install "wheel>=0.38.4, <0.39"
+          pip install "wheel>=0.40.0, <0.41"
           pip install -r requirements/local.txt
           pip install -r requirements/test.txt
       - name: Download icons
@@ -58,13 +59,13 @@ jobs:
           coverage report
       - name: Check linting
         run: flake8 .
-        if: ${{ matrix.python-version == '3.8' }}
+        if: ${{ matrix.python-version == '3.11' }}
       - name: Check formatting
         run: make black arg=--check
-        if: ${{ matrix.python-version == '3.8' }}
+        if: ${{ matrix.python-version == '3.11' }}
       - name: Report coverage with Coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: './coverage.lcov'
-        if: ${{ matrix.python-version == '3.8' }}
+        if: ${{ matrix.python-version == '3.11' }}

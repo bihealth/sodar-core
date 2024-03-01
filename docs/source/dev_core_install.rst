@@ -26,7 +26,8 @@ system of choice.
 System Dependencies
 ===================
 
-To get started, install the OS dependencies, PostgreSQL >=11 and Python >=3.8.
+To get started, install the OS dependencies, Python >=3.8 (3.11 recommended) and
+PostgreSQL >=12.
 
 .. code-block:: console
 

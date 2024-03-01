@@ -1904,7 +1904,6 @@ class RoleAssignmentDeleteView(
     RolePermissionMixin,
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
-    CurrentUserFormMixin,
     RoleAssignmentDeleteMixin,
     DeleteView,
 ):
@@ -3023,21 +3022,17 @@ class RemoteSiteUpdateView(
 class RemoteSiteDeleteView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
-    RemoteSiteModifyMixin,
     HTTPRefererMixin,
-    CurrentUserFormMixin,
     DeleteView,
 ):
     """RemoteSite deletion view"""
 
     model = RemoteSite
-    form_class = RemoteSiteForm
     permission_required = 'projectroles.update_remote'
     slug_url_kwarg = 'remotesite'
     slug_field = 'sodar_uuid'
 
     def get_success_url(self):
-        """Override get_success_url() to add message"""
         timeline = get_backend_api('timeline_backend')
         if timeline:
             event_name = '{}_site_delete'.format(

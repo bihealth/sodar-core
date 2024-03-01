@@ -56,9 +56,9 @@ your Django site are listed below. For a complete requirement list, see the
 - Ubuntu (20.04 Focal recommended and supported) / CentOS 7
 - System library requirements (see the ``utility`` directory and/or your own
   Django project)
-- Python >=3.8 (**NOTE:** Python 3.7 no longer supported in SODAR Core v0.10.8+)
-- Django 3.2
-- PostgreSQL >=11 and psycopg2-binary
+- Python 3.8-3.11 (3.11 recommended)
+- Django 4.2
+- PostgreSQL >=12 and psycopg2-binary
 - Bootstrap 4.x
 - JQuery 3.3.x
 - Shepherd and Tether

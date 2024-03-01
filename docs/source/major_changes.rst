@@ -10,6 +10,53 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.0 (WIP)
+************
+
+Release Highlights
+==================
+
+- Upgrade to Django v4.2 and Postgres v16
+- Add Python 3.11 support
+
+Breaking Changes
+================
+
+Django v4.2 Upgrade
+-------------------
+
+This release updates SODAR Core from Django v3.2 to v4.2. This is a breaking
+change which causes many updates and also potentially requires updating several
+dependencies.
+
+To upgrade, please update the Django requirement along with your site's other
+Python requirements to match ones in ``requirements/*.txt``. See
+`Django deprecation documentation <https://docs.djangoproject.com/en/dev/internals/deprecation/>`_
+for details about what has been deprecated in Django and which changes are
+mandatory.
+
+Common known issues:
+
+- Minimum version of PostgreSQL has been bumped to v12.
+- Replace ``django.utils.translation.ugettext_lazy`` imports with
+  ``gettext_lazy``.
+- Replace ``django.conf.urls.url`` imports with ``django.urls.re_path``.
+- Calls for ``related_managers`` for unsaved objects raises ``ValueError``. This
+  can be handled by e.g. calling ``model.save(commit=False)`` before trying to
+  access foreign key relations.
+
+System Prerequisites
+--------------------
+
+The minimum required PostgreSQL version has been bumped to v12. In CI we
+currently use PostgreSQL v16, but anything from v12 to above should work with
+this SODAR Core release. It is strongly recommended to make backups of your
+production databases before upgrading.
+
+Python v3.11 support has been officially added in this version. 3.11 is now also
+the recommended Python version to use.
+
+
 v0.13.4 (2024-02-16)
 ********************
 

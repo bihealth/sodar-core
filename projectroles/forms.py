@@ -697,8 +697,8 @@ class ProjectForm(SODARModelForm):
     def clean(self):
         """Function for custom form validation and cleanup"""
         self.instance_owner_as = (
-            self.instance.get_owner() if self.instance else None
-        )
+            self.instance.get_owner() if self.instance.pk else None
+        )  # Must check pk, get_owner() with unsaved model fails in Django v4+
         disable_categories = getattr(
             settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
         )
