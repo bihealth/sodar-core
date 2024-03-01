@@ -1115,7 +1115,6 @@ class ProjectInviteForm(SODARModelForm):
             ]
             if (
                 not settings.PROJECTROLES_ALLOW_LOCAL_USERS
-                and not settings.ENABLE_SAML
                 and domain
                 not in [
                     x.lower() for x in getattr(settings, 'LDAP_ALT_DOMAINS', [])

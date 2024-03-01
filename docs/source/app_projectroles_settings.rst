@@ -475,144 +475,18 @@ This part of the setup is **optional**.
             )
 
 
-SAML SSO Configuration (Optional)
-=================================
+SAML SSO Configuration (Removed in v1.0)
+========================================
 
-.. danger::
+.. note::
 
     In the current dev version of SODAR Core (v1.1.0-WIP), SAML support has been
-    temporarily disabled. The repository must be upgraded to a new SAML library
-    with support for Django v4.2+. This may also cause changes for configuring
-    SAML authentication.
-
-Optional Single Sign-On (SSO) authorization via SAML is also available. To
-enable this feature, set ``ENABLE_SAML=1`` in your environment. Configuring SAML
-for SSO requires proper configuration of the Keycloak SSO server and the SAML
-client library.
-
-Keycloak
---------
-
-Create a new client in Keycloak and configure it as follows. Please note that
-**Client ID** can be chosen however you like, but it must match the setting
-in the client.
-
-.. figure:: _static/saml/keycloak_client_config.png
-
-To generate the ``metadata.xml`` file required for the client, go to the
-**Realm Settings** page and in the **General** tab, click
-``SAML 2.0 Identity Provider Metadata`` to download the xml data. Save it
-somewhere on the client, the preferred name is ``metadata.xml``.
-
-.. figure:: _static/saml/keycloak_metadata_download.png
-
-For the signing of the request send to the Keycloak server you will require a
-certificate and key provided by the Keycloak server and incorporated into the
-configuration of the client. Switch to the ``SAML Keys``. Make sure to select
-``PKCS12`` as **Archive Format**.
-
-.. figure:: _static/saml/keycloak_saml_key_download1.png
-.. figure:: _static/saml/keycloak_saml_key_download2.png
-
-Convert the archive on the commandline with the follow command and store them in
-some place on your client.
-
-.. code::
-
-    openssl pkcs12 -in keystore.p12 -password "pass:<PASSWORD>" -nodes | openssl x509 -out cert.pem
-    openssl pkcs12 -in keystore.p12 -password "pass:<PASSWORD>" -nodes -nocerts | openssl rsa -out key.pem
-
-SODAR Core
-----------
-
-Make sure that your ``config/settings/base.py`` contains the following
-configuration:
-
-.. code-block:: python
-
-    ENABLE_SAML = env.bool('ENABLE_SAML', False)
-    SAML2_AUTH = {
-        # Required setting
-        # Pysaml2 Saml client settings
-        # See: https://pysaml2.readthedocs.io/en/latest/howto/config.html
-        'SAML_CLIENT_SETTINGS': {
-            # Optional entity ID string to be passed in the 'Issuer' element of
-            # authn request, if required by the IDP.
-            'entityid': env.str('SAML_CLIENT_ENTITY_ID', 'SODARcore'),
-            'entitybaseurl': env.str(
-                'SAML_CLIENT_ENTITY_URL', 'https://localhost:8000'
-            ),
-            # The auto(dynamic) metadata configuration URL of SAML2
-            'metadata': {
-                'local': [
-                    env.str('SAML_CLIENT_METADATA_FILE', 'metadata.xml'),
-                ],
-            },
-            'service': {
-                'sp': {
-                    'idp': env.str(
-                        'SAML_CLIENT_IPD',
-                        'https://sso.hpc.bihealth.org/auth/realms/cubi',
-                    ),
-                    # Keycloak expects client signature
-                    'authn_requests_signed': 'true',
-                    # Enforce POST binding which is required by keycloak
-                    'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-                },
-            },
-            'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
-            'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
-            'xmlsec_binary': env.str('SAML_CLIENT_XMLSEC1', '/usr/bin/xmlsec1'),
-            'encryption_keypairs': [
-                {
-                    'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
-                    'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
-                }
-            ],
-        },
-        # Custom target redirect URL after the user get logged in.
-        # Defaults to /admin if not set. This setting will be overwritten if you
-        # have parameter ?next= specified in the login URL.
-        'DEFAULT_NEXT_URL': '/',
-        # # Optional settings below
-        # 'NEW_USER_PROFILE': {
-        #     'USER_GROUPS': [],  # The default group name when a new user logs in
-        #     'ACTIVE_STATUS': True,  # The default active status for new users
-        #     'STAFF_STATUS': True,  # The staff status for new users
-        #     'SUPERUSER_STATUS': False,  # The superuser status for new users
-        # },
-        # 'ATTRIBUTES_MAP': env.dict(
-        #     'SAML_ATTRIBUTES_MAP',
-        #     default={
-        #         Change values to corresponding SAML2 userprofile attributes.
-        #         'email': 'Email',
-        #         'username': 'UserName',
-        #         'first_name': 'FirstName',
-        #         'last_name': 'LastName',
-        #     }
-        # ),
-        # 'TRIGGER': {
-        #     'FIND_USER': 'path.to.your.find.user.hook.method',
-        #     'NEW_USER': 'path.to.your.new.user.hook.method',
-        #     'CREATE_USER': 'path.to.your.create.user.hook.method',
-        #     'BEFORE_LOGIN': 'path.to.your.login.hook.method',
-        # },
-        # Custom URL to validate incoming SAML requests against
-        # 'ASSERTION_URL': 'https://your.url.here',
-    }
-
-Add the following settings to your environment variables:
-
-.. code-block::
-
-    ENABLE_SAML=1
-    SAML_CLIENT_ENTITY_ID=<Entity ID configured in Keycloak>
-    SAML_CLIENT_ENTITY_URL=<Client URL, e.g. https://sodar-core.bihealth.org>
-    SAML_CLIENT_METADATA_FILE=<e.g. metadata.xml>
-    SAML_CLIENT_IPO=<SSO server URL, e.g. https://sso.hpc.bihealth.org/auth/realms/cubi>
-    SAML_CLIENT_KEY_FILE=<e.g. key.pem>
-    SAML_CLIENT_CERT_FILE=<e.g. cert.pem>
-    SAML_CLIENT_XMLSEC1=<e.g. /usr/bin/xmlsec1>
+    removed. It will soon be replaced with support OpenID Connect
+    authentication. The library we previously used is no longer compatible with
+    Django v4.2 and we are not aware of SODAR Core based projects requiring SAML
+    at this time. If there are specific needs to use SAML on a SODAR Core based
+    site, we are happy to review pull requests to re-introduce it. Please note
+    the implementation has to support Django v4.2+.
 
 
 Global JS/CSS Include Modifications (Optional)

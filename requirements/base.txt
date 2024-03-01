@@ -82,5 +82,3 @@ celery>=5.2.7, <5.3
 # NOTE: 3.9.5 causes crash with Whitenoise (see issue #1224)
 django-autocomplete-light==3.9.4
 
-# SAML2 support for SSO
-django-saml2-auth-ai>=2.1.6, <2.2

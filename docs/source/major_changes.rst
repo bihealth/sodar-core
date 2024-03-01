@@ -18,6 +18,7 @@ Release Highlights
 
 - Upgrade to Django v4.2 and Postgres v16
 - Add Python 3.11 support
+- Remove SAML SSO support
 
 Breaking Changes
 ================
@@ -55,6 +56,17 @@ production databases before upgrading.
 
 Python v3.11 support has been officially added in this version. 3.11 is now also
 the recommended Python version to use.
+
+SAML SSO Support Removed
+------------------------
+
+Support for SAML SSO authentication has been removed in this release. It will
+soon be replaced with support OpenID Connect authentication. The library we
+previously used is no longer compatible with Django v4.2 and we are not aware of
+SODAR Core based projects requiring SAML at this time. If there are specific
+needs to use SAML on a SODAR Core based site, we are happy to review pull
+requests to re-introduce it. Please note the implementation has to support
+Django v4.2+.
 
 
 v0.13.4 (2024-02-16)

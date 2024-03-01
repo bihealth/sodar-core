@@ -46,14 +46,6 @@
         <i class="iconify" data-icon="mdi:login-variant"></i> Login
       </button>
     </form>
-    {% get_django_setting 'ENABLE_SAML' as enable_saml %}
-    {% if enable_saml %}
-      <hr class="my-3" />
-      <p>To log in with your SSO provider, please click below.</p>
-      <a href="/sso/login" class="btn btn-md btn-info btn-block">
-        <i class="iconify" data-icon="mdi:login-variant"></i> Single Sign-On
-      </a>
-    {% endif %}
   </div>
 
   {# Optional template for additional login page HTML #}

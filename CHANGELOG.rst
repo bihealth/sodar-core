@@ -22,6 +22,12 @@ Changed
     - Upgrade minimum PostgreSQL version to v12 (#1074)
     - Upgrade to PostgreSQL v16 in CI (#1074)
 
+Removed
+-------
+
+- **General**
+    - SAML support (#1368)
+
 
 v0.13.4 (2024-02-16)
 ====================

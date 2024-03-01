@@ -3636,10 +3636,7 @@ class TestProjectInviteCreateView(
                 ),
             )
 
-    @override_settings(
-        PROJECTROLES_ALLOW_LOCAL_USERS=False,
-        ENABLE_SAML=False,
-    )
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
     def test_post_local_users_not_allowed(self):
         """Test POST for local user with local users not allowed"""
         values = {
@@ -3652,10 +3649,7 @@ class TestProjectInviteCreateView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ProjectInvite.objects.all().count(), 0)
 
-    @override_settings(
-        PROJECTROLES_ALLOW_LOCAL_USERS=True,
-        ENABLE_SAML=False,
-    )
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_post_local_users_allowed(self):
         """Test POST for local user with local users allowed"""
         values = {
@@ -3673,7 +3667,6 @@ class TestProjectInviteCreateView(
 
     @override_settings(
         PROJECTROLES_ALLOW_LOCAL_USERS=False,
-        ENABLE_SAML=False,
         ENABLE_LDAP=True,
         AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE',
     )
@@ -3694,7 +3687,6 @@ class TestProjectInviteCreateView(
 
     @override_settings(
         PROJECTROLES_ALLOW_LOCAL_USERS=False,
-        ENABLE_SAML=False,
         ENABLE_LDAP=True,
         LDAP_ALT_DOMAINS=['example.com'],
     )

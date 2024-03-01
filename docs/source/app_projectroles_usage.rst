@@ -25,8 +25,7 @@ Core based Django site.
 
 One can either log in using a local Django user or, if LDAP/AD is enabled, their
 LDAP/AD credentials from a supported site. In the latter case, the user domain
-must be appended to the user name in form of ``user@DOMAIN``. Single sign-on
-with SAML can also be made available.
+must be appended to the user name in form of ``user@DOMAIN``.
 
 .. figure:: _static/app_projectroles/sodar_login.png
     :align: center

@@ -40,7 +40,6 @@ CORE_SETTINGS = [
     'EMAIL_SENDER',
     'ENABLE_LDAP',
     'ENABLE_LDAP_SECONDARY',
-    'ENABLE_SAML',
     'ENABLED_BACKEND_PLUGINS',
     'ICONIFY_JSON_ROOT',
     'INSTALLED_APPS',
@@ -194,5 +193,5 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
 
         # Core settings
         context['settings_core'] = self._get_settings(CORE_SETTINGS)
-        # TODO: Add LDAP/SAML settings?
+        # TODO: Add LDAP settings?
         return context
