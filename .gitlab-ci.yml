@@ -1,7 +1,7 @@
 image: python:3.8
 
 services:
-  - postgres:11
+  - postgres:16
 
 variables:
   POSTGRES_DB: sodar_core
