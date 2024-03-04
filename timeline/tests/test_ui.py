@@ -1,4 +1,5 @@
 """UI tests for the timeline app"""
+
 import json
 
 from django.urls import reverse

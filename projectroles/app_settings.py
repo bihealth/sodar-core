@@ -454,26 +454,26 @@ class AppSettingAPI:
         for plugin in app_plugins:
             p_settings = cls.get_definitions(scope, plugin=plugin)
             for s_key in p_settings:
-                ret[
-                    'settings.{}.{}'.format(plugin.name, s_key)
-                ] = cls.get_default(
-                    plugin.name,
+                ret['settings.{}.{}'.format(plugin.name, s_key)] = (
+                    cls.get_default(
+                        plugin.name,
+                        s_key,
+                        project=project,
+                        user=user,
+                        post_safe=post_safe,
+                    )
+                )
+
+        p_settings = cls.get_definitions(scope, app_name='projectroles')
+        for s_key in p_settings:
+            ret['settings.{}.{}'.format('projectroles', s_key)] = (
+                cls.get_default(
+                    'projectroles',
                     s_key,
                     project=project,
                     user=user,
                     post_safe=post_safe,
                 )
-
-        p_settings = cls.get_definitions(scope, app_name='projectroles')
-        for s_key in p_settings:
-            ret[
-                'settings.{}.{}'.format('projectroles', s_key)
-            ] = cls.get_default(
-                'projectroles',
-                s_key,
-                project=project,
-                user=user,
-                post_safe=post_safe,
             )
         return ret
 

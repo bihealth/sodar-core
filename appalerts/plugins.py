@@ -1,6 +1,5 @@
 """Plugins for the appalerts app"""
 
-
 # Projectroles dependency
 from projectroles.plugins import SiteAppPluginPoint, BackendPluginPoint
 

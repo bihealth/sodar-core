@@ -1,4 +1,5 @@
 """Tests for UI views in the adminalerts app"""
+
 from django.urls import reverse
 from django.utils import timezone
 

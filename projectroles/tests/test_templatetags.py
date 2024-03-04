@@ -389,12 +389,12 @@ class TestProjectrolesCommonTags(TestTemplateTagsBase):
         # TODO: Replace with get_app_plugin once implemented for backend plugins
         backend_plugin = get_active_plugins('backend')[0]
 
-        type(
-            backend_plugin
-        ).javascript_url = 'example_backend_app/js/NOT_EXISTING_JS.js'
-        type(
-            backend_plugin
-        ).css_url = 'example_backend_app/css/NOT_EXISTING_CSS.css'
+        type(backend_plugin).javascript_url = (
+            'example_backend_app/js/NOT_EXISTING_JS.js'
+        )
+        type(backend_plugin).css_url = (
+            'example_backend_app/css/NOT_EXISTING_CSS.css'
+        )
 
         self.assertEqual(
             c_tags.get_backend_include(backend_plugin.name, 'js'), ''
@@ -408,9 +408,9 @@ class TestProjectrolesCommonTags(TestTemplateTagsBase):
         # TODO: Replace with get_app_plugin once implemented for backend plugins
         backend_plugin = get_active_plugins('backend')[0]
 
-        type(
-            backend_plugin
-        ).javascript_url = 'example_backend_app/js/greeting.js'
+        type(backend_plugin).javascript_url = (
+            'example_backend_app/js/greeting.js'
+        )
         type(backend_plugin).css_url = 'example_backend_app/css/greeting.css'
 
         self.assertEqual(

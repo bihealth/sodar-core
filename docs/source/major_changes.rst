@@ -17,7 +17,8 @@ Release Highlights
 ==================
 
 - Upgrade to Django v4.2 and Postgres v16
-- Add Python 3.11 support
+- Add Python v3.11 support
+- Remove Python v3.8 support
 - Remove SAML SSO support
 
 Breaking Changes
@@ -49,13 +50,20 @@ Common known issues:
 System Prerequisites
 --------------------
 
-The minimum required PostgreSQL version has been bumped to v12. In CI we
-currently use PostgreSQL v16, but anything from v12 to above should work with
-this SODAR Core release. It is strongly recommended to make backups of your
-production databases before upgrading.
-
-Python v3.11 support has been officially added in this version. 3.11 is now also
-the recommended Python version to use.
+PostgreSQL
+    The minimum required PostgreSQL version has been bumped to v12. In CI we
+    currently use PostgreSQL v16, but anything from v12 to above should work
+    with this SODAR Core release. It is strongly recommended to make backups of
+    your production databases before upgrading.
+Python v3.11 Support Added
+    Python v3.11 support has been officially added in this version. 3.11 is now
+    also the recommended Python version to use.
+Python v3.8 Support Dropped
+    This release no longer supports Python v3.8.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project.
 
 SAML SSO Support Removed
 ------------------------

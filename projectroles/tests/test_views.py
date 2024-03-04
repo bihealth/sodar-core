@@ -910,12 +910,12 @@ class TestProjectUpdateView(
         ps['settings.example_project_app.project_str_setting'] = 'test'
         ps['settings.example_project_app.project_bool_setting'] = True
         ps['settings.example_project_app.project_json_setting'] = '{}'
-        ps[
-            'settings.example_project_app.project_callable_setting'
-        ] = 'No project or user for callable'
-        ps[
-            'settings.example_project_app.project_callable_setting_options'
-        ] = str(project.sodar_uuid)
+        ps['settings.example_project_app.project_callable_setting'] = (
+            'No project or user for callable'
+        )
+        ps['settings.example_project_app.project_callable_setting_options'] = (
+            str(project.sodar_uuid)
+        )
         ps['settings.projectroles.ip_restrict'] = True
         ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         return ps
@@ -1161,9 +1161,9 @@ class TestProjectUpdateView(
         values.update(
             app_settings.get_all(project=self.project, post_safe=True)
         )
-        values[
-            'settings.example_project_app.project_str_setting'
-        ] = INVALID_SETTING_VALUE
+        values['settings.example_project_app.project_str_setting'] = (
+            INVALID_SETTING_VALUE
+        )
         with self.login(self.user):
             response = self.client.post(self.url, values)
         self.assertEqual(response.status_code, 200)
@@ -1372,13 +1372,13 @@ class TestProjectUpdateView(
         values['settings.example_project_app.project_int_setting'] = 0
         values['settings.example_project_app.project_int_setting_options'] = 0
         values['settings.example_project_app.project_str_setting'] = 'test'
-        values[
-            'settings.example_project_app.project_str_setting_options'
-        ] = 'string1'
+        values['settings.example_project_app.project_str_setting_options'] = (
+            'string1'
+        )
         values['settings.example_project_app.project_bool_setting'] = True
-        values[
-            'settings.example_project_app.project_callable_setting'
-        ] = 'No project or user for callable'
+        values['settings.example_project_app.project_callable_setting'] = (
+            'No project or user for callable'
+        )
         values[
             'settings.example_project_app.project_callable_setting_options'
         ] = str(self.project.sodar_uuid)

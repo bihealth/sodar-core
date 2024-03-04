@@ -7,7 +7,6 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - '3.8'
           - '3.9'
           - '3.10'
           - '3.11'
@@ -45,7 +44,7 @@ jobs:
         run: git fetch --prune --unshallow
       - name: Install project Python dependencies
         run: |
-          pip install "wheel>=0.40.0, <0.41"
+          pip install "wheel>=0.42.0, <0.43"
           pip install -r requirements/local.txt
           pip install -r requirements/test.txt
       - name: Download icons

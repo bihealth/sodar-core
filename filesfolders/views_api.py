@@ -97,9 +97,11 @@ class RetrieveUpdateDestroyAPITimelineMixin(FilesfoldersTimelineMixin):
             tl_event.add_object(
                 obj=instance,
                 label=obj_type,
-                name=instance.get_path()
-                if isinstance(instance, Folder)
-                else instance.name,
+                name=(
+                    instance.get_path()
+                    if isinstance(instance, Folder)
+                    else instance.name
+                ),
             )
 
 

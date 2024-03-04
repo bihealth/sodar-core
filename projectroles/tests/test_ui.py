@@ -124,7 +124,7 @@ class TestUIBase(
         options = webdriver.ChromeOptions()
         for arg in self.chrome_options:
             options.add_argument(arg)
-        self.selenium = webdriver.Chrome(chrome_options=options)
+        self.selenium = webdriver.Chrome(options=options)
         # Prevent ElementNotVisibleException
         self.selenium.set_window_size(self.window_size[0], self.window_size[1])
 

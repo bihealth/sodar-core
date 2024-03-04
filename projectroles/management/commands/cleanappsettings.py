@@ -28,9 +28,11 @@ def get_setting_str(db_setting):
     return '.'.join(
         [
             'settings',
-            'projectroles'
-            if db_setting.app_plugin is None
-            else db_setting.app_plugin.name,
+            (
+                'projectroles'
+                if db_setting.app_plugin is None
+                else db_setting.app_plugin.name
+            ),
             db_setting.name,
         ]
     )

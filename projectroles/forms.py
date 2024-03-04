@@ -407,9 +407,11 @@ class ProjectForm(SODARModelForm):
                     values = s_val['options'](project=self.instance)
                     self.fields[s_field] = forms.ChoiceField(
                         choices=[
-                            (str(value[0]), str(value[1]))
-                            if isinstance(value, tuple)
-                            else (str(value), str(value))
+                            (
+                                (str(value[0]), str(value[1]))
+                                if isinstance(value, tuple)
+                                else (str(value), str(value))
+                            )
                             for value in values
                         ],
                         **setting_kwargs
@@ -418,9 +420,11 @@ class ProjectForm(SODARModelForm):
                     values = s_val['options'](project=None)
                     self.fields[s_field] = forms.ChoiceField(
                         choices=[
-                            (str(value[0]), str(value[1]))
-                            if isinstance(value, tuple)
-                            else (str(value), str(value))
+                            (
+                                (str(value[0]), str(value[1]))
+                                if isinstance(value, tuple)
+                                else (str(value), str(value))
+                            )
                             for value in values
                         ],
                         **setting_kwargs
@@ -428,9 +432,11 @@ class ProjectForm(SODARModelForm):
                 else:
                     self.fields[s_field] = forms.ChoiceField(
                         choices=[
-                            (int(option), int(option))
-                            if s_val['type'] == 'INTEGER'
-                            else (option, option)
+                            (
+                                (int(option), int(option))
+                                if s_val['type'] == 'INTEGER'
+                                else (option, option)
+                            )
                             for option in s_val['options']
                         ],
                         **setting_kwargs
@@ -662,9 +668,9 @@ class ProjectForm(SODARModelForm):
                 self.initial['owner'] = parent_project.get_owner().user
             else:
                 self.initial['owner'] = self.current_user
-            self.fields[
-                'owner'
-            ].label_from_instance = lambda x: x.get_form_label(email=True)
+            self.fields['owner'].label_from_instance = (
+                lambda x: x.get_form_label(email=True)
+            )
             # Hide owner select widget for regular users
             if not self.current_user.is_superuser:
                 self.fields['owner'].widget = forms.HiddenInput()

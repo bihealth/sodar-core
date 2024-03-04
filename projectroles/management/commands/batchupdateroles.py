@@ -36,7 +36,7 @@ class MockRequest(HttpRequest):
     def mock_scheme(self, host):
         self.scheme = host.scheme
 
-    def scheme(self):
+    def scheme(self):  # noqa
         return self.scheme
 
 

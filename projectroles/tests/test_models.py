@@ -137,12 +137,14 @@ class ProjectInviteMixin:
             'role': role,
             'issuer': issuer,
             'message': message,
-            'date_expire': date_expire
-            if date_expire
-            else (
-                timezone.now()
-                + timezone.timedelta(
-                    days=settings.PROJECTROLES_INVITE_EXPIRY_DAYS
+            'date_expire': (
+                date_expire
+                if date_expire
+                else (
+                    timezone.now()
+                    + timezone.timedelta(
+                        days=settings.PROJECTROLES_INVITE_EXPIRY_DAYS
+                    )
                 )
             ),
             'secret': secret or SECRET,
@@ -171,9 +173,11 @@ class AppSettingMixin:
     ):
         """Make and save a AppSetting"""
         values = {
-            'app_plugin': None
-            if app_name == 'projectroles'
-            else get_app_plugin(app_name).get_model(),
+            'app_plugin': (
+                None
+                if app_name == 'projectroles'
+                else get_app_plugin(app_name).get_model()
+            ),
             'project': project,
             'name': name,
             'type': setting_type,
@@ -231,9 +235,11 @@ class RemoteProjectMixin:
             'site': site,
             'level': level,
             'date_access': date_access,
-            'project': project
-            if project
-            else Project.objects.filter(sodar_uuid=project_uuid).first(),
+            'project': (
+                project
+                if project
+                else Project.objects.filter(sodar_uuid=project_uuid).first()
+            ),
         }
         remote_project = RemoteProject(**values)
         remote_project.save()

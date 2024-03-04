@@ -105,9 +105,9 @@ class RemoteProjectAPI:
             cat_data = {
                 'title': category.title,
                 'type': PROJECT_TYPE_CATEGORY,
-                'parent_uuid': str(category.parent.sodar_uuid)
-                if category.parent
-                else None,
+                'parent_uuid': (
+                    str(category.parent.sodar_uuid) if category.parent else None
+                ),
                 'description': category.description,
                 'readme': category.readme.raw,
             }
@@ -192,15 +192,17 @@ class RemoteProjectAPI:
             'type': app_setting.type,
             'value': app_setting.value,
             'value_json': app_setting.value_json,
-            'app_plugin': app_setting.app_plugin.name
-            if app_setting.app_plugin
-            else None,
-            'project_uuid': str(app_setting.project.sodar_uuid)
-            if app_setting.project
-            else None,
-            'user_uuid': str(app_setting.user.sodar_uuid)
-            if app_setting.user
-            else None,
+            'app_plugin': (
+                app_setting.app_plugin.name if app_setting.app_plugin else None
+            ),
+            'project_uuid': (
+                str(app_setting.project.sodar_uuid)
+                if app_setting.project
+                else None
+            ),
+            'user_uuid': (
+                str(app_setting.user.sodar_uuid) if app_setting.user else None
+            ),
             'local': local,
         }
         if add_user_name:
@@ -260,9 +262,11 @@ class RemoteProjectAPI:
                     logger.error(
                         'Failed to add app setting "{}.settings.{}" '
                         '(UUID={}): {} '.format(
-                            a.app_plugin.name
-                            if a.app_plugin
-                            else 'projectroles',
+                            (
+                                a.app_plugin.name
+                                if a.app_plugin
+                                else 'projectroles'
+                            ),
                             a.name,
                             a.sodar_uuid,
                             ex,
@@ -1236,9 +1240,11 @@ class RemoteProjectAPI:
             except Exception as ex:
                 logger.error(
                     'Failed to set app setting "{}.setting.{}" ({}): {}'.format(
-                        a_data['app_plugin']
-                        if a_data['app_plugin']
-                        else 'projectroles',
+                        (
+                            a_data['app_plugin']
+                            if a_data['app_plugin']
+                            else 'projectroles'
+                        ),
                         a_data['name'],
                         a_uuid,
                         ex,

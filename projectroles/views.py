@@ -3145,9 +3145,11 @@ class RemoteProjectBatchUpdateView(
                             'project': Project.objects.get(
                                 sodar_uuid=project_uuid
                             ),
-                            'old_level': REMOTE_LEVEL_NONE
-                            if not remote_obj
-                            else remote_obj.level,
+                            'old_level': (
+                                REMOTE_LEVEL_NONE
+                                if not remote_obj
+                                else remote_obj.level
+                            ),
                             'new_level': v,
                         }
                     )
@@ -3188,9 +3190,9 @@ class RemoteProjectBatchUpdateView(
             modifying_access.append(
                 {
                     'project': project.get_log_title(),
-                    'old_level': REMOTE_LEVEL_NONE
-                    if not old_level
-                    else old_level,
+                    'old_level': (
+                        REMOTE_LEVEL_NONE if not old_level else old_level
+                    ),
                     'new_level': v,
                 }
             )

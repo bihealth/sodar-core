@@ -1,4 +1,5 @@
 """Ajax API views for the timeline app"""
+
 import html
 
 from django.http import HttpResponseForbidden

@@ -40,9 +40,9 @@ class AdminAlertForm(SODARModelForm):
 
         # Creation
         if not self.instance.pk:
-            self.fields[
-                'date_expire'
-            ].initial = timezone.now() + timezone.timedelta(days=1)
+            self.fields['date_expire'].initial = (
+                timezone.now() + timezone.timedelta(days=1)
+            )
         # Updating
         else:  # self.instance.pk
             # Set description value as raw markdown

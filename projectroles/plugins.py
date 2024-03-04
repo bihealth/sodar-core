@@ -667,9 +667,11 @@ def get_active_plugins(plugin_type='project_app', custom_order=False):
         ]
         return sorted(
             ret,
-            key=lambda x: x.plugin_ordering
-            if custom_order and plugin_type == 'project_app'
-            else x.name,
+            key=lambda x: (
+                x.plugin_ordering
+                if custom_order and plugin_type == 'project_app'
+                else x.name
+            ),
         )
     return None
 

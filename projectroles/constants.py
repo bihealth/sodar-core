@@ -1,6 +1,5 @@
 """SODAR constants definition and helper functions"""
 
-
 # Global SODAR constants
 SODAR_CONSTANTS = {
     # Project roles

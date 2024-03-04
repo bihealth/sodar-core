@@ -21,12 +21,15 @@ Changed
     - Upgrade to Django v4.2 (#880)
     - Upgrade minimum PostgreSQL version to v12 (#1074)
     - Upgrade to PostgreSQL v16 in CI (#1074)
+    - Upgrade general Python dependencies (#1374)
+    - Reformat with ``black==24.2.0`` (#1374)
 
 Removed
 -------
 
 - **General**
     - SAML support (#1368)
+    - Python v3.8 support (#1382)
 
 
 v0.13.4 (2024-02-16)

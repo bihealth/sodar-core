@@ -212,9 +212,11 @@ class DeleteSuccessMixin(DeletionMixin):
             tl_event.add_object(
                 obj=self.object,
                 label=obj_type,
-                name=self.object.get_path()
-                if isinstance(self.object, Folder)
-                else self.object.name,
+                name=(
+                    self.object.get_path()
+                    if isinstance(self.object, Folder)
+                    else self.object.name
+                ),
             )
 
         messages.success(
@@ -843,12 +845,16 @@ class BatchEditView(
                     self.batch_action,
                     edit_count,
                     edit_suffix,
-                    '({} failed)'.format(len(self.failed))
-                    if len(self.failed) > 0
-                    else '',
-                    'to {target_folder}'
-                    if self.batch_action == 'move' and target_folder
-                    else '',
+                    (
+                        '({} failed)'.format(len(self.failed))
+                        if len(self.failed) > 0
+                        else ''
+                    ),
+                    (
+                        'to {target_folder}'
+                        if self.batch_action == 'move' and target_folder
+                        else ''
+                    ),
                 ),
                 extra_data=extra_data,
                 status_type='OK' if edit_count > 0 else 'FAILED',
