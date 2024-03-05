@@ -244,9 +244,6 @@ The following projectroles settings are **optional**:
     app views and URLs are still accessible via other links or knowing the URL.
     The names should correspond to the ``name`` property in project app plugins
     (list)
-``PROJECTROLES_HIDE_APP_LINKS``
-    **DEPRECATED**, use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead. This will be
-    removed in v1.0
 ``PROJECTROLES_DELEGATE_LIMIT``
     The number of delegate roles allowed per project. The amount is limited to 1
     per project if not set, unlimited if set to 0. Will be ignored for remote

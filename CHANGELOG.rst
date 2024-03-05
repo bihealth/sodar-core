@@ -32,6 +32,8 @@ Removed
 - **General**
     - SAML support (#1368)
     - Python v3.8 support (#1382)
+- **Projectroles**
+    - ``PROJECTROLES_HIDE_APP_LINKS`` setting (#1143)
 
 
 v0.13.4 (2024-02-16)

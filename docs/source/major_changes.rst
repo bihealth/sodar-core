@@ -76,6 +76,12 @@ needs to use SAML on a SODAR Core based site, we are happy to review pull
 requests to re-introduce it. Please note the implementation has to support
 Django v4.2+.
 
+PROJECTROLES_HIDE_APP_LINKS Removed
+-----------------------------------
+
+The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting, which was deprecated in
+v0.13, has been removed. Use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead.
+
 
 v0.13.4 (2024-02-16)
 ********************
