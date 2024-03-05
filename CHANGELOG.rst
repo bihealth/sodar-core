@@ -13,6 +13,8 @@ Added
 
 - **General**
     - Python v3.11 support (#1157)
+- **Projectroles**
+    - ``full_title`` field in ``ProjectSerializer`` and API views (#1314)
 
 Changed
 -------
