@@ -12,6 +12,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.plugins import get_active_plugins
+from projectroles.utils import SidebarContent
 
 
 register = template.Library()
@@ -285,3 +286,10 @@ def get_admin_warning():
         '</a></p>'.format(reverse('admin:index'))
     )
     return ret
+
+
+@register.simple_tag
+def get_sidebar_links(request, project):
+    """Return sidebar links"""
+    sidebar_content = SidebarContent()
+    return sidebar_content.get_sidebar_links(request, project)

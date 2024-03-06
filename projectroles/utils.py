@@ -1,12 +1,14 @@
 import random
 import string
 
+from math import ceil
+
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
 from projectroles.constants import get_sodar_constants
-
+from projectroles.plugins import get_active_plugins
 
 # Settings
 SECRET_LENGTH = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
@@ -14,6 +16,10 @@ INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 
 # SODAR constants
 SODAR_CONSTANTS = get_sodar_constants()
+
+# Local constants
+SIDEBAR_ICON_MIN_SIZE = 18
+SIDEBAR_ICON_MAX_SIZE = 42
 
 
 def get_display_name(key, title=False, count=1, plural=False):
@@ -95,3 +101,184 @@ def get_app_names():
             else:
                 ret.append(s[0])
     return sorted(ret)
+
+
+class SidebarContent:
+
+    def _is_app_visible(self, plugin, project, user):
+        """Check if app should be visible for user in a specific project"""
+        can_view_app = user.has_perm(plugin.app_permission, project)
+        app_hidden = False
+        if plugin.name in getattr(
+            settings, 'PROJECTROLES_HIDE_PROJECT_APPS', []
+        ):
+            app_hidden = True
+        if (
+            can_view_app
+            and not app_hidden
+            and (
+                project.type == SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+                or plugin.category_enable
+            )
+        ):
+            return True
+        return False
+
+    def _allow_project_creation(self):
+        """Check whether creating a project is allowed on the site"""
+        if (
+            settings.PROJECTROLES_SITE_MODE
+            == SODAR_CONSTANTS['SITE_MODE_TARGET']
+            and not settings.PROJECTROLES_TARGET_CREATE
+        ):
+            return False
+        return True
+
+    def get_sidebar_links(self, request, project=None):
+        """
+        Return sidebar links based on the current project and user.
+
+        :param request: HTTP request object
+        :param project: Project object (optional)
+        :return: List of sidebar link dictionaries
+        """
+        links = []
+        # Add project related links
+        if project:
+            # Add project overview link
+            links.append(
+                {
+                    'name': 'project-detail',
+                    'url': reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    'label': 'Project<br />Overview',
+                    'icon': (
+                        'mdi:rhombus-split'
+                        if project.type
+                        == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+                        else 'mdi:cube'
+                    ),
+                    'active': request.path
+                    == reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                }
+            )
+            # Add app plugins links
+            app_plugins = get_active_plugins()
+            for plugin in app_plugins:
+                if self._is_app_visible(plugin, project, request.user):
+                    links.append(
+                        {
+                            'name': plugin.name,
+                            'url': reverse(
+                                plugin.entry_point_url_id,
+                                kwargs={'project': project.sodar_uuid},
+                            ),
+                            'label': '<br />'.join(plugin.title.split(' ')),
+                            'icon': plugin.icon,
+                            'active': request.path
+                            == reverse(
+                                plugin.entry_point_url_id,
+                                kwargs={'project': project.sodar_uuid},
+                            ),
+                        }
+                    )
+            # Add role editing link
+            if request.user.has_perm(
+                'projectroles.view_project_roles', project
+            ):
+                links.append(
+                    {
+                        'name': 'project-roles',
+                        'url': reverse(
+                            'projectroles:roles',
+                            kwargs={'project': project.sodar_uuid},
+                        ),
+                        'label': 'Members',
+                        'icon': 'mdi:account-multiple',
+                        'active': request.path
+                        == reverse(
+                            'projectroles:roles',
+                            kwargs={'project': project.sodar_uuid},
+                        ),
+                    }
+                )
+            # Add project update link
+            if request.user.has_perm('projectroles.update_project', project):
+                links.append(
+                    {
+                        'name': 'project-update',
+                        'url': reverse(
+                            'projectroles:update',
+                            kwargs={'project': project.sodar_uuid},
+                        ),
+                        'label': 'Update<br />Project',
+                        'icon': 'mdi:lead-pencil',
+                        'active': request.path
+                        == reverse(
+                            'projectroles:update',
+                            kwargs={'project': project.sodar_uuid},
+                        ),
+                    }
+                )
+
+        # Add project and category creation links
+        if (
+            project
+            and project.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+            and request.user.has_perm('projectroles.create_project', project)
+            and self._allow_project_creation()
+            and not project.is_remote()
+        ):
+            links.append(
+                {
+                    'name': 'project-create',
+                    'url': reverse(
+                        'projectroles:create',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    'label': 'Create<br />Project or<br />Category',
+                    'icon': 'mdi:plus-thick',
+                    'active': request.path
+                    == reverse(
+                        'projectroles:create',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                }
+            )
+        elif (
+            getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
+            and request.user.is_superuser()
+        ):
+            links.append(
+                {
+                    'name': 'project-create',
+                    'url': reverse('projectroles:create'),
+                    'label': 'Create<br />Project',
+                    'icon': 'mdi:plus-thick',
+                    'active': request.path == reverse('projectroles:create'),
+                }
+            )
+        elif (
+            (
+                request.resolver_match.url_name == 'home'
+                or request.resolver_match.app_name == 'projectroles'
+                and not project
+            )
+            and request.user.has_perm('projectroles.create_project')
+            and self._allow_project_creation()
+        ):
+            links.append(
+                {
+                    'name': 'project-create',
+                    'url': reverse('projectroles:create'),
+                    'label': 'Create<br />Category',
+                    'icon': 'mdi:plus-thick',
+                    'active': request.path == reverse('projectroles:create'),
+                }
+            )
+        return links

@@ -1,146 +1,20 @@
-{% load rules %}
 {% load projectroles_tags %}
-{% load projectroles_common_tags %}
-
-{% sodar_constant 'PROJECT_TYPE_PROJECT' as PROJECT_TYPE_PROJECT %}
-{% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
-{% allow_project_creation as allow_creation %}
-{% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
-{% get_display_name 'PROJECT' title=True as project_display %}
-{% get_display_name 'CATEGORY' title=True as category_display %}
 
 {# Project nav #}
-
-{% if project %}
-  {% has_perm 'projectroles.view_project' request.user project as can_view_project %}
-  {% has_perm 'projectroles.view_project_roles' request.user project as can_view_roles %}
-  {% has_perm 'projectroles.update_project' request.user project as can_update_project %}
-
-  {# Overview #}
-
-  <li id="sodar-pr-nav-project-detail"
-      class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'detail' %}">
-    <a class="nav-link sodar-pr-sidebar-nav-link"
-       href="{% url 'projectroles:detail' project=project.sodar_uuid %}"
-       id="sodar-pr-link-project-detail">
-      <span class="sodar-pr-sidebar-icon">
-        {% if project.type == PROJECT_TYPE_CATEGORY %}
-          <i class="iconify"
-             data-icon="mdi:rhombus-split"
-             data-height="{{ sidebar_icon_size }}"></i>
-        {% else %}
-          <i class="iconify"
-             data-icon="mdi:cube"
-             data-height="{{ sidebar_icon_size }}"></i>
-        {% endif %}
-      </span>
-      <br />{% get_display_name project.type title=True %}<br />Overview
-    </a>
-  </li>
-
-  {# App plugins #}
-  {% for plugin in app_plugins %}
-    {% is_app_visible plugin project request.user as app_link_visible %}
-    {% if app_link_visible %}
-      {% get_sidebar_app_legend plugin.title as app_legend %}
-      <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"
-          class="nav-item sodar-pr-sidebar-nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
-        <a class="nav-link"
-           href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
-           id="sodar-pr-link-app-plugin-{{ plugin.name }}">
-         <span class="sodar-pr-sidebar-icon">
-           <i class="iconify"
-              data-icon="{{ plugin.icon }}"
-              data-height="{{ sidebar_icon_size }}"></i>
-         </span>
-         <br />{{ app_legend | safe }}
-        </a>
+{% get_sidebar_links request project as sidebar_links %}
+{% for link in sidebar_links %}
+      <li
+          id="sodar-pr-nav-app-plugin-{{ link.name }}"
+          class="nav-item sodar-pr-sidebar-nav-item {% if link.active %}active{% endif %}">
+          <a class="nav-link"
+              href="{{ link.url }}"
+              id="sodar-pr-link-app-plugin-{{ link.name }}">
+              <span class="sodar-pr-sidebar-icon">
+                  <i class="iconify"
+                      data-icon="{{ link.icon }}"
+                      data-height="{{ sidebar_icon_size }}"></i>
+              </span>
+              <br />{{ link.label | safe }}
+          </a>
       </li>
-    {% endif %}
-  {% endfor %}
-
-  {# Role and project editing #}
-  {% if can_view_roles %}
-    <li id="sodar-pr-nav-project-roles"
-        class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request role_urls %}">
-      <a class="nav-link"
-         href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
-         id="sodar-pr-link-project-roles">
-        <span class="sodar-pr-sidebar-icon">
-          <i class="iconify"
-             data-icon="mdi:account-multiple"
-             data-height="{{ sidebar_icon_size }}"></i>
-          <br />Members
-        </span>
-      </a>
-    </li>
-  {% endif %}
-  {% if can_update_project %}
-    <li id="sodar-pr-nav-project-update"
-        class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'update' %}">
-      <a class="nav-link"
-         href="{% url 'projectroles:update' project=project.sodar_uuid %}"
-         id="sodar-pr-link-project-update">
-        <span class="sodar-pr-sidebar-icon">
-          <i class="iconify"
-             data-icon="mdi:lead-pencil"
-             data-height="{{ sidebar_icon_size }}"></i>
-          <br />Update<br />{% get_display_name project.type title=True %}
-        </span>
-      </a>
-    </li>
-  {% endif %}
-
-{% endif %}
-
-{# Project and Category Creation #}
-{% if project and project.type == 'CATEGORY' %}
-  {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
-  {% if allow_creation and can_create_project and not project.is_remote %}
-    <li id="sodar-pr-nav-project-create"
-        class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
-      <a class="nav-link"
-         href="{% url 'projectroles:create' project=project.sodar_uuid %}"
-         id="sodar-pr-link-project-create">
-        <span class="sodar-pr-sidebar-icon">
-          <i class="iconify"
-             data-icon="mdi:plus-thick"
-             data-height="{{ sidebar_icon_size }}"></i>
-        </span>
-        <br />Create<br />{{ project_display }} or<br />{{ category_display }}
-      </a>
-    </li>
-  {% endif %}
-{# Allow project creation under root #}
-{% elif disable_categories and request.user.is_superuser %}
-  <li id="sodar-pr-nav-project-create"
-      class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
-    <a class="nav-link"
-       href="{% url 'projectroles:create' %}"
-       id="sodar-pr-link-project-create">
-      <span class="sodar-pr-sidebar-icon">
-        <i class="iconify"
-           data-icon="mdi:plus-thick"
-           data-height="{{ sidebar_icon_size }}"></i>
-      </span>
-      <br />Create<br />{{ project_display }}
-    </a>
-  </li>
-{% elif request.resolver_match.url_name == 'home' or request.resolver_match.app_name == 'projectroles' and not project %}
-  {% has_perm 'projectroles.create_project' request.user as can_create_project %}
-  {% if allow_creation and can_create_project %}
-    <li id="sodar-pr-nav-project-create"
-        class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
-      <a class="nav-link"
-         href="{% url 'projectroles:create' %}"
-         id="sodar-pr-home-link-create">
-        <span class="sodar-pr-sidebar-icon">
-          <i class="iconify"
-             data-icon="mdi:plus-thick"
-             data-height="{{ sidebar_icon_size }}"></i>
-        </span>
-        <br />Create<br />{{ category_display }}
-      </a>
-    </li>
-  {% endif %}
-{% endif %}
+{% endfor %}
