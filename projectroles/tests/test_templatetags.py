@@ -618,3 +618,35 @@ class TestProjectrolesTags(TestTemplateTagsBase):
         self.assertEqual(
             tags.get_sidebar_app_legend('Update Project'), 'Update<br />Project'
         )
+
+    # def test_get_sidebar_links_homepage(self):
+    #     """Test get_sidebar_links()"""
+    #     req_factory = RequestFactory()
+    #     url = reverse('home')
+    #
+    #     with self.login(self.user):
+    #         request = req_factory.get(url)
+    #         print(request.__dict__)
+    #         self.assertEqual(
+    #             tags.get_sidebar_links(request, self.project),
+    #             [
+    #                 {
+    #                     'name': 'project-detail',
+    #                     'url': reverse(
+    #                         'projectroles:detail',
+    #                         kwargs={'project': self.project.sodar_uuid},
+    #                     ),
+    #                     'label': 'Project<br />Overview',
+    #                     'icon': (
+    #                         'mdi:rhombus-split'
+    #                         if self.project.type
+    #                         == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+    #                         else 'mdi:cube'
+    #                     ),
+    #                     'active': reverse(
+    #                         'projectroles:detail',
+    #                         kwargs={'project': self.project.sodar_uuid},
+    #                     ),
+    #                 }
+    #             ],
+    #         )
