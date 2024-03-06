@@ -593,10 +593,6 @@ class ProjectDetailView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        from projectroles.utils import SidebarContent
-
-        sc = SidebarContent()
-        sc.get_sidebar_links(self.request, project=context['project'])
         if self.request.user.is_superuser:
             context['role'] = None
         elif self.request.user.is_authenticated:
