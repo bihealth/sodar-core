@@ -621,7 +621,6 @@ class TestProjectrolesTags(TestTemplateTagsBase):
 
     def test_get_sidebar_links_homepage(self):
         """Test get_sidebar_links() on the homepage"""
-        self.maxDiff = None
         url = reverse('home')
         req_factory = RequestFactory()
         with self.login(self.user):
