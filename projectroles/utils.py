@@ -306,6 +306,7 @@ class UserDropdownContent:
     """Class to generate user dropdown content"""
 
     def get_user_links(self, request):
+        """Return user links for the user dropdown"""
         links = []
         # Add site-wide apps links
         site_apps = get_active_plugins('site_app')
@@ -334,7 +335,7 @@ class UserDropdownContent:
                     'active': request.path == reverse('admin:index'),
                 }
             )
-        # Add log out link
+        # Add log out / sign in link
         if request.user.is_authenticated:
             links.append(
                 {
@@ -355,5 +356,4 @@ class UserDropdownContent:
                     'active': False,
                 }
             )
-        print(links)
         return links
