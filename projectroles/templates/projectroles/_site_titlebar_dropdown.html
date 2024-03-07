@@ -44,6 +44,9 @@
 
     {% get_user_links request as dropdown_links %}
     {% for link in dropdown_links %}
+      {% if link.name == 'admin' or link.name == 'sign-out' or link.name == 'sign-in' %}
+        <div class="dropdown-divider"></div>
+      {% endif %}
       <a class="dropdown-item {% if link.active %}active{% endif %}
                 {% if link.name == 'sign-out' %}text-danger{% endif %}
                 {% if link.name == 'sign-in' %}text-primary{% endif %}"
