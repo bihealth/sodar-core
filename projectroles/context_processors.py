@@ -6,6 +6,7 @@ from django.conf import settings
 
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.urls import urlpatterns
+from projectroles.utils import ROLE_URLS
 
 
 SIDEBAR_ICON_MIN_SIZE = 18
@@ -14,18 +15,10 @@ SIDEBAR_ICON_MAX_SIZE = 42
 
 def urls_processor(request):
     """Context processor for providing projectroles URLs for the sidebar"""
+    pass
     return {
         'projectroles_urls': urlpatterns,
-        'role_urls': [
-            'roles',
-            'role_create',
-            'role_update',
-            'role_delete',
-            'invites',
-            'invite_create',
-            'invite_resend',
-            'invite_revoke',
-        ],
+        'role_urls': ROLE_URLS,
     }
 
 

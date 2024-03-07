@@ -20,6 +20,16 @@ SODAR_CONSTANTS = get_sodar_constants()
 # Local constants
 SIDEBAR_ICON_MIN_SIZE = 18
 SIDEBAR_ICON_MAX_SIZE = 42
+ROLE_URLS = [
+    'roles',
+    'role_create',
+    'role_update',
+    'role_delete',
+    'invites',
+    'invite_create',
+    'invite_resend',
+    'invite_revoke',
+]
 
 
 def get_display_name(key, title=False, count=1, plural=False):
@@ -104,9 +114,44 @@ def get_app_names():
 
 
 class SidebarContent:
+    """Class for generating sidebar content for the site"""
+
+    def _is_active(self, request, link_names=None):
+        """Check if current URL is active in the sidebar."""
+        # HACK: Avoid circular import
+        from projectroles.urls import urlpatterns
+
+        if request.resolver_match.app_name != 'projectroles':
+            return False
+        url_name = request.resolver_match.url_name
+        if url_name in [u.name for u in urlpatterns]:
+            if link_names:
+                if not isinstance(link_names, list):
+                    link_names = [link_names]
+                if url_name not in link_names:
+                    return False
+            return True
+        return False
+
+    def _is_active_plugin(self, app_plugin, app_name, url_name):
+        """
+        Check if current URL is active in the sidebar for a specific app plugin.
+        """
+        if app_plugin.name.startswith(app_name) and url_name in [
+            u.name for u in getattr(app_plugin, 'urls', [])
+        ]:
+            return True
+        # HACK for remote site views, see issue #1336
+        if (
+            app_name == 'projectroles'
+            and app_plugin.name == 'remotesites'
+            and url_name.startswith('remote_')
+        ):
+            return True
+        return False
 
     def _is_app_visible(self, plugin, project, user):
-        """Check if app should be visible for user in a specific project"""
+        """Check if app should be visible for user in a specific project."""
         can_view_app = user.has_perm(plugin.app_permission, project)
         app_hidden = False
         if plugin.name in getattr(
@@ -125,7 +170,7 @@ class SidebarContent:
         return False
 
     def _allow_project_creation(self):
-        """Check whether creating a project is allowed on the site"""
+        """Check whether creating a project is allowed on the site."""
         if (
             settings.PROJECTROLES_SITE_MODE
             == SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -135,13 +180,7 @@ class SidebarContent:
         return True
 
     def get_sidebar_links(self, request, project=None):
-        """
-        Return sidebar links based on the current project and user.
-
-        :param request: HTTP request object
-        :param project: Project object (optional)
-        :return: List of sidebar link dictionaries
-        """
+        """Return sidebar links based on the current project and user."""
         links = []
         # Add project related links
         if project:
@@ -160,11 +199,7 @@ class SidebarContent:
                         == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
                         else 'mdi:cube'
                     ),
-                    'active': request.path
-                    == reverse(
-                        'projectroles:detail',
-                        kwargs={'project': project.sodar_uuid},
-                    ),
+                    'active': self._is_active(request, 'detail'),
                 }
             )
             # Add app plugins links
@@ -180,10 +215,10 @@ class SidebarContent:
                             ),
                             'label': '<br />'.join(plugin.title.split(' ')),
                             'icon': plugin.icon,
-                            'active': request.path
-                            == reverse(
-                                plugin.entry_point_url_id,
-                                kwargs={'project': project.sodar_uuid},
+                            'active': self._is_active_plugin(
+                                plugin,
+                                request.resolver_match.app_name,
+                                request.resolver_match.url_name,
                             ),
                         }
                     )
@@ -200,11 +235,7 @@ class SidebarContent:
                         ),
                         'label': 'Members',
                         'icon': 'mdi:account-multiple',
-                        'active': request.path
-                        == reverse(
-                            'projectroles:roles',
-                            kwargs={'project': project.sodar_uuid},
-                        ),
+                        'active': self._is_active(request, ROLE_URLS),
                     }
                 )
             # Add project update link
@@ -218,11 +249,7 @@ class SidebarContent:
                         ),
                         'label': 'Update<br />Project',
                         'icon': 'mdi:lead-pencil',
-                        'active': request.path
-                        == reverse(
-                            'projectroles:update',
-                            kwargs={'project': project.sodar_uuid},
-                        ),
+                        'active': self._is_active(request, 'update'),
                     }
                 )
 
@@ -243,11 +270,7 @@ class SidebarContent:
                     ),
                     'label': 'Create<br />Project or<br />Category',
                     'icon': 'mdi:plus-thick',
-                    'active': request.path
-                    == reverse(
-                        'projectroles:create',
-                        kwargs={'project': project.sodar_uuid},
-                    ),
+                    'active': self._is_active(request, 'create'),
                 }
             )
         elif (
@@ -260,7 +283,7 @@ class SidebarContent:
                     'url': reverse('projectroles:create'),
                     'label': 'Create<br />Project',
                     'icon': 'mdi:plus-thick',
-                    'active': request.path == reverse('projectroles:create'),
+                    'active': self._is_active(request, 'create'),
                 }
             )
         elif (
@@ -278,7 +301,7 @@ class SidebarContent:
                     'url': reverse('projectroles:create'),
                     'label': 'Create<br />Category',
                     'icon': 'mdi:plus-thick',
-                    'active': request.path == reverse('projectroles:create'),
+                    'active': self._is_active(request, 'create'),
                 }
             )
         return links
