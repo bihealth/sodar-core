@@ -624,6 +624,7 @@ class TestProjectrolesTags(TestTemplateTagsBase):
         url = reverse('home')
         with self.login(self.user):
             response = self.client.get(url)
+            assert response
             # self.assertEqual(
             #     tags.get_sidebar_links(response.request, self.project),
             #     [

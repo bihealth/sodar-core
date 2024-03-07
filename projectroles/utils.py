@@ -1,8 +1,6 @@
 import random
 import string
 
-from math import ceil
-
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
