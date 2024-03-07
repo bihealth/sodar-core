@@ -677,10 +677,10 @@ class TestHomeView(TestUIBase):
             self.user_no_roles,
         ]
         self.assert_element_exists(
-            expected_true, self.url, 'sodar-pr-home-link-create', True
+            expected_true, self.url, 'sodar-pr-link-home-project-create', True
         )
         self.assert_element_exists(
-            expected_false, self.url, 'sodar-pr-home-link-create', False
+            expected_false, self.url, 'sodar-pr-link-home-project-create', False
         )
 
     @override_settings(PROJECTROLES_INLINE_HEAD_INCLUDE=HEAD_INCLUDE)

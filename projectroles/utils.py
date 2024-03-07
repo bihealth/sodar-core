@@ -297,7 +297,7 @@ class SidebarContent:
         ):
             links.append(
                 {
-                    'name': 'project-create',
+                    'name': 'home-project-create',
                     'url': reverse('projectroles:create'),
                     'label': 'Create<br />Category',
                     'icon': 'mdi:plus-thick',
