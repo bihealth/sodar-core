@@ -174,7 +174,7 @@ class AppLinkContent:
             return False
         return True
 
-    def get_sidebar_links(self, request, project=None):
+    def get_app_links(self, request, project=None):
         """Return sidebar links based on the current project and user."""
         ret = []
         # Add project related links

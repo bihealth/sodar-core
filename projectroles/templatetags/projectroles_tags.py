@@ -278,4 +278,4 @@ def get_admin_warning():
 def get_sidebar_links(request, project=None):
     """Return sidebar links"""
     sidebar_content = AppLinkContent()
-    return sidebar_content.get_sidebar_links(request, project)
+    return sidebar_content.get_app_links(request, project)
