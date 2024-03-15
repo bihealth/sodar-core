@@ -26,6 +26,12 @@ Changed
     - Upgrade general Python dependencies (#1374)
     - Reformat with ``black==24.2.0`` (#1374)
 
+Fixed
+-----
+
+- **Projectroles**
+    - ``SODARUser.update_full_name()`` not working with existing name (#1371)
+
 Removed
 -------
 

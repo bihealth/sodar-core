@@ -20,6 +20,7 @@ def handle_ldap_login(sender, user, **kwargs):
     """Signal for LDAP login handling"""
     try:
         if hasattr(user, 'ldap_username'):
+            logger.debug('Updating LDAP user..')
             user.update_full_name()
             user.update_ldap_username()
     except Exception as ex:

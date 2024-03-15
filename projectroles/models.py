@@ -1344,11 +1344,19 @@ class SODARUser(AbstractUser):
         :return: String
         """
         # Save user name from first_name and last_name into name
-        if self.name in ['', None] and self.first_name != '':
-            self.name = self.first_name + (
+        full_name = ''
+        if self.first_name != '':
+            full_name = self.first_name + (
                 ' ' + self.last_name if self.last_name != '' else ''
             )
-        self.save()
+        if self.name != full_name:
+            self.name = full_name
+            self.save()
+            logger.info(
+                'Full name updated for user {}: {}'.format(
+                    self.username, self.name
+                )
+            )
         return self.name
 
     def update_ldap_username(self):

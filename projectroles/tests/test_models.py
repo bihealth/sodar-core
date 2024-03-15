@@ -1523,6 +1523,17 @@ class TestSODARUser(TestCase):
         self.user.update_full_name()
         self.assertEqual(self.user.name, 'Full Name')
 
+    def test_update_full_name_non_empty(self):
+        """Test update_full_name() with previously non-empty name"""
+        self.user.first_name = 'Old'
+        self.user.last_name = 'Placeholder'
+        self.user.update_full_name()
+        self.assertEqual(self.user.name, 'Old Placeholder')
+        self.user.first_name = 'Full'
+        self.user.last_name = 'Name'
+        self.user.update_full_name()
+        self.assertEqual(self.user.name, 'Full Name')
+
     def test_update_ldap_username(self):
         """Test update_ldap_username()"""
         self.user.username = 'user@example'
