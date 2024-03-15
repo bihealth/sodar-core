@@ -619,9 +619,24 @@ class TestProjectrolesTags(TestTemplateTagsBase):
             tags.get_sidebar_app_legend('Update Project'), 'Update<br />Project'
         )
 
-    def test_get_sidebar_links_homepage(self):
-        """Test get_sidebar_links() on the homepage"""
+    def test_get_sidebar_links_home_view(self):
+        """Test get_sidebar_links() on the home view"""
         url = reverse('home')
+        req_factory = RequestFactory()
+        with self.login(self.user):
+            request = req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            self.assertEqual(
+                tags.get_sidebar_links(request),
+                [],
+            )
+
+    def test_get_sidebar_links_project_view(self):
+        """Test get_sidebar_links() on the project view"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
         req_factory = RequestFactory()
         with self.login(self.user):
             request = req_factory.get(url)
@@ -631,62 +646,183 @@ class TestProjectrolesTags(TestTemplateTagsBase):
                 tags.get_sidebar_links(request, self.project),
                 [
                     {
-                        'active': False,
-                        'icon': 'mdi:cube',
-                        'label': 'Project<br />Overview',
                         'name': 'project-detail',
-                        'url': reverse(
-                            'projectroles:detail',
-                            kwargs={'project': self.project.sodar_uuid},
-                        ),
+                        'url': f'/project/{self.project.sodar_uuid}',
+                        'label': 'Project Overview',
+                        'icon': 'mdi:cube',
+                        'active': True,
                     },
                     {
-                        'active': False,
-                        'icon': 'mdi:server',
-                        'label': 'Background<br />Jobs',
                         'name': 'app-plugin-bgjobs',
                         'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                        'label': 'Background Jobs',
+                        'icon': 'mdi:server',
+                        'active': False,
                     },
                     {
-                        'active': False,
-                        'icon': 'mdi:rocket-launch',
-                        'label': 'Example<br />Project<br />App',
                         'name': 'app-plugin-example_project_app',
                         'url': f'/examples/project/{self.project.sodar_uuid}',
+                        'label': 'Example Project App',
+                        'icon': 'mdi:rocket-launch',
+                        'active': False,
                     },
                     {
-                        'active': False,
-                        'icon': 'mdi:file',
-                        'label': 'Files',
                         'name': 'app-plugin-filesfolders',
                         'url': f'/files/{self.project.sodar_uuid}',
+                        'label': 'Files',
+                        'icon': 'mdi:file',
+                        'active': False,
                     },
                     {
-                        'active': False,
-                        'icon': 'mdi:clock-time-eight',
-                        'label': 'Timeline',
                         'name': 'app-plugin-timeline',
                         'url': f'/timeline/{self.project.sodar_uuid}',
+                        'label': 'Timeline',
+                        'icon': 'mdi:clock-time-eight',
+                        'active': False,
                     },
                     {
-                        'active': False,
-                        'icon': 'mdi:account-multiple',
-                        'label': 'Members',
                         'name': 'project-roles',
-                        'url': reverse(
-                            'projectroles:roles',
-                            kwargs={'project': self.project.sodar_uuid},
-                        ),
+                        'url': f'/project/members/{self.project.sodar_uuid}',
+                        'label': 'Members',
+                        'icon': 'mdi:account-multiple',
+                        'active': False,
                     },
                     {
-                        'active': False,
-                        'icon': 'mdi:lead-pencil',
-                        'label': 'Update<br />Project',
                         'name': 'project-update',
-                        'url': reverse(
-                            'projectroles:update',
-                            kwargs={'project': self.project.sodar_uuid},
-                        ),
+                        'url': f'/project/project/update/{self.project.sodar_uuid}',
+                        'label': 'Update Project',
+                        'icon': 'mdi:lead-pencil',
+                        'active': False,
+                    },
+                ],
+            )
+
+    def test_get_sidebar_links_role_view(self):
+        """Test get_sidebar_links() on the role view"""
+        url = reverse(
+            'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
+        )
+        req_factory = RequestFactory()
+        with self.login(self.user):
+            request = req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            self.assertEqual(
+                tags.get_sidebar_links(request, self.project),
+                [
+                    {
+                        'name': 'project-detail',
+                        'url': f'/project/{self.project.sodar_uuid}',
+                        'label': 'Project Overview',
+                        'icon': 'mdi:cube',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-bgjobs',
+                        'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                        'label': 'Background Jobs',
+                        'icon': 'mdi:server',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-example_project_app',
+                        'url': f'/examples/project/{self.project.sodar_uuid}',
+                        'label': 'Example Project App',
+                        'icon': 'mdi:rocket-launch',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-filesfolders',
+                        'url': f'/files/{self.project.sodar_uuid}',
+                        'label': 'Files',
+                        'icon': 'mdi:file',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-timeline',
+                        'url': f'/timeline/{self.project.sodar_uuid}',
+                        'label': 'Timeline',
+                        'icon': 'mdi:clock-time-eight',
+                        'active': False,
+                    },
+                    {
+                        'name': 'project-roles',
+                        'url': f'/project/members/{self.project.sodar_uuid}',
+                        'label': 'Members',
+                        'icon': 'mdi:account-multiple',
+                        'active': True,
+                    },
+                    {
+                        'name': 'project-update',
+                        'url': f'/project/project/update/{self.project.sodar_uuid}',
+                        'label': 'Update Project',
+                        'icon': 'mdi:lead-pencil',
+                        'active': False,
+                    },
+                ],
+            )
+
+    def test_get_sidebar_links_timeline_view(self):
+        """Test get_sidebar_links() on the timeline view"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        req_factory = RequestFactory()
+        with self.login(self.user):
+            request = req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            self.assertEqual(
+                tags.get_sidebar_links(request, self.project),
+                [
+                    {
+                        'name': 'project-detail',
+                        'url': f'/project/{self.project.sodar_uuid}',
+                        'label': 'Project Overview',
+                        'icon': 'mdi:cube',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-bgjobs',
+                        'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                        'label': 'Background Jobs',
+                        'icon': 'mdi:server',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-example_project_app',
+                        'url': f'/examples/project/{self.project.sodar_uuid}',
+                        'label': 'Example Project App',
+                        'icon': 'mdi:rocket-launch',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-filesfolders',
+                        'url': f'/files/{self.project.sodar_uuid}',
+                        'label': 'Files',
+                        'icon': 'mdi:file',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-timeline',
+                        'url': f'/timeline/{self.project.sodar_uuid}',
+                        'label': 'Timeline',
+                        'icon': 'mdi:clock-time-eight',
+                        'active': True,
+                    },
+                    {
+                        'name': 'project-roles',
+                        'url': f'/project/members/{self.project.sodar_uuid}',
+                        'label': 'Members',
+                        'icon': 'mdi:account-multiple',
+                        'active': False,
+                    },
+                    {
+                        'name': 'project-update',
+                        'url': f'/project/project/update/{self.project.sodar_uuid}',
+                        'label': 'Update Project',
+                        'icon': 'mdi:lead-pencil',
+                        'active': False,
                     },
                 ],
             )

@@ -3,18 +3,18 @@
 {# Project nav #}
 {% get_sidebar_links request project as sidebar_links %}
 {% for link in sidebar_links %}
-      <li
-          id="sodar-pr-nav-{{ link.name }}"
-          class="nav-item sodar-pr-sidebar-nav-item {% if link.active %}active{% endif %}">
-          <a class="nav-link"
-              href="{{ link.url }}"
-              id="sodar-pr-link-{{ link.name }}">
-              <span class="sodar-pr-sidebar-icon">
-                  <i class="iconify"
-                      data-icon="{{ link.icon }}"
-                      data-height="{{ sidebar_icon_size }}"></i>
-              </span>
-              <br />{{ link.label | safe }}
-          </a>
-      </li>
+  <li
+    id="sodar-pr-nav-{{ link.name }}"
+    class="nav-item sodar-pr-sidebar-nav-item {% if link.active %}active{% endif %}">
+    <a class="nav-link"
+      href="{{ link.url }}"
+      id="sodar-pr-link-{{ link.name }}">
+      <span class="sodar-pr-sidebar-icon">
+        <i class="iconify"
+            data-icon="{{ link.icon }}"
+            data-height="{{ sidebar_icon_size }}"></i>
+      </span>
+      <br />{{ link.label | safe }}
+    </a>
+  </li>
 {% endfor %}

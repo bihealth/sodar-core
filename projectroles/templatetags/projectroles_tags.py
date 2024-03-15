@@ -156,20 +156,6 @@ def get_help_highlight(user):
 
 
 @register.simple_tag
-def get_role_import_action(source_as, dest_project):
-    """Return label for role import action based on existing assignment"""
-    try:
-        target_as = RoleAssignment.objects.get(
-            project=dest_project, user=source_as.user
-        )
-        if target_as.role == source_as.role:
-            return 'No action'
-        return 'Update'
-    except RoleAssignment.DoesNotExist:
-        return 'Import'
-
-
-@register.simple_tag
 def get_login_info():
     """Return HTML info for the login page"""
     ret = '<p>Please log in'
@@ -289,7 +275,7 @@ def get_admin_warning():
 
 
 @register.simple_tag
-def get_sidebar_links(request, project):
+def get_sidebar_links(request, project=None):
     """Return sidebar links"""
     sidebar_content = SidebarContent()
     return sidebar_content.get_sidebar_links(request, project)

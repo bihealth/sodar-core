@@ -16,6 +16,8 @@ INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SIDEBAR_ICON_MIN_SIZE = 18
 SIDEBAR_ICON_MAX_SIZE = 42
 ROLE_URLS = [
@@ -114,7 +116,7 @@ def get_app_names():
 class SidebarContent:
     """Class for generating sidebar content for the site"""
 
-    def _is_active(self, request, link_names=None):
+    def _is_active_projectroles(self, request, link_names=None):
         """Check if current URL is active in the sidebar."""
         # HACK: Avoid circular import
         from projectroles.urls import urlpatterns
@@ -124,8 +126,6 @@ class SidebarContent:
         url_name = request.resolver_match.url_name
         if url_name in [u.name for u in urlpatterns]:
             if link_names:
-                if not isinstance(link_names, list):
-                    link_names = [link_names]
                 if url_name not in link_names:
                     return False
             return True
@@ -159,10 +159,7 @@ class SidebarContent:
         if (
             can_view_app
             and not app_hidden
-            and (
-                project.type == SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-                or plugin.category_enable
-            )
+            and (project.type == PROJECT_TYPE_PROJECT or plugin.category_enable)
         ):
             return True
         return False
@@ -179,39 +176,38 @@ class SidebarContent:
 
     def get_sidebar_links(self, request, project=None):
         """Return sidebar links based on the current project and user."""
-        links = []
+        ret = []
         # Add project related links
         if project:
             # Add project overview link
-            links.append(
+            ret.append(
                 {
                     'name': 'project-detail',
                     'url': reverse(
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
                     ),
-                    'label': 'Project<br />Overview',
+                    'label': 'Project Overview',
                     'icon': (
                         'mdi:rhombus-split'
-                        if project.type
-                        == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+                        if project.type == PROJECT_TYPE_CATEGORY
                         else 'mdi:cube'
                     ),
-                    'active': self._is_active(request, 'detail'),
+                    'active': self._is_active_projectroles(request, ['detail']),
                 }
             )
             # Add app plugins links
             app_plugins = get_active_plugins()
             for plugin in app_plugins:
                 if self._is_app_visible(plugin, project, request.user):
-                    links.append(
+                    ret.append(
                         {
                             'name': "app-plugin-" + plugin.name,
                             'url': reverse(
                                 plugin.entry_point_url_id,
                                 kwargs={'project': project.sodar_uuid},
                             ),
-                            'label': '<br />'.join(plugin.title.split(' ')),
+                            'label': ' '.join(plugin.title.split(' ')),
                             'icon': plugin.icon,
                             'active': self._is_active_plugin(
                                 plugin,
@@ -224,7 +220,7 @@ class SidebarContent:
             if request.user.has_perm(
                 'projectroles.view_project_roles', project
             ):
-                links.append(
+                ret.append(
                     {
                         'name': 'project-roles',
                         'url': reverse(
@@ -233,55 +229,59 @@ class SidebarContent:
                         ),
                         'label': 'Members',
                         'icon': 'mdi:account-multiple',
-                        'active': self._is_active(request, ROLE_URLS),
+                        'active': self._is_active_projectroles(
+                            request, ROLE_URLS
+                        ),
                     }
                 )
             # Add project update link
             if request.user.has_perm('projectroles.update_project', project):
-                links.append(
+                ret.append(
                     {
                         'name': 'project-update',
                         'url': reverse(
                             'projectroles:update',
                             kwargs={'project': project.sodar_uuid},
                         ),
-                        'label': 'Update<br />Project',
+                        'label': 'Update Project',
                         'icon': 'mdi:lead-pencil',
-                        'active': self._is_active(request, 'update'),
+                        'active': self._is_active_projectroles(
+                            request, ['update']
+                        ),
                     }
                 )
 
         # Add project and category creation links
         if (
             project
-            and project.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+            and project.type == PROJECT_TYPE_CATEGORY
             and request.user.has_perm('projectroles.create_project', project)
             and self._allow_project_creation()
             and not project.is_remote()
         ):
-            links.append(
+            ret.append(
                 {
                     'name': 'project-create',
                     'url': reverse(
                         'projectroles:create',
                         kwargs={'project': project.sodar_uuid},
                     ),
-                    'label': 'Create<br />Project or<br />Category',
+                    'label': 'Create Project or Category',
                     'icon': 'mdi:plus-thick',
-                    'active': self._is_active(request, 'create'),
+                    'active': self._is_active_projectroles(request, ['create']),
                 }
             )
         elif (
             getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
             and request.user.is_superuser
         ):
-            links.append(
+            ret.append(
                 {
                     'name': 'project-create',
                     'url': reverse('projectroles:create'),
-                    'label': 'Create<br />Project',
+                    'label': 'Create Project',
                     'icon': 'mdi:plus-thick',
-                    'active': self._is_active(request, 'create'),
+                    'active': self._is_active_projectroles(request, ['create']),
                 }
             )
         elif (
@@ -293,13 +293,13 @@ class SidebarContent:
             and request.user.has_perm('projectroles.create_project')
             and self._allow_project_creation()
         ):
-            links.append(
+            ret.append(
                 {
                     'name': 'home-project-create',
                     'url': reverse('projectroles:create'),
-                    'label': 'Create<br />Category',
+                    'label': 'Create Category',
                     'icon': 'mdi:plus-thick',
-                    'active': self._is_active(request, 'create'),
+                    'active': self._is_active_projectroles(request, ['create']),
                 }
             )
-        return links
+        return ret
