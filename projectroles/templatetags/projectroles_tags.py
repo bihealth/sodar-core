@@ -6,11 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import (
-    RoleAssignment,
-    RemoteProject,
-    SODAR_CONSTANTS,
-)
+from projectroles.models import RemoteProject, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
 from projectroles.utils import AppLinkContent
 
