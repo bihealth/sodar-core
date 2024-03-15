@@ -12,7 +12,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.plugins import get_active_plugins
-from projectroles.utils import SidebarContent
+from projectroles.utils import AppLinkContent
 
 
 register = template.Library()
@@ -277,5 +277,5 @@ def get_admin_warning():
 @register.simple_tag
 def get_sidebar_links(request, project=None):
     """Return sidebar links"""
-    sidebar_content = SidebarContent()
+    sidebar_content = AppLinkContent()
     return sidebar_content.get_sidebar_links(request, project)

@@ -113,7 +113,7 @@ def get_app_names():
     return sorted(ret)
 
 
-class SidebarContent:
+class AppLinkContent:
     """Class for generating sidebar content for the site"""
 
     def _is_active_projectroles(self, request, link_names=None):
