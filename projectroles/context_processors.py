@@ -15,7 +15,6 @@ SIDEBAR_ICON_MAX_SIZE = 42
 
 def urls_processor(request):
     """Context processor for providing projectroles URLs for the sidebar"""
-    pass
     return {
         'projectroles_urls': urlpatterns,
         'role_urls': ROLE_URLS,
