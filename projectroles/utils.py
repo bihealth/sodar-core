@@ -5,7 +5,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
-from projectroles.constants import get_sodar_constants
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
 
 # Settings
@@ -13,11 +13,10 @@ SECRET_LENGTH = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 
 # SODAR constants
-SODAR_CONSTANTS = get_sodar_constants()
-
-# Local constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+
+# Local constants
 SIDEBAR_ICON_MIN_SIZE = 18
 SIDEBAR_ICON_MAX_SIZE = 42
 ROLE_URLS = [
@@ -114,26 +113,23 @@ def get_app_names():
 
 
 class AppLinkContent:
-    """Class for generating sidebar content for the site"""
+    """Class for generating application links for the UI"""
 
     def _is_active_projectroles(self, request, link_names=None):
-        """Check if current URL is active in the sidebar."""
+        """Check if current URL is active under the projectroles app."""
         # HACK: Avoid circular import
         from projectroles.urls import urlpatterns
 
         if request.resolver_match.app_name != 'projectroles':
             return False
         url_name = request.resolver_match.url_name
-        if url_name in [u.name for u in urlpatterns]:
-            if link_names:
-                if url_name not in link_names:
-                    return False
-            return True
-        return False
+        return url_name in [u.name for u in urlpatterns] and (
+            not link_names or url_name in link_names
+        )
 
     def _is_active_plugin(self, app_plugin, app_name, url_name):
         """
-        Check if current URL is active in the sidebar for a specific app plugin.
+        Check if current URL is active for a specific app plugin.
         """
         if app_plugin.name.startswith(app_name) and url_name in [
             u.name for u in getattr(app_plugin, 'urls', [])
@@ -175,7 +171,7 @@ class AppLinkContent:
         return True
 
     def get_app_links(self, request, project=None):
-        """Return sidebar links based on the current project and user."""
+        """Return project app links based on the current project and user."""
         ret = []
         # Add project related links
         if project:

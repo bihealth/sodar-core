@@ -20,7 +20,7 @@
       <i class="iconify" data-icon="mdi:home"></i> Home
     </a>
 
-    {% get_sidebar_links request project as dropdown_links %}
+    {% get_project_app_links request project as dropdown_links %}
     {% for link in dropdown_links %}
       <a class="dropdown-item{% if link.active %} active{% endif %}"
           href="{{ link.url }}"

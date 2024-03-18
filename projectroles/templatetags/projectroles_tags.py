@@ -271,7 +271,7 @@ def get_admin_warning():
 
 
 @register.simple_tag
-def get_sidebar_links(request, project=None):
+def get_project_app_links(request, project=None):
     """Return sidebar links"""
-    sidebar_content = AppLinkContent()
-    return sidebar_content.get_app_links(request, project)
+    app_links = AppLinkContent()
+    return app_links.get_app_links(request, project)
