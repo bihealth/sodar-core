@@ -4,7 +4,8 @@
 {% get_project_app_links request project as sidebar_links %}
 {% for link in sidebar_links %}
   <li id="sodar-pr-nav-{{ link.name }}"
-      class="nav-item sodar-pr-sidebar-nav-item {% if link.active %}active{% endif %}">
+      class="nav-item sodar-pr-sidebar-nav-item {% if link.active %}active{% endif %}"
+      style="word-break: break-word;">
     <a class="nav-link"
       href="{{ link.url }}"
       id="sodar-pr-link-{{ link.name }}">
