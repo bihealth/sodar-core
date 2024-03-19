@@ -5,7 +5,6 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
-from projectroles.constants import get_sodar_constants
 from projectroles.plugins import get_active_plugins
 from projectroles.models import SODAR_CONSTANTS
 
@@ -303,7 +302,7 @@ class AppLinkContent:
 
 
 class UserDropdownContent:
-    """Class to generate user dropdown content"""
+    """Class for generating application links for the dropdown"""
 
     def get_user_links(self, request):
         """Return user links for the user dropdown"""
