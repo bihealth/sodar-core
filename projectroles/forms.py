@@ -357,11 +357,11 @@ class ProjectForm(SODARModelForm):
         ret += [(c.sodar_uuid, c.full_title) for c in categories]
         return sorted(ret, key=lambda x: x[1])
 
-    def _set_app_setting_widget(self, app_name, s_field, s_key, s_val):
+    def _set_app_setting_widget(self, plugin_name, s_field, s_key, s_val):
         """
         Internal helper for setting app setting widget and value.
 
-        :param app_name: App name
+        :param plugin_name: App plugin name
         :param s_field: Form field name
         :param s_key: Setting key
         :param s_val: Setting value
@@ -376,7 +376,7 @@ class ProjectForm(SODARModelForm):
             s_widget_attrs['placeholder'] = s_val.get('placeholder')
         setting_kwargs = {
             'required': False,
-            'label': s_val.get('label') or '{}.{}'.format(app_name, s_key),
+            'label': s_val.get('label') or '{}.{}'.format(plugin_name, s_key),
             'help_text': s_val['description'],
         }
         if s_val['type'] == 'JSON':
@@ -390,13 +390,13 @@ class ProjectForm(SODARModelForm):
             )
             if self.instance.pk:
                 json_data = self.app_settings.get(
-                    app_name=app_name,
+                    plugin_name=plugin_name,
                     setting_name=s_key,
                     project=self.instance,
                 )
             else:
                 json_data = self.app_settings.get_default(
-                    app_name=app_name,
+                    plugin_name=plugin_name,
                     setting_name=s_key,
                     project=None,
                 )
@@ -462,13 +462,13 @@ class ProjectForm(SODARModelForm):
             # Set initial value
             if self.instance.pk:
                 self.initial[s_field] = self.app_settings.get(
-                    app_name=app_name,
+                    plugin_name=plugin_name,
                     setting_name=s_key,
                     project=self.instance,
                 )
             else:
                 self.initial[s_field] = self.app_settings.get_default(
-                    app_name=app_name,
+                    plugin_name=plugin_name,
                     setting_name=s_key,
                     project=None,
                 )
@@ -509,21 +509,21 @@ class ProjectForm(SODARModelForm):
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
         for plugin in self.app_plugins + [None]:  # Projectroles has no plugin
             if plugin:
-                app_name = plugin.name
+                plugin_name = plugin.name
                 p_settings = self.app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
                 )
             else:
-                app_name = APP_NAME
+                plugin_name = APP_NAME
                 p_settings = self.app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT,
-                    app_name=app_name,
+                    plugin_name=plugin_name,
                     **self.p_kwargs
                 )
             for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(app_name, s_key)
+                s_field = 'settings.{}.{}'.format(plugin_name, s_key)
                 # Set widget and value
-                self._set_app_setting_widget(app_name, s_field, s_key, s_val)
+                self._set_app_setting_widget(plugin_name, s_field, s_key, s_val)
                 # Set label notes
                 self._set_app_setting_notes(s_field, s_val, plugin)
 
@@ -544,7 +544,7 @@ class ProjectForm(SODARModelForm):
                 def_kwarg = {'plugin': plugin}
             else:
                 p_name = 'projectroles'
-                def_kwarg = {'app_name': p_name}
+                def_kwarg = {'plugin_name': p_name}
             p_defs = app_settings.get_definitions(
                 APP_SETTING_SCOPE_PROJECT, **{**p_kwargs, **def_kwarg}
             )

@@ -3150,7 +3150,7 @@ class TestRoleAssignmentDeleteView(
         """Test post with PROJECT_USER app settings after contributor deletion"""
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name='project_user_bool_setting',
             project=self.project,
             user=self.user,
@@ -3182,7 +3182,7 @@ class TestRoleAssignmentDeleteView(
         self.make_assignment(self.category, self.user_contrib, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name='project_user_bool_setting',
             project=self.project,
             user=self.user,
@@ -3216,7 +3216,7 @@ class TestRoleAssignmentDeleteView(
         )
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name='project_user_bool_setting',
             project=self.project,
             user=self.user,

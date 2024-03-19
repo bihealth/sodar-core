@@ -56,7 +56,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
         super().setUp()
         # Init test setting
         self.setting_str = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='user_str_setting',
             setting_type='STRING',
             value='test',
@@ -64,7 +64,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
         )
         # Init integer setting
         self.setting_int = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='user_int_setting',
             setting_type='INTEGER',
             value=170,
@@ -72,7 +72,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
         )
         # Init test setting with options
         self.setting_str_options = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='user_str_setting_options',
             setting_type='STRING',
             value='string1',
@@ -80,7 +80,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
         )
         # Init integer setting with options
         self.setting_int_options = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='user_int_setting_options',
             setting_type='INTEGER',
             value=0,
@@ -88,7 +88,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
         )
         # Init boolean setting
         self.setting_bool = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='user_bool_setting',
             setting_type='BOOLEAN',
             value=True,
@@ -96,7 +96,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
         )
         # Init json setting
         self.setting_json = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='user_json_setting',
             setting_type='JSON',
             value=None,

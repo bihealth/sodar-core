@@ -814,17 +814,17 @@ class AppSettingMixin:
     """Helpers for app setting API views"""
 
     @classmethod
-    def get_and_validate_def(cls, app_name, setting_name, allowed_scopes):
+    def get_and_validate_def(cls, plugin_name, setting_name, allowed_scopes):
         """
         Return settings definition or raise a validation error.
 
-        :param app_name: Name of app plugin for the setting (string)
+        :param plugin_name: Name of app plugin for the setting (string)
         :param setting_name: Setting name (string)
         :param allowed_scopes: Allowed scopes for the setting (list)
         """
         try:
             s_def = app_settings.get_definition(
-                name=setting_name, app_name=app_name
+                name=setting_name, plugin_name=plugin_name
             )
         except Exception as ex:
             raise serializers.ValidationError(ex)
@@ -876,11 +876,13 @@ class AppSettingMixin:
                 )
 
     @classmethod
-    def _get_setting_obj(cls, app_name, setting_name, project=None, user=None):
+    def _get_setting_obj(
+        cls, plugin_name, setting_name, project=None, user=None
+    ):
         """
         Return the database object for a setting. Returns None if not available.
 
-        :param app_name: Name of the app plugin (string or None)
+        :param plugin_name: Name of the app plugin (string or None)
         :param setting_name: Setting name (string)
         :param project: Project object or None
         :param user: User object or None
@@ -893,41 +895,43 @@ class AppSettingMixin:
             'project': project,
             'user': user,
         }
-        if app_name == 'projectroles':
+        if plugin_name == 'projectroles':
             q_kwargs['app_plugin'] = None
         else:
-            q_kwargs['app_plugin__name'] = app_name
+            q_kwargs['app_plugin__name'] = plugin_name
         return AppSetting.objects.get(**q_kwargs)
 
     @classmethod
     def get_setting_for_api(
-        cls, app_name, setting_name, project=None, user=None
+        cls, plugin_name, setting_name, project=None, user=None
     ):
         """
         Return the database object for a setting for API serving. Will create
         the object if not yet created.
 
-        :param app_name: Name of the app plugin (string or None)
+        :param plugin_name: Name of the app plugin (string or None)
         :param setting_name: Setting name (string)
         :param project: Project object or None
         :param user: User object or None
         :return: AppSetting object
         """
         try:
-            return cls._get_setting_obj(app_name, setting_name, project, user)
+            return cls._get_setting_obj(
+                plugin_name, setting_name, project, user
+            )
         except AppSetting.DoesNotExist:
             try:
                 app_settings.set(
-                    app_name=app_name,
+                    plugin_name=plugin_name,
                     setting_name=setting_name,
                     value=app_settings.get_default(
-                        app_name, setting_name, project=project, user=user
+                        plugin_name, setting_name, project=project, user=user
                     ),
                     project=project,
                     user=user,
                 )
                 return cls._get_setting_obj(
-                    app_name, setting_name, project, user
+                    plugin_name, setting_name, project, user
                 )
             except Exception as ex:
                 raise serializers.ValidationError(ex)
@@ -946,7 +950,7 @@ class ProjectSettingRetrieveAPIView(
 
     **Parameters:**
 
-    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     - ``user``: User UUID for a PROJECT_USER setting (string or None, optional)
     """
@@ -956,12 +960,12 @@ class ProjectSettingRetrieveAPIView(
     serializer_class = AppSettingSerializer
 
     def get_object(self):
-        app_name = self.request.GET.get('app_name')
+        plugin_name = self.request.GET.get('plugin_name')
         setting_name = self.request.GET.get('setting_name')
 
         # Get and validate definition
         s_def = self.get_and_validate_def(
-            app_name,
+            plugin_name,
             setting_name,
             [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER],
         )
@@ -979,7 +983,7 @@ class ProjectSettingRetrieveAPIView(
 
         # Return new object with default setting if not set
         return self.get_setting_for_api(
-            app_name, setting_name, project, setting_user
+            plugin_name, setting_name, project, setting_user
         )
 
 
@@ -999,7 +1003,7 @@ class ProjectSettingSetAPIView(
 
     **Parameters:**
 
-    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     - ``value``: Setting value (string, may contain JSON for JSON settings)
     - ``user``: User UUID for a PROJECT_USER setting (string or None, optional)
@@ -1012,12 +1016,12 @@ class ProjectSettingSetAPIView(
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         timeline = get_backend_api('timeline_backend')
-        app_name = request.data.get('app_name')
+        plugin_name = request.data.get('plugin_name')
         setting_name = request.data.get('setting_name')
 
         # Get and validate definition
         s_def = self.get_and_validate_def(
-            app_name,
+            plugin_name,
             setting_name,
             [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER],
         )
@@ -1038,10 +1042,10 @@ class ProjectSettingSetAPIView(
         # Set setting value with validation, return possible errors
         try:
             old_value = app_settings.get(
-                app_name, setting_name, project=project, user=setting_user
+                plugin_name, setting_name, project=project, user=setting_user
             )
             app_settings.set(
-                app_name=app_name,
+                plugin_name=plugin_name,
                 setting_name=setting_name,
                 value=value,
                 project=project,
@@ -1054,7 +1058,7 @@ class ProjectSettingSetAPIView(
                 False,
             ):
                 args = [
-                    app_name,
+                    plugin_name,
                     setting_name,
                     value,
                     old_value,
@@ -1071,12 +1075,12 @@ class ProjectSettingSetAPIView(
 
         if timeline:
             tl_desc = 'set value of {}.settings.{}'.format(
-                app_name, setting_name
+                plugin_name, setting_name
             )
             if setting_user:
                 tl_desc += ' for user {{{}}}'.format('user')
             setting_obj = self._get_setting_obj(
-                app_name, setting_name, project, setting_user
+                plugin_name, setting_name, project, setting_user
             )
             tl_extra_data = {'value': setting_obj.get_value()}
             tl_event = timeline.add_event(
@@ -1095,7 +1099,7 @@ class ProjectSettingSetAPIView(
             {
                 'detail': 'Set value of {}.settings.{} '
                 '(project={}; user={})'.format(
-                    app_name,
+                    plugin_name,
                     setting_name,
                     project.sodar_uuid,
                     setting_user.sodar_uuid if setting_user else None,
@@ -1117,7 +1121,7 @@ class UserSettingRetrieveAPIView(
 
     **Parameters:**
 
-    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     """
 
@@ -1128,15 +1132,15 @@ class UserSettingRetrieveAPIView(
     def get_object(self):
         if not self.request.user.is_authenticated:
             raise PermissionDenied(ANON_ACCESS_MSG)
-        app_name = self.request.GET.get('app_name')
+        plugin_name = self.request.GET.get('plugin_name')
         setting_name = self.request.GET.get('setting_name')
         # Get and validate definition
         self.get_and_validate_def(
-            app_name, setting_name, [APP_SETTING_SCOPE_USER]
+            plugin_name, setting_name, [APP_SETTING_SCOPE_USER]
         )
         # Return new object with default setting if not set
         return self.get_setting_for_api(
-            app_name, setting_name, user=self.request.user
+            plugin_name, setting_name, user=self.request.user
         )
 
 
@@ -1151,7 +1155,7 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
 
     **Parameters:**
 
-    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     - ``value``: Setting value (string, may contain JSON for JSON settings)
     """
@@ -1161,10 +1165,10 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             raise PermissionDenied(ANON_ACCESS_MSG)
-        app_name = request.data.get('app_name')
+        plugin_name = request.data.get('plugin_name')
         setting_name = request.data.get('setting_name')
         s_def = self.get_and_validate_def(
-            app_name, setting_name, [APP_SETTING_SCOPE_USER]
+            plugin_name, setting_name, [APP_SETTING_SCOPE_USER]
         )
         if s_def.get('user_modifiable') is False:
             raise PermissionDenied(USER_MODIFIABLE_MSG)
@@ -1172,7 +1176,7 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
 
         try:
             app_settings.set(
-                app_name=app_name,
+                plugin_name=plugin_name,
                 setting_name=setting_name,
                 value=value,
                 user=request.user,
@@ -1182,7 +1186,7 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
         return Response(
             {
                 'detail': 'Set value of {}.settings.{}'.format(
-                    app_name, setting_name
+                    plugin_name, setting_name
                 )
             },
             status=200,

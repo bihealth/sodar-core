@@ -525,7 +525,7 @@ class TestCleanAppSettings(
 
         # Init test setting
         self.setting_str_values = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting',
             'setting_type': 'STRING',
@@ -534,7 +534,7 @@ class TestCleanAppSettings(
             'non_valid_value': False,
         }
         self.setting_int_values = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting',
             'setting_type': 'INTEGER',
@@ -543,7 +543,7 @@ class TestCleanAppSettings(
             'non_valid_value': 'Nan',
         }
         self.setting_bool_values = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_bool_setting',
             'setting_type': 'BOOLEAN',
@@ -552,7 +552,7 @@ class TestCleanAppSettings(
             'non_valid_value': 170,
         }
         self.setting_json_values = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_json_setting',
             'setting_type': 'JSON',
@@ -565,7 +565,7 @@ class TestCleanAppSettings(
             'non_valid_value': self.project,
         }
         self.setting_iprestrict_values = {
-            'app_name': 'projectroles',
+            'plugin_name': 'projectroles',
             'project': self.project,
             'name': 'ip_restrict',
             'setting_type': 'BOOLEAN',
@@ -582,7 +582,7 @@ class TestCleanAppSettings(
         ]
         for s in self.settings:
             self.make_setting(
-                app_name=s['app_name'],
+                plugin_name=s['plugin_name'],
                 name=s['name'],
                 setting_type=s['setting_type'],
                 value=s['value'] if s['setting_type'] != 'JSON' else '',

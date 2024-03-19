@@ -88,9 +88,9 @@ def get_django_setting(name, default=None, js=False):
 
 
 @register.simple_tag
-def get_app_setting(app_name, setting_name, project=None, user=None):
+def get_app_setting(plugin_name, setting_name, project=None, user=None):
     """Get a project/user specific app setting from AppSettingAPI"""
-    return app_settings.get(app_name, setting_name, project, user)
+    return app_settings.get(plugin_name, setting_name, project, user)
 
 
 @register.simple_tag

@@ -447,14 +447,14 @@ class TestGetSourceData(
         self.make_assignment(local_project, self.user_source, self.role_owner)
         # Init settings for synced project
         set_ip_restrict = self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
             value=True,
             project=self.project,
         )
         set_ip_allowlist = self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
             value=None,
@@ -462,7 +462,7 @@ class TestGetSourceData(
             project=self.project,
         )
         set_star = self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='project_star',
             setting_type='BOOLEAN',
             value=True,
@@ -471,7 +471,7 @@ class TestGetSourceData(
         )
         # Init setting for local project (should not be synced)
         set_local = self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='project_star',
             setting_type='BOOLEAN',
             value=True,
@@ -531,7 +531,7 @@ class TestGetSourceData(
             level=REMOTE_LEVEL_READ_ROLES,
         )
         set_star = self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='project_star',
             setting_type='BOOLEAN',
             value=True,
@@ -1523,7 +1523,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
 
         # Init app settings
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
             value=False,
@@ -1531,7 +1531,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
             sodar_uuid=SET_IP_RESTRICT_UUID,
         )
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
             value=None,
@@ -1540,7 +1540,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
             sodar_uuid=SET_IP_ALLOWLIST_UUID,
         )
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='project_star',
             setting_type='BOOLEAN',
             value=False,

@@ -12,13 +12,13 @@ def clean_up_app_settings(apps, schema_editor):
     pr_settings = AppSetting.objects.exclude(project=None)
     for app_setting in pr_settings:
         try:
-            app_name = (
+            plugin_name = (
                 app_setting.app_plugin.name
                 if app_setting.app_plugin
                 else 'projectroles'
             )
             setting_def = app_settings.get_definition(
-                app_name=app_name, name=app_setting.name
+                plugin_name=plugin_name, name=app_setting.name
             )
         except ValueError:
             app_setting.delete()

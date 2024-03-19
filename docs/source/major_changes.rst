@@ -20,6 +20,7 @@ Release Highlights
 - Add Python v3.11 support
 - Remove Python v3.8 support
 - Remove SAML SSO support
+- Rename AppSettingAPI "app_name" arguments to "plugin_name"
 
 Breaking Changes
 ================
@@ -75,6 +76,29 @@ SODAR Core based projects requiring SAML at this time. If there are specific
 needs to use SAML on a SODAR Core based site, we are happy to review pull
 requests to re-introduce it. Please note the implementation has to support
 Django v4.2+.
+
+AppSettingAPI Plugin Name Arguments Updated
+-------------------------------------------
+
+In ``AppSettingAPI``, all method arguments called ``app_name`` have been renamed
+into ``plugin_name``. This is to remove confusion as the argument does in fact
+refer specifically to a plugin, not the app name itself. If the argument is
+provided as a kwarg, references to it should be renamed.
+
+REST API Changes
+----------------
+
+The following breaking changes have been made into specific REST API endpoints
+in this release:
+
+``ProjectSettingRetrieveAPIView`` (``project/api/settings/retrieve/<uuid:project>``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``ProjectSettingSetAPIView`` (``project/api/settings/set/<uuid:project>``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``UserSettingRetrieveAPIView`` (``project/api/settings/retrieve/user``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``UserSettingSetAPIView`` (``project/api/settings/set/user``)
+    Rename ``app_name`` parameter to ``plugin_name``.
 
 PROJECTROLES_HIDE_APP_LINKS Removed
 -----------------------------------

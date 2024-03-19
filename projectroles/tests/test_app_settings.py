@@ -55,7 +55,7 @@ class AppSettingInitMixin:
         # TODO: Rename these to match the settings in example_project_app
         # Init test project settings
         self.project_str_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting',
             'setting_type': 'STRING',
@@ -64,7 +64,7 @@ class AppSettingInitMixin:
             'non_valid_value': False,
         }
         self.project_int_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting',
             'setting_type': 'INTEGER',
@@ -73,7 +73,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'Nan',
         }
         self.project_str_setting_options = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting_options',
             'setting_type': 'STRING',
@@ -83,7 +83,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'string3',
         }
         self.project_int_setting_options = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting_options',
             'setting_type': 'INTEGER',
@@ -93,7 +93,7 @@ class AppSettingInitMixin:
             'non_valid_value': 2,
         }
         self.project_bool_settings = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_bool_setting',
             'setting_type': 'BOOLEAN',
@@ -102,7 +102,7 @@ class AppSettingInitMixin:
             'non_valid_value': 170,
         }
         self.project_json_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_json_setting',
             'setting_type': 'JSON',
@@ -116,7 +116,7 @@ class AppSettingInitMixin:
         }
         # Init test user settings
         self.user_str_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_str_setting',
             'setting_type': 'STRING',
@@ -125,7 +125,7 @@ class AppSettingInitMixin:
             'non_valid_value': False,
         }
         self.user_int_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_int_setting',
             'setting_type': 'INTEGER',
@@ -134,7 +134,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'Nan',
         }
         self.user_str_setting_options = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_str_setting_options',
             'setting_type': 'STRING',
@@ -144,7 +144,7 @@ class AppSettingInitMixin:
             'non_valid_value': False,
         }
         self.user_int_setting_options = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_int_setting_options',
             'setting_type': 'INTEGER',
@@ -154,7 +154,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'Nan',
         }
         self.user_bool_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_bool_setting',
             'setting_type': 'BOOLEAN',
@@ -163,7 +163,7 @@ class AppSettingInitMixin:
             'non_valid_value': 170,
         }
         self.user_json_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_json_setting',
             'setting_type': 'JSON',
@@ -177,7 +177,7 @@ class AppSettingInitMixin:
         }
         # Init test PROJECT_USER settings
         self.project_user_str_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
             'name': 'project_user_str_setting',
@@ -187,7 +187,7 @@ class AppSettingInitMixin:
             'non_valid_value': False,
         }
         self.project_user_int_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
             'name': 'project_user_int_setting',
@@ -197,7 +197,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'Nan',
         }
         self.project_user_bool_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
             'name': 'project_user_bool_setting',
@@ -207,7 +207,7 @@ class AppSettingInitMixin:
             'non_valid_value': 170,
         }
         self.project_user_json_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
             'name': 'project_user_json_setting',
@@ -241,7 +241,7 @@ class AppSettingInitMixin:
         ]
         for s in self.settings:
             kwargs = {
-                'app_name': s['app_name'],
+                'plugin_name': s['plugin_name'],
                 'name': s['name'],
                 'setting_type': s['setting_type'],
                 'value': s['value'] if s['setting_type'] != 'JSON' else '',
@@ -285,7 +285,7 @@ class TestAppSettingAPI(
         """Test get()"""
         for setting in self.settings:
             data = {
-                'app_name': setting['app_name'],
+                'plugin_name': setting['plugin_name'],
                 'setting_name': setting['name'],
             }
             if 'project' in setting:
@@ -300,7 +300,7 @@ class TestAppSettingAPI(
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         default_val = app_plugin.app_settings[EXISTING_SETTING]['default']
         val = app_settings.get(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
             project=self.project,
         )
@@ -310,7 +310,7 @@ class TestAppSettingAPI(
         """Test get_() with non-existing setting"""
         with self.assertRaises(KeyError):
             app_settings.get(
-                app_name=EXAMPLE_APP_NAME,
+                plugin_name=EXAMPLE_APP_NAME,
                 setting_name='NON-EXISTING SETTING',
                 project=self.project,
             )
@@ -318,7 +318,7 @@ class TestAppSettingAPI(
     def test_get_with_post_safe(self):
         """Test get() with JSON setting and post_safe=True"""
         val = app_settings.get(
-            app_name=self.project_json_setting['app_name'],
+            plugin_name=self.project_json_setting['plugin_name'],
             setting_name=self.project_json_setting['name'],
             project=self.project_json_setting['project'],
             post_safe=True,
@@ -329,7 +329,7 @@ class TestAppSettingAPI(
         """Test set()"""
         for setting in self.settings:
             data = {
-                'app_name': setting['app_name'],
+                'plugin_name': setting['plugin_name'],
                 'setting_name': setting['name'],
             }
             if 'project' in setting:
@@ -348,7 +348,7 @@ class TestAppSettingAPI(
         """Test set() with unchanged value"""
         for setting in self.settings:
             data = {
-                'app_name': setting['app_name'],
+                'plugin_name': setting['plugin_name'],
                 'setting_name': setting['name'],
             }
             if 'project' in setting:
@@ -364,7 +364,7 @@ class TestAppSettingAPI(
                 ret,
                 False,
                 msg='setting={}.{}'.format(
-                    setting['app_name'], setting['name']
+                    setting['plugin_name'], setting['name']
                 ),
             )
             val = app_settings.get(**data)
@@ -372,7 +372,7 @@ class TestAppSettingAPI(
                 val,
                 setting['value'],
                 msg='setting={}.{}'.format(
-                    setting['app_name'], setting['name']
+                    setting['plugin_name'], setting['name']
                 ),
             )
 
@@ -386,14 +386,14 @@ class TestAppSettingAPI(
         self.assertEqual(bool(int(val)), False)
 
         ret = app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
             value=True,
             project=self.project,
         )
         self.assertEqual(ret, True)
         val = app_settings.get(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
             project=self.project,
         )
@@ -409,7 +409,7 @@ class TestAppSettingAPI(
         """Test set() with undefined setting (should fail)"""
         with self.assertRaises(ValueError):
             app_settings.set(
-                app_name=EXAMPLE_APP_NAME,
+                plugin_name=EXAMPLE_APP_NAME,
                 setting_name='new_setting',
                 value='new',
                 project=self.project,
@@ -420,7 +420,7 @@ class TestAppSettingAPI(
         # Set up second user
         new_user = self.make_user('new_user')
         ret = app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name='project_user_str_setting',
             project=self.project,
             user=self.user,
@@ -428,7 +428,7 @@ class TestAppSettingAPI(
         )
         self.assertEqual(ret, True)
         ret = app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name='project_user_str_setting',
             project=self.project,
             user=new_user,
@@ -441,7 +441,7 @@ class TestAppSettingAPI(
         # Should fail because project_category_bool_setting has CATEGORY scope
         with self.assertRaises(ValueError):
             app_settings.set(
-                app_name=EXAMPLE_APP_NAME,
+                plugin_name=EXAMPLE_APP_NAME,
                 setting_name='project_category_bool_setting',
                 project=self.project,
                 value=True,
@@ -569,7 +569,7 @@ class TestAppSettingAPI(
             'user_modifiable': True,
         }
         s_def = app_settings.get_definition(
-            'project_str_setting', app_name=EXAMPLE_APP_NAME
+            'project_str_setting', plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(s_def, expected)
 
@@ -585,7 +585,7 @@ class TestAppSettingAPI(
             'user_modifiable': True,
         }
         s_def = app_settings.get_definition(
-            'user_str_setting', app_name=EXAMPLE_APP_NAME
+            'user_str_setting', plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(s_def, expected)
 
@@ -593,11 +593,11 @@ class TestAppSettingAPI(
         """Test get_def() with innvalid input"""
         with self.assertRaises(ValueError):
             app_settings.get_definition(
-                'non_existing_setting', app_name=EXAMPLE_APP_NAME
+                'non_existing_setting', plugin_name=EXAMPLE_APP_NAME
             )
         with self.assertRaises(ValueError):
             app_settings.get_definition(
-                'project_str_setting', app_name='non_existing_app_name'
+                'project_str_setting', plugin_name='non_existing_app_name'
             )
         # Both app_name and plugin unset
         with self.assertRaises(ValueError):
@@ -716,7 +716,7 @@ class TestAppSettingAPI(
             },
         }
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
@@ -807,7 +807,7 @@ class TestAppSettingAPI(
             },
         }
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_USER, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_USER, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
@@ -857,7 +857,7 @@ class TestAppSettingAPI(
             },
         }
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_PROJECT_USER, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_PROJECT_USER, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
@@ -874,19 +874,19 @@ class TestAppSettingAPI(
             }
         }
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_SITE, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_SITE, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
     def test_get_defs_modifiable(self):
         """Test get_defs() with user_modifiable arg"""
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(len(defs), 12)
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT,
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
         self.assertEqual(len(defs), 10)
@@ -895,7 +895,7 @@ class TestAppSettingAPI(
         """Test get_defs() with invalid scope"""
         with self.assertRaises(ValueError):
             app_settings.get_definitions(
-                'Ri4thai8aez5ooRa', app_name=EXAMPLE_APP_NAME
+                'Ri4thai8aez5ooRa', plugin_name=EXAMPLE_APP_NAME
             )
 
     def test_get_defaults_project(self):

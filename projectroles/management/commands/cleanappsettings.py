@@ -52,7 +52,7 @@ class Command(BaseCommand):
             if s.app_plugin:
                 def_kwargs['plugin'] = s.app_plugin.get_plugin()
             else:
-                def_kwargs['app_name'] = 'projectroles'
+                def_kwargs['plugin_name'] = 'projectroles'
             try:
                 definition = app_settings.get_definition(**def_kwargs)
             except ValueError:

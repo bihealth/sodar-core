@@ -590,13 +590,13 @@ class AppSettingSerializer(SODARProjectModelSerializer):
     directly is not the intended way to set/get app settings.
     """
 
-    app_name = serializers.CharField(read_only=True)
+    plugin_name = serializers.CharField(read_only=True)
     user = SODARUserSerializer(read_only=True)
 
     class Meta:
         model = AppSetting
         fields = [
-            'app_name',
+            'plugin_name',
             'project',
             'user',
             'name',
@@ -610,8 +610,8 @@ class AppSettingSerializer(SODARProjectModelSerializer):
         """Override to clean up data for serialization"""
         ret = super().to_representation(instance)
         if instance.app_plugin:
-            ret['app_name'] = instance.app_plugin.name
+            ret['plugin_name'] = instance.app_plugin.name
         else:
-            ret['app_name'] = 'projectroles'
+            ret['plugin_name'] = 'projectroles'
         ret['value'] = instance.get_value()
         return ret

@@ -40,7 +40,9 @@ class UserSettingsForm(SODARForm):
             else:
                 name = 'projectroles'
                 p_defs = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
+                    APP_SETTING_SCOPE_USER,
+                    plugin_name=name,
+                    user_modifiable=True,
                 )
 
             for s_key, s_val in p_defs.items():
@@ -118,12 +120,12 @@ class UserSettingsForm(SODARForm):
                     self.fields[s_field].widget.attrs.update(s_widget_attrs)
 
                     self.initial[s_field] = app_settings.get(
-                        app_name=name, setting_name=s_key, user=self.user
+                        plugin_name=name, setting_name=s_key, user=self.user
                     )
                 else:
                     self.initial[s_field] = json.dumps(
                         app_settings.get(
-                            app_name=name,
+                            plugin_name=name,
                             setting_name=s_key,
                             user=self.user,
                         )
@@ -142,7 +144,7 @@ class UserSettingsForm(SODARForm):
                 p_kwargs['plugin'] = plugin
             else:
                 p_name = 'projectroles'
-                p_kwargs['app_name'] = p_name
+                p_kwargs['plugin_name'] = p_name
             p_defs = app_settings.get_definitions(
                 APP_SETTING_SCOPE_USER, **p_kwargs
             )

@@ -117,7 +117,7 @@ class IPAllowMixin(AppSettingMixin):
     def setup_ip_allowing(self, ip_list):
         # Init IP restrict setting
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
             value=True,
@@ -125,7 +125,7 @@ class IPAllowMixin(AppSettingMixin):
         )
         # Init IP allowlist setting
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
             value=None,

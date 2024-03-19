@@ -855,14 +855,14 @@ class AppSettingManager(models.Manager):
     """Manager for custom table-level AppSetting queries"""
 
     def get_setting_value(
-        self, app_name, setting_name, project=None, user=None
+        self, plugin_name, setting_name, project=None, user=None
     ):
         """
-        Return value of setting_name for app_name in project or for user.
+        Return value of setting_name for plugin_name in project or for user.
 
         Note that project and/or user must be set.
 
-        :param app_name: App plugin name (string)
+        :param plugin_name: App plugin name (string)
         :param setting_name: Name of setting (string)
         :param project: Project object or pk
         :param user: User object or pk
@@ -874,8 +874,8 @@ class AppSettingManager(models.Manager):
             'project': project,
             'user': user,
         }
-        if not app_name == 'projectroles':
-            query_parameters['app_plugin__name'] = app_name
+        if not plugin_name == 'projectroles':
+            query_parameters['app_plugin__name'] = plugin_name
         setting = super().get_queryset().get(**query_parameters)
         return setting.get_value()
 

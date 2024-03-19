@@ -49,7 +49,9 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
             else:
                 name = 'projectroles'
                 p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
+                    APP_SETTING_SCOPE_USER,
+                    plugin_name=name,
+                    user_modifiable=True,
                 )
             for k, v in p_settings.items():
                 yield {
@@ -88,10 +90,10 @@ class UserSettingsView(
         result = super().form_valid(form)
         for k, v in form.cleaned_data.items():
             if k.startswith('settings.'):
-                _, app_name, setting_name = k.split('.', 3)
+                _, plugin_name, setting_name = k.split('.', 3)
                 # TODO: Omit global USER settings (#1329)
                 app_settings.set(
-                    app_name, setting_name, v, user=self.request.user
+                    plugin_name, setting_name, v, user=self.request.user
                 )
         messages.success(self.request, SETTING_UPDATE_MSG)
         return result

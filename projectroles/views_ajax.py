@@ -28,11 +28,7 @@ from projectroles.models import (
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.utils import get_display_name
-from projectroles.views import (
-    ProjectAccessMixin,
-    APP_NAME,
-    User,
-)
+from projectroles.views import ProjectAccessMixin, APP_NAME, User
 from projectroles.views_api import (
     SODARAPIProjectPermission,
     CurrentUserRetrieveAPIView,
@@ -430,7 +426,7 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
             app_settings.delete('projectroles', 'project_star', project, user)
         else:
             app_settings.set(
-                app_name='projectroles',
+                plugin_name='projectroles',
                 setting_name='project_star',
                 value=True,
                 project=project,

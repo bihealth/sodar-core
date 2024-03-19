@@ -161,7 +161,7 @@ class AppSettingMixin:
     @classmethod
     def make_setting(
         cls,
-        app_name,
+        plugin_name,
         name,
         setting_type,
         value,
@@ -175,8 +175,8 @@ class AppSettingMixin:
         values = {
             'app_plugin': (
                 None
-                if app_name == 'projectroles'
-                else get_app_plugin(app_name).get_model()
+                if plugin_name == 'projectroles'
+                else get_app_plugin(plugin_name).get_model()
             ),
             'project': project,
             'name': name,
@@ -1042,7 +1042,7 @@ class TestProjectSetting(
 
         # Init test setting
         self.setting_str = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='str_setting',
             setting_type='STRING',
             value='test',
@@ -1050,7 +1050,7 @@ class TestProjectSetting(
         )
         # Init integer setting
         self.setting_int = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='int_setting',
             setting_type='INTEGER',
             value=170,
@@ -1058,7 +1058,7 @@ class TestProjectSetting(
         )
         # Init boolean setting
         self.setting_bool = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='bool_setting',
             setting_type='BOOLEAN',
             value=True,
@@ -1066,7 +1066,7 @@ class TestProjectSetting(
         )
         # Init JSON setting
         self.setting_json = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='json_setting',
             setting_type='JSON',
             value=None,
@@ -1170,28 +1170,28 @@ class TestUserSetting(
         self.user = self.make_user('owner')
         # Init settings
         self.setting_str = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='str_setting',
             setting_type='STRING',
             value='test',
             user=self.user,
         )
         self.setting_int = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='int_setting',
             setting_type='INTEGER',
             value=170,
             user=self.user,
         )
         self.setting_bool = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='bool_setting',
             setting_type='BOOLEAN',
             value=True,
             user=self.user,
         )
         self.setting_json = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='json_setting',
             setting_type='JSON',
             value=None,

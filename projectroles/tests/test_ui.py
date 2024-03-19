@@ -630,7 +630,7 @@ class TestHomeView(TestUIBase):
     def test_project_list_star(self):
         """Test project list star filter"""
         app_settings.set(
-            app_name='projectroles',
+            plugin_name='projectroles',
             setting_name='project_star',
             value=True,
             project=self.project,
@@ -1306,7 +1306,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
     def test_copy_uuid_visibility_enabled(self):
         """Test UUID copy button visibility with setting enabled"""
         app_settings.set(
-            app_name='userprofile',
+            plugin_name='userprofile',
             setting_name='enable_project_uuid_copy',
             value=True,
             user=self.user_owner,

@@ -938,7 +938,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             else:
                 name = 'projectroles'
                 p_settings = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name, **p_kwargs
+                    APP_SETTING_SCOPE_PROJECT, plugin_name=name, **p_kwargs
                 )
 
             for s_key, s_val in p_settings.items():
@@ -984,10 +984,10 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
         # Settings
         for k, v in project_settings.items():
-            a_name = k.split('.')[1]
+            p_name = k.split('.')[1]
             s_name = k.split('.')[2]
-            s_def = app_settings.get_definition(s_name, app_name=a_name)
-            old_v = app_settings.get(a_name, s_name, project)
+            s_def = app_settings.get_definition(s_name, plugin_name=p_name)
+            old_v = app_settings.get(p_name, s_name, project)
             if s_def['type'] == 'JSON':
                 v = json.loads(v)
             if old_v != v:
@@ -1014,9 +1014,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             }
             # Add settings to extra data
             for k, v in project_settings.items():
-                a_name = k.split('.')[1]
+                p_name = k.split('.')[1]
                 s_name = k.split('.')[2]
-                s_def = app_settings.get_definition(s_name, app_name=a_name)
+                s_def = app_settings.get_definition(s_name, plugin_name=p_name)
                 if s_def['type'] == 'JSON':
                     v = json.loads(v)
                 extra_data[k] = v
@@ -1048,17 +1048,17 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         """Update project settings"""
         is_remote = project.is_remote()
         for k, v in project_settings.items():
-            _, app_name, setting_name = k.split('.', 3)
+            _, plugin_name, setting_name = k.split('.', 3)
             # Skip updating global settings on target site
             if is_remote:
                 # TODO: Optimize (this can require a lot of queries)
                 s_def = app_settings.get_definition(
-                    setting_name, app_name=app_name
+                    setting_name, plugin_name=plugin_name
                 )
                 if not s_def.get('local', APP_SETTING_LOCAL_DEFAULT):
                     continue
             app_settings.set(
-                app_name=k.split('.')[1],
+                plugin_name=k.split('.')[1],
                 setting_name=k.split('.')[2],
                 value=v,
                 project=project,

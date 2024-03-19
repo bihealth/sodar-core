@@ -1448,7 +1448,7 @@ class TestProjectSettingRetrieveAPIView(TestCoreProjectAPIPermissionBase):
         )
         # GET data for PROJECT setting, others defined within tests
         self.get_data = {
-            'app_name': 'example_project_app',
+            'plugin_name': 'example_project_app',
             'setting_name': 'project_str_setting',
         }
 
@@ -1540,7 +1540,7 @@ class TestProjectSettingRetrieveAPIView(TestCoreProjectAPIPermissionBase):
     def test_get_project_user_setting(self):
         """Test GET with PROJECT_USER scope"""
         get_data = {
-            'app_name': 'example_project_app',
+            'plugin_name': 'example_project_app',
             'setting_name': 'project_user_str_setting',
             'user': str(self.user_owner.sodar_uuid),
         }
@@ -1589,7 +1589,7 @@ class TestProjectSettingSetAPIView(TestCoreProjectAPIPermissionBase):
         )
         # POST data for PROJECT setting, others defined within tests
         self.post_data = {
-            'app_name': 'example_project_app',
+            'plugin_name': 'example_project_app',
             'setting_name': 'project_str_setting',
             'value': 'value',
         }
@@ -1720,7 +1720,7 @@ class TestProjectSettingSetAPIView(TestCoreProjectAPIPermissionBase):
     def test_post_project_user_setting(self):
         """Test POST with PROJECT_USER scope"""
         post_data = {
-            'app_name': 'example_project_app',
+            'plugin_name': 'example_project_app',
             'setting_name': 'project_user_str_setting',
             'value': 'value',
             'user': str(self.user_owner.sodar_uuid),
@@ -1774,7 +1774,7 @@ class TestUserSettingRetrieveAPIView(TestCoreProjectAPIPermissionBase):
         super().setUp()
         self.url = reverse('projectroles:api_user_setting_retrieve')
         self.get_data = {
-            'app_name': 'example_project_app',
+            'plugin_name': 'example_project_app',
             'setting_name': 'user_str_setting',
         }
 
@@ -1820,7 +1820,7 @@ class TestUserSettingSetAPIView(TestCoreProjectAPIPermissionBase):
         super().setUp()
         self.url = reverse('projectroles:api_user_setting_set')
         self.post_data = {
-            'app_name': 'example_project_app',
+            'plugin_name': 'example_project_app',
             'setting_name': 'user_str_setting',
             'value': 'value',
         }

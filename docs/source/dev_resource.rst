@@ -341,7 +341,7 @@ docs, see
 
     from projectroles.app_settings import AppSettingAPI
     app_settings = AppSettingAPI()
-    app_settings.get('app_name', 'setting_name', project_object)  # Etc..
+    app_settings.get('plugin_name', 'setting_name', project_object)  # Etc..
 
 There is no need to separately generate settings for projects or users. If the
 setting object does not exist in the Django database when

@@ -165,7 +165,7 @@ class ProjectModifyPluginMixin:
 
     def perform_project_setting_update(
         self,
-        app_name,
+        plugin_name,
         setting_name,
         value,
         old_value,
@@ -176,8 +176,8 @@ class ProjectModifyPluginMixin:
         Perform additional actions when updating a single app setting with
         PROJECT scope.
 
-        :param app_name: Name of app plugin for the setting, "projectroles" is
-                         used for projectroles settings (string)
+        :param plugin_name: Name of app plugin for the setting, "projectroles"
+                            is used for projectroles settings (string)
         :param setting_name: Setting name (string)
         :param value: New value for setting
         :param old_value: Previous value for setting
@@ -189,7 +189,7 @@ class ProjectModifyPluginMixin:
 
     def revert_project_setting_update(
         self,
-        app_name,
+        plugin_name,
         setting_name,
         value,
         old_value,
@@ -200,8 +200,8 @@ class ProjectModifyPluginMixin:
         Revert updating a single app setting with PROJECT scope if errors have
         occurred in other apps.
 
-        :param app_name: Name of app plugin for the setting, "projectroles" is
-                         used for projectroles settings (string)
+        :param plugin_name: Name of app plugin for the setting, "projectroles"
+                            is used for projectroles settings (string)
         :param setting_name: Setting name (string)
         :param value: New value for setting
         :param old_value: Previous value for setting

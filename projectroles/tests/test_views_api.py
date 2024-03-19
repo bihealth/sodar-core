@@ -2640,12 +2640,12 @@ class TestProjectSettingRetrievePIView(
     def test_get_project(self):
         """Test ProjectSettingRetrieveAPIView GET with PROJECT scope setting"""
         setting_name = 'project_str_setting'
-        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
@@ -2665,13 +2665,13 @@ class TestProjectSettingRetrievePIView(
             'project': self.project,
         }
         AppSetting.objects.get(**q_kwargs).delete()
-        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
 
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
@@ -2686,7 +2686,7 @@ class TestProjectSettingRetrievePIView(
         """Test GET with PROJECT_USER scope setting"""
         setting_name = 'project_user_str_setting'
         get_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'user': str(self.user.sodar_uuid),
         }
@@ -2695,7 +2695,7 @@ class TestProjectSettingRetrievePIView(
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': str(self.project.sodar_uuid),
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
@@ -2717,7 +2717,7 @@ class TestProjectSettingRetrievePIView(
         }
         AppSetting.objects.get(**q_kwargs).delete()
         get_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'user': str(self.user.sodar_uuid),
         }
@@ -2726,7 +2726,7 @@ class TestProjectSettingRetrievePIView(
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': str(self.project.sodar_uuid),
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
@@ -2740,20 +2740,20 @@ class TestProjectSettingRetrievePIView(
     def test_get_project_user_no_user(self):
         """Test GET with PROJECT_USER setting and no user (should fail)"""
         setting_name = 'project_user_str_setting'
-        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_get_json(self):
         """Test GET with JSON app setting"""
         setting_name = 'project_json_setting'
-        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
 
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
@@ -2766,12 +2766,12 @@ class TestProjectSettingRetrievePIView(
     def test_get_non_modifiable(self):
         """Test GET with non-modifiable app setting"""
         setting_name = 'project_hidden_setting'
-        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
@@ -2785,7 +2785,7 @@ class TestProjectSettingRetrievePIView(
         """Test GET with invalid app name (should fail)"""
         setting_name = 'project_str_setting'
         get_data = {
-            'app_name': 'NON-EXISTING-APP',
+            'plugin_name': 'NON-EXISTING-APP',
             'setting_name': setting_name,
         }
         response = self.request_knox(self.url, data=get_data)
@@ -2824,7 +2824,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         )
         setting_name = 'project_str_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -2846,7 +2846,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         self.assertEqual(AppSetting.objects.count(), 0)
         setting_name = 'project_user_str_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': 'value',
             'user': str(self.user_owner.sodar_uuid),
@@ -2861,7 +2861,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         """Test setting PROJECT_USER setting with no user (should fail)"""
         setting_name = 'project_user_str_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -2873,7 +2873,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         """Test POST with non-modifiable app setting (should fail)"""
         setting_name = 'project_hidden_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -2885,7 +2885,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         """Test POST with invalid app name (should fail)"""
         setting_name = 'project_str_setting'
         post_data = {
-            'app_name': 'NON-EXISTING-APP',
+            'plugin_name': 'NON-EXISTING-APP',
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -2897,7 +2897,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         """Test POST with invalid scope (should fail)"""
         setting_name = 'user_str_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -2909,7 +2909,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         """Test POST with unaccepted project type (should fail)"""
         setting_name = 'project_category_bool_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': True,
         }
@@ -2921,7 +2921,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         """Test POST without value (should fail)"""
         self.assertEqual(AppSetting.objects.count(), 0)
         setting_name = 'project_str_setting'
-        post_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        post_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
@@ -2930,7 +2930,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         """Test POST with integer value"""
         setting_name = 'project_int_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': '170',
         }
@@ -2943,7 +2943,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         """Test POST with boolean value"""
         setting_name = 'project_bool_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': True,
         }
@@ -2957,7 +2957,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
         setting_name = 'project_json_setting'
         value = {'key': 'value'}
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': value,
         }
@@ -2980,12 +2980,12 @@ class TestUserSettingRetrievePIView(
     def test_get(self):
         """Test UserSettingRetrieveAPIView GET"""
         setting_name = 'user_str_setting'
-        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': None,
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
@@ -3005,12 +3005,12 @@ class TestUserSettingRetrievePIView(
             'user': self.user,
         }
         AppSetting.objects.get(**q_kwargs).delete()
-        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': None,
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
@@ -3024,12 +3024,12 @@ class TestUserSettingRetrievePIView(
     def test_get_non_modifiable(self):
         """Test GET with non-modifiable USER app setting"""
         setting_name = 'user_hidden_setting'
-        get_data = {'app_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'project': None,
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
@@ -3042,7 +3042,7 @@ class TestUserSettingRetrievePIView(
     def test_get_invalid_app_name(self):
         """Test GET with invalid app name (should fail)"""
         get_data = {
-            'app_name': 'NON-EXISTING-APP',
+            'plugin_name': 'NON-EXISTING-APP',
             'setting_name': 'user_str_setting',
         }
         response = self.request_knox(self.url, data=get_data)
@@ -3075,7 +3075,7 @@ class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
         )
         setting_name = 'user_str_setting'
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -3094,7 +3094,7 @@ class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
     def test_post_invalid_app_name(self):
         """Test POST with invalid app name (should fail)"""
         post_data = {
-            'app_name': 'NON-EXISTING-APP',
+            'plugin_name': 'NON-EXISTING-APP',
             'setting_name': 'user_str_setting',
             'value': 'value',
         }
@@ -3105,7 +3105,7 @@ class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
     def test_post_invalid_scope_project(self):
         """Test POST with PROJECT scope (should fail)"""
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': 'project_str_setting',
             'value': 'value',
         }
@@ -3116,7 +3116,7 @@ class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
     def test_post_invalid_scope_project_user(self):
         """Test POST with PROJECT_USER scope (should fail)"""
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': 'project_user_str_setting',
             'value': 'value',
         }
@@ -3128,7 +3128,7 @@ class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
         """Test POST without value (should fail)"""
         self.assertEqual(AppSetting.objects.count(), 0)
         post_data = {
-            'app_name': EX_APP_NAME,
+            'plugin_name': EX_APP_NAME,
             'setting_name': 'user_str_setting',
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -3325,7 +3325,7 @@ class TestRemoteProjectGetAPIView(
         """Test retrieving project data with legacy target site version"""
         # See issue #1355
         set_star = self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='project_star',
             setting_type='BOOLEAN',
             value=True,
@@ -3385,7 +3385,7 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
             )
         # Init IP restrict setting
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
             value=True,
@@ -3393,7 +3393,7 @@ class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
         )
         # Init IP allowlist setting
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
             value=None,
