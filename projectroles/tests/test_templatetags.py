@@ -725,3 +725,59 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     self.assertEqual(app['active'], True)
                 else:
                     self.assertEqual(app['active'], False)
+
+    def test_get_get_user_links(self):
+        """Test get_user_links() on the homepage"""
+        url = reverse('home')
+        req_factory = RequestFactory()
+        with self.login(self.user):
+            request = req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            self.assertEqual(
+                tags.get_user_links(request),
+                [
+                    {
+                        'name': 'appalerts',
+                        'url': '/alerts/app/list',
+                        'label': 'App Alerts',
+                        'icon': 'mdi:alert-octagram',
+                        'active': False,
+                    },
+                    {
+                        'name': 'example_site_app',
+                        'url': '/examples/site/example',
+                        'label': 'Example Site App',
+                        'icon': 'mdi:rocket-launch-outline',
+                        'active': False,
+                    },
+                    {
+                        'name': 'timeline_site',
+                        'url': '/timeline/site',
+                        'label': 'Site-Wide Events',
+                        'icon': 'mdi:clock-time-eight-outline',
+                        'active': False,
+                    },
+                    {
+                        'name': 'tokens',
+                        'url': '/tokens/',
+                        'label': 'API Tokens',
+                        'icon': 'mdi:key-chain-variant',
+                        'active': False,
+                    },
+                    {
+                        'name': 'userprofile',
+                        'url': '/user/profile',
+                        'label': 'User Profile',
+                        'icon': 'mdi:account-details',
+                        'active': False,
+                    },
+                    {
+                        'name': 'sign-out',
+                        'url': '/logout/',
+                        'label': 'Logout',
+                        'icon': 'mdi:logout-variant',
+                        'active': False,
+                    },
+                ],
+            )
