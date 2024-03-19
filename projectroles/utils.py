@@ -5,8 +5,9 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.constants import get_sodar_constants
 from projectroles.plugins import get_active_plugins
+from projectroles.models import SODAR_CONSTANTS
 
 # Settings
 SECRET_LENGTH = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
@@ -299,3 +300,60 @@ class AppLinkContent:
                 }
             )
         return ret
+
+
+class UserDropdownContent:
+    """Class to generate user dropdown content"""
+
+    def get_user_links(self, request):
+        links = []
+        # Add site-wide apps links
+        site_apps = get_active_plugins('site_app')
+        for app in site_apps:
+            if not app.app_permission or request.user.has_perm(
+                app.app_permission
+            ):
+                links.append(
+                    {
+                        'name': app.name,
+                        'url': reverse(app.entry_point_url_id),
+                        'label': app.title,
+                        'icon': app.icon,
+                        'active': request.path
+                        == reverse(app.entry_point_url_id),
+                    }
+                )
+        # Add admin link
+        if request.user.is_superuser:
+            links.append(
+                {
+                    'name': 'admin',
+                    'url': reverse('admin:index'),
+                    'label': 'Django Admin',
+                    'icon': 'mdi:cogs',
+                    'active': request.path == reverse('admin:index'),
+                }
+            )
+        # Add log out link
+        if request.user.is_authenticated:
+            links.append(
+                {
+                    'name': 'sign-out',
+                    'url': reverse('logout'),
+                    'label': 'Logout',
+                    'icon': 'mdi:logout-variant',
+                    'active': False,
+                }
+            )
+        elif not getattr(settings, 'PROJECTROLES_KIOSK_MODE', False):
+            links.append(
+                {
+                    'name': 'sign-in',
+                    'url': reverse('login'),
+                    'label': 'Login',
+                    'icon': 'mdi:login-variant',
+                    'active': False,
+                }
+            )
+        print(links)
+        return links
