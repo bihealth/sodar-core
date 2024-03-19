@@ -726,12 +726,11 @@ class TestProjectrolesTags(TemplateTagTestBase):
                 else:
                     self.assertEqual(app['active'], False)
 
-    def test_get_get_user_links(self):
-        """Test get_user_links() on the homepage"""
+    def test_get_get_user_links_home(self):
+        """Test get_user_links() on the home view"""
         url = reverse('home')
-        req_factory = RequestFactory()
         with self.login(self.user):
-            request = req_factory.get(url)
+            request = self.req_factory.get(url)
             request.resolver_match = resolve(url)
             request.user = self.user
             self.assertEqual(
@@ -781,3 +780,16 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     },
                 ],
             )
+
+    def test_get_user_links_userprofile(self):
+        """Test get_user_links() on the user profile view"""
+        url = reverse('userprofile:detail')
+        with self.login(self.user):
+            request = self.req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            for app in tags.get_user_links(request):
+                if app['name'] == 'userprofile':
+                    self.assertEqual(app['active'], True)
+                else:
+                    self.assertEqual(app['active'], False)

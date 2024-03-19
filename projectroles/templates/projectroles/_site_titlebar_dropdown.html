@@ -9,9 +9,9 @@
 {% for link in dropdown_links %}
   <li class="nav-item sodar-navbar-alt-item {% if link.active %}active{% endif %}">
     <a class="nav-link {% if link.name == 'sign-out' %}text-danger{% endif %}
-                      {% if link.name == 'sign-in' %}text-white{% endif %}"
-      href="{{ link.url }}"
-      id="sodar-navbar-nav-link-{{ link.name }}">
+              {% if link.name == 'sign-in' %}text-white{% endif %}"
+       href="{{ link.url }}"
+       id="sodar-navbar-nav-link-{{ link.name }}">
       <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
     </a>
 {% endfor %}
