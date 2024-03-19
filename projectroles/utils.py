@@ -170,7 +170,7 @@ class AppLinkContent:
             return False
         return True
 
-    def get_app_links(self, request, project=None):
+    def get_project_app_links(self, request, project=None):
         """Return project app links based on the current project and user."""
         ret = []
         # Add project related links

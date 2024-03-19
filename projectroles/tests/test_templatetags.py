@@ -95,6 +95,8 @@ class TestTemplateTagsBase(
             app_plugin__name='filesfolders',
             name='allow_public_links',
         )
+        # Init request factory
+        self.req_factory = RequestFactory()
 
 
 class TestProjectrolesCommonTags(TestTemplateTagsBase):
@@ -180,13 +182,12 @@ class TestProjectrolesCommonTags(TestTemplateTagsBase):
 
     def test_get_full_url(self):
         """Test get_full_url()"""
-        req_factory = RequestFactory()
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
 
         with self.login(self.user):
-            request = req_factory.get(url)
+            request = self.req_factory.get(url)
             self.assertEqual(
                 c_tags.get_full_url(request, url),
                 'http://testserver/project/{}'.format(self.project.sodar_uuid),
@@ -622,9 +623,8 @@ class TestProjectrolesTags(TestTemplateTagsBase):
     def test_get_sidebar_links_home(self):
         """Test get_sidebar_links() on the home view"""
         url = reverse('home')
-        req_factory = RequestFactory()
         with self.login(self.user):
-            request = req_factory.get(url)
+            request = self.req_factory.get(url)
             request.resolver_match = resolve(url)
             request.user = self.user
             self.assertEqual(
@@ -637,9 +637,8 @@ class TestProjectrolesTags(TestTemplateTagsBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-        req_factory = RequestFactory()
         with self.login(self.user):
-            request = req_factory.get(url)
+            request = self.req_factory.get(url)
             request.resolver_match = resolve(url)
             request.user = self.user
             self.assertEqual(
@@ -702,9 +701,8 @@ class TestProjectrolesTags(TestTemplateTagsBase):
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-        req_factory = RequestFactory()
         with self.login(self.user):
-            request = req_factory.get(url)
+            request = self.req_factory.get(url)
             request.resolver_match = resolve(url)
             request.user = self.user
             for app in tags.get_project_app_links(request, self.project):
@@ -718,9 +716,8 @@ class TestProjectrolesTags(TestTemplateTagsBase):
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
-        req_factory = RequestFactory()
         with self.login(self.user):
-            request = req_factory.get(url)
+            request = self.req_factory.get(url)
             request.resolver_match = resolve(url)
             request.user = self.user
             for app in tags.get_project_app_links(request, self.project):
