@@ -25,6 +25,7 @@ Changed
     - Upgrade to PostgreSQL v16 in CI (#1074)
     - Upgrade general Python dependencies (#1374)
     - Reformat with ``black==24.2.0`` (#1374)
+    - Update download URL in ``get_chromedriver_url.py`` (#1385)
 - **Projectroles**
     - Rename ``AppSettingAPI`` ``app_name`` arguments to ``plugin_name`` (#1285)
 
