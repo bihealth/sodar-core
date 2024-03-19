@@ -8,7 +8,7 @@ from django.utils import timezone
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import RemoteProject, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
-from projectroles.utils import AppLinkContent
+from projectroles.utils import UserDropdownContent, AppLinkContent
 
 
 register = template.Library()
@@ -268,6 +268,13 @@ def get_admin_warning():
         '</a></p>'.format(reverse('admin:index'))
     )
     return ret
+
+
+@register.simple_tag
+def get_user_links(request):
+    """Return user dropdown links"""
+    user_dropdown_content = UserDropdownContent()
+    return user_dropdown_content.get_user_links(request)
 
 
 @register.simple_tag
