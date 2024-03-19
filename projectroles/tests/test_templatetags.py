@@ -7,7 +7,7 @@ from importlib import import_module
 
 from django.conf import settings
 from django.test import override_settings, RequestFactory
-from django.urls import reverse
+from django.urls import reverse, resolve
 
 from test_plus.test import TestCase
 
@@ -95,6 +95,8 @@ class TestTemplateTagsBase(
             app_plugin__name='filesfolders',
             name='allow_public_links',
         )
+        # Init request factory
+        self.req_factory = RequestFactory()
 
 
 class TestProjectrolesCommonTags(TestTemplateTagsBase):
@@ -180,13 +182,12 @@ class TestProjectrolesCommonTags(TestTemplateTagsBase):
 
     def test_get_full_url(self):
         """Test get_full_url()"""
-        req_factory = RequestFactory()
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
 
         with self.login(self.user):
-            request = req_factory.get(url)
+            request = self.req_factory.get(url)
             self.assertEqual(
                 c_tags.get_full_url(request, url),
                 'http://testserver/project/{}'.format(self.project.sodar_uuid),
@@ -618,3 +619,109 @@ class TestProjectrolesTags(TestTemplateTagsBase):
         self.assertEqual(
             tags.get_sidebar_app_legend('Update Project'), 'Update<br />Project'
         )
+
+    def test_get_sidebar_links_home(self):
+        """Test get_sidebar_links() on the home view"""
+        url = reverse('home')
+        with self.login(self.user):
+            request = self.req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            self.assertEqual(
+                tags.get_project_app_links(request),
+                [],
+            )
+
+    def test_get_sidebar_links_project_detail_view(self):
+        """Test get_sidebar_links() on project detail view"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        with self.login(self.user):
+            request = self.req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            self.assertEqual(
+                tags.get_project_app_links(request, self.project),
+                [
+                    {
+                        'name': 'project-detail',
+                        'url': f'/project/{self.project.sodar_uuid}',
+                        'label': 'Project Overview',
+                        'icon': 'mdi:cube',
+                        'active': True,
+                    },
+                    {
+                        'name': 'app-plugin-bgjobs',
+                        'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                        'label': 'Background Jobs',
+                        'icon': 'mdi:server',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-example_project_app',
+                        'url': f'/examples/project/{self.project.sodar_uuid}',
+                        'label': 'Example Project App',
+                        'icon': 'mdi:rocket-launch',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-filesfolders',
+                        'url': f'/files/{self.project.sodar_uuid}',
+                        'label': 'Files',
+                        'icon': 'mdi:file',
+                        'active': False,
+                    },
+                    {
+                        'name': 'app-plugin-timeline',
+                        'url': f'/timeline/{self.project.sodar_uuid}',
+                        'label': 'Timeline',
+                        'icon': 'mdi:clock-time-eight',
+                        'active': False,
+                    },
+                    {
+                        'name': 'project-roles',
+                        'url': f'/project/members/{self.project.sodar_uuid}',
+                        'label': 'Members',
+                        'icon': 'mdi:account-multiple',
+                        'active': False,
+                    },
+                    {
+                        'name': 'project-update',
+                        'url': f'/project/project/update/{self.project.sodar_uuid}',
+                        'label': 'Update Project',
+                        'icon': 'mdi:lead-pencil',
+                        'active': False,
+                    },
+                ],
+            )
+
+    def test_get_sidebar_links_role_view(self):
+        """Test get_sidebar_links() on the role view"""
+        url = reverse(
+            'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
+        )
+        with self.login(self.user):
+            request = self.req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            for app in tags.get_project_app_links(request, self.project):
+                if app['name'] == 'project-roles':
+                    self.assertEqual(app['active'], True)
+                else:
+                    self.assertEqual(app['active'], False)
+
+    def test_get_sidebar_links_timeline_view(self):
+        """Test get_sidebar_links() on the timeline view"""
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+        with self.login(self.user):
+            request = self.req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            for app in tags.get_project_app_links(request, self.project):
+                if app['name'] == 'app-plugin-timeline':
+                    self.assertEqual(app['active'], True)
+                else:
+                    self.assertEqual(app['active'], False)

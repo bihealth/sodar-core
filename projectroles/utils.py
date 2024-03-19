@@ -5,15 +5,30 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
-from projectroles.constants import get_sodar_constants
-
+from projectroles.models import SODAR_CONSTANTS
+from projectroles.plugins import get_active_plugins
 
 # Settings
 SECRET_LENGTH = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 
 # SODAR constants
-SODAR_CONSTANTS = get_sodar_constants()
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+
+# Local constants
+SIDEBAR_ICON_MIN_SIZE = 18
+SIDEBAR_ICON_MAX_SIZE = 42
+ROLE_URLS = [
+    'roles',
+    'role_create',
+    'role_update',
+    'role_delete',
+    'invites',
+    'invite_create',
+    'invite_resend',
+    'invite_revoke',
+]
 
 
 def get_display_name(key, title=False, count=1, plural=False):
@@ -95,3 +110,192 @@ def get_app_names():
             else:
                 ret.append(s[0])
     return sorted(ret)
+
+
+class AppLinkContent:
+    """Class for generating application links for the UI"""
+
+    def _is_active_projectroles(self, request, link_names=None):
+        """Check if current URL is active under the projectroles app."""
+        # HACK: Avoid circular import
+        from projectroles.urls import urlpatterns
+
+        if request.resolver_match.app_name != 'projectroles':
+            return False
+        url_name = request.resolver_match.url_name
+        return url_name in [u.name for u in urlpatterns] and (
+            not link_names or url_name in link_names
+        )
+
+    def _is_active_plugin(self, app_plugin, app_name, url_name):
+        """
+        Check if current URL is active for a specific app plugin.
+        """
+        if app_plugin.name.startswith(app_name) and url_name in [
+            u.name for u in getattr(app_plugin, 'urls', [])
+        ]:
+            return True
+        # HACK for remote site views, see issue #1336
+        if (
+            app_name == 'projectroles'
+            and app_plugin.name == 'remotesites'
+            and url_name.startswith('remote_')
+        ):
+            return True
+        return False
+
+    def _is_app_visible(self, plugin, project, user):
+        """Check if app should be visible for user in a specific project."""
+        can_view_app = user.has_perm(plugin.app_permission, project)
+        app_hidden = False
+        if plugin.name in getattr(
+            settings, 'PROJECTROLES_HIDE_PROJECT_APPS', []
+        ):
+            app_hidden = True
+        if (
+            can_view_app
+            and not app_hidden
+            and (project.type == PROJECT_TYPE_PROJECT or plugin.category_enable)
+        ):
+            return True
+        return False
+
+    def _allow_project_creation(self):
+        """Check whether creating a project is allowed on the site."""
+        if (
+            settings.PROJECTROLES_SITE_MODE
+            == SODAR_CONSTANTS['SITE_MODE_TARGET']
+            and not settings.PROJECTROLES_TARGET_CREATE
+        ):
+            return False
+        return True
+
+    def get_project_app_links(self, request, project=None):
+        """Return project app links based on the current project and user."""
+        ret = []
+        # Add project related links
+        if project:
+            # Add project overview link
+            ret.append(
+                {
+                    'name': 'project-detail',
+                    'url': reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    'label': 'Project Overview',
+                    'icon': (
+                        'mdi:rhombus-split'
+                        if project.type == PROJECT_TYPE_CATEGORY
+                        else 'mdi:cube'
+                    ),
+                    'active': self._is_active_projectroles(request, ['detail']),
+                }
+            )
+            # Add app plugins links
+            app_plugins = get_active_plugins()
+            for plugin in app_plugins:
+                if self._is_app_visible(plugin, project, request.user):
+                    ret.append(
+                        {
+                            'name': "app-plugin-" + plugin.name,
+                            'url': reverse(
+                                plugin.entry_point_url_id,
+                                kwargs={'project': project.sodar_uuid},
+                            ),
+                            'label': ' '.join(plugin.title.split(' ')),
+                            'icon': plugin.icon,
+                            'active': self._is_active_plugin(
+                                plugin,
+                                request.resolver_match.app_name,
+                                request.resolver_match.url_name,
+                            ),
+                        }
+                    )
+            # Add role editing link
+            if request.user.has_perm(
+                'projectroles.view_project_roles', project
+            ):
+                ret.append(
+                    {
+                        'name': 'project-roles',
+                        'url': reverse(
+                            'projectroles:roles',
+                            kwargs={'project': project.sodar_uuid},
+                        ),
+                        'label': 'Members',
+                        'icon': 'mdi:account-multiple',
+                        'active': self._is_active_projectroles(
+                            request, ROLE_URLS
+                        ),
+                    }
+                )
+            # Add project update link
+            if request.user.has_perm('projectroles.update_project', project):
+                ret.append(
+                    {
+                        'name': 'project-update',
+                        'url': reverse(
+                            'projectroles:update',
+                            kwargs={'project': project.sodar_uuid},
+                        ),
+                        'label': 'Update Project',
+                        'icon': 'mdi:lead-pencil',
+                        'active': self._is_active_projectroles(
+                            request, ['update']
+                        ),
+                    }
+                )
+
+        # Add project and category creation links
+        if (
+            project
+            and project.type == PROJECT_TYPE_CATEGORY
+            and request.user.has_perm('projectroles.create_project', project)
+            and self._allow_project_creation()
+            and not project.is_remote()
+        ):
+            ret.append(
+                {
+                    'name': 'project-create',
+                    'url': reverse(
+                        'projectroles:create',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    'label': 'Create Project or Category',
+                    'icon': 'mdi:plus-thick',
+                    'active': self._is_active_projectroles(request, ['create']),
+                }
+            )
+        elif (
+            getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
+            and request.user.is_superuser
+        ):
+            ret.append(
+                {
+                    'name': 'project-create',
+                    'url': reverse('projectroles:create'),
+                    'label': 'Create Project',
+                    'icon': 'mdi:plus-thick',
+                    'active': self._is_active_projectroles(request, ['create']),
+                }
+            )
+        elif (
+            (
+                request.resolver_match.url_name == 'home'
+                or request.resolver_match.app_name == 'projectroles'
+                and not project
+            )
+            and request.user.has_perm('projectroles.create_project')
+            and self._allow_project_creation()
+        ):
+            ret.append(
+                {
+                    'name': 'home-project-create',
+                    'url': reverse('projectroles:create'),
+                    'label': 'Create Category',
+                    'icon': 'mdi:plus-thick',
+                    'active': self._is_active_projectroles(request, ['create']),
+                }
+            )
+        return ret

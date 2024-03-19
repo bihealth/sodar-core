@@ -6,12 +6,9 @@ from django.urls import reverse
 from django.utils import timezone
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import (
-    RoleAssignment,
-    RemoteProject,
-    SODAR_CONSTANTS,
-)
+from projectroles.models import RemoteProject, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
+from projectroles.utils import AppLinkContent
 
 
 register = template.Library()
@@ -155,20 +152,6 @@ def get_help_highlight(user):
 
 
 @register.simple_tag
-def get_role_import_action(source_as, dest_project):
-    """Return label for role import action based on existing assignment"""
-    try:
-        target_as = RoleAssignment.objects.get(
-            project=dest_project, user=source_as.user
-        )
-        if target_as.role == source_as.role:
-            return 'No action'
-        return 'Update'
-    except RoleAssignment.DoesNotExist:
-        return 'Import'
-
-
-@register.simple_tag
 def get_login_info():
     """Return HTML info for the login page"""
     ret = '<p>Please log in'
@@ -285,3 +268,10 @@ def get_admin_warning():
         '</a></p>'.format(reverse('admin:index'))
     )
     return ret
+
+
+@register.simple_tag
+def get_project_app_links(request, project=None):
+    """Return sidebar links"""
+    app_links = AppLinkContent()
+    return app_links.get_project_app_links(request, project)
