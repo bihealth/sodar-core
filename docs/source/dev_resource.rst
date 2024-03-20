@@ -306,9 +306,10 @@ The rest of the attributes are listed below:
     Default value for the setting. This is returned if no value has been set.
     Can alternatively be a callable with the signature
     ``callable(project=None, user=None)``.
-``local``
-    Boolean for allowing/disallowing editing in target sites for synchronized
-    projects.
+``global``
+    Boolean for allowing/disallowing editing in target sites for remote
+    projects. Relevant to ``SOURCE`` sites. If set ``True``, the value can not
+    be edited on target sites, the default value being ``False`` (optional).
 ``label``
     Label string to be displayed in forms for ``PROJECT`` and ``USER`` scope
     settings (optional).

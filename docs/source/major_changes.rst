@@ -85,6 +85,14 @@ into ``plugin_name``. This is to remove confusion as the argument does in fact
 refer specifically to a plugin, not the app name itself. If the argument is
 provided as a kwarg, references to it should be renamed.
 
+App Settings "Local" Attribute Deprecated
+-----------------------------------------
+
+The optional ``local`` attribute in app settings definitions has been
+depreacted. You should instead use ``global`` and the inverse value of your
+existing ``local`` settings. Support for ``local`` will be removed in SODAR Core
+v1.1. This is only relevant to sites being deployed as ``SOURCE`` sites.
+
 REST API Changes
 ----------------
 

@@ -34,7 +34,7 @@ from projectroles.utils import (
     get_user_display_name,
     build_secret,
 )
-from projectroles.app_settings import AppSettingAPI, APP_SETTING_LOCAL_DEFAULT
+from projectroles.app_settings import AppSettingAPI
 
 
 User = auth.get_user_model()
@@ -484,7 +484,7 @@ class ProjectForm(SODARModelForm):
         if s_val.get('user_modifiable') is False:
             self.fields[s_field].label += ' [HIDDEN]'
             self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
-        if s_val.get('local', APP_SETTING_LOCAL_DEFAULT) is False:
+        if self.app_settings.get_global_value(s_val):
             if self.instance.is_remote():
                 self.fields[s_field].label += ' [DISABLED]'
                 self.fields[

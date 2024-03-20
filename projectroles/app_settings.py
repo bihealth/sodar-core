@@ -24,7 +24,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 # Local constants
-APP_SETTING_LOCAL_DEFAULT = True
+APP_SETTING_GLOBAL_DEFAULT = False
 APP_SETTING_SCOPES = [
     APP_SETTING_SCOPE_PROJECT,
     APP_SETTING_SCOPE_USER,
@@ -45,6 +45,11 @@ APP_SETTING_SCOPE_ARGS = {
 }
 DELETE_SCOPE_ERR_MSG = 'Argument "{arg}" must be set for {scope} scope setting'
 OVERRIDE_ERR_MSG = 'Overriding global settings for remote projects not allowed'
+# TODO: Remove in v1.1 (see #1394)
+LOCAL_DEPRECATE_MSG = (
+    'The "local" argument for app settings has been deprecated and will be '
+    'removed in SODAR Core v1.1: use "global" instead'
+)
 
 
 # Define App Settings for projectroles app
@@ -63,7 +68,8 @@ PROJECTROLES_APP_SETTINGS = {
     #:         'options': ['example', 'example2'],  # Optional, only for
     #:                    settings of type STRING or INTEGER
     #:         'user_modifiable': True,  # Optional, show/hide in forms
-    #:         'local': False,  # Allow editing in target site forms if True
+    #:         'global': True,  # Only allow editing on target sites if False
+    #:                          # (optional, default True)
     #:         'project_types': [PROJECT_TYPE_PROJECT],  # Optional, list may
     #:          contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
     #:     }
@@ -74,7 +80,7 @@ PROJECTROLES_APP_SETTINGS = {
         'label': 'IP restrict',
         'description': 'Restrict project access by an allowed IP list',
         'user_modifiable': True,
-        'local': False,
+        'global': True,
     },
     'ip_allowlist': {
         'scope': APP_SETTING_SCOPE_PROJECT,
@@ -83,7 +89,7 @@ PROJECTROLES_APP_SETTINGS = {
         'label': 'IP allow list',
         'description': 'List of allowed IPs for project access',
         'user_modifiable': True,
-        'local': False,
+        'global': True,
     },
     'user_email_additional': {
         'scope': APP_SETTING_SCOPE_USER,
@@ -94,14 +100,14 @@ PROJECTROLES_APP_SETTINGS = {
         'description': 'Also send user emails to these addresses. Separate '
         'multiple emails with semicolon.',
         'user_modifiable': True,
-        'local': False,
+        'global': True,
         'project_types': [PROJECT_TYPE_PROJECT],
     },
     'project_star': {
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
         'type': 'BOOLEAN',
         'default': False,
-        'local': True,
+        'global': False,
         'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
     },
 }
@@ -200,6 +206,18 @@ class AppSettingAPI:
                 )
             )
 
+    # TODO: Remove in v1.1 (see #1394)
+    @classmethod
+    def _check_local_attr(cls, setting_def):
+        """
+        Warn if the deprecated "local" attribute is included in a settings
+        definition instead of the new "global" attribute.
+
+        :param setting_def: Dict
+        """
+        if 'local' in setting_def:
+            logger.warning(LOCAL_DEPRECATE_MSG)
+
     @classmethod
     def _get_app_plugin(cls, plugin_name):
         """
@@ -250,9 +268,8 @@ class AppSettingAPI:
         try:
             if isinstance(value, str):
                 return json.loads(value)
-            else:
-                json.dumps(value)  # Ensure this is valid
-                return value
+            json.dumps(value)  # Ensure this is valid
+            return value
         except Exception:
             raise ValueError('Value is not valid JSON: {}'.format(value))
 
@@ -328,38 +345,39 @@ class AppSettingAPI:
                     'App plugin not found: "{}"'.format(plugin_name)
                 )
             app_settings = app_plugin.app_settings
-
-        if setting_name in app_settings:
-            if callable(app_settings[setting_name].get('default')):
-                try:
-                    callable_setting = app_settings[setting_name]['default']
-                    return callable_setting(project, user)
-                except Exception:
-                    logger.error(
-                        'Error in callable setting "{}" for plugin "{}"'.format(
-                            setting_name, plugin_name
-                        )
-                    )
-                    return APP_SETTING_DEFAULT_VALUES[
-                        app_settings[setting_name]['type']
-                    ]
-            elif app_settings[setting_name]['type'] == 'JSON':
-                json_default = app_settings[setting_name].get('default')
-                if not json_default:
-                    if isinstance(json_default, dict):
-                        return {}
-                    elif isinstance(json_default, list):
-                        return []
-                    return {}
-                if post_safe:
-                    return json.dumps(app_settings[setting_name]['default'])
-            return app_settings[setting_name]['default']
-
-        raise KeyError(
-            'Setting "{}" not found in app plugin "{}"'.format(
-                setting_name, plugin_name
+        if setting_name not in app_settings:
+            raise KeyError(
+                'Setting "{}" not found in app plugin "{}"'.format(
+                    setting_name, plugin_name
+                )
             )
-        )
+
+        # TODO: Remove _check_local_attr() in v1.1 (see #1394)
+        cls._check_local_attr(app_settings[setting_name])
+        if callable(app_settings[setting_name].get('default')):
+            try:
+                callable_setting = app_settings[setting_name]['default']
+                return callable_setting(project, user)
+            except Exception:
+                logger.error(
+                    'Error in callable setting "{}" for plugin "{}"'.format(
+                        setting_name, plugin_name
+                    )
+                )
+                return APP_SETTING_DEFAULT_VALUES[
+                    app_settings[setting_name]['type']
+                ]
+        elif app_settings[setting_name]['type'] == 'JSON':
+            json_default = app_settings[setting_name].get('default')
+            if not json_default:
+                if isinstance(json_default, dict):
+                    return {}
+                elif isinstance(json_default, list):
+                    return []
+                return {}
+            if post_safe:
+                return json.dumps(app_settings[setting_name]['default'])
+        return app_settings[setting_name]['default']
 
     @classmethod
     def get(
@@ -524,11 +542,7 @@ class AppSettingAPI:
             )
         # Prevent updating global setting on remote project
         # TODO: Prevent editing global USER settings (#1329)
-        if (
-            not s_def.get('local', APP_SETTING_LOCAL_DEFAULT)
-            and project
-            and project.is_remote()
-        ):
+        if cls.get_global_value(s_def) and project and project.is_remote():
             raise ValueError(OVERRIDE_ERR_MSG)
 
         try:  # Update existing setting
@@ -804,12 +818,6 @@ class AppSettingAPI:
             )
         except AttributeError:
             app_settings = PROJECTROLES_APP_SETTINGS
-        for k, v in app_settings.items():
-            if 'local' not in v:
-                raise ValueError(
-                    'Attribute "local" is missing in projectroles app '
-                    'setting definition "{}"'.format(k)
-                )
         return app_settings
 
     @classmethod
@@ -829,6 +837,20 @@ class AppSettingAPI:
         for p in plugins:
             ret[p.name] = p.app_settings
         return ret
+
+    @classmethod
+    def get_global_value(cls, setting_def):
+        """
+        Get the "global" value of a settings definition. If the deprecated
+        "local" value is still used, return that and log a warning.
+
+        :param setting_def: Dict
+        :return: Boolean
+        """
+        if 'local' in setting_def:  # TODO: Remove in v1.1 (see #1394)
+            logger.warning(LOCAL_DEPRECATE_MSG)
+            return not setting_def['local']  # Inverse value
+        return setting_def.get('global', APP_SETTING_GLOBAL_DEFAULT)
 
 
 def get_example_setting_default(project=None, user=None):

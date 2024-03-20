@@ -20,7 +20,7 @@ from djangoplugins.models import Plugin
 
 from projectroles.app_settings import (
     AppSettingAPI,
-    APP_SETTING_LOCAL_DEFAULT,
+    APP_SETTING_GLOBAL_DEFAULT,
 )
 from projectroles.models import (
     Project,
@@ -181,10 +181,8 @@ class RemoteProjectAPI:
             plugin_name = app_setting.app_plugin.name
         else:
             plugin_name = 'projectroles'
-        local = (
-            all_defs.get(plugin_name, {})
-            .get(app_setting.name, {})
-            .get('local', APP_SETTING_LOCAL_DEFAULT)
+        global_val = app_settings.get_global_value(
+            all_defs.get(plugin_name, {}).get(app_setting.name, {})
         )
         # TODO: Remove user_name once #1316 and #1317 are implemented
         sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
@@ -203,7 +201,7 @@ class RemoteProjectAPI:
             'user_uuid': (
                 str(app_setting.user.sodar_uuid) if app_setting.user else None
             ),
-            'local': local,
+            'global': global_val,
         }
         if add_user_name:
             sync_data['app_settings'][str(app_setting.sodar_uuid)][
@@ -1091,7 +1089,7 @@ class RemoteProjectAPI:
                 user=user,
             )
             # Keep target instance of local app setting if available
-            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
+            if not ad.get('global', APP_SETTING_GLOBAL_DEFAULT):
                 logger.info('Keeping local setting {}'.format(ad['name']))
                 set_data['status'] = 'skipped'
                 return
@@ -1111,7 +1109,8 @@ class RemoteProjectAPI:
             action_str = 'creating'
 
         # Remove keys that are not available in the model
-        ad.pop('local', None)
+        ad.pop('global', None)
+        ad.pop('local', None)  # TODO: Remove in v1.1 (see #1394)
         ad.pop('project_uuid', None)
         ad.pop('user_name', None)  # TODO: Remove once user UUID support added
         ad.pop('user_uuid', None)

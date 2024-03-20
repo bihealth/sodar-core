@@ -4,13 +4,14 @@ from django.test import override_settings
 
 from test_plus.test import TestCase
 
-from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
-from projectroles.plugins import get_app_plugin
 from projectroles.app_settings import (
     AppSettingAPI,
     get_example_setting_default,
     get_example_setting_options,
+    LOCAL_DEPRECATE_MSG,
 )
+from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
+from projectroles.plugins import get_app_plugin
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -45,6 +46,15 @@ EXISTING_SETTING = 'project_bool_setting'
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_SETTING_VALUE = 'INVALID VALUE'
 INVALID_SETTING_MSG = 'INVALID_SETTING_VALUE detected'
+APP_SETTINGS_TEST = {
+    'project_star': {
+        'scope': APP_SETTING_SCOPE_PROJECT_USER,
+        'type': 'BOOLEAN',
+        'default': False,
+        'local': True,  # Deprecated
+        'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
+    },
+}
 
 
 class AppSettingInitMixin:
@@ -307,7 +317,7 @@ class TestAppSettingAPI(
         self.assertEqual(val, default_val)
 
     def test_get_with_nonexisting(self):
-        """Test get_() with non-existing setting"""
+        """Test get() with non-existing setting"""
         with self.assertRaises(KeyError):
             app_settings.get(
                 plugin_name=EXAMPLE_APP_NAME,
@@ -457,7 +467,6 @@ class TestAppSettingAPI(
         app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
         self.assertEqual(AppSetting.objects.filter(**args).count(), 1)
 
-    # TODO: Test local setting on remote project
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_set_target_local_remote(self):
         """Test setting local setting on target site and remote project"""
@@ -540,8 +549,8 @@ class TestAppSettingAPI(
         with self.assertRaises(ValueError):
             app_settings.validate('INVALID_TYPE', 'value', None)
 
-    def test_get_def_plugin(self):
-        """Test get_def() with plugin"""
+    def test_get_definition_plugin(self):
+        """Test get_definition() with plugin"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
@@ -557,8 +566,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(s_def, expected)
 
-    def test_get_def_app_name(self):
-        """Test get_def() with app name"""
+    def test_get_definition_app_name(self):
+        """Test get_definition() with app name"""
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': 'STRING',
@@ -573,8 +582,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(s_def, expected)
 
-    def test_get_def_user(self):
-        """Test get_def() with user setting"""
+    def test_get_definition_user(self):
+        """Test get_definition() with user setting"""
         expected = {
             'scope': APP_SETTING_SCOPE_USER,
             'type': 'STRING',
@@ -589,8 +598,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(s_def, expected)
 
-    def test_get_invalid(self):
-        """Test get_def() with innvalid input"""
+    def test_get_definition_invalid(self):
+        """Test get_definition() with innvalid input"""
         with self.assertRaises(ValueError):
             app_settings.get_definition(
                 'non_existing_setting', plugin_name=EXAMPLE_APP_NAME
@@ -603,8 +612,8 @@ class TestAppSettingAPI(
         with self.assertRaises(ValueError):
             app_settings.get_definition('project_str_setting')
 
-    def test_get_defs_project(self):
-        """Test get_defs() with PROJECT scope"""
+    def test_get_definitions_project(self):
+        """Test get_definitions() with PROJECT scope"""
         expected = {
             'project_str_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
@@ -659,7 +668,7 @@ class TestAppSettingAPI(
                 'default': False,
                 'description': 'Example global boolean project setting',
                 'user_modifiable': True,
-                'local': False,
+                'global': True,
             },
             'project_json_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
@@ -720,8 +729,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(defs, expected)
 
-    def test_get_defs_user(self):
-        """Test get_defs() with USER scope"""
+    def test_get_definitions_user(self):
+        """Test get_definitions() with USER scope"""
         expected = {
             'user_str_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
@@ -811,8 +820,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(defs, expected)
 
-    def test_get_defs_project_user(self):
-        """Test get_defs() with PROJECT_USER scope"""
+    def test_get_definitions_project_user(self):
+        """Test get_definitions() with PROJECT_USER scope"""
         expected = {
             'project_user_str_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
@@ -861,8 +870,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(defs, expected)
 
-    def test_get_defs_site(self):
-        """Test get_defs() with SITE scope"""
+    def test_get_definitions_site(self):
+        """Test get_definitions() with SITE scope"""
         expected = {
             'site_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
@@ -878,8 +887,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(defs, expected)
 
-    def test_get_defs_modifiable(self):
-        """Test get_defs() with user_modifiable arg"""
+    def test_get_definitions_modifiable(self):
+        """Test get_definitions() with user_modifiable arg"""
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
         )
@@ -891,8 +900,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(len(defs), 10)
 
-    def test_get_defs_invalid_scope(self):
-        """Test get_defs() with invalid scope"""
+    def test_get_definitions_invalid_scope(self):
+        """Test get_definitions() with invalid scope"""
         with self.assertRaises(ValueError):
             app_settings.get_definitions(
                 'Ri4thai8aez5ooRa', plugin_name=EXAMPLE_APP_NAME
@@ -1093,6 +1102,37 @@ class TestAppSettingAPI(
                 APP_SETTING_SCOPE_USER,
                 project=self.project,
                 user=self.user,
+            )
+
+    def test_get_global_value(self):
+        """Test get_global_value() with set value"""
+        s_def = app_settings.get_definition(
+            'project_global_setting', plugin_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(app_settings.get_global_value(s_def), True)
+
+    def test_get_global_value_unset(self):
+        """Test get_global_value() with unset value"""
+        s_def = app_settings.get_definition(
+            'project_str_setting', plugin_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(app_settings.get_global_value(s_def), False)  # Default
+
+    # TODO: Remove in v1.1 (see #1394)
+    @override_settings(PROJECTROLES_APP_SETTINGS_TEST=APP_SETTINGS_TEST)
+    def test_get_global_value_local(self):
+        """Test get_global_value() with deprecated local value"""
+        s_def = app_settings.get_definition(
+            'project_star', plugin_name='projectroles'
+        )
+        # Should be inverse of "local" value
+        with self.assertLogs(
+            logger='projectroles.app_settings', level='WARNING'
+        ) as log:
+            self.assertEqual(app_settings.get_global_value(s_def), False)
+            self.assertIn(
+                'WARNING:projectroles.app_settings:' + LOCAL_DEPRECATE_MSG,
+                log.output,
             )
 
     def test_validate_form_app_settings(self):

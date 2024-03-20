@@ -113,7 +113,7 @@ HIDDEN_PROJECT_SETTINGS = [
 UPDATED_HIDDEN_SETTING = 'Updated value'
 UPDATED_HIDDEN_JSON_SETTING = {'updated': 'value'}
 
-PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
+APP_SETTINGS_TEST = {
     'test_setting': {
         'scope': APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER
         'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
@@ -121,7 +121,7 @@ PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
         'label': 'Test setting',  # Optional, defaults to name/key
         'description': 'Test setting',  # Optional
         'user_modifiable': True,  # Optional, show/hide in forms
-        'local': False,
+        'global': True,
     },
     'test_setting_local': {
         'scope': APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER
@@ -130,13 +130,13 @@ PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
         'label': 'Test setting',  # Optional, defaults to name/key
         'description': 'Test setting',  # Optional
         'user_modifiable': True,  # Optional, show/hide in forms
-        'local': True,
+        'global': False,
     },
     'project_star': {  # NOTE: We have to include this for view tests
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
         'type': 'BOOLEAN',
         'default': False,
-        'local': False,
+        'global': True,
     },
 }
 
@@ -1918,7 +1918,7 @@ class TestProjectFormTarget(
 
 @override_settings(
     PROJECTROLES_SITE_MODE=SITE_MODE_TARGET,
-    PROJECTROLES_APP_SETTINGS_TEST=PROJECTROLES_APP_SETTINGS_TEST_LOCAL,
+    PROJECTROLES_APP_SETTINGS_TEST=APP_SETTINGS_TEST,
 )
 class TestProjectFormTargetLocal(
     RemoteSiteMixin,

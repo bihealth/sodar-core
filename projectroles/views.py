@@ -33,7 +33,7 @@ from django.views.generic.detail import ContextMixin
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
 from projectroles import email
-from projectroles.app_settings import AppSettingAPI, APP_SETTING_LOCAL_DEFAULT
+from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
@@ -1055,7 +1055,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 s_def = app_settings.get_definition(
                     setting_name, plugin_name=plugin_name
                 )
-                if not s_def.get('local', APP_SETTING_LOCAL_DEFAULT):
+                if app_settings.get_global_value(s_def):
                     continue
             app_settings.set(
                 plugin_name=k.split('.')[1],

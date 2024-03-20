@@ -30,6 +30,8 @@ Changed
 - **Projectroles**
     - Rename ``AppSettingAPI`` ``app_name`` arguments to ``plugin_name`` (#1285)
     - Default password in ``createdevusers`` management command (#1390)
+    - Deprecate ``local`` in app settings, use ``global`` instead (#1319)
+    - Enforce optional handling of app settings ``global`` attributes (#1395)
 
 Fixed
 -----

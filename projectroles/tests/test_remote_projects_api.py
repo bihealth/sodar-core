@@ -492,7 +492,7 @@ class TestGetSourceData(
             'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': None,
             'user_name': None,
-            'local': False,
+            'global': True,
         }
         self.assertEqual(set_data, expected)
         set_data = sync_data['app_settings'][str(set_ip_allowlist.sodar_uuid)]
@@ -505,7 +505,7 @@ class TestGetSourceData(
             'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': None,
             'user_name': None,
-            'local': False,
+            'global': True,
         }
         self.assertEqual(set_data, expected)
         set_data = sync_data['app_settings'][str(set_star.sodar_uuid)]
@@ -518,7 +518,7 @@ class TestGetSourceData(
             'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': str(self.user_source.sodar_uuid),
             'user_name': self.user_source.username,
-            'local': True,
+            'global': False,
         }
         self.assertEqual(set_data, expected)
 
@@ -552,7 +552,7 @@ class TestGetSourceData(
             'app_plugin': None,
             'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': str(self.user_source.sodar_uuid),
-            'local': True,
+            'global': False,
         }
         self.assertEqual(set_data, expected)
         self.assertNotIn('user_name', set_data)  # No user_name here
@@ -715,7 +715,7 @@ class SyncRemoteDataTestBase(
                     'app_plugin': None,  # None is for 'projectroles' app
                     'project_uuid': SOURCE_PROJECT_UUID,
                     'user_uuid': None,
-                    'local': False,
+                    'global': True,
                 },
                 SET_IP_ALLOWLIST_UUID: {
                     'name': 'ip_allowlist',
@@ -725,7 +725,7 @@ class SyncRemoteDataTestBase(
                     'app_plugin': None,  # None is for 'projectroles' app
                     'project_uuid': SOURCE_PROJECT_UUID,
                     'user_uuid': None,
-                    'local': False,
+                    'global': True,
                 },
                 SET_STAR_UUID: {
                     'name': 'project_star',
@@ -736,7 +736,7 @@ class SyncRemoteDataTestBase(
                     'project_uuid': SOURCE_PROJECT_UUID,
                     'user_uuid': SOURCE_USER_UUID,
                     'user_name': SOURCE_USER_USERNAME,
-                    'local': True,
+                    'global': False,
                 },
             },
         }
@@ -1092,8 +1092,8 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
     def test_create_app_setting_local(self):
         """Test sync with local app setting"""
         remote_data = self.default_data
-        remote_data['app_settings'][SET_IP_RESTRICT_UUID]['local'] = True
-        remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['local'] = True
+        remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
+        remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['global'] = False
         expected = deepcopy(remote_data)
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
@@ -1816,8 +1816,8 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
     def test_update_app_settings_local(self):
         """Test update with local app settings (should not be updated)"""
         remote_data = self.default_data
-        remote_data['app_settings'][SET_IP_RESTRICT_UUID]['local'] = True
-        remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['local'] = True
+        remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
+        remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['global'] = False
         remote_data['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
         remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['value_json'] = [
             '192.168.1.1'
@@ -1882,7 +1882,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
             'app_plugin': 'NOT_A_VALID_APP',
             'project_uuid': SOURCE_PROJECT_UUID,
             'user_uuid': None,
-            'local': False,
+            'global': True,
         }
         self.remote_api.sync_remote_data(self.source_site, remote_data)
         # Make sure setting was not set
