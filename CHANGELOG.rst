@@ -15,6 +15,7 @@ Added
     - Python v3.11 support (#1157)
 - **Projectroles**
     - ``full_title`` field in ``ProjectSerializer`` and API views (#1314)
+    - Custom password argument in ``createdevusers`` management command (#1393)
 
 Changed
 -------
@@ -28,6 +29,7 @@ Changed
     - Update download URL in ``get_chromedriver_url.py`` (#1385)
 - **Projectroles**
     - Rename ``AppSettingAPI`` ``app_name`` arguments to ``plugin_name`` (#1285)
+    - Default password in ``createdevusers`` management command (#1390)
 
 Fixed
 -----

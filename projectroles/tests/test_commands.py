@@ -24,7 +24,10 @@ from projectroles.management.commands.cleanappsettings import (
     DELETE_PROJECT_TYPE_MSG,
     DELETE_SCOPE_MSG,
 )
-from projectroles.management.commands.createdevusers import DEV_USER_NAMES
+from projectroles.management.commands.createdevusers import (
+    DEV_USER_NAMES,
+    DEFAULT_PASSWORD,
+)
 
 from projectroles.models import (
     RoleAssignment,
@@ -55,6 +58,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 # Local constants
 EXAMPLE_APP_NAME = 'example_project_app'
 CLEAN_LOG_PREFIX = 'INFO:projectroles.management.commands.cleanappsettings:'
+CUSTOM_PASSWORD = 'custompass'
 
 
 class BatchUpdateRolesMixin:
@@ -731,6 +735,14 @@ class TestCreateDevUsers(TestCase):
                 email='{}@example.com'.format(u),
             ).first()
             self.assertIsNotNone(user)
+            self.assertEqual(user.check_password(DEFAULT_PASSWORD), True)
+
+    def test_create_custom_password(self):
+        """Test creating users with custom password"""
+        call_command('createdevusers', password=CUSTOM_PASSWORD)
+        for u in DEV_USER_NAMES:
+            user = User.objects.filter(username=u).first()
+            self.assertEqual(user.check_password(CUSTOM_PASSWORD), True)
 
     def test_create_existing(self):
         """Test creating users with existing user in list"""

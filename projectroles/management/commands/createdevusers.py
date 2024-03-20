@@ -20,23 +20,36 @@ User = get_user_model()
 DEV_USER_NAMES = ['alice', 'bob', 'carol', 'dan', 'erin']
 LAST_NAME = 'Example'
 EMAIL_DOMAIN = 'example.com'
-PASSWORD = 'password'
+DEFAULT_PASSWORD = 'sodarpass'
 
 
 class Command(BaseCommand):
-    help = (
-        'Create fictitious local user accounts for development. The password '
-        'for each user will be set as "password".'
-    )
+    help = 'Create fictitious local user accounts for development.'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-p',
+            '--password',
+            dest='password',
+            type=str,
+            required=False,
+            help='Password to use for created dev users. If not given, the '
+            'default password "{}" will be used'.format(DEFAULT_PASSWORD),
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
             logger.error(
                 'DEBUG not enabled, cancelling. Are you attempting to create '
-                'development users on a production site?'
+                'development users on a production instance?'
             )
             sys.exit(1)
-        password = make_password(PASSWORD)
+        pw = (
+            DEFAULT_PASSWORD
+            if not options.get('password')
+            else options['password']
+        )
+        password = make_password(pw)
         for u in DEV_USER_NAMES:
             if User.objects.filter(username=u).first():
                 logger.info('User "{}" already exists'.format(u))

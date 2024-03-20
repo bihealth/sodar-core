@@ -135,7 +135,9 @@ Optional Steps
 
 For creating a group of example users for your development site, you can run the
 ``createdevusers`` management command. This creates the users "alice", "bob",
-"carol", "dan" and "erin", all with the password "password".
+"carol", "dan" and "erin". The users will be created with the password
+"sodarpass", unless a custom password is supplied via the ``-p`` or
+``--password`` argument.
 
 .. code-block:: console
 
