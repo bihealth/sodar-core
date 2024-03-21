@@ -27,6 +27,8 @@ Changed
     - Upgrade general Python dependencies (#1374)
     - Reformat with ``black==24.2.0`` (#1374)
     - Update download URL in ``get_chromedriver_url.py`` (#1385)
+- **Filesfolders**
+    - Add migration required by Django v4.2 (#1396)
 - **Projectroles**
     - Rename ``AppSettingAPI`` ``app_name`` arguments to ``plugin_name`` (#1285)
     - Default password in ``createdevusers`` management command (#1390)
