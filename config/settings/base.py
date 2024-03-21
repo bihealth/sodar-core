@@ -424,6 +424,26 @@ if ENABLE_LDAP:
         )
 
 
+# OpenID configuration
+# ------------------------------------------------------------------------------
+
+ENABLE_OPENID = env.bool('ENABLE_OPENID', False)
+
+if ENABLE_OPENID:
+    INSTALLED_APPS.append('social_django')
+    AUTHENTICATION_BACKENDS = tuple(
+        itertools.chain(
+            ('social_core.backends.open_id.OpenIdAuth',),
+            AUTHENTICATION_BACKENDS,
+        )
+    )
+    TEMPLATES[0]['OPTIONS']['context_processors'] += [
+        'social_django.context_processors.backends',
+        'social_django.context_processors.login_redirect',
+    ]
+    SOCIAL_AUTH_JSONFIELD_ENABLED = True
+    # TODO: OpenID settings here
+
 # Logging
 # ------------------------------------------------------------------------------
 

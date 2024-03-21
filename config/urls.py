@@ -55,6 +55,8 @@ urlpatterns = [
     path('examples/site/', include('example_site_app.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+if settings.ENABLE_OPENID:
+    urlpatterns.append(path('social/', include('social_django.urls')))
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit
