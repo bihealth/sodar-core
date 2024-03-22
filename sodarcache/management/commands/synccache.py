@@ -70,6 +70,8 @@ class Command(BaseCommand):
                         plugin.name, ex
                     )
                 )
+                if settings.DEBUG:
+                    raise ex
                 errors = True
         logger.info(
             'Cache synchronization {}'.format(
