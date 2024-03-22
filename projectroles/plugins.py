@@ -384,17 +384,11 @@ class ProjectAppPluginPoint(PluginPoint):
         :param user: User object for user initiating the search
         :param search_type: String
         :param keywords: List (optional)
-        :return: Dict
+        :return: List of PluginSearchResult objects
         """
         # TODO: Implement this in your app plugin
         # TODO: Implement display of results in the app's search template
-        return {
-            'all': {  # You can add 1-N lists of result items
-                'title': 'Title to be displayed',
-                'search_types': [],
-                'items': [],
-            }
-        }
+        return []
 
     def update_cache(self, name=None, project=None, user=None):
         """
@@ -663,6 +657,42 @@ class PluginObjectLink:
         self.url = url
         self.name = name
         self.blank = blank
+
+
+class PluginSearchResult:
+    """
+    Class representing a list of search results from a specific plugin for one
+    or more search types. Expected to be returned from search() implementations.
+    """
+
+    #: Category of the result set, used in templates (string)
+    category = None
+    #: Title to be displayed for this set of search results in the UI (string)
+    title = None
+    #: List of one or more search type keywords for these results
+    search_types = []
+    #: List or QuerySet of result objects
+    items = []
+
+    def __init__(self, category, title, search_types, items):
+        """
+        Initialize PluginSearchResult.
+
+        :param category: Category of the result set, used in templates (string)
+        :param title: Title to be displayed for this set of search results in
+                      the UI (string)
+        :param search_types: List of one or more search type keywords for the
+                             results
+        :param items: List or QuerySet of result objects
+        """
+        self.category = category
+        self.title = title
+        self.search_types = search_types
+        if not isinstance(search_types, list) or len(search_types) < 1:
+            raise ValueError(
+                'At least one type keyword must be provided in search_types'
+            )
+        self.items = items
 
 
 # Plugin API -------------------------------------------------------------------

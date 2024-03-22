@@ -17,6 +17,7 @@ Added
     - ``full_title`` field in ``ProjectSerializer`` and API views (#1314)
     - Custom password argument in ``createdevusers`` management command (#1393)
     - ``PluginObjectLink`` data class in plugins (#1343)
+    - ``PluginSearchResult`` data class in plugins (#1399)
 
 Changed
 -------
@@ -37,6 +38,8 @@ Changed
     - Enforce optional handling of app settings ``global`` attributes (#1395)
     - Expect ``get_object_link()`` plugin methods to return ``PluginObjectLink`` (#1343)
     - Deprecate returning ``dict`` from ``get_object_link()`` (#1343)
+    - Expect ``search()`` plugin methods to return list of ``PluginSearchResult`` objects (#1399)
+    - Deprecate returning ``dict`` from ``search()`` (#1399)
 - **Sodarcache**
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
 - **Timeline**

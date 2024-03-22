@@ -98,11 +98,23 @@ Plugin API get_object_link() Changes
 ------------------------------------
 
 Implementations of ``get_object_link()`` in app plugins are now expected to
-return a ``PluginObjectLink`` object or ``None``. Returning ``dict`` has been
+return a ``PluginObjectLink`` object or ``None``. Returning a ``dict`` has been
 deprecated and support for it will be removed in v1.1.
 
 Furthermore, the return data is now expected to return the object name in the
 ``name`` attribute, instead of ``label`` in the old implementation.
+
+Plugin API search() Changes
+---------------------------
+
+Similar to ``get_object_link()``, expected return data for ``search()`` has
+changed. Implementations are now expected to return a list of
+``PluginSearchResult`` objects. Returning a ``dict`` has been deprecated and
+support for it will be removed in v1.1.
+
+Note that a dict using the ``category`` variable as a key will still be
+provided for your app's search template. Hence, modifying the template should
+not be required after updating the method.
 
 REST API Changes
 ----------------

@@ -6,6 +6,7 @@ from projectroles.plugins import (
     ProjectAppPluginPoint,
     BackendPluginPoint,
     SiteAppPluginPoint,
+    PluginSearchResult,
 )
 from projectroles.utils import get_display_name
 
@@ -101,7 +102,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :param user: User object for user initiating the search
         :param search_type: String
         :param keywords: List (optional)
-        :return: Dict
+        :return: List of PluginSearchResult objects
         """
         items = []
         if not search_type or search_type == 'timeline':
@@ -112,13 +113,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 for event in list(events)
                 if self.check_permission(user, event)
             ]
-        return {
-            'all': {
-                'title': 'Timeline Events',
-                'search_types': ['timeline'],
-                'items': items,
-            }
-        }
+        ret = PluginSearchResult(
+            category='all',
+            title='Timeline Event',
+            search_types=['timeline'],
+            items=items,
+        )
+        return [ret]
 
 
 class BackendPlugin(BackendPluginPoint):

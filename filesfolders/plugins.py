@@ -3,7 +3,11 @@ from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import ProjectAppPluginPoint, PluginObjectLink
+from projectroles.plugins import (
+    ProjectAppPluginPoint,
+    PluginObjectLink,
+    PluginSearchResult,
+)
 
 from filesfolders.models import File, Folder, HyperLink
 from filesfolders.urls import urlpatterns
@@ -146,10 +150,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :param user: User object for user initiating the search
         :param search_type: String
         :param keywords: List (optional)
-        :return: Dict
+        :return: List of PluginSearchResult objects
         """
         items = []
-
         if not search_type:
             files = File.objects.find(search_terms, keywords)
             folders = Folder.objects.find(search_terms, keywords)
@@ -164,21 +167,19 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             items = HyperLink.objects.find(search_terms, keywords).order_by(
                 'name'
             )
-
         if items:
             items = [
                 x
                 for x in items
                 if user.has_perm('filesfolders.view_data', x.project)
             ]
-
-        return {
-            'all': {
-                'title': 'Files, Folders and Links',
-                'search_types': ['file', 'folder', 'link'],
-                'items': items,
-            }
-        }
+        ret = PluginSearchResult(
+            category='all',
+            title='Files, Folders and Links',
+            search_types=['file', 'folder', 'link'],
+            items=items,
+        )
+        return [ret]
 
     def get_statistics(self):
         return {

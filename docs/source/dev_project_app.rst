@@ -253,7 +253,7 @@ Implementing the following is **optional**:
     Return extra data link for a Timeline event.
 ``search()``
     Function called when searching for data related to the app if search is
-    enabled.
+    enabled. Expected to return a list of ``PluginSearchResult`` objects.
 ``get_statistics()``
     Return statistics for the siteinfo app. See details in
     :ref:`the siteinfo documentation <app_siteinfo>`.
@@ -596,7 +596,7 @@ Project Search API and Template
 ===============================
 
 If you want to implement search in your project app, you need to implement the
-``search()`` method in your plugin as well as a template for displaying the
+``search()`` method in your plugin, as well as a template for displaying the
 results.
 
 .. hint::
@@ -628,29 +628,33 @@ See the signature of ``search()`` in
 
 .. note::
 
-   Within this function, you are expected to verify appropriate access of the
+   Within this method, you are expected to verify appropriate access of the
    searching user yourself!
 
-.. warning::
-
-    The old expected signature of providing a single ``search_term`` argument
-    has been deprecated in v0.9 and will be removed in the next major release!
-
-The return data is a dictionary, which is split by groups in case your app can
-return multiple different lists for data. This is useful where e.g. the same
-type of HTML list isn't suitable for all returnable types. If only returning one
-type of data, you can just use e.g. ``all`` as your only category. Example of
-the result:
+The return data is a list of one or more ``PluginSearchResult`` objects. The
+objects are expected to be split between search categories, of which there can
+be one or multiple. This is useful where e.g. the same type of HTML list isn't
+suitable for all returnable types. If only returning one type of data, you can
+use e.g. ``all`` as your only category. Example of a return data:
 
 .. code-block:: python
 
-   return {
-       'all': {                     # 1-N categories to be included
-           'title': 'List title',   # Title of the result list to be displayed
-           'search_types': [],      # Object types included in this category
-           'items': []              # The actual objects returned
-           }
-       }
+    from projectroles.plugins import PluginSearchResult
+    # ...
+    return [
+        PluginSearchResult(
+            'category': 'all',  # Category ID to be used in your search template
+            'title': 'List title',  # Title of the result set
+            'search_types': [],  # Object types included in this category
+            'items': [],  # List or QuerySet of objects returned by search
+        )
+    ]
+
+.. warning::
+
+    The earlier search implementation expected a ``dict`` as return data. This
+    has been deprecated and support for it will be removed in SODAR Core v1.1.
+
 
 Search Template
 ---------------
