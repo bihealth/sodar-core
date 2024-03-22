@@ -3,7 +3,7 @@ from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import ProjectAppPluginPoint
+from projectroles.plugins import ProjectAppPluginPoint, PluginObjectLink
 
 from filesfolders.models import File, Folder, HyperLink
 from filesfolders.urls import urlpatterns
@@ -106,34 +106,34 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     def get_object_link(self, model_str, uuid):
         """
-        Return the URL for referring to a object used by the app, along with a
-        label to be shown to the user for linking.
+        Return URL referring to an object used by the app, along with a name to
+        be shown to the user for linking.
 
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
-        :return: Dict or None if not found
+        :return: PluginObjectLink or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
             return None
         elif obj.__class__ == File:
-            return {
-                'url': reverse(
+            return PluginObjectLink(
+                url=reverse(
                     'filesfolders:file_serve',
                     kwargs={'file': obj.sodar_uuid, 'file_name': obj.name},
                 ),
-                'label': obj.name,
-                'blank': True,
-            }
+                name=obj.name,
+                blank=True,
+            )
         elif obj.__class__ == Folder:
-            return {
-                'url': reverse(
+            return PluginObjectLink(
+                url=reverse(
                     'filesfolders:list', kwargs={'folder': obj.sodar_uuid}
                 ),
-                'label': obj.name,
-            }
+                name=obj.name,
+            )
         elif obj.__class__ == HyperLink:
-            return {'url': obj.url, 'label': obj.name, 'blank': True}
+            return PluginObjectLink(url=obj.url, name=obj.name, blank=True)
         return None
 
     def search(self, search_terms, user, search_type=None, keywords=None):

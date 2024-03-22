@@ -10,7 +10,7 @@ from django.utils.text import Truncator
 
 # Projectroles dependency
 from projectroles.models import Project, RemoteSite
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import get_app_plugin, PluginObjectLink
 from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
 
@@ -31,6 +31,10 @@ APP_NAMES = get_app_names()
 LABEL_MAX_WIDTH = 32
 UNKNOWN_LABEL = '(unknown)'
 PLUGIN_NOT_FOUND_MSG = 'Plugin not found: {plugin_name}'
+DEPRECATE_LINK_DICT_MSG = (
+    'Returning dicts from get_object_link() has been deprecated and will no '
+    'longer be supported in v1.1. Return a PluginObjectLink object instead.'
+)
 
 
 class TimelineAPI:
@@ -163,7 +167,7 @@ class TimelineAPI:
         # Apps with plugins
         else:
             try:
-                link_data = app_plugin.get_object_link(
+                link = app_plugin.get_object_link(
                     obj_ref.object_model, obj_ref.object_uuid
                 )
             except Exception as ex:
@@ -174,23 +178,27 @@ class TimelineAPI:
                 )
                 if settings.DEBUG:
                     raise ex
-                link_data = None
-            if link_data:
-                if not link_data['label']:
+                link = None
+            if link:
+                # TODO: Remove in v1.1 (see #1398)
+                if isinstance(link, dict):
+                    logger.warning(DEPRECATE_LINK_DICT_MSG)
+                    link = PluginObjectLink(
+                        url=link['url'],
+                        name=link['label'],
+                        blank=link['blank'],
+                    )
+                if not link.name:
                     logger.warning(
-                        'Empty label returned by plugin "{}" for object '
+                        'Empty name returned by plugin "{}" for object '
                         'reference "{}" ({})"'.format(
                             app_plugin.name, obj_ref, obj_ref.object_uuid
                         )
                     )
                 return '<a href="{}" {}>{}</a> {}'.format(
-                    link_data['url'],
-                    (
-                        'target="_blank"'
-                        if 'blank' in link_data and link_data['blank'] is True
-                        else ''
-                    ),
-                    cls._get_ref_label(link_data['label']),
+                    link.url,
+                    'target="_blank"' if link.blank else '',
+                    cls._get_ref_label(link.name),
                     cls._get_history_link(obj_ref),
                 )
             else:

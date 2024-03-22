@@ -18,9 +18,10 @@ Release Highlights
 
 - Upgrade to Django v4.2 and Postgres v16
 - Add Python v3.11 support
+- Rename AppSettingAPI "app_name" arguments to "plugin_name"
+- Plugin API return data updates and deprecations
 - Remove Python v3.8 support
 - Remove SAML SSO support
-- Rename AppSettingAPI "app_name" arguments to "plugin_name"
 
 Breaking Changes
 ================
@@ -92,6 +93,16 @@ The optional ``local`` attribute in app settings definitions has been
 depreacted. You should instead use ``global`` and the inverse value of your
 existing ``local`` settings. Support for ``local`` will be removed in SODAR Core
 v1.1. This is only relevant to sites being deployed as ``SOURCE`` sites.
+
+Plugin API get_object_link() Changes
+------------------------------------
+
+Implementations of ``get_object_link()`` in app plugins are now expected to
+return a ``PluginObjectLink`` object or ``None``. Returning ``dict`` has been
+deprecated and support for it will be removed in v1.1.
+
+Furthermore, the return data is now expected to return the object name in the
+``name`` attribute, instead of ``label`` in the old implementation.
 
 REST API Changes
 ----------------

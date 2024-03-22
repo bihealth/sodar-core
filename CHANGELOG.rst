@@ -16,6 +16,7 @@ Added
 - **Projectroles**
     - ``full_title`` field in ``ProjectSerializer`` and API views (#1314)
     - Custom password argument in ``createdevusers`` management command (#1393)
+    - ``PluginObjectLink`` data class in plugins (#1343)
 
 Changed
 -------
@@ -34,6 +35,10 @@ Changed
     - Default password in ``createdevusers`` management command (#1390)
     - Deprecate ``local`` in app settings, use ``global`` instead (#1319)
     - Enforce optional handling of app settings ``global`` attributes (#1395)
+    - Expect ``get_object_link()`` plugin methods to return ``PluginObjectLink`` (#1343)
+    - Deprecate returning ``dict`` from ``get_object_link()`` (#1343)
+- **Timeline**
+    - Update ``get_object_link()`` usage for ``PluginObjectLink`` return data (#1343)
 
 Fixed
 -----

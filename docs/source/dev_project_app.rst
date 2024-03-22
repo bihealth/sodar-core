@@ -247,7 +247,8 @@ Implementing the following is **optional**:
     List of names for app-specific Django settings to be displayed for
     administrators in the siteinfo app.
 ``get_object_link()``
-    Return object link for a Timeline event.
+    Return object link for a Timeline event. Expected to return a
+    ``PluginObjectLink`` object or ``None``.
 ``get_extra_data_link()``
     Return extra data link for a Timeline event.
 ``search()``

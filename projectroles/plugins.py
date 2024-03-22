@@ -356,12 +356,12 @@ class ProjectAppPluginPoint(PluginPoint):
 
     def get_object_link(self, model_str, uuid):
         """
-        Return URL referring to an object used by the app, along with a label to
+        Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
 
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
-        :return: Dict or None if not found
+        :return: PluginObjectLink or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
@@ -497,12 +497,12 @@ class BackendPluginPoint(PluginPoint):
 
     def get_object_link(self, model_str, uuid):
         """
-        Return URL referring to an object used by the app, along with a label to
+        Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
 
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
-        :return: Dict or None if not found
+        :return: PluginObjectLink or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
@@ -604,12 +604,12 @@ class SiteAppPluginPoint(PluginPoint):
 
     def get_object_link(self, model_str, uuid):
         """
-        Return URL referring to an object used by the app, along with a label to
+        Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
 
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
-        :return: Dict or None if not found
+        :return: PluginObjectLink or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
@@ -632,6 +632,37 @@ class SiteAppPluginPoint(PluginPoint):
         """
         # TODO: Implement this in your app plugin (optional)
         return None
+
+
+# Data Classes -----------------------------------------------------------------
+
+
+class PluginObjectLink:
+    """
+    Class representing a hyperlink to an object used by the app. Expected to be
+    returned from get_object_link() implementations.
+    """
+
+    #: URL to the object (string)
+    url = None
+    #: Name of the object to be displayed in link (string, formerly "label")
+    name = None
+    #: Open the link in a blank browser tab (boolean, default=False)
+    blank = False
+
+    def __init__(self, url, name, blank=False):
+        """
+        Initialize PluginObjectLink.
+
+        :param url: URL to the object (string)
+        :param name: Name of the object to be displayed in link (string,
+                     formerly "label")
+        :param blank: Open the link in a blank browser tab (boolean,
+                      default=False)
+        """
+        self.url = url
+        self.name = name
+        self.blank = blank
 
 
 # Plugin API -------------------------------------------------------------------
