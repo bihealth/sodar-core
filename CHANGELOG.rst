@@ -31,6 +31,7 @@ Changed
     - Update download URL in ``get_chromedriver_url.py`` (#1385)
 - **Filesfolders**
     - Add migration required by Django v4.2 (#1396)
+    - Add app specific media type and versioning (#1278)
 - **Projectroles**
     - Rename ``AppSettingAPI`` ``app_name`` arguments to ``plugin_name`` (#1285)
     - Default password in ``createdevusers`` management command (#1390)
@@ -40,6 +41,8 @@ Changed
     - Deprecate returning ``dict`` from ``get_object_link()`` (#1343)
     - Expect ``search()`` plugin methods to return list of ``PluginSearchResult`` objects (#1399)
     - Deprecate returning ``dict`` from ``search()`` (#1399)
+    - Update core API view media type and versioning (#1278)
+    - Separate projectroles and remote sync API media types and versioning (#1278)
 - **Sodarcache**
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
 - **Timeline**
@@ -59,6 +62,7 @@ Removed
     - Python v3.8 support (#1382)
 - **Projectroles**
     - ``PROJECTROLES_HIDE_APP_LINKS`` setting (#1143)
+    - ``CORE_API_*`` Django settings (#1278)
 
 
 v0.13.4 (2024-02-16)

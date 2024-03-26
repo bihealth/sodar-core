@@ -64,6 +64,8 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 # Local constants
+CORE_API_MEDIA_TYPE_LEGACY = 'application/vnd.bihealth.sodar-core+json'
+CORE_API_DEFAULT_VERSION_LEGACY = '0.13.4'
 CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
 CORE_API_VERSION_INVALID = '9.9.9'
 
@@ -116,7 +118,8 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
     """
 
     # Default API header parameters are for external SODAR site APIs
-    # Override these for testing SODAR Core API views
+    # DEPRECATED: To be removed in SODAR Core v1.1 (see #1401)
+    # Instead, provide a media type and version specific to your app
     media_type = settings.SODAR_API_MEDIA_TYPE
     api_version = settings.SODAR_API_DEFAULT_VERSION
 
@@ -270,17 +273,17 @@ class TestAPIViewsBase(
         self.knox_token = self.get_token(self.user)
 
 
-class TestCoreAPIViewsBase(TestAPIViewsBase):
-    """Override of TestAPIViewsBase to be used with SODAR Core API views"""
+class TestProjectrolesAPIViewsBase(TestAPIViewsBase):
+    """Override of TestAPIViewsBase to be used with Projectroles API views"""
 
-    media_type = views_api.CORE_API_MEDIA_TYPE
-    api_version = views_api.CORE_API_DEFAULT_VERSION
+    media_type = views_api.PROJECTROLES_API_MEDIA_TYPE
+    api_version = views_api.PROJECTROLES_API_DEFAULT_VERSION
 
 
 # Tests ------------------------------------------------------------------------
 
 
-class TestProjectListAPIView(TestCoreAPIViewsBase):
+class TestProjectListAPIView(TestProjectrolesAPIViewsBase):
     """Tests for ProjectListAPIView"""
 
     def test_get(self):
@@ -440,7 +443,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
         )
 
 
-class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
+class TestProjectRetrieveAPIView(AppSettingMixin, TestProjectrolesAPIViewsBase):
     """Tests for ProjectRetrieveAPIView"""
 
     def test_get_category(self):
@@ -535,7 +538,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
 
 
 class TestProjectCreateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for ProjectCreateAPIView"""
 
@@ -890,7 +893,7 @@ class TestProjectCreateAPIView(
 
 
 class TestProjectUpdateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for ProjectUpdateAPIView"""
 
@@ -1290,7 +1293,7 @@ class TestProjectUpdateAPIView(
 
 
 class TestRoleAssignmentCreateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for RoleAssignmentCreateAPIView"""
 
@@ -1622,7 +1625,7 @@ class TestRoleAssignmentCreateAPIView(
 
 
 class TestRoleAssignmentUpdateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for RoleAssignmentUpdateAPIView"""
 
@@ -1842,7 +1845,7 @@ class TestRoleAssignmentUpdateAPIView(
 
 
 class TestRoleAssignmentDestroyAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for RoleAssignmentDestroyAPIView"""
 
@@ -1926,7 +1929,7 @@ class TestRoleAssignmentDestroyAPIView(
 
 
 class TestRoleAssignmentOwnerTransferAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for RoleAssignmentOwnerTransferAPIView"""
 
@@ -2214,7 +2217,9 @@ class TestRoleAssignmentOwnerTransferAPIView(
         self.assertEqual(self.project.get_owner().user, self.user_owner)
 
 
-class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
+class TestProjectInviteListAPIView(
+    ProjectInviteMixin, TestProjectrolesAPIViewsBase
+):
     """Tests for ProjectInviteListAPIView"""
 
     def setUp(self):
@@ -2300,7 +2305,7 @@ class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
 
 
 class TestProjectInviteCreateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for ProjectInviteCreateAPIView"""
 
@@ -2498,7 +2503,9 @@ class TestProjectInviteCreateAPIView(
         self.assertEqual(len(mail.outbox), 0)
 
 
-class TestProjectInviteRevokeAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
+class TestProjectInviteRevokeAPIView(
+    ProjectInviteMixin, TestProjectrolesAPIViewsBase
+):
     """Tests for ProjectInviteRevokeAPIView"""
 
     def setUp(self):
@@ -2562,7 +2569,9 @@ class TestProjectInviteRevokeAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         self.assertEqual(response.status_code, 404)
 
 
-class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
+class TestProjectInviteResendAPIView(
+    ProjectInviteMixin, TestProjectrolesAPIViewsBase
+):
     """Tests for ProjectInviteResendAPIView"""
 
     def setUp(self):
@@ -2625,7 +2634,7 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
 
 
 class TestProjectSettingRetrievePIView(
-    AppSettingMixin, AppSettingInitMixin, TestCoreAPIViewsBase
+    AppSettingMixin, AppSettingInitMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for ProjectSettingRetrieveAPIView"""
 
@@ -2802,7 +2811,7 @@ class TestProjectSettingRetrievePIView(
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
-class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
+class TestProjectSettingSetAPIView(TestProjectrolesAPIViewsBase):
     """Tests for ProjectSettingSetAPIView"""
 
     def setUp(self):
@@ -2968,7 +2977,7 @@ class TestProjectSettingSetAPIView(TestCoreAPIViewsBase):
 
 
 class TestUserSettingRetrievePIView(
-    AppSettingMixin, AppSettingInitMixin, TestCoreAPIViewsBase
+    AppSettingMixin, AppSettingInitMixin, TestProjectrolesAPIViewsBase
 ):
     """Tests for UserSettingRetrieveAPIView"""
 
@@ -3058,7 +3067,7 @@ class TestUserSettingRetrievePIView(
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
-class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
+class TestUserSettingSetAPIView(TestProjectrolesAPIViewsBase):
     """Tests for UserSettingSetAPIView"""
 
     def setUp(self):
@@ -3136,7 +3145,7 @@ class TestUserSettingSetAPIView(TestCoreAPIViewsBase):
         self.assertEqual(AppSetting.objects.count(), 0)
 
 
-class TestUserListAPIView(TestCoreAPIViewsBase):
+class TestUserListAPIView(TestProjectrolesAPIViewsBase):
     """Tests for UserListAPIView"""
 
     def setUp(self):
@@ -3171,7 +3180,7 @@ class TestUserListAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
-class TestCurrentUserRetrieveAPIView(TestCoreAPIViewsBase):
+class TestCurrentUserRetrieveAPIView(TestProjectrolesAPIViewsBase):
     """Tests for CurrentUserRetrieveAPIView"""
 
     def setUp(self):
@@ -3211,7 +3220,7 @@ class TestCurrentUserRetrieveAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
-class TestAPIVersioning(TestCoreAPIViewsBase):
+class TestAPIVersioning(TestProjectrolesAPIViewsBase):
     """Tests for REST API view versioning using ProjectRetrieveAPIView"""
 
     def setUp(self):
@@ -3222,29 +3231,38 @@ class TestAPIVersioning(TestCoreAPIViewsBase):
         )
 
     def test_api_versioning(self):
-        """Test SODAR API Access with correct version headers"""
+        """Test projectroles API with correct version headers"""
         response = self.request_knox(
             self.url,
-            media_type=views_api.CORE_API_MEDIA_TYPE,
-            version=views_api.CORE_API_DEFAULT_VERSION,
+            media_type=views_api.PROJECTROLES_API_MEDIA_TYPE,
+            version=views_api.PROJECTROLES_API_DEFAULT_VERSION,
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_api_versioning_invalid_version(self):
-        """Test SODAR API Access with unsupported version (should fail)"""
+    def test_api_versioning_legacy(self):
+        """Test projectroles API with legacy version (should fail)"""
         response = self.request_knox(
             self.url,
-            media_type=views_api.CORE_API_MEDIA_TYPE,
+            media_type=CORE_API_MEDIA_TYPE_LEGACY,
+            version=CORE_API_DEFAULT_VERSION_LEGACY,
+        )
+        self.assertEqual(response.status_code, 406)
+
+    def test_api_versioning_invalid_version(self):
+        """Test projectroles API with unsupported version (should fail)"""
+        response = self.request_knox(
+            self.url,
+            media_type=views_api.PROJECTROLES_API_MEDIA_TYPE,
             version=CORE_API_VERSION_INVALID,
         )
         self.assertEqual(response.status_code, 406)
 
     def test_api_versioning_invalid_media_type(self):
-        """Test SODAR API Access with unsupported media type (should fail)"""
+        """Test projectroles API with unsupported media type (should fail)"""
         response = self.request_knox(
             self.url,
             media_type=CORE_API_MEDIA_TYPE_INVALID,
-            version=views_api.CORE_API_DEFAULT_VERSION,
+            version=CORE_API_DEFAULT_VERSION_LEGACY,
         )
         self.assertEqual(response.status_code, 406)
 
@@ -3261,8 +3279,8 @@ class TestRemoteProjectGetAPIView(
 ):
     """Tests for remote project getting API view"""
 
-    media_type = views_api.CORE_API_MEDIA_TYPE
-    api_version = views_api.CORE_API_DEFAULT_VERSION
+    media_type = views_api.SYNC_API_MEDIA_TYPE
+    api_version = views_api.SYNC_API_DEFAULT_VERSION
 
     def setUp(self):
         super().setUp()
@@ -3321,6 +3339,8 @@ class TestRemoteProjectGetAPIView(
         )
         self.assertEqual(response.status_code, 401)
 
+    # TODO: Update test once we have a supported legacy version for this API
+    '''
     def test_get_legacy_version(self):
         """Test retrieving project data with legacy target site version"""
         # See issue #1355
@@ -3348,6 +3368,7 @@ class TestRemoteProjectGetAPIView(
         # Assert user_name is not present in PROJECT_USER setting
         set_data = response_dict['app_settings'][str(set_star.sodar_uuid)]
         self.assertNotIn('user_name', set_data)
+    '''
 
     def test_get_unsupported_version(self):
         """Test retrieving project data with legacy target site version"""
@@ -3365,7 +3386,7 @@ class TestRemoteProjectGetAPIView(
 # IP Allowing Tests ------------------------------------------------------------
 
 
-class TestIPAllowing(AppSettingMixin, TestCoreAPIViewsBase):
+class TestIPAllowing(AppSettingMixin, TestProjectrolesAPIViewsBase):
     """Tests for IP allowing settings using ProjectRetrieveAPIView"""
 
     def _setup_ip_allowing(self, ip_list, role_suffix):

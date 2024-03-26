@@ -6,7 +6,6 @@ import ssl
 import urllib
 
 from copy import deepcopy
-from packaging import version
 
 from django.conf import settings
 from django.contrib import auth
@@ -220,13 +219,7 @@ class RemoteProjectAPI:
         :param req_version: Request version (string)
         :return: Dict
         """
-        # TODO: Remove user_name workaround when API backwards compatibility to
-        #       <0.13.3 is removed
-        if not req_version:
-            from projectroles.views_api import CORE_API_DEFAULT_VERSION
-
-            req_version = CORE_API_DEFAULT_VERSION
-        add_user_name = version.parse(req_version) >= version.parse('0.13.3')
+        add_user_name = True
         sync_data = {
             'users': {},
             'projects': {},
@@ -327,8 +320,8 @@ class RemoteProjectAPI:
         :return: remote data (dict)
         """
         from projectroles.views_api import (
-            CORE_API_MEDIA_TYPE,
-            CORE_API_DEFAULT_VERSION,
+            SYNC_API_MEDIA_TYPE,
+            SYNC_API_DEFAULT_VERSION,
         )
 
         api_url = site.get_url() + reverse(
@@ -340,7 +333,7 @@ class RemoteProjectAPI:
             api_req.add_header(
                 'accept',
                 '{}; version={}'.format(
-                    CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+                    SYNC_API_MEDIA_TYPE, SYNC_API_DEFAULT_VERSION
                 ),
             )
             response = urllib.request.urlopen(api_req)

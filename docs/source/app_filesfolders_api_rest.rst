@@ -11,6 +11,23 @@ addition to the GUI.
 For general information on REST API usage in SODAR Core, see
 :ref:`app_projectroles_api_rest`.
 
+
+Filesfolders REST API Versioning
+================================
+
+Media Type
+    ``application/vnd.bihealth.sodar-core.filesfolders+json``
+Current Version
+    ``1.0``
+Accepted Versions
+    ``1.0``
+Header Example
+    ``Accept: application/vnd.bihealth.sodar-core.filesfolders+json; version=x.y``
+
+
+Filesfolders REST API Views
+===========================
+
 .. currentmodule:: filesfolders.views_api
 
 .. autoclass:: FolderListCreateAPIView

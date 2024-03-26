@@ -5,6 +5,8 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     GenericAPIView,
 )
+from rest_framework.renderers import JSONRenderer
+from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -28,8 +30,32 @@ from filesfolders.views import (
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
+# Local constants
+FILESFOLDERS_API_MEDIA_TYPE = (
+    'application/vnd.bihealth.sodar-core.filesfolders+json'
+)
+FILESFOLDERS_API_DEFAULT_VERSION = '1.0'
+FILESFOLDERS_API_ALLOWED_VERSIONS = ['1.0']
+
 
 # Base Classes and Mixins ------------------------------------------------------
+
+
+class FilesfoldersAPIVersioningMixin:
+    """
+    Filesfolders API view versioning mixin for overriding media type and
+    accepted versions.
+    """
+
+    class FilesfoldersAPIRenderer(JSONRenderer):
+        media_type = FILESFOLDERS_API_MEDIA_TYPE
+
+    class FilesfoldersAPIVersioning(AcceptHeaderVersioning):
+        allowed_versions = FILESFOLDERS_API_ALLOWED_VERSIONS
+        default_version = FILESFOLDERS_API_DEFAULT_VERSION
+
+    renderer_classes = [FilesfoldersAPIRenderer]
+    versioning_class = FilesfoldersAPIVersioning
 
 
 class ListCreateAPITimelineMixin(FilesfoldersTimelineMixin):
@@ -138,6 +164,7 @@ class RetrieveUpdateDestroyPermissionMixin:
 class FolderListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
@@ -164,6 +191,7 @@ class FolderListCreateAPIView(
 class FolderRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
@@ -192,6 +220,7 @@ class FolderRetrieveUpdateDestroyAPIView(
 class FileListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
@@ -221,6 +250,7 @@ class FileListCreateAPIView(
 class FileRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
@@ -249,7 +279,10 @@ class FileRetrieveUpdateDestroyAPIView(
 
 
 class FileServeAPIView(
-    CoreAPIGenericProjectMixin, FileServeMixin, GenericAPIView
+    FilesfoldersAPIVersioningMixin,
+    CoreAPIGenericProjectMixin,
+    FileServeMixin,
+    GenericAPIView,
 ):
     """
     Serve the file content.
@@ -267,6 +300,7 @@ class FileServeAPIView(
 class HyperLinkListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
@@ -294,6 +328,7 @@ class HyperLinkListCreateAPIView(
 class HyperLinkRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):

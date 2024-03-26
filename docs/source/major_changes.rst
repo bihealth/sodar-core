@@ -17,6 +17,8 @@ Release Highlights
 ==================
 
 - Upgrade to Django v4.2 and Postgres v16
+- Add app specific and semantic REST API versioning
+- Add REST API versioning independent from repo/site versions
 - Add Python v3.11 support
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations
@@ -78,6 +80,67 @@ needs to use SAML on a SODAR Core based site, we are happy to review pull
 requests to re-introduce it. Please note the implementation has to support
 Django v4.2+.
 
+REST API Versioning Overhaul
+----------------------------
+
+The REST API versioning system has been overhauled in this release. Before, we
+used two separate accept header versioning systems: 1) API views in SODAR Core
+apps with ``CORE_API_MEDIA_TYPE``, and 2) API views of the site built on SODAR
+Core with ``SODAR_API_MEDIA_TYPE``. The version number has been expected to
+match the SODAR Core or the site version number, respectively.
+
+In the new system there are two critical changes to this versioning scheme:
+
+1. Each app is expected to provide its own media type and API version number.
+2. Each API should use a version number independent from the site version,
+   ideally following semantic versioning. Versions will start at ``1.0``.
+
+SODAR Core REST APIs are now be provided under the following media types, each
+available initially under version ``1.0``:
+
+:ref:`Projectroles <app_projectroles_api_rest>`
+    ``application/vnd.bihealth.sodar-core.projectroles+json``
+Projectroles Remote Sync (only used internally by SODAR Core sites)
+    ``application/vnd.bihealth.sodar-core.projectroles.sync+json``
+:ref:`Filesfolders <app_filesfolders_api_rest>`
+    ``application/vnd.bihealth.sodar-core.filesfolders+json``
+
+If you have previously used the ``SODAR_API_*`` accept header versioning, you
+should update your own views to the new scheme. To do this, you need to provide
+your custom renderer and versioning class for each app providing a REST API. For
+instructions and an example on how to do this, see
+:ref:`dev_project_app_rest_api`.
+
+.. note::
+
+    Legacy ``SODAR_API_*`` is deprecated but will still be supported in this
+    release. Support will be removed in v1.1, after which you will be required
+    to provide your own versioning and rendering classes. Calls to updated API
+    views using legacy versioning will not work with SODAR Core v1.0.
+
+.. warning::
+
+    The legacy API versioning for SODAR Core API views (projectroles and
+    filesfolders) is no longer working as of v1.0. Make sure to update your
+    clients for the new version number and see the API changes below. After this
+    overhaul, we aim to provide backwards compatibility for old API versions
+    whereever possible.
+
+REST API Changes
+----------------
+
+The following breaking changes have been made into specific REST API endpoints
+in this release:
+
+``ProjectSettingRetrieveAPIView`` (``project/api/settings/retrieve/<uuid:project>``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``ProjectSettingSetAPIView`` (``project/api/settings/set/<uuid:project>``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``UserSettingRetrieveAPIView`` (``project/api/settings/retrieve/user``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``UserSettingSetAPIView`` (``project/api/settings/set/user``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+
 AppSettingAPI Plugin Name Arguments Updated
 -------------------------------------------
 
@@ -115,21 +178,6 @@ support for it will be removed in v1.1.
 Note that a dict using the ``category`` variable as a key will still be
 provided for your app's search template. Hence, modifying the template should
 not be required after updating the method.
-
-REST API Changes
-----------------
-
-The following breaking changes have been made into specific REST API endpoints
-in this release:
-
-``ProjectSettingRetrieveAPIView`` (``project/api/settings/retrieve/<uuid:project>``)
-    Rename ``app_name`` parameter to ``plugin_name``.
-``ProjectSettingSetAPIView`` (``project/api/settings/set/<uuid:project>``)
-    Rename ``app_name`` parameter to ``plugin_name``.
-``UserSettingRetrieveAPIView`` (``project/api/settings/retrieve/user``)
-    Rename ``app_name`` parameter to ``plugin_name``.
-``UserSettingSetAPIView`` (``project/api/settings/set/user``)
-    Rename ``app_name`` parameter to ``plugin_name``.
 
 PROJECTROLES_HIDE_APP_LINKS Removed
 -----------------------------------

@@ -705,6 +705,8 @@ API Views
 
 API view usage in project apps is detailed in this section.
 
+.. _dev_project_app_rest_api:
+
 Rest API Views
 --------------
 
@@ -718,14 +720,40 @@ methods of authentication: Knox tokens and Django session auth. These can of
 course be modified by overriding/extending the base classes.
 
 For versioning we strongly recommend using accept header versioning, which is
-what is supported by the SODAR Core base classes. For this, supply your custom
-media type and version data using the corresponding ``SODAR_API_*`` settings.
-For details on these, see :ref:`app_projectroles_settings`.
+what is supported by the SODAR Core base classes. From SODAR Core v1.0 onwards,
+each app is expected to use its own media type and API versioning, preferably
+based on semantic versioning. For this, you should supply your own versioning
+mixin to be used in your views. Example:
+
+.. code-block:: python
+
+    from rest_framework.renderers import JSONRenderer
+    from rest_framework.versioning import AcceptHeaderVersioning
+    from rest_framework.views import APIView
+    from projectroles.views_api import SODARAPIGenericProjectMixin
+
+    YOURAPP_API_MEDIA_TYPE = application/vnd.yourorg.yoursite.yourapp+json
+    YOURAPP_API_DEFAULT_VERSION = '1.0'
+    YOURAPP_API_ALLOWED_VERSIONS = ['1.0']
+
+    class YourAPIVersioningMixin:
+
+        class YourAPIRenderer(JSONRenderer):
+            media_type = YOURAPP_API_MEDIA_TYPE
+
+        class YourAPIVersioning(AcceptHeaderVersioning):
+            allowed_versions = YOURAPP_API_ALLOWED_VERSIONS
+            default_version = YOURAPP_API_DEFAULT_VERSION
+
+        render_classes = [YourAPIRenderer]
+        versioning_class = YourAPIVersioning
+
+    class YourAPIView(YourAPIVersioningMixin, SODARAPIGenericProjectMixin, APIView):
+        # ...
 
 The base classes provide permission checks via SODAR Core project objects
-similar to UI view mixins.
-
-Base REST API classes without a project context can also be used in site apps.
+similar to UI view mixins. Base REST API classes without a project context can
+also be used in site apps.
 
 See the
 :ref:`base REST API class documentation <app_projectroles_api_django_rest>` for
@@ -737,13 +765,14 @@ An example "hello world" REST API view for SODAR apps is available in
 .. note::
 
     Internal SODAR Core REST API views, specifically ones used in apps provided
-    by the django-sodar-core package, use different media type and versioning
-    from views to be implemented on your site. This is to prevent version number
-    clashes and not require changes from your API when SODAR Core is updated.
+    by the django-sodar-core package, use different media types and versioning
+    from views to be implemented on your site. From SODAR Core v1.0 onwards,
+    each app is expected to provide their own versioning.
 
     For implementing your own API views, make sure to use the ``SODARAPI*``
     base classes, **not** the ``CoreAPI`` classes. Similarly, in testing make
-    sure to use the base class helpers of the site API instead of the core API.
+    sure to use the base class helpers of the general API instead of the core
+    API.
 
 Ajax API Views
 --------------

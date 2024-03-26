@@ -1,7 +1,5 @@
 """REST API views for the projectroles app"""
 
-import re
-
 from ipaddress import ip_address, ip_network
 
 from django.conf import settings
@@ -33,7 +31,6 @@ from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
-from projectroles import __version__ as core_version
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
@@ -85,6 +82,7 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
 ]
 
 # API constants for external SODAR Core sites
+# DEPRECATED: To be removed in SODAR Core v1.1 (see #1401)
 SODAR_API_MEDIA_TYPE = getattr(
     settings, 'SODAR_API_MEDIA_TYPE', 'application/UNDEFINED+json'
 )
@@ -94,11 +92,18 @@ SODAR_API_DEFAULT_VERSION = getattr(
 SODAR_API_ALLOWED_VERSIONS = getattr(
     settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
 )
-CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-CORE_API_DEFAULT_VERSION = re.match(
-    r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
-)[1]
-CORE_API_ALLOWED_VERSIONS = ['0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4']
+
+# API constants for projectroles APIs
+PROJECTROLES_API_MEDIA_TYPE = (
+    'application/vnd.bihealth.sodar-core.projectroles+json'
+)
+PROJECTROLES_API_DEFAULT_VERSION = '1.0'
+PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0']
+SYNC_API_MEDIA_TYPE = (
+    'application/vnd.bihealth.sodar-core.projectroles.sync+json'
+)
+SYNC_API_DEFAULT_VERSION = '1.0'
+SYNC_API_ALLOWED_VERSIONS = ['1.0']
 
 # Local constants
 INVALID_PROJECT_TYPE_MSG = (
@@ -204,18 +209,27 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         return request.user.has_perm(perm, project)
 
 
+# TODO: Remove in v1.1 (see #1401)
 class SODARAPIVersioning(AcceptHeaderVersioning):
-    """Accept header versioning class for SODAR API views"""
+    """
+    Accept header versioning class for SODAR API views.
+
+    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You need to
+    provide version identifiers specific to your API providing app.
+    """
 
     allowed_versions = SODAR_API_ALLOWED_VERSIONS
     default_version = SODAR_API_DEFAULT_VERSION
-    version_param = 'version'
 
 
+# TODO: Remove in v1.1 (see #1401)
 class SODARAPIRenderer(JSONRenderer):
     """
     SODAR API JSON renderer with a site-specific media type retrieved from
     Django settings.
+
+    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You must define
+    a media type specific for your API providing app.
     """
 
     media_type = SODAR_API_MEDIA_TYPE
@@ -224,13 +238,20 @@ class SODARAPIRenderer(JSONRenderer):
 # Base API View Mixins ---------------------------------------------------------
 
 
+# TODO: Remove in v1.1 (see #1401)
 class SODARAPIBaseMixin:
-    """Base SODAR API mixin to be used by external SODAR Core based sites"""
+    """
+    Base SODAR API mixin to be used by external SODAR Core based sites.
+
+    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You must define
+    a base renderer and a versioning class specific to your API providing app.
+    """
 
     renderer_classes = [SODARAPIRenderer]
     versioning_class = SODARAPIVersioning
 
 
+# TODO: Remove SODARAPIBaseMixin inheritance in v1.1 (see #1401)
 class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     """
     API view mixin for the base DRF ``APIView`` class with project permission
@@ -239,6 +260,8 @@ class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     Project type can be restricted to ``PROJECT_TYPE_CATEGORY`` or
     ``PROJECT_TYPE_PROJECT``, as defined in SODAR constants, by setting the
     ``project_type`` attribute in the view.
+
+    NOTE: The SODARAPIBaseMixin inheritance will be removed in
     """
 
     permission_classes = [SODARAPIProjectPermission]
@@ -307,27 +330,7 @@ class ProjectQuerysetMixin:
 # SODAR Core Base Views and Mixins ---------------------------------------------
 
 
-class CoreAPIVersioning(AcceptHeaderVersioning):
-    allowed_versions = CORE_API_ALLOWED_VERSIONS
-    default_version = CORE_API_DEFAULT_VERSION
-    version_param = 'version'
-
-
-class CoreAPIRenderer(JSONRenderer):
-    media_type = CORE_API_MEDIA_TYPE
-
-
-class CoreAPIBaseMixin:
-    """
-    SODAR Core API view mixin, which overrides versioning and renderer classes
-    with ones intended for use with internal SODAR Core API views.
-    """
-
-    renderer_classes = [CoreAPIRenderer]
-    versioning_class = CoreAPIVersioning
-
-
-class CoreAPIBaseProjectMixin(ProjectAccessMixin, CoreAPIBaseMixin):
+class CoreAPIBaseProjectMixin(ProjectAccessMixin):
     """
     SODAR Core API view mixin for the base DRF ``APIView`` class with project
     permission checking, but without serializers and other generic view
@@ -347,7 +350,38 @@ class CoreAPIGenericProjectMixin(
     queryset_project_field = 'project'  # Replace if no direct project relation
 
 
-# Projectroles Specific Base Views and Mixins ----------------------------------
+class ProjectrolesAPIVersioningMixin:
+    """
+    Projectroles API view versioning mixin for overriding media type
+    and accepted versions.
+    """
+
+    class ProjectrolesAPIVersioning(AcceptHeaderVersioning):
+        allowed_versions = PROJECTROLES_API_ALLOWED_VERSIONS
+        default_version = PROJECTROLES_API_DEFAULT_VERSION
+
+    class ProjectrolesAPIRenderer(JSONRenderer):
+        media_type = PROJECTROLES_API_MEDIA_TYPE
+
+    renderer_classes = [ProjectrolesAPIRenderer]
+    versioning_class = ProjectrolesAPIVersioning
+
+
+class RemoteSyncAPIVersioningMixin:
+    """
+    Projectroles remote sync API view versioning mixin for overriding media type
+    and accepted versions.
+    """
+
+    class RemoteSyncAPIRenderer(JSONRenderer):
+        media_type = SYNC_API_MEDIA_TYPE
+
+    class RemoteSyncAPIVersioning(AcceptHeaderVersioning):
+        allowed_versions = SYNC_API_ALLOWED_VERSIONS
+        default_version = SYNC_API_DEFAULT_VERSION
+
+    renderer_classes = [RemoteSyncAPIRenderer]
+    versioning_class = RemoteSyncAPIVersioning
 
 
 class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
@@ -375,7 +409,7 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
 # API Views --------------------------------------------------------------------
 
 
-class ProjectListAPIView(APIView):
+class ProjectListAPIView(ProjectrolesAPIVersioningMixin, APIView):
     """
     List all projects and categories for which the requesting user has access.
 
@@ -390,8 +424,6 @@ class ProjectListAPIView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
-    renderer_classes = [CoreAPIRenderer]
-    versioning_class = CoreAPIVersioning
 
     def get(self, request, *args, **kwargs):
         projects_all = Project.objects.all().order_by('full_title')
@@ -421,7 +453,10 @@ class ProjectListAPIView(APIView):
 
 
 class ProjectRetrieveAPIView(
-    ProjectQuerysetMixin, CoreAPIGenericProjectMixin, RetrieveAPIView
+    ProjectQuerysetMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIGenericProjectMixin,
+    RetrieveAPIView,
 ):
     """
     Retrieve a project or category by its UUID.
@@ -446,7 +481,9 @@ class ProjectRetrieveAPIView(
     serializer_class = ProjectSerializer
 
 
-class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
+class ProjectCreateAPIView(
+    ProjectrolesAPIVersioningMixin, ProjectAccessMixin, CreateAPIView
+):
     """
     Create a project or a category.
 
@@ -466,13 +503,14 @@ class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
     """
 
     permission_classes = [ProjectCreatePermission]
-    renderer_classes = [CoreAPIRenderer]
     serializer_class = ProjectSerializer
-    versioning_class = CoreAPIVersioning
 
 
 class ProjectUpdateAPIView(
-    ProjectQuerysetMixin, CoreAPIGenericProjectMixin, UpdateAPIView
+    ProjectQuerysetMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIGenericProjectMixin,
+    UpdateAPIView,
 ):
     """
     Update the metadata of a project or a category.
@@ -509,7 +547,9 @@ class ProjectUpdateAPIView(
         return context
 
 
-class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
+class RoleAssignmentCreateAPIView(
+    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, CreateAPIView
+):
     """
     Create a role assignment in a project.
 
@@ -527,7 +567,9 @@ class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
     serializer_class = RoleAssignmentSerializer
 
 
-class RoleAssignmentUpdateAPIView(CoreAPIGenericProjectMixin, UpdateAPIView):
+class RoleAssignmentUpdateAPIView(
+    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, UpdateAPIView
+):
     """
     Update the role assignment for a user in a project.
 
@@ -549,7 +591,10 @@ class RoleAssignmentUpdateAPIView(CoreAPIGenericProjectMixin, UpdateAPIView):
 
 
 class RoleAssignmentDestroyAPIView(
-    RoleAssignmentDeleteMixin, CoreAPIGenericProjectMixin, DestroyAPIView
+    RoleAssignmentDeleteMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIGenericProjectMixin,
+    DestroyAPIView,
 ):
     """
     Destroy a role assignment.
@@ -590,7 +635,10 @@ class RoleAssignmentDestroyAPIView(
 
 
 class RoleAssignmentOwnerTransferAPIView(
-    RoleAssignmentOwnerTransferMixin, CoreAPIBaseProjectMixin, APIView
+    RoleAssignmentOwnerTransferMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIBaseProjectMixin,
+    APIView,
 ):
     """
     Trensfer project ownership to another user with a role in the project.
@@ -708,7 +756,9 @@ class ProjectInviteAPIMixin:
             raise serializers.ValidationError('Invite is not active')
 
 
-class ProjectInviteListAPIView(CoreAPIBaseProjectMixin, ListAPIView):
+class ProjectInviteListAPIView(
+    ProjectrolesAPIVersioningMixin, CoreAPIBaseProjectMixin, ListAPIView
+):
     """
     List user invites for a project.
 
@@ -730,7 +780,9 @@ class ProjectInviteListAPIView(CoreAPIBaseProjectMixin, ListAPIView):
         ).order_by('pk')
 
 
-class ProjectInviteCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
+class ProjectInviteCreateAPIView(
+    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, CreateAPIView
+):
     """
     Create a project invite.
 
@@ -749,7 +801,11 @@ class ProjectInviteCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
 
 
 class ProjectInviteRevokeAPIView(
-    ProjectInviteMixin, ProjectInviteAPIMixin, CoreAPIBaseProjectMixin, APIView
+    ProjectInviteMixin,
+    ProjectInviteAPIMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIBaseProjectMixin,
+    APIView,
 ):
     """
     Revoke a project invite.
@@ -780,7 +836,11 @@ class ProjectInviteRevokeAPIView(
 
 
 class ProjectInviteResendAPIView(
-    ProjectInviteMixin, ProjectInviteAPIMixin, CoreAPIBaseProjectMixin, APIView
+    ProjectInviteMixin,
+    ProjectInviteAPIMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIBaseProjectMixin,
+    APIView,
 ):
     """
     Resend email for a project invite.
@@ -938,7 +998,10 @@ class AppSettingMixin:
 
 
 class ProjectSettingRetrieveAPIView(
-    CoreAPIBaseProjectMixin, AppSettingMixin, RetrieveAPIView
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIBaseProjectMixin,
+    AppSettingMixin,
+    RetrieveAPIView,
 ):
     """
     API view for retrieving an app setting with the PROJECT or PROJECT_USER
@@ -988,6 +1051,7 @@ class ProjectSettingRetrieveAPIView(
 
 
 class ProjectSettingSetAPIView(
+    ProjectrolesAPIVersioningMixin,
     CoreAPIBaseProjectMixin,
     AppSettingMixin,
     ProjectModifyPluginViewMixin,
@@ -1110,7 +1174,7 @@ class ProjectSettingSetAPIView(
 
 
 class UserSettingRetrieveAPIView(
-    CoreAPIBaseMixin, AppSettingMixin, RetrieveAPIView
+    ProjectrolesAPIVersioningMixin, AppSettingMixin, RetrieveAPIView
 ):
     """
     API view for retrieving an app setting with the USER scope.
@@ -1144,7 +1208,9 @@ class UserSettingRetrieveAPIView(
         )
 
 
-class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
+class UserSettingSetAPIView(
+    ProjectrolesAPIVersioningMixin, AppSettingMixin, APIView
+):
     """
     API view for setting the value of an app setting with the USER scope. Only
     allows the user to set the value of their own settings.
@@ -1193,7 +1259,7 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
         )
 
 
-class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
+class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     """
     Return a list of all users on the site. Excludes system users, unless called
     with superuser access.
@@ -1220,7 +1286,9 @@ class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
         return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
 
 
-class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
+class CurrentUserRetrieveAPIView(
+    ProjectrolesAPIVersioningMixin, RetrieveAPIView
+):
     """
     Return information on the user making the request.
 
@@ -1247,7 +1315,7 @@ class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
 
 
 # TODO: Update this for new API base classes
-class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
+class RemoteProjectGetAPIView(RemoteSyncAPIVersioningMixin, APIView):
     """API view for retrieving remote projects from a source site"""
 
     permission_classes = (AllowAny,)  # We check the secret in get()
@@ -1266,7 +1334,7 @@ class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
         if accept_header and 'version=' in accept_header:
             req_version = accept_header[accept_header.find('version=') + 8 :]
         else:
-            req_version = CORE_API_DEFAULT_VERSION
+            req_version = SYNC_API_DEFAULT_VERSION
         sync_data = remote_api.get_source_data(target_site, req_version)
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())

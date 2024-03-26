@@ -330,30 +330,23 @@ information see :ref:`dev_backend_app`.
     ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
 
 
-API View Settings (Optional)
+REST API Settings (Optional)
 ============================
 
-If you want to build an API to your site using SODAR Core functionality, it is
-recommended to base your API views on ``projectroles.views.SODARAPIBaseView``.
-Using this base class also allows you to define your API media type, version
-number and allowed versions via Django settings.
+.. warning::
 
-The recommended API setup uses accept header versioning. The
-``SODAR_API_MEDIA_TYPE`` setting should be changed to your organization and API
-identification if API views are introduced. The ``SODAR_API_DEFAULT_HOST``
-setting should post to the externally visible host of your server and be
-configured in your environment settings.
+    General site-based REST API versioning settings have been deprecated in
+    SODAR Core v1.0. They will be removed in v1.1. You are expected to provide
+    your own app-based media type and versioning schema. For more information,
+    see :ref:`dev_project_app_rest_api`.
 
-These settings are **optional**. Default values will be used if they are unset.
-
-Example:
+If your site provides a REST API, the ``SODAR_API_DEFAULT_HOST`` setting should
+point to the externally visible host of your server and be configured in your
+environment settings. Example:
 
 .. code-block:: python
 
-    SODAR_API_DEFAULT_VERSION = '0.1'
-    SODAR_API_ACCEPTED_VERSIONS = [SODAR_API_DEFAULT_VERSION]
-    SODAR_API_MEDIA_TYPE = 'application/your.application+json'  # Change this
-    SODAR_API_DEFAULT_HOST = SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
+    SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
 
 
 LDAP/AD Configuration (Optional)

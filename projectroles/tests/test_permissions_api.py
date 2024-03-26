@@ -13,7 +13,10 @@ from projectroles.models import (
 )
 from projectroles.tests.test_permissions import TestProjectPermissionBase
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
-from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+from projectroles.views_api import (
+    PROJECTROLES_API_MEDIA_TYPE,
+    PROJECTROLES_API_DEFAULT_VERSION,
+)
 
 from rest_framework.test import APITestCase
 
@@ -116,8 +119,8 @@ class TestCoreProjectAPIPermissionBase(
     Base class for testing project permissions in internal SODAR Core API views
     """
 
-    media_type = CORE_API_MEDIA_TYPE
-    api_version = CORE_API_DEFAULT_VERSION
+    media_type = PROJECTROLES_API_MEDIA_TYPE
+    api_version = PROJECTROLES_API_DEFAULT_VERSION
 
 
 # Tests ------------------------------------------------------------------------

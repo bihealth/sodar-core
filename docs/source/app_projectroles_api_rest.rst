@@ -12,9 +12,10 @@ HTTP API calls in addition to the GUI.
 API Usage
 =========
 
-Usage of the REST API is detailed in this section. These instructions also apply
-to REST APIs in any other application within SODAR Core and are recommended
-as guidelines for API development in your SODAR Core based Django site.
+General information on usage of the REST APIs in SODAR Core is detailed in this
+section. These instructions also apply to REST APIs in any other application
+within SODAR Core. They are recommended as guidelines for API development in
+your SODAR Core based Django site.
 
 Authentication
 --------------
@@ -38,21 +39,14 @@ desired API version in your HTTP requests is optional, it is
 **strongly recommended**. This ensures you will get the appropriate return data
 and avoid running into unexpected incompatibility issues.
 
-To enable versioning, add the ``Accept`` header to your request with the
-following media type and version syntax. Replace the version number with your
-expected version.
+From SODAR Core v1.0 onwards, each application is expected to use its own media
+type and version numbering. To enable versioning, add the ``Accept`` header to
+your request with the app's respective media type and version number. Example
+for the projectroles API:
 
 .. code-block:: console
 
-    Accept: application/vnd.bihealth.sodar-core+json; version=0.13.2
-
-.. note::
-
-    The media type and version for internal SODAR Core apps are by design
-    intended to be different to applications implemented in your Django site.
-    Only use the aforementioned values when calling REST API views in
-    projectroles or other applications installed from the django-sodar-core
-    package.
+    Accept: application/vnd.bihealth.sodar-core.projectroles+json; version=x.y
 
 Model Access and Permissions
 ----------------------------
@@ -108,8 +102,21 @@ For creation views, the ``sodar_uuid`` of the created object is returned
 along with other object fields.
 
 
-API Views
-=========
+Projectroles REST API Versioning
+================================
+
+Media Type
+    ``application/vnd.bihealth.sodar-core.projectroles+json``
+Current Version
+    ``1.0``
+Accepted Versions
+    ``1.0``
+Header Example
+    ``Accept: application/vnd.bihealth.sodar-core.projectroles+json; version=x.y``
+
+
+Projectroles REST API Views
+===========================
 
 .. currentmodule:: projectroles.views_api
 
