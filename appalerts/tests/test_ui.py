@@ -16,7 +16,7 @@ from appalerts.models import AppAlert
 from appalerts.tests.test_models import AppAlertMixin
 
 
-class TestAlertUIBase(AppAlertMixin, TestUIBase):
+class AlertUITestBase(AppAlertMixin, TestUIBase):
     def setUp(self):
         super().setUp()
         # Create users
@@ -37,7 +37,7 @@ class TestAlertUIBase(AppAlertMixin, TestUIBase):
         )
 
 
-class TestListView(TestAlertUIBase):
+class TestListView(AlertUITestBase):
     """Tests for app alert list view"""
 
     def _find_alert_element(self, alert):
@@ -205,7 +205,7 @@ class TestListView(TestAlertUIBase):
         )
 
 
-class TestTitlebarBadge(TestAlertUIBase):
+class TestTitlebarBadge(AlertUITestBase):
     """Tests for the site titlebar badge"""
 
     def test_render(self):

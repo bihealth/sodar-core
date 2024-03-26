@@ -11,7 +11,10 @@ from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
 from projectroles.views_api import INVALID_PROJECT_TYPE_MSG
 
-from filesfolders.tests.test_views import ZIP_PATH_NO_FILES, TestViewsBaseMixin
+from filesfolders.tests.test_views import (
+    ZIP_PATH_NO_FILES,
+    FilesfoldersViewTestMixin,
+)
 from filesfolders.models import Folder, File, HyperLink
 from filesfolders.views_api import (
     FILESFOLDERS_API_MEDIA_TYPE,
@@ -26,8 +29,8 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
-class TestFilesfoldersAPIViewsBase(
-    TestViewsBaseMixin, SODARAPIViewTestMixin, APITestCase
+class FilesfoldersAPIViewTestBase(
+    FilesfoldersViewTestMixin, SODARAPIViewTestMixin, APITestCase
 ):
     """Base class for filesfolders API tests"""
 
@@ -40,8 +43,8 @@ class TestFilesfoldersAPIViewsBase(
         self.knox_token = self.get_token(self.user)
 
 
-class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
-    """Tests for the FolderListCreateAPIView class"""
+class TestFolderListCreateAPIView(FilesfoldersAPIViewTestBase):
+    """Tests for FolderListCreateAPIView"""
 
     def setUp(self):
         super().setUp()
@@ -50,49 +53,37 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'flag': 'IMPORTANT',
             'description': 'Folder\'s description',
         }
-
-    def test_list_superuser(self):
-        """Test GET request listing folders"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_folder_list_create',
-                kwargs={'project': self.project.sodar_uuid},
-            )
+        self.url = reverse(
+            'filesfolders:api_folder_list_create',
+            kwargs={'project': self.project.sodar_uuid},
         )
+
+    def test_get_list(self):
+        """Test FolderListCreateAPIView GET to list folders"""
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200, msg=response.data)
-        expected = [
-            {
-                'name': self.folder.name,
-                'folder': None,
-                'owner': self.get_serialized_user(self.folder.owner),
-                'project': str(self.folder.project.sodar_uuid),
-                'flag': self.folder.flag,
-                'description': self.folder.description,
-                'date_modified': self.get_drf_datetime(
-                    self.folder.date_modified
-                ),
-                'sodar_uuid': str(self.folder.sodar_uuid),
-            }
-        ]
-        self.assertEqual(json.loads(response.content), expected)
+        expected = {
+            'name': self.folder.name,
+            'folder': None,
+            'owner': self.get_serialized_user(self.folder.owner),
+            'project': str(self.folder.project.sodar_uuid),
+            'flag': self.folder.flag,
+            'description': self.folder.description,
+            'date_modified': self.get_drf_datetime(self.folder.date_modified),
+            'sodar_uuid': str(self.folder.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), [expected])
 
-    def test_create_in_root(self):
-        """Test creation of new folder in root"""
+    def test_post_create_root(self):
+        """Test POST to create folder in root"""
         response = self.request_knox(
-            reverse(
-                'filesfolders:api_folder_list_create',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
-            method='POST',
-            data=self.folder_data,
+            self.url, method='POST', data=self.folder_data
         )
-
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_folder = Folder.objects.filter(
             sodar_uuid=response.data['sodar_uuid']
         ).first()
         self.assertIsNotNone(new_folder)
-
         expected = {
             **self.folder_data,
             'folder': None,
@@ -103,27 +94,18 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_create_in_folder(self):
-        """Test creation of new folder below other"""
+    def test_post_create_folder(self):
+        """Test POST to create folder under folder"""
         folder_data = {
             **self.folder_data,
             'folder': str(self.folder.sodar_uuid),
         }
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_folder_list_create',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
-            method='POST',
-            data=folder_data,
-        )
-
+        response = self.request_knox(self.url, method='POST', data=folder_data)
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_folder = Folder.objects.filter(
             sodar_uuid=response.data['sodar_uuid']
         ).first()
         self.assertIsNotNone(new_folder)
-
         expected = {
             **folder_data,
             'owner': self.get_serialized_user(self.user),
@@ -133,8 +115,8 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_create_in_category(self):
-        """Test creation of new folder in a category (should fail)"""
+    def test_post_create_category(self):
+        """Test POST to create folder in category (should fail)"""
         category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -154,17 +136,19 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
         )
 
 
-class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
-    """Tests for the FolderRetrieveUpdateDestroyAPIView class"""
+class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
+    """Tests for FolderRetrieveUpdateDestroyAPIView"""
 
-    def test_retrieve(self):
-        """Test retrieval of Folder model through API"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_folder_retrieve_update_destroy',
-                kwargs={'folder': self.folder.sodar_uuid},
-            )
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'filesfolders:api_folder_retrieve_update_destroy',
+            kwargs={'folder': self.folder.sodar_uuid},
         )
+
+    def test_get_retrieve(self):
+        """Test FolderRetrieveUpdateDestroyAPIView GET to retrieve folder"""
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200, msg=response.data)
         expected = {
             'name': self.folder.name,
@@ -178,8 +162,8 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_retrieve_not_found(self):
-        """Test retrieval of Folder with invalid UUID"""
+    def test_get_invalid_uuid(self):
+        """Test GET with invalid UUID"""
         response = self.request_knox(
             reverse(
                 'filesfolders:api_folder_retrieve_update_destroy',
@@ -188,21 +172,14 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         )
         self.assertEqual(response.status_code, 404)
 
-    def test_update(self):
-        """Test update of Folder model through API"""
+    def test_put_update(self):
+        """Test PUT to update folder"""
         folder_data = {
             'name': 'UPDATED Folder',
             'flag': 'FLAG',
             'description': 'UPDATED Description',
         }
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_folder_retrieve_update_destroy',
-                kwargs={'folder': self.folder.sodar_uuid},
-            ),
-            method='PUT',
-            data=folder_data,
-        )
+        response = self.request_knox(self.url, method='PUT', data=folder_data)
         self.assertEqual(response.status_code, 200, msg=response.data)
         self.folder.refresh_from_db()
         expected = {
@@ -215,15 +192,9 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_destroy(self):
-        """Test destruction of Folder model through API"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_folder_retrieve_update_destroy',
-                kwargs={'folder': self.folder.sodar_uuid},
-            ),
-            method='DELETE',
-        )
+    def test_delete(self):
+        """Test DELETE to remove folder"""
+        response = self.request_knox(self.url, method='DELETE')
         self.assertEqual(response.status_code, 204, msg=response.data)
         self.assertIsNone(response.data)
         with self.assertRaises(Folder.DoesNotExist):
@@ -232,8 +203,8 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             )
 
 
-class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
-    """Tests for the FileListCreateAPIView class"""
+class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
+    """Tests for FileListCreateAPIView"""
 
     def setUp(self):
         super().setUp()
@@ -245,55 +216,44 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'public_url': True,
             'file': open(ZIP_PATH_NO_FILES, 'rb'),
         }
+        self.url = reverse(
+            'filesfolders:api_file_list_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
 
     def tearDown(self):
         self.file_data['file'].close()
         super().tearDown()
 
-    def test_list_superuser(self):
-        """Test GET request listing files"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_file_list_create',
-                kwargs={'project': self.project.sodar_uuid},
-            )
-        )
+    def test_get_list(self):
+        """Test FileListCreateAPIView GET to list files"""
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200, msg=response.data)
-        expected = [
-            {
-                'name': self.file.name,
-                'folder': None,
-                'owner': self.get_serialized_user(self.file.owner),
-                'project': str(self.file.project.sodar_uuid),
-                'flag': self.file.flag,
-                'description': self.file.description,
-                'secret': self.file.secret,
-                'public_url': self.file.public_url,
-                'date_modified': self.get_drf_datetime(self.file.date_modified),
-                'sodar_uuid': str(self.file.sodar_uuid),
-            }
-        ]
-        self.assertEqual(json.loads(response.content), expected)
+        expected = {
+            'name': self.file.name,
+            'folder': None,
+            'owner': self.get_serialized_user(self.file.owner),
+            'project': str(self.file.project.sodar_uuid),
+            'flag': self.file.flag,
+            'description': self.file.description,
+            'secret': self.file.secret,
+            'public_url': self.file.public_url,
+            'date_modified': self.get_drf_datetime(self.file.date_modified),
+            'sodar_uuid': str(self.file.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), [expected])
 
-    def test_create_in_root(self):
-        """Test creation of new file in root"""
+    def test_post_create_root(self):
+        """Test POST to create file in root"""
         response = self.request_knox(
-            reverse(
-                'filesfolders:api_file_list_create',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
-            method='POST',
-            format='multipart',
-            data=self.file_data,
+            self.url, method='POST', format='multipart', data=self.file_data
         )
-
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_file = File.objects.filter(
             sodar_uuid=response.data['sodar_uuid']
         ).first()
         self.assertIsNotNone(new_file)
         self.assertNotEqual(new_file.file.file.size, 0)
-
         expected = {
             **self.file_data,
             'folder': None,
@@ -307,17 +267,11 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
         expected.pop('file')
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_create_in_folder(self):
-        """Test creation of a file inside a folder"""
+    def test_post_create_folder(self):
+        """Test POST to create file under folder"""
         file_data = {**self.file_data, 'folder': str(self.folder.sodar_uuid)}
         response = self.request_knox(
-            reverse(
-                'filesfolders:api_file_list_create',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
-            method='POST',
-            format='multipart',
-            data=file_data,
+            self.url, method='POST', format='multipart', data=file_data
         )
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_file = File.objects.filter(
@@ -337,8 +291,8 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
         expected.pop('file')
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_create_in_category(self):
-        """Test creation of new file in a category (should fail)"""
+    def test_post_create_category(self):
+        """Test POST to create file in category (should fail)"""
         category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -359,8 +313,8 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
         )
 
 
-class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
-    """Tests for the FileRetrieveUpdateDestroyAPIView class"""
+class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
+    """Tests for FileRetrieveUpdateDestroyAPIView"""
 
     def setUp(self):
         super().setUp()
@@ -372,19 +326,18 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             'public_url': False,
             'file': open(ZIP_PATH_NO_FILES, 'rb'),
         }
+        self.url = reverse(
+            'filesfolders:api_file_retrieve_update_destroy',
+            kwargs={'file': self.file.sodar_uuid},
+        )
 
     def tearDown(self):
         self.file_data['file'].close()
         super().tearDown()
 
-    def test_retrieve(self):
-        """Test retrieval of File model through API"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_file_retrieve_update_destroy',
-                kwargs={'file': self.file.sodar_uuid},
-            )
-        )
+    def test_get_retrieve(self):
+        """Test FileRetrieveUpdateDestroyAPIView GET to retrieve file"""
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200, msg=response.data)
         expected = {
             'name': self.file.name,
@@ -400,8 +353,8 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_retrieve_not_found(self):
-        """Test retrieval of File with invalid UUID"""
+    def test_get_invalid_uuid(self):
+        """Test GET with invalid UUID"""
         response = self.request_knox(
             reverse(
                 'filesfolders:api_file_retrieve_update_destroy',
@@ -410,18 +363,11 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         )
         self.assertEqual(response.status_code, 404)
 
-    def test_update(self):
-        """Test update of File model through API"""
+    def test_put_update(self):
+        """Test PUT to update file"""
         response = self.request_knox(
-            reverse(
-                'filesfolders:api_file_retrieve_update_destroy',
-                kwargs={'file': self.file.sodar_uuid},
-            ),
-            method='PUT',
-            format='multipart',
-            data=self.file_data,
+            self.url, method='PUT', format='multipart', data=self.file_data
         )
-
         self.assertEqual(response.status_code, 200, msg=response.data)
         old_secret = self.file.secret
         self.file.refresh_from_db()
@@ -433,7 +379,6 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             old_secret,
             msg='Secret should change when public_url flag changes',
         )
-
         expected = {
             **self.file_data,
             'folder': None,
@@ -447,15 +392,9 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         expected.pop('file')
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_destroy(self):
-        """Test destruction of File model through API"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_file_retrieve_update_destroy',
-                kwargs={'file': self.file.sodar_uuid},
-            ),
-            method='DELETE',
-        )
+    def test_delete(self):
+        """Test DELETE"""
+        response = self.request_knox(self.url, method='DELETE')
         self.assertEqual(response.status_code, 204, msg=response.data)
         self.assertIsNone(response.data)
         with self.assertRaises(File.DoesNotExist):
@@ -464,11 +403,11 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             )
 
 
-class TestFileServeAPIView(TestFilesfoldersAPIViewsBase):
-    """Tests for the FileServeAPIView class"""
+class TestFileServeAPIView(FilesfoldersAPIViewTestBase):
+    """Tests for FileServeAPIView"""
 
     def test_get(self):
-        """Test download of file content"""
+        """Test FileServeAPIView GET to download file"""
         response = self.request_knox(
             reverse(
                 'filesfolders:api_file_serve',
@@ -480,7 +419,7 @@ class TestFileServeAPIView(TestFilesfoldersAPIViewsBase):
         self.assertEqual(response.content, expected)
 
     def test_get_not_found(self):
-        """Test download with invalid UUID"""
+        """Test GET with invalid UUID"""
         response = self.request_knox(
             reverse(
                 'filesfolders:api_file_serve',
@@ -490,8 +429,8 @@ class TestFileServeAPIView(TestFilesfoldersAPIViewsBase):
         self.assertEqual(response.status_code, 404)
 
 
-class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
-    """Tests for the HyperLinkListCreateAPIView class"""
+class TestHyperLinkListCreateAPIView(FilesfoldersAPIViewTestBase):
+    """Tests for HyperLinkListCreateAPIView"""
 
     def setUp(self):
         super().setUp()
@@ -501,50 +440,40 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'description': 'HyperLink\'s description',
             'url': 'http://www.cubi.bihealth.org',
         }
-
-    def test_list_superuser(self):
-        """Test GET request listing hyperlinks"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_hyperlink_list_create',
-                kwargs={'project': self.project.sodar_uuid},
-            )
+        self.url = reverse(
+            'filesfolders:api_hyperlink_list_create',
+            kwargs={'project': self.project.sodar_uuid},
         )
+
+    def test_get_list(self):
+        """Test HyperLinkListCreateAPIView GET to list hyperlinks"""
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200, msg=response.data)
-        expected = [
-            {
-                'name': self.hyperlink.name,
-                'folder': None,
-                'owner': self.get_serialized_user(self.hyperlink.owner),
-                'project': str(self.hyperlink.project.sodar_uuid),
-                'flag': self.hyperlink.flag,
-                'description': self.hyperlink.description,
-                'url': self.hyperlink.url,
-                'date_modified': self.get_drf_datetime(
-                    self.hyperlink.date_modified
-                ),
-                'sodar_uuid': str(self.hyperlink.sodar_uuid),
-            }
-        ]
-        self.assertEqual(json.loads(response.content), expected)
-
-    def test_create_in_root(self):
-        """Test creation of new hyperlink in root"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_hyperlink_list_create',
-                kwargs={'project': self.project.sodar_uuid},
+        expected = {
+            'name': self.hyperlink.name,
+            'folder': None,
+            'owner': self.get_serialized_user(self.hyperlink.owner),
+            'project': str(self.hyperlink.project.sodar_uuid),
+            'flag': self.hyperlink.flag,
+            'description': self.hyperlink.description,
+            'url': self.hyperlink.url,
+            'date_modified': self.get_drf_datetime(
+                self.hyperlink.date_modified
             ),
-            method='POST',
-            data=self.hyperlink_data,
-        )
+            'sodar_uuid': str(self.hyperlink.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), [expected])
 
+    def test_post_root(self):
+        """Test POST to create hyperlink in root"""
+        response = self.request_knox(
+            self.url, method='POST', data=self.hyperlink_data
+        )
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_link = HyperLink.objects.filter(
             sodar_uuid=response.data['sodar_uuid']
         ).first()
         self.assertIsNotNone(new_link)
-
         expected = {
             **self.hyperlink_data,
             'folder': None,
@@ -555,19 +484,14 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_create_in_folder(self):
-        """Test creation of new hyperlink below another"""
+    def test_post_folder(self):
+        """Test POST to create hyperlink under folder"""
         hyperlink_data = {
             **self.hyperlink_data,
             'folder': str(self.folder.sodar_uuid),
         }
         response = self.request_knox(
-            reverse(
-                'filesfolders:api_hyperlink_list_create',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
-            method='POST',
-            data=hyperlink_data,
+            self.url, method='POST', data=hyperlink_data
         )
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_link = HyperLink.objects.filter(
@@ -583,8 +507,8 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_create_in_category(self):
-        """Test creation of new hyperlink in a category (should fail)"""
+    def test_post_category(self):
+        """Test POST to create hyperlink in category (should fail)"""
         category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -604,17 +528,19 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
         )
 
 
-class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
-    """Tests for the HyperLinkRetrieveUpdateDestroyAPIView class"""
+class TestHyperLinkRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
+    """Tests for HyperLinkRetrieveUpdateDestroyAPIView"""
 
-    def test_retrieve(self):
-        """Test retrieval of HyperLink model through API"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_hyperlink_retrieve_update_destroy',
-                kwargs={'hyperlink': self.hyperlink.sodar_uuid},
-            )
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'filesfolders:api_hyperlink_retrieve_update_destroy',
+            kwargs={'hyperlink': self.hyperlink.sodar_uuid},
         )
+
+    def test_get_retrieve(self):
+        """Test HyperLinkRetrieveUpdateDestroyAPIView to retrieve hyperlink"""
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200, msg=response.data)
         expected = {
             'name': self.hyperlink.name,
@@ -631,8 +557,8 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_retrieve_not_found(self):
-        """Test retrieval of HyperLink with invalid UUID"""
+    def test_get_invalid_uuid(self):
+        """Test GET with invalid UUID"""
         response = self.request_knox(
             reverse(
                 'filesfolders:api_hyperlink_retrieve_update_destroy',
@@ -641,8 +567,8 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         )
         self.assertEqual(response.status_code, 404)
 
-    def test_update(self):
-        """Test update of HyperLink model through API"""
+    def test_put_update(self):
+        """Test PUT to update hyperlink"""
         hyperlink_data = {
             'name': 'UPDATED HyperLink',
             'flag': 'FLAG',
@@ -650,12 +576,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             'url': 'http://www.bihealth.org',
         }
         response = self.request_knox(
-            reverse(
-                'filesfolders:api_hyperlink_retrieve_update_destroy',
-                kwargs={'hyperlink': self.hyperlink.sodar_uuid},
-            ),
-            method='PUT',
-            data=hyperlink_data,
+            self.url, method='PUT', data=hyperlink_data
         )
         self.assertEqual(response.status_code, 200, msg=response.data)
         self.hyperlink.refresh_from_db()
@@ -676,14 +597,8 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_destroy(self):
-        """Test destruction of HyperLink model through API"""
-        response = self.request_knox(
-            reverse(
-                'filesfolders:api_hyperlink_retrieve_update_destroy',
-                kwargs={'hyperlink': self.hyperlink.sodar_uuid},
-            ),
-            method='DELETE',
-        )
+    def test_delete(self):
+        """Test DELETE"""
+        response = self.request_knox(self.url, method='DELETE')
         self.assertEqual(response.status_code, 204, msg=response.data)
         self.assertIsNone(response.data)
