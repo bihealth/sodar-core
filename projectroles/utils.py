@@ -300,32 +300,31 @@ class AppLinkContent:
             )
         return ret
 
-
-class UserDropdownContent:
-    """Class for generating application links for the dropdown"""
-
     def get_user_links(self, request):
         """Return user links for the user dropdown"""
-        links = []
+        ret = []
         # Add site-wide apps links
         site_apps = get_active_plugins('site_app')
         for app in site_apps:
             if not app.app_permission or request.user.has_perm(
                 app.app_permission
             ):
-                links.append(
+                ret.append(
                     {
                         'name': app.name,
                         'url': reverse(app.entry_point_url_id),
                         'label': app.title,
                         'icon': app.icon,
-                        'active': request.path
-                        == reverse(app.entry_point_url_id),
+                        'active': self._is_active_plugin(
+                            app,
+                            request.resolver_match.app_name,
+                            request.resolver_match.url_name,
+                        ),
                     }
                 )
         # Add admin link
         if request.user.is_superuser:
-            links.append(
+            ret.append(
                 {
                     'name': 'admin',
                     'url': reverse('admin:index'),
@@ -336,7 +335,7 @@ class UserDropdownContent:
             )
         # Add log out / sign in link
         if request.user.is_authenticated:
-            links.append(
+            ret.append(
                 {
                     'name': 'sign-out',
                     'url': reverse('logout'),
@@ -346,7 +345,7 @@ class UserDropdownContent:
                 }
             )
         elif not getattr(settings, 'PROJECTROLES_KIOSK_MODE', False):
-            links.append(
+            ret.append(
                 {
                     'name': 'sign-in',
                     'url': reverse('login'),
@@ -355,4 +354,4 @@ class UserDropdownContent:
                     'active': False,
                 }
             )
-        return links
+        return ret
