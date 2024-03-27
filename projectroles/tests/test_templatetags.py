@@ -726,7 +726,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
                 else:
                     self.assertEqual(app['active'], False)
 
-    def test_get_get_user_links_home(self):
+    def test_get_user_links_home(self):
         """Test get_user_links() on the home view"""
         url = reverse('home')
         with self.login(self.user):
@@ -781,6 +781,106 @@ class TestProjectrolesTags(TemplateTagTestBase):
                 ],
             )
 
+    def test_get_superuser_links_home(self):
+        """Test get_user_links() on the home view as superuser"""
+        url = reverse('home')
+        superuser = self.make_user('superuser')
+        superuser.is_superuser = True
+        superuser.save()
+        with self.login(superuser):
+            request = self.req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = superuser
+            self.assertEqual(
+                tags.get_user_links(request),
+                [
+                    {
+                        'name': 'adminalerts',
+                        'url': '/alerts/adm/list',
+                        'label': 'Admin Alerts',
+                        'icon': 'mdi:alert',
+                        'active': False,
+                    },
+                    {
+                        'name': 'appalerts',
+                        'url': '/alerts/app/list',
+                        'label': 'App Alerts',
+                        'icon': 'mdi:alert-octagram',
+                        'active': False,
+                    },
+                    {
+                        'name': 'bgjobs_site',
+                        'url': '/bgjobs/list',
+                        'label': 'Site Background Jobs',
+                        'icon': 'mdi:server',
+                        'active': False,
+                    },
+                    {
+                        'name': 'example_site_app',
+                        'url': '/examples/site/example',
+                        'label': 'Example Site App',
+                        'icon': 'mdi:rocket-launch-outline',
+                        'active': False,
+                    },
+                    {
+                        'name': 'remotesites',
+                        'url': '/project/remote/sites',
+                        'label': 'Remote Site Access',
+                        'icon': 'mdi:cloud-sync',
+                        'active': False,
+                    },
+                    {
+                        'name': 'siteinfo',
+                        'url': '/siteinfo/info',
+                        'label': 'Site Info',
+                        'icon': 'mdi:bar-chart',
+                        'active': False,
+                    },
+                    {
+                        'name': 'timeline_site',
+                        'url': '/timeline/site',
+                        'label': 'Site-Wide Events',
+                        'icon': 'mdi:clock-time-eight-outline',
+                        'active': False,
+                    },
+                    {
+                        'name': 'timeline_site_admin',
+                        'url': '/timeline/site/all',
+                        'label': 'All Timeline Events',
+                        'icon': 'mdi:web-clock',
+                        'active': False,
+                    },
+                    {
+                        'name': 'tokens',
+                        'url': '/tokens/',
+                        'label': 'API Tokens',
+                        'icon': 'mdi:key-chain-variant',
+                        'active': False,
+                    },
+                    {
+                        'name': 'userprofile',
+                        'url': '/user/profile',
+                        'label': 'User Profile',
+                        'icon': 'mdi:account-details',
+                        'active': False,
+                    },
+                    {
+                        'name': 'admin',
+                        'url': '/admin/',
+                        'label': 'Django Admin',
+                        'icon': 'mdi:cogs',
+                        'active': False,
+                    },
+                    {
+                        'name': 'sign-out',
+                        'url': '/logout/',
+                        'label': 'Logout',
+                        'icon': 'mdi:logout-variant',
+                        'active': False,
+                    },
+                ],
+            )
+
     def test_get_user_links_userprofile(self):
         """Test get_user_links() on the user profile view"""
         url = reverse('userprofile:detail')
@@ -790,6 +890,19 @@ class TestProjectrolesTags(TemplateTagTestBase):
             request.user = self.user
             for app in tags.get_user_links(request):
                 if app['name'] == 'userprofile':
+                    self.assertEqual(app['active'], True)
+                else:
+                    self.assertEqual(app['active'], False)
+
+    def test_get_user_links_remote_site(self):
+        """Test get_user_links() on the remote site view"""
+        url = reverse('projectroles:remote_site_create')
+        with self.login(self.user):
+            request = self.req_factory.get(url)
+            request.resolver_match = resolve(url)
+            request.user = self.user
+            for app in tags.get_user_links(request):
+                if app['name'] == 'remote_site_app':
                     self.assertEqual(app['active'], True)
                 else:
                     self.assertEqual(app['active'], False)
