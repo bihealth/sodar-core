@@ -271,6 +271,13 @@ def get_admin_warning():
 
 
 @register.simple_tag
+def get_user_links(request):
+    """Return user dropdown links"""
+    app_links = AppLinkContent()
+    return app_links.get_user_links(request)
+
+
+@register.simple_tag
 def get_project_app_links(request, project=None):
     """Return sidebar links"""
     app_links = AppLinkContent()

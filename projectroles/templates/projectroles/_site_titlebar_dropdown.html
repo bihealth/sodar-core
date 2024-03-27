@@ -5,49 +5,16 @@
 {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 
 {# Responsive replacement for user dropdown #}
-
-{# Admin link #}
-{% if request.user.is_superuser %}
-  <li class="nav-item sodar-navbar-alt-item">
-    <a class="nav-link" href="{% url 'admin:index' %}"
-       id="sodar-navbar-link-admin" target="_blank">
-      <i class="iconify" data-icon="mdi:cogs"></i> Admin
+{% get_user_links request as dropdown_links %}
+{% for link in dropdown_links %}
+  <li class="nav-item sodar-navbar-alt-item {% if link.active %}active{% endif %}">
+    <a class="nav-link {% if link.name == 'sign-out' %}text-danger{% endif %}
+              {% if link.name == 'sign-in' %}text-white{% endif %}"
+       href="{{ link.url }}"
+       id="sodar-navbar-nav-link-{{ link.name }}">
+      <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
     </a>
-  </li>
-{% endif %}
-
-{# Site-wide apps #}
-{% for plugin in site_apps %}
-  {% has_perm plugin.app_permission request.user as can_view_app %}
-  {% if not plugin.app_permission or can_view_app %}
-    <li class="nav-item sodar-navbar-alt-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
-      <a class="nav-link"
-         href="{% url plugin.entry_point_url_id %}"
-         id="sodar-navbar-siteapp-link-{{ plugin.name }}">
-        <i class="iconify" data-icon="{{ plugin.icon }}"></i> {{ plugin.title }}</a>
-    </li>
-  {% endif %}
 {% endfor %}
-
-{# Log out link #}
-{% if request.user.is_authenticated %}
-  <li class="nav-item sodar-navbar-alt-item">
-    <a class="nav-link text-danger"
-       href="{% url 'logout' %}"
-       id="sodar-alt-nav-link-sign-out">
-      <i class="iconify" data-icon="mdi:logout-variant"></i> Logout
-    </a>
-  </li>
-{% elif not kiosk_mode %}
-  <li class="nav-item sodar-navbar-alt-item">
-    <a class="nav-link text-white"
-       href="{% url 'login' %}"
-       id="sodar-alt-nav-link-sign-in">
-      <i class="iconify" data-icon="mdi:login-variant"></i> Login
-    </a>
-  </li>
-{% endif %}
-
 {# Actual user dropdown #}
 
 <li class="nav-item sodar-navbar-user-dropdown">
@@ -75,45 +42,18 @@
     </div>
     <div class="dropdown-divider"></div>
 
-    {# Site-wide apps #}
-    {% for plugin in site_apps %}
-      {% has_perm plugin.app_permission request.user as can_view_app %}
-      {% if not plugin.app_permission or can_view_app %}
-        <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
-           href="{% url plugin.entry_point_url_id %}"
-           id="sodar-navbar-siteapp-link-{{ plugin.name }}">
-          <i class="iconify" data-icon="{{ plugin.icon }}"></i> {{ plugin.title }}
-        </a>
+    {% get_user_links request as dropdown_links %}
+    {% for link in dropdown_links %}
+      {% if link.name == 'admin' or link.name == 'sign-out' or link.name == 'sign-in' %}
+        <div class="dropdown-divider"></div>
       {% endif %}
+      <a class="dropdown-item {% if link.active %}active{% endif %}
+                {% if link.name == 'sign-out' %}text-danger{% endif %}
+                {% if link.name == 'sign-in' %}text-primary{% endif %}"
+         href="{{ link.url }}"
+         id="sodar-navbar-link-{{ link.name }}">
+        <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
+      </a>
     {% endfor %}
-    {% if site_apps|length > 0 %}
-      <div class="dropdown-divider"></div>
-    {% endif %}
-
-    {# Admin link #}
-    {% if request.user.is_superuser %}
-      <a class="dropdown-item"
-         href="#"
-         id="sodar-navbar-link-admin-warning"
-         data-toggle="modal" data-target="#sodar-modal">
-        <i class="iconify" data-icon="mdi:cogs"></i> Django Admin
-      </a>
-      <div class="dropdown-divider"></div>
-    {% endif %}
-
-    {# Log out / log in links #}
-    {% if request.user.is_authenticated %}
-      <a class="dropdown-item text-danger"
-         href="{% url 'logout' %}"
-         id="sodar-navbar-link-logout">
-        <i class="iconify" data-icon="mdi:logout-variant"></i> Logout
-      </a>
-    {% else %}
-      <a class="dropdown-item text-primary"
-         href="{% url 'login' %}"
-         id="sodar-navbar-link-login">
-        <i class="iconify" data-icon="mdi:login-variant"></i> Login
-      </a>
-    {% endif %}
   </div>
 </li>
