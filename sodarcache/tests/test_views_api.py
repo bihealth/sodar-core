@@ -11,8 +11,8 @@ from projectroles.plugins import get_backend_api
 
 from sodarcache.models import JSONCacheItem
 from sodarcache.tests.test_models import (
-    TestJsonCacheItemBase,
-    JsonCacheItemMixin,
+    JSONCacheItemTestBase,
+    JSONCacheItemMixin,
 )
 
 
@@ -26,9 +26,10 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 TEST_APP_NAME = 'sodarcache'
+ITEM_NAME = 'test_item'
 
 
-class TestViewsBase(JsonCacheItemMixin, TestJsonCacheItemBase):
+class SODARCacheViewTestBase(JSONCacheItemMixin, JSONCacheItemTestBase):
     """Base class for sodarcache view testing"""
 
     def setUp(self):
@@ -51,69 +52,64 @@ class TestViewsBase(JsonCacheItemMixin, TestJsonCacheItemBase):
             project=self.project,
             app_name=TEST_APP_NAME,
             user=self.user_owner,
-            name='test_item',
+            name=ITEM_NAME,
             data={'test_key': 'test_val'},
         )
 
 
-class TestSodarCacheGetAPIView(TestViewsBase):
-    """Tests for the sodarcache item getting API view"""
+class TestSODARCacheGetAPIView(SODARCacheViewTestBase):
+    """Tests for SODARCacheGetAPIView"""
 
-    def test_get_wrong_item(self):
-        values = {'app_name': TEST_APP_NAME, 'name': 'not_test_item'}
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'sodarcache:cache_get',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test SODARCacheGetAPIView GET"""
+        values = {'app_name': TEST_APP_NAME, 'name': ITEM_NAME}
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'sodarcache:cache_get',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-                values,
-            )
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_item(self):
-        values = {'app_name': TEST_APP_NAME, 'name': 'test_item'}
-
-        with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'sodarcache:cache_get',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-                values,
-            )
-
+            response = self.client.get(self.url, values)
         expected = {
             'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': str(self.user_owner.sodar_uuid),
-            'name': 'test_item',
+            'name': ITEM_NAME,
             'data': {'test_key': 'test_val'},
             'sodar_uuid': str(self.item.sodar_uuid),
         }
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected)
 
+    def test_get_not_found(self):
+        """Test GET with a nonexistent item"""
+        values = {'app_name': TEST_APP_NAME, 'name': 'not_test_item'}
+        with self.login(self.user):
+            response = self.client.get(self.url, values)
+        self.assertEqual(response.status_code, 404)
 
-class TestSodarCacheSetAPIView(TestViewsBase):
-    """Tests for the sodarcache item setting API view"""
 
-    def test_set_item(self):
-        """Test creating a new cache item"""
+class TestSODARCacheSetAPIView(SODARCacheViewTestBase):
+    """Tests for SODARCacheSetAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'sodarcache:cache_set',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+
+    def test_post_create(self):
+        """Test SODARCacheSetAPIView POST to create cache item"""
         values = {
             'app_name': TEST_APP_NAME,
             'name': 'new_test_item',
             'data': json.dumps({'test_key': 'test_val'}),
         }
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
-
         with self.login(self.user):
-            response = self.client.post(
-                reverse(
-                    'sodarcache:cache_set',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-                values,
-            )
+            response = self.client.post(self.url, values)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(JSONCacheItem.objects.all().count(), 2)
@@ -131,34 +127,27 @@ class TestSodarCacheSetAPIView(TestViewsBase):
         model_dict = model_to_dict(item)
         self.assertEqual(model_dict, expected)
 
-    def test_update_item(self):
-        """Test updating a cache item"""
+    def test_post_update(self):
+        """Test POST to update cache item"""
         values = {
             'app_name': TEST_APP_NAME,
-            'name': 'test_item',
+            'name': ITEM_NAME,
             'data': json.dumps({'test_key': 'test_val_updated'}),
         }
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
-
         with self.login(self.user):
-            response = self.client.post(
-                reverse(
-                    'sodarcache:cache_set',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-                values,
-            )
+            response = self.client.post(self.url, values)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
-        item = JSONCacheItem.objects.get(name='test_item')
+        item = JSONCacheItem.objects.get(name=ITEM_NAME)
         self.assertIsNotNone(item)
         expected = {
             'id': item.pk,
             'project': self.project.pk,
             'app_name': TEST_APP_NAME,
             'user': self.user.pk,
-            'name': 'test_item',
+            'name': ITEM_NAME,
             'data': json.dumps({'test_key': 'test_val_updated'}),
             'sodar_uuid': item.sodar_uuid,
         }
@@ -166,14 +155,13 @@ class TestSodarCacheSetAPIView(TestViewsBase):
         self.assertEqual(model_dict, expected)
 
 
-class TestSodarCacheGetDateAPIView(TestViewsBase):
-    """Tests for the sodarcache item update time getting API view"""
+class TestSODARCacheGetDateAPIView(SODARCacheViewTestBase):
+    """Tests for SODARCacheGetDateAPIView"""
 
-    def test_get_time(self):
-        """Test retrieving cache item update time"""
+    def test_get(self):
+        """Test SODARCacheGetDateAPIView GET"""
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
-        values = {'app_name': TEST_APP_NAME, 'name': 'test_item'}
-
+        values = {'app_name': TEST_APP_NAME, 'name': ITEM_NAME}
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -182,9 +170,8 @@ class TestSodarCacheGetDateAPIView(TestViewsBase):
                 ),
                 values,
             )
-
         expected = self.cache_backend.get_update_time(
-            app_name=TEST_APP_NAME, name='test_item'
+            app_name=TEST_APP_NAME, name=ITEM_NAME
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['update_time'], expected)

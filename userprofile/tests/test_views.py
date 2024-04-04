@@ -18,10 +18,11 @@ app_settings = AppSettingAPI()
 User = auth.get_user_model()
 
 
-INVALID_SETTING_VALUE = 'INVALID VALUE'
+# Local constants
+INVALID_VALUE = 'INVALID VALUE'
 
 
-class UserViewsTestBase(TestCase):
+class UserViewTestBase(TestCase):
     """Base class for view testing"""
 
     def setUp(self):
@@ -35,7 +36,7 @@ class UserViewsTestBase(TestCase):
 # View tests -------------------------------------------------------------------
 
 
-class TestUserDetailView(UserViewsTestBase):
+class TestUserDetailView(UserViewTestBase):
     """Tests for UserDetailView"""
 
     def test_get(self):
@@ -46,7 +47,7 @@ class TestUserDetailView(UserViewsTestBase):
         self.assertIsNotNone(response.context['user_settings'])
 
 
-class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
+class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
     """Tests for UserSettingsView"""
 
     def _get_setting(self, name):
@@ -199,8 +200,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewsTestBase):
     def test_post_custom_validation(self):
         """Test POST with custom validation and invalid value"""
         values = {
-            'settings.example_project_app.'
-            'user_str_setting': INVALID_SETTING_VALUE,
+            'settings.example_project_app.' 'user_str_setting': INVALID_VALUE,
             'settings.example_project_app.user_int_setting': '170',
             'settings.example_project_app.user_str_setting_options': 'string1',
             'settings.example_project_app.user_int_setting_options': '0',

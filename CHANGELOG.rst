@@ -43,8 +43,10 @@ Changed
     - Deprecate returning ``dict`` from ``search()`` (#1399)
     - Update core API view media type and versioning (#1278)
     - Separate projectroles and remote sync API media types and versioning (#1278)
+    - Rename base test classes for consistency (#1259)
 - **Sodarcache**
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
+    - Rename API view classes to match conventions (#1389)
 - **Timeline**
     - Update ``get_object_link()`` usage for ``PluginObjectLink`` return data (#1343)
 

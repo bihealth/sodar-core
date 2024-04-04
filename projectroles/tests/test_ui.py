@@ -90,7 +90,7 @@ class LiveUserMixin:
         return user
 
 
-class TestUIBase(
+class UITestBase(
     LiveUserMixin,
     ProjectMixin,
     RoleMixin,
@@ -450,7 +450,7 @@ class TestUIBase(
             self.assertNotIn('active', element.get_attribute('class'))
 
 
-class TestBaseTemplate(TestUIBase):
+class TestBaseTemplate(UITestBase):
     """Tests for the base project template"""
 
     def test_admin_link(self):
@@ -474,7 +474,7 @@ class TestBaseTemplate(TestUIBase):
         self.assert_element_exists(expected_false, url, elem_id, False)
 
 
-class TestHomeView(TestUIBase):
+class TestHomeView(UITestBase):
     """Tests for the home view and project list UI"""
 
     #: Home view URL
@@ -698,7 +698,7 @@ class TestHomeView(TestUIBase):
             self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
 
 
-class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
+class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
     """Tests for the project sidebar"""
 
     def setUp(self):
@@ -1091,7 +1091,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         )
 
 
-class TestProjectSearchResultsView(TestUIBase):
+class TestProjectSearchResultsView(UITestBase):
     """Tests for ProjectSearchResultsView UI"""
 
     def test_search_results(self):
@@ -1197,7 +1197,7 @@ class TestProjectSearchResultsView(TestUIBase):
         )
 
 
-class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
+class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
     """Tests for ProjectDetailView UI"""
 
     @classmethod
@@ -1580,7 +1580,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
             )
 
 
-class TestProjectCreateView(TestUIBase):
+class TestProjectCreateView(UITestBase):
     """Tests for ProjectCreateView UI"""
 
     def test_owner_widget_top(self):
@@ -1722,7 +1722,7 @@ class TestProjectCreateView(TestUIBase):
                 break
 
 
-class TestProjectUpdateView(TestUIBase):
+class TestProjectUpdateView(UITestBase):
     """Tests for ProjectUpdateView UI"""
 
     def test_archive_button(self):
@@ -1775,7 +1775,7 @@ class TestProjectUpdateView(TestUIBase):
         self.assertFalse(element.is_displayed())
 
 
-class TestProjectArchiveView(TestUIBase):
+class TestProjectArchiveView(UITestBase):
     """Tests for ProjectArchiveView UI"""
 
     def test_archive_button(self):
@@ -1798,7 +1798,7 @@ class TestProjectArchiveView(TestUIBase):
         )
 
 
-class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
+class TestProjectRoleView(RemoteTargetMixin, UITestBase):
     """Tests for ProjectRoleView UI"""
 
     def _get_role_dropdown(self, user, owner=False):
@@ -2008,7 +2008,7 @@ class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-delete')
 
 
-class TestRoleAssignmentCreateView(TestUIBase):
+class TestRoleAssignmentCreateView(UITestBase):
     """Tests for RoleAssignmentCreateView UI"""
 
     def test_role_preview(self):
@@ -2060,7 +2060,7 @@ class TestRoleAssignmentCreateView(TestUIBase):
         )
 
 
-class TestRoleAssignmentDeleteView(TestUIBase):
+class TestRoleAssignmentDeleteView(UITestBase):
     """Tests for RoleAssignmentDeleteView UI"""
 
     def test_render(self):
@@ -2139,7 +2139,7 @@ class TestRoleAssignmentDeleteView(TestUIBase):
             )
 
 
-class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
+class TestProjectInviteView(ProjectInviteMixin, UITestBase):
     """Tests for ProjectInviteView UI"""
 
     def test_invite_ops(self):
@@ -2214,7 +2214,7 @@ class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
         )
 
 
-class TestProjectInviteCreateView(TestUIBase):
+class TestProjectInviteCreateView(UITestBase):
     """Tests for ProjectInviteCreateView UI"""
 
     def test_invite_preview(self):
@@ -2237,7 +2237,7 @@ class TestProjectInviteCreateView(TestUIBase):
         )
 
 
-class TestRemoteSiteListView(RemoteSiteMixin, TestUIBase):
+class TestRemoteSiteListView(RemoteSiteMixin, UITestBase):
     """Tests for RemoteSiteListView UI"""
 
     def test_source_user_display(self):
@@ -2304,7 +2304,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestUIBase):
             )
 
 
-class TestRemoteSiteCreateView(RemoteSiteMixin, TestUIBase):
+class TestRemoteSiteCreateView(RemoteSiteMixin, UITestBase):
     """Tests for RemoteSiteCreateView UI"""
 
     def test_source_user_toggle(self):

@@ -7,12 +7,12 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 
 # Projectroles dependency
-from projectroles.tests.test_ui import TestUIBase
+from projectroles.tests.test_ui import UITestBase
 
 from adminalerts.tests.test_models import AdminAlertMixin
 
 
-class TestAlertUIBase(AdminAlertMixin, TestUIBase):
+class AdminAlertUITestBase(AdminAlertMixin, UITestBase):
     def setUp(self):
         super().setUp()
         # Create users
@@ -30,7 +30,7 @@ class TestAlertUIBase(AdminAlertMixin, TestUIBase):
         )
 
 
-class TestAlertMessage(TestAlertUIBase):
+class TestAlertMessage(AdminAlertUITestBase):
     """Tests for the admin alert message"""
 
     def test_message(self):
@@ -78,7 +78,7 @@ class TestAlertMessage(TestAlertUIBase):
         )
 
 
-class TestListView(TestAlertUIBase):
+class TestListView(AdminAlertUITestBase):
     """Tests for the admin alert list view"""
 
     def test_list_items(self):

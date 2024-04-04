@@ -4,7 +4,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_permissions import TestProjectPermissionBase
+from projectroles.tests.test_permissions import ProjectPermissionTestBase
 
 
 # SODAR constants
@@ -16,7 +16,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
-class TestProjectListAjaxViews(TestProjectPermissionBase):
+class TestProjectListAjaxViews(ProjectPermissionTestBase):
     """Tests for project list Ajax view permissions"""
 
     def test_get_project_list(self):
@@ -169,7 +169,7 @@ class TestProjectListAjaxViews(TestProjectPermissionBase):
         )
 
 
-class TestProjectStarringAjaxView(TestProjectPermissionBase):
+class TestProjectStarringAjaxView(ProjectPermissionTestBase):
     """Tests for ProjectStarringAjaxView permissions"""
 
     def setUp(self):
@@ -237,7 +237,7 @@ class TestProjectStarringAjaxView(TestProjectPermissionBase):
         self.assert_response(self.url_cat, self.anonymous, 401, method='POST')
 
 
-class TestUserAjaxViews(TestProjectPermissionBase):
+class TestUserAjaxViews(ProjectPermissionTestBase):
     """Tests for user Ajax view permissions"""
 
     def test_get_current_user(self):

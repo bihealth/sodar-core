@@ -4,7 +4,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestProjectPermissionBase
+from projectroles.tests.test_permissions import ProjectPermissionTestBase
 
 from timeline.tests.test_models import (
     ProjectEventMixin,
@@ -13,7 +13,7 @@ from timeline.tests.test_models import (
 
 
 class TestProjectEventDetailAjaxView(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectPermissionBase
+    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for ProjectEventDetailAjaxView permissions"""
 
@@ -116,7 +116,7 @@ class TestProjectEventDetailAjaxView(
 
 
 class TestSiteEventDetailAjaxView(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectPermissionBase
+    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for SiteEventDetailAjaxView permissions"""
 
@@ -160,7 +160,7 @@ class TestSiteEventDetailAjaxView(
 
 
 class TestProjectEventExtraAjaxView(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectPermissionBase
+    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for ProjectEventExtraAjaxView permissions"""
 
@@ -263,7 +263,7 @@ class TestProjectEventExtraAjaxView(
 
 
 class TestSiteEventExtraAjaxView(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectPermissionBase
+    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for SiteEventExtraAjaxView permissions"""
 
@@ -310,7 +310,7 @@ class TestSiteEventExtraAjaxView(
 
 
 class TestEventStatusExtraAjaxViewProject(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectPermissionBase
+    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for EventStatusExtraAjaxView permissions with a project event"""
 
@@ -391,7 +391,7 @@ class TestEventStatusExtraAjaxViewProject(
 
 
 class TestEventStatusExtraAjaxViewSite(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectPermissionBase
+    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for EventStatusExtraAjaxView permissions with a site event"""
 

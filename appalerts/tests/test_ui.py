@@ -10,13 +10,13 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
 # Projectroles dependency
-from projectroles.tests.test_ui import TestUIBase
+from projectroles.tests.test_ui import UITestBase
 
 from appalerts.models import AppAlert
 from appalerts.tests.test_models import AppAlertMixin
 
 
-class TestAlertUIBase(AppAlertMixin, TestUIBase):
+class AlertUITestBase(AppAlertMixin, UITestBase):
     def setUp(self):
         super().setUp()
         # Create users
@@ -37,7 +37,7 @@ class TestAlertUIBase(AppAlertMixin, TestUIBase):
         )
 
 
-class TestListView(TestAlertUIBase):
+class TestListView(AlertUITestBase):
     """Tests for app alert list view"""
 
     def _find_alert_element(self, alert):
@@ -205,7 +205,7 @@ class TestListView(TestAlertUIBase):
         )
 
 
-class TestTitlebarBadge(TestAlertUIBase):
+class TestTitlebarBadge(AlertUITestBase):
     """Tests for the site titlebar badge"""
 
     def test_render(self):

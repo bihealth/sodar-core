@@ -2,6 +2,7 @@
 
 from django.contrib.messages import get_messages
 from django.urls import reverse
+from django.utils import timezone
 
 from knox.models import AuthToken
 
@@ -13,26 +14,27 @@ from tokens.views import TOKEN_CREATE_MSG, TOKEN_DELETE_MSG
 class TestUserTokenListView(TestCase):
     """Tests for UserTokenListView"""
 
-    def setUp(self):
-        self.user = self.make_user()
-
     def _make_token(self):
         self.tokens = [AuthToken.objects.create(self.user, None)]
 
-    def test_list_empty(self):
-        """Test rendering the list view without tokens"""
-        with self.login(self.user):
-            response = self.get('tokens:list')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['object_list']), 0)
+    def setUp(self):
+        self.user = self.make_user()
+        self.url = reverse('tokens:list')
 
-    def test_list_one(self):
-        """Test rendering the list view with one token"""
+    def test_get(self):
+        """Test UserTokenListView GET with a token"""
         self._make_token()
         with self.login(self.user):
-            response = self.get('tokens:list')
+            response = self.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['object_list']), 1)
+
+    def test_get_no_tokens(self):
+        """Test GET with no tokens"""
+        with self.login(self.user):
+            response = self.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['object_list']), 0)
 
 
 class TestUserTokenCreateView(TestCase):
@@ -40,36 +42,46 @@ class TestUserTokenCreateView(TestCase):
 
     def setUp(self):
         self.user = self.make_user()
+        self.url = reverse('tokens:create')
 
     def test_get(self):
-        """Test rendering the creation form"""
+        """Test UserTokenCreateView GET"""
         with self.login(self.user):
-            response = self.get('tokens:create')
+            response = self.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(response.context["form"])
+        self.assertIsNotNone(response.context['form'])
 
     def test_post_no_ttl(self):
-        """Test creating an authentication token with TTL=0"""
+        """Test POST with TTL=0"""
         self.assertEqual(AuthToken.objects.count(), 0)
         with self.login(self.user):
-            response = self.post('tokens:create', data={'ttl': 0})
+            response = self.post(self.url, data={'ttl': 0})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(AuthToken.objects.count(), 1)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             TOKEN_CREATE_MSG,
         )
+        self.assertEqual(AuthToken.objects.count(), 1)
+        self.assertEqual(AuthToken.objects.first().expiry, None)
 
     def test_post_ttl(self):
-        """Test creating an authentication token with TTL != 0"""
+        """Test POST with TTL != 0"""
         self.assertEqual(AuthToken.objects.count(), 0)
         with self.login(self.user):
-            response = self.post('tokens:create', data={'ttl': 10})
+            response = self.post(self.url, data={'ttl': 10})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(AuthToken.objects.count(), 1)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             TOKEN_CREATE_MSG,
+        )
+        self.assertEqual(AuthToken.objects.count(), 1)
+        self.assertEqual(
+            AuthToken.objects.first().expiry.replace(
+                minute=0, second=0, microsecond=0
+            ),
+            (timezone.now() + timezone.timedelta(hours=10)).replace(
+                minute=0, second=0, microsecond=0
+            ),
         )
 
 
@@ -78,25 +90,25 @@ class TestUserTokenDeleteView(TestCase):
 
     def setUp(self):
         self.user = self.make_user()
-        AuthToken.objects.create(user=self.user)
-        self.token = AuthToken.objects.first()
+        self.token = AuthToken.objects.create(user=self.user)[0]
+        self.url = reverse('tokens:delete', kwargs={'pk': self.token.pk})
 
     def test_get(self):
-        """Test rendering the deletion form"""
+        """Test UserTokenDeleteView GET"""
         with self.login(self.user):
-            response = self.get('tokens:delete', pk=self.token.pk)
+            response = self.get(self.url)
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
         """Test token deletion"""
         self.assertEqual(AuthToken.objects.count(), 1)
         with self.login(self.user):
-            response = self.post('tokens:delete', pk=self.token.pk)
-        self.response_302(response)
-        self.assertRedirects(
-            response, reverse('tokens:list'), fetch_redirect_response=False
-        )
+            response = self.post(self.url)
+            self.assertRedirects(
+                response, reverse('tokens:list'), fetch_redirect_response=False
+            )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             TOKEN_DELETE_MSG,
         )
+        self.assertEqual(AuthToken.objects.count(), 0)

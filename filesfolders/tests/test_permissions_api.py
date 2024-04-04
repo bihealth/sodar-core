@@ -8,7 +8,7 @@ from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.tests.test_permissions_api import (
-    TestCoreProjectAPIPermissionBase,
+    CoreProjectAPIPermissionTestBase,
 )
 
 from filesfolders.models import File, HyperLink
@@ -27,7 +27,7 @@ OBJ_UUID = uuid.uuid4()
 
 
 class FilesfoldersAPIPermissionTestBase(
-    FilesfoldersPermissionTestMixin, TestCoreProjectAPIPermissionBase
+    FilesfoldersPermissionTestMixin, CoreProjectAPIPermissionTestBase
 ):
     """Base class for filesfolders REST API view permission tests"""
 

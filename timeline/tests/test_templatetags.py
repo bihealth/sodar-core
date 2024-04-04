@@ -12,7 +12,7 @@ from timeline.models import ProjectEvent, DEFAULT_MESSAGES
 from timeline.templatetags import timeline_tags as tags
 from timeline.tests.test_api import TimelineAPIMixin
 from timeline.tests.test_models import (
-    TestProjectEventBase,
+    ProjectEventTestBase,
     ProjectEventMixin,
     ProjectEventStatusMixin,
     ProjectEventObjectRefMixin,
@@ -29,7 +29,7 @@ class TestTemplateTags(
     ProjectEventMixin,
     ProjectEventStatusMixin,
     ProjectEventObjectRefMixin,
-    TestProjectEventBase,
+    ProjectEventTestBase,
 ):
     """Tests for timeline template tags"""
 

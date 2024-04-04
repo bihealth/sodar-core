@@ -6,7 +6,7 @@ from django.urls import reverse
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_permissions import TestProjectPermissionBase
+from projectroles.tests.test_permissions import ProjectPermissionTestBase
 
 from filesfolders.tests.test_models import (
     FileMixin,
@@ -78,7 +78,7 @@ class FilesfoldersPermissionTestMixin(FolderMixin, FileMixin, HyperLinkMixin):
 
 
 class TestProjectFileViewPermissions(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for ProjectFileView permissions"""
 
@@ -138,7 +138,7 @@ class TestProjectFileViewPermissions(
 
 
 class TestFolderCreateView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for FolderCreateView view permissions"""
 
@@ -224,7 +224,7 @@ class TestFolderCreateView(
 
 
 class TestFolderUpdateView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for FolderUpdateView permissions"""
 
@@ -289,7 +289,7 @@ class TestFolderUpdateView(
 
 
 class TestFolderDeleteView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for FolderDeleteView permissions"""
 
@@ -354,7 +354,7 @@ class TestFolderDeleteView(
 
 
 class TestFileCreateView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests FileCreateView permissions"""
 
@@ -440,7 +440,7 @@ class TestFileCreateView(
 
 
 class TestFileUpdateView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for FileUpdateView permissions"""
 
@@ -504,7 +504,7 @@ class TestFileUpdateView(
 
 
 class TestFileDeleteView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for FileDeleteView permissions"""
 
@@ -568,7 +568,7 @@ class TestFileDeleteView(
 
 
 class TestFilePublicLinkView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for FilePublicLinkView permissions"""
 
@@ -635,7 +635,7 @@ class TestFilePublicLinkView(
 
 
 class TestFileServeView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for FileServeView permissions"""
 
@@ -696,7 +696,7 @@ class TestFileServeView(
 
 
 class TestFileServePublicView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for FileServePublicView permissions"""
 
@@ -782,7 +782,7 @@ class TestFileServePublicView(
 
 
 class TestHyperLinkCreateView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for HyperLinkCreateView permissions"""
 
@@ -868,7 +868,7 @@ class TestHyperLinkCreateView(
 
 
 class TestHyperLinkUpdateView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for HyperLinkUpdateView permissions"""
 
@@ -933,7 +933,7 @@ class TestHyperLinkUpdateView(
 
 
 class TestHyperLinkDeleteView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for HyperLinkDeleteView permissions"""
 
@@ -998,7 +998,7 @@ class TestHyperLinkDeleteView(
 
 
 class TestBatchEditView(
-    FilesfoldersPermissionTestMixin, TestProjectPermissionBase
+    FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for BatchEditView permissions"""
 

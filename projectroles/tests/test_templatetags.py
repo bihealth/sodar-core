@@ -56,7 +56,7 @@ STATIC_FILE_PATH = 'images/logo_navbar.png'
 TEMPLATE_PATH = 'projectroles/home.html'
 
 
-class TestTemplateTagsBase(
+class TemplateTagTestBase(
     ProjectMixin, RoleMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase
 ):
     """Base class for testing template tags"""
@@ -99,7 +99,7 @@ class TestTemplateTagsBase(
         self.req_factory = RequestFactory()
 
 
-class TestProjectrolesCommonTags(TestTemplateTagsBase):
+class TestProjectrolesCommonTags(TemplateTagTestBase):
     """Test for template tags in projectroles_common_tags"""
 
     def test_site_version(self):
@@ -426,7 +426,7 @@ class TestProjectrolesCommonTags(TestTemplateTagsBase):
         )
 
 
-class TestProjectrolesRoleTags(TestTemplateTagsBase):
+class TestProjectrolesRoleTags(TemplateTagTestBase):
     """Test for template tags in projectroles_role_tags"""
 
     def test_get_role_icon(self):
@@ -517,7 +517,7 @@ class TestProjectrolesRoleTags(TestTemplateTagsBase):
         )
 
 
-class TestProjectrolesTags(TestTemplateTagsBase):
+class TestProjectrolesTags(TemplateTagTestBase):
     """Test for template tags in projectroles_tags"""
 
     def test_sodar_constant(self):

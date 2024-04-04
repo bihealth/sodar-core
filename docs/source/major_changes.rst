@@ -22,6 +22,7 @@ Release Highlights
 - Add Python v3.11 support
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations
+- Rename base test classes
 - Remove Python v3.8 support
 - Remove SAML SSO support
 
@@ -184,6 +185,29 @@ PROJECTROLES_HIDE_APP_LINKS Removed
 
 The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting, which was deprecated in
 v0.13, has been removed. Use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead.
+
+Base Test Classes Renamed
+-------------------------
+
+A number of base test classes in the :ref:`Projectroles app <app_projectroles>`
+have been renamed for consistency. If you use these base classes in your site's
+tests, you will have to rename them accordingly. The changes are as follows:
+
+- ``projectroles.tests.test_permissions``
+    * ``TestPermissionBase`` -> ``PermissionTestBase``
+    * ``TestPermissionMixin`` -> ``PermissionTestMixin``
+    * ``TestProjectPermissionBase`` -> ``ProjectPermissionTestBase``
+    * ``TestSiteAppPermissionBase`` -> ``SiteAppPermissionTestBase``
+- ``projectroles.tests.test_permissions_api``
+    * ``TestProjectAPIPermissionBase`` -> ``ProjectAPIPermissionTestBase``
+- ``projectroles.tests.test_templatetags``
+    * ``TestTemplateTagsBase`` -> ``TemplateTagTestBase``
+- ``projectroles.tests.test_ui``
+    * ``TestUIBase`` -> ``UITestBase``
+- ``projectroles.tests.test_views``
+    * ``TestViewsBase`` -> ``ViewTestBase``
+- ``projectroles.tests.test_views_api``
+    * ``TestAPIViewsBase`` -> ``APIViewTestBase``
 
 
 v0.13.4 (2024-02-16)

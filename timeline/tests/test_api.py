@@ -18,7 +18,7 @@ from projectroles.tests.test_models import (
 from filesfolders.tests.test_models import FolderMixin
 
 from timeline.tests.test_models import (
-    TestProjectEventBase,
+    ProjectEventTestBase,
     ProjectEventMixin,
     ProjectEventStatusMixin,
 )
@@ -59,7 +59,7 @@ class TestTimelineAPI(
     ProjectEventStatusMixin,
     RemoteSiteMixin,
     FolderMixin,
-    TestProjectEventBase,
+    ProjectEventTestBase,
 ):
     def setUp(self):
         super().setUp()

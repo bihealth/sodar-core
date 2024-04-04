@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.tests.test_ui import TestUIBase
+from projectroles.tests.test_ui import UITestBase
 
 from timeline.tests.test_models import (
     ProjectEventMixin,
@@ -31,7 +31,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestProjectListView(
-    ProjectEventMixin, ProjectEventStatusMixin, TestUIBase
+    ProjectEventMixin, ProjectEventStatusMixin, UITestBase
 ):
     """Tests for the timeline project list view UI"""
 
@@ -147,7 +147,7 @@ class TestProjectListView(
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
 
-class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
     """Tests for the timeline site-wide list view UI"""
 
     def setUp(self):
@@ -243,7 +243,7 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             pass
 
 
-class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
     """Test for the timeline view of all events in UI"""
 
     def setUp(self):
@@ -294,7 +294,7 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         self.assertIsNotNone(self.selenium.find_element(By.CLASS_NAME, 'badge'))
 
 
-class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+class TestModals(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
     """Test UI of modals in timeline event list"""
 
     def setUp(self):
@@ -430,7 +430,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         btn.click()
 
 
-class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
     """Tests for the project search UI functionalities"""
 
     def setUp(self):

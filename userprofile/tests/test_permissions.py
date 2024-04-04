@@ -4,10 +4,10 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestSiteAppPermissionBase
+from projectroles.tests.test_permissions import SiteAppPermissionTestBase
 
 
-class TestUserProfilePermissions(TestSiteAppPermissionBase):
+class TestUserProfilePermissions(SiteAppPermissionTestBase):
     """Tests for userprofile view permissions"""
 
     def test_get_profile(self):

@@ -152,7 +152,7 @@ EX_PROJECT_UI_SETTINGS = [
 ]
 
 
-class TestViewsBase(RoleMixin, TestCase):
+class ViewTestBase(RoleMixin, TestCase):
     """Base class for view testing"""
 
     def setUp(self):
@@ -168,7 +168,7 @@ class TestViewsBase(RoleMixin, TestCase):
 # General view tests -----------------------------------------------------------
 
 
-class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     """Tests for HomeView"""
 
     def setUp(self):
@@ -269,7 +269,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 class TestProjectSearchResultsView(
     ProjectMixin,
     RoleAssignmentMixin,
-    TestViewsBase,
+    ViewTestBase,
     ProjectEventMixin,
     ProjectEventStatusMixin,
 ):
@@ -479,7 +479,7 @@ class TestProjectSearchResultsView(
 
 
 class TestProjectAdvancedSearchView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for ProjectAdvancedSearchView"""
 
@@ -497,7 +497,7 @@ class TestProjectAdvancedSearchView(
             self.assertRedirects(response, reverse('home'))
 
 
-class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     """Tests for ProjectDetailView"""
 
     def setUp(self):
@@ -533,7 +533,7 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.status_code, 404)
 
 
-class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     """Tests for ProjectCreateView"""
 
     def setUp(self):
@@ -892,7 +892,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
 
 class TestProjectUpdateView(
-    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
 ):
     """Tests for ProjectUpdateView"""
 
@@ -1403,7 +1403,7 @@ class TestProjectUpdateView(
 
 
 class TestProjectArchiveView(
-    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
 ):
     """Tests for ProjectArchiveView"""
 
@@ -1561,7 +1561,7 @@ class TestProjectArchiveView(
 
 
 class TestProjectForm(
-    AppSettingMixin, TestViewsBase, ProjectMixin, RoleAssignmentMixin
+    AppSettingMixin, ViewTestBase, ProjectMixin, RoleAssignmentMixin
 ):
     """Tests for ProjectForm"""
 
@@ -1739,7 +1739,7 @@ class TestProjectFormTarget(
     RemoteSiteMixin,
     RemoteProjectMixin,
     AppSettingMixin,
-    TestViewsBase,
+    ViewTestBase,
     ProjectMixin,
     RoleAssignmentMixin,
 ):
@@ -1924,7 +1924,7 @@ class TestProjectFormTargetLocal(
     RemoteSiteMixin,
     RemoteProjectMixin,
     AppSettingMixin,
-    TestViewsBase,
+    ViewTestBase,
     ProjectMixin,
     RoleAssignmentMixin,
 ):
@@ -2124,7 +2124,7 @@ class TestProjectFormTargetLocal(
         )
 
 
-class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     """Tests for ProjectRoleView"""
 
     def setUp(self):
@@ -2200,7 +2200,7 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
 
 class TestRoleAssignmentCreateView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for RoleAssignmentCreateView and related helper views"""
 
@@ -2648,7 +2648,7 @@ class TestRoleAssignmentCreateView(
 
 
 class TestRoleAssignmentUpdateView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for RoleAssignmentUpdateView"""
 
@@ -2916,7 +2916,7 @@ class TestRoleAssignmentUpdateView(
 
 
 class TestRoleAssignmentDeleteView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for RoleAssignmentDeleteView"""
 
@@ -3250,7 +3250,7 @@ class TestRoleAssignmentDeleteView(
 
 
 class TestRoleAssignmentOwnerTransferView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for RoleAssignmentOwnerTransferView"""
 
@@ -3533,7 +3533,7 @@ class TestRoleAssignmentOwnerTransferView(
 
 
 class TestProjectInviteCreateView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
 ):
     """Tests for ProjectInviteCreateView"""
 
@@ -3707,7 +3707,7 @@ class TestProjectInviteCreateView(
 
 
 class TestProjectInviteAcceptView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
 ):
     """Tests for ProjectInviteAcceptView and related helper views"""
 
@@ -4344,7 +4344,7 @@ class TestProjectInviteAcceptView(
 
 
 class TestProjectInviteListView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
 ):
     """Tests for ProjectInviteListView"""
 
@@ -4388,7 +4388,7 @@ class TestProjectInviteListView(
 
 
 class TestProjectInviteRevokeView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
 ):
     """Tests for ProjectInviteRevokeView"""
 
@@ -4462,7 +4462,7 @@ class TestProjectInviteRevokeView(
 # Remote view tests ------------------------------------------------------------
 
 
-class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
+class TestRemoteSiteListView(RemoteSiteMixin, ViewTestBase):
     """Tests for RemoteSiteListView"""
 
     def setUp(self):
@@ -4501,7 +4501,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
             self.assertRedirects(response, reverse('home'))
 
 
-class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
+class TestRemoteSiteCreateView(RemoteSiteMixin, ViewTestBase):
     """Tests for RemoteSiteCreateView"""
 
     def setUp(self):
@@ -4648,7 +4648,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
 
-class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
+class TestRemoteSiteUpdateView(RemoteSiteMixin, ViewTestBase):
     """Tests for RemoteSiteUpdateView"""
 
     def setUp(self):
@@ -4761,7 +4761,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
 
-class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
+class TestRemoteSiteDeleteView(RemoteSiteMixin, ViewTestBase):
     """Tests for RemoteSiteDeleteView"""
 
     def setUp(self):
@@ -4820,7 +4820,7 @@ class TestRemoteProjectBatchUpdateView(
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
-    TestViewsBase,
+    ViewTestBase,
 ):
     """Tests for RemoteProjectBatchUpdateView"""
 

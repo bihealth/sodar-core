@@ -95,7 +95,7 @@ class ProjectEventStatusMixin:
         return result
 
 
-class TestProjectEventBase(
+class ProjectEventTestBase(
     ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase
 ):
     def setUp(self):
@@ -115,8 +115,8 @@ class TestProjectEventBase(
 class TestProjectEvent(
     ProjectEventMixin,
     ProjectEventStatusMixin,
-    TestProjectEventBase,
     ProjectEventObjectRefMixin,
+    ProjectEventTestBase,
 ):
     def setUp(self):
         super().setUp()
@@ -340,7 +340,7 @@ class TestProjectEvent(
 
 
 class TestProjectEventObjectRef(
-    ProjectEventMixin, ProjectEventObjectRefMixin, TestProjectEventBase
+    ProjectEventMixin, ProjectEventObjectRefMixin, ProjectEventTestBase
 ):
     def setUp(self):
         super().setUp()
@@ -400,7 +400,7 @@ class TestProjectEventObjectRef(
 
 
 class TestProjectEventStatus(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase
+    ProjectEventMixin, ProjectEventStatusMixin, ProjectEventTestBase
 ):
     def setUp(self):
         super().setUp()

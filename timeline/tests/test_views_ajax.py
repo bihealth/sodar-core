@@ -4,12 +4,9 @@ from django.urls import reverse
 from django.utils.timezone import localtime
 
 # Projectroles dependency
-from projectroles.tests.test_models import (
-    ProjectMixin,
-    RoleAssignmentMixin,
-)
+from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 from projectroles.tests.test_views import (
-    TestViewsBase,
+    ViewTestBase,
     PROJECT_TYPE_CATEGORY,
     PROJECT_TYPE_PROJECT,
 )
@@ -20,8 +17,8 @@ from timeline.templatetags.timeline_tags import get_status_style
 from timeline.tests.test_models import ProjectEventMixin
 
 
-class TestEventAjaxViewsBase(
-    ProjectMixin, RoleAssignmentMixin, ProjectEventMixin, TestViewsBase
+class TimelineAjaxViewTestBase(
+    ProjectMixin, RoleAssignmentMixin, ProjectEventMixin, ViewTestBase
 ):
     """Base class for timeline Ajax API view tests"""
 
@@ -46,7 +43,7 @@ class TestEventAjaxViewsBase(
         )
 
 
-class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
+class TestProjectEventDetailAjaxView(TimelineAjaxViewTestBase):
     """Tests for ProjectEventDetailAjaxView"""
 
     def setUp(self):
@@ -60,17 +57,15 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
         self.event_status_ok = self.event.set_status(
             'OK', DEFAULT_MESSAGES['OK'], extra_data={'test': 'test'}
         )
+        self.url = reverse(
+            'timeline:ajax_detail_project',
+            kwargs={'projectevent': self.event.sodar_uuid},
+        )
 
     def test_get(self):
-        """Test project event detail retrieval"""
-
+        """Test ProjectEventDetailAjaxView GET"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'timeline:ajax_detail_project',
-                    kwargs={'projectevent': self.event.sodar_uuid},
-                ),
-            )
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         expected = {
             'app': self.event.app,
@@ -106,21 +101,16 @@ class TestProjectEventDetailAjaxView(TestEventAjaxViewsBase):
         self.assertEqual(response.data, expected)
 
     def test_get_no_user(self):
-        """Test project event detail retrieval with no user for event"""
+        """Test GET for event with no user"""
         self.event.user = None
         self.event.save()
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'timeline:ajax_detail_project',
-                    kwargs={'projectevent': self.event.sodar_uuid},
-                ),
-            )
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['user'], 'N/A')
 
 
-class TestProjectEventExtraAjaxView(TestEventAjaxViewsBase):
+class TestProjectEventExtraAjaxView(TimelineAjaxViewTestBase):
     """Tests for ProjectEventExtraAjaxView"""
 
     def setUp(self):
@@ -138,16 +128,15 @@ class TestProjectEventExtraAjaxView(TestEventAjaxViewsBase):
         self.event_status_ok = self.event.set_status(
             'OK', DEFAULT_MESSAGES['OK']
         )
+        self.url = reverse(
+            'timeline:ajax_extra_project',
+            kwargs={'projectevent': self.event.sodar_uuid},
+        )
 
     def test_get(self):
-        """Test project event detail retrieval"""
+        """Test ProjectEventExtraAjaxView GET"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'timeline:ajax_extra_project',
-                    kwargs={'projectevent': self.event.sodar_uuid},
-                ),
-            )
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         expected = {
             'app': self.event.app,
@@ -159,21 +148,16 @@ class TestProjectEventExtraAjaxView(TestEventAjaxViewsBase):
         self.assertIn(expected['extra']['example_data'], str(response.data))
 
     def test_get_no_user(self):
-        """Test project event detail retrieval with no user for event"""
+        """Test GET for event with no user"""
         self.event.user = None
         self.event.save()
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'timeline:ajax_extra_project',
-                    kwargs={'projectevent': self.event.sodar_uuid},
-                ),
-            )
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['user'], 'N/A')
 
 
-class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
+class TestSiteEventDetailAjaxView(TimelineAjaxViewTestBase):
     """Tests for SiteEventDetailAjaxView"""
 
     def setUp(self):
@@ -189,8 +173,7 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
         )
 
     def test_get(self):
-        """Test site event detail retrieval"""
-
+        """Test SiteEventDetailAjaxView GET"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -233,7 +216,7 @@ class TestSiteEventDetailAjaxView(TestEventAjaxViewsBase):
         self.assertEqual(response.data, expected)
 
 
-class TestSiteEventExtraAjaxView(TestEventAjaxViewsBase):
+class TestSiteEventExtraAjaxView(TimelineAjaxViewTestBase):
     """Tests for SiteEventExtraAjaxView"""
 
     def setUp(self):
@@ -253,7 +236,7 @@ class TestSiteEventExtraAjaxView(TestEventAjaxViewsBase):
         )
 
     def test_get(self):
-        """Test site event detail retrieval"""
+        """Test SiteEventExtraAjaxView GET"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -273,7 +256,9 @@ class TestSiteEventExtraAjaxView(TestEventAjaxViewsBase):
         self.assertIn(expected['user'], str(response.data))
 
 
-class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
+class TestEventStatusExtraAjaxView(
+    TimelineAjaxViewTestBase, EventExtraDataMixin
+):
     """Tests for EventStatusExtraAjaxView"""
 
     def setUp(self):
@@ -295,9 +280,8 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
             extra_data={'test': 'test'},
         )
 
-    def test_get(self):
-        """Test event status extra data retrieval"""
-
+    def test_get_project(self):
+        """Test EventStatusExtraAjaxView GET with project event"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -318,8 +302,7 @@ class TestEventStatusExtraAjaxView(TestEventAjaxViewsBase, EventExtraDataMixin):
         self.assertEqual(response.data, expected)
 
     def test_get_site(self):
-        """Test site event status extra data retrieval"""
-
+        """Test GET with site event"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(

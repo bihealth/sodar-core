@@ -6,11 +6,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
 # Projectroles dependency
-from projectroles.tests.test_ui import TestUIBase
+from projectroles.tests.test_ui import UITestBase
 
 
 @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
-class TestUserDetails(TestUIBase):
+class TestUserDetails(UITestBase):
     """Tests for user details page"""
 
     def setUp(self):
@@ -26,7 +26,7 @@ class TestUserDetails(TestUIBase):
         self.assert_element_count(expected, url, 'sodar-user-btn-update')
 
 
-class TestUserSettings(TestUIBase):
+class TestUserSettings(UITestBase):
     """Tests for user settings page"""
 
     def setUp(self):

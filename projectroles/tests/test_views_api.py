@@ -40,7 +40,7 @@ from projectroles.tests.test_models import (
     AppSettingMixin,
 )
 from projectroles.tests.test_views import (
-    TestViewsBase,
+    ViewTestBase,
     REMOTE_SITE_NAME,
     REMOTE_SITE_URL,
     REMOTE_SITE_DESC,
@@ -232,7 +232,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         return req_method(url, **req_kwargs)
 
 
-class TestAPIViewsBase(
+class APIViewTestBase(
     ProjectMixin,
     RoleMixin,
     RoleAssignmentMixin,
@@ -273,8 +273,8 @@ class TestAPIViewsBase(
         self.knox_token = self.get_token(self.user)
 
 
-class TestProjectrolesAPIViewsBase(TestAPIViewsBase):
-    """Override of TestAPIViewsBase to be used with Projectroles API views"""
+class ProjectrolesAPIViewTestBase(APIViewTestBase):
+    """Override of APIViewTestBase to be used with Projectroles API views"""
 
     media_type = views_api.PROJECTROLES_API_MEDIA_TYPE
     api_version = views_api.PROJECTROLES_API_DEFAULT_VERSION
@@ -283,7 +283,7 @@ class TestProjectrolesAPIViewsBase(TestAPIViewsBase):
 # Tests ------------------------------------------------------------------------
 
 
-class TestProjectListAPIView(TestProjectrolesAPIViewsBase):
+class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
     """Tests for ProjectListAPIView"""
 
     def test_get(self):
@@ -443,7 +443,7 @@ class TestProjectListAPIView(TestProjectrolesAPIViewsBase):
         )
 
 
-class TestProjectRetrieveAPIView(AppSettingMixin, TestProjectrolesAPIViewsBase):
+class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
     """Tests for ProjectRetrieveAPIView"""
 
     def test_get_category(self):
@@ -538,7 +538,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestProjectrolesAPIViewsBase):
 
 
 class TestProjectCreateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for ProjectCreateAPIView"""
 
@@ -893,7 +893,7 @@ class TestProjectCreateAPIView(
 
 
 class TestProjectUpdateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for ProjectUpdateAPIView"""
 
@@ -1293,7 +1293,7 @@ class TestProjectUpdateAPIView(
 
 
 class TestRoleAssignmentCreateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for RoleAssignmentCreateAPIView"""
 
@@ -1625,7 +1625,7 @@ class TestRoleAssignmentCreateAPIView(
 
 
 class TestRoleAssignmentUpdateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for RoleAssignmentUpdateAPIView"""
 
@@ -1845,7 +1845,7 @@ class TestRoleAssignmentUpdateAPIView(
 
 
 class TestRoleAssignmentDestroyAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for RoleAssignmentDestroyAPIView"""
 
@@ -1929,7 +1929,7 @@ class TestRoleAssignmentDestroyAPIView(
 
 
 class TestRoleAssignmentOwnerTransferAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for RoleAssignmentOwnerTransferAPIView"""
 
@@ -2218,7 +2218,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
 
 
 class TestProjectInviteListAPIView(
-    ProjectInviteMixin, TestProjectrolesAPIViewsBase
+    ProjectInviteMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for ProjectInviteListAPIView"""
 
@@ -2305,7 +2305,7 @@ class TestProjectInviteListAPIView(
 
 
 class TestProjectInviteCreateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectrolesAPIViewsBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for ProjectInviteCreateAPIView"""
 
@@ -2504,7 +2504,7 @@ class TestProjectInviteCreateAPIView(
 
 
 class TestProjectInviteRevokeAPIView(
-    ProjectInviteMixin, TestProjectrolesAPIViewsBase
+    ProjectInviteMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for ProjectInviteRevokeAPIView"""
 
@@ -2570,7 +2570,7 @@ class TestProjectInviteRevokeAPIView(
 
 
 class TestProjectInviteResendAPIView(
-    ProjectInviteMixin, TestProjectrolesAPIViewsBase
+    ProjectInviteMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for ProjectInviteResendAPIView"""
 
@@ -2634,7 +2634,7 @@ class TestProjectInviteResendAPIView(
 
 
 class TestProjectSettingRetrievePIView(
-    AppSettingMixin, AppSettingInitMixin, TestProjectrolesAPIViewsBase
+    AppSettingMixin, AppSettingInitMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for ProjectSettingRetrieveAPIView"""
 
@@ -2811,7 +2811,7 @@ class TestProjectSettingRetrievePIView(
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
-class TestProjectSettingSetAPIView(TestProjectrolesAPIViewsBase):
+class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
     """Tests for ProjectSettingSetAPIView"""
 
     def setUp(self):
@@ -2977,7 +2977,7 @@ class TestProjectSettingSetAPIView(TestProjectrolesAPIViewsBase):
 
 
 class TestUserSettingRetrievePIView(
-    AppSettingMixin, AppSettingInitMixin, TestProjectrolesAPIViewsBase
+    AppSettingMixin, AppSettingInitMixin, ProjectrolesAPIViewTestBase
 ):
     """Tests for UserSettingRetrieveAPIView"""
 
@@ -3067,7 +3067,7 @@ class TestUserSettingRetrievePIView(
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
-class TestUserSettingSetAPIView(TestProjectrolesAPIViewsBase):
+class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
     """Tests for UserSettingSetAPIView"""
 
     def setUp(self):
@@ -3145,7 +3145,7 @@ class TestUserSettingSetAPIView(TestProjectrolesAPIViewsBase):
         self.assertEqual(AppSetting.objects.count(), 0)
 
 
-class TestUserListAPIView(TestProjectrolesAPIViewsBase):
+class TestUserListAPIView(ProjectrolesAPIViewTestBase):
     """Tests for UserListAPIView"""
 
     def setUp(self):
@@ -3180,7 +3180,7 @@ class TestUserListAPIView(TestProjectrolesAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
-class TestCurrentUserRetrieveAPIView(TestProjectrolesAPIViewsBase):
+class TestCurrentUserRetrieveAPIView(ProjectrolesAPIViewTestBase):
     """Tests for CurrentUserRetrieveAPIView"""
 
     def setUp(self):
@@ -3220,7 +3220,7 @@ class TestCurrentUserRetrieveAPIView(TestProjectrolesAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
-class TestAPIVersioning(TestProjectrolesAPIViewsBase):
+class TestAPIVersioning(ProjectrolesAPIViewTestBase):
     """Tests for REST API view versioning using ProjectRetrieveAPIView"""
 
     def setUp(self):
@@ -3275,7 +3275,7 @@ class TestRemoteProjectGetAPIView(
     RemoteProjectMixin,
     AppSettingMixin,
     SODARAPIViewTestMixin,
-    TestViewsBase,
+    ViewTestBase,
 ):
     """Tests for remote project getting API view"""
 
@@ -3386,7 +3386,7 @@ class TestRemoteProjectGetAPIView(
 # IP Allowing Tests ------------------------------------------------------------
 
 
-class TestIPAllowing(AppSettingMixin, TestProjectrolesAPIViewsBase):
+class TestIPAllowing(AppSettingMixin, ProjectrolesAPIViewTestBase):
     """Tests for IP allowing settings using ProjectRetrieveAPIView"""
 
     def _setup_ip_allowing(self, ip_list, role_suffix):

@@ -9,8 +9,8 @@ from projectroles.plugins import get_backend_api
 
 from sodarcache.models import JSONCacheItem
 from sodarcache.tests.test_models import (
-    TestJsonCacheItemBase,
-    JsonCacheItemMixin,
+    JSONCacheItemTestBase,
+    JSONCacheItemMixin,
 )
 
 
@@ -27,7 +27,7 @@ TEST_APP_NAME = 'sodarcache'
 INVALID_APP_NAME = 'timeline'  # Valid app name but but no data is created
 
 
-class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
+class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
     """Testing sodarcache API class"""
 
     def setUp(self):

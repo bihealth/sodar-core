@@ -13,7 +13,7 @@ from projectroles.tests.test_models import (
     RoleAssignmentMixin,
 )
 from projectroles.tests.test_views import (
-    TestViewsBase,
+    ViewTestBase,
     PROJECT_TYPE_CATEGORY,
     PROJECT_TYPE_PROJECT,
 )
@@ -23,7 +23,7 @@ from projectroles.tests.test_views_api import SerializedObjectMixin
 app_settings = AppSettingAPI()
 
 
-class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     """Tests for ProjectListAjaxView"""
 
     def setUp(self):
@@ -241,7 +241,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
 
 class TestProjectListColumnAjaxView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for ProjectListColumnAjaxView"""
 
@@ -320,7 +320,7 @@ class TestProjectListColumnAjaxView(
 
 
 class TestProjectListRoleAjaxView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for ProjectListRoleAjaxView"""
 
@@ -409,7 +409,7 @@ class TestProjectListRoleAjaxView(
 
 
 class TestProjectStarringAjaxView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for ProjectStarringAjaxView"""
 

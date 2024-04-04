@@ -13,29 +13,7 @@ APP_NAME = 'sodarcache'
 # TODO: Refactor views and URLs to match SODAR conventions in v0.9 (see #498)
 
 
-class SodarCacheSetAPIView(CoreAPIBaseProjectMixin, APIView):
-    """API View for creating or updating the value of a cache item"""
-
-    permission_required = 'sodarcache.set_cache_value'
-
-    def post(self, request, *args, **kwargs):
-        cache_backend = get_backend_api('sodar_cache')
-        project = self.get_project()
-        try:
-            cache_backend.set_cache_item(
-                name=request.data['name'],
-                app_name=APP_NAME,
-                user=self.request.user,
-                data=request.data['data'],
-                data_type='json',
-                project=project,
-            )
-        except Exception as ex:
-            return Response({'message': str(ex)}, status=500)
-        return Response({'message': 'ok'}, status=200)
-
-
-class SodarCacheGetAPIView(CoreAPIBaseProjectMixin, APIView):
+class SODARCacheGetAPIView(CoreAPIBaseProjectMixin, APIView):
     """API View for retrieving the value of a cache item"""
 
     permission_required = 'sodarcache.get_cache_value'
@@ -63,7 +41,29 @@ class SodarCacheGetAPIView(CoreAPIBaseProjectMixin, APIView):
             return Response({'message': str(ex)}, status=500)
 
 
-class SodarCacheGetDateAPIView(CoreAPIBaseProjectMixin, APIView):
+class SODARCacheSetAPIView(CoreAPIBaseProjectMixin, APIView):
+    """API View for creating or updating the value of a cache item"""
+
+    permission_required = 'sodarcache.set_cache_value'
+
+    def post(self, request, *args, **kwargs):
+        cache_backend = get_backend_api('sodar_cache')
+        project = self.get_project()
+        try:
+            cache_backend.set_cache_item(
+                name=request.data['name'],
+                app_name=APP_NAME,
+                user=self.request.user,
+                data=request.data['data'],
+                data_type='json',
+                project=project,
+            )
+        except Exception as ex:
+            return Response({'message': str(ex)}, status=500)
+        return Response({'message': 'ok'}, status=200)
+
+
+class SODARCacheGetDateAPIView(CoreAPIBaseProjectMixin, APIView):
     """API View for retrieving the update date of a cache item"""
 
     permission_required = 'sodarcache.get_cache_value'

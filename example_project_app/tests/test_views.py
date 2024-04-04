@@ -5,7 +5,7 @@ from django.urls import reverse
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
-from projectroles.tests.test_views import TestViewsBase
+from projectroles.tests.test_views import ViewTestBase
 
 # Filesfolders dependency
 from filesfolders.tests.test_models import FolderMixin
@@ -16,7 +16,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestExampleView(
-    FolderMixin, ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    FolderMixin, ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for the example view"""
 
