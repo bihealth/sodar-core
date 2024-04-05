@@ -387,14 +387,20 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
             )
 
     def test_validate_public_guest_access(self):
-        """Test public guest access validation with project"""
+        """Test _validate_public_guest_access() with project"""
+        self.assertEqual(self.project.public_guest_access, False)
         # Test with project
         self.project.public_guest_access = True
         self.project.save()
-        # Test with category
-        with self.assertRaises(ValidationError):
-            self.category.public_guest_access = True
-            self.category.save()
+        self.assertEqual(self.project.public_guest_access, True)
+
+    def test_validate_public_guest_access_category(self):
+        """Test _validate_public_guest_access() with category"""
+        # NOTE: Does not raise error but forces value to be False, see #1404
+        self.assertEqual(self.category.public_guest_access, False)
+        self.category.public_guest_access = True
+        self.category.save()
+        self.assertEqual(self.category.public_guest_access, False)
 
     def test_get_absolute_url(self):
         """Test get_absolute_url()"""
@@ -447,6 +453,8 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         self.assertFalse(self.project.public_guest_access)
         self.project.set_public(True)
         self.assertTrue(self.project.public_guest_access)
+        with self.assertRaises(ValidationError):
+            self.category.set_public(True)
 
     def test_set_archive(self):
         """Test Project.set_archive()"""

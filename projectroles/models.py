@@ -61,6 +61,7 @@ CAT_DELIMITER_ERROR_MSG = 'String "{}" is not allowed in title'.format(
 ROLE_PROJECT_TYPE_ERROR_MSG = (
     'Invalid project type "{project_type}" for ' 'role "{role_name}"'
 )
+CAT_PUBLIC_ACCESS_MSG = 'Public guest access is not allowed for categories'
 
 
 # Project ----------------------------------------------------------------------
@@ -107,7 +108,7 @@ class Project(models.Model):
     type = models.CharField(
         max_length=64,
         choices=PROJECT_TYPE_CHOICES,
-        default=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
+        default=PROJECT_TYPE_PROJECT,
         help_text='Type of project ("CATEGORY", "PROJECT")',
     )
 
@@ -217,23 +218,21 @@ class Project(models.Model):
 
     def _validate_parent_type(self):
         """Validate parent value to ensure parent can not be a project"""
-        if (
-            self.parent
-            and self.parent.type == SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-        ):
+        if self.parent and self.parent.type == PROJECT_TYPE_PROJECT:
             raise ValidationError(
                 'Subprojects are only allowed within categories'
             )
 
     def _validate_public_guest_access(self):
-        """Validate public guest access to ensure it is not set on categories"""
-        if (
-            self.public_guest_access
-            and self.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
-        ):
-            raise ValidationError(
-                'Public guest access is not allowed for categories'
-            )
+        """
+        Validate public guest access to ensure it is not set on categories.
+
+        NOTE: Does not prevent saving but forces the value to be False, see
+              issue #1404.
+        """
+        if self.type == PROJECT_TYPE_CATEGORY and self.public_guest_access:
+            logger.warning(CAT_PUBLIC_ACCESS_MSG + ', setting to False')
+            self.public_guest_access = False
 
     def _validate_title(self):
         """
@@ -253,10 +252,7 @@ class Project(models.Model):
         Validate archive status against project type to ensure archiving is only
         applied to projects.
         """
-        if (
-            self.archive
-            and self.type != SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-        ):
+        if self.archive and self.type != PROJECT_TYPE_PROJECT:
             raise ValidationError(
                 'Archiving a category is not currently supported'
             )
@@ -656,6 +652,9 @@ class Project(models.Model):
     def set_public(self, public=True):
         """Helper for setting value of public_guest_access"""
         if public != self.public_guest_access:
+            # NOTE: Validation no longer raises an exception (see ¤1404)
+            if self.type == PROJECT_TYPE_CATEGORY and public:
+                raise ValidationError(CAT_PUBLIC_ACCESS_MSG)
             self.public_guest_access = public
             self.save()
             self._update_public_children()  # Update for parents

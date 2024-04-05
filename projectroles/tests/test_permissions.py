@@ -1500,7 +1500,7 @@ class TestProjectInviteView(ProjectPermissionTestBase):
         ]
         self.assert_response(self.url_cat, good_users, 200)
         self.assert_response(self.url_cat, bad_users, 302)
-        # public guest access is temporally disabled for categories
+        # Public guest access is temporally disabled for categories
         with self.assertRaises(ValidationError):
             self.category.set_public()
 
