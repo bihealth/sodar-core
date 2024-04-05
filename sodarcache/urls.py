@@ -6,18 +6,18 @@ app_name = 'sodarcache'
 
 urlpatterns = [
     path(
-        route='api/set/<uuid:project>',
-        view=views_api.SODARCacheSetAPIView.as_view(),
-        name='cache_set',
+        route='api/retrieve/<uuid:project>/<str:app_name>/<str:item_name>',
+        view=views_api.CacheItemRetrieveAPIView.as_view(),
+        name='api_retrieve',
     ),
     path(
-        route='api/get/<uuid:project>',
-        view=views_api.SODARCacheGetAPIView.as_view(),
-        name='cache_get',
+        route='api/retrieve/date/<uuid:project>/<str:app_name>/<str:item_name>',
+        view=views_api.CacheItemDateRetrieveAPIView.as_view(),
+        name='api_retrieve_date',
     ),
     path(
-        route='api/get/date/<uuid:project>',
-        view=views_api.SODARCacheGetDateAPIView.as_view(),
-        name='cache_get_date',
+        route='api/set/<uuid:project>/<str:app_name>/<str:item_name>',
+        view=views_api.CacheItemSetAPIView.as_view(),
+        name='api_set',
     ),
 ]

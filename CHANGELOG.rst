@@ -45,8 +45,8 @@ Changed
     - Separate projectroles and remote sync API media types and versioning (#1278)
     - Rename base test classes for consistency (#1259)
 - **Sodarcache**
+    - Rewrite REST API views (#498, #1389)
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
-    - Rename API view classes to match conventions (#1389)
 - **Timeline**
     - Update ``get_object_link()`` usage for ``PluginObjectLink`` return data (#1343)
 
@@ -55,6 +55,8 @@ Fixed
 
 - **Projectroles**
     - ``SODARUser.update_full_name()`` not working with existing name (#1371)
+- **Sodarcache**
+    - REST API set view ``app_name`` incorrectly set (#1405)
 
 Removed
 -------

@@ -20,6 +20,7 @@ Release Highlights
 - Add app specific and semantic REST API versioning
 - Add REST API versioning independent from repo/site versions
 - Add Python v3.11 support
+- Rewrite sodarcache REST API views
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations
 - Rename base test classes
@@ -105,6 +106,8 @@ Projectroles Remote Sync (only used internally by SODAR Core sites)
     ``application/vnd.bihealth.sodar-core.projectroles.sync+json``
 :ref:`Filesfolders <app_filesfolders_api_rest>`
     ``application/vnd.bihealth.sodar-core.filesfolders+json``
+:ref:`Sodarcache <app_sodarcache_api_rest>`
+    ``application/vnd.bihealth.sodar-core.sodarcache+json``
 
 If you have previously used the ``SODAR_API_*`` accept header versioning, you
 should update your own views to the new scheme. To do this, you need to provide
@@ -141,6 +144,10 @@ in this release:
     Rename ``app_name`` parameter to ``plugin_name``.
 ``UserSettingSetAPIView`` (``project/api/settings/set/user``)
     Rename ``app_name`` parameter to ``plugin_name``.
+:ref:`Sodarcache REST API <app_sodarcache_api_rest>`
+    The entire sodarcache REST API has been rewritten to conform to our general
+    REST API conventions regarding URLs and return data. See the API
+    documentation and refactor your client code accordingly.
 
 AppSettingAPI Plugin Name Arguments Updated
 -------------------------------------------

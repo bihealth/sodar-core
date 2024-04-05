@@ -1,81 +1,181 @@
-"""API views for the sodarcache app"""
+"""REST API views for the sodarcache app"""
 
+from rest_framework.exceptions import APIException, NotFound, ParseError
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.views_api import CoreAPIBaseProjectMixin
+from projectroles.views_api import CoreAPIGenericProjectMixin
 
+from sodarcache.serializers import JSONCacheItemSerializer
+
+# SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+
+# Local constants
 APP_NAME = 'sodarcache'
+SODARCACHE_API_MEDIA_TYPE = (
+    'application/vnd.bihealth.sodar-core.sodarcache+json'
+)
+SODARCACHE_API_DEFAULT_VERSION = '1.0'
+SODARCACHE_API_ALLOWED_VERSIONS = ['1.0']
 
 
-# TODO: Refactor views and URLs to match SODAR conventions in v0.9 (see #498)
+# Base Classes and Mixins ------------------------------------------------------
 
 
-class SODARCacheGetAPIView(CoreAPIBaseProjectMixin, APIView):
-    """API View for retrieving the value of a cache item"""
+class SodarcacheAPIViewMixin:
+    """
+    Sodarcache API view versioning mixin for overriding media type and
+    accepted versions, as well as providing helpers
+    """
+
+    class SodarcacheAPIRenderer(JSONRenderer):
+        media_type = SODARCACHE_API_MEDIA_TYPE
+
+    class SodarcacheAPIVersioning(AcceptHeaderVersioning):
+        allowed_versions = SODARCACHE_API_ALLOWED_VERSIONS
+        default_version = SODARCACHE_API_DEFAULT_VERSION
+
+    class BackendUnavailable(APIException):
+        status_code = 503
+        default_detail = 'Cache backend not enabled'
+        default_code = 'service_unavailable'
+
+    renderer_classes = [SodarcacheAPIRenderer]
+    versioning_class = SodarcacheAPIVersioning
+
+    @classmethod
+    def get_backend(cls):
+        """
+        Return sodarcache backend or raise 503 if not enabled.
+
+        :Return: SodarCacheAPI object
+        """
+        cache_backend = get_backend_api('sodar_cache')
+        if not cache_backend:
+            raise cls.BackendUnavailable()
+        return cache_backend
+
+
+# API Views --------------------------------------------------------------------
+
+
+class CacheItemRetrieveAPIView(
+    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, RetrieveAPIView
+):
+    """
+    Retrieve a cache item along with its data. Returns 404 if cache item is not
+    set.
+
+    **URL:** ``/cache/api/retrieve/{Project.sodar_uuid}/{app_name}/{item_name}``
+
+    **Methods:** ``GET``
+
+    **Returns:**
+
+    - ``project``: Project UUID (string)
+    - ``app_name``: Name of app to which the item belongs (string)
+    - ``name``: Item name (string)
+    - ``data``: Item data (JSON)
+    - ``date_modified``: Item modification datetime (YYYY-MM-DDThh:mm:ssZ)
+    - ``user``: User who created the item (SODARUserSerializer dict or None)
+    """
 
     permission_required = 'sodarcache.get_cache_value'
+    project_type = PROJECT_TYPE_PROJECT
+    serializer_class = JSONCacheItemSerializer
 
-    def get(self, request, *args, **kwargs):
-        cache_backend = get_backend_api('sodar_cache')
-        project = self.get_project()
+    def get_object(self):
+        """
+        Override get_object() to return object by project, app name and name.
+        """
+        cache_backend = self.get_backend()
         try:
             item = cache_backend.get_cache_item(
-                app_name=request.GET.get('app_name'),
-                name=request.GET.get('name'),
-                project=project,
+                app_name=self.kwargs.get('app_name'),
+                name=self.kwargs.get('item_name'),
+                project=self.get_project(),
             )
-            if not item:
-                return Response({'message': 'Not found'}, status=404)
-            ret_data = {
-                'sodar_uuid': str(item.sodar_uuid),
-                'project_uuid': str(item.project.sodar_uuid),
-                'user_uuid': str(item.user.sodar_uuid) if item.user else None,
-                'name': item.name,
-                'data': item.data,
-            }
-            return Response(ret_data, status=200)
         except Exception as ex:
-            return Response({'message': str(ex)}, status=500)
+            raise ParseError(ex)
+        if not item:
+            raise NotFound()
+        return item
 
 
-class SODARCacheSetAPIView(CoreAPIBaseProjectMixin, APIView):
-    """API View for creating or updating the value of a cache item"""
+class CacheItemDateRetrieveAPIView(
+    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, APIView
+):
+    """
+    Retrieve timestamp of the last update to a cache item. Returns 404 if cache
+    item is not set.
+
+    **URL:** ``/cache/api/retrieve/date/{Project.sodar_uuid}/{app_name}/{item_name}``
+
+    **Methods:** ``GET``
+
+    **Returns:**
+
+    - ``update_time``: Update timestamp in seconds since epoch (integer)
+    """
+
+    permission_required = 'sodarcache.get_cache_value'
+    project_type = PROJECT_TYPE_PROJECT
+    http_method_names = ['get']
+
+    def get(self, request, *args, **kwargs):
+        cache_backend = self.get_backend()
+        try:
+            update_time = cache_backend.get_update_time(
+                app_name=self.kwargs.get('app_name'),
+                name=self.kwargs.get('item_name'),
+                project=self.get_project(),
+            )
+        except Exception as ex:
+            raise ParseError(ex)
+        if not update_time:
+            raise NotFound()
+        return Response({'update_time': update_time}, status=200)
+
+
+class CacheItemSetAPIView(
+    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, APIView
+):
+    """
+    Create or update a cache item. Replaces an existing item with the same
+    project, app name and item name if previously set. Returns 200 on both a
+    successful creation and update.
+
+    **URL:** ``/cache/api/set/{Project.sodar_uuid}/{app_name}/{item_name}``
+
+    **Methods:** ``POST``
+
+    **Parameters:**
+
+    - ``data``: Full item data to be set (JSON)
+    """
 
     permission_required = 'sodarcache.set_cache_value'
+    project_type = PROJECT_TYPE_PROJECT
+    http_method_names = ['post']
 
     def post(self, request, *args, **kwargs):
-        cache_backend = get_backend_api('sodar_cache')
-        project = self.get_project()
+        cache_backend = self.get_backend()
         try:
             cache_backend.set_cache_item(
-                name=request.data['name'],
-                app_name=APP_NAME,
+                app_name=self.kwargs.get('app_name'),
+                name=self.kwargs.get('item_name'),
                 user=self.request.user,
                 data=request.data['data'],
                 data_type='json',
-                project=project,
+                project=self.get_project(),
             )
         except Exception as ex:
-            return Response({'message': str(ex)}, status=500)
-        return Response({'message': 'ok'}, status=200)
-
-
-class SODARCacheGetDateAPIView(CoreAPIBaseProjectMixin, APIView):
-    """API View for retrieving the update date of a cache item"""
-
-    permission_required = 'sodarcache.get_cache_value'
-
-    def get(self, request, *args, **kwargs):
-        cache_backend = get_backend_api('sodar_cache')
-        project = self.get_project()
-        update_time = cache_backend.get_update_time(
-            request.GET.get('app_name'),
-            request.GET.get('name'),
-            project=project,
-        )
-        if update_time:
-            return Response({'update_time': update_time}, status=200)
-        return Response({'message': 'Not found'}, status=404)
+            raise APIException(ex)
+        return Response({'detail': 'ok'}, status=200)
