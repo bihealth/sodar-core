@@ -41,7 +41,7 @@ Changed
     - Deprecate returning ``dict`` from ``get_object_link()`` (#1343)
     - Expect ``search()`` plugin methods to return list of ``PluginSearchResult`` objects (#1399)
     - Deprecate returning ``dict`` from ``search()`` (#1399)
-    - Update core API view media type and versioning (#1278)
+    - Update core API view media type and versioning (#1278, #1406)
     - Separate projectroles and remote sync API media types and versioning (#1278)
     - Rename base test classes for consistency (#1259)
 - **Sodarcache**

@@ -112,13 +112,8 @@ class ProjectAPIPermissionTestBase(
     """Base class for testing project permissions in SODAR API views"""
 
 
-# TODO: Remove this
-class CoreProjectAPIPermissionTestBase(
-    SODARAPIPermissionTestMixin, APITestCase, ProjectPermissionTestBase
-):
-    """
-    Base class for testing project permissions in internal SODAR Core API views
-    """
+class ProjectrolesAPIPermissionTestBase(ProjectAPIPermissionTestBase):
+    """Base class for testing projectroles app REST API view permissions"""
 
     media_type = PROJECTROLES_API_MEDIA_TYPE
     api_version = PROJECTROLES_API_DEFAULT_VERSION
@@ -127,7 +122,7 @@ class CoreProjectAPIPermissionTestBase(
 # Tests ------------------------------------------------------------------------
 
 
-class TestProjectListAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectListAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectListAPIView permissions"""
 
     def test_get(self):
@@ -151,7 +146,7 @@ class TestProjectListAPIView(CoreProjectAPIPermissionTestBase):
         self.assert_response_api(url, good_users, 200, knox=True)
 
 
-class TestProjectRetrieveAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectRetrieveAPIView permissions"""
 
     def setUp(self):
@@ -213,7 +208,7 @@ class TestProjectRetrieveAPIView(CoreProjectAPIPermissionTestBase):
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
 
-class TestProjectCreateAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectCreateAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectCreateAPIView permissions"""
 
     def _cleanup(self):
@@ -376,7 +371,7 @@ class TestProjectCreateAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestProjectUpdateAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectUpdateAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectUpdateAPIView permissions"""
 
     def setUp(self):
@@ -497,7 +492,7 @@ class TestProjectUpdateAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestRoleAssignmentCreateAPIView(CoreProjectAPIPermissionTestBase):
+class TestRoleAssignmentCreateAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for RoleAssignmentCreateAPIView permissions"""
 
     def _cleanup(self):
@@ -643,7 +638,7 @@ class TestRoleAssignmentCreateAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestRoleAssignmentUpdateAPIView(CoreProjectAPIPermissionTestBase):
+class TestRoleAssignmentUpdateAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for RoleAssignmentUpdateAPIView permissions"""
 
     def setUp(self):
@@ -765,7 +760,7 @@ class TestRoleAssignmentUpdateAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestRoleAssignmentDestroyAPIView(CoreProjectAPIPermissionTestBase):
+class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for RoleAssignmentDestroyAPIView permissions"""
 
     def _make_as(self):
@@ -877,7 +872,7 @@ class TestRoleAssignmentDestroyAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestRoleAssignmentOwnerTransferAPIView(CoreProjectAPIPermissionTestBase):
+class TestRoleAssignmentOwnerTransferAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for RoleAssignmentOwnerTransferAPIView permissions"""
 
     def _cleanup(self):
@@ -1027,7 +1022,7 @@ class TestRoleAssignmentOwnerTransferAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestProjectInviteListAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectInviteListAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectInviteListAPIView permissions"""
 
     def setUp(self):
@@ -1093,7 +1088,7 @@ class TestProjectInviteListAPIView(CoreProjectAPIPermissionTestBase):
         self.assert_response_api(self.url, self.user_no_roles, 403)
 
 
-class TestProjectInviteCreateAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectInviteCreateAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectInviteCreateAPIView permissions"""
 
     def _cleanup(self):
@@ -1235,7 +1230,7 @@ class TestProjectInviteCreateAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestProjectInviteRevokeAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectInviteRevokeAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectInviteRevokeAPIView( permissions"""
 
     def _cleanup(self):
@@ -1347,7 +1342,7 @@ class TestProjectInviteRevokeAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestProjectInviteResendAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectInviteResendAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectInviteResendAPIView permissions"""
 
     def setUp(self):
@@ -1441,7 +1436,7 @@ class TestProjectInviteResendAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestProjectSettingRetrieveAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectSettingRetrieveAPIView permissions"""
 
     def setUp(self):
@@ -1582,7 +1577,7 @@ class TestProjectSettingRetrieveAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestProjectSettingSetAPIView(CoreProjectAPIPermissionTestBase):
+class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectSettingSetAPIView permissions"""
 
     def setUp(self):
@@ -1771,7 +1766,7 @@ class TestProjectSettingSetAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestUserSettingRetrieveAPIView(CoreProjectAPIPermissionTestBase):
+class TestUserSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for UserSettingRetrieveAPIView permissions"""
 
     def setUp(self):
@@ -1817,7 +1812,7 @@ class TestUserSettingRetrieveAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestUserSettingSetAPIView(CoreProjectAPIPermissionTestBase):
+class TestUserSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for UserSettingSetAPIView permissions"""
 
     def setUp(self):
@@ -1871,7 +1866,7 @@ class TestUserSettingSetAPIView(CoreProjectAPIPermissionTestBase):
         )
 
 
-class TestUserListAPIView(CoreProjectAPIPermissionTestBase):
+class TestUserListAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for UserSettingSetAPIView permissions"""
 
     def setUp(self):
@@ -1903,7 +1898,7 @@ class TestUserListAPIView(CoreProjectAPIPermissionTestBase):
         self.assert_response_api(self.url, [self.anonymous], 401)
 
 
-class TestCurrentUserRetrieveAPIView(CoreProjectAPIPermissionTestBase):
+class TestCurrentUserRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for CurrentUserRetrieveAPIView permissions"""
 
     def setUp(self):

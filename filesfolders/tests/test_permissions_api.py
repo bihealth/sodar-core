@@ -7,9 +7,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions_api import (
-    CoreProjectAPIPermissionTestBase,
-)
+from projectroles.tests.test_permissions_api import ProjectAPIPermissionTestBase
 
 from filesfolders.models import File, HyperLink
 from filesfolders.tests.test_permissions import FilesfoldersPermissionTestMixin
@@ -27,12 +25,12 @@ OBJ_UUID = uuid.uuid4()
 
 
 class FilesfoldersAPIPermissionTestBase(
-    FilesfoldersPermissionTestMixin, CoreProjectAPIPermissionTestBase
+    FilesfoldersPermissionTestMixin, ProjectAPIPermissionTestBase
 ):
     """Base class for filesfolders REST API view permission tests"""
 
     media_type = FILESFOLDERS_API_MEDIA_TYPE
-    default_version = FILESFOLDERS_API_DEFAULT_VERSION
+    api_version = FILESFOLDERS_API_DEFAULT_VERSION
 
 
 class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
