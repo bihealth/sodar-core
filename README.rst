@@ -1,27 +1,29 @@
 SODAR Core
 ^^^^^^^^^^
 
-.. image:: https://badge.fury.io/py/django-sodar-core.svg
+.. |b1| image:: https://badge.fury.io/py/django-sodar-core.svg
     :target: https://badge.fury.io/py/django-sodar-core
 
-.. image:: https://github.com/bihealth/sodar-core/actions/workflows/build.yml/badge.svg
+.. |b2| image:: https://github.com/bihealth/sodar-core/actions/workflows/build.yml/badge.svg
     :target: https://github.com/bihealth/sodar-core/actions?query=workflow%3ABuild
 
-.. image:: https://coveralls.io/repos/github/bihealth/sodar-core/badge.svg?branch=main
+.. |b3| image:: https://coveralls.io/repos/github/bihealth/sodar-core/badge.svg?branch=main
     :target: https://coveralls.io/github/bihealth/sodar-core?branch=main
 
-.. image:: https://img.shields.io/badge/License-MIT-green.svg
+.. |b4| image:: https://img.shields.io/badge/License-MIT-green.svg
     :target: https://opensource.org/licenses/MIT
 
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+.. |b5| image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/ambv/black
 
-.. image:: https://readthedocs.org/projects/sodar-core/badge/?version=latest
+.. |b6| image:: https://readthedocs.org/projects/sodar-core/badge/?version=latest
     :target: https://sodar-core.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4269346.svg
+.. |b7| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4269346.svg
     :target: https://doi.org/10.5281/zenodo.4269346
+
+|b1| |b2| |b3| |b4| |b5| |b6| |b7|
 
 SODAR Core is a framework for Django web application development.
 
