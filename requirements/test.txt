@@ -21,7 +21,7 @@ tblib==3.0.0
 beautifulsoup4==4.12.3
 
 # Black for formatting
-black==24.2.0
+black==24.3.0
 
 # Coveralls for coverage reporting
 coveralls==3.3.1
