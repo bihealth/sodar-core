@@ -20,6 +20,8 @@ Release Highlights
 - Add app specific and semantic REST API versioning
 - Add REST API versioning independent from repo/site versions
 - Add Python v3.11 support
+- Add target site user UUID updating in remote sync
+- Add remote sync of existing target local users
 - Rewrite sodarcache REST API views
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations
@@ -186,6 +188,21 @@ support for it will be removed in v1.1.
 Note that a dict using the ``category`` variable as a key will still be
 provided for your app's search template. Hence, modifying the template should
 not be required after updating the method.
+
+Remote Sync User Update Changes
+-------------------------------
+
+UUIDs Updated to Match Source Site
+    User UUIDs on target sites are now correctly created and updated in remote
+    sync to match the UUIDs of similarly named users on the source site. This
+    should only be a breaking change in case you are storing existing user UUIDs
+    outside your site and using them in e.g. REST API queries. Otherwise this
+    change should require no actions.
+Local User Details Updated on Target Site
+    If local users are enabled, local users are updated to match target site
+    users similar to what was before done for LDAP/AD users. Note that creation
+    of local users must still be done manually: they will not be automatically
+    created by remote sync.
 
 PROJECTROLES_HIDE_APP_LINKS Removed
 -----------------------------------

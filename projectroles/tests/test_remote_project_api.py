@@ -1,4 +1,4 @@
-"""Tests for the remote projects API in the projectroles app"""
+"""Tests for RemoteProjectAPI in the projectroles app"""
 
 import uuid
 
@@ -129,8 +129,11 @@ SET_IP_ALLOWLIST_UUID = str(uuid.uuid4())
 SET_STAR_UUID = str(uuid.uuid4())
 
 
-class RemoteProjectsAPITestBase(RoleMixin, TestCase):
-    """Base class for remote project API tests"""
+# TODO: Fix incorrect sodar_uuid fields in user data
+
+
+class RemoteProjectAPITestBase(RoleMixin, TestCase):
+    """Base class for RemoteProjectAPI tests"""
 
     def assert_app_setting(self, uuid, expected):
         """
@@ -158,7 +161,7 @@ class TestGetSourceData(
     RemoteProjectMixin,
     SODARUserMixin,
     AppSettingMixin,
-    RemoteProjectsAPITestBase,
+    RemoteProjectAPITestBase,
 ):
     """Tests for get_source_data()"""
 
@@ -350,6 +353,7 @@ class TestGetSourceData(
                     'last_name': self.user_source.last_name,
                     'email': self.user_source.email,
                     'groups': [SOURCE_USER_GROUP],
+                    'sodar_uuid': str(self.user_source.sodar_uuid),
                 }
             },
             'projects': {
@@ -546,6 +550,7 @@ class TestGetSourceData(
                     'last_name': self.user_source.last_name,
                     'email': self.user_source.email,
                     'groups': [SOURCE_USER_GROUP],
+                    'sodar_uuid': str(self.user_source.sodar_uuid),
                 }
             },
             'projects': {
@@ -598,7 +603,7 @@ class SyncRemoteDataTestBase(
     RemoteProjectMixin,
     SODARUserMixin,
     AppSettingMixin,
-    RemoteProjectsAPITestBase,
+    RemoteProjectAPITestBase,
 ):
     """Base class for tests for sync_remote_data()"""
 
@@ -1277,6 +1282,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'user': local_user_username,
             'role': self.role_contributor.name,
         }
+        self.assertEqual(User.objects.all().count(), 1)
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         # Assert database status (the new user and role should not be created)
@@ -1286,7 +1292,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_create_local_user_allow(self):
         """Test sync with local user with local users allowed"""
@@ -1294,7 +1299,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         local_user_uuid = str(uuid.uuid4())
         role_uuid = str(uuid.uuid4())
         remote_data = self.default_data
-        # Create user on target site
         self.make_user(local_user_username)
         remote_data['users'][local_user_uuid] = {
             'sodar_uuid': local_user_uuid,
@@ -1309,6 +1313,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'user': local_user_username,
             'role': self.role_contributor.name,
         }
+        self.assertEqual(User.objects.all().count(), 2)
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1748,6 +1753,71 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         expected['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
         self.assertEqual(remote_data, expected)
 
+    def test_update_user_uuid_ldap(self):
+        """Test sync with legacy UUID for LDAP user"""
+        # Set different UUID for target user
+        target_uuid = str(uuid.uuid4())
+        self.assertNotEqual(SOURCE_USER_UUID, target_uuid)
+        self.user_target.sodar_uuid = target_uuid
+        self.user_target.save()
+        self.assertEqual(User.objects.all().count(), 2)
+        self.remote_api.sync_remote_data(self.source_site, self.default_data)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.user_target.refresh_from_db()
+        self.assertEqual(str(self.user_target.sodar_uuid), SOURCE_USER_UUID)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_update_user_uuid_local_allow(self):
+        """Test sync with legacy UUID for local user with local users allowed"""
+        local_username = 'localusername'
+        local_name = 'Local User'
+        user_local = self.make_user(local_username)
+        local_uuid_target = str(user_local.sodar_uuid)
+        local_uuid_source = str(uuid.uuid4())
+        self.assertNotEqual(local_uuid_target, local_uuid_source)
+        self.assertNotEqual(user_local.name, local_name)
+        remote_data = self.default_data
+        remote_data['users'][local_uuid_source] = {
+            'username': local_username,
+            'name': local_name,
+            'first_name': local_name.split(' ')[0],
+            'last_name': local_name.split(' ')[1],
+            'groups': [SOURCE_USER_GROUP],
+        }
+        self.assertEqual(User.objects.all().count(), 3)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
+        self.assertEqual(User.objects.all().count(), 3)
+        user_local.refresh_from_db()
+        self.assertEqual(str(user_local.sodar_uuid), local_uuid_source)
+        self.assertEqual(user_local.name, local_name)
+        self.assertEqual(user_local.first_name, local_name.split(' ')[0])
+        self.assertEqual(user_local.last_name, local_name.split(' ')[1])
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_update_user_uuid_local_disallow(self):
+        """Test sync with legacy UUID for local user with local users disallowed (should fail)"""
+        local_username = 'localusername'
+        local_name = 'Local User'
+        user_local = self.make_user(local_username)
+        local_uuid_target = str(user_local.sodar_uuid)
+        local_uuid_source = str(uuid.uuid4())  # Source UUID
+        self.assertNotEqual(local_uuid_target, local_uuid_source)
+        self.assertNotEqual(user_local.name, local_name)
+        remote_data = self.default_data
+        remote_data['users'][local_uuid_source] = {
+            'username': local_username,
+            'name': local_name,
+            'first_name': local_name.split(' ')[0],
+            'last_name': local_name.split(' ')[1],
+            'groups': [SOURCE_USER_GROUP],
+        }
+        self.assertEqual(User.objects.all().count(), 3)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
+        self.assertEqual(User.objects.all().count(), 3)
+        user_local.refresh_from_db()
+        self.assertEqual(str(user_local.sodar_uuid), local_uuid_target)
+        self.assertNotEqual(user_local.name, local_name)
+
     def test_update_inherited(self):
         """Test sync with existing project data and inherited contributor"""
         self.assertEqual(User.objects.all().count(), 2)
@@ -1757,7 +1827,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         new_user_uuid = str(uuid.uuid4())
         new_role_uuid = str(uuid.uuid4())
         remote_data['users'][str(new_user_uuid)] = {
-            'sodar_uuid': new_user_uuid,
+            'sodar_uuid': new_user_uuid,  # TODO: Remove these
             'username': new_user_username,
             'name': 'Some Name',
             'first_name': 'Some',

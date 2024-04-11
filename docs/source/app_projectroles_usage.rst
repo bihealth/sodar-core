@@ -451,6 +451,12 @@ Alternatively, the following management command can be used:
     owner role. Hence you **must** have this setting defined if you are
     implementing a SODAR site in target mode.
 
+.. note::
+
+    Local non-owner users can be granted roles if
+    ``PROJECTROLES_ALLOW_LOCAL_USERS`` is set on the target site. However, local
+    users must be manually created by a target site admin in order for their
+    data and roles to be synchronized.
 
 Search
 ======

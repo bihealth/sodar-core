@@ -46,7 +46,6 @@ PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
-
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
@@ -55,6 +54,7 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
 APP_NAME = 'projectroles'
+NO_LOCAL_USERS_MSG = 'Local users not allowed'
 
 
 class RemoteProjectAPI:
@@ -162,18 +162,18 @@ class RemoteProjectAPI:
                 'last_name': user.last_name,
                 'email': user.email,
                 'groups': [g.name for g in user.groups.all()],
+                'sodar_uuid': str(user.sodar_uuid),
             }
         return sync_data
 
     @classmethod
-    def _add_app_setting(cls, sync_data, app_setting, all_defs, add_user_name):
+    def _add_app_setting(cls, sync_data, app_setting, all_defs):
         """
         Add app setting to sync data on source site.
 
         :param sync_data: Sync data to be updated (dict)
         :param app_setting: AppSetting object
         :param all_defs: All settings defs
-        :param add_user_name: Add user_name to sync data (boolean)
         :return: Updated sync_data (dict)
         """
         if app_setting.app_plugin:
@@ -183,7 +183,7 @@ class RemoteProjectAPI:
         global_val = app_settings.get_global_value(
             all_defs.get(plugin_name, {}).get(app_setting.name, {})
         )
-        # TODO: Remove user_name once #1316 and #1317 are implemented
+        # NOTE: Provide user_name in case of local target users
         sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
             'name': app_setting.name,
             'type': app_setting.type,
@@ -200,12 +200,11 @@ class RemoteProjectAPI:
             'user_uuid': (
                 str(app_setting.user.sodar_uuid) if app_setting.user else None
             ),
+            'user_name': (
+                app_setting.user.username if app_setting.user else None
+            ),
             'global': global_val,
         }
-        if add_user_name:
-            sync_data['app_settings'][str(app_setting.sodar_uuid)][
-                'user_name'
-            ] = (app_setting.user.username if app_setting.user else None)
         return sync_data
 
     # Source Site API functions ------------------------------------------------
@@ -219,7 +218,6 @@ class RemoteProjectAPI:
         :param req_version: Request version (string)
         :return: Dict
         """
-        add_user_name = True
         sync_data = {
             'users': {},
             'projects': {},
@@ -243,12 +241,9 @@ class RemoteProjectAPI:
             ]
 
             # Get and add app settings for project
-            # NOTE: Also provide global settings in case they are not yet set
             for a in AppSetting.objects.filter(project=project):
                 try:
-                    sync_data = self._add_app_setting(
-                        sync_data, a, all_defs, add_user_name
-                    )
+                    sync_data = self._add_app_setting(sync_data, a, all_defs)
                 except Exception as ex:
                     logger.error(
                         'Failed to add app setting "{}.settings.{}" '
@@ -396,18 +391,28 @@ class RemoteProjectAPI:
 
     def _sync_user(self, uuid, user_data):
         """
-        Synchronize LDAP user on target site.
+        Synchronize LDAP or local user on target site. For local users, will
+        only update an existing user object. Local users must be manually
+        created. If local users are not allowed, data is not synchronized.
 
         :param uuid: User UUID (string)
         :param user_data: User sync data (dict)
         """
+        # Don't sync local users if disallowed
+        allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
+        if '@' not in user_data['username'] and not allow_local:
+            logger.info(NO_LOCAL_USERS_MSG)
+            return
+        # Add UUID to user_data to ensure it gets synced
+        user_data['sodar_uuid'] = uuid
+
         # Update existing user
         try:
             user = User.objects.get(username=user_data['username'])
             updated_fields = []
             for k, v in user_data.items():
                 if (
-                    k not in ['groups', 'sodar_uuid']
+                    k != 'groups'
                     and hasattr(user, k)
                     and str(getattr(user, k)) != str(v)
                 ):
@@ -447,6 +452,14 @@ class RemoteProjectAPI:
 
         # Create new user
         except User.DoesNotExist:
+            if '@' not in user_data['username']:
+                logger.warning(
+                    'Local user "{}" not found: local users must '
+                    'be manually created before they can be synced'.format(
+                        user_data['username']
+                    )
+                )
+                return
             create_values = {
                 k: v for k, v in user_data.items() if k != 'groups'
             }
@@ -940,7 +953,6 @@ class RemoteProjectAPI:
         ]:
             return
         # Create/update roles
-        # NOTE: Only update AD/LDAP user roles and local owner roles
         if project_data['level'] == REMOTE_LEVEL_READ_ROLES:
             self._update_roles(project, project_data)
         # Remove deleted user roles (also for REVOKED projects)
@@ -1032,8 +1044,7 @@ class RemoteProjectAPI:
                 )
             )
 
-    @classmethod
-    def _sync_app_setting(cls, uuid, set_data):
+    def _sync_app_setting(self, uuid, set_data):
         """
         Create or update an AppSetting on a target site.
 
@@ -1042,37 +1053,38 @@ class RemoteProjectAPI:
         """
         ad = deepcopy(set_data)
         app_plugin = None
-        project = None
         user = None
+        user_name = ad.get('user_name')
+        user_uuid = ad.get('user_uuid')
+        project = None
+        skip_msg = 'Skipping setting "{}": '.format(ad['name'])
 
         # Get app plugin (skip the rest if not found on target server)
         if ad['app_plugin']:
             app_plugin = Plugin.objects.filter(name=ad['app_plugin']).first()
             if not app_plugin:
                 logger.debug(
-                    'Skipping setting "{}": App plugin not found with name '
-                    '"{}"'.format(ad['name'], ad['app_plugin'])
+                    skip_msg + 'App plugin not found with name '
+                    '"{}"'.format(ad['app_plugin'])
                 )
                 return
-
-        if ad['project_uuid']:
-            project = Project.objects.get(sodar_uuid=ad['project_uuid'])
-        # TODO: Use UUID for LDAP users once #1316 and #1317 are implemented
-        if ad.get('user_name'):
+        if user_name:
+            allow_local = getattr(
+                settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False
+            )
+            if '@' not in user_name and not allow_local:
+                logger.info(skip_msg + NO_LOCAL_USERS_MSG)
+                return
+            user = User.objects.filter(sodar_uuid=user_uuid).first()
             # User may not be found if e.g. local users allowed but not created
-            user = User.objects.filter(username=ad['user_name']).first()
             if not user:
                 logger.info(
-                    'Skipping setting {}: User not found'.format(ad['name'])
+                    'Skipping setting "{}": User not found (user_name={}; '
+                    'user_uuid={})'.format(ad['name'], user_name, user_uuid)
                 )
                 return
-        # Skip for now, as UUIDs have not been correctly synced
-        # TODO: Remove skip after #1316 and #1317
-        elif ad['user_uuid']:
-            logger.info(
-                'Skipping setting {}: user_name not present'.format(ad['name'])
-            )
-            return
+        if ad['project_uuid']:
+            project = Project.objects.get(sodar_uuid=ad['project_uuid'])
 
         try:
             obj = AppSetting.objects.get(
@@ -1105,7 +1117,7 @@ class RemoteProjectAPI:
         ad.pop('global', None)
         ad.pop('local', None)  # TODO: Remove in v1.1 (see #1394)
         ad.pop('project_uuid', None)
-        ad.pop('user_name', None)  # TODO: Remove once user UUID support added
+        ad.pop('user_name', None)
         ad.pop('user_uuid', None)
         # Add keys required for the model
         ad['project'] = project
@@ -1202,13 +1214,9 @@ class RemoteProjectAPI:
             logger.info('No new Peer Sites to sync')
 
         # Users
-        logger.info('Synchronizing LDAP/AD users..')
-        # NOTE: only sync LDAP/AD users
-        for u_uuid, u_data in {
-            k: v
-            for k, v in self.remote_data['users'].items()
-            if '@' in v['username']
-        }.items():
+        logger.info('Synchronizing users..')
+        # NOTE: Add all users here, only update local users within _sync_user()
+        for u_uuid, u_data in self.remote_data['users'].items():
             self._sync_user(u_uuid, u_data)
         logger.info('User sync OK')
 
