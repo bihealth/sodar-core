@@ -66,6 +66,9 @@ class TemplateTagTestBase(
         self.init_roles()
         # Init users
         self.user = self.make_user('user_owner')
+        self.superuser = self.make_user('user_superuser')
+        self.superuser.is_superuser = True
+        self.superuser.save()
         # Init category
         self.category = self.make_project(
             title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
@@ -623,105 +626,275 @@ class TestProjectrolesTags(TemplateTagTestBase):
     def test_get_sidebar_links_home(self):
         """Test get_sidebar_links() on the home view"""
         url = reverse('home')
-        with self.login(self.user):
-            request = self.req_factory.get(url)
-            request.resolver_match = resolve(url)
-            request.user = self.user
-            self.assertEqual(
-                tags.get_project_app_links(request),
-                [],
-            )
+        request = self.req_factory.get(url)
+        request.resolver_match = resolve(url)
+        request.user = self.user
+        self.assertEqual(
+            tags.get_project_app_links(request),
+            [],
+        )
 
     def test_get_sidebar_links_project_detail_view(self):
         """Test get_sidebar_links() on project detail view"""
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-        with self.login(self.user):
-            request = self.req_factory.get(url)
-            request.resolver_match = resolve(url)
-            request.user = self.user
-            self.assertEqual(
-                tags.get_project_app_links(request, self.project),
-                [
-                    {
-                        'name': 'project-detail',
-                        'url': f'/project/{self.project.sodar_uuid}',
-                        'label': 'Project Overview',
-                        'icon': 'mdi:cube',
-                        'active': True,
-                    },
-                    {
-                        'name': 'app-plugin-bgjobs',
-                        'url': f'/bgjobs/list/{self.project.sodar_uuid}',
-                        'label': 'Background Jobs',
-                        'icon': 'mdi:server',
-                        'active': False,
-                    },
-                    {
-                        'name': 'app-plugin-example_project_app',
-                        'url': f'/examples/project/{self.project.sodar_uuid}',
-                        'label': 'Example Project App',
-                        'icon': 'mdi:rocket-launch',
-                        'active': False,
-                    },
-                    {
-                        'name': 'app-plugin-filesfolders',
-                        'url': f'/files/{self.project.sodar_uuid}',
-                        'label': 'Files',
-                        'icon': 'mdi:file',
-                        'active': False,
-                    },
-                    {
-                        'name': 'app-plugin-timeline',
-                        'url': f'/timeline/{self.project.sodar_uuid}',
-                        'label': 'Timeline',
-                        'icon': 'mdi:clock-time-eight',
-                        'active': False,
-                    },
-                    {
-                        'name': 'project-roles',
-                        'url': f'/project/members/{self.project.sodar_uuid}',
-                        'label': 'Members',
-                        'icon': 'mdi:account-multiple',
-                        'active': False,
-                    },
-                    {
-                        'name': 'project-update',
-                        'url': f'/project/project/update/{self.project.sodar_uuid}',
-                        'label': 'Update Project',
-                        'icon': 'mdi:lead-pencil',
-                        'active': False,
-                    },
-                ],
-            )
+        request = self.req_factory.get(url)
+        request.resolver_match = resolve(url)
+        request.user = self.user
+        self.assertEqual(
+            tags.get_project_app_links(request, self.project),
+            [
+                {
+                    'name': 'project-detail',
+                    'url': f'/project/{self.project.sodar_uuid}',
+                    'label': 'Project Overview',
+                    'icon': 'mdi:cube',
+                    'active': True,
+                },
+                {
+                    'name': 'app-plugin-bgjobs',
+                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                    'label': 'Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-example_project_app',
+                    'url': f'/examples/project/{self.project.sodar_uuid}',
+                    'label': 'Example Project App',
+                    'icon': 'mdi:rocket-launch',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-filesfolders',
+                    'url': f'/files/{self.project.sodar_uuid}',
+                    'label': 'Files',
+                    'icon': 'mdi:file',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-timeline',
+                    'url': f'/timeline/{self.project.sodar_uuid}',
+                    'label': 'Timeline',
+                    'icon': 'mdi:clock-time-eight',
+                    'active': False,
+                },
+                {
+                    'name': 'project-roles',
+                    'url': f'/project/members/{self.project.sodar_uuid}',
+                    'label': 'Members',
+                    'icon': 'mdi:account-multiple',
+                    'active': False,
+                },
+                {
+                    'name': 'project-update',
+                    'url': f'/project/project/update/{self.project.sodar_uuid}',
+                    'label': 'Update Project',
+                    'icon': 'mdi:lead-pencil',
+                    'active': False,
+                },
+            ],
+        )
 
     def test_get_sidebar_links_role_view(self):
         """Test get_sidebar_links() on the role view"""
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-        with self.login(self.user):
-            request = self.req_factory.get(url)
-            request.resolver_match = resolve(url)
-            request.user = self.user
-            for app in tags.get_project_app_links(request, self.project):
-                if app['name'] == 'project-roles':
-                    self.assertEqual(app['active'], True)
-                else:
-                    self.assertEqual(app['active'], False)
+        request = self.req_factory.get(url)
+        request.resolver_match = resolve(url)
+        request.user = self.user
+        for app in tags.get_project_app_links(request, self.project):
+            if app['name'] == 'project-roles':
+                self.assertEqual(app['active'], True)
+            else:
+                self.assertEqual(app['active'], False)
 
     def test_get_sidebar_links_timeline_view(self):
         """Test get_sidebar_links() on the timeline view"""
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
-        with self.login(self.user):
-            request = self.req_factory.get(url)
-            request.resolver_match = resolve(url)
-            request.user = self.user
-            for app in tags.get_project_app_links(request, self.project):
-                if app['name'] == 'app-plugin-timeline':
-                    self.assertEqual(app['active'], True)
-                else:
-                    self.assertEqual(app['active'], False)
+        request = self.req_factory.get(url)
+        request.resolver_match = resolve(url)
+        request.user = self.user
+        for app in tags.get_project_app_links(request, self.project):
+            if app['name'] == 'app-plugin-timeline':
+                self.assertEqual(app['active'], True)
+            else:
+                self.assertEqual(app['active'], False)
+
+    def test_get_links_home_user(self):
+        """Test get_user_links() on the home view"""
+        url = reverse('home')
+        request = self.req_factory.get(url)
+        request.resolver_match = resolve(url)
+        request.user = self.user
+        self.assertEqual(
+            tags.get_user_links(request),
+            [
+                {
+                    'name': 'appalerts',
+                    'url': '/alerts/app/list',
+                    'label': 'App Alerts',
+                    'icon': 'mdi:alert-octagram',
+                    'active': False,
+                },
+                {
+                    'name': 'example_site_app',
+                    'url': '/examples/site/example',
+                    'label': 'Example Site App',
+                    'icon': 'mdi:rocket-launch-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'timeline_site',
+                    'url': '/timeline/site',
+                    'label': 'Site-Wide Events',
+                    'icon': 'mdi:clock-time-eight-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'tokens',
+                    'url': '/tokens/',
+                    'label': 'API Tokens',
+                    'icon': 'mdi:key-chain-variant',
+                    'active': False,
+                },
+                {
+                    'name': 'userprofile',
+                    'url': '/user/profile',
+                    'label': 'User Profile',
+                    'icon': 'mdi:account-details',
+                    'active': False,
+                },
+                {
+                    'name': 'sign-out',
+                    'url': '/logout/',
+                    'label': 'Logout',
+                    'icon': 'mdi:logout-variant',
+                    'active': False,
+                },
+            ],
+        )
+
+    def test_get_links_home_superuser(self):
+        """Test get_user_links() on the home view as superuser"""
+        url = reverse('home')
+        request = self.req_factory.get(url)
+        request.resolver_match = resolve(url)
+        request.user = self.superuser
+        self.assertEqual(
+            tags.get_user_links(request),
+            [
+                {
+                    'name': 'adminalerts',
+                    'url': '/alerts/adm/list',
+                    'label': 'Admin Alerts',
+                    'icon': 'mdi:alert',
+                    'active': False,
+                },
+                {
+                    'name': 'appalerts',
+                    'url': '/alerts/app/list',
+                    'label': 'App Alerts',
+                    'icon': 'mdi:alert-octagram',
+                    'active': False,
+                },
+                {
+                    'name': 'bgjobs_site',
+                    'url': '/bgjobs/list',
+                    'label': 'Site Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'example_site_app',
+                    'url': '/examples/site/example',
+                    'label': 'Example Site App',
+                    'icon': 'mdi:rocket-launch-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'remotesites',
+                    'url': '/project/remote/sites',
+                    'label': 'Remote Site Access',
+                    'icon': 'mdi:cloud-sync',
+                    'active': False,
+                },
+                {
+                    'name': 'siteinfo',
+                    'url': '/siteinfo/info',
+                    'label': 'Site Info',
+                    'icon': 'mdi:bar-chart',
+                    'active': False,
+                },
+                {
+                    'name': 'timeline_site',
+                    'url': '/timeline/site',
+                    'label': 'Site-Wide Events',
+                    'icon': 'mdi:clock-time-eight-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'timeline_site_admin',
+                    'url': '/timeline/site/all',
+                    'label': 'All Timeline Events',
+                    'icon': 'mdi:web-clock',
+                    'active': False,
+                },
+                {
+                    'name': 'tokens',
+                    'url': '/tokens/',
+                    'label': 'API Tokens',
+                    'icon': 'mdi:key-chain-variant',
+                    'active': False,
+                },
+                {
+                    'name': 'userprofile',
+                    'url': '/user/profile',
+                    'label': 'User Profile',
+                    'icon': 'mdi:account-details',
+                    'active': False,
+                },
+                {
+                    'name': 'admin',
+                    'url': '/admin/',
+                    'label': 'Django Admin',
+                    'icon': 'mdi:cogs',
+                    'active': False,
+                },
+                {
+                    'name': 'sign-out',
+                    'url': '/logout/',
+                    'label': 'Logout',
+                    'icon': 'mdi:logout-variant',
+                    'active': False,
+                },
+            ],
+        )
+
+    def test_get_user_links_userprofile(self):
+        """Test get_user_links() on the user profile view"""
+        url = reverse('userprofile:detail')
+        request = self.req_factory.get(url)
+        request.resolver_match = resolve(url)
+        request.user = self.user
+        for app in tags.get_user_links(request):
+            if app['name'] == 'userprofile':
+                self.assertEqual(app['active'], True)
+            else:
+                self.assertEqual(app['active'], False)
+
+    def test_get_user_links_remote_site(self):
+        """Test get_user_links() on the remote site view"""
+        url = reverse('projectroles:remote_site_create')
+        request = self.req_factory.get(url)
+        request.resolver_match = resolve(url)
+        request.user = self.user
+        for app in tags.get_user_links(request):
+            if app['name'] == 'remote_site_app':
+                self.assertEqual(app['active'], True)
+            else:
+                self.assertEqual(app['active'], False)
