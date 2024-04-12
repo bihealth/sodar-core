@@ -19,6 +19,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     AppSetting,
 )
+from projectroles.plugins import get_app_plugin
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -128,8 +129,7 @@ SET_IP_RESTRICT_UUID = str(uuid.uuid4())
 SET_IP_ALLOWLIST_UUID = str(uuid.uuid4())
 SET_STAR_UUID = str(uuid.uuid4())
 
-
-# TODO: Fix incorrect sodar_uuid fields in user data
+EXAMPLE_APP_NAME = 'example_project_app'
 
 
 class RemoteProjectAPITestBase(RoleMixin, TestCase):
@@ -525,6 +525,61 @@ class TestGetSourceData(
             'global': False,
         }
         self.assertEqual(set_data, expected)
+
+    def test_get_settings_user(self):
+        """Test getting user app settings"""
+        user_global_setting = self.make_setting(
+            plugin_name='projectroles',
+            name='user_email_additional',
+            setting_type='STRING',
+            value='additional@example.com',
+            user=self.user_source,
+        )
+        user_local_setting = self.make_setting(
+            plugin_name=EXAMPLE_APP_NAME,
+            name='user_str_setting',
+            setting_type='STRING',
+            value='Local value',
+            user=self.user_source,
+        )
+        self.assertEqual(
+            AppSetting.objects.filter(project=None).exclude(user=None).count(),
+            2,
+        )
+        sync_data = self.remote_api.get_source_data(self.target_site)
+
+        # NOTE: Local setting should also be included
+        self.assertEqual(len(sync_data['app_settings']), 2)
+        expected = {
+            'name': 'user_email_additional',
+            'type': 'STRING',
+            'value': 'additional@example.com',
+            'value_json': {},
+            'app_plugin': None,
+            'project_uuid': None,
+            'user_uuid': str(self.user_source.sodar_uuid),
+            'user_name': SOURCE_USER_USERNAME,
+            'global': True,
+        }
+        self.assertEqual(
+            sync_data['app_settings'][str(user_global_setting.sodar_uuid)],
+            expected,
+        )
+        expected = {
+            'name': 'user_str_setting',
+            'type': 'STRING',
+            'value': 'Local value',
+            'value_json': {},
+            'app_plugin': EXAMPLE_APP_NAME,
+            'project_uuid': None,
+            'user_uuid': str(self.user_source.sodar_uuid),
+            'user_name': SOURCE_USER_USERNAME,
+            'global': False,
+        }
+        self.assertEqual(
+            sync_data['app_settings'][str(user_local_setting.sodar_uuid)],
+            expected,
+        )
 
     def test_get_revoked(self):
         """Test getting data with REVOKED level"""
@@ -1058,7 +1113,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         expected['app_settings'][SET_STAR_UUID]['status'] = 'created'
         self.assertEqual(self.default_data, expected)
 
-    # TODO: Update once local settings updating is fixed
     def test_create_app_setting_local(self):
         """Test sync with local app setting"""
         remote_data = self.default_data
@@ -1417,6 +1471,81 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         self.assertEqual(RemoteSite.objects.all().count(), 2)
         new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
         self.assertEqual(new_project.get_owner().user, self.admin_user)
+
+    def test_create_settings_user(self):
+        """Test sync with USER scope settings"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+        remote_data = self.default_data
+        global_set_uuid = str(uuid.uuid4())
+        local_set_uuid = str(uuid.uuid4())
+        remote_data['app_settings'][global_set_uuid] = {
+            'name': 'user_email_additional',
+            'type': 'STRING',
+            'value': 'additional@example.com',
+            'value_json': {},
+            'app_plugin': None,
+            'project_uuid': None,
+            'user_uuid': SOURCE_USER_UUID,
+            'user_name': SOURCE_USER_USERNAME,
+            'global': True,
+        }
+        remote_data['app_settings'][local_set_uuid] = {
+            'name': 'user_str_setting',
+            'type': 'STRING',
+            'value': 'Local value',
+            'value_json': {},
+            'app_plugin': EXAMPLE_APP_NAME,
+            'project_uuid': None,
+            'user_uuid': SOURCE_USER_UUID,
+            'user_name': SOURCE_USER_USERNAME,
+            'global': False,
+        }
+
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
+        self.assertEqual(AppSetting.objects.count(), 5)
+        target_user = User.objects.get(username=SOURCE_USER_USERNAME)
+
+        obj = AppSetting.objects.get(
+            app_plugin=None, name='user_email_additional'
+        )
+        expected = {
+            'id': obj.pk,
+            'app_plugin': None,
+            'project': None,
+            'name': 'user_email_additional',
+            'type': 'STRING',
+            'user': target_user.pk,
+            'value': 'additional@example.com',
+            'value_json': {},
+            'user_modifiable': True,
+            'sodar_uuid': obj.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(obj), expected)
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME).get_model()
+
+        obj = AppSetting.objects.get(
+            app_plugin=app_plugin, name='user_str_setting'
+        )
+        expected = {
+            'id': obj.pk,
+            'app_plugin': app_plugin.pk,
+            'project': None,
+            'name': 'user_str_setting',
+            'type': 'STRING',
+            'user': target_user.pk,
+            'value': 'Local value',
+            'value_json': {},
+            'user_modifiable': True,
+            'sodar_uuid': obj.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(obj), expected)
+        # Assert sync data
+        self.assertEqual(
+            remote_data['app_settings'][global_set_uuid]['status'], 'created'
+        )
+        self.assertEqual(
+            remote_data['app_settings'][local_set_uuid]['status'], 'created'
+        )
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -1827,7 +1956,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         new_user_uuid = str(uuid.uuid4())
         new_role_uuid = str(uuid.uuid4())
         remote_data['users'][str(new_user_uuid)] = {
-            'sodar_uuid': new_user_uuid,  # TODO: Remove these
+            'sodar_uuid': new_user_uuid,
             'username': new_user_username,
             'name': 'Some Name',
             'first_name': 'Some',
@@ -1848,7 +1977,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
             self.role_contributor,
         )
 
-    def test_update_app_settings_local(self):
+    def test_update_settings_local(self):
         """Test update with local app settings (should not be updated)"""
         remote_data = self.default_data
         remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
@@ -1902,7 +2031,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         og_data['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
         self.assertEqual(remote_data, og_data)
 
-    def test_update_app_setting_no_app(self):
+    def test_update_settings_no_app(self):
         """Test update with app setting for app not present on target site"""
         self.assertEqual(AppSetting.objects.count(), 3)
         remote_data = self.default_data
@@ -1922,6 +2051,73 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         self.remote_api.sync_remote_data(self.source_site, remote_data)
         # Make sure setting was not set
         self.assertIsNone(AppSetting.objects.filter(name=setting_name).first())
+
+    def test_update_settings_user(self):
+        """Test update with USER scope settings"""
+        # Create target settings
+        self.make_setting(
+            plugin_name='projectroles',
+            name='user_email_additional',
+            setting_type='STRING',
+            value='target@example.com',
+            user=self.user_target,
+        )
+        target_local_setting = self.make_setting(
+            plugin_name=EXAMPLE_APP_NAME,
+            name='user_str_setting',
+            setting_type='STRING',
+            value='Target value',
+            user=self.user_target,
+        )
+        self.assertEqual(AppSetting.objects.count(), 5)
+
+        remote_data = self.default_data
+        global_set_uuid = str(uuid.uuid4())
+        local_set_uuid = str(uuid.uuid4())
+        remote_data['app_settings'][global_set_uuid] = {
+            'name': 'user_email_additional',
+            'type': 'STRING',
+            'value': 'source@example.com',
+            'value_json': {},
+            'app_plugin': None,
+            'project_uuid': None,
+            'user_uuid': SOURCE_USER_UUID,
+            'user_name': SOURCE_USER_USERNAME,
+            'global': True,
+        }
+        remote_data['app_settings'][local_set_uuid] = {
+            'name': 'user_str_setting',
+            'type': 'STRING',
+            'value': 'Source value',
+            'value_json': {},
+            'app_plugin': EXAMPLE_APP_NAME,
+            'project_uuid': None,
+            'user_uuid': SOURCE_USER_UUID,
+            'user_name': SOURCE_USER_USERNAME,
+            'global': False,
+        }
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
+
+        self.assertEqual(AppSetting.objects.count(), 5)
+        # Global setting should be updated
+        # TODO: Why do we create a new object here?
+        target_global_setting = AppSetting.objects.get(
+            app_plugin=None, name='user_email_additional'
+        )
+        self.assertEqual(target_global_setting.value, 'source@example.com')
+        # Local setting value should remain as is
+        target_local_setting.refresh_from_db()
+        self.assertEqual(target_local_setting.value, 'Target value')
+        # Assert sync data
+        self.assertEqual(
+            remote_data['app_settings'][global_set_uuid]['status'], 'updated'
+        )
+        self.assertEqual(
+            remote_data['app_settings'][local_set_uuid]['status'], 'skipped'
+        )
+
+    # TODO: Once object recreation is fixed, test to ensure no change in value
+    #       does not result in new object creation
 
     def test_update_revoke(self):
         """Test sync with existing project data and REVOKED access"""

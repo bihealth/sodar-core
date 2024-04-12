@@ -20,6 +20,7 @@ Added
     - ``PluginSearchResult`` data class in plugins (#1399)
     - Target user ``sodar_uuid`` updating in remote sync (#1316, #1317)
     - Update local user data in remote sync (#1407)
+    - ``USER`` scope settings in remote sync (#1322)
 
 Changed
 -------

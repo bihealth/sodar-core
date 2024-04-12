@@ -22,6 +22,7 @@ Release Highlights
 - Add Python v3.11 support
 - Add target site user UUID updating in remote sync
 - Add remote sync of existing target local users
+- Add remote sync of USER scope app settings
 - Rewrite sodarcache REST API views
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations

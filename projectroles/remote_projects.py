@@ -207,6 +207,28 @@ class RemoteProjectAPI:
         }
         return sync_data
 
+    @classmethod
+    def _get_app_setting_error(cls, app_setting, exception):
+        """
+        Return app setting error message to be logged.
+
+        :param app_setting: AppSetting object
+        :param exception: Exception object
+        :return: String
+        """
+        return (
+            'Failed to add app setting "{}.settings.{}" (UUID={}): {} '
+        ).format(
+            (
+                app_setting.app_plugin.name
+                if app_setting.app_plugin
+                else 'projectroles'
+            ),
+            app_setting.name,
+            app_setting.sodar_uuid,
+            exception,
+        )
+
     # Source Site API functions ------------------------------------------------
 
     def get_source_data(self, target_site, req_version=None):
@@ -245,19 +267,7 @@ class RemoteProjectAPI:
                 try:
                     sync_data = self._add_app_setting(sync_data, a, all_defs)
                 except Exception as ex:
-                    logger.error(
-                        'Failed to add app setting "{}.settings.{}" '
-                        '(UUID={}): {} '.format(
-                            (
-                                a.app_plugin.name
-                                if a.app_plugin
-                                else 'projectroles'
-                            ),
-                            a.name,
-                            a.sodar_uuid,
-                            ex,
-                        )
-                    )
+                    logger.error(self._get_app_setting_error(a, ex))
 
             # RemoteSite data to create objects on target site
             for site in remote_sites:
@@ -304,6 +314,13 @@ class RemoteProjectAPI:
                         }
                         sync_data = self._add_user(sync_data, role_as.user)
             sync_data['projects'][str(rp.project_uuid)] = project_data
+
+        # Sync USER scope settings
+        for a in AppSetting.objects.filter(project=None).exclude(user=None):
+            try:
+                sync_data = self._add_app_setting(sync_data, a, all_defs)
+            except Exception as ex:
+                logger.error(self._get_app_setting_error(a, ex))
         return sync_data
 
     def get_remote_data(self, site):
