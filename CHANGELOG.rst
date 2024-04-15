@@ -47,11 +47,14 @@ Changed
     - Update core API view media type and versioning (#1278, #1406)
     - Separate projectroles and remote sync API media types and versioning (#1278)
     - Rename base test classes for consistency (#1259)
+    - Prevent setting global user app settings on target site in ``AppSettingAPI`` (#1329)
 - **Sodarcache**
     - Rewrite REST API views (#498, #1389)
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
 - **Timeline**
     - Update ``get_object_link()`` usage for ``PluginObjectLink`` return data (#1343)
+- **Userprofile**
+    - Disable global user settings on target site in ``UserSettingsForm`` (#1329)
 
 Fixed
 -----

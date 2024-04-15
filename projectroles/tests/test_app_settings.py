@@ -516,6 +516,24 @@ class TestAppSettingAPI(
             app_settings.set(EXAMPLE_APP_NAME, n, True, project=self.project)
         self.assertEqual(AppSetting.objects.filter(name=n, value=1).count(), 0)
 
+    def test_set_user_global(self):
+        """Test setting global user setting on source site"""
+        n = 'user_email_additional'
+        v = 'additional@example.com'
+        self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
+        app_settings.set('projectroles', n, v, user=self.user)
+        self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 1)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_set_user_global_target(self):
+        """Test setting global user setting on target site"""
+        n = 'user_email_additional'
+        v = 'additional@example.com'
+        self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
+        with self.assertRaises(ValueError):
+            app_settings.set('projectroles', n, v, user=self.user)
+        self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
+
     def test_validate_boolean(self):
         """Test validate() with type BOOLEAN"""
         for setting in self.settings:

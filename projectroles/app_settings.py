@@ -22,6 +22,7 @@ APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 # Local constants
 APP_SETTING_GLOBAL_DEFAULT = False
@@ -44,7 +45,12 @@ APP_SETTING_SCOPE_ARGS = {
     APP_SETTING_SCOPE_SITE: {'project': False, 'user': False},
 }
 DELETE_SCOPE_ERR_MSG = 'Argument "{arg}" must be set for {scope} scope setting'
-OVERRIDE_ERR_MSG = 'Overriding global settings for remote projects not allowed'
+GLOBAL_PROJECT_ERR_MSG = (
+    'Overriding global settings for remote projects not allowed'
+)
+GLOBAL_USER_ERR_MSG = (
+    'Overriding global user settings on target site not allowed'
+)
 # TODO: Remove in v1.1 (see #1394)
 LOCAL_DEPRECATE_MSG = (
     'The "local" argument for app settings has been deprecated and will be '
@@ -540,10 +546,16 @@ class AppSettingAPI:
                     project.type, setting_name
                 )
             )
-        # Prevent updating global setting on remote project
-        # TODO: Prevent editing global USER settings (#1329)
-        if cls.get_global_value(s_def) and project and project.is_remote():
-            raise ValueError(OVERRIDE_ERR_MSG)
+        # Prevent updating global setting on target site
+        if cls.get_global_value(s_def):
+            if project and project.is_remote():
+                raise ValueError(GLOBAL_PROJECT_ERR_MSG)
+            if (
+                user
+                and not project
+                and settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+            ):
+                raise ValueError(GLOBAL_USER_ERR_MSG)
 
         try:  # Update existing setting
             q_kwargs = {'name': setting_name, 'project': project, 'user': user}

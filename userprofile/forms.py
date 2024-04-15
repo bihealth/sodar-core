@@ -1,10 +1,16 @@
 import json
 
 from django import forms
+from django.conf import settings
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.forms import SODARForm, SETTING_CUSTOM_VALIDATE_ERROR
+from projectroles.forms import (
+    SODARForm,
+    SETTING_CUSTOM_VALIDATE_MSG,
+    SETTING_DISABLE_LABEL,
+    SETTING_SOURCE_ONLY_MSG,
+)
 from projectroles.models import APP_SETTING_VAL_MAXLENGTH, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
 
@@ -14,6 +20,7 @@ app_settings = AppSettingAPI()
 
 # SODAR Constants
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 
@@ -55,31 +62,35 @@ class UserSettingsForm(SODARForm):
                     'label': s_val.get('label') or '{}.{}'.format(name, s_key),
                     'help_text': s_val.get('description'),
                 }
+                # Disable global user settings if on target site
+                if (
+                    app_settings.get_global_value(s_val)
+                    and settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+                ):
+                    setting_kwargs['label'] += ' ' + SETTING_DISABLE_LABEL
+                    setting_kwargs['help_text'] += ' ' + SETTING_SOURCE_ONLY_MSG
+                    setting_kwargs['disabled'] = True
 
                 if s_val['type'] == 'STRING':
-                    if 'options' in s_val:
-                        if callable(s_val['options']):
-                            self.fields[s_field] = forms.ChoiceField(
-                                choices=[
-                                    (
-                                        (str(value[0]), str(value[1]))
-                                        if isinstance(value, tuple)
-                                        else (str(value), str(value))
-                                    )
-                                    for value in s_val['options'](
-                                        user=self.user
-                                    )
-                                ],
-                                **setting_kwargs,
-                            )
-                        else:
-                            self.fields[s_field] = forms.ChoiceField(
-                                choices=[
-                                    (option, option)
-                                    for option in s_val['options']
-                                ],
-                                **setting_kwargs,
-                            )
+                    if 'options' in s_val and callable(s_val['options']):
+                        self.fields[s_field] = forms.ChoiceField(
+                            choices=[
+                                (
+                                    (str(value[0]), str(value[1]))
+                                    if isinstance(value, tuple)
+                                    else (str(value), str(value))
+                                )
+                                for value in s_val['options'](user=self.user)
+                            ],
+                            **setting_kwargs,
+                        )
+                    elif 'options' in s_val:
+                        self.fields[s_field] = forms.ChoiceField(
+                            choices=[
+                                (option, option) for option in s_val['options']
+                            ],
+                            **setting_kwargs,
+                        )
                     else:
                         self.fields[s_field] = forms.CharField(
                             max_length=APP_SETTING_VAL_MAXLENGTH,
@@ -133,7 +144,6 @@ class UserSettingsForm(SODARForm):
                 self.fields[s_field].label = self.get_app_setting_label(
                     plugin, self.fields[s_field].label
                 )
-                # TODO: Disable editing global USER settings (#1329)
 
     def clean(self):
         """Function for custom form validation and cleanup"""
@@ -188,7 +198,7 @@ class UserSettingsForm(SODARForm):
                 except Exception as ex:
                     self.add_error(
                         None,
-                        SETTING_CUSTOM_VALIDATE_ERROR.format(
+                        SETTING_CUSTOM_VALIDATE_MSG.format(
                             plugin=p_name, exception=ex
                         ),
                     )

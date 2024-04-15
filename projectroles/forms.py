@@ -62,10 +62,12 @@ PROJECT_TYPE_CHOICES = [
     ),
     (PROJECT_TYPE_PROJECT, get_display_name(PROJECT_TYPE_PROJECT, title=True)),
 ]
-SETTING_CUSTOM_VALIDATE_ERROR = (
+SETTING_DISABLE_LABEL = '[DISABLED]'
+SETTING_CUSTOM_VALIDATE_MSG = (
     'Exception in custom app setting validation for plugin "{plugin}": '
     '{exception}'
 )
+SETTING_SOURCE_ONLY_MSG = '[Only editable on source site]'
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -486,10 +488,8 @@ class ProjectForm(SODARModelForm):
             self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
         if self.app_settings.get_global_value(s_val):
             if self.instance.is_remote():
-                self.fields[s_field].label += ' [DISABLED]'
-                self.fields[
-                    s_field
-                ].help_text += ' [Only editable on source site]'
+                self.fields[s_field].label += ' ' + SETTING_DISABLE_LABEL
+                self.fields[s_field].help_text += ' ' + SETTING_SOURCE_ONLY_MSG
                 self.fields[s_field].disabled = True
             else:
                 self.fields[
@@ -586,7 +586,7 @@ class ProjectForm(SODARModelForm):
                             f_name = '.'.join(['settings', p_name, field])
                             errors.append((f_name, error))
                 except Exception as ex:
-                    err_msg = SETTING_CUSTOM_VALIDATE_ERROR.format(
+                    err_msg = SETTING_CUSTOM_VALIDATE_MSG.format(
                         plugin=p_name, exception=ex
                     )
                     errors.append((None, err_msg))
