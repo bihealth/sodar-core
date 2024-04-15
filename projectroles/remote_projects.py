@@ -1074,6 +1074,7 @@ class RemoteProjectAPI:
         user_name = ad.get('user_name')
         user_uuid = ad.get('user_uuid')
         project = None
+        obj = None
         skip_msg = 'Skipping setting "{}": '.format(ad['name'])
 
         # Get app plugin (skip the rest if not found on target server)
@@ -1124,9 +1125,8 @@ class RemoteProjectAPI:
                 )
                 set_data['status'] = 'skipped'
                 return
-            # Else update existing value by recreating object
+            # Else update existing value
             action_str = 'updating'
-            obj.delete()
         except ObjectDoesNotExist:
             action_str = 'creating'
 
@@ -1143,9 +1143,13 @@ class RemoteProjectAPI:
         if app_plugin:
             ad['app_plugin'] = app_plugin
 
-        # Create new app setting
-        obj = AppSetting(**ad)
         logger.info('{} setting {}'.format(action_str.capitalize(), str(obj)))
+        logger.debug('Setting data: {}'.format(ad))
+        if action_str == 'updating' and obj:  # Update existing setting object
+            for k, v in ad.items():
+                setattr(obj, k, v)
+        else:  # Create new setting object
+            obj = AppSetting(**ad)
         obj.save()
         set_data['status'] = action_str.replace('ing', 'ed')
 

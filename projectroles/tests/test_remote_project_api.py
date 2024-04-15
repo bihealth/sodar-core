@@ -2055,7 +2055,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
     def test_update_settings_user(self):
         """Test update with USER scope settings"""
         # Create target settings
-        self.make_setting(
+        target_global_setting = self.make_setting(
             plugin_name='projectroles',
             name='user_email_additional',
             setting_type='STRING',
@@ -2100,10 +2100,7 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
 
         self.assertEqual(AppSetting.objects.count(), 5)
         # Global setting should be updated
-        # TODO: Why do we create a new object here?
-        target_global_setting = AppSetting.objects.get(
-            app_plugin=None, name='user_email_additional'
-        )
+        target_global_setting.refresh_from_db()
         self.assertEqual(target_global_setting.value, 'source@example.com')
         # Local setting value should remain as is
         target_local_setting.refresh_from_db()
@@ -2115,9 +2112,6 @@ class TestSyncRemoteDataUpdate(SyncRemoteDataTestBase):
         self.assertEqual(
             remote_data['app_settings'][local_set_uuid]['status'], 'skipped'
         )
-
-    # TODO: Once object recreation is fixed, test to ensure no change in value
-    #       does not result in new object creation
 
     def test_update_revoke(self):
         """Test sync with existing project data and REVOKED access"""

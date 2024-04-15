@@ -52,6 +52,7 @@ Changed
     - Prevent setting global user app settings on target site in ``AppSettingAPI`` (#1329)
     - Move project app link logic in ``AppLinkContent`` (#1380)
     - Move user dropdown link logic in ``AppLinkContent`` (#1381, #1413)
+    - Do not recreate ``AppSetting`` objects on remote sync update (#1409)
 - **Sodarcache**
     - Rewrite REST API views (#498, #1389)
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
