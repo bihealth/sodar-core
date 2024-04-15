@@ -13,6 +13,7 @@ Added
 
 - **General**
     - Python v3.11 support (#1157)
+    - Flake8 rule in ``Makefile`` (#1387)
 - **Projectroles**
     - ``full_title`` field in ``ProjectSerializer`` and API views (#1314)
     - Custom password argument in ``createdevusers`` management command (#1393)
@@ -21,6 +22,7 @@ Added
     - Target user ``sodar_uuid`` updating in remote sync (#1316, #1317)
     - Update local user data in remote sync (#1407)
     - ``USER`` scope settings in remote sync (#1322)
+    - ``AppLinkContent`` utility class (#1380, #1381)
 
 Changed
 -------
@@ -48,6 +50,8 @@ Changed
     - Separate projectroles and remote sync API media types and versioning (#1278)
     - Rename base test classes for consistency (#1259)
     - Prevent setting global user app settings on target site in ``AppSettingAPI`` (#1329)
+    - Move project app link logic in ``AppLinkContent`` (#1380)
+    - Move user dropdown link logic in ``AppLinkContent`` (#1381, #1413)
 - **Sodarcache**
     - Rewrite REST API views (#498, #1389)
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)

@@ -127,10 +127,14 @@ class AppLinkContent:
             not link_names or url_name in link_names
         )
 
-    def _is_active_plugin(self, app_plugin, app_name, url_name):
+    def _is_active_plugin(self, app_plugin, request):
         """
         Check if current URL is active for a specific app plugin.
         """
+        if not getattr(request, 'resolver_match'):
+            return False
+        app_name = request.resolver_match.app_name
+        url_name = request.resolver_match.url_name
         if app_plugin.name.startswith(app_name) and url_name in [
             u.name for u in getattr(app_plugin, 'urls', [])
         ]:
@@ -205,11 +209,7 @@ class AppLinkContent:
                             ),
                             'label': ' '.join(plugin.title.split(' ')),
                             'icon': plugin.icon,
-                            'active': self._is_active_plugin(
-                                plugin,
-                                request.resolver_match.app_name,
-                                request.resolver_match.url_name,
-                            ),
+                            'active': self._is_active_plugin(plugin, request),
                         }
                     )
             # Add role editing link
@@ -306,8 +306,10 @@ class AppLinkContent:
         # Add site-wide apps links
         site_apps = get_active_plugins('site_app')
         for app in site_apps:
-            if not app.app_permission or request.user.has_perm(
-                app.app_permission
+            if (
+                not app.app_permission
+                or hasattr(request, 'user')
+                and request.user.has_perm(app.app_permission)
             ):
                 ret.append(
                     {
@@ -315,15 +317,11 @@ class AppLinkContent:
                         'url': reverse(app.entry_point_url_id),
                         'label': app.title,
                         'icon': app.icon,
-                        'active': self._is_active_plugin(
-                            app,
-                            request.resolver_match.app_name,
-                            request.resolver_match.url_name,
-                        ),
+                        'active': self._is_active_plugin(app, request),
                     }
                 )
         # Add admin link
-        if request.user.is_superuser:
+        if hasattr(request, 'user') and request.user.is_superuser:
             ret.append(
                 {
                     'name': 'admin',
@@ -334,7 +332,7 @@ class AppLinkContent:
                 }
             )
         # Add log out / sign in link
-        if request.user.is_authenticated:
+        if hasattr(request, 'user') and request.user.is_authenticated:
             ret.append(
                 {
                     'name': 'sign-out',
