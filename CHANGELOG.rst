@@ -61,6 +61,7 @@ Fixed
 - **Projectroles**
     - ``SODARUser.update_full_name()`` not working with existing name (#1371)
     - Legacy public guest access in child category breaks category updating (#1404)
+    - Incorrect DAL widget highlight colour after upgrade (#1412)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 
