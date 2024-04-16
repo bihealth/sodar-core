@@ -373,8 +373,9 @@ if ENABLE_LDAP:
     AUTH_LDAP_USER_FILTER = env.str(
         'AUTH_LDAP_USER_FILTER', '(sAMAccountName=%(user)s)'
     )
+    AUTH_LDAP_USER_SEARCH_BASE = env.str('AUTH_LDAP_USER_SEARCH_BASE', None)
     AUTH_LDAP_USER_SEARCH = LDAPSearch(
-        env.str('AUTH_LDAP_USER_SEARCH_BASE', None),
+        AUTH_LDAP_USER_SEARCH_BASE,
         ldap.SCOPE_SUBTREE,
         AUTH_LDAP_USER_FILTER,
     )
@@ -406,8 +407,11 @@ if ENABLE_LDAP:
         AUTH_LDAP2_USER_FILTER = env.str(
             'AUTH_LDAP2_USER_FILTER', '(sAMAccountName=%(user)s)'
         )
+        AUTH_LDAP2_USER_SEARCH_BASE = env.str(
+            'AUTH_LDAP2_USER_SEARCH_BASE', None
+        )
         AUTH_LDAP2_USER_SEARCH = LDAPSearch(
-            env.str('AUTH_LDAP2_USER_SEARCH_BASE', None),
+            AUTH_LDAP2_USER_SEARCH_BASE,
             ldap.SCOPE_SUBTREE,
             AUTH_LDAP2_USER_FILTER,
         )

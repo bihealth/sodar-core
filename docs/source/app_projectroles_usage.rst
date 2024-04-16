@@ -322,6 +322,17 @@ project permissions, or by a site admin using the ``batchupdateroles``
 management command. The latter supports multiple projects in one batch. It is
 also able to send invites to users who have not yet signed up on the site.
 
+User Status Checking
+--------------------
+
+An administrator can check status of external LDAP user accounts using the
+``checkusers`` management command. This will list accounts disabled or locked
+out of the LDAP server. Use the ``-h`` flag to see additional options.
+
+.. code-block:: console
+
+    $ ./manage.py checkusers
+
 
 Remote Projects
 ===============

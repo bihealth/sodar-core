@@ -23,6 +23,7 @@ Release Highlights
 - Add target site user UUID updating in remote sync
 - Add remote sync of existing target local users
 - Add remote sync of USER scope app settings
+- Add checkusers management command
 - Rewrite sodarcache REST API views
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations
@@ -205,11 +206,17 @@ Local User Details Updated on Target Site
     of local users must still be done manually: they will not be automatically
     created by remote sync.
 
-PROJECTROLES_HIDE_APP_LINKS Removed
------------------------------------
+Django Settings Changed
+-----------------------
 
-The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting, which was deprecated in
-v0.13, has been removed. Use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead.
+``AUTH_LDAP*_USER_SEARCH_BASE`` Added
+    The user search base values for primary and secondary LDAP servers have been
+    included as directly accessible Django settings. This is require for the
+    ``checkuser`` management command to work. It is recommended to update your
+    site's LDAP settings accordingly.
+``PROJECTROLES_HIDE_APP_LINKS`` Removed
+    The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting, which was deprecated in
+    v0.13, has been removed. Use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead.
 
 Base Test Classes Renamed
 -------------------------

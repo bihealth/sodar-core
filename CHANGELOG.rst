@@ -23,6 +23,7 @@ Added
     - Update local user data in remote sync (#1407)
     - ``USER`` scope settings in remote sync (#1322)
     - ``AppLinkContent`` utility class (#1380, #1381)
+    - ``checkusers`` management command (#1410)
 
 Changed
 -------
@@ -34,6 +35,7 @@ Changed
     - Upgrade general Python dependencies (#1374)
     - Reformat with black v24.3.0 (#1374)
     - Update download URL in ``get_chromedriver_url.py`` (#1385)
+    - Add ``AUTH_LDAP_USER_SEARCH_BASE`` as a Django setting (#1410)
 - **Filesfolders**
     - Add migration required by Django v4.2 (#1396)
     - Add app specific media type and versioning (#1278)
