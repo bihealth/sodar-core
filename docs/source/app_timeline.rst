@@ -27,3 +27,4 @@ the :ref:`timeline usage documentation <app_timeline_usage>`.
    Installation <app_timeline_install>
    Usage <app_timeline_usage>
    Django API Documentation <app_timeline_api_django>
+   REST API Documentation <app_timeline_api_rest>

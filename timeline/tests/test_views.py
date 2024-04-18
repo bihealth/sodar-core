@@ -10,7 +10,7 @@ from timeline.tests.test_models import (
     TimelineEventTestBase,
     TimelineEventMixin,
     TimelineEventStatusMixin,
-    TEST_EXTRA_DATA,
+    EXTRA_DATA,
 )
 
 
@@ -58,7 +58,7 @@ class ViewTestBase(
             user=self.user,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
 
 
@@ -127,7 +127,7 @@ class TestSiteTimelineView(ViewTestBase):
             user=self.user,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
 
     def test_get(self):
@@ -152,7 +152,7 @@ class TestSiteObjectTimelineView(ViewTestBase):
             user=self.user,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
         self.obj_ref = self.event_site.add_object(
             obj=self.user, label='user', name=self.user.username
@@ -188,7 +188,7 @@ class TestAdminTimelineView(ViewTestBase):
             user=self.user,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
 
     def test_get(self):

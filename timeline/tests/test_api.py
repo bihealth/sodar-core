@@ -28,7 +28,7 @@ from timeline.tests.test_models import (
     TimelineEventTestBase,
     TimelineEventMixin,
     TimelineEventStatusMixin,
-    TEST_EXTRA_DATA,
+    EXTRA_DATA,
 )
 
 
@@ -80,7 +80,7 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
 
         self.assertEqual(TimelineEvent.objects.all().count(), 1)
@@ -95,7 +95,7 @@ class TestTimelineAPI(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': TEST_EXTRA_DATA,
+            'extra_data': EXTRA_DATA,
             'sodar_uuid': event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(event), expected)
@@ -122,7 +122,7 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
             status_type='OK',
             status_desc='OK',
             status_extra_data={},
@@ -141,7 +141,7 @@ class TestTimelineAPI(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': TEST_EXTRA_DATA,
+            'extra_data': EXTRA_DATA,
             'sodar_uuid': event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(event), expected_event)
@@ -168,7 +168,7 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
             status_type='INIT',
             status_desc=custom_init_desc,
         )
@@ -198,7 +198,7 @@ class TestTimelineAPI(
             user=None,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
 
         self.assertEqual(TimelineEvent.objects.all().count(), 1)
@@ -213,7 +213,7 @@ class TestTimelineAPI(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': TEST_EXTRA_DATA,
+            'extra_data': EXTRA_DATA,
             'sodar_uuid': event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(event), expected)
@@ -229,7 +229,7 @@ class TestTimelineAPI(
             user=AnonymousUser(),
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
 
         self.assertEqual(TimelineEvent.objects.all().count(), 1)
@@ -248,7 +248,7 @@ class TestTimelineAPI(
                 user=self.user_owner,
                 event_name='test_event',
                 description='description',
-                extra_data=TEST_EXTRA_DATA,
+                extra_data=EXTRA_DATA,
             )
 
         self.assertEqual(TimelineEvent.objects.all().count(), 0)
@@ -267,7 +267,7 @@ class TestTimelineAPI(
                 event_name='test_event',
                 description='description',
                 status_type='NON-EXISTING STATUS TYPE',
-                extra_data=TEST_EXTRA_DATA,
+                extra_data=EXTRA_DATA,
             )
 
         self.assertEqual(TimelineEvent.objects.all().count(), 0)
@@ -283,14 +283,14 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
         temp_obj = self.project.get_owner()
         ref = event.add_object(
             obj=temp_obj,
             label='obj',
             name='assignment',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
 
         self.assertEqual(TimelineEventObjectRef.objects.all().count(), 1)
@@ -301,7 +301,7 @@ class TestTimelineAPI(
             'name': 'assignment',
             'object_model': temp_obj.__class__.__name__,
             'object_uuid': temp_obj.sodar_uuid,
-            'extra_data': TEST_EXTRA_DATA,
+            'extra_data': EXTRA_DATA,
             'sodar_uuid': ref.sodar_uuid,
         }
         self.assertEqual(model_to_dict(ref), expected)
@@ -314,7 +314,7 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
         event_classified = self.timeline.add_event(
             project=self.project,
@@ -323,7 +323,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='description',
             classified=True,
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
 
         events = self.timeline.get_project_events(
@@ -395,7 +395,7 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='description',
-            extra_data=TEST_EXTRA_DATA,
+            extra_data=EXTRA_DATA,
         )
         self.assertEqual(
             self.timeline.get_event_description(event), event.description

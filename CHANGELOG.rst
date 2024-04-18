@@ -26,6 +26,8 @@ Added
     - ``checkusers`` management command (#1410)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
+    - REST API views (#1350)
+    - ``get_project()`` helpers in ``TimelineEvent`` and ``TimelineEventObjectRef`` (#1350)
 
 Changed
 -------

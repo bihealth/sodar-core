@@ -20,6 +20,7 @@ Release Highlights
 - Add app specific and semantic REST API versioning
 - Add REST API versioning independent from repo/site versions
 - Add Python v3.11 support
+- Add timeline REST API
 - Add target site user UUID updating in remote sync
 - Add remote sync of existing target local users
 - Add remote sync of USER scope app settings
@@ -113,6 +114,8 @@ Projectroles Remote Sync (only used internally by SODAR Core sites)
     ``application/vnd.bihealth.sodar-core.filesfolders+json``
 :ref:`Sodarcache <app_sodarcache_api_rest>`
     ``application/vnd.bihealth.sodar-core.sodarcache+json``
+:ref:`Timeline <app_timeline_api_rest>`
+    ``application/vnd.bihealth.sodar-core.timeline+json``
 
 If you have previously used the ``SODAR_API_*`` accept header versioning, you
 should update your own views to the new scheme. To do this, you need to provide

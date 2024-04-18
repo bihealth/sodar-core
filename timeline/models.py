@@ -171,6 +171,10 @@ class TimelineEvent(models.Model):
             '{}pk'.format('-' if reverse else '')
         )
 
+    def get_project(self):
+        """Return the project for the event"""
+        return self.project
+
     def add_object(self, obj, label, name, extra_data=None):
         """
         Add object reference to an event.
@@ -292,6 +296,10 @@ class TimelineEventObjectRef(models.Model):
         return 'TimelineEventObjectRef({})'.format(
             ', '.join(repr(v) for v in values)
         )
+
+    def get_project(self):
+        """Return the project for the event"""
+        return self.event.project
 
 
 class TimelineEventStatus(models.Model):

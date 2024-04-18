@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from timeline import views, views_ajax
+from timeline import views, views_ajax, views_api
 
 
 app_name = 'timeline'
@@ -69,4 +69,25 @@ urls_ajax = [
     ),
 ]
 
-urlpatterns = urls_ui_project + urls_ui_site + urls_ui_admin + urls_ajax
+# REST API views
+urls_api = [
+    path(
+        route='api/list/<uuid:project>',
+        view=views_api.ProjectTimelineEventListAPIView.as_view(),
+        name='api_list_project',
+    ),
+    path(
+        route='api/list/site',
+        view=views_api.SiteTimelineEventListAPIView.as_view(),
+        name='api_list_site',
+    ),
+    path(
+        route='api/retrieve/<uuid:timelineevent>',
+        view=views_api.TimelineEventRetrieveAPIView.as_view(),
+        name='api_retrieve',
+    ),
+]
+
+urlpatterns = (
+    urls_ui_project + urls_ui_site + urls_ui_admin + urls_ajax + urls_api
+)
