@@ -905,8 +905,8 @@ with the name of your application as specified in its ``ProjectAppPlugin``.
 
 .. code-block:: python
 
-    from timeline.models import ProjectEvent
-    ProjectEvent.objects.filter(app='app_name').delete()
+    from timeline.models import TimelineEvent
+    TimelineEvent.objects.filter(app='app_name').delete()
 
 Next you should delete existing database objects defined by the models in your
 app. This is also most easily done via the Django shell. Example:

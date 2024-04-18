@@ -7,13 +7,13 @@ from django.urls import reverse
 from projectroles.tests.test_permissions import ProjectPermissionTestBase
 
 from timeline.tests.test_models import (
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
 )
 
 
 class TestProjectEventDetailAjaxView(
-    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for ProjectEventDetailAjaxView permissions"""
 
@@ -25,7 +25,7 @@ class TestProjectEventDetailAjaxView(
         self.make_event_status(self.event, 'OK')
         self.url = reverse(
             'timeline:ajax_detail_project',
-            kwargs={'projectevent': self.event.sodar_uuid},
+            kwargs={'timelineevent': self.event.sodar_uuid},
         )
 
     def test_get(self):
@@ -116,7 +116,7 @@ class TestProjectEventDetailAjaxView(
 
 
 class TestSiteEventDetailAjaxView(
-    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for SiteEventDetailAjaxView permissions"""
 
@@ -129,7 +129,7 @@ class TestSiteEventDetailAjaxView(
         self.regular_user = self.make_user('regular_user')
         self.url = reverse(
             'timeline:ajax_detail_site',
-            kwargs={'projectevent': self.event.sodar_uuid},
+            kwargs={'timelineevent': self.event.sodar_uuid},
         )
 
     def test_get(self):
@@ -160,7 +160,7 @@ class TestSiteEventDetailAjaxView(
 
 
 class TestProjectEventExtraAjaxView(
-    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for ProjectEventExtraAjaxView permissions"""
 
@@ -172,7 +172,7 @@ class TestProjectEventExtraAjaxView(
         self.make_event_status(self.event, 'OK')
         self.url = reverse(
             'timeline:ajax_extra_project',
-            kwargs={'projectevent': self.event.sodar_uuid},
+            kwargs={'timelineevent': self.event.sodar_uuid},
         )
 
     def test_get(self):
@@ -263,7 +263,7 @@ class TestProjectEventExtraAjaxView(
 
 
 class TestSiteEventExtraAjaxView(
-    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for SiteEventExtraAjaxView permissions"""
 
@@ -280,7 +280,7 @@ class TestSiteEventExtraAjaxView(
         self.regular_user = self.make_user('regular_user')
         self.url = reverse(
             'timeline:ajax_extra_site',
-            kwargs={'projectevent': self.event.sodar_uuid},
+            kwargs={'timelineevent': self.event.sodar_uuid},
         )
 
     def test_get(self):
@@ -310,7 +310,7 @@ class TestSiteEventExtraAjaxView(
 
 
 class TestEventStatusExtraAjaxViewProject(
-    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for EventStatusExtraAjaxView permissions with a project event"""
 
@@ -391,7 +391,7 @@ class TestEventStatusExtraAjaxViewProject(
 
 
 class TestEventStatusExtraAjaxViewSite(
-    ProjectEventMixin, ProjectEventStatusMixin, ProjectPermissionTestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectPermissionTestBase
 ):
     """Tests for EventStatusExtraAjaxView permissions with a site event"""
 

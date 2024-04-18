@@ -11,7 +11,7 @@ from projectroles.plugins import (
 from projectroles.utils import get_display_name
 
 from timeline.api import TimelineAPI
-from timeline.models import ProjectEvent
+from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 
 
@@ -73,7 +73,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         return {
             'event_count': {
                 'label': 'Events',
-                'value': ProjectEvent.objects.all().count(),
+                'value': TimelineEvent.objects.all().count(),
             }
         }
 
@@ -106,7 +106,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         """
         items = []
         if not search_type or search_type == 'timeline':
-            events = ProjectEvent.objects.find(search_terms, keywords)
+            events = TimelineEvent.objects.find(search_terms, keywords)
         if events:
             items = [
                 event

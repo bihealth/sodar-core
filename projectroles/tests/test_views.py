@@ -16,10 +16,10 @@ from django.utils import timezone
 from test_plus.test import TestCase
 
 # Timeline dependency
-from timeline.models import ProjectEvent
+from timeline.models import TimelineEvent
 from timeline.tests.test_models import (
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
 )
 
 from projectroles.app_settings import AppSettingAPI
@@ -270,8 +270,8 @@ class TestProjectSearchResultsView(
     ProjectMixin,
     RoleAssignmentMixin,
     ViewTestBase,
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
 ):
     """Tests for ProjectSearchResultsView"""
 
@@ -1409,11 +1409,11 @@ class TestProjectArchiveView(
 
     @classmethod
     def _get_tl(cls):
-        return ProjectEvent.objects.filter(event_name='project_archive')
+        return TimelineEvent.objects.filter(event_name='project_archive')
 
     @classmethod
     def _get_tl_un(cls):
-        return ProjectEvent.objects.filter(event_name='project_unarchive')
+        return TimelineEvent.objects.filter(event_name='project_unarchive')
 
     def _get_alerts(self):
         return self.app_alert_model.objects.filter(alert_name='project_archive')
@@ -4323,7 +4323,7 @@ class TestProjectInviteAcceptView(
         self.make_assignment(self.project, invited_user, self.role_guest)
         self.assertTrue(invite.active)
         self.assertIsNone(
-            ProjectEvent.objects.filter(event_name='invite_accept').first()
+            TimelineEvent.objects.filter(event_name='invite_accept').first()
         )
 
         with self.login(invited_user):
@@ -4339,7 +4339,7 @@ class TestProjectInviteAcceptView(
         self.assertFalse(invite.active)
         # No timeline event should be created
         self.assertIsNone(
-            ProjectEvent.objects.filter(event_name='invite_accept').first()
+            TimelineEvent.objects.filter(event_name='invite_accept').first()
         )
 
 
@@ -4548,7 +4548,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, ViewTestBase):
         """Test RemoteSiteCreateView POST as source site"""
         self.assertEqual(
             0,
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='target_site_create'
             ).count(),
         )
@@ -4578,7 +4578,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, ViewTestBase):
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
 
-        tl_event = ProjectEvent.objects.filter(
+        tl_event = TimelineEvent.objects.filter(
             event_name='target_site_create'
         ).first()
         self.assertEqual(tl_event.event_name, 'target_site_create')
@@ -4590,7 +4590,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, ViewTestBase):
         """Test POST as target"""
         self.assertEqual(
             0,
-            ProjectEvent.objects.filter(event_name='source_site_set').count(),
+            TimelineEvent.objects.filter(event_name='source_site_set').count(),
         )
         self.assertEqual(RemoteSite.objects.all().count(), 0)
         values = {
@@ -4619,7 +4619,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, ViewTestBase):
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
 
-        tl_event = ProjectEvent.objects.filter(
+        tl_event = TimelineEvent.objects.filter(
             event_name='source_site_set'
         ).first()
         self.assertEqual(tl_event.event_name, 'source_site_set')
@@ -4695,7 +4695,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, ViewTestBase):
         """Test RemoteSiteUpdateView POST as source"""
         self.assertEqual(
             0,
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='target_site_update'
             ).count(),
         )
@@ -4725,7 +4725,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, ViewTestBase):
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
 
-        tl_event = ProjectEvent.objects.filter(
+        tl_event = TimelineEvent.objects.filter(
             event_name='target_site_update'
         ).first()
         self.assertEqual(tl_event.event_name, 'target_site_update')
@@ -4800,7 +4800,7 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, ViewTestBase):
         """Test RemoteSiteDeleteView POST"""
         self.assertEqual(
             0,
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='target_site_delete'
             ).count(),
         )
@@ -4808,7 +4808,7 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, ViewTestBase):
         with self.login(self.user):
             response = self.client.post(self.url)
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
-        tl_event = ProjectEvent.objects.filter(
+        tl_event = TimelineEvent.objects.filter(
             event_name='target_site_delete'
         ).first()
         self.assertEqual(tl_event.event_name, 'target_site_delete')
@@ -4857,7 +4857,7 @@ class TestRemoteProjectBatchUpdateView(
             response = self.client.post(self.url, values)
         self.assertEqual(
             0,
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='remote_access_update'
             ).count(),
         )
@@ -4881,7 +4881,7 @@ class TestRemoteProjectBatchUpdateView(
 
         self.assertEqual(
             0,
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='remote_access_update'
             ).count(),
         )
@@ -4890,7 +4890,7 @@ class TestRemoteProjectBatchUpdateView(
         """Test POST to create new RemoteProject"""
         self.assertEqual(
             0,
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='remote_batch_update'
             ).count(),
         )
@@ -4915,7 +4915,7 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
-        tl_event = ProjectEvent.objects.filter(
+        tl_event = TimelineEvent.objects.filter(
             event_name='remote_batch_update'
         ).first()
         self.assertEqual(tl_event.event_name, 'remote_batch_update')
@@ -4924,7 +4924,7 @@ class TestRemoteProjectBatchUpdateView(
         """Test POST to update existing RemoteProject"""
         self.assertEqual(
             0,
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='remote_batch_update'
             ).count(),
         )
@@ -4955,7 +4955,7 @@ class TestRemoteProjectBatchUpdateView(
         self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
         self.assertEqual(rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
 
-        tl_event = ProjectEvent.objects.filter(
+        tl_event = TimelineEvent.objects.filter(
             event_name='remote_batch_update'
         ).first()
         self.assertEqual(tl_event.event_name, 'remote_batch_update')

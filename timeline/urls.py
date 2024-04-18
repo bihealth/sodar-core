@@ -43,22 +43,22 @@ urls_ui_admin = [
 # Ajax API views
 urls_ajax = [
     path(
-        route='ajax/detail/<uuid:projectevent>',
+        route='ajax/detail/<uuid:timelineevent>',
         view=views_ajax.ProjectEventDetailAjaxView.as_view(),
         name='ajax_detail_project',
     ),
     path(
-        route='ajax/detail/site/<uuid:projectevent>',
+        route='ajax/detail/site/<uuid:timelineevent>',
         view=views_ajax.SiteEventDetailAjaxView.as_view(),
         name='ajax_detail_site',
     ),
     path(
-        route='ajax/extra/<uuid:projectevent>',
+        route='ajax/extra/<uuid:timelineevent>',
         view=views_ajax.ProjectEventExtraAjaxView.as_view(),
         name='ajax_extra_project',
     ),
     path(
-        route='ajax/extra/site/<uuid:projectevent>',
+        route='ajax/extra/site/<uuid:timelineevent>',
         view=views_ajax.SiteEventExtraAjaxView.as_view(),
         name='ajax_extra_site',
     ),

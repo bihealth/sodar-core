@@ -27,6 +27,7 @@ Release Highlights
 - Rewrite sodarcache REST API views
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations
+- Rename timeline app models
 - Rename base test classes
 - Remove Python v3.8 support
 - Remove SAML SSO support
@@ -152,6 +153,18 @@ in this release:
     The entire sodarcache REST API has been rewritten to conform to our general
     REST API conventions regarding URLs and return data. See the API
     documentation and refactor your client code accordingly.
+
+Timeline Models Renamed
+-----------------------
+
+Models in the timeline app have been renamed from ``ProjectEvent*`` to
+``TimelineEvent*``. This is done to better reflect the fact that events are not
+necessarily tied to projects.
+
+If your site only accesses these models through ``TimelineAPI`` and
+``TimelineAPI.get_model()``, which is the strongly recommended way, no changes
+should be required.
+
 
 AppSettingAPI Plugin Name Arguments Updated
 -------------------------------------------

@@ -10,12 +10,12 @@
     {% get_timestamp event as event_time %}
     {% if event.project %}
       <a class="sodar-tl-link-detail text-primary"
-         data-url="{% url 'timeline:ajax_detail_project' projectevent=event.sodar_uuid %}">
+         data-url="{% url 'timeline:ajax_detail_project' timelineevent=event.sodar_uuid %}">
         {{ event_time }}
       </a>
     {% else %}
       <a class="sodar-tl-link-detail text-primary"
-         data-url="{% url 'timeline:ajax_detail_site' projectevent=event.sodar_uuid %}">
+         data-url="{% url 'timeline:ajax_detail_site' timelineevent=event.sodar_uuid %}">
         {{ event_time }}
       </a>
     {% endif %}
@@ -46,14 +46,14 @@
     {% if not details_card_mode and event.extra_data %}
       {% if event.project and can_view_extra_data %}
         <a class="sodar-tl-link-extra-data text-primary pull-right"
-           data-url="{% url 'timeline:ajax_extra_project' projectevent=event.sodar_uuid %}">
+           data-url="{% url 'timeline:ajax_extra_project' timelineevent=event.sodar_uuid %}">
           <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
              data-toggle="tooltip" data-placement="right">
           </i>
         </a>
       {% elif not event.project and user.is_superuser %}
         <a class="sodar-tl-link-extra-data text-primary pull-right"
-           data-url="{% url 'timeline:ajax_extra_site' projectevent=event.sodar_uuid %}">
+           data-url="{% url 'timeline:ajax_extra_site' timelineevent=event.sodar_uuid %}">
           <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
              data-toggle="tooltip" data-placement="right">
           </i>

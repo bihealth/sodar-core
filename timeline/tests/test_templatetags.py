@@ -8,14 +8,14 @@ from djangoplugins.models import Plugin
 # Projectroles dependency
 from projectroles.plugins import get_app_plugin, get_backend_api
 
-from timeline.models import ProjectEvent, DEFAULT_MESSAGES
+from timeline.models import TimelineEvent, DEFAULT_MESSAGES
 from timeline.templatetags import timeline_tags as tags
 from timeline.tests.test_api import TimelineAPIMixin
 from timeline.tests.test_models import (
-    ProjectEventTestBase,
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
-    ProjectEventObjectRefMixin,
+    TimelineEventTestBase,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    TimelineEventObjectRefMixin,
 )
 
 
@@ -26,10 +26,10 @@ TEST_EVENT_DESC = 'test event'
 
 class TestTemplateTags(
     TimelineAPIMixin,
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
-    ProjectEventObjectRefMixin,
-    ProjectEventTestBase,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    TimelineEventObjectRefMixin,
+    TimelineEventTestBase,
 ):
     """Tests for timeline template tags"""
 
@@ -86,7 +86,7 @@ class TestTemplateTags(
 
     def test_get_details_events(self):
         """Test get_details_events()"""
-        self.assertEqual(ProjectEvent.objects.count(), 1)
+        self.assertEqual(TimelineEvent.objects.count(), 1)
         self.assertEqual(len(tags.get_details_events(self.project)), 1)
         # Create 5 additional events for a total of 6
         for _ in range(5):
@@ -102,7 +102,7 @@ class TestTemplateTags(
                 status_type='OK',
                 description=DEFAULT_MESSAGES['OK'],
             )
-        self.assertEqual(ProjectEvent.objects.count(), 6)
+        self.assertEqual(TimelineEvent.objects.count(), 6)
         self.assertEqual(len(tags.get_details_events(self.project)), 5)
 
     def test_get_details_events_classified_disabled(self):
@@ -121,7 +121,7 @@ class TestTemplateTags(
             status_type='OK',
             description=DEFAULT_MESSAGES['OK'],
         )
-        self.assertEqual(ProjectEvent.objects.count(), 2)
+        self.assertEqual(TimelineEvent.objects.count(), 2)
         self.assertEqual(len(tags.get_details_events(self.project)), 1)
 
     def test_get_details_events_classified_enabled(self):

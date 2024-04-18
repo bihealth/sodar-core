@@ -16,8 +16,8 @@ from projectroles.plugins import get_backend_api
 from projectroles.tests.test_ui import UITestBase
 
 from timeline.tests.test_models import (
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
 )
 
 
@@ -31,7 +31,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestProjectListView(
-    ProjectEventMixin, ProjectEventStatusMixin, UITestBase
+    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
 ):
     """Tests for the timeline project list view UI"""
 
@@ -147,7 +147,9 @@ class TestProjectListView(
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
 
-class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
+class TestSiteListView(
+    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
+):
     """Tests for the timeline site-wide list view UI"""
 
     def setUp(self):
@@ -243,7 +245,9 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
             pass
 
 
-class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
+class TestAdminListView(
+    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
+):
     """Test for the timeline view of all events in UI"""
 
     def setUp(self):
@@ -294,7 +298,7 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
         self.assertIsNotNone(self.selenium.find_element(By.CLASS_NAME, 'badge'))
 
 
-class TestModals(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
+class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
     """Test UI of modals in timeline event list"""
 
     def setUp(self):
@@ -430,7 +434,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
         btn.click()
 
 
-class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, UITestBase):
+class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
     """Tests for the project search UI functionalities"""
 
     def setUp(self):

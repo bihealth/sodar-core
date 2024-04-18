@@ -14,11 +14,11 @@ from projectroles.tests.test_views import (
 from timeline.models import DEFAULT_MESSAGES
 from timeline.views_ajax import EventExtraDataMixin
 from timeline.templatetags.timeline_tags import get_status_style
-from timeline.tests.test_models import ProjectEventMixin
+from timeline.tests.test_models import TimelineEventMixin
 
 
 class TimelineAjaxViewTestBase(
-    ProjectMixin, RoleAssignmentMixin, ProjectEventMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, TimelineEventMixin, ViewTestBase
 ):
     """Base class for timeline Ajax API view tests"""
 
@@ -59,7 +59,7 @@ class TestProjectEventDetailAjaxView(TimelineAjaxViewTestBase):
         )
         self.url = reverse(
             'timeline:ajax_detail_project',
-            kwargs={'projectevent': self.event.sodar_uuid},
+            kwargs={'timelineevent': self.event.sodar_uuid},
         )
 
     def test_get(self):
@@ -130,7 +130,7 @@ class TestProjectEventExtraAjaxView(TimelineAjaxViewTestBase):
         )
         self.url = reverse(
             'timeline:ajax_extra_project',
-            kwargs={'projectevent': self.event.sodar_uuid},
+            kwargs={'timelineevent': self.event.sodar_uuid},
         )
 
     def test_get(self):
@@ -178,7 +178,7 @@ class TestSiteEventDetailAjaxView(TimelineAjaxViewTestBase):
             response = self.client.get(
                 reverse(
                     'timeline:ajax_detail_site',
-                    kwargs={'projectevent': self.event.sodar_uuid},
+                    kwargs={'timelineevent': self.event.sodar_uuid},
                 ),
             )
         self.assertEqual(response.status_code, 200)
@@ -241,7 +241,7 @@ class TestSiteEventExtraAjaxView(TimelineAjaxViewTestBase):
             response = self.client.get(
                 reverse(
                     'timeline:ajax_extra_site',
-                    kwargs={'projectevent': self.event.sodar_uuid},
+                    kwargs={'timelineevent': self.event.sodar_uuid},
                 ),
             )
         self.assertEqual(response.status_code, 200)

@@ -18,14 +18,14 @@ from projectroles.tests.test_models import (
 from filesfolders.tests.test_models import FolderMixin
 
 from timeline.tests.test_models import (
-    ProjectEventTestBase,
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventTestBase,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
 )
 from timeline.models import (
-    ProjectEvent,
-    ProjectEventStatus,
-    ProjectEventObjectRef,
+    TimelineEvent,
+    TimelineEventStatus,
+    TimelineEventObjectRef,
     DEFAULT_MESSAGES,
 )
 from timeline.templatetags import timeline_tags as tags
@@ -55,11 +55,11 @@ class TimelineAPIMixin:
 
 class TestTimelineAPI(
     TimelineAPIMixin,
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
     RemoteSiteMixin,
     FolderMixin,
-    ProjectEventTestBase,
+    TimelineEventTestBase,
 ):
     def setUp(self):
         super().setUp()
@@ -70,8 +70,8 @@ class TestTimelineAPI(
 
     def test_add_event(self):
         """Test adding an event"""
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
         event = self.timeline.add_event(
             project=self.project,
@@ -82,8 +82,8 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        self.assertEqual(ProjectEvent.objects.all().count(), 1)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 1)  # Init
+        self.assertEqual(TimelineEvent.objects.all().count(), 1)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 1)  # Init
 
         expected = {
             'id': event.pk,
@@ -112,8 +112,8 @@ class TestTimelineAPI(
 
     def test_add_event_with_status(self):
         """Test adding an event with status"""
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
         event = self.timeline.add_event(
             project=self.project,
@@ -128,8 +128,8 @@ class TestTimelineAPI(
         )
 
         status = event.get_status()
-        self.assertEqual(ProjectEvent.objects.all().count(), 1)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 2)
+        self.assertEqual(TimelineEvent.objects.all().count(), 1)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 2)
 
         expected_event = {
             'id': event.pk,
@@ -158,8 +158,8 @@ class TestTimelineAPI(
     def test_add_event_custom_init(self):
         """Test adding an event with custom INIT status"""
         custom_init_desc = 'Custom init'
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
         event = self.timeline.add_event(
             project=self.project,
@@ -172,8 +172,8 @@ class TestTimelineAPI(
             status_desc=custom_init_desc,
         )
 
-        self.assertEqual(ProjectEvent.objects.all().count(), 1)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 1)  # Init
+        self.assertEqual(TimelineEvent.objects.all().count(), 1)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 1)  # Init
 
         status = event.get_status()
         expected_status = {
@@ -188,8 +188,8 @@ class TestTimelineAPI(
 
     def test_add_event_no_user(self):
         """Test adding an event with no user"""
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
         event = self.timeline.add_event(
             project=self.project,
@@ -200,8 +200,8 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        self.assertEqual(ProjectEvent.objects.all().count(), 1)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 1)
+        self.assertEqual(TimelineEvent.objects.all().count(), 1)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 1)
 
         expected = {
             'id': event.pk,
@@ -219,8 +219,8 @@ class TestTimelineAPI(
 
     def test_add_event_anon_user(self):
         """Test adding an event with AnonymousUser"""
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
         event = self.timeline.add_event(
             project=self.project,
@@ -231,14 +231,14 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        self.assertEqual(ProjectEvent.objects.all().count(), 1)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 1)
+        self.assertEqual(TimelineEvent.objects.all().count(), 1)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 1)
         self.assertIsNone(event.user)
 
     def test_add_event_invalid_app(self):
         """Test adding an event with an invalid app name (should fail)"""
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
         with self.assertRaises(ValueError):
             self.timeline.add_event(
@@ -250,13 +250,13 @@ class TestTimelineAPI(
                 extra_data={'test_key': 'test_val'},
             )
 
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
     def test_add_event_invalid_status(self):
         """Test adding an event with an invalid status type"""
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
         with self.assertRaises(ValueError):
             self.timeline.add_event(
@@ -269,12 +269,12 @@ class TestTimelineAPI(
                 extra_data={'test_key': 'test_val'},
             )
 
-        self.assertEqual(ProjectEvent.objects.all().count(), 0)
-        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+        self.assertEqual(TimelineEvent.objects.all().count(), 0)
+        self.assertEqual(TimelineEventStatus.objects.all().count(), 0)
 
     def test_add_object(self):
         """Test adding an object to an event"""
-        self.assertEqual(ProjectEventObjectRef.objects.all().count(), 0)
+        self.assertEqual(TimelineEventObjectRef.objects.all().count(), 0)
 
         event = self.timeline.add_event(
             project=self.project,
@@ -292,7 +292,7 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        self.assertEqual(ProjectEventObjectRef.objects.all().count(), 1)
+        self.assertEqual(TimelineEventObjectRef.objects.all().count(), 1)
         expected = {
             'id': ref.pk,
             'event': event.pk,

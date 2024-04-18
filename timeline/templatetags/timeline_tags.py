@@ -9,7 +9,7 @@ from djangoplugins.models import Plugin
 from projectroles.plugins import ProjectAppPluginPoint
 
 from timeline.api import TimelineAPI
-from timeline.models import ProjectEvent
+from timeline.models import TimelineEvent
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def get_timestamp(event):
     """Return printable timestamp of event in local timezone"""
     try:
         return localtime(event.get_timestamp()).strftime('%Y-%m-%d %H:%M:%S')
-    except Exception:  # Handle error cases where ProjectEventStatus is missing
+    except Exception:  # Handle error cases where TimelineEventStatus is missing
         return 'N/A'
 
 
@@ -51,7 +51,7 @@ def get_event_description(event, plugin_lookup, request=None):
 def get_details_events(project, view_classified=False):
     """Return recent events for card on project details page"""
     c_kwargs = {'classified': False} if not view_classified else {}
-    return ProjectEvent.objects.filter(project=project, **c_kwargs).order_by(
+    return TimelineEvent.objects.filter(project=project, **c_kwargs).order_by(
         '-pk'
     )[:5]
 

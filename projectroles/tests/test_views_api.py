@@ -16,7 +16,7 @@ from django.utils import timezone
 from test_plus.test import APITestCase
 
 # Timeline dependency
-from timeline.models import ProjectEvent
+from timeline.models import TimelineEvent
 
 from projectroles import views_api
 from projectroles.app_settings import AppSettingAPI
@@ -2827,7 +2827,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test TestProjectSettingSetAPIView POST with PROJECT scope setting"""
         self.assertEqual(AppSetting.objects.count(), 0)
         self.assertIsNone(
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='app_setting_set_api'
             ).first()
         )
@@ -2843,7 +2843,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         self.assertEqual(AppSetting.objects.count(), 1)
         obj = AppSetting.objects.get(name=setting_name, project=self.project)
         self.assertEqual(obj.get_value(), 'value')
-        tl_event = ProjectEvent.objects.filter(
+        tl_event = TimelineEvent.objects.filter(
             event_name='app_setting_set_api'
         ).first()
         self.assertIsNotNone(tl_event)
@@ -3078,7 +3078,7 @@ class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test UserSettingSetAPIView POST"""
         self.assertEqual(AppSetting.objects.count(), 0)
         self.assertIsNone(
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='app_setting_set_api'
             ).first()
         )
@@ -3095,7 +3095,7 @@ class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
         obj = AppSetting.objects.get(name=setting_name, user=self.user)
         self.assertEqual(obj.get_value(), 'value')
         self.assertIsNone(
-            ProjectEvent.objects.filter(
+            TimelineEvent.objects.filter(
                 event_name='app_setting_set_api'
             ).first()
         )

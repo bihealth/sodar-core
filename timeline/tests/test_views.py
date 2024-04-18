@@ -7,9 +7,9 @@ from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
 from timeline.tests.test_models import (
-    ProjectEventTestBase,
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventTestBase,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
 )
 
 
@@ -23,7 +23,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class ViewTestBase(
-    ProjectEventMixin, ProjectEventStatusMixin, ProjectEventTestBase
+    TimelineEventMixin, TimelineEventStatusMixin, TimelineEventTestBase
 ):
     """Base class for timeline view testing"""
 

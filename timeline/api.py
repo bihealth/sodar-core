@@ -15,8 +15,8 @@ from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
 
 from timeline.models import (
-    ProjectEvent,
-    ProjectEventObjectRef,
+    TimelineEvent,
+    TimelineEventObjectRef,
     EVENT_STATUS_TYPES,
     OBJ_REF_UNNAMED,
 )
@@ -123,7 +123,7 @@ class TimelineAPI:
         Get reference object description for event description, or unknown label
         if not found.
 
-        :param event: ProjectEvent object
+        :param event: TimelineEvent object
         :param ref_label: Label for the reference object (string)
         :param app_plugin: App plugin or None
         :param request: Request object or None
@@ -136,10 +136,10 @@ class TimelineAPI:
 
         # Get object reference
         try:
-            obj_ref = ProjectEventObjectRef.objects.get(
+            obj_ref = TimelineEventObjectRef.objects.get(
                 event=event, label=ref_label
             )
-        except ProjectEventObjectRef.DoesNotExist:
+        except TimelineEventObjectRef.DoesNotExist:
             return UNKNOWN_LABEL
 
         # Special case: User model
@@ -238,7 +238,7 @@ class TimelineAPI:
         :param status_extra_data: Extra data for initial status (dict, optional)
         :param plugin_name: Name of plugin to which the event is related
             (optional, plugin with the name of the app is assumed if unset)
-        :return: ProjectEvent object
+        :return: TimelineEvent object
         :raise: ValueError if app_name or status_type is invalid
         """
         if app_name not in APP_NAMES:
@@ -258,7 +258,7 @@ class TimelineAPI:
         if user and user.is_anonymous:
             user = None
 
-        event = ProjectEvent()
+        event = TimelineEvent()
         event.project = project
         event.app = app_name
         event.plugin = plugin_name
@@ -287,7 +287,7 @@ class TimelineAPI:
         :param classified: Include classified (boolean)
         :return: QuerySet
         """
-        events = ProjectEvent.objects.filter(project=project)
+        events = TimelineEvent.objects.filter(project=project)
         if not classified:
             events = events.filter(classified=False)
         return events
@@ -297,7 +297,7 @@ class TimelineAPI:
         """
         Return the description of a timeline event as HTML.
 
-        :param event: ProjectEvent object
+        :param event: TimelineEvent object
         :param plugin_lookup: App plugin lookup dict (optional)
         :param request: Request object (optional)
         :return: String (contains HTML)
@@ -376,8 +376,8 @@ class TimelineAPI:
     @classmethod
     def get_models(cls):
         """
-        Return project event model classes for custom/advanced queries.
+        Return timeline event model classes for custom/advanced queries.
 
-        :return: ProjectEvent, ProjectEventObjectRef
+        :return: TimelineEvent, TimelineEventObjectRef
         """
-        return ProjectEvent, ProjectEventObjectRef
+        return TimelineEvent, TimelineEventObjectRef
