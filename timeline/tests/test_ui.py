@@ -18,6 +18,7 @@ from projectroles.tests.test_ui import UITestBase
 from timeline.tests.test_models import (
     TimelineEventMixin,
     TimelineEventStatusMixin,
+    TEST_EXTRA_DATA,
 )
 
 
@@ -46,7 +47,7 @@ class TestProjectListView(
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             status_type='OK',
         )
 
@@ -57,7 +58,7 @@ class TestProjectListView(
             user=self.superuser,
             event_name='classified_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             classified=True,
         )
 
@@ -163,7 +164,7 @@ class TestSiteListView(
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             status_type='OK',
         )
 
@@ -174,7 +175,7 @@ class TestSiteListView(
             user=self.superuser,
             event_name='classified_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             classified=True,
         )
 
@@ -261,7 +262,7 @@ class TestAdminListView(
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             status_type='OK',
         )
         # Init default site event
@@ -271,7 +272,7 @@ class TestAdminListView(
             user=self.superuser,
             event_name='test_site_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             status_type='OK',
         )
         # Init classified event
@@ -281,7 +282,7 @@ class TestAdminListView(
             user=self.superuser,
             event_name='classified_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             classified=True,
         )
 
@@ -312,7 +313,7 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data=json.dumps({'test_key': 'test_val'}),
+            extra_data=json.dumps(TEST_EXTRA_DATA),
             status_type='OK',
         )
         self.event_status_init = self.event.set_status(
@@ -448,7 +449,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             status_type='OK',
         )
 
@@ -456,7 +457,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             event=self.event,
             status_type='SUBMIT',
             description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
 
         # Init default site event
@@ -466,7 +467,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             user=self.superuser,
             event_name='test_site_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             status_type='OK',
         )
 
@@ -474,7 +475,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             event=self.site_event,
             status_type='SUBMIT',
             description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
 
         # Init classified event
@@ -484,7 +485,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             user=self.superuser,
             event_name='classified_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             classified=True,
         )
 
@@ -492,7 +493,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             event=self.classified_event,
             status_type='SUBMIT',
             description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
 
         self.classified_site_event = self.timeline.add_event(
@@ -501,7 +502,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             user=self.superuser,
             event_name='classified_site_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
             classified=True,
         )
 
@@ -509,7 +510,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             event=self.classified_site_event,
             status_type='SUBMIT',
             description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
 
     def test_search_results(self):

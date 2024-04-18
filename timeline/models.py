@@ -12,11 +12,10 @@ from projectroles.models import Project
 
 
 logger = logging.getLogger(__name__)
-
-
 # Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-# Event status types
+
+# Local constants
 EVENT_STATUS_TYPES = ['OK', 'INIT', 'SUBMIT', 'FAILED', 'INFO', 'CANCEL']
 DEFAULT_MESSAGES = {
     'OK': 'All OK',
@@ -230,8 +229,10 @@ class TimelineEvent(models.Model):
 
 
 class TimelineEventObjectRef(models.Model):
-    """Class representing a reference to an object (existing or removed)
-    related to a Timeline event status"""
+    """
+    Class representing a reference to an object (existing or removed)
+    related to a timeline event status.
+    """
 
     #: Event to which the object belongs
     event = models.ForeignKey(
@@ -275,6 +276,11 @@ class TimelineEventObjectRef(models.Model):
         default=dict, help_text='Additional data related to the object as JSON'
     )
 
+    #: UUID for this object reference
+    sodar_uuid = models.UUIDField(
+        default=uuid.uuid4, unique=True, help_text='Object reference SODAR UUID'
+    )
+
     def __str__(self):
         return '{} ({})'.format(
             self.event.__str__(),
@@ -289,7 +295,7 @@ class TimelineEventObjectRef(models.Model):
 
 
 class TimelineEventStatus(models.Model):
-    """Class representing a Timeline event status"""
+    """Class representing a timeline event status"""
 
     #: Event to which the status change belongs
     event = models.ForeignKey(

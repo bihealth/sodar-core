@@ -29,6 +29,10 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
+# Local constants
+TEST_EXTRA_DATA = {'test_key': 'test_val'}
+
+
 class TimelineEventMixin:
     """Helper mixin for TimelineEvent creation"""
 
@@ -127,7 +131,7 @@ class TestTimelineEvent(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
 
         self.obj_ref = self.make_object_ref(
@@ -136,7 +140,7 @@ class TestTimelineEvent(
             label='test_label',
             name='test_object_name',
             uuid=self.assignment_owner.sodar_uuid,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
 
     def test_initialization(self):
@@ -150,7 +154,7 @@ class TestTimelineEvent(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
@@ -164,7 +168,7 @@ class TestTimelineEvent(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
         expected = {
             'id': self.event.pk,
@@ -175,7 +179,7 @@ class TestTimelineEvent(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
@@ -189,7 +193,7 @@ class TestTimelineEvent(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
         expected = {
             'id': self.event.pk,
@@ -200,7 +204,7 @@ class TestTimelineEvent(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
@@ -215,7 +219,7 @@ class TestTimelineEvent(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
         expected = {
             'id': self.event.pk,
@@ -226,7 +230,7 @@ class TestTimelineEvent(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
@@ -303,6 +307,7 @@ class TestTimelineEvent(
             'object_uuid': new_as.sodar_uuid,
             'object_model': 'RoleAssignment',
             'extra_data': {},
+            'sodar_uuid': new_obj.sodar_uuid,
         }
         self.assertEqual(model_to_dict(new_obj), expected)
 
@@ -351,7 +356,7 @@ class TestTimelineEventObjectRef(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
         self.obj_ref = self.make_object_ref(
             event=self.event,
@@ -359,7 +364,7 @@ class TestTimelineEventObjectRef(
             label='test_label',
             name='test_name',
             uuid=self.assignment_owner.sodar_uuid,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
 
     def test_initialization(self):
@@ -371,7 +376,8 @@ class TestTimelineEventObjectRef(
             'name': 'test_name',
             'object_model': 'RoleAssignment',
             'object_uuid': self.assignment_owner.sodar_uuid,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
+            'sodar_uuid': self.obj_ref.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.obj_ref), expected)
 
@@ -411,19 +417,19 @@ class TestTimelineEventStatus(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
         self.event_status_submit = self.make_event_status(
             event=self.event,
             status_type='SUBMIT',
             description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
         self.event_status_ok = self.make_event_status(
             event=self.event,
             status_type='OK',
             description='OK',
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
 
     def test_initialization(self):
@@ -434,7 +440,7 @@ class TestTimelineEventStatus(
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(self.event_status_ok), expected)
 
@@ -446,7 +452,7 @@ class TestTimelineEventStatus(
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
         }
         self.event = self.make_event(
             project=self.project,
@@ -455,7 +461,7 @@ class TestTimelineEventStatus(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=TEST_EXTRA_DATA,
         )
         self.assertEqual(model_to_dict(self.event_status_ok), expected)
 
@@ -496,7 +502,7 @@ class TestTimelineEventStatus(
             'event': self.event.pk,
             'status_type': 'OK',
             'description': 'OK',
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(status), expected)
 
@@ -521,7 +527,7 @@ class TestTimelineEventStatus(
     def test_set_status(self):
         """Test TimelineEventStatus set_status()"""
         new_status = self.event.set_status(
-            'FAILED', status_desc='FAILED', extra_data={'test_key': 'test_val'}
+            'FAILED', status_desc='FAILED', extra_data=TEST_EXTRA_DATA
         )
         expected = {
             'id': new_status.pk,
@@ -529,6 +535,6 @@ class TestTimelineEventStatus(
             'event': self.event.pk,
             'status_type': 'FAILED',
             'description': 'FAILED',
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': TEST_EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(new_status), expected)

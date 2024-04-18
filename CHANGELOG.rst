@@ -24,6 +24,8 @@ Added
     - ``USER`` scope settings in remote sync (#1322)
     - ``AppLinkContent`` utility class (#1380, #1381)
     - ``checkusers`` management command (#1410)
+- **Timeline**
+    - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
 
 Changed
 -------
