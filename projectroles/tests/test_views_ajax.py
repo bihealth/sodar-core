@@ -8,6 +8,7 @@ from django.urls import reverse
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
+from projectroles.models import AppSetting
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -413,6 +414,12 @@ class TestProjectStarringAjaxView(
 ):
     """Tests for ProjectStarringAjaxView"""
 
+    def _assert_setting_count(self, count):
+        qs = AppSetting.objects.filter(
+            app_plugin=None, project=self.project, name='project_star'
+        )
+        self.assertEqual(qs.count(), count)
+
     def setUp(self):
         super().setUp()
         self.project = self.make_project(
@@ -424,6 +431,7 @@ class TestProjectStarringAjaxView(
 
     def test_project_star(self):
         """Test Starring a Project"""
+        self._assert_setting_count(0)
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -432,6 +440,7 @@ class TestProjectStarringAjaxView(
                 )
             )
         self.assertEqual(response.status_code, 200)
+        self._assert_setting_count(1)
         star = app_settings.get(
             'projectroles', 'project_star', self.project, self.user
         )
@@ -448,6 +457,7 @@ class TestProjectStarringAjaxView(
         star = app_settings.get(
             'projectroles', 'project_star', self.project, self.user
         )
+        self._assert_setting_count(1)
         self.assertEqual(star, False)
 
 

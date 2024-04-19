@@ -82,6 +82,7 @@ Fixed
     - ``SODARUser.update_full_name()`` not working with existing name (#1371)
     - Legacy public guest access in child category breaks category updating (#1404)
     - Incorrect DAL widget highlight colour after upgrade (#1412)
+    - ``ProjectStarringAjaxView`` creating redundant database objects (#1416)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 
@@ -94,6 +95,7 @@ Removed
 - **Projectroles**
     - ``PROJECTROLES_HIDE_APP_LINKS`` setting (#1143)
     - ``CORE_API_*`` Django settings (#1278)
+    - Project starring timeline event creation (#1294)
 
 
 v0.13.4 (2024-02-16)

@@ -26,9 +26,9 @@ from projectroles.models import (
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import get_active_plugins, get_backend_api
+from projectroles.plugins import get_active_plugins
 from projectroles.utils import get_display_name
-from projectroles.views import ProjectAccessMixin, APP_NAME, User
+from projectroles.views import ProjectAccessMixin, User
 from projectroles.views_api import (
     SODARAPIProjectPermission,
     CurrentUserRetrieveAPIView,
@@ -414,38 +414,21 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         # HACK: Manually refuse access to anonymous as this view is an exception
         if request.user.is_anonymous:
             return Response({'detail': 'Anonymous access denied'}, status=401)
-
         project = self.get_project()
         user = request.user
-        timeline = get_backend_api('timeline_backend')
         project_star = app_settings.get(
             'projectroles', 'project_star', project, user
         )
-        action_str = '{}star'.format('un' if project_star else '')
-        if project_star:
-            app_settings.delete('projectroles', 'project_star', project, user)
-        else:
-            app_settings.set(
-                plugin_name='projectroles',
-                setting_name='project_star',
-                value=True,
-                project=project,
-                user=user,
-                validate=False,
-            )
-
-        # Add event in Timeline
-        if timeline:
-            timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=user,
-                event_name='project_{}'.format(action_str),
-                description='{} project'.format(action_str),
-                classified=True,
-                status_type='INFO',
-            )
-        return Response(0 if project_star else 1, status=200)
+        value = False if project_star else True
+        app_settings.set(
+            plugin_name='projectroles',
+            setting_name='project_star',
+            value=value,
+            project=project,
+            user=user,
+            validate=False,
+        )
+        return Response(1 if value else 0, status=200)
 
 
 class CurrentUserRetrieveAjaxView(
