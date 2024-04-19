@@ -84,6 +84,7 @@ INVITE_MESSAGE = 'Message'
 EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
 
 EX_APP_NAME = 'example_project_app'
+TEST_SERVER_URL = 'http://testserver'
 
 
 # Base Classes -----------------------------------------------------------------
@@ -286,12 +287,13 @@ class ProjectrolesAPIViewTestBase(APIViewTestBase):
 class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
     """Tests for ProjectListAPIView"""
 
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:api_project_list')
+
     def test_get(self):
         """Test ProjectListAPIView GET as superuser"""
-        url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url)
-
-        # Assert response
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
@@ -345,9 +347,8 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
 
     def test_get_cat_owner(self):
         """Test GET as category owner"""
-        url = reverse('projectroles:api_project_list')
         response = self.request_knox(
-            url, token=self.get_token(self.user_owner_cat)
+            self.url, token=self.get_token(self.user_owner_cat)
         )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
@@ -355,8 +356,9 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
 
     def test_get_owner(self):
         """Test GET as project owner"""
-        url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url, token=self.get_token(self.user_owner))
+        response = self.request_knox(
+            self.url, token=self.get_token(self.user_owner)
+        )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)
@@ -367,8 +369,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
     def test_get_no_roles(self):
         """Test GET without roles"""
         user_new = self.make_user('user_new')
-        url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url, token=self.get_token(user_new))
+        response = self.request_knox(self.url, token=self.get_token(user_new))
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 0)
@@ -377,8 +378,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
         """Test GET with only local role"""
         user_new = self.make_user('user_new')
         self.make_assignment(self.project, user_new, self.role_contributor)
-        url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url, token=self.get_token(user_new))
+        response = self.request_knox(self.url, token=self.get_token(user_new))
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)
@@ -398,8 +398,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
         self.make_assignment(sub_project, self.user_owner, self.role_owner)
         user_new = self.make_user('user_new')
         self.make_assignment(self.category, user_new, self.role_contributor)
-        url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url, token=self.get_token(user_new))
+        response = self.request_knox(self.url, token=self.get_token(user_new))
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 4)
@@ -408,8 +407,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
         """Test GET with finder"""
         user_new = self.make_user('user_new')
         self.make_assignment(self.category, user_new, self.role_finder)
-        url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url, token=self.get_token(user_new))
+        response = self.request_knox(self.url, token=self.get_token(user_new))
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
@@ -433,14 +431,49 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
         self.project.public_guest_access = True
         self.project.save()
         user_new = self.make_user('user_new')
-        url = reverse('projectroles:api_project_list')
-        response = self.request_knox(url, token=self.get_token(user_new))
+        response = self.request_knox(self.url, token=self.get_token(user_new))
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)
         self.assertEqual(
             response_data[0]['sodar_uuid'], str(self.project.sodar_uuid)
         )
+
+    def test_get_pagination(self):
+        """Test GET with pagination"""
+        url = self.url + '?page=1'
+        response = self.request_knox(url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'count': 2,
+            'next': TEST_SERVER_URL + self.url + '?page=2',
+            'previous': None,
+            'results': [
+                {
+                    'title': self.category.title,
+                    'type': self.category.type,
+                    'parent': None,
+                    'description': self.category.description,
+                    'readme': '',
+                    'public_guest_access': False,
+                    'archive': False,
+                    'full_title': self.category.full_title,
+                    'roles': {
+                        str(self.owner_as_cat.sodar_uuid): {
+                            'user': self.get_serialized_user(
+                                self.user_owner_cat
+                            ),
+                            'role': PROJECT_ROLE_OWNER,
+                            'inherited': False,
+                            'sodar_uuid': str(self.owner_as_cat.sodar_uuid),
+                        }
+                    },
+                    'sodar_uuid': str(self.category.sodar_uuid),
+                }
+            ],
+        }
+        self.assertEqual(response_data, expected)
 
 
 class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
@@ -2303,6 +2336,35 @@ class TestProjectInviteListAPIView(
         ]
         self.assertEqual(response_data, expected)
 
+    def test_get_pagination(self):
+        """Test GET with pagination"""
+        url = self.url + '?page=1'
+        response = self.request_knox(url, token=self.get_token(self.user))
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'count': 2,
+            'next': TEST_SERVER_URL + self.url + '?page=2',
+            'previous': None,
+            'results': [
+                {
+                    'email': INVITE_USER_EMAIL,
+                    'project': str(self.project.sodar_uuid),
+                    'role': PROJECT_ROLE_GUEST,
+                    'issuer': self.get_serialized_user(self.user),
+                    'date_created': self.get_drf_datetime(
+                        self.invite.date_created
+                    ),
+                    'date_expire': self.get_drf_datetime(
+                        self.invite.date_expire
+                    ),
+                    'message': '',
+                    'sodar_uuid': str(self.invite.sodar_uuid),
+                }
+            ],
+        }
+        self.assertEqual(response_data, expected)
+
 
 class TestProjectInviteCreateAPIView(
     RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
@@ -3177,6 +3239,20 @@ class TestUserListAPIView(ProjectrolesAPIViewTestBase):
             self.get_serialized_user(self.user_owner),
             self.get_serialized_user(self.domain_user),
         ]
+        self.assertEqual(response_data, expected)
+
+    def test_get_pagination(self):
+        """Test GET with pagination"""
+        url = self.url + '?page=1'
+        response = self.request_knox(url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'count': 4,
+            'next': TEST_SERVER_URL + self.url + '?page=2',
+            'previous': None,
+            'results': [self.get_serialized_user(self.user)],
+        }
         self.assertEqual(response_data, expected)
 
 

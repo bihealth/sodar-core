@@ -21,6 +21,7 @@ from rest_framework.generics import (
     UpdateAPIView,
     DestroyAPIView,
 )
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
     BasePermission,
     AllowAny,
@@ -327,6 +328,25 @@ class ProjectQuerysetMixin:
         return Project.objects.all()
 
 
+class SODARPageNumberPagination(PageNumberPagination):
+    """
+    Override of PageNumberPagination to provide optional pagination.
+
+    If the "page" query string is not present, results will be provided as a
+    full unpaginated list.
+
+    If the "page" query string is included, results will be presented in the
+    default ``PageNumberPagination`` dict format.
+
+    See: https://www.django-rest-framework.org/api-guide/pagination/#pagenumberpagination
+    """
+
+    def paginate_queryset(self, queryset, request, view=None):
+        if not request.query_params.get('page'):
+            return None
+        return super().paginate_queryset(queryset, request, view)
+
+
 # SODAR Core Base Views and Mixins ---------------------------------------------
 
 
@@ -409,32 +429,48 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
 # API Views --------------------------------------------------------------------
 
 
-class ProjectListAPIView(ProjectrolesAPIVersioningMixin, APIView):
+class ProjectListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     """
     List all projects and categories for which the requesting user has access.
+
+    Supports optional pagination by providing the ``page`` query string. This
+    will return results in the Django Rest Framework ``PageNumberPagination``
+    format.
 
     **URL:** ``/project/api/list``
 
     **Methods:** ``GET``
 
+    **Parameters:**
+
+    - ``page``: Page number for paginated results (int, optional)
+
     **Returns:**
 
-    List of project details (see ``ProjectRetrieveAPIView``). For project finder
-    role, only lists title and UUID of projects.
+    List of ``Project`` objects (see ``ProjectRetrieveAPIView``). For project
+    finder role, only lists title and UUID of projects.
     """
 
+    pagination_class = SODARPageNumberPagination
     permission_classes = [IsAuthenticated]
+    serializer_class = ProjectSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
+        """
+        Override get_queryset() to return categories and projects to which the
+        user has access. NOTE: Returns a list, not a QuerySet.
+
+        :return: List of Project objects
+        """
         projects_all = Project.objects.all().order_by('full_title')
-        if request.user.is_superuser:
-            ret = projects_all
+        if self.request.user.is_superuser:
+            qs = projects_all
         else:
-            ret = []
+            qs = []
             role_cats = []
             projects_local = [
                 a.project
-                for a in RoleAssignment.objects.filter(user=request.user)
+                for a in RoleAssignment.objects.filter(user=self.request.user)
             ]
             for p in projects_all:
                 local_role = p in projects_local
@@ -443,13 +479,10 @@ class ProjectListAPIView(ProjectrolesAPIVersioningMixin, APIView):
                     or p.public_guest_access
                     or any(p.full_title.startswith(c) for c in role_cats)
                 ):
-                    ret.append(p)
+                    qs.append(p)
                 if local_role and p.type == PROJECT_TYPE_CATEGORY:
                     role_cats.append(p.full_title + CAT_DELIMITER)
-        serializer = ProjectSerializer(
-            ret, many=True, context={'request': request}
-        )
-        return Response(serializer.data, status=200)
+        return qs
 
 
 class ProjectRetrieveAPIView(
@@ -762,15 +795,22 @@ class ProjectInviteListAPIView(
     """
     List user invites for a project.
 
+    Supports optional pagination by providing the ``page`` query string. This
+    will return results in the Django Rest Framework ``PageNumberPagination``
+    format.
+
     **URL:** ``/project/api/invites/list/{Project.sodar_uuid}``
 
     **Methods:** ``GET``
 
-    **Returns:** List of project invite details
+    **Parameters:**
+
+    - ``page``: Page number for paginated results (int, optional)
+
+    **Returns:** List or paginated dict of project invite details
     """
 
-    # lookup_field = 'project__sodar_uuid'
-    # lookup_url_kwarg = 'projectinvite'
+    pagination_class = SODARPageNumberPagination
     permission_required = 'projectroles.invite_users'
     serializer_class = ProjectInviteSerializer
 
@@ -1264,14 +1304,23 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     Return a list of all users on the site. Excludes system users, unless called
     with superuser access.
 
+    Supports optional pagination by providing the ``page`` query string. This
+    will return results in the Django Rest Framework ``PageNumberPagination``
+    format.
+
     **URL:** ``/project/api/users/list``
 
     **Methods:** ``GET``
 
-    **Returns**: List of serializers users (see ``CurrentUserRetrieveAPIView``)
+    **Parameters:**
+
+    - ``page``: Page number for paginated results (int, optional)
+
+    **Returns**: List or paginated dict of serializers users (see ``CurrentUserRetrieveAPIView``)
     """
 
     lookup_field = 'project__sodar_uuid'
+    pagination_class = SODARPageNumberPagination
     permission_classes = [IsAuthenticated]
     serializer_class = SODARUserSerializer
 

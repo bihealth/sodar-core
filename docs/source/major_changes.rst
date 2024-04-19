@@ -21,6 +21,7 @@ Release Highlights
 - Add REST API versioning independent from repo/site versions
 - Add Python v3.11 support
 - Add timeline REST API
+- Add optional pagination for REST API list views
 - Add target site user UUID updating in remote sync
 - Add remote sync of existing target local users
 - Add remote sync of USER scope app settings
@@ -138,8 +139,32 @@ instructions and an example on how to do this, see
     overhaul, we aim to provide backwards compatibility for old API versions
     whereever possible.
 
-REST API Changes
-----------------
+REST API Pagination Support
+---------------------------
+
+This release adds optional pagination support for REST API list views. To
+paginate your results, provide the ``?page=1`` query string in your request.
+If paginated, the results will correspond to the Django Rest Framework
+``PageNumberPagination`` results. For more, see
+`DRF documentation <https://www.django-rest-framework.org/api-guide/pagination/#pagenumberpagination>`_.
+
+Requests to the views without the pagination query string return full results
+as a list as they did in previous releases. Hence, this change should not
+equire breaking changes in clients using the REST API.
+
+To support REST API list view pagination on your site, it is recommended to add
+the following in your Django settings:
+
+.. code-block:: python
+
+    REST_FRAMEWORK = {
+        # ...
+        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+        'PAGE_SIZE': env.int('SODAR_API_PAGE_SIZE', 100),
+    }
+
+REST API View Changes
+---------------------
 
 The following breaking changes have been made into specific REST API endpoints
 in this release:

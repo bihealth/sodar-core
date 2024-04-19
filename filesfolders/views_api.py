@@ -11,7 +11,10 @@ from rest_framework.versioning import AcceptHeaderVersioning
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.views_api import CoreAPIGenericProjectMixin
+from projectroles.views_api import (
+    CoreAPIGenericProjectMixin,
+    SODARPageNumberPagination,
+)
 
 from filesfolders.models import Folder
 from filesfolders.serializers import (
@@ -171,9 +174,17 @@ class FolderListCreateAPIView(
     """
     List folders or create a folder.
 
+    Supports optional pagination for listing by providing the ``page`` query
+    string. This will return results in the Django Rest Framework
+    ``PageNumberPagination`` format.
+
     **URL:** ``/files/api/folder/list-create/{Project.sodar_uuid}``
 
     **Methods:** ``GET``, ``POST``
+
+    **Parameters for GET:**
+
+    - ``page``: Page number for paginated results (int, optional)
 
     **Parameters for POST:**
 
@@ -184,6 +195,7 @@ class FolderListCreateAPIView(
     - ``description``: Folder description (string, optional)
     """
 
+    pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
     serializer_class = FolderSerializer
 
@@ -228,9 +240,17 @@ class FileListCreateAPIView(
     List files or upload a file. For uploads, the request must be made in the
     ``multipart`` format.
 
+    Supports optional pagination for listing by providing the ``page`` query
+    string. This will return results in the Django Rest Framework
+    ``PageNumberPagination`` format.
+
     **URL:** ``/files/api/file/list-create/{Project.sodar_uuid}``
 
     **Methods:** ``GET``, ``POST``
+
+    **Parameters for GET:**
+
+    - ``page``: Page number for paginated results (int, optional)
 
     **Parameters for POST:**
 
@@ -243,6 +263,7 @@ class FileListCreateAPIView(
     - ``file``: File to be uploaded
     """
 
+    pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
     serializer_class = FileSerializer
 
@@ -307,9 +328,17 @@ class HyperLinkListCreateAPIView(
     """
     List hyperlinks or create a hyperlink.
 
+    Supports optional pagination for listing by providing the ``page`` query
+    string. This will return results in the Django Rest Framework
+    ``PageNumberPagination`` format.
+
     **URL:** ``/files/api/hyperlink/list-create/{Project.sodar_uuid}``
 
     **Methods:** ``GET``, ``POST``
+
+    **Parameters for GET:**
+
+    - ``page``: Page number for paginated results (int, optional)
 
     **Parameters for POST:**
 
@@ -321,6 +350,7 @@ class HyperLinkListCreateAPIView(
     - ``url``: URL for the link (string)
     """
 
+    pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
     serializer_class = HyperLinkSerializer
 

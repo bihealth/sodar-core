@@ -7,7 +7,10 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
-from projectroles.views_api import CoreAPIGenericProjectMixin
+from projectroles.views_api import (
+    CoreAPIGenericProjectMixin,
+    SODARPageNumberPagination,
+)
 
 from timeline.models import TimelineEvent
 from timeline.serializers import TimelineEventSerializer
@@ -40,16 +43,25 @@ class ProjectTimelineEventListAPIView(
     TimelineAPIVersioningMixin, CoreAPIGenericProjectMixin, ListAPIView
 ):
     """
-    List TimelineEvent objects belonging in a category or project. Events are
-    ordered from newest to oldest.
+    List ``TimelineEvent`` objects belonging in a category or project. Events
+    are ordered from newest to oldest.
+
+    Supports optional pagination by providing the ``page`` query string. This
+    will return results in the Django Rest Framework PageNumberPagination
+    format.
 
     **URL:** ``/timeline/api/list/{Project.sodar_uuid}``
 
     **Methods:** ``GET``
 
-    **Returns:** List of TimelineEvent objects (see TimelineEventRetrieveAPIView)
+    **Parameters:**
+
+    - ``page``: Page number for paginated results (int, optional)
+
+    **Returns:** List or paginated dict of ``TimelineEvent`` objects (see ``TimelineEventRetrieveAPIView``)
     """
 
+    pagination_class = SODARPageNumberPagination
     permission_required = 'timeline.view_timeline'
     serializer_class = TimelineEventSerializer
 
@@ -64,16 +76,25 @@ class ProjectTimelineEventListAPIView(
 
 class SiteTimelineEventListAPIView(TimelineAPIVersioningMixin, ListAPIView):
     """
-    List site-wide TimelineEvent objects. Events are ordered from newest to
+    List site-wide ``TimelineEvent`` objects. Events are ordered from newest to
     oldest.
+
+    Supports optional pagination by providing the ``page`` query string. This
+    will return results in the Django Rest Framework ``PageNumberPagination``
+    format.
 
     **URL:** ``/timeline/api/list/site``
 
     **Methods:** ``GET``
 
-    **Returns:** List of TimelineEvent objects (see TimelineEventRetrieveAPIView)
+    **Parameters:**
+
+    - ``page``: Page number for paginated results (int, optional)
+
+    **Returns:** List or paginated dict of ``TimelineEvent`` objects (see ``TimelineEventRetrieveAPIView``)
     """
 
+    pagination_class = SODARPageNumberPagination
     permission_classes = [IsAuthenticated]
     serializer_class = TimelineEventSerializer
 
@@ -87,7 +108,7 @@ class SiteTimelineEventListAPIView(TimelineAPIVersioningMixin, ListAPIView):
 
 class TimelineEventRetrieveAPIView(TimelineAPIVersioningMixin, RetrieveAPIView):
     """
-    Retrieve TimelineEvent object.
+    Retrieve ``TimelineEvent`` object.
 
     Extra data is only returned for users with sufficient permissions
     (superusers, project owners and delegates).

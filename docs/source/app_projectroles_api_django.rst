@@ -152,6 +152,9 @@ Base API View Mixins
 .. autoclass:: ProjectQuerysetMixin
     :members:
 
+.. autoclass:: SODARPageNumberPagination
+    :members:
+
 
 .. _app_projectroles_api_django_ajax:
 

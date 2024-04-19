@@ -316,14 +316,23 @@ CELERYD_TASK_TIME_LIMIT = 5 * 60
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
 
 
-# Django REST framework default auth classes
+# Django REST framework
+# ------------------------------------------------------------------------------
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'knox.auth.TokenAuthentication',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': (
+        'rest_framework.pagination.PageNumberPagination'
+    ),
+    'PAGE_SIZE': env.int('SODAR_API_PAGE_SIZE', 100),
 }
+
+# Additional authentication settings
+# ------------------------------------------------------------------------------
 
 # Knox settings
 TOKEN_TTL = None
@@ -516,11 +525,12 @@ ENABLED_BACKEND_PLUGINS = env.list(
 SODAR_API_DEFAULT_VERSION = '0.1'
 SODAR_API_ALLOWED_VERSIONS = [SODAR_API_DEFAULT_VERSION]
 SODAR_API_MEDIA_TYPE = 'application/your.application+json'
-
 # SODAR API host URL
 SODAR_API_DEFAULT_HOST = env.url(
     'SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000'
 )
+# Default page size for paginated REST API list views
+SODAR_API_PAGE_SIZE = env.int('SODAR_API_PAGE_SIZE', 100)
 
 
 # Projectroles app settings

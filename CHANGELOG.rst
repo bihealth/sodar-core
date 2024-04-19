@@ -14,6 +14,8 @@ Added
 - **General**
     - Python v3.11 support (#1157)
     - Flake8 rule in ``Makefile`` (#1387)
+- **Filesfolders**
+    - Optional pagination for REST API list views (#1313)
 - **Projectroles**
     - ``full_title`` field in ``ProjectSerializer`` and API views (#1314)
     - Custom password argument in ``createdevusers`` management command (#1393)
@@ -24,10 +26,13 @@ Added
     - ``USER`` scope settings in remote sync (#1322)
     - ``AppLinkContent`` utility class (#1380, #1381)
     - ``checkusers`` management command (#1410)
+    - ``SODARPageNumberPagination`` pagination class (#1313)
+    - Optional pagination for REST API list views (#1313)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
     - ``get_project()`` helpers in ``TimelineEvent`` and ``TimelineEventObjectRef`` (#1350)
+    - Optional pagination for REST API list views (#1313)
 
 Changed
 -------

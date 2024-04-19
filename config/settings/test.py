@@ -64,6 +64,13 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
     ]
 ]
 
+# Django REST framework
+# ------------------------------------------------------------------------------
+
+# Set pagination page size to 1 for easy testing
+REST_FRAMEWORK['PAGE_SIZE'] = 1
+
+
 # Logging
 # ------------------------------------------------------------------------------
 

@@ -74,6 +74,32 @@ class TestFolderListCreateAPIView(FilesfoldersAPIViewTestBase):
         }
         self.assertEqual(json.loads(response.content), [expected])
 
+    def test_get_pagination(self):
+        """Test GET with pagination"""
+        url = self.url + '?page=1'
+        response = self.request_knox(url)
+        self.assertEqual(response.status_code, 200, msg=response.data)
+        expected = {
+            'count': 1,
+            'next': None,
+            'previous': None,
+            'results': [
+                {
+                    'name': self.folder.name,
+                    'folder': None,
+                    'owner': self.get_serialized_user(self.folder.owner),
+                    'project': str(self.folder.project.sodar_uuid),
+                    'flag': self.folder.flag,
+                    'description': self.folder.description,
+                    'date_modified': self.get_drf_datetime(
+                        self.folder.date_modified
+                    ),
+                    'sodar_uuid': str(self.folder.sodar_uuid),
+                }
+            ],
+        }
+        self.assertEqual(json.loads(response.content), expected)
+
     def test_post_create_root(self):
         """Test POST to create folder in root"""
         response = self.request_knox(
@@ -242,6 +268,34 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
             'sodar_uuid': str(self.file.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), [expected])
+
+    def test_get_pagination(self):
+        """Test GET with pagination"""
+        url = self.url + '?page=1'
+        response = self.request_knox(url)
+        self.assertEqual(response.status_code, 200, msg=response.data)
+        expected = {
+            'count': 1,
+            'next': None,
+            'previous': None,
+            'results': [
+                {
+                    'name': self.file.name,
+                    'folder': None,
+                    'owner': self.get_serialized_user(self.file.owner),
+                    'project': str(self.file.project.sodar_uuid),
+                    'flag': self.file.flag,
+                    'description': self.file.description,
+                    'secret': self.file.secret,
+                    'public_url': self.file.public_url,
+                    'date_modified': self.get_drf_datetime(
+                        self.file.date_modified
+                    ),
+                    'sodar_uuid': str(self.file.sodar_uuid),
+                }
+            ],
+        }
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_post_create_root(self):
         """Test POST to create file in root"""
@@ -463,6 +517,33 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIViewTestBase):
             'sodar_uuid': str(self.hyperlink.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), [expected])
+
+    def test_get_pagination(self):
+        """Test GET with pagination"""
+        url = self.url + '?page=1'
+        response = self.request_knox(url)
+        self.assertEqual(response.status_code, 200, msg=response.data)
+        expected = {
+            'count': 1,
+            'next': None,
+            'previous': None,
+            'results': [
+                {
+                    'name': self.hyperlink.name,
+                    'folder': None,
+                    'owner': self.get_serialized_user(self.hyperlink.owner),
+                    'project': str(self.hyperlink.project.sodar_uuid),
+                    'flag': self.hyperlink.flag,
+                    'description': self.hyperlink.description,
+                    'url': self.hyperlink.url,
+                    'date_modified': self.get_drf_datetime(
+                        self.hyperlink.date_modified
+                    ),
+                    'sodar_uuid': str(self.hyperlink.sodar_uuid),
+                }
+            ],
+        }
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_post_root(self):
         """Test POST to create hyperlink in root"""

@@ -14,7 +14,10 @@ from projectroles.tests.test_models import (
     RoleMixin,
     RoleAssignmentMixin,
 )
-from projectroles.tests.test_views_api import SODARAPIViewTestMixin
+from projectroles.tests.test_views_api import (
+    SODARAPIViewTestMixin,
+    TEST_SERVER_URL,
+)
 
 from timeline.tests.test_models import (
     TimelineEventMixin,
@@ -154,6 +157,33 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
             'sodar_uuid': str(self.event_classified.sodar_uuid),
         }
         self.assertEqual(response_data[0], expected)
+
+    def test_get_pagination(self):
+        """Test GET with pagination"""
+        url = self.url + '?page=1'
+        response = self.request_knox(url, token=self.get_token(self.superuser))
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'count': 2,
+            'next': TEST_SERVER_URL + self.url + '?page=2',
+            'previous': None,
+            'results': [
+                {
+                    'project': str(self.project.sodar_uuid),
+                    'app': 'projectroles',
+                    'plugin': None,
+                    'user': self.get_serialized_user(self.user_owner),
+                    'event_name': EVENT_NAME_CLASSIFIED,
+                    'description': EVENT_DESC,
+                    'extra_data': EXTRA_DATA,
+                    'classified': True,
+                    'status_changes': [],
+                    'event_objects': [],
+                    'sodar_uuid': str(self.event_classified.sodar_uuid),
+                }
+            ],
+        }
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_get_owner(self):
         """Test GET as owner"""
