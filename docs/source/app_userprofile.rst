@@ -87,6 +87,12 @@ Display Project UUID Copying Link
 Additional Email
     In addition to the default user email, also send email notifications to
     these addresses.
+Receive Email for Project Updates
+    Receive email notifications for project or category creation, updating,
+    moving and archiving.
+Receive Email for Project Membership Updates
+    Receive email notifications for project or category membership updates and
+    invitation activity.
 
 In the development setup, the SODAR Core example site apps also provide
 additional settings for demonstrating settings features.

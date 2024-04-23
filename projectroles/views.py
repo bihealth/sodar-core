@@ -1123,7 +1123,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     ),
                     project=project,
                 )
-            if SEND_EMAIL:
+            if SEND_EMAIL and app_settings.get(
+                APP_NAME, 'notify_email_role', user=owner
+            ):
                 email.send_role_change_mail(
                     action.lower(),
                     project,
@@ -1138,6 +1140,10 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             and project.parent.get_owner().user != request.user
         ):
             parent_owner = project.parent.get_owner().user
+            parent_owner_email = app_settings.get(
+                APP_NAME, 'notify_email_project', user=parent_owner
+            )
+
             if action == PROJECT_ACTION_CREATE and request.user != parent_owner:
                 if app_alerts:
                     app_alerts.add_alert(
@@ -1156,7 +1162,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                         ),
                         project=project,
                     )
-                if SEND_EMAIL:
+                if SEND_EMAIL and parent_owner_email:
                     email.send_project_create_mail(project, request)
 
             elif old_parent and request.user != parent_owner:
@@ -1176,7 +1182,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     ),
                     project=project,
                 )
-                if SEND_EMAIL:
+                if SEND_EMAIL and parent_owner_email:
                     email.send_project_move_mail(project, request)
 
     @transaction.atomic
@@ -1558,7 +1564,7 @@ class ProjectArchiveView(
                 )
             # Alert users and send email
             self._alert_users(project, action, request.user)
-            if SEND_EMAIL:
+            if SEND_EMAIL:  # NOTE: Opt-out settings checked in email method
                 email.send_project_archive_mail(project, action, request)
         except Exception as ex:
             messages.error(request, 'Failed to alert users: {}'.format(ex))
@@ -1682,7 +1688,9 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
                     ),
                     project=project,
                 )
-            if SEND_EMAIL:
+            if SEND_EMAIL and app_settings.get(
+                APP_NAME, 'notify_email_role', user=user
+            ):
                 email.send_role_change_mail(
                     'update' if promote else action.lower(),
                     project,
@@ -1848,12 +1856,17 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             tl_event.set_status('OK')
         if app_alerts:
             self._update_app_alerts(app_alerts, project, user, inh_as)
-        if SEND_EMAIL and inh_as:
-            email.send_role_change_mail(
-                'update', project, user, inh_as.role, request
-            )
-        elif SEND_EMAIL:
-            email.send_role_change_mail('delete', project, user, None, request)
+        if SEND_EMAIL and app_settings.get(
+            APP_NAME, 'notify_email_role', user=user
+        ):
+            if inh_as:
+                email.send_role_change_mail(
+                    'update', project, user, inh_as.role, request
+                )
+            else:
+                email.send_role_change_mail(
+                    'delete', project, user, None, request
+                )
         return instance
 
 
@@ -2140,7 +2153,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                     ),
                     project=project,
                 )
-            if SEND_EMAIL:
+            if SEND_EMAIL and app_settings.get(
+                APP_NAME, 'notify_email_role', user=old_owner
+            ):
                 email.send_role_change_mail(
                     'update', project, old_owner, old_owner_role, self.request
                 )
@@ -2159,7 +2174,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                     ),
                     project=project,
                 )
-            if SEND_EMAIL:
+            if SEND_EMAIL and app_settings.get(
+                APP_NAME, 'notify_email_role', user=new_owner
+            ):
                 email.send_role_change_mail(
                     'update',
                     project,
@@ -2227,7 +2244,13 @@ class RoleAssignmentOwnerTransferView(
                 'Successfully transferred ownership from '
                 '{} to {}.'.format(old_owner.username, new_owner.username)
             )
-            if SEND_EMAIL:
+            old_owner_email = app_settings.get(
+                APP_NAME, 'notify_email_role', user=old_owner
+            )
+            new_owner_email = app_settings.get(
+                APP_NAME, 'notify_email_role', user=new_owner
+            )
+            if SEND_EMAIL and (old_owner_email or new_owner_email):
                 success_msg += ' Notification(s) have been sent by email.'
             messages.success(self.request, success_msg)
         return redirect(redirect_url)
@@ -2477,7 +2500,9 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 '{} ({})'.format(invite.issuer.name, invite.issuer.email),
             )
             # Send notification of expiry to issuer
-            if SEND_EMAIL:
+            if SEND_EMAIL and app_settings.get(
+                APP_NAME, 'notify_email_role', user=invite.issuer
+            ):
                 email.send_expiry_note(
                     invite,
                     self.request,
@@ -2536,7 +2561,9 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 ),
                 project=invite.project,
             )
-        if SEND_EMAIL:
+        if SEND_EMAIL and app_settings.get(
+            APP_NAME, 'notify_email_role', user=invite.issuer
+        ):
             email.send_accept_note(invite, self.request, user)
 
         # Deactivate the invite

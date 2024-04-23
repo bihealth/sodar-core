@@ -7,6 +7,7 @@ from django.conf import settings
 
 from projectroles.models import AppSetting, APP_SETTING_TYPES, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin, get_active_plugins
+from projectroles.utils import get_display_name
 
 
 logger = logging.getLogger(__name__)
@@ -115,6 +116,40 @@ PROJECTROLES_APP_SETTINGS = {
         'default': False,
         'global': False,
         'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
+    },
+    'notify_email_project': {
+        'scope': APP_SETTING_SCOPE_USER,
+        'type': 'BOOLEAN',
+        'default': True,
+        'label': 'Receive email for {} updates'.format(
+            get_display_name(PROJECT_TYPE_PROJECT)
+        ),
+        'description': (
+            'Receive email notifications for {} or {} creation, updating, '
+            'moving and archiving.'.format(
+                get_display_name(PROJECT_TYPE_CATEGORY),
+                get_display_name(PROJECT_TYPE_PROJECT),
+            )
+        ),
+        'user_modifiable': True,
+        'global': True,
+    },
+    'notify_email_role': {
+        'scope': APP_SETTING_SCOPE_USER,
+        'type': 'BOOLEAN',
+        'default': True,
+        'label': 'Receive email for {} membership updates'.format(
+            get_display_name(PROJECT_TYPE_PROJECT)
+        ),
+        'description': (
+            'Receive email notifications for {} or {} membership updates and '
+            'invitation activity.'.format(
+                get_display_name(PROJECT_TYPE_CATEGORY),
+                get_display_name(PROJECT_TYPE_PROJECT),
+            )
+        ),
+        'user_modifiable': True,
+        'global': True,
     },
 }
 

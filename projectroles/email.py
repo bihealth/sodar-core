@@ -25,6 +25,7 @@ DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
 
 # Local constants
+APP_NAME = 'projectroles'
 EMAIL_RE = re.compile(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)')
 
 
@@ -673,7 +674,12 @@ def send_project_archive_mail(project, action, request):
     :return: Amount of sent email (int)
     """
     user = request.user
-    project_users = [a.user for a in project.get_roles() if a.user != user]
+    project_users = [
+        a.user
+        for a in project.get_roles()
+        if a.user != user
+        and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
+    ]
     project_users = list(set(project_users))  # Remove possible dupes (see #710)
     if not project_users:
         return 0

@@ -17,11 +17,12 @@ Release Highlights
 ==================
 
 - Upgrade to Django v4.2 and Postgres v16
+- Add Python v3.11 support
 - Add app specific and semantic REST API versioning
 - Add REST API versioning independent from repo/site versions
-- Add Python v3.11 support
 - Add timeline REST API
 - Add optional pagination for REST API list views
+- Add user opt-out settings for email notifications
 - Add target site user UUID updating in remote sync
 - Add remote sync of existing target local users
 - Add remote sync of USER scope app settings

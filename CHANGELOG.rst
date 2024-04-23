@@ -28,6 +28,7 @@ Added
     - ``checkusers`` management command (#1410)
     - ``SODARPageNumberPagination`` pagination class (#1313)
     - Optional pagination for REST API list views (#1313)
+    - Email notification opt-out settings (#1417)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
