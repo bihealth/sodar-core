@@ -12,6 +12,7 @@ class TestAdminAlertActiveToggleAjaxView(AdminalertsViewTestBase):
 
     def setUp(self):
         super().setUp()
+        self.alert = self._make_alert()
         self.url = reverse(
             'adminalerts:ajax_active_toggle',
             kwargs={'adminalert': self.alert.sodar_uuid},

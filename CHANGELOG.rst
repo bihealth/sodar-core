@@ -14,6 +14,9 @@ Added
 - **General**
     - Python v3.11 support (#1157)
     - Flake8 rule in ``Makefile`` (#1387)
+- **Adminalerts**
+    - Admin alert email sending (#415)
+    - ``notify_email_alert`` app setting (#415)
 - **Filesfolders**
     - Optional pagination for REST API list views (#1313)
 - **Projectroles**
@@ -29,6 +32,7 @@ Added
     - ``SODARPageNumberPagination`` pagination class (#1313)
     - Optional pagination for REST API list views (#1313)
     - Email notification opt-out settings (#1417)
+    - CC and BCC field support in sending generic emails (#415)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)

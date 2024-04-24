@@ -22,11 +22,13 @@ Release Highlights
 - Add REST API versioning independent from repo/site versions
 - Add timeline REST API
 - Add optional pagination for REST API list views
+- Add admin alert email sending to all users
 - Add user opt-out settings for email notifications
 - Add target site user UUID updating in remote sync
 - Add remote sync of existing target local users
 - Add remote sync of USER scope app settings
 - Add checkusers management command
+- Add CC and BCC field support in sending generic emails
 - Rewrite sodarcache REST API views
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations

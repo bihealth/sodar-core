@@ -408,7 +408,15 @@ def get_user_addr(user):
     return ret
 
 
-def send_mail(subject, message, recipient_list, request=None, reply_to=None):
+def send_mail(
+    subject,
+    message,
+    recipient_list,
+    request=None,
+    reply_to=None,
+    cc=None,
+    bcc=None,
+):
     """
     Wrapper for send_mail() with logging and error messaging.
 
@@ -417,6 +425,8 @@ def send_mail(subject, message, recipient_list, request=None, reply_to=None):
     :param recipient_list: Recipients of email (list)
     :param request: Request object (optional)
     :param reply_to: List of emails for the "reply-to" header (optional)
+    :param cc: List of emails for "cc" field (optional)
+    :param bcc: List of emails for "bcc" field (optional)
     :return: Amount of sent email (int)
     """
     try:
@@ -426,6 +436,8 @@ def send_mail(subject, message, recipient_list, request=None, reply_to=None):
             from_email=EMAIL_SENDER,
             to=recipient_list,
             reply_to=reply_to if isinstance(reply_to, list) else [],
+            cc=cc if isinstance(cc, list) else [],
+            bcc=bcc if isinstance(bcc, list) else [],
         )
         ret = e.send(fail_silently=False)
         logger.debug(
@@ -723,17 +735,25 @@ def send_project_archive_mail(project, action, request):
 
 
 def send_generic_mail(
-    subject_body, message_body, recipient_list, request=None, reply_to=None
+    subject_body,
+    message_body,
+    recipient_list,
+    request=None,
+    reply_to=None,
+    cc=None,
+    bcc=None,
 ):
     """
-    Send a notification email to the issuer of an invitation when a user
-    attempts to accept an expired invitation.
+    Send a generic mail with standard header and footer and no-reply
+    notifications.
 
     :param subject_body: Subject body without prefix (string)
     :param message_body: Message body before header or footer (string)
     :param recipient_list: Recipients (list of User objects or email strings)
-    :param reply_to: List of emails for the "reply-to" header (optional)
     :param request: Request object (optional)
+    :param reply_to: List of emails for the "reply-to" header (optional)
+    :param cc: List of emails for "cc" field (optional)
+    :param bcc: List of emails for "bcc" field (optional)
     :return: Amount of mail sent (int)
     """
     subject = SUBJECT_PREFIX + subject_body
@@ -752,5 +772,7 @@ def send_generic_mail(
         if not reply_to and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
             message += NO_REPLY_NOTE
         message += get_email_footer()
-        ret += send_mail(subject, message, recp_addr, request, reply_to)
+        ret += send_mail(
+            subject, message, recp_addr, request, reply_to, cc, bcc
+        )
     return ret

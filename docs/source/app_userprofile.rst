@@ -81,6 +81,8 @@ app plugins.
 User settings defined in the ``projectroles`` app, available for all SODAR Core
 using sites:
 
+Receive Email for Admin Alerts
+    Receive email for :ref:`admin alerts <app_adminalerts>`.
 Display Project UUID Copying Link
     If set true, display a link in the project title bar for copying the project
     UUID into the clipboard.

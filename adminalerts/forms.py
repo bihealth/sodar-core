@@ -9,8 +9,19 @@ from projectroles.forms import SODARModelForm, SODARPagedownWidget
 from adminalerts.models import AdminAlert
 
 
+# Local constants
+EMAIL_HELP_CREATE = 'Send alert as email to all users on this site'
+EMAIL_HELP_UPDATE = 'Send updated alert as email to all users on this site'
+
+
 class AdminAlertForm(SODARModelForm):
     """Form for AdminAlert creation/updating"""
+
+    send_email = forms.BooleanField(
+        initial=True,
+        label='Send alert as email',
+        required=False,
+    )
 
     class Meta:
         model = AdminAlert
@@ -19,6 +30,7 @@ class AdminAlertForm(SODARModelForm):
             'date_expire',
             'active',
             'require_auth',
+            'send_email',
             'description',
         ]
 
@@ -40,13 +52,17 @@ class AdminAlertForm(SODARModelForm):
 
         # Creation
         if not self.instance.pk:
-            self.fields['date_expire'].initial = (
-                timezone.now() + timezone.timedelta(days=1)
+            self.initial['date_expire'] = timezone.now() + timezone.timedelta(
+                days=1
             )
+            self.fields['send_email'].help_text = EMAIL_HELP_CREATE
         # Updating
         else:  # self.instance.pk
             # Set description value as raw markdown
             self.initial['description'] = self.instance.description.raw
+            self.fields['send_email'].help_text = EMAIL_HELP_UPDATE
+            # Sending email for update should be false by default
+            self.initial['send_email'] = False
 
     def clean(self):
         """Custom form validation and cleanup"""

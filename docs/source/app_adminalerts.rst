@@ -120,6 +120,11 @@ Require Auth
     If set true, this alert will only be shown to users logged in to the site.
     If false, it will also appear in the login screen as well as for anonymous
     users if allowed on the site.
+Send Alert as Email
+    Send alert as email to all users with email notifications enabled, with the
+    exception of the sender. This is enabled by default when creating an alert.
+    When updating an existing alert it is initially disabled to avoid redundant
+    emails when e.g. fixing a typo.
 Description
     A longer description, which can be accessed through the :guilabel:`Details`
     link in the alert element. Markdown syntax is supported.
