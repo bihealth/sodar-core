@@ -792,7 +792,7 @@ class TestUserDropdownContentAjaxView(ViewTestBase):
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:ajax_user_dropdown')
-                + '?app_name=example_site_app&'
+                + '?app_name=example_site_app'
             )
         self.assertEqual(response.status_code, 200)
         expected = {
