@@ -185,7 +185,7 @@ urls_ajax = [
         name='ajax_sidebar',
     ),
     path(
-        route='ajax/dropdown/<uuid:project>',
+        route='ajax/dropdown',
         view=views_ajax.UserDropdownContentAjaxView.as_view(),
         name='ajax_user_dropdown',
     ),
