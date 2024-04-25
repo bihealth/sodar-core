@@ -18,7 +18,7 @@ from django.views.generic.edit import ModelFormMixin
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.email import get_email_user, send_generic_mail
+from projectroles.email import get_email_user, get_user_addr, send_generic_mail
 from projectroles.views import (
     LoggedInPermissionMixin,
     HTTPRefererMixin,
@@ -105,16 +105,8 @@ class AdminAlertModifyMixin(ModelFormMixin):
             if not u.email:
                 logger.warning('No email set for user: {}'.format(u.username))
                 continue
-            if u.email not in ret:
-                ret.append(u.email)
-            alt_emails = app_settings.get(
-                'projectroles', 'user_email_additional', user=u
-            )
-            if not alt_emails:
-                continue
-            for e in alt_emails.split(';'):
-                if e not in ret:
-                    ret.append(e)
+            user_emails = get_user_addr(u)
+            ret += [e for e in user_emails if e not in ret]
         return ret
 
     def _send_email(self, alert, action):
