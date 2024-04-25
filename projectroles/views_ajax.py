@@ -438,11 +438,13 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
 
     def get(self, request, *args, **kwargs):
         project = self.get_project()
+        app_name = request.GET.get('app_name')
+        url_name = request.GET.get('url_name')
         # Get the content for the sidebar
         app_link_content = AppLinkContent()
-        # # Get the current URL for highlighting the active link
-        # current_url = request.GET.get('current_url')
-        sidebar_links = app_link_content.get_project_app_links(request, project)
+        sidebar_links = app_link_content.get_project_app_links(
+            request.user, project, app_name=app_name, url_name=url_name
+        )
         return JsonResponse({'links': sidebar_links})
 
 
@@ -452,9 +454,13 @@ class UserDropdownContentAjaxView(SODARBaseAjaxView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        app_name = request.GET.get('app_name')
+        url_name = request.GET.get('url_name')
         # Get the content for the user dropdown
         app_link_content = AppLinkContent()
-        user_dropdown_links = app_link_content.get_user_links(request)
+        user_dropdown_links = app_link_content.get_user_links(
+            request.user, app_name=app_name, url_name=url_name
+        )
         return JsonResponse({'links': user_dropdown_links})
 
 

@@ -274,10 +274,19 @@ def get_admin_warning():
 @register.simple_tag
 def get_user_links(request):
     """Return user dropdown links"""
-    return app_links.get_user_links(request)
+    return app_links.get_user_links(
+        request.user,
+        app_name=request.resolver_match.app_name,
+        url_name=request.resolver_match.url_name,
+    )
 
 
 @register.simple_tag
 def get_project_app_links(request, project=None):
     """Return sidebar links"""
-    return app_links.get_project_app_links(request, project)
+    return app_links.get_project_app_links(
+        request.user,
+        project,
+        app_name=request.resolver_match.app_name,
+        url_name=request.resolver_match.url_name,
+    )
