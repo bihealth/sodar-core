@@ -435,9 +435,9 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
     """
     Ajax view for delivering sidebar content for specific projects.
     All returned links are nor active by default. To get correct "active"
-    attribute for each of the links, you must provide the app_name and url_name
-    as GET parameters. Both of them refer to the current app and url name
-    (request.resolver_match.app_name and request.resolver_match.url_name).
+    attribute for each of the links, you must provide the app_name as GET
+    parameter. The app_name refers to the current app name
+    (request.resolver_match.app_name).
     """
 
     permission_required = 'projectroles.view_project'
@@ -445,11 +445,10 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
     def get(self, request, *args, **kwargs):
         project = self.get_project()
         app_name = request.GET.get('app_name')
-        url_name = request.GET.get('url_name')
         # Get the content for the sidebar
         app_link_content = AppLinkContent()
         sidebar_links = app_link_content.get_project_app_links(
-            request.user, project, app_name=app_name, url_name=url_name
+            request.user, project, app_name=app_name
         )
         return JsonResponse({'links': sidebar_links})
 
@@ -458,20 +457,19 @@ class UserDropdownContentAjaxView(SODARBaseAjaxView):
     """
     Ajax view for delivering user dropdown content for the navbar.
     All returned links are nor active by default. To get correct "active"
-    attribute for each of the links, you must provide the app_name and url_name
-    as GET parameters. Both of them refer to the current app and url name
-    (request.resolver_match.app_name and request.resolver_match.url_name).
+    attribute for each of the links, you must provide the app_name as GET
+    parameter. The app_name refers to the current app name
+    (request.resolver_match.app_name).
     """
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         app_name = request.GET.get('app_name')
-        url_name = request.GET.get('url_name')
         # Get the content for the user dropdown
         app_link_content = AppLinkContent()
         user_dropdown_links = app_link_content.get_user_links(
-            request.user, app_name=app_name, url_name=url_name
+            request.user, app_name=app_name
         )
         return JsonResponse({'links': user_dropdown_links})
 

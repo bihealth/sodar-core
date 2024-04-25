@@ -554,7 +554,7 @@ class TestSidebarContentAjaxView(
                     'projectroles:ajax_sidebar',
                     kwargs={'project': self.project.sodar_uuid},
                 )
-                + '?app_name=filesfolders&url_name=list'
+                + '?app_name=filesfolders'
             )
         self.assertEqual(response.status_code, 200)
         expected = {
@@ -792,7 +792,7 @@ class TestUserDropdownContentAjaxView(ViewTestBase):
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:ajax_user_dropdown')
-                + '?app_name=example_site_app&url_name=example'
+                + '?app_name=example_site_app&'
             )
         self.assertEqual(response.status_code, 200)
         expected = {

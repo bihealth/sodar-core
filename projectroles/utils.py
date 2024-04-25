@@ -119,14 +119,13 @@ class AppLinkContent:
         self, app_name=None, url_name=None, link_names=None
     ):
         """Check if current URL is active under the projectroles app."""
-        if not app_name or not url_name:
+        if not app_name and not url_name:
             return False
         # HACK: Avoid circular import
         from projectroles.urls import urlpatterns
 
         if app_name != 'projectroles':
             return False
-        url_name = url_name
         return url_name in [u.name for u in urlpatterns] and (
             not link_names or url_name in link_names
         )
@@ -135,11 +134,12 @@ class AppLinkContent:
         """
         Check if current URL is active for a specific app plugin.
         """
-        if not app_name or not url_name:
+        if not app_name and not url_name:
             return False
-        if app_plugin.name.startswith(app_name) and url_name in [
-            u.name for u in getattr(app_plugin, 'urls', [])
-        ]:
+        if app_plugin.name.startswith(app_name) and (
+            not url_name
+            or url_name in [u.name for u in getattr(app_plugin, 'urls', [])]
+        ):
             return True
         # HACK for remote site views, see issue #1336
         if (
