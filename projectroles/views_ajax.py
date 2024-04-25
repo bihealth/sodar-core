@@ -432,7 +432,13 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
 
 
 class SidebarContentAjaxView(SODARBaseProjectAjaxView):
-    """Ajax view for delivering sidebar content for specific projects."""
+    """
+    Ajax view for delivering sidebar content for specific projects.
+    All returned links are nor active by default. To get correct "active"
+    attribute for each of the links, you must provide the app_name and url_name
+    as GET parameters. Both of them refer to the current app and url name
+    (request.resolver_match.app_name and request.resolver_match.url_name).
+    """
 
     permission_required = 'projectroles.view_project'
 
@@ -449,7 +455,13 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
 
 
 class UserDropdownContentAjaxView(SODARBaseAjaxView):
-    """Ajax view for delivering user dropdown content for the navbar."""
+    """
+    Ajax view for delivering user dropdown content for the navbar.
+    All returned links are nor active by default. To get correct "active"
+    attribute for each of the links, you must provide the app_name and url_name
+    as GET parameters. Both of them refer to the current app and url name
+    (request.resolver_match.app_name and request.resolver_match.url_name).
+    """
 
     permission_classes = [IsAuthenticated]
 
