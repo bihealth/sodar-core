@@ -16,14 +16,27 @@ logger = logging.getLogger(__name__)
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 # Local constants
-EVENT_STATUS_TYPES = ['OK', 'INIT', 'SUBMIT', 'FAILED', 'INFO', 'CANCEL']
+TL_STATUS_OK = 'OK'
+TL_STATUS_INIT = 'INIT'
+TL_STATUS_SUBMIT = 'SUBMIT'
+TL_STATUS_FAILED = 'FAILED'
+TL_STATUS_INFO = 'INFO'
+TL_STATUS_CANCEL = 'CANCEL'
+EVENT_STATUS_TYPES = [
+    TL_STATUS_OK,
+    TL_STATUS_INIT,
+    TL_STATUS_SUBMIT,
+    TL_STATUS_FAILED,
+    TL_STATUS_INFO,
+    TL_STATUS_CANCEL,
+]
 DEFAULT_MESSAGES = {
-    'OK': 'All OK',
-    'INIT': 'Event initialized',
-    'SUBMIT': 'Job submitted asynchronously',
-    'FAILED': 'Failed (unknown problem)',
-    'INFO': 'Info level action',
-    'CANCEL': 'Action cancelled',
+    TL_STATUS_OK: 'All OK',
+    TL_STATUS_INIT: 'Event initialized',
+    TL_STATUS_SUBMIT: 'Job submitted asynchronously',
+    TL_STATUS_FAILED: 'Failed (unknown problem)',
+    TL_STATUS_INFO: 'Info level action',
+    TL_STATUS_CANCEL: 'Action cancelled',
 }
 OBJ_REF_UNNAMED = '(unnamed)'
 

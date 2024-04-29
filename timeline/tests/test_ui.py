@@ -48,7 +48,7 @@ class TestProjectListView(
             event_name='test_event',
             description='description',
             extra_data=EXTRA_DATA,
-            status_type='OK',
+            status_type=self.timeline.TL_STATUS_OK,
         )
 
         # Init classified event
@@ -165,7 +165,7 @@ class TestSiteListView(
             event_name='test_event',
             description='description',
             extra_data=EXTRA_DATA,
-            status_type='OK',
+            status_type=self.timeline.TL_STATUS_OK,
         )
 
         # Init classified event
@@ -263,7 +263,7 @@ class TestAdminListView(
             event_name='test_event',
             description='description',
             extra_data=EXTRA_DATA,
-            status_type='OK',
+            status_type=self.timeline.TL_STATUS_OK,
         )
         # Init default site event
         self.site_event = self.timeline.add_event(
@@ -273,7 +273,7 @@ class TestAdminListView(
             event_name='test_site_event',
             description='description',
             extra_data=EXTRA_DATA,
-            status_type='OK',
+            status_type=self.timeline.TL_STATUS_OK,
         )
         # Init classified event
         self.classified_event = self.timeline.add_event(
@@ -314,10 +314,10 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             event_name='test_event',
             description='description',
             extra_data=json.dumps(EXTRA_DATA),
-            status_type='OK',
+            status_type=self.timeline.TL_STATUS_OK,
         )
         self.event_status_init = self.event.set_status(
-            'INIT',
+            self.timeline.TL_STATUS_INIT,
             'Event initialized',
             extra_data={'example_data': 'example_extra_data'},
         )
@@ -392,7 +392,13 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         title = self.selenium.find_element(By.CLASS_NAME, 'modal-title')
         self.assertIn('Event Details: ', title.text)
         table = self.selenium.find_element(By.CLASS_NAME, 'table')
-        check_list = ['Timestamp', 'Event', 'Description', 'Status', 'INIT']
+        check_list = [
+            'Timestamp',
+            'Event',
+            'Description',
+            'Status',
+            self.timeline.TL_STATUS_INIT,
+        ]
         for check in check_list:
             self.assertIn(check, table.text)
 
@@ -450,13 +456,13 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             event_name='test_event',
             description='description',
             extra_data=EXTRA_DATA,
-            status_type='OK',
+            status_type=self.timeline.TL_STATUS_OK,
         )
 
         self.make_event_status(
             event=self.event,
-            status_type='SUBMIT',
-            description='SUBMIT',
+            status_type=self.timeline.TL_STATUS_SUBMIT,
+            description=self.timeline.TL_STATUS_SUBMIT,
             extra_data=EXTRA_DATA,
         )
 
@@ -468,13 +474,13 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             event_name='test_site_event',
             description='description',
             extra_data=EXTRA_DATA,
-            status_type='OK',
+            status_type=self.timeline.TL_STATUS_OK,
         )
 
         self.make_event_status(
             event=self.site_event,
-            status_type='SUBMIT',
-            description='SUBMIT',
+            status_type=self.timeline.TL_STATUS_SUBMIT,
+            description=self.timeline.TL_STATUS_SUBMIT,
             extra_data=EXTRA_DATA,
         )
 
@@ -491,8 +497,8 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
 
         self.make_event_status(
             event=self.classified_event,
-            status_type='SUBMIT',
-            description='SUBMIT',
+            status_type=self.timeline.TL_STATUS_SUBMIT,
+            description=self.timeline.TL_STATUS_SUBMIT,
             extra_data=EXTRA_DATA,
         )
 
@@ -508,8 +514,8 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
 
         self.make_event_status(
             event=self.classified_site_event,
-            status_type='SUBMIT',
-            description='SUBMIT',
+            status_type=self.timeline.TL_STATUS_SUBMIT,
+            description=self.timeline.TL_STATUS_SUBMIT,
             extra_data=EXTRA_DATA,
         )
 

@@ -100,7 +100,7 @@ class BackgroundJobClearViewBase(
                     description='Clearing {} background jobs'.format(
                         'user-owned' if self.which_jobs != 'all' else 'all'
                     ),
-                    status_type='OK',
+                    status_type=timeline.TL_STATUS_OK,
                 )
             messages.success(
                 self.request, 'Removed {} background jobs.'.format(bg_job_count)

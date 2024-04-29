@@ -1289,7 +1289,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
         # Once all is done, update timeline event, create alerts and emails
         if tl_event:
-            tl_event.set_status('OK')
+            tl_event.set_status(tl_event.TL_STATUS_OK)
         self._notify_users(project, action, owner, old_parent, request)
         return project
 
@@ -1560,7 +1560,7 @@ class ProjectArchiveView(
                     user=request.user,
                     event_name='project_{}'.format(action),
                     description='{} project'.format(action),
-                    status_type='OK',
+                    status_type=timeline.TL_STATUS_OK,
                 )
             # Alert users and send email
             self._alert_users(project, action, request.user)
@@ -1853,7 +1853,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
 
         inh_as = project.get_role(user, inherited_only=True)
         if tl_event:
-            tl_event.set_status('OK')
+            tl_event.set_status(tl_event.TL_STATUS_OK)
         if app_alerts:
             self._update_app_alerts(app_alerts, project, user, inh_as)
         if SEND_EMAIL and app_settings.get(
@@ -2133,11 +2133,11 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
             )
         except Exception as ex:
             if tl_event:
-                tl_event.set_status('FAILED', str(ex))
+                tl_event.set_status(tl_event.TL_STATUS_FAILED, str(ex))
             raise ex
 
         if tl_event:
-            tl_event.set_status('OK')
+            tl_event.set_status(tl_event.TL_STATUS_OK)
         if not old_inh_owner and self.request.user != old_owner:
             if app_alerts:
                 app_alerts.add_alert(
@@ -2274,18 +2274,18 @@ class ProjectInviteMixin:
         """
         timeline = get_backend_api('timeline_backend')
         send_str = 'resend' if resend else 'send'
-        status_type = 'OK'
+        status_type = timeline.TL_STATUS_OK
         status_desc = None
 
         if SEND_EMAIL:
             sent_mail = email.send_invite_mail(invite, request)
             if sent_mail == 0:
-                status_type = 'FAILED'
+                status_type = timeline.TL_STATUS_FAILED
                 status_desc = 'Email sending failed'
         else:
-            status_type = 'FAILED'
+            status_type = timeline.TL_STATUS_FAILED
             status_desc = 'PROJECTROLES_SEND_EMAIL not True'
-        if status_type != 'OK' and not resend:
+        if status_type != timeline.TL_STATUS_OK and not resend:
             status_desc += ', invite not created'
 
         # Add event in Timeline
@@ -2302,7 +2302,7 @@ class ProjectInviteMixin:
                 status_desc=status_desc,
             )
 
-        if add_message and status_type == 'OK':
+        if add_message and status_type == timeline.TL_STATUS_OK:
             messages.success(
                 request,
                 'Invite for "{}" role in {} sent to {}, expires on {}.'.format(
@@ -2334,7 +2334,11 @@ class ProjectInviteMixin:
                 description='revoke invite sent to "{}"'.format(
                     invite.email if invite else 'N/A'
                 ),
-                status_type='OK' if invite else 'FAILED',
+                status_type=(
+                    timeline.TL_STATUS_OK
+                    if invite
+                    else timeline.TL_STATUS_FAILED
+                ),
             )
         return invite
 
@@ -2455,7 +2459,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 user=user,
                 event_name='invite_accept',
                 description='accept project invite',
-                status_type='FAILED',
+                status_type=timeline.TL_STATUS_FAILED,
                 status_desc=fail_desc,
             )
 
@@ -2543,7 +2547,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             )
         role_as.save()
         if tl_event:
-            tl_event.set_status('OK')
+            tl_event.set_status(tl_event.TL_STATUS_OK)
 
         # Notify the issuer by alert and email
         if app_alerts:
@@ -3023,7 +3027,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
                 'user display': remote_site.user_display,
                 'secret': remote_site.secret,
             },
-            status_type='OK',
+            status_type=timeline.TL_STATUS_OK,
         )
         tl_event.add_object(
             obj=remote_site, label='remote_site', name=remote_site.name
@@ -3104,7 +3108,7 @@ class RemoteSiteDeleteView(
                 event_name=event_name,
                 description=tl_desc,
                 classified=True,
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
             tl_event.add_object(
                 obj=self.object, label='remote_site', name=self.object.name
@@ -3267,7 +3271,7 @@ class RemoteProjectBatchUpdateView(
                     event_name='remote_project_update',
                     description=tl_desc,
                     classified=True,
-                    status_type='OK',
+                    status_type=timeline.TL_STATUS_OK,
                 )
                 tl_event.add_object(site, 'remote_site', site.name)
 
@@ -3281,7 +3285,7 @@ class RemoteProjectBatchUpdateView(
                 description=tl_desc,
                 extra_data={'modifying_access': modifying_access},
                 classified=True,
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
             tl_event.add_object(obj=site, label='remote_site', name=site.name)
 
@@ -3401,7 +3405,7 @@ class RemoteProjectSyncView(
                 event_name='remote_project_sync',
                 description=tl_desc,
                 classified=True,
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
             tl_event.add_object(
                 obj=source_site, label='remote_site', name=source_site.name

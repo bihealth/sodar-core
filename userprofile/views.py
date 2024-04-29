@@ -195,7 +195,7 @@ class UserEmailCreateView(
                     self.object.email
                 ),
                 classified=True,
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
         return reverse('userprofile:detail')
 
