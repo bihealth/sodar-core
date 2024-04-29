@@ -191,7 +191,7 @@ class AppLinkContent:
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
                     ),
-                    'label': 'Project Overview',
+                    'label': 'Overview',
                     'icon': (
                         'mdi:rhombus-split'
                         if project.type == PROJECT_TYPE_CATEGORY
@@ -249,7 +249,7 @@ class AppLinkContent:
                             'projectroles:update',
                             kwargs={'project': project.sodar_uuid},
                         ),
-                        'label': 'Update Project',
+                        'label': f'Update {get_display_name(project.type)}',
                         'icon': 'mdi:lead-pencil',
                         'active': self._is_active_projectroles(
                             link_names=['update'],
