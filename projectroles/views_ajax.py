@@ -27,7 +27,7 @@ from projectroles.models import (
     ROLE_RANKING,
 )
 from projectroles.plugins import get_active_plugins
-from projectroles.utils import get_display_name
+from projectroles.utils import get_display_name, AppLinkContent
 from projectroles.views import ProjectAccessMixin, User
 from projectroles.views_api import (
     SODARAPIProjectPermission,
@@ -429,6 +429,49 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
             validate=False,
         )
         return Response(1 if value else 0, status=200)
+
+
+class SidebarContentAjaxView(SODARBaseProjectAjaxView):
+    """
+    Ajax view for delivering sidebar content for specific projects.
+    All returned links are nor active by default. To get correct "active"
+    attribute for each of the links, you must provide the app_name as GET
+    parameter. The app_name refers to the current app name
+    (request.resolver_match.app_name).
+    """
+
+    permission_required = 'projectroles.view_project'
+
+    def get(self, request, *args, **kwargs):
+        project = self.get_project()
+        app_name = request.GET.get('app_name')
+        # Get the content for the sidebar
+        app_link_content = AppLinkContent()
+        sidebar_links = app_link_content.get_project_app_links(
+            request.user, project, app_name=app_name
+        )
+        return JsonResponse({'links': sidebar_links})
+
+
+class UserDropdownContentAjaxView(SODARBaseAjaxView):
+    """
+    Ajax view for delivering user dropdown content for the navbar.
+    All returned links are nor active by default. To get correct "active"
+    attribute for each of the links, you must provide the app_name as GET
+    parameter. The app_name refers to the current app name
+    (request.resolver_match.app_name).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        app_name = request.GET.get('app_name')
+        # Get the content for the user dropdown
+        app_link_content = AppLinkContent()
+        user_dropdown_links = app_link_content.get_user_links(
+            request.user, app_name=app_name
+        )
+        return JsonResponse({'links': user_dropdown_links})
 
 
 class CurrentUserRetrieveAjaxView(

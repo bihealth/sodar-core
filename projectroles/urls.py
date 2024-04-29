@@ -180,6 +180,16 @@ urls_ajax = [
         name='ajax_star',
     ),
     path(
+        route='ajax/sidebar/<uuid:project>',
+        view=views_ajax.SidebarContentAjaxView.as_view(),
+        name='ajax_sidebar',
+    ),
+    path(
+        route='ajax/dropdown',
+        view=views_ajax.UserDropdownContentAjaxView.as_view(),
+        name='ajax_user_dropdown',
+    ),
+    path(
         route='ajax/user/current',
         view=views_ajax.CurrentUserRetrieveAjaxView.as_view(),
         name='ajax_user_current',

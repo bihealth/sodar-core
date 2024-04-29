@@ -115,29 +115,31 @@ def get_app_names():
 class AppLinkContent:
     """Class for generating application links for the UI"""
 
-    def _is_active_projectroles(self, request, link_names=None):
+    def _is_active_projectroles(
+        self, app_name=None, url_name=None, link_names=None
+    ):
         """Check if current URL is active under the projectroles app."""
+        if not app_name and not url_name:
+            return False
         # HACK: Avoid circular import
         from projectroles.urls import urlpatterns
 
-        if request.resolver_match.app_name != 'projectroles':
+        if app_name != 'projectroles':
             return False
-        url_name = request.resolver_match.url_name
         return url_name in [u.name for u in urlpatterns] and (
             not link_names or url_name in link_names
         )
 
-    def _is_active_plugin(self, app_plugin, request):
+    def _is_active_plugin(self, app_plugin, app_name=None, url_name=None):
         """
         Check if current URL is active for a specific app plugin.
         """
-        if not getattr(request, 'resolver_match'):
+        if not app_name and not url_name:
             return False
-        app_name = request.resolver_match.app_name
-        url_name = request.resolver_match.url_name
-        if app_plugin.name.startswith(app_name) and url_name in [
-            u.name for u in getattr(app_plugin, 'urls', [])
-        ]:
+        if app_plugin.name.startswith(app_name) and (
+            not url_name
+            or url_name in [u.name for u in getattr(app_plugin, 'urls', [])]
+        ):
             return True
         # HACK for remote site views, see issue #1336
         if (
@@ -174,7 +176,9 @@ class AppLinkContent:
             return False
         return True
 
-    def get_project_app_links(self, request, project=None):
+    def get_project_app_links(
+        self, user, project=None, app_name=None, url_name=None
+    ):
         """Return project app links based on the current project and user."""
         ret = []
         # Add project related links
@@ -193,13 +197,17 @@ class AppLinkContent:
                         if project.type == PROJECT_TYPE_CATEGORY
                         else 'mdi:cube'
                     ),
-                    'active': self._is_active_projectroles(request, ['detail']),
+                    'active': self._is_active_projectroles(
+                        link_names=['detail'],
+                        app_name=app_name,
+                        url_name=url_name,
+                    ),
                 }
             )
             # Add app plugins links
             app_plugins = get_active_plugins()
             for plugin in app_plugins:
-                if self._is_app_visible(plugin, project, request.user):
+                if self._is_app_visible(plugin, project, user):
                     ret.append(
                         {
                             'name': "app-plugin-" + plugin.name,
@@ -209,13 +217,13 @@ class AppLinkContent:
                             ),
                             'label': ' '.join(plugin.title.split(' ')),
                             'icon': plugin.icon,
-                            'active': self._is_active_plugin(plugin, request),
+                            'active': self._is_active_plugin(
+                                plugin, app_name=app_name, url_name=url_name
+                            ),
                         }
                     )
             # Add role editing link
-            if request.user.has_perm(
-                'projectroles.view_project_roles', project
-            ):
+            if user.has_perm('projectroles.view_project_roles', project):
                 ret.append(
                     {
                         'name': 'project-roles',
@@ -226,12 +234,14 @@ class AppLinkContent:
                         'label': 'Members',
                         'icon': 'mdi:account-multiple',
                         'active': self._is_active_projectroles(
-                            request, ROLE_URLS
+                            link_names=ROLE_URLS,
+                            app_name=app_name,
+                            url_name=url_name,
                         ),
                     }
                 )
             # Add project update link
-            if request.user.has_perm('projectroles.update_project', project):
+            if user.has_perm('projectroles.update_project', project):
                 ret.append(
                     {
                         'name': 'project-update',
@@ -242,7 +252,9 @@ class AppLinkContent:
                         'label': 'Update Project',
                         'icon': 'mdi:lead-pencil',
                         'active': self._is_active_projectroles(
-                            request, ['update']
+                            link_names=['update'],
+                            app_name=app_name,
+                            url_name=url_name,
                         ),
                     }
                 )
@@ -251,7 +263,7 @@ class AppLinkContent:
         if (
             project
             and project.type == PROJECT_TYPE_CATEGORY
-            and request.user.has_perm('projectroles.create_project', project)
+            and user.has_perm('projectroles.create_project', project)
             and self._allow_project_creation()
             and not project.is_remote()
         ):
@@ -264,12 +276,16 @@ class AppLinkContent:
                     ),
                     'label': 'Create Project or Category',
                     'icon': 'mdi:plus-thick',
-                    'active': self._is_active_projectroles(request, ['create']),
+                    'active': self._is_active_projectroles(
+                        link_names=['create'],
+                        app_name=app_name,
+                        url_name=url_name,
+                    ),
                 }
             )
         elif (
             getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
-            and request.user.is_superuser
+            and user.is_superuser
         ):
             ret.append(
                 {
@@ -277,16 +293,16 @@ class AppLinkContent:
                     'url': reverse('projectroles:create'),
                     'label': 'Create Project',
                     'icon': 'mdi:plus-thick',
-                    'active': self._is_active_projectroles(request, ['create']),
+                    'active': self._is_active_projectroles(
+                        link_names=['create'],
+                        app_name=app_name,
+                        url_name=url_name,
+                    ),
                 }
             )
         elif (
-            (
-                request.resolver_match.url_name == 'home'
-                or request.resolver_match.app_name == 'projectroles'
-                and not project
-            )
-            and request.user.has_perm('projectroles.create_project')
+            (url_name == 'home' or app_name == 'projectroles' and not project)
+            and user.has_perm('projectroles.create_project')
             and self._allow_project_creation()
         ):
             ret.append(
@@ -295,44 +311,46 @@ class AppLinkContent:
                     'url': reverse('projectroles:create'),
                     'label': 'Create Category',
                     'icon': 'mdi:plus-thick',
-                    'active': self._is_active_projectroles(request, ['create']),
+                    'active': self._is_active_projectroles(
+                        link_names=['create'],
+                        app_name=app_name,
+                        url_name=url_name,
+                    ),
                 }
             )
         return ret
 
-    def get_user_links(self, request):
+    def get_user_links(self, user, app_name=None, url_name=None):
         """Return user links for the user dropdown"""
         ret = []
         # Add site-wide apps links
         site_apps = get_active_plugins('site_app')
         for app in site_apps:
-            if (
-                not app.app_permission
-                or hasattr(request, 'user')
-                and request.user.has_perm(app.app_permission)
-            ):
+            if not app.app_permission or user.has_perm(app.app_permission):
                 ret.append(
                     {
                         'name': app.name,
                         'url': reverse(app.entry_point_url_id),
                         'label': app.title,
                         'icon': app.icon,
-                        'active': self._is_active_plugin(app, request),
+                        'active': self._is_active_plugin(
+                            app, app_name=app_name, url_name=url_name
+                        ),
                     }
                 )
         # Add admin link
-        if hasattr(request, 'user') and request.user.is_superuser:
+        if user.is_superuser:
             ret.append(
                 {
                     'name': 'admin',
                     'url': reverse('admin:index'),
                     'label': 'Django Admin',
                     'icon': 'mdi:cogs',
-                    'active': request.path == reverse('admin:index'),
+                    'active': False,
                 }
             )
         # Add log out / sign in link
-        if hasattr(request, 'user') and request.user.is_authenticated:
+        if user.is_authenticated:
             ret.append(
                 {
                     'name': 'sign-out',
