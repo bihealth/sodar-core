@@ -1026,6 +1026,14 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 upd_fields.append(k)
         return extra_data, upd_fields
 
+    @staticmethod
+    def _get_timeline_ok_status():
+        timeline = get_backend_api('timeline_backend')
+        if not timeline:
+            raise ImproperlyConfigured('Timeline backend not found')
+        else:
+            return timeline.TL_STATUS_OK
+
     @classmethod
     def _create_timeline_event(
         cls, project, action, owner, old_data, project_settings, request
@@ -1289,7 +1297,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
         # Once all is done, update timeline event, create alerts and emails
         if tl_event:
-            tl_event.set_status(tl_event.TL_STATUS_OK)
+            tl_event.set_status(self._get_timeline_ok_status())
         self._notify_users(project, action, owner, old_parent, request)
         return project
 
@@ -1853,7 +1861,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
 
         inh_as = project.get_role(user, inherited_only=True)
         if tl_event:
-            tl_event.set_status(tl_event.TL_STATUS_OK)
+            tl_event.set_status(timeline.TL_STATUS_OK)
         if app_alerts:
             self._update_app_alerts(app_alerts, project, user, inh_as)
         if SEND_EMAIL and app_settings.get(
@@ -2028,6 +2036,20 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     #: Owner role object
     role_owner = None
 
+    def _get_timeline_ok_status(self):
+        timeline = get_backend_api('timeline_backend')
+        if not timeline:
+            return None
+        else:
+            return timeline.TL_STATUS_OK
+
+    def _get_timeline_failed_status(self):
+        timeline = get_backend_api('timeline_backend')
+        if not timeline:
+            return None
+        else:
+            return timeline.TL_STATUS_FAILED
+
     def _create_timeline_event(self, old_owner, new_owner, project):
         timeline = get_backend_api('timeline_backend')
         # Init Timeline event
@@ -2133,11 +2155,11 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
             )
         except Exception as ex:
             if tl_event:
-                tl_event.set_status(tl_event.TL_STATUS_FAILED, str(ex))
+                tl_event.set_status(self._get_timeline_failed_status(), str(ex))
             raise ex
 
         if tl_event:
-            tl_event.set_status(tl_event.TL_STATUS_OK)
+            tl_event.set_status(self._get_timeline_ok_status())
         if not old_inh_owner and self.request.user != old_owner:
             if app_alerts:
                 app_alerts.add_alert(
@@ -2547,7 +2569,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             )
         role_as.save()
         if tl_event:
-            tl_event.set_status(tl_event.TL_STATUS_OK)
+            tl_event.set_status(timeline.TL_STATUS_OK)
 
         # Notify the issuer by alert and email
         if app_alerts:
