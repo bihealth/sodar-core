@@ -263,7 +263,7 @@ class TestSidebarContentAjaxView(ProjectPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.user_finder_cat, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 403)
         self.project.set_public()
@@ -289,7 +289,7 @@ class TestSidebarContentAjaxView(ProjectPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_no_roles, self.user_finder_cat, self.anonymous]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 403)
 
