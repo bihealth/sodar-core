@@ -23,6 +23,7 @@ Release Highlights
 - Add timeline REST API
 - Add optional pagination for REST API list views
 - Add admin alert email sending to all users
+- Add improved additional email address management and verification
 - Add user opt-out settings for email notifications
 - Add target site user UUID updating in remote sync
 - Add remote sync of existing target local users
@@ -30,6 +31,7 @@ Release Highlights
 - Add checkusers management command
 - Add CC and BCC field support in sending generic emails
 - Rewrite sodarcache REST API views
+- Rewrite user additional email storing
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"
 - Plugin API return data updates and deprecations
 - Rename timeline app models
@@ -234,6 +236,14 @@ support for it will be removed in v1.1.
 Note that a dict using the ``category`` variable as a key will still be
 provided for your app's search template. Hence, modifying the template should
 not be required after updating the method.
+
+User Additional Email Changes
+-----------------------------
+
+The ``user_email_additional`` app setting has been removed. Instead, additional
+user email addresses can be accessed via the ``SODARUserAdditionalEmail`` model
+if needed. Using ``email.get_user_addr()`` to retrieve all user email addresses
+is strongly recommended.
 
 Remote Sync User Update Changes
 -------------------------------

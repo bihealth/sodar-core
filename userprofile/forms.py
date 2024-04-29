@@ -7,12 +7,19 @@ from django.conf import settings
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import (
     SODARForm,
+    SODARModelForm,
     SETTING_CUSTOM_VALIDATE_MSG,
     SETTING_DISABLE_LABEL,
     SETTING_SOURCE_ONLY_MSG,
 )
-from projectroles.models import APP_SETTING_VAL_MAXLENGTH, SODAR_CONSTANTS
+from projectroles.models import (
+    SODARUserAdditionalEmail,
+    SODAR_CONSTANTS,
+    APP_SETTING_VAL_MAXLENGTH,
+    ADD_EMAIL_ALREADY_SET_MSG,
+)
 from projectroles.plugins import get_active_plugins
+from projectroles.utils import build_secret
 
 
 app_settings = AppSettingAPI()
@@ -24,11 +31,8 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 
-# User Settings Form -----------------------------------------------------------
-
-
 class UserSettingsForm(SODARForm):
-    """The form for configuring user settings."""
+    """Form for configuring user settings"""
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('current_user')
@@ -202,4 +206,39 @@ class UserSettingsForm(SODARForm):
                             plugin=p_name, exception=ex
                         ),
                     )
+        return self.cleaned_data
+
+
+class UserEmailForm(SODARModelForm):
+    """Form for creating additional email addresses for user"""
+
+    class Meta:
+        model = SODARUserAdditionalEmail
+        fields = ['email', 'user', 'secret']
+
+    def __init__(self, current_user=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if current_user:
+            self.current_user = current_user
+        self.fields['user'].widget = forms.HiddenInput()
+        self.initial['user'] = current_user
+        self.fields['secret'].widget = forms.HiddenInput()
+        self.initial['secret'] = build_secret(32)
+
+    def clean(self):
+        if self.cleaned_data['email'] == self.current_user.email:
+            self.add_error(
+                'email', ADD_EMAIL_ALREADY_SET_MSG.format(email_type='primary')
+            )
+            return self.cleaned_data
+        if (
+            SODARUserAdditionalEmail.objects.filter(
+                user=self.current_user, email=self.cleaned_data['email']
+            ).count()
+            > 0
+        ):
+            self.add_error(
+                'email',
+                ADD_EMAIL_ALREADY_SET_MSG.format(email_type='additional'),
+            )
         return self.cleaned_data

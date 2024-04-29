@@ -25,6 +25,7 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     AppSetting,
+    SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
@@ -38,6 +39,8 @@ from projectroles.tests.test_models import (
     RemoteSiteMixin,
     RemoteProjectMixin,
     AppSettingMixin,
+    SODARUserAdditionalEmailMixin,
+    ADD_EMAIL,
 )
 from projectroles.tests.test_views import (
     ViewTestBase,
@@ -103,7 +106,11 @@ class SerializedObjectMixin:
         :param user: User object
         :return: Dict
         """
+        add_emails = SODARUserAdditionalEmail.objects.filter(
+            user=user, verified=True
+        ).order_by('email')
         return {
+            'additional_emails': [e.email for e in add_emails],
             'email': user.email,
             'is_superuser': user.is_superuser,
             'name': user.name,
@@ -3256,7 +3263,9 @@ class TestUserListAPIView(ProjectrolesAPIViewTestBase):
         self.assertEqual(response_data, expected)
 
 
-class TestCurrentUserRetrieveAPIView(ProjectrolesAPIViewTestBase):
+class TestCurrentUserRetrieveAPIView(
+    SODARUserAdditionalEmailMixin, ProjectrolesAPIViewTestBase
+):
     """Tests for CurrentUserRetrieveAPIView"""
 
     def setUp(self):
@@ -3276,6 +3285,7 @@ class TestCurrentUserRetrieveAPIView(ProjectrolesAPIViewTestBase):
             'username': self.domain_user.username,
             'name': self.domain_user.name,
             'email': self.domain_user.email,
+            'additional_emails': [],
             'is_superuser': False,
             'sodar_uuid': str(self.domain_user.sodar_uuid),
         }
@@ -3290,8 +3300,27 @@ class TestCurrentUserRetrieveAPIView(ProjectrolesAPIViewTestBase):
             'username': self.user.username,
             'name': self.user.name,
             'email': self.user.email,
+            'additional_emails': [],
             'is_superuser': True,
             'sodar_uuid': str(self.user.sodar_uuid),
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_get_additional_email(self):
+        """Test CurrentUserRetrieveAPIView GET with additional email"""
+        self.make_email(self.domain_user, ADD_EMAIL)
+        response = self.request_knox(
+            self.url, token=self.get_token(self.domain_user)
+        )
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'username': self.domain_user.username,
+            'name': self.domain_user.name,
+            'email': self.domain_user.email,
+            'additional_emails': [ADD_EMAIL],
+            'is_superuser': False,
+            'sodar_uuid': str(self.domain_user.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
 

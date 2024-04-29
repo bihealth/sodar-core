@@ -33,11 +33,15 @@ Added
     - Optional pagination for REST API list views (#1313)
     - Email notification opt-out settings (#1417)
     - CC and BCC field support in sending generic emails (#415)
+    - ``SODARUserAdditionalEmail`` model (#874)
+    - ``is_source_site()`` and ``is_target_site()`` rule predicates
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
     - ``get_project()`` helpers in ``TimelineEvent`` and ``TimelineEventObjectRef`` (#1350)
     - Optional pagination for REST API list views (#1313)
+- **Userprofile**
+    - Additional email address management and verification (#874)
 
 Changed
 -------
@@ -101,6 +105,7 @@ Removed
     - ``PROJECTROLES_HIDE_APP_LINKS`` setting (#1143)
     - ``CORE_API_*`` Django settings (#1278)
     - Project starring timeline event creation (#1294)
+    - ``user_email_additional`` app setting (#874)
 
 
 v0.13.4 (2024-02-16)

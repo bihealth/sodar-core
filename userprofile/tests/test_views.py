@@ -1,25 +1,51 @@
 """Tests for views in the userprofile Django app"""
 
+import uuid
+
 from django.contrib import auth
 from django.contrib.messages import get_messages
+from django.core import mail
+from django.forms.models import model_to_dict
+from django.test import override_settings
 from django.urls import reverse
 
 from test_plus.test import TestCase
 
+# Timeline dependency
+from timeline.models import TimelineEvent
+
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.tests.test_models import EXAMPLE_APP_NAME, AppSettingMixin
+from projectroles.models import SODARUserAdditionalEmail, SODAR_CONSTANTS
+from projectroles.tests.test_models import (
+    EXAMPLE_APP_NAME,
+    AppSettingMixin,
+    SODARUserAdditionalEmailMixin,
+)
 from projectroles.views import MSG_FORM_INVALID
+from projectroles.utils import build_secret
 
-from userprofile.views import SETTING_UPDATE_MSG
+from userprofile.views import (
+    SETTING_UPDATE_MSG,
+    EMAIL_NOT_FOUND_MSG,
+    EMAIL_ALREADY_VERIFIED_MSG,
+    EMAIL_VERIFIED_MSG,
+    EMAIL_VERIFY_RESEND_MSG,
+)
 
 
 app_settings = AppSettingAPI()
 User = auth.get_user_model()
 
 
+# SODAR constants
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+
 # Local constants
 INVALID_VALUE = 'INVALID VALUE'
+ADD_EMAIL = 'add1@example.com'
+ADD_EMAIL2 = 'add2@example.com'
+ADD_EMAIL_SECRET = build_secret(32)
 
 
 class UserViewTestBase(TestCase):
@@ -36,7 +62,7 @@ class UserViewTestBase(TestCase):
 # View tests -------------------------------------------------------------------
 
 
-class TestUserDetailView(UserViewTestBase):
+class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
     """Tests for UserDetailView"""
 
     def test_get(self):
@@ -45,6 +71,17 @@ class TestUserDetailView(UserViewTestBase):
             response = self.client.get(reverse('userprofile:detail'))
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.context['user_settings'])
+        self.assertEqual(response.context['add_emails'].count(), 0)
+
+    def test_get_additional_email(self):
+        """Test GET with additional email"""
+        self.make_email(self.user, 'add@example.com')
+        self.make_email(self.user, 'add_unverified@example.com', verified=False)
+        with self.login(self.user):
+            response = self.client.get(reverse('userprofile:detail'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['user_settings'])
+        self.assertEqual(response.context['add_emails'].count(), 2)
 
 
 class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
@@ -222,3 +259,284 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
             MSG_FORM_INVALID,
         )
         self.assertEqual(self._get_setting('user_str_setting'), 'test')
+
+
+class TestUserEmailCreateView(SODARUserAdditionalEmailMixin, UserViewTestBase):
+    """Tests for UserEmailCreateView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('userprofile:email_create')
+        self.url_redirect = reverse('userprofile:detail')
+
+    def test_get(self):
+        """Test UserEmailCreateView GET"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['form'])
+
+    @override_settings(PROJECTROLES_SEND_EMAIL=False)
+    def test_get_email_disabled(self):
+        """Test GET with disabled email sending"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+            self.assertRedirects(response, self.url_redirect)
+
+    def test_post(self):
+        """Test POST"""
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 0)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='email_create').count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            data = {
+                'user': self.user.pk,
+                'email': ADD_EMAIL,
+                'secret': ADD_EMAIL_SECRET,
+            }
+            response = self.client.post(self.url, data)
+            self.assertRedirects(response, self.url_redirect)
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 1)
+        email = SODARUserAdditionalEmail.objects.first()
+        expected = {
+            'id': email.pk,
+            'user': self.user.pk,
+            'email': ADD_EMAIL,
+            'secret': ADD_EMAIL_SECRET,
+            'verified': False,
+            'sodar_uuid': email.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(email), expected)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='email_create').count(), 1
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].recipients(), [ADD_EMAIL])
+        verify_url = reverse(
+            'userprofile:email_verify', kwargs={'secret': email.secret}
+        )
+        self.assertIn(verify_url, mail.outbox[0].body)
+
+    def test_post_existing_primary(self):
+        """Test POST with email used as primary email for user"""
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 0)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='email_create').count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            data = {
+                'user': self.user.pk,
+                'email': self.user.email,
+                'secret': ADD_EMAIL_SECRET,
+            }
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 0)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='email_create').count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_existing_additional(self):
+        """Test POST with email used as additional email for user"""
+        self.make_email(self.user, ADD_EMAIL)
+        with self.login(self.user):
+            data = {
+                'user': self.user.pk,
+                'email': ADD_EMAIL,
+                'secret': ADD_EMAIL_SECRET,
+            }
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_multiple(self):
+        """Test POST with different existing additional email"""
+        self.make_email(self.user, ADD_EMAIL)
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            data = {
+                'user': self.user.pk,
+                'email': ADD_EMAIL2,
+                'secret': ADD_EMAIL_SECRET,
+            }
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 2)
+        self.assertEqual(len(mail.outbox), 1)
+
+
+class TestUserEmailVerifyView(SODARUserAdditionalEmailMixin, UserViewTestBase):
+    """Tests for UserEmailVerifyView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url_redirect = reverse('userprofile:detail')
+        self.email = self.make_email(self.user, ADD_EMAIL, verified=False)
+        self.url = reverse(
+            'userprofile:email_verify', kwargs={'secret': self.email.secret}
+        )
+
+    def test_get(self):
+        """Test UserEmailVerifyView GET"""
+        self.assertEqual(self.email.verified, False)
+        with self.login(self.user):
+            response = self.client.get(self.url)
+            self.assertRedirects(response, self.url_redirect)
+        self.email.refresh_from_db()
+        self.assertEqual(self.email.verified, True)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EMAIL_VERIFIED_MSG.format(email=self.email.email),
+        )
+
+    def test_get_invalid_secret(self):
+        """Test GET with invalid secret"""
+        self.assertEqual(self.email.verified, False)
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'userprofile:email_verify',
+                    kwargs={'secret': build_secret(32)},
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+        self.email.refresh_from_db()
+        self.assertEqual(self.email.verified, False)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EMAIL_NOT_FOUND_MSG,
+        )
+
+    def test_get_wrong_user(self):
+        """Test GET with wrong user"""
+        user_new = self.make_user('user_new')
+        self.assertEqual(self.email.verified, False)
+        with self.login(user_new):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.email.refresh_from_db()
+        self.assertEqual(self.email.verified, False)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EMAIL_NOT_FOUND_MSG,
+        )
+
+    def test_get_verified(self):
+        """Test GET with verified email"""
+        self.email.verified = True
+        self.email.save()
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.email.refresh_from_db()
+        self.assertEqual(self.email.verified, True)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EMAIL_ALREADY_VERIFIED_MSG,
+        )
+
+
+class TestUserEmailVerifyResendView(
+    SODARUserAdditionalEmailMixin, UserViewTestBase
+):
+    """Tests for UserEmailVerifyResendView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url_redirect = reverse('userprofile:detail')
+        self.email = self.make_email(self.user, ADD_EMAIL, verified=False)
+        self.url = reverse(
+            'userprofile:email_verify_resend',
+            kwargs={'sodaruseradditionalemail': self.email.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test UserEmailVerifyResendView GET"""
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            response = self.client.get(self.url)
+            self.assertRedirects(response, self.url_redirect)
+        self.email.refresh_from_db()
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EMAIL_VERIFY_RESEND_MSG.format(email=self.email.email),
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_get_invalid_uuid(self):
+        """Test GET with invalid UUID"""
+        self.assertEqual(self.email.verified, False)
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'userprofile:email_verify_resend',
+                    kwargs={'sodaruseradditionalemail': uuid.uuid4()},
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+        self.email.refresh_from_db()
+        self.assertEqual(self.email.verified, False)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EMAIL_NOT_FOUND_MSG,
+        )
+
+    def test_get_wrong_user(self):
+        """Test GET with wrong user"""
+        user_new = self.make_user('user_new')
+        self.assertEqual(self.email.verified, False)
+        with self.login(user_new):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.email.refresh_from_db()
+        self.assertEqual(self.email.verified, False)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EMAIL_NOT_FOUND_MSG,
+        )
+
+    def test_get_verified(self):
+        """Test GET with verified email"""
+        self.email.verified = True
+        self.email.save()
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.email.refresh_from_db()
+        self.assertEqual(self.email.verified, True)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EMAIL_ALREADY_VERIFIED_MSG,
+        )
+
+
+class TestUserEmailDeleteView(SODARUserAdditionalEmailMixin, UserViewTestBase):
+    """Tests for UserEmailDeleteView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url_redirect = reverse('userprofile:detail')
+        self.email = self.make_email(self.user, ADD_EMAIL, verified=False)
+        self.url = reverse(
+            'userprofile:email_delete',
+            kwargs={'sodaruseradditionalemail': self.email.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test UserEmailDeleteView GET"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'], self.email)
+
+    def test_post(self):
+        """Test POST"""
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 1)
+        with self.login(self.user):
+            response = self.client.post(self.url)
+            self.assertRedirects(response, self.url_redirect)
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 0)

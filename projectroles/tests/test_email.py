@@ -21,6 +21,7 @@ from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
     RoleAssignmentMixin,
+    SODARUserAdditionalEmailMixin,
 )
 
 
@@ -46,7 +47,13 @@ USER_ADD_EMAIL = 'user1@example.com'
 USER_ADD_EMAIL2 = 'user2@example.com'
 
 
-class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
+class TestEmailSending(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    SODARUserAdditionalEmailMixin,
+    TestCase,
+):
     def setUp(self):
         self.factory = RequestFactory()
         # Init roles
@@ -98,12 +105,8 @@ class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test_role_create_mail_additional(self):
         """Test role creation with additional sender emails"""
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
-            user=self.user,
-        )
+        self.make_email(self.user, USER_ADD_EMAIL)
+        self.make_email(self.user, USER_ADD_EMAIL2)
         with self.login(self.user_owner):
             request = self.factory.get(reverse('home'))
             request.user = self.user_owner
@@ -126,12 +129,8 @@ class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test_role_create_mail_additional_no_default(self):
         """Test role creation with additional sender emails but no default email"""
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
-            user=self.user,
-        )
+        self.make_email(self.user, USER_ADD_EMAIL)
+        self.make_email(self.user, USER_ADD_EMAIL2)
         self.user.email = ''
         self.user.save()
         with self.login(self.user_owner):
@@ -156,12 +155,8 @@ class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test_role_create_mail_additional_reply(self):
         """Test role creation with additional reply-to emails"""
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
-            user=self.user_owner,
-        )
+        self.make_email(self.user_owner, USER_ADD_EMAIL)
+        self.make_email(self.user_owner, USER_ADD_EMAIL2)
         with self.login(self.user_owner):
             request = self.factory.get(reverse('home'))
             request.user = self.user_owner
@@ -229,7 +224,6 @@ class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
             'New Project', PROJECT_TYPE_PROJECT, self.category
         )
         self.make_assignment(new_project, self.user, self.role_owner)
-
         with self.login(self.user):
             request = self.factory.get(reverse('home'))
             request.user = self.user
@@ -265,12 +259,8 @@ class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test_generic_mail_user_additional(self):
         """Test send_generic_mail() with a User and additional emails"""
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
-            user=self.user,
-        )
+        self.make_email(self.user, USER_ADD_EMAIL)
+        self.make_email(self.user, USER_ADD_EMAIL2)
         with self.login(self.user_owner):
             request = self.factory.get(reverse('home'))
             request.user = self.user_owner
@@ -312,10 +302,8 @@ class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test_generic_mail_multiple(self):
         """Test send_generic_mail() with multiple recipients"""
-
         # Init new user
         user_new = self.make_user('newuser')
-
         with self.login(self.user_owner):
             request = self.factory.get(reverse('home'))
             request.user = self.user_owner
@@ -405,44 +393,26 @@ class TestEmailSending(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test_get_user_addr_additional(self):
         """Test get_user_addr() with additional user emails"""
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
-            user=self.user,
-        )
+        self.make_email(self.user, USER_ADD_EMAIL)
+        self.make_email(self.user, USER_ADD_EMAIL2)
         self.assertEqual(
             get_user_addr(self.user),
             [self.user.email, USER_ADD_EMAIL, USER_ADD_EMAIL2],
         )
 
+    def test_get_user_addr_additional_unverified(self):
+        """Test get_user_addr() with additional and unverified user emails"""
+        self.make_email(self.user, USER_ADD_EMAIL)
+        self.make_email(self.user, USER_ADD_EMAIL2, verified=False)
+        self.assertEqual(
+            get_user_addr(self.user), [self.user.email, USER_ADD_EMAIL]
+        )
+
     def test_get_user_addr_additional_no_default(self):
         """Test get_user_addr() with additional user emails and no default"""
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            '{};{}'.format(USER_ADD_EMAIL, USER_ADD_EMAIL2),
-            user=self.user,
-        )
+        self.make_email(self.user, USER_ADD_EMAIL)
+        self.make_email(self.user, USER_ADD_EMAIL2)
         self.user.email = ''
         self.assertEqual(
             get_user_addr(self.user), [USER_ADD_EMAIL, USER_ADD_EMAIL2]
-        )
-
-    def test_get_user_addr_invalid(self):
-        """Test get_user_addr() with invalid user email"""
-        self.user.email = INVALID_EMAIL
-        self.assertEqual(get_user_addr(self.user), [])
-
-    def test_get_user_addr_additional_invalid(self):
-        """Test get_user_addr() with invalid additional email"""
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            '{};{}'.format(USER_ADD_EMAIL, INVALID_EMAIL),
-            user=self.user,
-        )
-        self.assertEqual(
-            get_user_addr(self.user),
-            [self.user.email, USER_ADD_EMAIL],
         )

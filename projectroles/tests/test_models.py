@@ -19,6 +19,7 @@ from projectroles.models import (
     AppSetting,
     RemoteSite,
     RemoteProject,
+    SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ROLE_RANKING,
     CAT_DELIMITER,
@@ -45,6 +46,8 @@ REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.example.org'
 REMOTE_SITE_SECRET = build_secret()
 REMOTE_SITE_USER_DISPLAY = True
+ADD_EMAIL = 'additional@example.com'
+ADD_EMAIL_SECRET = build_secret()
 
 
 class ProjectMixin:
@@ -295,6 +298,21 @@ class SODARUserMixin:
             user.sodar_uuid = sodar_uuid
         user.save()
         return user
+
+
+class SODARUserAdditionalEmailMixin:
+    """Helper mixin for SODARUserAdditionalEmail creation"""
+
+    def make_email(self, user, email, verified=True, secret=None):
+        values = {
+            'user': user,
+            'email': email,
+            'verified': verified,
+            'secret': secret or build_secret(32),
+        }
+        email = SODARUserAdditionalEmail(**values)
+        email.save()
+        return email
 
 
 class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
@@ -1547,3 +1565,53 @@ class TestSODARUser(TestCase):
         self.user.username = 'user@example'
         self.user.update_ldap_username()
         self.assertEqual(self.user.username, 'user@EXAMPLE')
+
+
+class TestSODARUserAdditionalEmail(SODARUserAdditionalEmailMixin, TestCase):
+    """Tests for SODARUserAdditionalEmail"""
+
+    def setUp(self):
+        self.user = self.make_user('user')
+        self.email = self.make_email(
+            user=self.user,
+            email=ADD_EMAIL,
+            verified=True,
+            secret=ADD_EMAIL_SECRET,
+        )
+
+    def test_initialization(self):
+        """Test SODARUserAdditionalEmail initialization"""
+        expected = {
+            'id': self.email.pk,
+            'user': self.user.pk,
+            'email': ADD_EMAIL,
+            'verified': True,
+            'secret': ADD_EMAIL_SECRET,
+            'sodar_uuid': self.email.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.email), expected)
+
+    def test__str__(self):
+        """Test SODARUserAdditionalEmail __str__()"""
+        self.assertEqual(self.email.__str__(), 'user: additional@example.com')
+
+    def test__repr__(self):
+        """Test SODARUserAdditionalEmail __repr__()"""
+        expected = 'SODARUserAdditionalEmail(\'{}\')'.format(
+            '\', \''.join(
+                [
+                    self.email.user.username,
+                    self.email.email,
+                    str(self.email.verified),
+                    self.email.secret,
+                    str(self.email.sodar_uuid),
+                ]
+            )
+        )
+        self.assertEqual(self.email.__repr__(), expected)
+
+    def test_validate_email_unique(self):
+        """Test _validate_email_unique()"""
+        with self.assertRaises(ValidationError):
+            self.email.email = self.user.email
+            self.email.save()

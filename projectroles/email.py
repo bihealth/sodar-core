@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils.timezone import localtime
 
 from projectroles.app_settings import AppSettingAPI
+from projectroles.models import SODARUserAdditionalEmail
 from projectroles.utils import build_invite_url, get_display_name
 
 
@@ -380,31 +381,20 @@ def get_role_change_body(
 
 def get_user_addr(user):
     """
-    Return all the email addresses for a user as a list. Emails set with
-    user_email_additional are included. If a user has no main email set but
-    additional emails exist, the latter are returned.
+    Return all the email addresses for a user as a list. Verified emails set as
+    SODARUserAdditionalEmail objects are included. If a user has no main email
+    set but additional emails exist, the latter are returned.
 
     :param user: User object
     :return: list
     """
-
-    def _validate(user, email):
-        if re.match(EMAIL_RE, email):
-            return True
-        logger.error(
-            'Invalid email for user {}: {}'.format(user.username, email)
-        )
-
     ret = []
-    if user.email and _validate(user, user.email):
+    if user.email:
         ret.append(user.email)
-    add_email = app_settings.get(
-        'projectroles', 'user_email_additional', user=user
-    )
-    if add_email:
-        for e in add_email.strip().split(';'):
-            if _validate(user, e):
-                ret.append(e)
+    for e in SODARUserAdditionalEmail.objects.filter(
+        user=user, verified=True
+    ).order_by('email'):
+        ret.append(e.email)
     return ret
 
 

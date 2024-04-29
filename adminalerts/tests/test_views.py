@@ -9,6 +9,7 @@ from test_plus.test import TestCase
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
+from projectroles.tests.test_models import SODARUserAdditionalEmailMixin
 
 from adminalerts.models import AdminAlert
 from adminalerts.tests.test_models import AdminAlertMixin
@@ -26,9 +27,13 @@ ALERT_DESC = 'Description'
 ALERT_DESC_UPDATED = 'Updated description'
 ALERT_DESC_MARKDOWN = '## Description'
 EMAIL_DESC_LEGEND = 'Additional details'
+ADD_EMAIL = 'add1@example.com'
+ADD_EMAIL2 = 'add2@example.com'
 
 
-class AdminalertsViewTestBase(AdminAlertMixin, TestCase):
+class AdminalertsViewTestBase(
+    AdminAlertMixin, SODARUserAdditionalEmailMixin, TestCase
+):
     """Base class for adminalerts view testing"""
 
     def _make_alert(self):
@@ -199,16 +204,10 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
         self.assertIn(EMAIL_DESC_LEGEND, mail.outbox[0].body)
         self.assertIn(ALERT_DESC, mail.outbox[0].body)
 
-    def test_post_alt_email_regular_user(self):
-        """Test POST with alt emails on regular user"""
-        alt_email = 'alt@example.com'
-        alt_email2 = 'alt2@example.com'
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            ';'.join([alt_email, alt_email2]),
-            user=self.user_regular,
-        )
+    def test_post_add_email_regular_user(self):
+        """Test POST with additional emails on regular user"""
+        self.make_email(self.user_regular, ADD_EMAIL)
+        self.make_email(self.user_regular, ADD_EMAIL2)
         self.assertEqual(len(mail.outbox), 0)
         data = self._get_post_data()
         with self.login(self.superuser):
@@ -220,28 +219,41 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
             [
                 settings.EMAIL_SENDER,
                 self.user_regular.email,
-                alt_email,
-                alt_email2,
+                ADD_EMAIL,
+                ADD_EMAIL2,
             ],
         )
 
-    def test_post_alt_email_superuser(self):
-        """Test POST with alt emails on superuser"""
-        alt_email = 'alt@example.com'
-        alt_email2 = 'alt2@example.com'
-        app_settings.set(
-            'projectroles',
-            'user_email_additional',
-            ';'.join([alt_email, alt_email2]),
-            user=self.superuser,
-        )
+    def test_post_add_email_regular_user_unverified(self):
+        """Test POST with additional and unverified emails on regular user"""
+        self.make_email(self.user_regular, ADD_EMAIL)
+        self.make_email(self.user_regular, ADD_EMAIL2, verified=False)
         self.assertEqual(len(mail.outbox), 0)
         data = self._get_post_data()
         with self.login(self.superuser):
             response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(mail.outbox), 1)
-        # Superuser alt emails should not be included
+        self.assertEqual(
+            mail.outbox[0].recipients(),
+            [
+                settings.EMAIL_SENDER,
+                self.user_regular.email,
+                ADD_EMAIL,
+            ],
+        )
+
+    def test_post_add_email_superuser(self):
+        """Test POST with additional emails on superuser"""
+        self.make_email(self.superuser, ADD_EMAIL)
+        self.make_email(self.superuser, ADD_EMAIL2)
+        self.assertEqual(len(mail.outbox), 0)
+        data = self._get_post_data()
+        with self.login(self.superuser):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        # Superuser additional emails should not be included
         self.assertEqual(
             mail.outbox[0].recipients(),
             [settings.EMAIL_SENDER, self.user_regular.email],

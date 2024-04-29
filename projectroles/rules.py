@@ -142,6 +142,18 @@ def is_allowed_anonymous(user):
     return False
 
 
+@rules.predicate
+def is_source_site():
+    """Return True if PROJECTROLES_SITE_MODE is set to SITE_MODE_PROJECT"""
+    return settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
+
+
+@rules.predicate
+def is_target_site():
+    """Return True if PROJECTROLES_SITE_MODE is set to SITE_MODE_TARGET"""
+    return settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+
+
 # Combined predicates ----------------------------------------------------------
 
 

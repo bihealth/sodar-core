@@ -62,6 +62,7 @@ ROLE_PROJECT_TYPE_ERROR_MSG = (
     'Invalid project type "{project_type}" for ' 'role "{role_name}"'
 )
 CAT_PUBLIC_ACCESS_MSG = 'Public guest access is not allowed for categories'
+ADD_EMAIL_ALREADY_SET_MSG = 'Email already set as {email_type} email for user'
 
 
 # Project ----------------------------------------------------------------------
@@ -1271,7 +1272,7 @@ class RemoteProject(models.Model):
         )
 
 
-# Abstract User Model ----------------------------------------------------------
+# User Models ------------------------------------------------------------------
 
 
 class SODARUser(AbstractUser):
@@ -1373,3 +1374,89 @@ class SODARUser(AbstractUser):
             self.username = u_split[0] + '@' + u_split[1].upper()
             self.save()
         return self.username
+
+
+class SODARUserAdditionalEmail(models.Model):
+    """
+    Model representing an additional email address for a user. Stores
+    information for email verification.
+    """
+
+    #: User for whom the email is assigned
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        related_name='additional_emails',
+        help_text='User for whom the email is assigned',
+        on_delete=models.CASCADE,
+    )
+
+    #: Email address
+    email = models.EmailField(
+        unique=False,
+        null=False,
+        blank=False,
+        help_text='Email address',
+    )
+
+    #: Email verification status
+    verified = models.BooleanField(
+        default=False, help_text='Email verification status'
+    )
+
+    #: Secret token for email verification
+    secret = models.CharField(
+        max_length=255,
+        unique=True,
+        blank=False,
+        null=False,
+        help_text='Secret token for email verification',
+    )
+
+    #: DateTime of creation
+    date_created = models.DateTimeField(
+        auto_now_add=True, help_text='DateTime of creation'
+    )
+
+    #: DateTime of last modification
+    date_modified = models.DateTimeField(
+        auto_now=True, help_text='DateTime of last modification'
+    )
+
+    #: SODARUserAdditionalEmail SODAR UUID
+    sodar_uuid = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        help_text='SODARUserAdditionalEmail SODAR UUID',
+    )
+
+    class Meta:
+        ordering = ['user__username', 'email']
+        unique_together = ['user', 'email']
+
+    def __str__(self):
+        return '{}: {}'.format(self.user.username, self.email)
+
+    def __repr__(self):
+        values = (
+            self.user.username,
+            self.email,
+            str(self.verified),
+            self.secret,
+            str(self.sodar_uuid),
+        )
+        return 'SODARUserAdditionalEmail({})'.format(
+            ', '.join(repr(v) for v in values)
+        )
+
+    def _validate_email_unique(self):
+        """
+        Assert the same email has not yet been set for the user.
+        """
+        if self.email == self.user.email:
+            raise ValidationError(
+                ADD_EMAIL_ALREADY_SET_MSG.format(email_type='primary')
+            )
+
+    def save(self, *args, **kwargs):
+        self._validate_email_unique()
+        super().save(*args, **kwargs)

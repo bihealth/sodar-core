@@ -4,6 +4,31 @@
 
 {% block title %}User Profile for {{ request.user.get_full_name }}{% endblock %}
 
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    .table#sodar-user-email-table tr td:nth-child(1) {
+      width: 100%;
+    }
+    .table#sodar-user-email-table tr td:nth-child(5) {
+      width: 80px;
+    }
+    /* Responsive modifications */
+    @media screen and (max-width: 900px) {
+      .table#sodar-user-email-table tr th:nth-child(3),
+      .table#sodar-user-email-table tr td:nth-child(3) {
+        display: none;
+      }
+    }
+    @media screen and (max-width: 700px) {
+      .table#sodar-user-email-table tr th:nth-child(4),
+      .table#sodar-user-email-table tr td:nth-child(4) {
+        display: none;
+      }
+    }
+  </style>
+{% endblock %}
+
 {% block projectroles %}
 
 <div class="row sodar-pr-content-title pt-2">
@@ -91,6 +116,82 @@
       </dl>
     </div>
   </div>
+
+  {% get_django_setting 'PROJECTROLES_SEND_EMAIL' as send_email %}
+  {% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
+  {% if send_email %}
+    <div class="card" id="sodar-user-email-card">
+      <div class="card-header">
+        <h4>
+          <i class="iconify" data-icon="mdi:email-multiple"></i>
+          Additional Email Addresses
+          {% if site_mode == 'SOURCE' %}
+            <span class="sodar-header-input-group pull-right">
+              <a role="button"
+                 class="btn btn-primary"
+                 id="sodar-user-btn-email-add"
+                 href="{% url 'userprofile:email_create' %}">
+                <i class="iconify" data-icon="mdi:plus-thick"></i> Add Email
+              </a>
+            </span>
+          {% endif %}
+        </h4>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped sodar-card-table"
+               id="sodar-user-email-table">
+          <thead>
+            <tr>
+              <th>Address</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Modified</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if add_emails.count > 0 %}
+              {% for email in add_emails %}
+                <tr class="sodar-user-email-table-row">
+                  <td><a href="mailto:{{ email.email }}">{{ email.email }}</a></td>
+                  <td class="text-nowrap text-{% if email.verified %}success{% else %}danger{% endif %}">
+                    {% if email.verified %}Verified{% else %}Unverified{% endif %}
+                  </td>
+                  <td class="text-nowrap">{{ email.date_created | date:'Y-m-d H:i'}}</td>
+                  <td class="text-nowrap">{{ email.date_modified | date:'Y-m-d H:i'}}</td>
+                  <td class="text-right">
+                    {% if site_mode == 'SOURCE' %}
+                      <button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
+                              type="button" data-toggle="dropdown"
+                              aria-haspopup="true" aria-expanded="false">
+                        <i class="iconify" data-icon="mdi:gear"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-right sodar-user-email-dropdown">
+                        <a class="dropdown-item sodar-user-email-resend {% if email.verified %}disabled{% endif %}"
+                           href="{% url 'userprofile:email_verify_resend' sodaruseradditionalemail=email.sodar_uuid %}">
+                          <i class="iconify" data-icon="mdi:send"></i> Resend Verification Mail
+                        </a>
+                        <a class="dropdown-item sodar-user-email-delete text-danger"
+                           href="{% url 'userprofile:email_delete' sodaruseradditionalemail=email.sodar_uuid %}">
+                          <i class="iconify" data-icon="mdi:close-thick"></i> Delete Address
+                        </a>
+                      </div>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr id="sodar-user-email-table-not-found">
+                <td class="bg-faded font-italic text-center" colspan="5">
+                  No additional email addresses set.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
 </div>
 
 {% endblock projectroles %}
@@ -143,5 +244,23 @@
               showCancelLink: true
           });
       }
+      tour.addStep('additional_email', {
+          title: 'Additional Email Addresses Card',
+          text: 'This card displays additional email addresses set for the ' +
+                'user and the ability to manage those addresses.',
+          attachTo: '#sodar-user-email-card top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+      tour.addStep('additional_email_add', {
+          title: 'Add Email',
+          text: 'If you want email notifications sent to one or more ' +
+                'addresses other than your primary address, add those here. ' +
+                'Addresses must be validated by following a link received in ' +
+                'the initial email.',
+          attachTo: '#sodar-user-btn-email-add left',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
   </script>
 {% endblock javascript %}

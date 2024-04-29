@@ -14,6 +14,7 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     AppSetting,
+    SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ROLE_RANKING,
     CAT_DELIMITER,
@@ -147,9 +148,26 @@ class SODARNestedListSerializer(SODARModelSerializer):
 class SODARUserSerializer(SODARModelSerializer):
     """Serializer for the user model used in SODAR Core based sites"""
 
+    additional_emails = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['username', 'name', 'email', 'is_superuser', 'sodar_uuid']
+        fields = [
+            'username',
+            'name',
+            'email',
+            'additional_emails',
+            'is_superuser',
+            'sodar_uuid',
+        ]
+
+    def get_additional_emails(self, obj):
+        return [
+            e.email
+            for e in SODARUserAdditionalEmail.objects.filter(
+                user=obj, verified=True
+            ).order_by('email')
+        ]
 
 
 # Projectroles Serializers -----------------------------------------------------

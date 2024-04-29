@@ -27,6 +27,7 @@ from projectroles.models import (
     RoleAssignment,
     RemoteProject,
     RemoteSite,
+    SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     AppSetting,
 )
@@ -155,12 +156,16 @@ class RemoteProjectAPI:
         if user.username not in [
             u['username'] for u in sync_data['users'].values()
         ]:
+            add_emails = SODARUserAdditionalEmail.objects.filter(
+                user=user, verified=True
+            )
             sync_data['users'][str(user.sodar_uuid)] = {
                 'username': user.username,
                 'name': user.name,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'email': user.email,
+                'additional_emails': [e.email for e in add_emails],
                 'groups': [g.name for g in user.groups.all()],
                 'sodar_uuid': str(user.sodar_uuid),
             }
@@ -422,6 +427,9 @@ class RemoteProjectAPI:
             return
         # Add UUID to user_data to ensure it gets synced
         user_data['sodar_uuid'] = uuid
+        # Pop additional emails
+        # TODO: Simply omit this from object creation/update instead?
+        add_emails = user_data.pop('additional_emails')
 
         # Update existing user
         try:
@@ -492,6 +500,29 @@ class RemoteProjectAPI:
                         user.username, user.sodar_uuid, g
                     )
                 )
+
+        # Sync additional emails
+        deleted_emails = SODARUserAdditionalEmail.objects.filter(
+            user=user
+        ).exclude(email__in=add_emails)
+        for e in deleted_emails:
+            e.delete()
+            logger.info(
+                'Deleted user {} additional email "{}"'.format(
+                    user.username, e.email
+                )
+            )
+        for e in add_emails:
+            email_obj = SODARUserAdditionalEmail.objects.create(
+                user=user, email=e, verified=True
+            )
+            logger.info(
+                'Created user {} additional email "{}"'.format(
+                    user.username, email_obj.email
+                )
+            )
+        # HACK: Re-add additional emails
+        user_data['additional_emails'] = add_emails
 
     def _handle_user_error(self, error_msg, project, role_uuid):
         """

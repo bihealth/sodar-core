@@ -1349,6 +1349,7 @@ class CurrentUserRetrieveAPIView(
 
     For current user:
 
+    - ``additional_emails``: Additional verified email addresses for user (list of strings)
     - ``email``: Email address of the user (string)
     - ``is_superuser``: Superuser status (boolean)
     - ``name``: Full name of the user (string)

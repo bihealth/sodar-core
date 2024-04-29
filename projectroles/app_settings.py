@@ -98,18 +98,6 @@ PROJECTROLES_APP_SETTINGS = {
         'user_modifiable': True,
         'global': True,
     },
-    'user_email_additional': {
-        'scope': APP_SETTING_SCOPE_USER,
-        'type': 'STRING',
-        'default': '',
-        'placeholder': 'email1@example.com;email2@example.com',
-        'label': 'Additional email',
-        'description': 'Also send user emails to these addresses. Separate '
-        'multiple emails with semicolon.',
-        'user_modifiable': True,
-        'global': True,
-        'project_types': [PROJECT_TYPE_PROJECT],
-    },
     'project_star': {
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
         'type': 'BOOLEAN',
