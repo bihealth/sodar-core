@@ -601,7 +601,7 @@ class RemoteProjectAPI:
                     user=self.tl_user,
                     event_name='remote_project_update',
                     description=tl_desc,
-                    status_type='OK',
+                    status_type=self.timeline.TL_STATUS_OK,
                 )
                 tl_event.add_object(
                     self.source_site, 'site', self.source_site.name
@@ -654,7 +654,7 @@ class RemoteProjectAPI:
                 user=self.tl_user,
                 event_name='remote_project_create',
                 description='create project from remote site {site}',
-                status_type='OK',
+                status_type=self.timeline.TL_STATUS_OK,
             )
             # TODO: Add extra_data
             tl_event.add_object(self.source_site, 'site', self.source_site.name)
@@ -812,7 +812,7 @@ class RemoteProjectAPI:
                         user=self.tl_user,
                         event_name='remote_role_update',
                         description=tl_desc,
-                        status_type='OK',
+                        status_type=self.timeline.TL_STATUS_OK,
                     )
                     tl_event.add_object(role_user, 'user', role_user.username)
                     tl_event.add_object(
@@ -849,7 +849,7 @@ class RemoteProjectAPI:
                         user=self.tl_user,
                         event_name='remote_role_create',
                         description=tl_desc,
-                        status_type='OK',
+                        status_type=self.timeline.TL_STATUS_OK,
                     )
                     tl_event.add_object(role_user, 'user', role_user.username)
                     tl_event.add_object(
@@ -902,7 +902,7 @@ class RemoteProjectAPI:
                         user=self.tl_user,
                         event_name='remote_role_delete',
                         description=tl_desc,
-                        status_type='OK',
+                        status_type=timeline.TL_STATUS_OK,
                     )
                     tl_event.add_object(del_user, 'user', del_user.username)
                     tl_event.add_object(

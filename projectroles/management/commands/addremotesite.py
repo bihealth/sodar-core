@@ -150,7 +150,7 @@ class Command(BaseCommand):
             event_name='remote_site_create',
             description=description,
             classified=True,
-            status_type='OK',
+            status_type=timeline.TL_STATUS_OK,
         )
         logger.info(
             'Created remote site "{}" with mode {}'.format(site.name, site.mode)

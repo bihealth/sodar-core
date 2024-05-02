@@ -104,8 +104,8 @@ class TestTimelineAPI(
         expected_status = {
             'id': status.pk,
             'event': event.pk,
-            'status_type': 'INIT',
-            'description': DEFAULT_MESSAGES['INIT'],
+            'status_type': self.timeline.TL_STATUS_INIT,
+            'description': DEFAULT_MESSAGES[self.timeline.TL_STATUS_INIT],
             'extra_data': {},
             'sodar_uuid': status.sodar_uuid,
         }
@@ -123,8 +123,8 @@ class TestTimelineAPI(
             event_name='test_event',
             description='description',
             extra_data=EXTRA_DATA,
-            status_type='OK',
-            status_desc='OK',
+            status_type=self.timeline.TL_STATUS_OK,
+            status_desc=self.timeline.TL_STATUS_OK,
             status_extra_data={},
         )
 
@@ -149,8 +149,8 @@ class TestTimelineAPI(
         expected_status = {
             'id': status.pk,
             'event': event.pk,
-            'status_type': 'OK',
-            'description': 'OK',
+            'status_type': self.timeline.TL_STATUS_OK,
+            'description': self.timeline.TL_STATUS_OK,
             'extra_data': {},
             'sodar_uuid': status.sodar_uuid,
         }
@@ -169,7 +169,7 @@ class TestTimelineAPI(
             event_name='test_event',
             description='description',
             extra_data=EXTRA_DATA,
-            status_type='INIT',
+            status_type=self.timeline.TL_STATUS_INIT,
             status_desc=custom_init_desc,
         )
 
@@ -180,7 +180,7 @@ class TestTimelineAPI(
         expected_status = {
             'id': status.pk,
             'event': event.pk,
-            'status_type': 'INIT',
+            'status_type': self.timeline.TL_STATUS_INIT,
             'description': custom_init_desc,
             'extra_data': {},
             'sodar_uuid': status.sodar_uuid,

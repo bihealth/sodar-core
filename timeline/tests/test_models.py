@@ -17,6 +17,8 @@ from timeline.models import (
     TimelineEventObjectRef,
     TimelineEventStatus,
     OBJ_REF_UNNAMED,
+    TL_STATUS_OK,
+    TL_STATUS_FAILED,
 )
 
 
@@ -427,8 +429,8 @@ class TestTimelineEventStatus(
         )
         self.event_status_ok = self.make_event_status(
             event=self.event,
-            status_type='OK',
-            description='OK',
+            status_type=TL_STATUS_OK,
+            description=TL_STATUS_OK,
             extra_data=EXTRA_DATA,
         )
 
@@ -438,8 +440,8 @@ class TestTimelineEventStatus(
             'id': self.event_status_ok.pk,
             'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
-            'status_type': 'OK',
-            'description': 'OK',
+            'status_type': TL_STATUS_OK,
+            'description': TL_STATUS_OK,
             'extra_data': EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(self.event_status_ok), expected)
@@ -450,8 +452,8 @@ class TestTimelineEventStatus(
             'id': self.event_status_ok.pk,
             'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
-            'status_type': 'OK',
-            'description': 'OK',
+            'status_type': TL_STATUS_OK,
+            'description': TL_STATUS_OK,
             'extra_data': EXTRA_DATA,
         }
         self.event = self.make_event(
@@ -467,30 +469,26 @@ class TestTimelineEventStatus(
 
     def test__str__(self):
         """Test TimelineEventStatus __str__()"""
-        expected = 'TestProject: test_event/owner (OK)'
+        expected = f'TestProject: test_event/owner ({TL_STATUS_OK})'
         self.assertEqual(str(self.event_status_ok), expected)
 
     def test__str__no_user(self):
         """Test __str__() with no user"""
         self.event.user = None
         self.event.save()
-        expected = 'TestProject: test_event (OK)'
+        expected = f'TestProject: test_event ({TL_STATUS_OK})'
         self.assertEqual(str(self.event_status_ok), expected)
 
     def test__repr__(self):
         """Test TimelineEventStatus __repr__()"""
-        expected = (
-            "TimelineEventStatus('TestProject', 'test_event', 'owner', 'OK')"
-        )
+        expected = f"TimelineEventStatus('TestProject', 'test_event', 'owner', '{TL_STATUS_OK}')"
         self.assertEqual(repr(self.event_status_ok), expected)
 
     def test__repr__no_user(self):
         """Test __repr__() with no user"""
         self.event.user = None
         self.event.save()
-        expected = (
-            "TimelineEventStatus('TestProject', 'test_event', 'N/A', 'OK')"
-        )
+        expected = f"TimelineEventStatus('TestProject', 'test_event', 'N/A', '{TL_STATUS_OK}')"
         self.assertEqual(repr(self.event_status_ok), expected)
 
     def test_get_status(self):
@@ -500,8 +498,8 @@ class TestTimelineEventStatus(
             'id': status.pk,
             'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
-            'status_type': 'OK',
-            'description': 'OK',
+            'status_type': TL_STATUS_OK,
+            'description': TL_STATUS_OK,
             'extra_data': EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(status), expected)
@@ -527,14 +525,16 @@ class TestTimelineEventStatus(
     def test_set_status(self):
         """Test TimelineEventStatus set_status()"""
         new_status = self.event.set_status(
-            'FAILED', status_desc='FAILED', extra_data=EXTRA_DATA
+            TL_STATUS_FAILED,
+            status_desc=TL_STATUS_FAILED,
+            extra_data=EXTRA_DATA,
         )
         expected = {
             'id': new_status.pk,
             'sodar_uuid': new_status.sodar_uuid,
             'event': self.event.pk,
-            'status_type': 'FAILED',
-            'description': 'FAILED',
+            'status_type': TL_STATUS_FAILED,
+            'description': TL_STATUS_FAILED,
             'extra_data': EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(new_status), expected)

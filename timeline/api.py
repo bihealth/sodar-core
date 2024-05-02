@@ -19,6 +19,12 @@ from timeline.models import (
     TimelineEventObjectRef,
     EVENT_STATUS_TYPES,
     OBJ_REF_UNNAMED,
+    TL_STATUS_OK,
+    TL_STATUS_INIT,
+    TL_STATUS_SUBMIT,
+    TL_STATUS_FAILED,
+    TL_STATUS_INFO,
+    TL_STATUS_CANCEL,
 )
 
 
@@ -39,6 +45,15 @@ DEPRECATE_LINK_DICT_MSG = (
 
 class TimelineAPI:
     """Timeline backend API to be used by Django apps."""
+
+    # Attributes --------------------------------------------------------------
+
+    TL_STATUS_OK = TL_STATUS_OK
+    TL_STATUS_INIT = TL_STATUS_INIT
+    TL_STATUS_SUBMIT = TL_STATUS_SUBMIT
+    TL_STATUS_FAILED = TL_STATUS_FAILED
+    TL_STATUS_INFO = TL_STATUS_INFO
+    TL_STATUS_CANCEL = TL_STATUS_CANCEL
 
     # Internal Helpers ---------------------------------------------------------
 
@@ -271,8 +286,8 @@ class TimelineAPI:
         event.save()
 
         # Always add "INIT" status when creating, except for "INFO"
-        if status_type not in ['INFO', 'INIT']:
-            event.set_status('INIT')
+        if status_type not in [TL_STATUS_INFO, TL_STATUS_INIT]:
+            event.set_status(TL_STATUS_INIT)
         # Add additional status if set (use if e.g. event is immediately "OK")
         if status_type:
             event.set_status(status_type, status_desc, status_extra_data)

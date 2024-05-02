@@ -1195,7 +1195,7 @@ class ProjectSettingSetAPIView(
                 description=tl_desc,
                 classified=True,
                 extra_data=tl_extra_data,
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
             if setting_user:
                 tl_event.add_object(setting_user, 'user', setting_user.username)
