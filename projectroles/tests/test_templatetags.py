@@ -689,7 +689,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
                 },
                 {
                     'name': 'project-update',
-                    'url': f'/project/project/update/{self.project.sodar_uuid}',
+                    'url': f'/project/update/{self.project.sodar_uuid}',
                     'label': 'Update Project',
                     'icon': 'mdi:lead-pencil',
                     'active': False,

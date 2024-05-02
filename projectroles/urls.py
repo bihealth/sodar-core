@@ -12,22 +12,22 @@ urls_ui = [
         name='detail',
     ),
     path(
-        route='project/update/<uuid:project>',
+        route='update/<uuid:project>',
         view=views.ProjectUpdateView.as_view(),
         name='update',
     ),
     path(
-        route='project/create',
+        route='create',
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
     path(
-        route='project/create/<uuid:project>',
+        route='create/<uuid:project>',
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
     path(
-        route='project/archive/<uuid:project>',
+        route='archive/<uuid:project>',
         view=views.ProjectArchiveView.as_view(),
         name='archive',
     ),
