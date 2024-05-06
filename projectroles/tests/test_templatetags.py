@@ -34,7 +34,6 @@ from projectroles.tests.test_models import (
 )
 
 
-
 app_settings = AppSettingAPI()
 site = import_module(settings.SITE_PACKAGE)
 

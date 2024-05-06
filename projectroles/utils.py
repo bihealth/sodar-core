@@ -191,7 +191,7 @@ class AppLinkContent:
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
                     ),
-                    'label': 'Overview',
+                    'label': f'{get_display_name(project.type, title=True)} Overview',
                     'icon': (
                         'mdi:rhombus-split'
                         if project.type == PROJECT_TYPE_CATEGORY
@@ -249,7 +249,7 @@ class AppLinkContent:
                             'projectroles:update',
                             kwargs={'project': project.sodar_uuid},
                         ),
-                        'label': f'Update {get_display_name(project.type)}',
+                        'label': f'Update {get_display_name(project.type, title=True)}',
                         'icon': 'mdi:lead-pencil',
                         'active': self._is_active_projectroles(
                             link_names=['update'],
@@ -274,7 +274,7 @@ class AppLinkContent:
                         'projectroles:create',
                         kwargs={'project': project.sodar_uuid},
                     ),
-                    'label': 'Create Project or Category',
+                    'label': f'Create {get_display_name(PROJECT_TYPE_PROJECT, title=True)} or {get_display_name(PROJECT_TYPE_CATEGORY, title=True)}',
                     'icon': 'mdi:plus-thick',
                     'active': self._is_active_projectroles(
                         link_names=['create'],
@@ -291,7 +291,7 @@ class AppLinkContent:
                 {
                     'name': 'project-create',
                     'url': reverse('projectroles:create'),
-                    'label': 'Create Project',
+                    'label': f'Create {get_display_name(PROJECT_TYPE_PROJECT, title=True)}',
                     'icon': 'mdi:plus-thick',
                     'active': self._is_active_projectroles(
                         link_names=['create'],
@@ -309,7 +309,7 @@ class AppLinkContent:
                 {
                     'name': 'home-project-create',
                     'url': reverse('projectroles:create'),
-                    'label': 'Create Category',
+                    'label': f'Create {get_display_name(PROJECT_TYPE_CATEGORY, title=True)}',
                     'icon': 'mdi:plus-thick',
                     'active': self._is_active_projectroles(
                         link_names=['create'],
