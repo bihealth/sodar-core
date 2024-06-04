@@ -80,6 +80,7 @@ Changed
 - **Timeline**
     - Update ``get_object_link()`` usage for ``PluginObjectLink`` return data (#1343)
     - Rename ``ProjectEvent*`` models to ``TimelineEvent*`` (#1414)
+    - Move event name from separate column into badge (#1370)
 - **Userprofile**
     - Disable global user settings on target site in ``UserSettingsForm`` (#1329)
 

@@ -372,7 +372,7 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         )
 
     def test_details_content(self):
-        """Test details modal's content"""
+        """Test details modal content"""
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
@@ -391,19 +391,18 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         )
         title = self.selenium.find_element(By.CLASS_NAME, 'modal-title')
         self.assertIn('Event Details: ', title.text)
-        table = self.selenium.find_element(By.CLASS_NAME, 'table')
-        check_list = [
+        table = self.selenium.find_element(By.ID, 'sodar-tl-table-detail')
+        expected = [
             'Timestamp',
-            'Event',
             'Description',
             'Status',
             self.timeline.TL_STATUS_INIT,
         ]
-        for check in check_list:
-            self.assertIn(check, table.text)
+        for e in expected:
+            self.assertIn(e, table.text)
 
     def test_extra_content(self):
-        """Test extra data modal's content"""
+        """Test extra data modal content"""
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )

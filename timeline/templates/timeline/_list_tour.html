@@ -24,12 +24,12 @@
           showCancelLink: true
       });
   }
-  if ($('.sodar-tl-item-name').length) {
+  if ($('.sodar-tl-event-badge').length) {
       tour.addStep('event_name', {
           title: 'Event Name',
-          text: 'The event name is displayed in this column. Event with the ' +
-                'name may be searched using the site search.',
-          attachTo: '.sodar-tl-item-name top',
+          text: 'The event name is displayed in these badges. Events may be ' +
+                'searched by name using the site search.',
+          attachTo: '.sodar-tl-event-badge top',
           advanceOn: '.docs-link click',
           showCancelLink: true
       });

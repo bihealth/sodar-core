@@ -20,13 +20,6 @@
       </a>
     {% endif %}
   </td>
-  <td class="sodar-tl-item-name">
-    <div class="sodar-overflow-container">
-      {% get_app_icon_html event plugin_lookup as event_icon %}
-      {{ event_icon|safe }}
-      {{ event.event_name }}
-    </div>
-  </td>
   <td class="sodar-tl-item-user {% if not event.user %}text-muted{% endif %}">
     {% if event.user %}
       <div class="sodar-overflow-container">
@@ -38,6 +31,11 @@
     {% endif %}
   </td>
   <td class="sodar-tl-item-desc">
+    {% get_app_icon_html event plugin_lookup as event_icon %}
+    <span class="badge bg-secondary text-white mr-1 sodar-tl-event-badge">
+      {{ event_icon|safe }}
+      {{ event.event_name }}
+    </span>
     {% if event.project and user.is_superuser and timeline_mode == 'admin' %}
       {% include 'projectroles/_project_badge.html' with project=event.project color='info' can_view=True %}
     {% endif %}

@@ -24,14 +24,18 @@ All Timeline Events
 
 .. figure:: _static/app_timeline/sodar_timeline.png
     :align: center
-    :scale: 50%
+    :scale: 65%
 
     Timeline project event list view
 
-The event list layout is practically similar for each view. By clicking on the
-time stamp for each event, you can view the details on different status updates
+The event list layout is mostly similar for each view. By clicking on the
+timestamp for each event, you can view the details on different status updates
 for the execution of the event. This is used e.g. in case of asynchronous
 events.
+
+The event description contains a badge with the event name, which can be used
+to refer to similar events and e.g. search for events of a specific type using
+the site search.
 
 By clicking on the clock icon next to an object link in the event description,
 you can view the event history of that object. The link itself will take you
