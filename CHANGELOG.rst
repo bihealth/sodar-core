@@ -31,10 +31,11 @@ Added
     - ``checkusers`` management command (#1410)
     - ``SODARPageNumberPagination`` pagination class (#1313)
     - Optional pagination for REST API list views (#1313)
-    - Email notification opt-out settings (#1417)
+    - Email notification opt-out settings (#1417, #1418)
     - CC and BCC field support in sending generic emails (#415)
     - ``SODARUserAdditionalEmail`` model (#874)
     - ``is_source_site()`` and ``is_target_site()`` rule predicates
+    - ``settings_link`` kwarg in ``send_generic_email()`` (#1418)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)

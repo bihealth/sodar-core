@@ -1729,12 +1729,7 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
                 user_name='{user_name}',
                 issuer=self.request.user,
                 role_name='{role_name}',
-                project_url=self.request.build_absolute_uri(
-                    reverse(
-                        'projectroles:detail',
-                        kwargs={'project': project.sodar_uuid},
-                    )
-                ),
+                request=self.request,
             ).replace('\n', '\\n')
         return context
 
@@ -2416,9 +2411,9 @@ class ProjectInviteCreateView(
         context['preview_message'] = email.get_invite_message(
             '{message}'
         ).replace('\n', '\\n')
-        context['preview_footer'] = email.get_email_footer().replace(
-            '\n', '\\n'
-        )
+        context['preview_footer'] = email.get_email_footer(
+            self.request
+        ).replace('\n', '\\n')
         return context
 
     def get_form_kwargs(self):
