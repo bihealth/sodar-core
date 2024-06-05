@@ -772,7 +772,7 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
 
 class TestRole(RoleMixin, TestCase):
-    """Tests for models.Role"""
+    """Tests for Role"""
 
     def setUp(self):
         self.init_roles()
@@ -813,7 +813,7 @@ class TestRole(RoleMixin, TestCase):
 class TestRoleAssignment(
     ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase
 ):
-    """Tests for model.RoleAssignment"""
+    """Tests for RoleAssignment"""
 
     def setUp(self):
         # Set up category and project
@@ -1051,7 +1051,7 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 class TestProjectSetting(
     ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
 ):
-    """Tests for model.AppSetting with user == None"""
+    """Tests for AppSetting with PROJECT scope"""
 
     def setUp(self):
         # Init project
@@ -1312,7 +1312,7 @@ class TestUserSetting(
 class TestRemoteSite(
     ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, TestCase
 ):
-    """Tests for model.RemoteSite"""
+    """Tests for RemoteSite"""
 
     def setUp(self):
         # Init project
@@ -1383,7 +1383,7 @@ class TestRemoteProject(
     RemoteProjectMixin,
     TestCase,
 ):
-    """Tests for model.RemoteProject"""
+    """Tests for RemoteProject"""
 
     def setUp(self):
         # Init project
@@ -1502,7 +1502,7 @@ class TestRemoteProject(
 
 
 class TestSODARUser(TestCase):
-    """Tests for the SODARUser class"""
+    """Tests for SODARUser"""
 
     def setUp(self):
         self.user = self.make_user()

@@ -36,6 +36,7 @@ Added
     - ``SODARUserAdditionalEmail`` model (#874)
     - ``is_source_site()`` and ``is_target_site()`` rule predicates
     - ``settings_link`` kwarg in ``send_generic_email()`` (#1418)
+    - ``addremotesite`` command tests (#352)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
@@ -94,6 +95,8 @@ Fixed
     - Legacy public guest access in child category breaks category updating (#1404)
     - Incorrect DAL widget highlight colour after upgrade (#1412)
     - ``ProjectStarringAjaxView`` creating redundant database objects (#1416)
+    - ``addremotesite`` crash in ``TimelineAPI.add_event()`` (#1425)
+    - ``addremotesite`` allows creation of site with mode identical to host (#1426)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 
