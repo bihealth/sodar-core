@@ -35,6 +35,9 @@ from projectroles.management.commands.createdevusers import (
     DEV_USER_NAMES,
     DEFAULT_PASSWORD,
 )
+from projectroles.management.commands.syncgroups import (
+    Command as SyncGroupsCommand,
+)
 
 from projectroles.models import (
     RoleAssignment,
@@ -67,6 +70,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 EXAMPLE_APP_NAME = 'example_project_app'
@@ -75,6 +79,7 @@ CUSTOM_PASSWORD = 'custompass'
 REMOTE_SITE_NAME = 'Test Site'
 REMOTE_SITE_URL = 'https://example.com'
 REMOTE_SITE_SECRET = build_secret(32)
+USER_DOMAIN = 'EXAMPLE'
 
 
 class TestAddRemoteSite(
@@ -868,6 +873,55 @@ class TestCleanAppSettings(
                 AppSetting.objects.filter(name='project_user_bool_setting'),
                 [],
             )
+
+
+class TestSyncGroups(TestCase):
+    """Tests for syncgroups command"""
+
+    def setUp(self):
+        self.command = SyncGroupsCommand()
+
+    def test_sync_system(self):
+        """Test sync with system username"""
+        user = self.make_user('user')
+        user.groups.all().delete()  # Remove groups
+        self.assertEqual(user.groups.count(), 0)
+        self.command.handle()
+        self.assertEqual(user.groups.count(), 1)
+        group = user.groups.first()
+        self.assertIsNotNone(group)
+        self.assertEqual(group.name, SYSTEM_USER_GROUP)
+
+    def test_sync_system_existing(self):
+        """Test sync with system username and existing group"""
+        user = self.make_user('user')
+        self.assertEqual(user.groups.count(), 1)
+        self.command.handle()
+        self.assertEqual(user.groups.count(), 1)
+        group = user.groups.first()
+        self.assertIsNotNone(group)
+        self.assertEqual(group.name, SYSTEM_USER_GROUP)
+
+    def test_sync_domain(self):
+        """Test sync with domain username"""
+        user = self.make_user('user@' + USER_DOMAIN)
+        user.groups.all().delete()
+        self.assertEqual(user.groups.count(), 0)
+        self.command.handle()
+        self.assertEqual(user.groups.count(), 1)
+        group = user.groups.first()
+        self.assertIsNotNone(group)
+        self.assertEqual(group.name, USER_DOMAIN.lower())
+
+    def test_sync_domain_existing(self):
+        """Test sync with domain username and existing group"""
+        user = self.make_user('user@' + USER_DOMAIN)
+        self.assertEqual(user.groups.count(), 1)
+        self.command.handle()
+        self.assertEqual(user.groups.count(), 1)
+        group = user.groups.first()
+        self.assertIsNotNone(group)
+        self.assertEqual(group.name, USER_DOMAIN.lower())
 
 
 @override_settings(DEBUG=True)

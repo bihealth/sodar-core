@@ -36,7 +36,7 @@ Added
     - ``SODARUserAdditionalEmail`` model (#874)
     - ``is_source_site()`` and ``is_target_site()`` rule predicates
     - ``settings_link`` kwarg in ``send_generic_email()`` (#1418)
-    - ``addremotesite`` command tests (#352)
+    - ``addremotesite`` and ``syncgroups`` command tests (#352)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
