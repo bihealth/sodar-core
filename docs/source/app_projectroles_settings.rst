@@ -69,16 +69,14 @@ following apps need to be included in the list in order for SODAR Core to work:
 Database
 ========
 
-Under ``DATABASES``, the setting below is recommended:
+Under ``DATABASES``, we recommend setting ``ATOMIC_REQUESTS`` to ``True`` as in
+the following sample. This ensures transactions to be atomic on a view-level.
+It is still possible to ensure atomicity of specific blocks of code with
+Django's ``transaction.atomic`` decorator or context manager.
 
 .. code-block:: python
 
-    DATABASES['default']['ATOMIC_REQUESTS'] = False
-
-.. note::
-
-    If this conflicts with your existing set up, you can modify the code in your
-    other apps to use e.g. ``@transaction.atomic``.
+    DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 
 Templates

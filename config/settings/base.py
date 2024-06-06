@@ -154,7 +154,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres:///sodar_core')
 }
-DATABASES['default']['ATOMIC_REQUESTS'] = False
+DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 # Set default auto field (for Django 3.2+)
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

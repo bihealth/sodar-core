@@ -56,6 +56,7 @@ Changed
     - Reformat with black v24.3.0 (#1374)
     - Update download URL in ``get_chromedriver_url.py`` (#1385)
     - Add ``AUTH_LDAP_USER_SEARCH_BASE`` as a Django setting (#1410)
+    - Change ``ATOMIC_REQUESTS`` recommendation and default to ``True`` (#1281)
 - **Filesfolders**
     - Add migration required by Django v4.2 (#1396)
     - Add app specific media type and versioning (#1278)
