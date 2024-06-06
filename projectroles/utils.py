@@ -183,6 +183,7 @@ class AppLinkContent:
         ret = []
         # Add project related links
         if project:
+            project_display_name = get_display_name(project.type, title=True)
             # Add project overview link
             ret.append(
                 {
@@ -191,7 +192,7 @@ class AppLinkContent:
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
                     ),
-                    'label': f'{get_display_name(project.type, title=True)} Overview',
+                    'label': f'{project_display_name} Overview',
                     'icon': (
                         'mdi:rhombus-split'
                         if project.type == PROJECT_TYPE_CATEGORY
@@ -249,7 +250,7 @@ class AppLinkContent:
                             'projectroles:update',
                             kwargs={'project': project.sodar_uuid},
                         ),
-                        'label': f'Update {get_display_name(project.type, title=True)}',
+                        'label': f'Update {project_display_name}',
                         'icon': 'mdi:lead-pencil',
                         'active': self._is_active_projectroles(
                             link_names=['update'],
@@ -274,7 +275,9 @@ class AppLinkContent:
                         'projectroles:create',
                         kwargs={'project': project.sodar_uuid},
                     ),
-                    'label': f'Create {get_display_name(PROJECT_TYPE_PROJECT, title=True)} or {get_display_name(PROJECT_TYPE_CATEGORY, title=True)}',
+                    'label': 'Create '
+                    f'{get_display_name(PROJECT_TYPE_PROJECT, title=True)} '
+                    f'or {get_display_name(PROJECT_TYPE_CATEGORY, title=True)}',
                     'icon': 'mdi:plus-thick',
                     'active': self._is_active_projectroles(
                         link_names=['create'],
@@ -291,7 +294,8 @@ class AppLinkContent:
                 {
                     'name': 'project-create',
                     'url': reverse('projectroles:create'),
-                    'label': f'Create {get_display_name(PROJECT_TYPE_PROJECT, title=True)}',
+                    'label': 'Create '
+                    f'{get_display_name(PROJECT_TYPE_PROJECT, title=True)}',
                     'icon': 'mdi:plus-thick',
                     'active': self._is_active_projectroles(
                         link_names=['create'],
@@ -309,7 +313,8 @@ class AppLinkContent:
                 {
                     'name': 'home-project-create',
                     'url': reverse('projectroles:create'),
-                    'label': f'Create {get_display_name(PROJECT_TYPE_CATEGORY, title=True)}',
+                    'label': 'Create '
+                    f'{get_display_name(PROJECT_TYPE_CATEGORY, title=True)}',
                     'icon': 'mdi:plus-thick',
                     'active': self._is_active_projectroles(
                         link_names=['create'],
