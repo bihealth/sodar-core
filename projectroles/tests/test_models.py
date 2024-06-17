@@ -1505,6 +1505,16 @@ class TestRemoteProject(
         self.remote_project.save()
         self.assertEqual(self.remote_project.get_project(), self.project)
 
+    def test_create_duplicate(self):
+        """Test creating duplicate remote project for site (should fail)"""
+        with self.assertRaises(ValidationError):
+            self.make_remote_project(
+                project_uuid=self.project.sodar_uuid,
+                site=self.site,
+                level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+                project=self.project,
+            )
+
 
 class TestSODARUser(TestCase):
     """Tests for SODARUser"""

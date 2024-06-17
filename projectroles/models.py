@@ -63,6 +63,9 @@ ROLE_PROJECT_TYPE_ERROR_MSG = (
 )
 CAT_PUBLIC_ACCESS_MSG = 'Public guest access is not allowed for categories'
 ADD_EMAIL_ALREADY_SET_MSG = 'Email already set as {email_type} email for user'
+REMOTE_PROJECT_UNIQUE_MSG = (
+    'RemoteProject with the same project UUID and site anready exists'
+)
 
 
 # Project ----------------------------------------------------------------------
@@ -1260,6 +1263,15 @@ class RemoteProject(models.Model):
 
     class Meta:
         ordering = ['site__name', 'project_uuid']
+
+    def save(self, *args, **kwargs):
+        # NOTE: Can't use unique constraint with foreign key relation
+        rp = self.__class__.objects.filter(
+            project_uuid=self.project_uuid, site=self.site
+        ).first()
+        if rp and rp.id != self.id:
+            raise ValidationError(REMOTE_PROJECT_UNIQUE_MSG)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return '{}: {} ({})'.format(
