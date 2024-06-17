@@ -205,9 +205,11 @@ class RemoteSiteMixin:
         name,
         url,
         user_display=REMOTE_SITE_USER_DISPLAY,
+        owner_modifiable=True,
         mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
         description='',
         secret=build_secret(),
+        sodar_uuid=None,
     ):
         """Make and save a RemoteSite"""
         values = {
@@ -217,6 +219,8 @@ class RemoteSiteMixin:
             'description': description,
             'secret': secret,
             'user_display': user_display,
+            'owner_modifiable': owner_modifiable,
+            'sodar_uuid': sodar_uuid or uuid.uuid4(),
         }
         site = RemoteSite(**values)
         site.save()
@@ -1347,6 +1351,7 @@ class TestRemoteSite(
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': self.site.sodar_uuid,
             'user_display': REMOTE_SITE_USER_DISPLAY,
+            'owner_modifiable': True,
         }
         self.assertEqual(model_to_dict(self.site), expected)
 

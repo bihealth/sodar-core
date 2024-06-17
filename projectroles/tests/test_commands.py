@@ -103,6 +103,7 @@ class TestAddRemoteSite(
             'description': '',
             'secret': REMOTE_SITE_SECRET,
             'user_display': True,
+            'owner_modifiable': False,
             'suppress_error': False,
         }
 
@@ -124,6 +125,7 @@ class TestAddRemoteSite(
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': site.sodar_uuid,
             'user_display': True,
+            'owner_modifiable': False,
         }
         self.assertEqual(model_to_dict(site), expected)
         self.assertEqual(TimelineEvent.objects.filter(**tl_kwargs).count(), 1)

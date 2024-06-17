@@ -81,6 +81,16 @@ class Command(BaseCommand):
             type=bool,
             help='User display of the remote site',
         )
+        parser.add_argument(
+            '-o',
+            '--owner-modifiable',
+            dest='owner_modifiable',
+            default=True,
+            required=False,
+            type=bool,
+            help='Allow owners and delegates to modify project access for this '
+            'site',
+        )
         # Additional Arguments
         parser.add_argument(
             '-s',
@@ -137,6 +147,7 @@ class Command(BaseCommand):
             'description': options['description'],
             'secret': options['secret'],
             'user_display': options['user_display'],
+            'owner_modifiable': options['owner_modifiable'],
         }
         site = RemoteSite.objects.create(**create_kw)
 

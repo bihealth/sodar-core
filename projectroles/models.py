@@ -1144,16 +1144,24 @@ class RemoteSite(models.Model):
         help_text='Secret token for connecting to the source site',
     )
 
+    #: RemoteSite visibilty to users
+    user_display = models.BooleanField(
+        default=True, unique=False, help_text='Display site to users'
+    )
+
+    #: RemoteSite project access modifiability for owners and delegates
+    owner_modifiable = models.BooleanField(
+        default=True,
+        unique=False,
+        help_text='Allow owners and delegates to modify project access for '
+        'this site',
+    )
+
     #: RemoteSite relation UUID (local)
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
         help_text='RemoteSite relation UUID (local)',
-    )
-
-    #: RemoteSite's link visibilty for users
-    user_display = models.BooleanField(
-        default=True, unique=False, help_text='RemoteSite visibility to users'
     )
 
     class Meta:

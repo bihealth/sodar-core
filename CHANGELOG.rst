@@ -37,6 +37,8 @@ Added
     - ``is_source_site()`` and ``is_target_site()`` rule predicates
     - ``settings_link`` kwarg in ``send_generic_email()`` (#1418)
     - ``addremotesite`` and ``syncgroups`` command tests (#352)
+    - ``RemoteSite.owner_modifiable`` field (#817)
+    - ``assert_displayed()`` UI test helper
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
@@ -98,6 +100,7 @@ Fixed
     - ``ProjectStarringAjaxView`` creating redundant database objects (#1416)
     - ``addremotesite`` crash in ``TimelineAPI.add_event()`` (#1425)
     - ``addremotesite`` allows creation of site with mode identical to host (#1426)
+    - Public guest access field not correctly hidden in project form (#1429)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 

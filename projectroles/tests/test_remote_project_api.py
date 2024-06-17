@@ -1032,6 +1032,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'secret': None,
             'sodar_uuid': uuid.UUID(PEER_SITE_UUID),
             'user_display': PEER_SITE_USER_DISPLAY,
+            'owner_modifiable': True,
         }
         peer_site_dict = model_to_dict(peer_site_obj)
         peer_site_dict.pop('id')
@@ -1845,6 +1846,7 @@ class TestSyncRemoteDataUpdate(
             'description': NEW_PEER_DESC,
             'secret': None,
             'user_display': NEW_PEER_USER_DISPLAY,
+            'owner_modifiable': True,
         }
         peer_site_dict = model_to_dict(peer_site_obj)
         peer_site_dict.pop('id')
@@ -2353,6 +2355,7 @@ class TestSyncRemoteDataUpdate(
             'secret': None,
             'sodar_uuid': uuid.UUID(PEER_SITE_UUID),
             'user_display': PEER_SITE_USER_DISPLAY,
+            'owner_modifiable': True,
         }
         peer_site_dict = model_to_dict(peer_site_obj)
         peer_site_dict.pop('id')

@@ -80,6 +80,7 @@ REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
@@ -932,8 +933,12 @@ class ProjectModifyPluginViewMixin:
 class ProjectModifyMixin(ProjectModifyPluginViewMixin):
     """Mixin for Project creation/updating in UI and API views"""
 
+    #: Remote site fields
+    site_fields = {}
+
     @staticmethod
     def _get_old_project_data(project):
+        """Get existing data from project fields"""
         return {
             'title': project.title,
             'parent': project.parent,
@@ -942,6 +947,21 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             'owner': project.get_owner().user,
             'public_guest_access': project.public_guest_access,
         }
+
+    @classmethod
+    def _get_remote_project_data(cls, project):
+        """Return existing remote project data"""
+        ret = {}
+        existing_sites = []
+        for rp in RemoteProject.objects.filter(project=project):
+            ret[str(rp.site.sodar_uuid)] = rp.level == REMOTE_LEVEL_READ_ROLES
+            existing_sites.append(rp.site.sodar_uuid)
+        # Sites not yet added
+        for rs in RemoteSite.objects.filter(
+            mode=SITE_MODE_TARGET, user_display=True, owner_modifiable=True
+        ).exclude(sodar_uuid__in=existing_sites):
+            ret[str(rs.sodar_uuid)] = False
+        return ret
 
     @staticmethod
     def _get_app_settings(data, instance, user):
@@ -993,8 +1013,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     project_settings[s_name] = s_data
         return project_settings
 
-    @staticmethod
-    def _get_project_update_data(old_data, project, project_settings):
+    def _get_project_update_data(
+        self, old_data, project, old_sites, sites, project_settings
+    ):
         extra_data = {}
         upd_fields = []
         if old_data['title'] != project.title:
@@ -1012,6 +1033,21 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['public_guest_access'] != project.public_guest_access:
             extra_data['public_guest_access'] = project.public_guest_access
             upd_fields.append('public_guest_access')
+
+        # Remote projects
+        if (
+            settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
+            and project.type == PROJECT_TYPE_PROJECT
+        ):
+            for s in [f.split('.')[1] for f in self.site_fields]:
+                if 'remote_sites' not in upd_fields and (
+                    s not in old_sites or bool(old_sites[s]) != bool(sites[s])
+                ):
+                    upd_fields.append('remote_sites')
+            if 'remote_sites' in upd_fields:
+                extra_data['remote_sites'] = {
+                    k: bool(v) for k, v in sites.items()
+                }
 
         # Settings
         for k, v in project_settings.items():
@@ -1034,9 +1070,76 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         else:
             return timeline.TL_STATUS_OK
 
+    def _update_remote_sites(self, project, data):
+        """Update project for remote sites"""
+        ret = {}
+        for f in self.site_fields:
+            site_uuid = f.split('.')[1]
+            site = RemoteSite.objects.filter(sodar_uuid=site_uuid).first()
+            # TODO: Validate site here
+            value = data[f]
+            rp = RemoteProject.objects.filter(
+                site=site, project=project
+            ).first()
+            modify = None
+            if rp and (
+                (value and rp.level != REMOTE_LEVEL_READ_ROLES)
+                or (not value and rp.level == REMOTE_LEVEL_READ_ROLES)
+            ):
+                rp.level = (
+                    REMOTE_LEVEL_READ_ROLES if value else REMOTE_LEVEL_REVOKED
+                )
+                rp.save()
+                modify = 'Updated'
+            elif not rp and value:  # Only create if value is True
+                rp = RemoteProject.objects.create(
+                    project_uuid=project.sodar_uuid,
+                    project=project,
+                    site=site,
+                    level=REMOTE_LEVEL_READ_ROLES,
+                )
+                modify = 'Created'
+            if modify:
+                logger.debug(
+                    '{} RemoteProject for site "{}" ({}): {}'.format(
+                        modify, site.name, site.sodar_uuid, rp.level
+                    )
+                )
+            ret[site_uuid] = rp and rp.level == REMOTE_LEVEL_READ_ROLES
+        return ret
+
     @classmethod
+    def _update_settings(cls, project, project_settings):
+        """Update project settings"""
+        is_remote = project.is_remote()
+        for k, v in project_settings.items():
+            _, plugin_name, setting_name = k.split('.', 3)
+            # Skip updating global settings on target site
+            if is_remote:
+                # TODO: Optimize (this can require a lot of queries)
+                s_def = app_settings.get_definition(
+                    setting_name, plugin_name=plugin_name
+                )
+                if app_settings.get_global_value(s_def):
+                    continue
+            app_settings.set(
+                plugin_name=k.split('.')[1],
+                setting_name=k.split('.')[2],
+                value=v,
+                project=project,
+                validate=True,
+            )
+
     def _create_timeline_event(
-        cls, project, action, owner, old_data, project_settings, request
+        self,
+        project,
+        action,
+        owner,
+        old_data,
+        old_sites,
+        sites,
+        project_settings,
+        request,
     ):
         timeline = get_backend_api('timeline_backend')
         if not timeline:
@@ -1062,8 +1165,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
         else:  # Update
             tl_desc = 'update ' + type_str.lower()
-            extra_data, upd_fields = cls._get_project_update_data(
-                old_data, project, project_settings
+            extra_data, upd_fields = self._get_project_update_data(
+                old_data, project, old_sites, sites, project_settings
             )
             if extra_data.get('parent'):  # Convert parent object into UUID
                 extra_data['parent'] = str(extra_data['parent'].sodar_uuid)
@@ -1081,28 +1184,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if action == PROJECT_ACTION_CREATE:
             tl_event.add_object(owner, 'owner', owner.username)
         return tl_event
-
-    @classmethod
-    def _update_settings(cls, project, project_settings):
-        """Update project settings"""
-        is_remote = project.is_remote()
-        for k, v in project_settings.items():
-            _, plugin_name, setting_name = k.split('.', 3)
-            # Skip updating global settings on target site
-            if is_remote:
-                # TODO: Optimize (this can require a lot of queries)
-                s_def = app_settings.get_definition(
-                    setting_name, plugin_name=plugin_name
-                )
-                if app_settings.get_global_value(s_def):
-                    continue
-            app_settings.set(
-                plugin_name=k.split('.')[1],
-                setting_name=k.split('.')[2],
-                value=v,
-                project=project,
-                validate=True,
-            )
 
     @classmethod
     def _notify_users(cls, project, action, owner, old_parent, request):
@@ -1242,6 +1323,18 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if not owner and old_project:  # In case of a PATCH request
             owner = old_project.get_owner().user
 
+        # Create/update RemoteProject objects
+        old_sites = {}
+        sites = {}
+        if (
+            settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
+            and project.type == PROJECT_TYPE_PROJECT
+        ):
+            self.site_fields = [f for f in data if f.startswith('remote_site.')]
+            old_sites = self._get_remote_project_data(project)
+            sites = self._update_remote_sites(project, data)
+
+        # Get app settings, store old settings
         project_settings = self._get_app_settings(data, project, request.user)
         old_settings = None
         if action == PROJECT_ACTION_UPDATE:
@@ -1249,7 +1342,14 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
         # Create timeline event
         tl_event = self._create_timeline_event(
-            project, action, owner, old_data, project_settings, request
+            project,
+            action,
+            owner,
+            old_data,
+            old_sites,
+            sites,
+            project_settings,
+            request,
         )
         # Get old parent for project moving
         old_parent = (

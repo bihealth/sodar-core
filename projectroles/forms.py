@@ -21,6 +21,7 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     RemoteSite,
+    RemoteProject,
     SODAR_CONSTANTS,
     ROLE_RANKING,
     APP_SETTING_VAL_MAXLENGTH,
@@ -50,6 +51,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -359,9 +361,36 @@ class ProjectForm(SODARModelForm):
         ret += [(c.sodar_uuid, c.full_title) for c in categories]
         return sorted(ret, key=lambda x: x[1])
 
-    def _set_app_setting_widget(self, plugin_name, s_field, s_key, s_val):
+    def _init_remote_sites(self):
         """
-        Internal helper for setting app setting widget and value.
+        Initialize remote site fields in the form.
+        """
+        p_display = get_display_name(PROJECT_TYPE_PROJECT)
+        for site in RemoteSite.objects.filter(
+            mode=SITE_MODE_TARGET, user_display=True, owner_modifiable=True
+        ).order_by('name'):
+            f_name = 'remote_site.{}'.format(site.sodar_uuid)
+            f_label = 'Enable {} on {}'.format(p_display, site.name)
+            f_help = 'Make {} available on remote site "{}" ({})'.format(
+                p_display, site.name, site.url
+            )
+            f_initial = False
+            if self.instance.pk:
+                rp = RemoteProject.objects.filter(
+                    site=site, project=self.instance
+                ).first()
+                # NOTE: Only "read roles" is supported at the moment
+                f_initial = rp and rp.level == REMOTE_LEVEL_READ_ROLES
+            self.fields[f_name] = forms.BooleanField(
+                label=f_label,
+                help_text=f_help,
+                initial=f_initial,
+                required=False,
+            )
+
+    def _set_app_setting_field(self, plugin_name, s_field, s_key, s_val):
+        """
+        Internal helper for setting app setting field, widget and value.
 
         :param plugin_name: App plugin name
         :param s_field: Form field name
@@ -500,6 +529,9 @@ class ProjectForm(SODARModelForm):
         )
 
     def _init_app_settings(self):
+        """
+        Initialize app settings fields in the form.
+        """
         # Set up setting query kwargs
         self.p_kwargs = {}
         # Show unmodifiable settings to superusers
@@ -522,8 +554,8 @@ class ProjectForm(SODARModelForm):
                 )
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(plugin_name, s_key)
-                # Set widget and value
-                self._set_app_setting_widget(plugin_name, s_field, s_key, s_val)
+                # Set field, widget and value
+                self._set_app_setting_field(plugin_name, s_field, s_key, s_val)
                 # Set label notes
                 self._set_app_setting_notes(s_field, s_val, plugin)
 
@@ -601,12 +633,18 @@ class ProjectForm(SODARModelForm):
         # Get current user for checking permissions for form items
         if current_user:
             self.current_user = current_user
-        # Add settings fields
-        self._init_app_settings()
         # Access parent project if present
         parent_project = None
         if project:
             parent_project = Project.objects.filter(sodar_uuid=project).first()
+        # Add remote site fields if on source site
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE and (
+            parent_project
+            or (self.instance.pk and self.instance.type == PROJECT_TYPE_PROJECT)
+        ):
+            self._init_remote_sites()
+        # Add settings fields
+        self._init_app_settings()
 
         # Update help texts to match DISPLAY_NAMES
         self.fields['title'].help_text = 'Title'
@@ -777,7 +815,7 @@ class ProjectForm(SODARModelForm):
                 'Public guest access is not allowed for categories',
             )
 
-        # Verify settings fields
+        # Verify remote site fields
         cleaned_data, errors = self._validate_app_settings(
             self.cleaned_data,
             self.app_plugins,
@@ -1181,7 +1219,14 @@ class RemoteSiteForm(SODARModelForm):
 
     class Meta:
         model = RemoteSite
-        fields = ['name', 'url', 'description', 'user_display', 'secret']
+        fields = [
+            'name',
+            'url',
+            'description',
+            'user_display',
+            'owner_modifiable',
+            'secret',
+        ]
 
     def __init__(self, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -1199,8 +1244,10 @@ class RemoteSiteForm(SODARModelForm):
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             self.fields['secret'].widget.attrs['readonly'] = True
             self.fields['user_display'].widget = forms.CheckboxInput()
+            self.fields['owner_modifiable'].widget = forms.CheckboxInput()
         elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
             self.fields['user_display'].widget = forms.HiddenInput()
+            self.fields['owner_modifiable'].widget = forms.HiddenInput()
         self.fields['user_display'].initial = True
 
         # Creation

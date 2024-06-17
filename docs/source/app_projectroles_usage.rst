@@ -197,6 +197,16 @@ specifically granting it.
     Public guest access can only be set for projects. Categories will be visible
     for users with access to any category or project under them.
 
+Access on Remote Sites
+----------------------
+
+In the project create/update view, owners and delegates can modify remote site
+access to projects. This is available for sites where these controls have been
+enabled by administrators. The sites will appear as checkboxes as
+:guilabel:`Enable project on {SITE-NAME}`.
+
+For more information, see :ref:`app_projectroles_usage_remote`.
+
 App Settings
 ------------
 
@@ -334,6 +344,8 @@ out of the LDAP server. Use the ``-h`` flag to see additional options.
     $ ./manage.py checkusers
 
 
+.. _app_projectroles_usage_remote:
+
 Remote Projects
 ===============
 
@@ -372,10 +384,33 @@ specifying the remote site. A secret string is generated automatically. You
 need to provide this to the administrator of the target site in question for
 accessing your site.
 
-Here you also have the option to hide the remote project link from your users.
-Users viewing the project on the source site then won't see a link to the target
-site. Owners and superusers will still see the link (greyed out). This is most
-commonly used for internal test sites which only needs to be used by admins.
+Fields for target remote site creation:
+
+Name
+    Name of the remote site.
+URL
+    URL for the remote site, e.g. ``https://sodar-core-site.example.com``.
+Description
+    Text description for the site.
+User display
+    If set false, this will hide the remote project links from your users.
+    Users viewing the project on the source site then won't see a link to the
+    target site. Owners and superusers will still see the link (greyed out).
+    This is most commonly used for internal test sites which only needs to be
+    used by admins.
+Owner modifiable
+    If this and :guilabel:`User display` are checked, owners and delegates can
+    control project visibility on this site in the project create/update view.
+Secret
+    Secret token for the project, which must be set to an identical value
+    between source and target sites.
+
+.. figure:: _static/app_projectroles/sodar_remote_site_form.png
+    :align: center
+    :scale: 50%
+
+    Remote site create/update view viewed as a source site
+
 
 Once created, you can access the list of projects on your site in regards to the
 created target site. For each project, you may select an access level, of which
@@ -390,6 +425,15 @@ Revoked Access
     Previously available access which has been revoked. The project will still
     remain in the target site, but only superusers, the project owner or the
     project delegate(s) can access it.
+
+Once desired access to specific projects has been granted and confirmed, the
+target site will sync the data by sending a request to the source site.
+
+.. figure:: _static/app_projectroles/sodar_remote_projects.png
+    :align: center
+    :scale: 50%
+
+    Remote project list viewed as a source site
 
 .. note::
 
@@ -414,15 +458,6 @@ Revoked Access
     project also publicly accessible on the target site, it needs to be
     explicitly set by the project owner, delegate or a superuser in the
     :guilabel:`Update Project` form.
-
-Once desired access to specific projects has been granted and confirmed, the
-target site will sync the data by sending a request to the source site.
-
-.. figure:: _static/app_projectroles/sodar_remote_projects.png
-    :align: center
-    :scale: 50%
-
-    Remote project list in source mode
 
 As Target Site
 --------------

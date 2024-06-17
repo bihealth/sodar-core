@@ -2,6 +2,7 @@
 
 import socket
 import time
+import uuid
 
 from urllib.parse import urlencode
 
@@ -20,6 +21,7 @@ from selenium import webdriver
 from selenium.common.exceptions import (
     NoSuchElementException,
     StaleElementReferenceException,
+    TimeoutException,
 )
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -68,6 +70,14 @@ REMOTE_SITE_NAME = 'Remote Site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_DESC = 'New description'
 REMOTE_SITE_SECRET = build_secret()
+PROJECT_SELECT_CSS = 'div[id="div_id_type"] div select[id="id_type"]'
+PROJECT_SETTING_ID = 'div_id_settings.example_project_app.project_int_setting'
+CATEGORY_SETTING_ID = (
+    'div_id_settings.example_project_app.project_category_bool_setting'
+)
+PUBLIC_ACCESS_ID = 'id_public_guest_access'
+REMOTE_SITE_UUID = uuid.uuid4()
+REMOTE_SITE_ID = 'id_remote_site.{}'.format(REMOTE_SITE_UUID)
 
 
 class LiveUserMixin:
@@ -204,6 +214,9 @@ class UITestBase(
 
         :param user: User object
         :param url: URL to redirect to (string)
+        :param wait_elem: Wait for existence of an element (string, optional)
+        :param wait_loc: Locator of optional wait element (string, corresponds
+                         to selenium "By" class members)
         """
         # Legacy login mode
         if getattr(settings, 'PROJECTROLES_TEST_UI_LEGACY_LOGIN', False):
@@ -448,6 +461,17 @@ class UITestBase(
             element = self.selenium.find_element(By.ID, n)
             self.assertIsNotNone(element)
             self.assertNotIn('active', element.get_attribute('class'))
+
+    def assert_displayed(self, by, value, expected):
+        """
+        Assert element is or isn't displayed. Assumes user to be logged in.
+
+        :param by: Selenium By selector
+        :param value: Value for selecting element
+        :param expected: Boolean
+        """
+        elem = self.selenium.find_element(by, value)
+        self.assertEqual(elem.is_displayed(), expected)
 
 
 class TestBaseTemplate(UITestBase):
@@ -1580,127 +1604,116 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             )
 
 
-class TestProjectCreateView(UITestBase):
+class TestProjectCreateView(RemoteSiteMixin, UITestBase):
     """Tests for ProjectCreateView UI"""
+
+    def setUp(self):
+        super().setUp()
+        self.remote_site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+            user_display=True,
+            sodar_uuid=REMOTE_SITE_UUID,
+        )
+        self.url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.url_top = reverse('projectroles:create')
 
     def test_owner_widget_top(self):
         """Test rendering the owner widget on the top level"""
-        url = reverse('projectroles:create')
-        self.assert_element_exists([self.superuser], url, 'div_id_owner', True)
+        self.assert_element_exists(
+            [self.superuser], self.url_top, 'div_id_owner', True
+        )
 
     def test_owner_widget_sub(self):
         """Test rendering the owner widget under a category"""
         # Add new user, make them a contributor in category
         new_user = self.make_user('new_user')
         self.make_assignment(self.category, new_user, self.role_contributor)
-        url = reverse(
-            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
-        )
-        self.assert_element_exists([self.superuser], url, 'div_id_owner', True)
         self.assert_element_exists(
-            [self.user_owner, new_user], url, 'div_id_owner', False
+            [self.superuser], self.url, 'div_id_owner', True
+        )
+        self.assert_element_exists(
+            [self.user_owner, new_user], self.url, 'div_id_owner', False
         )
 
     def test_archive_button(self):
         """Test rendering form without archive button"""
-        url = reverse('projectroles:create')
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-btn-archive', False
+            [self.superuser], self.url_top, 'sodar-pr-btn-archive', False
         )
 
-    def test_settings_fields_default(self):
-        """Test rendering of app settings fields for default view"""
-        url = reverse('projectroles:create')
-        self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
-        )
-        element = self.selenium.find_element(
-            By.ID, 'div_id_settings.example_project_app.project_int_setting'
-        )
-        self.assertFalse(element.is_displayed())
+    def test_fields_top(self):
+        """Test rendering of dynamic fields for top level creation view"""
+        self.login_and_redirect(self.superuser, self.url_top)
+        self.assert_displayed(By.ID, PUBLIC_ACCESS_ID, False)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, REMOTE_SITE_ID)
+        self.assert_displayed(By.ID, PROJECT_SETTING_ID, False)
+        self.assert_displayed(By.ID, CATEGORY_SETTING_ID, True)
 
-    def test_settings_fields_project(self):
-        """Test rendering of app settings fields for project creation"""
-        url = reverse(
-            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
-        )
-        self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
-        )
-        element = self.selenium.find_element(
-            By.ID, 'div_id_settings.example_project_app.project_int_setting'
-        )
-        self.assertFalse(element.is_displayed())
+    def test_fields_project(self):
+        """Test rendering of dynamic fields for project creation"""
+        self.login_and_redirect(self.superuser, self.url)
+        self.assert_displayed(By.ID, PUBLIC_ACCESS_ID, False)
+        self.assert_displayed(By.ID, REMOTE_SITE_ID, False)
+        self.assert_displayed(By.ID, PROJECT_SETTING_ID, False)
+        self.assert_displayed(By.ID, CATEGORY_SETTING_ID, False)
         select = Select(
-            self.selenium.find_element(
-                By.CSS_SELECTOR,
-                'div[id="div_id_type"] div select[id="id_type"]',
-            )
+            self.selenium.find_element(By.CSS_SELECTOR, PROJECT_SELECT_CSS)
         )
-        select.select_by_value('PROJECT')
+        select.select_by_value(PROJECT_TYPE_PROJECT)
         self.assertEqual(select.first_selected_option.text, 'Project')
-        WebDriverWait(self.selenium, 10)
-        element = self.selenium.find_element(
-            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        WebDriverWait(self.selenium, 10).until(
+            ec.visibility_of_element_located((By.ID, PUBLIC_ACCESS_ID))
         )
-        self.assertTrue(element.is_displayed())
+        self.assert_displayed(By.ID, REMOTE_SITE_ID, True)
+        self.assert_displayed(By.ID, PROJECT_SETTING_ID, True)
+        self.assert_displayed(By.ID, CATEGORY_SETTING_ID, False)
 
-    def test_settings_fields_category(self):
-        """Test rendering of app settings fields for category creation"""
-        url = reverse(
-            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
-        )
-        self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
-        )
-        element = self.selenium.find_element(
-            By.ID, 'div_id_settings.example_project_app.project_int_setting'
-        )
-        self.assertFalse(element.is_displayed())
+    def test_fields_category(self):
+        """Test rendering of dynamic fields for category creation"""
+        self.login_and_redirect(self.superuser, self.url)
+        self.assert_displayed(By.ID, PUBLIC_ACCESS_ID, False)
+        self.assert_displayed(By.ID, REMOTE_SITE_ID, False)
+        self.assert_displayed(By.ID, PROJECT_SETTING_ID, False)
+        self.assert_displayed(By.ID, CATEGORY_SETTING_ID, False)
         select = Select(
-            self.selenium.find_element(
-                By.CSS_SELECTOR,
-                'div[id="div_id_type"] div select[id="id_type"]',
-            )
+            self.selenium.find_element(By.CSS_SELECTOR, PROJECT_SELECT_CSS)
         )
-        select.select_by_value('CATEGORY')
+        select.select_by_value(PROJECT_TYPE_CATEGORY)
         self.assertEqual(select.first_selected_option.text, 'Category')
-        WebDriverWait(self.selenium, 10)
-        element = self.selenium.find_element(
-            By.ID, 'div_id_settings.example_project_app.project_int_setting'
+        WebDriverWait(self.selenium, 10).until(
+            ec.visibility_of_element_located((By.ID, CATEGORY_SETTING_ID))
         )
-        self.assertFalse(element.is_displayed())
+        self.assert_displayed(By.ID, PUBLIC_ACCESS_ID, False)
+        self.assert_displayed(By.ID, REMOTE_SITE_ID, False)
+        self.assert_displayed(By.ID, PROJECT_SETTING_ID, False)
+        self.assert_displayed(By.ID, CATEGORY_SETTING_ID, True)
 
     def test_settings_label_icon(self):
         """Test rendering of app settings icon for project creation"""
-        url = reverse(
-            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
-        )
-        self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
-        )
+        self.login_and_redirect(self.superuser, self.url)
         select = Select(
-            self.selenium.find_element(
-                By.CSS_SELECTOR,
-                'div[id="div_id_type"] div select[id="id_type"]',
-            )
+            self.selenium.find_element(By.CSS_SELECTOR, PROJECT_SELECT_CSS)
         )
-        select.select_by_value('PROJECT')
-        WebDriverWait(self.selenium, 10)
-        logo = self.selenium.find_element(
-            By.CSS_SELECTOR,
-            'div[id="div_id_settings.example_project_app.project_int_setting"]',
-        ).find_element(By.TAG_NAME, 'svg')
+        select.select_by_value(PROJECT_TYPE_PROJECT)
+        WebDriverWait(self.selenium, 10).until(
+            ec.presence_of_element_located((By.TAG_NAME, 'svg'))
+        )
+        find_args = (By.CSS_SELECTOR, 'div[id="{}"]'.format(PROJECT_SETTING_ID))
+        logo = self.selenium.find_element(*find_args).find_element(
+            By.TAG_NAME, 'svg'
+        )
         self.assertTrue(logo.is_displayed())
 
     def test_submit_button(self):
         """Test rendering of submit button"""
-        url = reverse(
-            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
-        )
-        self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
-        )
+        self.login_and_redirect(self.superuser, self.url)
         element = self.selenium.find_element(
             By.CLASS_NAME, 'sodar-btn-submit-once'
         )
@@ -1715,64 +1728,111 @@ class TestProjectCreateView(UITestBase):
                 if element.is_enabled() and i < max_retries - 1:
                     time.sleep(retry_interval)
                 else:
-                    self.fail(
-                        'Element did not become enabled within the timeout'
-                    )
+                    self.fail('Element not enabled within timeout')
             except StaleElementReferenceException:
                 break
 
 
-class TestProjectUpdateView(UITestBase):
+class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
     """Tests for ProjectUpdateView UI"""
 
-    def test_archive_button(self):
-        """Test rendering of archive button"""
-        url = reverse(
+    def setUp(self):
+        super().setUp()
+        self.remote_site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+            user_display=True,
+            sodar_uuid=REMOTE_SITE_UUID,
+        )
+        self.url = reverse(
             'projectroles:update', kwargs={'project': self.project.sodar_uuid}
         )
+        self.url_cat = reverse(
+            'projectroles:update', kwargs={'project': self.category.sodar_uuid}
+        )
+
+    def test_archive_button(self):
+        """Test rendering archive button"""
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-btn-archive', True
+            [self.superuser], self.url, 'sodar-pr-btn-archive', True
         )
         element = self.selenium.find_element(By.ID, 'sodar-pr-btn-archive')
         self.assertEqual(element.text, 'Archive')
 
     def test_archive_button_archived(self):
-        """Test rendering of archive button with archived project"""
+        """Test rendering archive button with archived project"""
         self.project.set_archive()
-        url = reverse(
-            'projectroles:update', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-btn-archive', True
+            [self.superuser], self.url, 'sodar-pr-btn-archive', True
         )
         element = self.selenium.find_element(By.ID, 'sodar-pr-btn-archive')
         self.assertEqual(element.text, 'Unarchive')
 
-    def test_settings_fields_project_update(self):
-        """Test rendering of app settings fields for project update view"""
-        url = reverse(
-            'projectroles:update', kwargs={'project': self.project.sodar_uuid}
-        )
-        self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
-        )
-        element = self.selenium.find_element(
-            By.ID, 'div_id_settings.example_project_app.project_int_setting'
-        )
-        self.assertTrue(element.is_displayed())
+    def test_fields_project(self):
+        """Test field visibility for project update"""
+        self.login_and_redirect(self.superuser, self.url)
+        self.assert_displayed(By.ID, PUBLIC_ACCESS_ID, True)
+        self.assert_displayed(By.ID, REMOTE_SITE_ID, True)
+        self.assert_displayed(By.ID, PROJECT_SETTING_ID, True)
+        self.assert_displayed(By.ID, CATEGORY_SETTING_ID, False)
 
-    def test_settings_fields_category_update(self):
-        """Test rendering of app settings fields for category update view"""
-        url = reverse(
-            'projectroles:update', kwargs={'project': self.category.sodar_uuid}
+    def test_fields_category(self):
+        """Test field visibility for category update"""
+        self.login_and_redirect(self.superuser, self.url_cat)
+        self.assert_displayed(By.ID, PUBLIC_ACCESS_ID, False)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, REMOTE_SITE_ID)
+        self.assert_displayed(By.ID, PROJECT_SETTING_ID, False)
+        self.assert_displayed(By.ID, CATEGORY_SETTING_ID, True)
+
+    def test_remote_field_enable(self):
+        """Test enabling remote site field"""
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, REMOTE_SITE_ID)
+        self.assertEqual(elem.is_selected(), False)
+        elem.click()
+        with self.assertRaises(TimeoutException):
+            WebDriverWait(self.selenium, 3).until(ec.alert_is_present())
+        self.assertEqual(elem.is_selected(), True)
+        elem.click()  # Disable again
+        with self.assertRaises(TimeoutException):
+            WebDriverWait(self.selenium, 3).until(ec.alert_is_present())
+        self.assertEqual(elem.is_selected(), False)
+
+    def test_remote_field_disable(self):
+        """Test disabling previously enabled remote site field"""
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+            project=self.project,
         )
-        self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, REMOTE_SITE_ID)
+        self.assertEqual(elem.is_selected(), True)
+        elem.click()
+        WebDriverWait(self.selenium, 3).until(ec.alert_is_present())
+        self.selenium.switch_to.alert.accept()
+        self.assertEqual(elem.is_selected(), False)
+
+    def test_remote_field_disable_cancel(self):
+        """Test canceling the disabling of previously enabled remote site field"""
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+            project=self.project,
         )
-        element = self.selenium.find_element(
-            By.ID, 'div_id_settings.example_project_app.project_int_setting'
-        )
-        self.assertFalse(element.is_displayed())
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, REMOTE_SITE_ID)
+        self.assertEqual(elem.is_selected(), True)
+        elem.click()
+        WebDriverWait(self.selenium, 3).until(ec.alert_is_present())
+        self.selenium.switch_to.alert.dismiss()
+        self.assertEqual(elem.is_selected(), True)
 
 
 class TestProjectArchiveView(UITestBase):
@@ -2319,6 +2379,4 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, UITestBase):
         """Test site create form user display toggle on target site"""
         url = reverse('projectroles:remote_site_create')
         self.login_and_redirect(self.superuser, url)
-        self.assertFalse(
-            self.selenium.find_element(By.ID, 'id_user_display').is_displayed()
-        )
+        self.assert_displayed(By.ID, 'id_user_display', False)

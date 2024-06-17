@@ -25,6 +25,7 @@ Release Highlights
 - Add admin alert email sending to all users
 - Add improved additional email address management and verification
 - Add user opt-out settings for email notifications
+- Add remote sync controls for owners and delegates in project form
 - Add target site user UUID updating in remote sync
 - Add remote sync of existing target local users
 - Add remote sync of USER scope app settings

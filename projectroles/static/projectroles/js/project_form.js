@@ -1,9 +1,10 @@
 $(document).ready(function() {
     // Hide settings fields by default
     $('div[id^="div_id_settings"]').hide();
-
-    // Temporary solution for hiding the public_guest_access field
+    // Hide public_guest_access field by default
     $('#div_id_public_guest_access').hide();
+    // Hide remote sites by default
+    $('div[id^="div_id_remote_site"]').hide();
 
     // Check if it's category/project update and show corresponding fields
     if ($('#sodar-pr-project-form-title').attr('data-project-type') === 'PROJECT') {
@@ -21,11 +22,9 @@ $(document).ready(function() {
                 $parentDiv.hide();
             }
         });
-
-        // Temporary solution for hiding the public_guest_access field
         $('#div_id_public_guest_access').show();
+        $('div[id^="div_id_remote_site"]').show();
     }
-
     if ($('#sodar-pr-project-form-title').attr('data-project-type') === 'CATEGORY') {
         $('div[id^="div_id_settings"]').each(function () {
             var $parentDiv = $(this);
@@ -42,10 +41,9 @@ $(document).ready(function() {
             }
         });
     }
-
     // Show settings fields if selected type is project/category in update form
     $('#div_id_type .form-control').change(function() {
-        if ($('#div_id_type .form-control').val() == 'PROJECT') {
+        if ($('#div_id_type .form-control').val() === 'PROJECT') {
             $('div[id^="div_id_settings"]').each(function () {
                 var $parentDiv = $(this);
                 var $projectElements = $parentDiv.find('select[data-project-types="project"]')
@@ -59,11 +57,10 @@ $(document).ready(function() {
                 } else {
                     $parentDiv.hide();
                 }
-
-                // Temporary solution for hiding the public_guest_access field
                 $('#div_id_public_guest_access').show();
+                $('div[id^="div_id_remote_site"]').show();
             });
-        } else if ($('#div_id_type .form-control').val() == 'CATEGORY') {
+        } else if ($('#div_id_type .form-control').val() === 'CATEGORY') {
             $('div[id^="div_id_settings"]').each(function () {
                 var $parentDiv = $(this);
                 var $categoryElements = $parentDiv.find('select[data-project-types="category"]')
@@ -77,7 +74,19 @@ $(document).ready(function() {
                 } else {
                     $parentDiv.hide();
                 }
+                $('#div_id_public_guest_access').hide();
+                $('div[id^="div_id_remote_site"]').hide();
             });
+        }
+    });
+
+    // Warn user of revoking remote site access
+    $('input[id^="id_remote_site"]').change(function() {
+        if (!$(this).is(':checked') && $(this).prop('defaultChecked')) {
+            const confirmMsg = 'This will revoke access to the project on ' +
+                'the site. Are you sure you want to proceed?'
+            if (!confirm(confirmMsg)) $(this).prop('checked', true);
+            else $(this).prop('checked', false);
         }
     });
 })
