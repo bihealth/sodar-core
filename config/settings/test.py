@@ -23,6 +23,11 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default='CHANGEME!!!')
 ADMINS = [('Admin User', 'admin@example.com')]
 MANAGERS = ADMINS
 
+# DATABASE CONFIGURATION
+# ------------------------------------------------------------------------------
+# Set False to support parallel testing, see issue #1428
+DATABASES['default']['ATOMIC_REQUESTS'] = False
+
 # Mail settings
 # ------------------------------------------------------------------------------
 EMAIL_HOST = 'localhost'
