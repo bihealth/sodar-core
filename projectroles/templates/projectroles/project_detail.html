@@ -29,14 +29,7 @@
           </div>
           <div class="card-body pb-2 mr-2">
             {% for rp in target_projects %}
-              <a class="btn {% if rp.site.user_display %}btn-info{% else %}btn-secondary{% endif %} mr-1 mb-1"
-                href="{{ rp.site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
-                role="button"
-                title="{% if rp.site.description %}{{ rp.site.description }}{% endif %}"
-                data-toggle="tooltip"
-                target="_blank">
-                <i class="iconify" data-icon="mdi:cloud-outline"></i> {{ rp.site.name }}
-              </a>
+              {% include 'projectroles/_remote_project_link.html' with site=rp.site %}
             {% endfor %}
           </div>
         </div>
@@ -49,25 +42,9 @@
             </h4>
           </div>
           <div class="card-body pb-2 mr-2">
-            <a class="btn btn-info mb-1 sodar-pr-link-remote sodar-pr-link-remote-master"
-                href="{{ object.get_source_site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
-                role="button"
-                title="{% if object.get_source_site.description %}{{ object.get_source_site.description }}{% endif %}"
-                data-toggle="tooltip"
-                target="_blank">
-              <i class="iconify" data-icon="mdi:cloud-outline"></i>
-              {{ object.get_source_site.name }}
-              (Source {% get_display_name object.type title=True %})
-            </a>
+            {% include 'projectroles/_remote_project_link.html' with site=object.get_source_site %}
             {% for rp in peer_projects %}
-              <a class="btn btn-info mb-1 sodar-pr-link-remote sodar-pr-link-remote-peer"
-                  href="{{ rp.site.get_url }}{% url 'projectroles:detail' project=rp.sodar_uuid %}"
-                  role="button"
-                  title="{% if rp.site.description %}{{ peer_p.site.description }}{% endif %}"
-                  data-toggle="tooltip"
-                  target="_blank">
-                <i class="iconify" data-icon="mdi:cloud-outline"></i> {{ rp.site.name }}
-              </a>
+              {% include 'projectroles/_remote_project_link.html' with site=rp.site %}
             {% endfor %}
           </div>
         </div>

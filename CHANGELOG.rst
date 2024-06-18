@@ -103,6 +103,8 @@ Fixed
     - ``addremotesite`` allows creation of site with mode identical to host (#1426)
     - Public guest access field not correctly hidden in project form (#1429)
     - Revoked remote projects displayed in project detail view (#1432)
+    - Invalid URLs for remote peer projects in project detail view (#1435)
+    - Redundant ``Project.get_source_site()`` calls in project detail view (#1436)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 

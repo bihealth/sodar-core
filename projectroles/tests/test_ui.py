@@ -1255,6 +1255,15 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             project=self.project,
         )
 
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.url_cat = reverse(
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
+
     def test_project_links(self):
         """Test visibility of project links"""
         expected = [
@@ -1274,10 +1283,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             (self.user_contributor, self._get_pr_links('roles', 'star')),
             (self.user_guest, self._get_pr_links('roles', 'star')),
         ]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
-        self.assert_element_set(expected, PROJECT_LINK_IDS, url)
+        self.assert_element_set(expected, PROJECT_LINK_IDS, self.url)
 
     def test_project_links_category(self):
         """Test visibility of top level category links"""
@@ -1305,10 +1311,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             (self.user_contributor, self._get_pr_links('star')),
             (self.user_guest, self._get_pr_links('star')),
         ]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
-        )
-        self.assert_element_set(expected, PROJECT_LINK_IDS, url)
+        self.assert_element_set(expected, PROJECT_LINK_IDS, self.url_cat)
 
     def test_copy_uuid_visibility_default(self):
         """Test default UUID copy button visibility (should not be visible)"""
@@ -1324,11 +1327,8 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         for user in users:
-            self.login_and_redirect(user, url)
+            self.login_and_redirect(user, self.url)
             with self.assertRaises(NoSuchElementException):
                 self.selenium.find_element(By.ID, 'sodar-pr-btn-copy-uuid')
 
@@ -1340,28 +1340,21 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             value=True,
             user=self.user_owner,
         )
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            [self.user_owner], url, 'sodar-pr-btn-copy-uuid', True
+            [self.user_owner], self.url, 'sodar-pr-btn-copy-uuid', True
         )
 
     def test_plugin_links(self):
         """Test visibility of app plugin links"""
         expected = [(self.superuser, len(get_active_plugins()))]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        self.assert_element_count(
+            expected, self.url, 'sodar-pr-link-app-plugin'
         )
-        self.assert_element_count(expected, url, 'sodar-pr-link-app-plugin')
 
     def test_plugin_cards(self):
         """Test visibility of app plugin cards"""
         expected = [(self.superuser, len(get_active_plugins()))]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
-        self.assert_element_count(expected, url, 'sodar-pr-app-item')
+        self.assert_element_count(expected, self.url, 'sodar-pr-app-item')
 
     def test_remote_project(self):
         """Test remote project visbility for all users"""
@@ -1377,42 +1370,35 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         for user in users:
-            self.login_and_redirect(user, url)
-            project_details = self.selenium.find_element(
-                By.ID, 'sodar-pr-details-card-remote'
+            self.login_and_redirect(user, self.url)
+            elem = self.selenium.find_element(
+                By.CLASS_NAME, 'sodar-pr-link-remote-target'
             )
-            remote_project = project_details.find_element(
-                By.CLASS_NAME, 'btn-info'
-            )
-            self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
+            self.assertIn('btn-info', elem.get_attribute('class'))
+            if user == self.superuser:  # No need to test these for all users
+                self.assertEqual(elem.text, REMOTE_SITE_NAME)
+                self.assertEqual(
+                    elem.get_attribute('href'), self.remote_site.url + self.url
+                )
 
     def test_remote_project_user_visibility_disabled(self):
         """Test remote project visibility with user_visibility=False"""
         self._setup_remote_project(user_visibility=False)
         users = [self.user_delegate, self.user_contributor, self.user_guest]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         for user in users:
-            self.login_and_redirect(user, url)
+            self.login_and_redirect(user, self.url)
             with self.assertRaises(NoSuchElementException):
                 self.selenium.find_element(
                     By.ID, 'sodar-pr-details-card-remote'
                 )
         # Greyed out for superuser and owner
         for user in [self.superuser, self.user_owner]:
-            self.login_and_redirect(user, url)
-            project_details = self.selenium.find_element(
-                By.ID, 'sodar-pr-details-card-remote'
+            self.login_and_redirect(user, self.url)
+            elem = self.selenium.find_element(
+                By.CLASS_NAME, 'sodar-pr-link-remote-target'
             )
-            remote_project = project_details.find_element(
-                By.CLASS_NAME, 'btn-secondary'
-            )
-            self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
+            self.assertIn('btn-secondary', elem.get_attribute('class'))
 
     def test_remote_project_revoked(self):
         """Test remote project with REVOKED level"""
@@ -1428,11 +1414,8 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         for user in users:
-            self.login_and_redirect(user, url)
+            self.login_and_redirect(user, self.url)
             with self.assertRaises(NoSuchElementException):
                 self.selenium.find_element(
                     By.ID, 'sodar-pr-details-card-remote'
@@ -1441,9 +1424,6 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
     def test_peer_project_source(self):
         """Test visibility of peer projects on SOURCE site"""
         self._setup_remote_project(site_mode=SITE_MODE_PEER)
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         users = [
             self.superuser,
             self.user_owner_cat,
@@ -1457,7 +1437,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_guest,
         ]
         for user in users:
-            self.login_and_redirect(user, url)
+            self.login_and_redirect(user, self.url)
             with self.assertRaises(NoSuchElementException):
                 self.selenium.find_element(
                     By.ID, 'sodar-pr-details-card-remote'
@@ -1484,9 +1464,6 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         )
         self._setup_remote_project(site_mode=SITE_MODE_PEER)
 
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         users = [
             self.superuser,
             self.user_owner_cat,
@@ -1498,21 +1475,23 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_contributor,
             self.user_guest,
         ]
-
         for user in users:
-            self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements(
+            self.login_and_redirect(user, self.url)
+            elems = self.selenium.find_elements(
                 By.CLASS_NAME, 'sodar-pr-link-remote'
             )
-            self.assertEqual(len(remote_links), 2)
+            self.assertEqual(len(elems), 2)
             self.assertIn(
-                'sodar-pr-link-remote-master',
-                remote_links[0].get_attribute('class'),
+                'sodar-pr-link-remote-source', elems[0].get_attribute('class')
             )
             self.assertIn(
-                'sodar-pr-link-remote-peer',
-                remote_links[1].get_attribute('class'),
+                'sodar-pr-link-remote-peer', elems[1].get_attribute('class')
             )
+            if user == self.superuser:
+                self.assertEqual(
+                    elems[1].get_attribute('href'),
+                    self.remote_site.url + self.url,
+                )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_user_visibility_disabled(self):
@@ -1535,9 +1514,6 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             site_mode=SITE_MODE_PEER, user_visibility=False
         )
 
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         expected_true = [self.superuser, self.user_owner_cat, self.user_owner]
         expected_false = [
             self.user_delegate_cat,
@@ -1547,31 +1523,26 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_contributor,
             self.user_guest,
         ]
-
         for user in expected_true:
-            self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements(
+            self.login_and_redirect(user, self.url)
+            elems = self.selenium.find_elements(
                 By.CLASS_NAME, 'sodar-pr-link-remote'
             )
-            self.assertEqual(len(remote_links), 2)
+            self.assertEqual(len(elems), 2)
             self.assertIn(
-                'sodar-pr-link-remote-master',
-                remote_links[0].get_attribute('class'),
+                'sodar-pr-link-remote-source', elems[0].get_attribute('class')
             )
             self.assertIn(
-                'sodar-pr-link-remote-peer',
-                remote_links[1].get_attribute('class'),
+                'sodar-pr-link-remote-peer', elems[1].get_attribute('class')
             )
-
         for user in expected_false:
-            self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements(
+            self.login_and_redirect(user, self.url)
+            elems = self.selenium.find_elements(
                 By.CLASS_NAME, 'sodar-pr-link-remote'
             )
-            self.assertEqual(len(remote_links), 1)
+            self.assertEqual(len(elems), 1)
             self.assertIn(
-                'sodar-pr-link-remote-master',
-                remote_links[0].get_attribute('class'),
+                'sodar-pr-link-remote-source', elems[0].get_attribute('class')
             )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -1594,9 +1565,6 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         self._setup_remote_project(
             site_mode=SITE_MODE_PEER, level=REMOTE_LEVEL_REVOKED
         )
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         users = [
             self.superuser,
             self.user_owner_cat,
@@ -1609,14 +1577,13 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_guest,
         ]
         for user in users:
-            self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements(
+            self.login_and_redirect(user, self.url)
+            elems = self.selenium.find_elements(
                 By.CLASS_NAME, 'sodar-pr-link-remote'
             )
-            self.assertEqual(len(remote_links), 1)
+            self.assertEqual(len(elems), 1)
             self.assertIn(
-                'sodar-pr-link-remote-master',
-                remote_links[0].get_attribute('class'),
+                'sodar-pr-link-remote-source', elems[0].get_attribute('class')
             )
 
     def test_archive_visibility_default(self):
@@ -1633,11 +1600,8 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         for user in users:
-            self.login_and_redirect(user, url)
+            self.login_and_redirect(user, self.url)
             with self.assertRaises(NoSuchElementException):
                 self.selenium.find_element(
                     By.ID, 'sodar-pr-header-icon-archive'
@@ -1659,11 +1623,8 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
-        )
         for user in users:
-            self.login_and_redirect(user, url)
+            self.login_and_redirect(user, self.url)
             self.assertIsNotNone(
                 self.selenium.find_element(By.ID, 'sodar-pr-alert-archive')
             )
