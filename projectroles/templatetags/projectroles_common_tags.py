@@ -293,17 +293,6 @@ def get_remote_icon(project, request):
 
 
 @register.simple_tag
-def get_visible_projects(projects, can_view_hidden_projects=False):
-    """
-    Return all projects that are either visible by user display or by view
-    hidden permission.
-    """
-    return [
-        p for p in projects if p.site.user_display or can_view_hidden_projects
-    ]
-
-
-@register.simple_tag
 def render_markdown(raw_markdown):
     """Markdown field rendering helper"""
     return mistune.markdown(raw_markdown)

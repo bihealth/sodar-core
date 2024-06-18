@@ -102,6 +102,7 @@ Fixed
     - ``addremotesite`` crash in ``TimelineAPI.add_event()`` (#1425)
     - ``addremotesite`` allows creation of site with mode identical to host (#1426)
     - Public guest access field not correctly hidden in project form (#1429)
+    - Revoked remote projects displayed in project detail view (#1432)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 
@@ -116,6 +117,7 @@ Removed
     - ``CORE_API_*`` Django settings (#1278)
     - Project starring timeline event creation (#1294)
     - ``user_email_additional`` app setting (#874)
+    - ``get_visible_projects()`` template tag (#1432)
 
 
 v0.13.4 (2024-02-16)

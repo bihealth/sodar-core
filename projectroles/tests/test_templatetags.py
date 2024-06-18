@@ -13,13 +13,7 @@ from test_plus.test import TestCase
 
 import projectroles
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import (
-    Project,
-    RemoteProject,
-    RemoteSite,
-    AppSetting,
-    SODAR_CONSTANTS,
-)
+from projectroles.models import AppSetting, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin, get_active_plugins
 from projectroles.templatetags import (
     projectroles_common_tags as c_tags,
@@ -302,48 +296,6 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         )
 
     # TODO: Test get_remote_icon() (need to set up remote projects)
-
-    def test_get_visible_projects(self):
-        """Test get_visible_projects()"""
-        # Setup projects
-        create_values = {'title': 'TestProject'}
-        project = Project.objects.create(**create_values)
-
-        # Setup sites
-        create_values = {
-            'name': 'VisibleSite',
-            'url': 'visible.site',
-            'mode': SITE_MODE_TARGET,
-            'user_display': True,
-        }
-        visible_site = RemoteSite.objects.create(**create_values)
-
-        create_values = {
-            'name': 'InvisibleSite',
-            'url': 'invisible.site',
-            'mode': SITE_MODE_TARGET,
-            'user_display': False,
-        }
-        invisible_site = RemoteSite.objects.create(**create_values)
-
-        # Setup remote projects
-        create_values = {
-            'project_uuid': project.sodar_uuid,
-            'project': project,
-            'site': visible_site,
-            'level': REMOTE_LEVEL_READ_ROLES,
-        }
-        visible_project = RemoteProject.objects.create(**create_values)
-
-        create_values['site'] = invisible_site
-        invisible_project = RemoteProject.objects.create(**create_values)
-
-        # Test returned peer projects
-        peer_projects = c_tags.get_visible_projects(
-            [visible_project, invisible_project]
-        )
-
-        self.assertEqual(peer_projects, [visible_project])
 
     def test_render_markdown(self):
         """Test render_markdown()"""

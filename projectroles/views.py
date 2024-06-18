@@ -616,13 +616,22 @@ class ProjectDetailView(
         else:
             context['role'] = None
 
+        # Remote projects
+        q_kwargs = {
+            'project_uuid': self.object.sodar_uuid,
+            'level': REMOTE_LEVEL_READ_ROLES,
+        }
+        if not self.request.user.has_perm(
+            'projectroles.view_hidden_projects', self.object
+        ):
+            q_kwargs['site__user_display'] = True
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             context['target_projects'] = RemoteProject.objects.filter(
-                project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_TARGET
+                site__mode=SITE_MODE_TARGET, **q_kwargs
             ).order_by('site__name')
         elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
             context['peer_projects'] = RemoteProject.objects.filter(
-                project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
+                site__mode=SITE_MODE_PEER, **q_kwargs
             ).order_by('site__name')
         return context
 
