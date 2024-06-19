@@ -105,6 +105,7 @@ Fixed
     - Revoked remote projects displayed in project detail view (#1432)
     - Invalid URLs for remote peer projects in project detail view (#1435)
     - Redundant ``Project.get_source_site()`` calls in project detail view (#1436)
+    - ``RemoteSite.get_access_date()`` invalid date sorting (#1437)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 

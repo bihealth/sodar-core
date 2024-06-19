@@ -38,6 +38,9 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
 # Local constants
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
@@ -273,7 +276,7 @@ class RemoteTargetMixin(RemoteSiteMixin, RemoteProjectMixin):
                     project_uuid=project.sodar_uuid,
                     project=project,
                     site=source_site,
-                    level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+                    level=REMOTE_LEVEL_READ_ROLES,
                 )
             )
         return source_site, remote_projects
@@ -1314,7 +1317,11 @@ class TestUserSetting(
 
 
 class TestRemoteSite(
-    ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, TestCase
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestCase,
 ):
     """Tests for RemoteSite"""
 
@@ -1380,6 +1387,53 @@ class TestRemoteSite(
                 mode='uGaj9eicQueib1th',
             )
 
+    def test_get_access_date_no_projects(self):
+        """Test get_access_date() with no remote projects"""
+        self.assertEqual(self.site.get_access_date(), None)
+
+    def test_get_access_date_not_accessed(self):
+        """Test get_access_date() with non-accessed project"""
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+            date_access=None,
+        )
+        self.assertEqual(self.site.get_access_date(), None)
+
+    def test_get_access_date_accessed(self):
+        """Test get_access_date() with accessed project"""
+        date_access = timezone.now()
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+            date_access=date_access,
+        )
+        self.assertEqual(self.site.get_access_date(), date_access)
+
+    def test_get_access_date_both_access_types(self):
+        """Test get_access_date() with accessed and non-accessed projects"""
+        date_access = timezone.now()
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+            date_access=date_access,
+        )
+        project2 = self.make_project('Project2', PROJECT_TYPE_PROJECT, None)
+        self.make_remote_project(
+            project_uuid=project2.sodar_uuid,
+            site=self.site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=project2,
+            date_access=None,
+        )
+        self.assertEqual(self.site.get_access_date(), date_access)
+
 
 class TestRemoteProject(
     ProjectMixin,
@@ -1418,7 +1472,7 @@ class TestRemoteProject(
         self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+            level=REMOTE_LEVEL_VIEW_AVAIL,
             project=self.project,
         )
 
@@ -1429,7 +1483,7 @@ class TestRemoteProject(
             'project_uuid': self.project.sodar_uuid,
             'project': self.project.pk,
             'site': self.site.pk,
-            'level': SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+            'level': REMOTE_LEVEL_VIEW_AVAIL,
             'date_access': None,
             'sodar_uuid': self.remote_project.sodar_uuid,
         }
@@ -1477,7 +1531,7 @@ class TestRemoteProject(
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
         self.assertEqual(self.project.is_revoked(), False)
-        self.remote_project.level = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+        self.remote_project.level = REMOTE_LEVEL_REVOKED
         self.remote_project.save()
         self.assertEqual(self.project.is_revoked(), True)
 
@@ -1511,7 +1565,7 @@ class TestRemoteProject(
             self.make_remote_project(
                 project_uuid=self.project.sodar_uuid,
                 site=self.site,
-                level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+                level=REMOTE_LEVEL_READ_ROLES,
                 project=self.project,
             )
 

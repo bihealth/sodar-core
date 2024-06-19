@@ -1194,8 +1194,10 @@ class RemoteSite(models.Model):
 
     def get_access_date(self):
         """Return date of latest project access by remote site"""
-        projects = RemoteProject.objects.filter(site=self).order_by(
-            '-date_access'
+        projects = (
+            RemoteProject.objects.filter(site=self)
+            .exclude(date_access__isnull=True)
+            .order_by('-date_access')
         )
         if projects.count() > 0:
             return projects.first().date_access
