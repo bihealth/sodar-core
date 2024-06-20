@@ -22,6 +22,7 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     RoleAssignment,
+    RemoteProject,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
     ROLE_RANKING,
@@ -45,6 +46,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -429,6 +431,30 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
             validate=False,
         )
         return Response(1 if value else 0, status=200)
+
+
+class RemoteProjectAccessAjaxView(SODARBaseProjectAjaxView):
+    """View to check whether a remote project has been accessed by sync"""
+
+    permission_required = 'projectroles.view_project'
+
+    def get(self, request, *args, **kwargs):
+        project = self.get_project()
+        rp_uuids = request.GET.getlist('rp')
+        ret = {}
+        for u in rp_uuids:
+            rp = RemoteProject.objects.filter(sodar_uuid=u).first()
+            if not rp:
+                return Response(
+                    {'detail': 'RemoteProject not found'}, status=404
+                )
+            if (
+                rp.project_uuid != project.sodar_uuid
+                or rp.site.mode == SITE_MODE_SOURCE
+            ):
+                return Response({'detail': 'Invalid RemoteProject'}, status=400)
+            ret[str(rp.sodar_uuid)] = rp.date_access is not None
+        return Response(ret, status=200)
 
 
 class SidebarContentAjaxView(SODARBaseProjectAjaxView):

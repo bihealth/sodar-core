@@ -180,6 +180,11 @@ urls_ajax = [
         name='ajax_star',
     ),
     path(
+        route='ajax/remote/access/<uuid:project>',
+        view=views_ajax.RemoteProjectAccessAjaxView.as_view(),
+        name='ajax_remote_access',
+    ),
+    path(
         route='ajax/sidebar/<uuid:project>',
         view=views_ajax.SidebarContentAjaxView.as_view(),
         name='ajax_sidebar',

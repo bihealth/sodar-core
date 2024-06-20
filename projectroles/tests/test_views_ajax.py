@@ -4,14 +4,17 @@ import json
 
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import AppSetting
+from projectroles.models import AppSetting, SODAR_CONSTANTS
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
 )
 from projectroles.tests.test_views import (
     ViewTestBase,
@@ -22,6 +25,14 @@ from projectroles.tests.test_views_api import SerializedObjectMixin
 
 
 app_settings = AppSettingAPI()
+
+
+# SODAR constants
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+
+# Local constants
+INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
 class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
@@ -459,6 +470,120 @@ class TestProjectStarringAjaxView(
         )
         self._assert_setting_count(1)
         self.assertEqual(star, False)
+
+
+class TestRemoteProjectAccessAjaxView(
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    ViewTestBase,
+):
+    """Tests for RemoteProjectAccessAjaxView"""
+
+    @classmethod
+    def _get_query_string(cls, *args):
+        """Get query string for GET requests"""
+        return '?' + '&'.join(['rp={}'.format(rp.sodar_uuid) for rp in args])
+
+    def setUp(self):
+        super().setUp()
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+        self.remote_site = self.make_site(
+            name='RemoteSite',
+            url='https://remote.site',
+            mode=SITE_MODE_TARGET,
+        )
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.rp_uuid = str(self.remote_project.sodar_uuid)
+        self.remote_site2 = self.make_site(
+            name='RemoteSite2',
+            url='https://remote.site2',
+            mode=SITE_MODE_TARGET,
+        )
+        self.remote_project2 = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site2,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.rp_uuid2 = str(self.remote_project2.sodar_uuid)
+        self.query_string = self._get_query_string(
+            self.remote_project, self.remote_project2
+        )
+        self.url = reverse(
+            'projectroles:ajax_remote_access',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test RemoteProjectAccessAjaxView GET"""
+        with self.login(self.user):
+            response = self.client.get(self.url + self.query_string)
+        self.assertEqual(response.status_code, 200)
+        expected = {self.rp_uuid: False, self.rp_uuid2: False}
+        self.assertEqual(response.data, expected)
+
+    def test_get_accessed(self):
+        """Test GET with one remote project accessed"""
+        self.remote_project.date_access = timezone.now()
+        self.remote_project.save()
+        with self.login(self.user):
+            response = self.client.get(self.url + self.query_string)
+        self.assertEqual(response.status_code, 200)
+        expected = {self.rp_uuid: True, self.rp_uuid2: False}
+        self.assertEqual(response.data, expected)
+
+    def test_get_accessed_multiple(self):
+        """Test GET with multiple remote projects accessed"""
+        self.remote_project.date_access = timezone.now()
+        self.remote_project.save()
+        self.remote_project2.date_access = timezone.now()
+        self.remote_project2.save()
+        with self.login(self.user):
+            response = self.client.get(self.url + self.query_string)
+        self.assertEqual(response.status_code, 200)
+        expected = {self.rp_uuid: True, self.rp_uuid2: True}
+        self.assertEqual(response.data, expected)
+
+    def test_get_wrong_project(self):
+        """Test GET with remote project for a different project"""
+        new_project = self.make_project(
+            'NewProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        new_rp = self.make_remote_project(
+            new_project.sodar_uuid,
+            self.remote_site,
+            REMOTE_LEVEL_READ_ROLES,
+            project=new_project,
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                self.url + self._get_query_string(new_rp)
+            )
+        self.assertEqual(response.status_code, 400)
+
+    def test_get_invalid_uuid(self):
+        """Test GET with invalid remote project UUID"""
+        with self.login(self.user):
+            response = self.client.get(self.url + '?rp=' + INVALID_UUID)
+        self.assertEqual(response.status_code, 404)
 
 
 class TestSidebarContentAjaxView(

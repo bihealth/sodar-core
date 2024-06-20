@@ -504,6 +504,22 @@ Alternatively, the following management command can be used:
     users must be manually created by a target site admin in order for their
     data and roles to be synchronized.
 
+Project Detail View Links
+-------------------------
+
+Links to the same project on other sites will appear in the
+:guilabel:`Project on Other Sites` card in the project detail view. If the
+remote site has not yet synchronized this project, the link will appear grayed
+out and unclickable. On a remote site, the source project will be labeled as
+such.
+
+.. figure:: _static/app_projectroles/sodar_remote_project_links.png
+    :align: center
+    :scale: 75%
+
+    Remote project links in the project detail view
+
+
 Search
 ======
 

@@ -16,7 +16,9 @@
 {% if can_view_project %}
   {% include 'projectroles/_project_header.html' %}
 
-  <div class="container-fluid sodar-page-container">
+  <div class="container-fluid sodar-page-container"
+       id="sodar-pr-page-container-detail"
+       data-project-type="{{ object.type }}">
     {# Links to remote projects #}
     {% if object.type == 'PROJECT' %}
       {% if target_projects %}
@@ -120,12 +122,17 @@
 
 {% block javascript %}
   {{ block.super }}
+  <script type="text/javascript">
+    window.remoteLinkUrl = "{% url 'projectroles:ajax_remote_access' project=object.sodar_uuid %}";
+  </script>
   {% if object.type == 'CATEGORY' %}
     <!-- Project list -->
     <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
   {% endif %}
   <!-- Project starring -->
   <script type="text/javascript" src="{% static 'projectroles/js/project_star.js' %}"></script>
+  <!-- Project detail view specific -->
+  <script type="text/javascript" src="{% static 'projectroles/js/project_detail.js' %}"></script>
 
   <!-- Tour content -->
   <script type="text/javascript">

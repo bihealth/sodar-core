@@ -16,6 +16,7 @@ from django.contrib.auth import (
 from django.contrib.sessions.backends.db import SessionStore
 from django.test import LiveServerTestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from selenium import webdriver
 from selenium.common.exceptions import (
@@ -1231,7 +1232,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         """Return full IDs of project links"""
         return ['sodar-pr-link-project-' + x for x in args]
 
-    def _setup_remote_project(
+    def _setup_remotes(
         self,
         site_mode=SITE_MODE_TARGET,
         level=REMOTE_LEVEL_READ_ROLES,
@@ -1246,13 +1247,12 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             secret=REMOTE_SITE_SECRET,
             user_display=user_visibility,
         )
-
-        # Setup remote project pointing to local object
         self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.remote_site,
             level=level,
             project=self.project,
+            date_access=timezone.now(),
         )
 
     def setUp(self):
@@ -1358,7 +1358,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
 
     def test_remote_project(self):
         """Test remote project visbility for all users"""
-        self._setup_remote_project()
+        self._setup_remotes()
         users = [
             self.superuser,
             self.user_owner_cat,
@@ -1381,10 +1381,11 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
                 self.assertEqual(
                     elem.get_attribute('href'), self.remote_site.url + self.url
                 )
+                self.assertIsNone(elem.get_attribute('disabled'))
 
     def test_remote_project_user_visibility_disabled(self):
         """Test remote project visibility with user_visibility=False"""
-        self._setup_remote_project(user_visibility=False)
+        self._setup_remotes(user_visibility=False)
         users = [self.user_delegate, self.user_contributor, self.user_guest]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -1402,7 +1403,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
 
     def test_remote_project_revoked(self):
         """Test remote project with REVOKED level"""
-        self._setup_remote_project(level=REMOTE_LEVEL_REVOKED)
+        self._setup_remotes(level=REMOTE_LEVEL_REVOKED)
         users = [
             self.superuser,
             self.user_owner_cat,
@@ -1421,9 +1422,41 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
                     By.ID, 'sodar-pr-details-card-remote'
                 )
 
+    def test_remote_project_not_accessed(self):
+        """Test non-accessed remote project"""
+        self._setup_remotes()
+        self.remote_project.date_access = None
+        self.remote_project.save()
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-pr-link-remote-target'
+        )
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    def test_remote_project_update(self):
+        """Test non-accessed remote project with client side update"""
+        self._setup_remotes()
+        self.remote_project.date_access = None
+        self.remote_project.save()
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-pr-link-remote-target'
+        )
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+        self.remote_project.date_access = timezone.now()
+        self.remote_project.save()
+        xp = (
+            '//a[contains(@class, "sodar-pr-link-remote-target") '
+            'and not(@disabled)]'
+        )
+        WebDriverWait(self.selenium, 15).until(
+            ec.presence_of_element_located((By.XPATH, xp))
+        )
+        self.assertEqual(elem.get_attribute('disabled'), None)
+
     def test_peer_project_source(self):
         """Test visibility of peer projects on SOURCE site"""
-        self._setup_remote_project(site_mode=SITE_MODE_PEER)
+        self._setup_remotes(site_mode=SITE_MODE_PEER)
         users = [
             self.superuser,
             self.user_owner_cat,
@@ -1461,8 +1494,9 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             site=source_site,
             level=REMOTE_LEVEL_READ_ROLES,
             project=self.project,
+            date_access=timezone.now(),
         )
-        self._setup_remote_project(site_mode=SITE_MODE_PEER)
+        self._setup_remotes(site_mode=SITE_MODE_PEER)
 
         users = [
             self.superuser,
@@ -1492,6 +1526,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
                     elems[1].get_attribute('href'),
                     self.remote_site.url + self.url,
                 )
+                self.assertIsNone(elems[1].get_attribute('disabled'))
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_user_visibility_disabled(self):
@@ -1510,9 +1545,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             level=REMOTE_LEVEL_READ_ROLES,
             project=self.project,
         )
-        self._setup_remote_project(
-            site_mode=SITE_MODE_PEER, user_visibility=False
-        )
+        self._setup_remotes(site_mode=SITE_MODE_PEER, user_visibility=False)
 
         expected_true = [self.superuser, self.user_owner_cat, self.user_owner]
         expected_false = [
@@ -1562,7 +1595,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             level=REMOTE_LEVEL_READ_ROLES,
             project=self.project,
         )
-        self._setup_remote_project(
+        self._setup_remotes(
             site_mode=SITE_MODE_PEER, level=REMOTE_LEVEL_REVOKED
         )
         users = [

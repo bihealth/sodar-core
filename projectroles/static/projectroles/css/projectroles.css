@@ -411,6 +411,12 @@ dl dd {
   height: 2.35em;
 }
 
+/* Enable disabling button-style anchors */
+a.btn[disabled='disabled'] {
+  pointer-events: none;
+  opacity: 75%;
+}
+
 .sodar-list-btn-group {
   height: 1.65em;
 }

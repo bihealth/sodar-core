@@ -39,6 +39,8 @@ Added
     - ``addremotesite`` and ``syncgroups`` command tests (#352)
     - ``RemoteSite.owner_modifiable`` field (#817)
     - ``assert_displayed()`` UI test helper
+    - ``RemoteProjectAccessAjaxView`` Ajax view (#1358)
+    - Remote project access status updating in project detail view (#1358)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
