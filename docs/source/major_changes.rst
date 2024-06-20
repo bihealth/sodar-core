@@ -37,6 +37,7 @@ Release Highlights
 - Plugin API return data updates and deprecations
 - Rename timeline app models
 - Rename base test classes
+- Remove app setting max length limit
 - Remove Python v3.8 support
 - Remove SAML SSO support
 

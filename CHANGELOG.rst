@@ -124,6 +124,7 @@ Removed
     - Project starring timeline event creation (#1294)
     - ``user_email_additional`` app setting (#874)
     - ``get_visible_projects()`` template tag (#1432)
+    - App setting value max length limit (#1443)
 
 
 v0.13.4 (2024-02-16)

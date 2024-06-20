@@ -15,7 +15,6 @@ from projectroles.forms import (
 from projectroles.models import (
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
-    APP_SETTING_VAL_MAXLENGTH,
     ADD_EMAIL_ALREADY_SET_MSG,
 )
 from projectroles.plugins import get_active_plugins
@@ -97,7 +96,6 @@ class UserSettingsForm(SODARForm):
                         )
                     else:
                         self.fields[s_field] = forms.CharField(
-                            max_length=APP_SETTING_VAL_MAXLENGTH,
                             widget=forms.TextInput(attrs=s_widget_attrs),
                             **setting_kwargs,
                         )

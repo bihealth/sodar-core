@@ -24,7 +24,6 @@ from projectroles.models import (
     RemoteProject,
     SODAR_CONSTANTS,
     ROLE_RANKING,
-    APP_SETTING_VAL_MAXLENGTH,
     CAT_DELIMITER,
     CAT_DELIMITER_ERROR_MSG,
 )
@@ -474,7 +473,6 @@ class ProjectForm(SODARModelForm):
                     )
             elif s_val['type'] == 'STRING':
                 self.fields[s_field] = forms.CharField(
-                    max_length=APP_SETTING_VAL_MAXLENGTH,
                     widget=forms.TextInput(attrs=s_widget_attrs),
                     **setting_kwargs
                 )

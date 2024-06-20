@@ -51,7 +51,6 @@ APP_SETTING_TYPE_CHOICES = [
     ('STRING', 'String'),
     ('JSON', 'Json'),
 ]
-APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
@@ -935,7 +934,6 @@ class AppSetting(models.Model):
 
     #: Value of the setting
     value = models.CharField(
-        max_length=APP_SETTING_VAL_MAXLENGTH,
         unique=False,
         null=True,
         blank=True,
