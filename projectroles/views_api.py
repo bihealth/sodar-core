@@ -1,5 +1,8 @@
 """REST API views for the projectroles app"""
 
+import re
+import sys
+
 from ipaddress import ip_address, ip_network
 
 from django.conf import settings
@@ -281,6 +284,8 @@ class APIProjectContextMixin(ProjectAccessMixin):
 
     def get_serializer_context(self, *args, **kwargs):
         context = super().get_serializer_context(*args, **kwargs)
+        if sys.argv[1:2] == ["generateschema"]:
+            return context
         context['project'] = self.get_project(request=context['request'])
         return context
 
@@ -573,6 +578,8 @@ class ProjectUpdateAPIView(
 
     def get_serializer_context(self, *args, **kwargs):
         context = super().get_serializer_context(*args, **kwargs)
+        if sys.argv[1:2] == ["generateschema"]:
+            return context
         project = self.get_project(request=context['request'])
         context['parent'] = (
             str(project.parent.sodar_uuid) if project.parent else None
