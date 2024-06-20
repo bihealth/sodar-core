@@ -9,114 +9,106 @@
 
 {% block projectroles %}
 
-{% has_perm 'projectroles.view_project' request.user object as can_view_project %}
 {% has_perm 'projectroles.update_project' request.user object as can_update_project %}
 {% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 
-{% if can_view_project %}
-  {% include 'projectroles/_project_header.html' %}
+{% include 'projectroles/_project_header.html' %}
 
-  <div class="container-fluid sodar-page-container"
-       id="sodar-pr-page-container-detail"
-       data-project-type="{{ object.type }}">
-    {# Links to remote projects #}
-    {% if object.type == 'PROJECT' %}
-      {% if target_projects %}
-        <div class="card" id="sodar-pr-details-card-remote">
-          <div class="card-header">
-            <h4>
-              <i class="iconify" data-icon="mdi:cloud"></i>
-              {% get_display_name object.type title=True %} on Other Sites
-            </h4>
-          </div>
-          <div class="card-body pb-2 mr-2">
-            {% for rp in target_projects %}
-              {% include 'projectroles/_remote_project_link.html' with site=rp.site %}
-            {% endfor %}
-          </div>
+<div class="container-fluid sodar-page-container"
+     id="sodar-pr-page-container-detail"
+     data-project-type="{{ object.type }}">
+  {# Links to remote projects #}
+  {% if object.type == 'PROJECT' %}
+    {% if target_projects %}
+      <div class="card" id="sodar-pr-details-card-remote">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:cloud"></i>
+            {% get_display_name object.type title=True %} on Other Sites
+          </h4>
         </div>
-      {% elif object.is_remote %}
-        <div class="card" id="sodar-pr-details-card-remote">
-          <div class="card-header">
-            <h4>
-              <i class="iconify" data-icon="mdi:cloud"></i>
-              {% get_display_name object.type title=True %} on Other Sites
-            </h4>
-          </div>
-          <div class="card-body pb-2 mr-2">
-            {% include 'projectroles/_remote_project_link.html' with site=object.get_source_site %}
-            {% for rp in peer_projects %}
-              {% include 'projectroles/_remote_project_link.html' with site=rp.site %}
-            {% endfor %}
-          </div>
+        <div class="card-body pb-2 mr-2">
+          {% for rp in target_projects %}
+            {% include 'projectroles/_remote_project_link.html' with site=rp.site %}
+          {% endfor %}
         </div>
-      {% endif %}
-    {% endif %}
-
-    {# README #}
-    <div class="card" id="sodar-pr-details-card-readme">
-      <div class="card-header">
-        <h4><i class="iconify" data-icon="mdi:book-open-page-variant"></i> ReadMe</h4>
       </div>
-      <div class="card-body">
-        {% if object.readme.rendered|length > 0 %}
-          {% autoescape off %}
-            {% render_markdown object.readme.raw %}
-          {% endautoescape %}
-        {% else %}
-          <p>
-            No ReadMe is currently set for this {% get_display_name object.type title=False %}.
-            {% if can_update_project %}
-             <a href="{% url 'projectroles:update' project=object.sodar_uuid %}#div_id_readme">You can update the ReadMe here</a>.
+    {% elif object.is_remote %}
+      <div class="card" id="sodar-pr-details-card-remote">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:cloud"></i>
+            {% get_display_name object.type title=True %} on Other Sites
+          </h4>
+        </div>
+        <div class="card-body pb-2 mr-2">
+          {% include 'projectroles/_remote_project_link.html' with site=object.get_source_site %}
+          {% for rp in peer_projects %}
+            {% include 'projectroles/_remote_project_link.html' with site=rp.site %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  {# README #}
+  <div class="card" id="sodar-pr-details-card-readme">
+    <div class="card-header">
+      <h4><i class="iconify" data-icon="mdi:book-open-page-variant"></i> ReadMe</h4>
+    </div>
+    <div class="card-body">
+      {% if object.readme.rendered|length > 0 %}
+        {% autoescape off %}
+          {% render_markdown object.readme.raw %}
+        {% endautoescape %}
+      {% else %}
+        <p>
+          No ReadMe is currently set for this {% get_display_name object.type title=False %}.
+          {% if can_update_project %}
+           <a href="{% url 'projectroles:update' project=object.sodar_uuid %}#div_id_readme">You can update the ReadMe here</a>.
+          {% endif %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Subprojects #}
+  {% if object.type == 'CATEGORY' %}
+    {% include 'projectroles/_project_list.html' with parent=object %}
+  {% endif %}
+
+  {# App Plugin Cards #}
+  {% for plugin in app_plugins %}
+    {% is_app_visible plugin project request.user as app_visible %}
+    {% if app_visible %}
+      <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="{{ plugin.icon }}"></i>
+            {% if plugin.details_title %}
+              {{ plugin.details_title }}
+            {% else %}
+              {{ plugin.title }}
             {% endif %}
-          </p>
+            <span class="pull-right">
+              {% get_info_link plugin.description as info_link %}
+              {{ info_link | safe }}
+            </span>
+          </h4>
+        </div>
+        {% if plugin.details_template %}
+          <div class="card-body p-0">
+            {% include plugin.details_template %}
+          </div>
+        {% else %}
+          <div class="card-body text-center">
+            <p class="text-danger"><em>No app card template found</em></p>
+          </div>
         {% endif %}
       </div>
-    </div>
-
-    {# Subprojects #}
-    {% if object.type == 'CATEGORY' %}
-      {% include 'projectroles/_project_list.html' with parent=object %}
     {% endif %}
-
-    {# App Plugin Cards #}
-    {% for plugin in app_plugins %}
-      {% is_app_visible plugin project request.user as app_visible %}
-      {% if app_visible %}
-        <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
-          <div class="card-header">
-            <h4>
-              <i class="iconify" data-icon="{{ plugin.icon }}"></i>
-              {% if plugin.details_title %}
-                {{ plugin.details_title }}
-              {% else %}
-                {{ plugin.title }}
-              {% endif %}
-              <span class="pull-right">
-                {% get_info_link plugin.description as info_link %}
-                {{ info_link | safe }}
-              </span>
-            </h4>
-          </div>
-          {% if plugin.details_template %}
-            <div class="card-body p-0">
-              {% include plugin.details_template %}
-            </div>
-          {% else %}
-            <div class="card-body text-center">
-              <p class="text-danger"><em>No app card template found</em></p>
-            </div>
-          {% endif %}
-        </div>
-      {% endif %}
-    {% endfor %}
-  </div>
-
-{% else %}
-  <div class="alert alert-danger" role="alert">
-    Insufficient permissions for viewing {% get_display_name 'PROJECT' title=False %}!
-  </div>
-{% endif %}
+  {% endfor %}
+</div>
 
 {% endblock projectroles %}
 

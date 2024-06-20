@@ -81,6 +81,7 @@ Changed
     - Move user dropdown link logic in ``AppLinkContent`` (#1381, #1413)
     - Do not recreate ``AppSetting`` objects on remote sync update (#1409)
     - Enforce project and site uniqueness in ``RemoteProject`` model (#1433)
+    - Remove redundant permission check in ``project_detail.html`` (#1438)
 - **Sodarcache**
     - Rewrite REST API views (#498, #1389)
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
