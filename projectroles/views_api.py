@@ -1,6 +1,5 @@
 """REST API views for the projectroles app"""
 
-import re
 import sys
 
 from ipaddress import ip_address, ip_network
