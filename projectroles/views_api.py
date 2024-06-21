@@ -284,7 +284,7 @@ class APIProjectContextMixin(ProjectAccessMixin):
 
     def get_serializer_context(self, *args, **kwargs):
         context = super().get_serializer_context(*args, **kwargs)
-        if sys.argv[1:2] == ["generateschema"]:
+        if sys.argv[1:2] == ['generateschema']:
             return context
         context['project'] = self.get_project(request=context['request'])
         return context
@@ -578,7 +578,7 @@ class ProjectUpdateAPIView(
 
     def get_serializer_context(self, *args, **kwargs):
         context = super().get_serializer_context(*args, **kwargs)
-        if sys.argv[1:2] == ["generateschema"]:
+        if sys.argv[1:2] == ['generateschema']:
             return context
         project = self.get_project(request=context['request'])
         context['parent'] = (
