@@ -64,6 +64,7 @@ class SODARBaseAjaxMixin:
     allow_anonymous = False
     authentication_classes = [SessionAuthentication]
     renderer_classes = [JSONRenderer]
+    schema = None
 
     @property
     def permission_classes(self):

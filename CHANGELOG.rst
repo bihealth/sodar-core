@@ -61,6 +61,7 @@ Changed
     - Update download URL in ``get_chromedriver_url.py`` (#1385)
     - Add ``AUTH_LDAP_USER_SEARCH_BASE`` as a Django setting (#1410)
     - Change ``ATOMIC_REQUESTS`` recommendation and default to ``True`` (#1281)
+    - Add OpenAPI dependencies (#1444)
 - **Filesfolders**
     - Add migration required by Django v4.2 (#1396)
     - Add app specific media type and versioning (#1278)
@@ -97,6 +98,8 @@ Fixed
 
 - **General**
     - ``README.rst`` badge rendering (#1402)
+- **Filesfolders**
+    - OpenAPI ``generateschema`` errors and warnings (#1442)
 - **Projectroles**
     - ``SODARUser.update_full_name()`` not working with existing name (#1371)
     - Legacy public guest access in child category breaks category updating (#1404)
@@ -109,8 +112,11 @@ Fixed
     - Invalid URLs for remote peer projects in project detail view (#1435)
     - Redundant ``Project.get_source_site()`` calls in project detail view (#1436)
     - ``RemoteSite.get_access_date()`` invalid date sorting (#1437)
+    - OpenAPI ``generateschema`` compatibility (#1440, #1442)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
+- **Timeline**
+    - OpenAPI ``generateschema`` warnings (#1442)
 
 Removed
 -------

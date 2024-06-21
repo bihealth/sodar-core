@@ -8,3 +8,7 @@ django-debug-toolbar>=4.3.0, <4.4
 
 # improved REPL
 ipdb>=0.13.13, <0.14
+
+# OpenAPI support
+uritemplate>=4.1.1, <4.2
+pyyaml>=6.0.1, <6.1

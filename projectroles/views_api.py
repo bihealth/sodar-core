@@ -31,6 +31,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
@@ -1066,6 +1067,7 @@ class ProjectSettingRetrieveAPIView(
 
     # NOTE: Update project settings perm is checked manually
     permission_required = 'projectroles.view_project'
+    schema = AutoSchema(operation_id_base='AppSettingProject')
     serializer_class = AppSettingSerializer
 
     def get_object(self):
@@ -1237,6 +1239,7 @@ class UserSettingRetrieveAPIView(
 
     # NOTE: Update project settings perm is checked manually
     permission_required = 'projectroles.view_project'
+    schema = AutoSchema(operation_id_base='AppSettingUser')
     serializer_class = AppSettingSerializer
 
     def get_object(self):
