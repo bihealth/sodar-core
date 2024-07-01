@@ -67,15 +67,16 @@ from projectroles.tests.test_models import (
     RemoteTargetMixin,
 )
 from projectroles.views import (
-    MSG_FORM_INVALID,
-    MSG_PROJECT_WELCOME,
-    MSG_USER_PROFILE_LDAP,
-    MSG_INVITE_LDAP_LOCAL_VIEW,
-    MSG_INVITE_LOCAL_NOT_ALLOWED,
-    MSG_INVITE_LOGGED_IN_ACCEPT,
-    MSG_INVITE_USER_NOT_EQUAL,
-    MSG_INVITE_USER_EXISTS,
-    MSG_LOGIN,
+    FORM_INVALID_MSG,
+    PROJECT_WELCOME_MSG,
+    USER_PROFILE_LDAP_MSG,
+    INVITE_LDAP_LOCAL_VIEW_MSG,
+    INVITE_LOCAL_NOT_ALLOWED_MSG,
+    INVITE_LOGGED_IN_ACCEPT_MSG,
+    INVITE_USER_NOT_EQUAL_MSG,
+    INVITE_USER_EXISTS_MSG,
+    LOGIN_MSG,
+    TARGET_CREATE_DISABLED_MSG,
 )
 from projectroles.context_processors import (
     SIDEBAR_ICON_MIN_SIZE,
@@ -627,6 +628,21 @@ class TestProjectCreateView(
         self.assertEqual(form.initial['owner'], self.user)
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
 
+    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    def test_get_top_target(self):
+        """Test GET with top level category as target site"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:create'))
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    @override_settings(PROJECTROLES_TARGET_CREATE=False)
+    def test_get_top_target_disabled(self):
+        """Test GET with top level category and target creation disabled"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:create'))
+        self.assertEqual(response.status_code, 302)
+
     def test_get_sub(self):
         """Test GET under category"""
         # Create another user to enable checking for owner selection
@@ -673,6 +689,18 @@ class TestProjectCreateView(
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
         self.assertNotIn(
             'remote_site.{}'.format(peer_site.sodar_uuid), form.fields
+        )
+
+    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    @override_settings(PROJECTROLES_TARGET_CREATE=False)
+    def test_get_sub_target_disabled(self):
+        """Test GET under category with target creation disabled"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            TARGET_CREATE_DISABLED_MSG,
         )
 
     def test_get_cat_member(self):
@@ -765,7 +793,7 @@ class TestProjectCreateView(
         settings = AppSetting.objects.filter(project=category)
         self.assertEqual(settings.count(), 1)
         setting = settings.first()
-        self.assertEqual(setting.name, 'project_category_bool_setting')
+        self.assertEqual(setting.name, 'category_bool_setting')
 
         # Assert owner role assignment
         owner_as = RoleAssignment.objects.get(
@@ -996,6 +1024,41 @@ class TestProjectCreateView(
         self.assertEqual(rp.project, project)
         self.assertEqual(rp.site, self.remote_site)
         self.assertEqual(rp.level, REMOTE_LEVEL_READ_ROLES)
+
+    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    def test_post_project_target(self):
+        """Test POST with project as target site"""
+        self.assertEqual(Project.objects.count(), 1)
+        data = self._get_post_data(
+            title='TestProject',
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 2)
+
+    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    @override_settings(PROJECTROLES_TARGET_CREATE=False)
+    def test_post_project_target_disabled(self):
+        """Test POST with project as target with target creation disabled"""
+        self.assertEqual(Project.objects.count(), 1)
+        data = self._get_post_data(
+            title='TestProject',
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            TARGET_CREATE_DISABLED_MSG,
+        )
+        self.assertEqual(Project.objects.count(), 1)
 
 
 class TestProjectUpdateView(
@@ -1426,7 +1489,7 @@ class TestProjectUpdateView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_FORM_INVALID,
+            FORM_INVALID_MSG,
         )
         self.assertEqual(
             app_settings.get(
@@ -1492,7 +1555,7 @@ class TestProjectUpdateView(
         settings = AppSetting.objects.filter(project=self.category)
         self.assertEqual(settings.count(), 1)
         setting = settings.first()
-        self.assertEqual(setting.name, 'project_category_bool_setting')
+        self.assertEqual(setting.name, 'category_bool_setting')
         # Assert redirect
         with self.login(self.user):
             self.assertRedirects(
@@ -4258,7 +4321,7 @@ class TestProjectInviteAcceptView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_PROJECT_WELCOME.format(
+            PROJECT_WELCOME_MSG.format(
                 project_type='project',
                 project_title='TestProject',
                 role='project contributor',
@@ -4555,7 +4618,7 @@ class TestProjectInviteAcceptView(
             ],
         )
         self.assertEqual(
-            list(get_messages(response.wsgi_request))[1].message, MSG_LOGIN
+            list(get_messages(response.wsgi_request))[1].message, LOGIN_MSG
         )
         user = User.objects.get(username=username)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
@@ -4684,7 +4747,7 @@ class TestProjectInviteAcceptView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_INVITE_LDAP_LOCAL_VIEW,
+            INVITE_LDAP_LOCAL_VIEW_MSG,
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
@@ -4733,7 +4796,7 @@ class TestProjectInviteAcceptView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_INVITE_LOCAL_NOT_ALLOWED,
+            INVITE_LOCAL_NOT_ALLOWED_MSG,
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -4758,7 +4821,7 @@ class TestProjectInviteAcceptView(
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_INVITE_LOGGED_IN_ACCEPT,
+            INVITE_LOGGED_IN_ACCEPT_MSG,
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -4786,7 +4849,7 @@ class TestProjectInviteAcceptView(
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_INVITE_USER_NOT_EQUAL,
+            INVITE_USER_NOT_EQUAL_MSG,
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -4814,7 +4877,7 @@ class TestProjectInviteAcceptView(
         self.assertRedirects(response, self.project_url)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_PROJECT_WELCOME.format(
+            PROJECT_WELCOME_MSG.format(
                 project_type='project',
                 project_title='TestProject',
                 role='project contributor',
@@ -4855,7 +4918,7 @@ class TestProjectInviteAcceptView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_INVITE_USER_EXISTS,
+            INVITE_USER_EXISTS_MSG,
         )
 
     def test_get_role_exists(self):
@@ -5541,7 +5604,7 @@ class TestUserUpdateView(TestCase):
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_USER_PROFILE_LDAP,
+            USER_PROFILE_LDAP_MSG,
         )
 
     def test_post_local_user(self):

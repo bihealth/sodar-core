@@ -34,7 +34,7 @@ class FilesfoldersAPIPermissionTestBase(
 
 
 class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
-    """Tests FolderListCreateAPIView permissions"""
+    """Tests for FolderListCreateAPIView permissions"""
 
     def setUp(self):
         super().setUp()
@@ -192,7 +192,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
 
 
 class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
-    """Tests FolderRetrieveUpdateDestroyAPIView permissions"""
+    """Tests for FolderRetrieveUpdateDestroyAPIView permissions"""
 
     def _make_folder(self):
         folder = self.make_test_folder()
@@ -501,7 +501,7 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
 
 
 class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
-    """Tests FileListCreateAPIView permissions"""
+    """Tests for FileListCreateAPIView permissions"""
 
     def _make_post_data(self):
         self.post_data = {
@@ -729,7 +729,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
 
 
 class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
-    """Tests FileRetrieveUpdateDestroyAPIView permissions"""
+    """Tests for FileRetrieveUpdateDestroyAPIView permissions"""
 
     def _make_file(self):
         file = self.make_test_file()
@@ -1145,7 +1145,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
 
 
 class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
-    """Tests FileServeAPIView permissions"""
+    """Tests for FileServeAPIView permissions"""
 
     def setUp(self):
         super().setUp()
@@ -1205,7 +1205,7 @@ class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
 
 
 class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
-    """Tests HyperLinkListCreateAPIView permissions"""
+    """Tests for HyperLinkListCreateAPIView permissions"""
 
     @classmethod
     def _cleanup(cls):
@@ -1383,7 +1383,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
 class TestHyperLinkRetrieveUpdateDestroyAPIView(
     FilesfoldersAPIPermissionTestBase
 ):
-    """Tests HyperLinkRetrieveUpdateDestroyAPIView permissions"""
+    """Tests for HyperLinkRetrieveUpdateDestroyAPIView permissions"""
 
     def _make_link(self):
         link = self.make_test_link()

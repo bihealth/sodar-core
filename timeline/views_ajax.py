@@ -28,13 +28,10 @@ class EventDetailMixin:
             'timeline.view_event_extra_data', status.event.project
         ):
             return None
-        else:
-            return reverse(
-                'timeline:ajax_extra_status',
-                kwargs={
-                    'eventstatus': status.sodar_uuid,
-                },
-            )
+        return reverse(
+            'timeline:ajax_extra_status',
+            kwargs={'eventstatus': status.sodar_uuid},
+        )
 
     def get_event_details(self, event, request):
         """
@@ -201,7 +198,6 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
             'timeline.view_classified_event', event.project
         ):
             return HttpResponseForbidden()
-
         return Response(self.get_event_extra(event), status=200)
 
 
@@ -245,29 +241,13 @@ class EventStatusExtraAjaxView(EventExtraDataMixin, SODARBaseAjaxView):
             sodar_uuid=self.kwargs['eventstatus']
         ).first()
         event = status.event
-        if event.project:
-            if (
-                not event.classified
-                and not request.user.has_perm(
-                    'timeline.view_event_extra_data', event.project
-                )
-                or event.classified
-                and not request.user.has_perm(
-                    'timeline.view_classified_event', event.project
-                )
-            ):
-                return HttpResponseForbidden()
+        if event.classified and event.project:
+            perm = 'view_classified_event'
+        elif event.classified:
+            perm = 'view_classified_site_event'
         else:
-            if (
-                not event.classified
-                and not request.user.has_perm('timeline.view_event_extra_data')
-                or event.classified
-                and not request.user.has_perm(
-                    'timeline.view_classified_site_event'
-                )
-            ):
-                return HttpResponseForbidden()
-        return Response(
-            self.get_event_extra(status.event, status),
-            status=200,
-        )
+            perm = 'view_event_extra_data'
+        project = getattr(event, 'project', None)
+        if not request.user.has_perm('timeline.' + perm, project):
+            return HttpResponseForbidden()
+        return Response(self.get_event_extra(status.event, status), status=200)

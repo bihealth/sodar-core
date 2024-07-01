@@ -48,7 +48,7 @@ class TestPlugins(
     RoleAssignmentMixin,
     TestCase,
 ):
-    """Test filesfolders plugin"""
+    """Tests for filesfolders project plugin"""
 
     def setUp(self):
         # Init superuser

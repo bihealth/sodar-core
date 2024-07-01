@@ -346,6 +346,15 @@ environment settings. Example:
 
     SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
 
+For enabling page size customization for pagination, it's recommended to set
+``REST_FRAMEWORK['PAGE_SIZE']`` using an environment variable as follows:
+
+.. code-block:: python
+
+    REST_FRAMEWORK = {
+        'PAGE_SIZE': env.int('SODAR_API_PAGE_SIZE', 100),
+    }
+
 
 LDAP/AD Configuration (Optional)
 ================================
@@ -377,6 +386,7 @@ This part of the setup is **optional**.
     ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
     ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
     LDAP_DEBUG = env.bool('LDAP_DEBUG', False)
+    LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, default=[])
 
     if ENABLE_LDAP:
         import itertools
@@ -397,20 +407,20 @@ This part of the setup is **optional**.
         AUTH_LDAP_SERVER_URI = env.str('AUTH_LDAP_SERVER_URI', None)
         AUTH_LDAP_BIND_DN = env.str('AUTH_LDAP_BIND_DN', None)
         AUTH_LDAP_BIND_PASSWORD = env.str('AUTH_LDAP_BIND_PASSWORD', None)
-        AUTH_LDAP_START_TLS = env.str('AUTH_LDAP_START_TLS', False)
+        AUTH_LDAP_START_TLS = env.bool('AUTH_LDAP_START_TLS', False)
         AUTH_LDAP_CA_CERT_FILE = env.str('AUTH_LDAP_CA_CERT_FILE', None)
         AUTH_LDAP_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
-        if AUTH_LDAP_CA_CERT_FILE is not None:
-            AUTH_LDAP_CONNECTION_OPTIONS[
-                ldap.OPT_X_TLS_CACERTFILE
-            ] = AUTH_LDAP_CA_CERT_FILE
+        if AUTH_LDAP_CA_CERT_FILE:
+            AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = (
+                AUTH_LDAP_CA_CERT_FILE
+            )
             AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
         AUTH_LDAP_USER_FILTER = env.str(
             'AUTH_LDAP_USER_FILTER', '(sAMAccountName=%(user)s)'
         )
-
+        AUTH_LDAP_USER_SEARCH_BASE = env.str('AUTH_LDAP_USER_SEARCH_BASE', None)
         AUTH_LDAP_USER_SEARCH = LDAPSearch(
-            env.str('AUTH_LDAP_USER_SEARCH_BASE', None),
+            AUTH_LDAP_USER_SEARCH_BASE,
             ldap.SCOPE_SUBTREE,
             AUTH_LDAP_USER_FILTER,
         )
@@ -419,7 +429,6 @@ This part of the setup is **optional**.
         AUTH_LDAP_DOMAIN_PRINTABLE = env.str(
             'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN
         )
-
         AUTHENTICATION_BACKENDS = tuple(
             itertools.chain(
                 ('projectroles.auth_backends.PrimaryLDAPBackend',),
@@ -432,20 +441,22 @@ This part of the setup is **optional**.
             AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
             AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
             AUTH_LDAP2_BIND_PASSWORD = env.str('AUTH_LDAP2_BIND_PASSWORD', None)
-            AUTH_LDAP2_START_TLS = env.str('AUTH_LDAP2_START_TLS', False)
+            AUTH_LDAP2_START_TLS = env.bool('AUTH_LDAP2_START_TLS', False)
             AUTH_LDAP2_CA_CERT_FILE = env.str('AUTH_LDAP2_CA_CERT_FILE', None)
             AUTH_LDAP2_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
-            if AUTH_LDAP2_CA_CERT_FILE is not None:
-                AUTH_LDAP2_CONNECTION_OPTIONS[
-                    ldap.OPT_X_TLS_CACERTFILE
-                ] = AUTH_LDAP2_CA_CERT_FILE
+            if AUTH_LDAP2_CA_CERT_FILE:
+                AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = (
+                    AUTH_LDAP2_CA_CERT_FILE
+                )
                 AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
             AUTH_LDAP2_USER_FILTER = env.str(
                 'AUTH_LDAP2_USER_FILTER', '(sAMAccountName=%(user)s)'
             )
-
+            AUTH_LDAP2_USER_SEARCH_BASE = env.str(
+                'AUTH_LDAP2_USER_SEARCH_BASE', None
+            )
             AUTH_LDAP2_USER_SEARCH = LDAPSearch(
-                env.str('AUTH_LDAP2_USER_SEARCH_BASE', None),
+                AUTH_LDAP2_USER_SEARCH_BASE,
                 ldap.SCOPE_SUBTREE,
                 AUTH_LDAP2_USER_FILTER,
             )
@@ -454,7 +465,6 @@ This part of the setup is **optional**.
             AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
                 'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP2_USERNAME_DOMAIN
             )
-
             AUTHENTICATION_BACKENDS = tuple(
                 itertools.chain(
                     ('projectroles.auth_backends.SecondaryLDAPBackend',),

@@ -60,6 +60,13 @@ Example of the database URL variable as set within an ``.env`` file:
 
     DATABASE_URL=postgres://your-db:your-db@127.0.0.1/your-db
 
+Asynchronous Celery tasks require running a Redis server. For development, you
+can install it with the following script:
+
+.. code-block:: console
+
+    $ sudo utility/install_redis.sh
+
 
 Repository and Environment Setup
 ================================

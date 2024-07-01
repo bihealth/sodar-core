@@ -30,6 +30,7 @@ Release Highlights
 - Add remote sync of existing target local users
 - Add remote sync of USER scope app settings
 - Add checkusers management command
+- Add Ajax views for sidebar, project dropdown and user dropdown retrieval
 - Add CC and BCC field support in sending generic emails
 - Rewrite sodarcache REST API views
 - Rewrite user additional email storing
@@ -176,6 +177,8 @@ REST API View Changes
 The following breaking changes have been made into specific REST API endpoints
 in this release:
 
+``ProjectRetrieveAPIView`` (``project/api/retrieve/<uuid:project>``)
+    Add ``full_title`` field to return data. Also affects list view.
 ``ProjectSettingRetrieveAPIView`` (``project/api/settings/retrieve/<uuid:project>``)
     Rename ``app_name`` parameter to ``plugin_name``.
 ``ProjectSettingSetAPIView`` (``project/api/settings/set/<uuid:project>``)

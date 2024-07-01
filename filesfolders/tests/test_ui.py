@@ -32,8 +32,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 APP_NAME = 'filesfolders'
 
 
-class TestListView(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
-    """Tests for filesfolders main file list view UI"""
+class TestProjectFileView(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
+    """Tests for ProjectFileView UI"""
 
     def setUp(self):
         super().setUp()

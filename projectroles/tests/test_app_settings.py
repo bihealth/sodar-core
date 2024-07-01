@@ -448,11 +448,11 @@ class TestAppSettingAPI(
 
     def test_set_invalid_project_types(self):
         """Test set() with invalid project types scope"""
-        # Should fail because project_category_bool_setting has CATEGORY scope
+        # Should fail because category_bool_setting has CATEGORY scope
         with self.assertRaises(ValueError):
             app_settings.set(
                 plugin_name=EXAMPLE_APP_NAME,
-                setting_name='project_category_bool_setting',
+                setting_name='category_bool_setting',
                 project=self.project,
                 value=True,
             )
@@ -732,7 +732,7 @@ class TestAppSettingAPI(
                 'description': 'Example callable project setting with options',
                 'user_modifiable': True,
             },
-            'project_category_bool_setting': {
+            'category_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
                 'type': 'BOOLEAN',
                 'label': 'Category boolean setting',
@@ -880,7 +880,8 @@ class TestAppSettingAPI(
                 'type': 'STRING',
                 'default': get_example_setting_default,
                 'options': get_example_setting_options,
-                'description': 'Example callable project user setting with options',
+                'description': 'Example callable project user setting with '
+                'options',
             },
         }
         defs = app_settings.get_definitions(

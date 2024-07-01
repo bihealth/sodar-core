@@ -41,6 +41,8 @@ Added
     - ``assert_displayed()`` UI test helper
     - ``RemoteProjectAccessAjaxView`` Ajax view (#1358)
     - Remote project access status updating in project detail view (#1358)
+    - ``SidebarContentAjaxView`` for sidebar and project dropdown content retrieval (#1366)
+    - ``UserDropdownContentAjaxView`` for user dropdown content retrieval (#1366, #1392)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
@@ -83,6 +85,7 @@ Changed
     - Do not recreate ``AppSetting`` objects on remote sync update (#1409)
     - Enforce project and site uniqueness in ``RemoteProject`` model (#1433)
     - Remove redundant permission check in ``project_detail.html`` (#1438)
+    - Move sidebar, project dropdown and user dropdown creation to ``utils`` (#1366)
 - **Sodarcache**
     - Rewrite REST API views (#498, #1389)
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
@@ -90,6 +93,7 @@ Changed
     - Update ``get_object_link()`` usage for ``PluginObjectLink`` return data (#1343)
     - Rename ``ProjectEvent*`` models to ``TimelineEvent*`` (#1414)
     - Move event name from separate column into badge (#1370)
+    - Use constants for event status types (#973)
 - **Userprofile**
     - Disable global user settings on target site in ``UserSettingsForm`` (#1329)
 
@@ -113,6 +117,7 @@ Fixed
     - Redundant ``Project.get_source_site()`` calls in project detail view (#1436)
     - ``RemoteSite.get_access_date()`` invalid date sorting (#1437)
     - OpenAPI ``generateschema`` compatibility (#1440, #1442)
+    - ``ProjectCreateView`` allows ``POST`` with disabled target project creation (#1448)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 - **Timeline**

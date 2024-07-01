@@ -2985,7 +2985,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
 
     def test_post_invalid_project_type(self):
         """Test POST with unaccepted project type (should fail)"""
-        setting_name = 'project_category_bool_setting'
+        setting_name = 'category_bool_setting'
         post_data = {
             'plugin_name': EX_APP_NAME,
             'setting_name': setting_name,

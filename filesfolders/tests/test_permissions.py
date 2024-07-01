@@ -356,7 +356,7 @@ class TestFolderDeleteView(
 class TestFileCreateView(
     FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
-    """Tests FileCreateView permissions"""
+    """Tests for FileCreateView permissions"""
 
     def setUp(self):
         super().setUp()

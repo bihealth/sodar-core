@@ -22,7 +22,7 @@ from projectroles.tests.test_models import (
     AppSettingMixin,
     SODARUserAdditionalEmailMixin,
 )
-from projectroles.views import MSG_FORM_INVALID
+from projectroles.views import FORM_INVALID_MSG
 from projectroles.utils import build_secret
 
 from userprofile.views import (
@@ -256,7 +256,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            MSG_FORM_INVALID,
+            FORM_INVALID_MSG,
         )
         self.assertEqual(self._get_setting('user_str_setting'), 'test')
 

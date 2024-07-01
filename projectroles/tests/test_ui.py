@@ -76,7 +76,7 @@ REMOTE_SITE_SECRET = build_secret()
 PROJECT_SELECT_CSS = 'div[id="div_id_type"] div select[id="id_type"]'
 PROJECT_SETTING_ID = 'div_id_settings.example_project_app.project_int_setting'
 CATEGORY_SETTING_ID = (
-    'div_id_settings.example_project_app.project_category_bool_setting'
+    'div_id_settings.example_project_app.category_bool_setting'
 )
 PUBLIC_ACCESS_ID = 'id_public_guest_access'
 REMOTE_SITE_UUID = uuid.uuid4()

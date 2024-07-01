@@ -460,11 +460,22 @@ class RemoteProjectAccessAjaxView(SODARBaseProjectAjaxView):
 
 class SidebarContentAjaxView(SODARBaseProjectAjaxView):
     """
-    Ajax view for delivering sidebar content for specific projects.
-    All returned links are nor active by default. To get correct "active"
+    Return sidebar and project dropdown links to be displayed in a client-side
+    application. This can be used as an alternative to rendering server-side
+    sidebar and project dropdonwn elements.
+
+    All returned links are inactive by default. To get correct "active"
     attribute for each of the links, you must provide the app_name as GET
     parameter. The app_name refers to the current app name
     (request.resolver_match.app_name).
+
+    Return data (for each link):
+
+    - ``name``: Internal ID (string)
+    - ``url``: View URL (string)
+    - ``label``: Text label to be displayed for link (string)
+    - ``icon``: Icon namespace and ID (string, example: "mdi:cube")
+    - ``active``: Whether link is currently active (boolean)
     """
 
     permission_required = 'projectroles.view_project'
@@ -482,11 +493,21 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
 
 class UserDropdownContentAjaxView(SODARBaseAjaxView):
     """
-    Ajax view for delivering user dropdown content for the navbar.
-    All returned links are nor active by default. To get correct "active"
+    Return user dropdown links to be displayed in a client-side application.
+    This can be used as an alternative to rendering the server-side dropdown.
+
+    All returned links are inactive by default. To get correct "active"
     attribute for each of the links, you must provide the app_name as GET
     parameter. The app_name refers to the current app name
     (request.resolver_match.app_name).
+
+    Return data (for each link):
+
+    - ``name``: Internal ID (string)
+    - ``url``: View URL (string)
+    - ``label``: Text label to be displayed for link (string)
+    - ``icon``: Icon namespace and ID (string, example: "mdi:cube")
+    - ``active``: Whether link is currently active (boolean)
     """
 
     permission_classes = [IsAuthenticated]

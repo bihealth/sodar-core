@@ -106,13 +106,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         """
         items = []
         if not search_type or search_type == 'timeline':
-            events = TimelineEvent.objects.find(search_terms, keywords)
-        if events:
-            items = [
-                event
-                for event in list(events)
-                if self.check_permission(user, event)
-            ]
+            events = list(TimelineEvent.objects.find(search_terms, keywords))
+            items = [e for e in events if self.check_permission(user, e)]
         ret = PluginSearchResult(
             category='all',
             title='Timeline Event',

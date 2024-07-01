@@ -397,11 +397,8 @@ class ProjectForm(SODARModelForm):
         :param s_val: Setting value
         """
         s_widget_attrs = s_val.get('widget_attrs') or {}
-
-        # Set project type
         s_project_types = s_val.get('project_types') or [PROJECT_TYPE_PROJECT]
         s_widget_attrs['data-project-types'] = ','.join(s_project_types).lower()
-
         if 'placeholder' in s_val:
             s_widget_attrs['placeholder'] = s_val.get('placeholder')
         setting_kwargs = {
@@ -409,7 +406,67 @@ class ProjectForm(SODARModelForm):
             'label': s_val.get('label') or '{}.{}'.format(plugin_name, s_key),
             'help_text': s_val['description'],
         }
-        if s_val['type'] == 'JSON':
+
+        # Option
+        if (
+            s_val.get('options')
+            and callable(s_val['options'])
+            and self.instance.pk
+        ):
+            values = s_val['options'](project=self.instance)
+            self.fields[s_field] = forms.ChoiceField(
+                choices=[
+                    (
+                        (str(value[0]), str(value[1]))
+                        if isinstance(value, tuple)
+                        else (str(value), str(value))
+                    )
+                    for value in values
+                ],
+                **setting_kwargs
+            )
+        elif (
+            s_val.get('options')
+            and callable(s_val['options'])
+            and not self.instance.pk
+        ):
+            values = s_val['options'](project=None)
+            self.fields[s_field] = forms.ChoiceField(
+                choices=[
+                    (
+                        (str(value[0]), str(value[1]))
+                        if isinstance(value, tuple)
+                        else (str(value), str(value))
+                    )
+                    for value in values
+                ],
+                **setting_kwargs
+            )
+        elif s_val.get('options'):
+            self.fields[s_field] = forms.ChoiceField(
+                choices=[
+                    (
+                        (int(option), int(option))
+                        if s_val['type'] == 'INTEGER'
+                        else (option, option)
+                    )
+                    for option in s_val['options']
+                ],
+                **setting_kwargs
+            )
+        # Other types
+        elif s_val['type'] == 'STRING':
+            self.fields[s_field] = forms.CharField(
+                widget=forms.TextInput(attrs=s_widget_attrs), **setting_kwargs
+            )
+        elif s_val['type'] == 'INTEGER':
+            self.fields[s_field] = forms.IntegerField(
+                widget=forms.NumberInput(attrs=s_widget_attrs), **setting_kwargs
+            )
+        elif s_val['type'] == 'BOOLEAN':
+            self.fields[s_field] = forms.BooleanField(**setting_kwargs)
+        # JSON
+        elif s_val['type'] == 'JSON':
             # NOTE: Attrs MUST be supplied here (#404)
             if 'class' in s_widget_attrs:
                 s_widget_attrs['class'] += ' sodar-json-input'
@@ -418,89 +475,19 @@ class ProjectForm(SODARModelForm):
             self.fields[s_field] = forms.CharField(
                 widget=forms.Textarea(attrs=s_widget_attrs), **setting_kwargs
             )
-            if self.instance.pk:
-                json_data = self.app_settings.get(
-                    plugin_name=plugin_name,
-                    setting_name=s_key,
-                    project=self.instance,
-                )
-            else:
-                json_data = self.app_settings.get_default(
-                    plugin_name=plugin_name,
-                    setting_name=s_key,
-                    project=None,
-                )
-            self.initial[s_field] = json.dumps(json_data)
-        else:
-            if s_val.get('options'):
-                if callable(s_val['options']) and self.instance.pk:
-                    values = s_val['options'](project=self.instance)
-                    self.fields[s_field] = forms.ChoiceField(
-                        choices=[
-                            (
-                                (str(value[0]), str(value[1]))
-                                if isinstance(value, tuple)
-                                else (str(value), str(value))
-                            )
-                            for value in values
-                        ],
-                        **setting_kwargs
-                    )
-                elif callable(s_val['options']) and not self.instance.pk:
-                    values = s_val['options'](project=None)
-                    self.fields[s_field] = forms.ChoiceField(
-                        choices=[
-                            (
-                                (str(value[0]), str(value[1]))
-                                if isinstance(value, tuple)
-                                else (str(value), str(value))
-                            )
-                            for value in values
-                        ],
-                        **setting_kwargs
-                    )
-                else:
-                    self.fields[s_field] = forms.ChoiceField(
-                        choices=[
-                            (
-                                (int(option), int(option))
-                                if s_val['type'] == 'INTEGER'
-                                else (option, option)
-                            )
-                            for option in s_val['options']
-                        ],
-                        **setting_kwargs
-                    )
-            elif s_val['type'] == 'STRING':
-                self.fields[s_field] = forms.CharField(
-                    widget=forms.TextInput(attrs=s_widget_attrs),
-                    **setting_kwargs
-                )
-            elif s_val['type'] == 'INTEGER':
-                self.fields[s_field] = forms.IntegerField(
-                    widget=forms.NumberInput(attrs=s_widget_attrs),
-                    **setting_kwargs
-                )
-            elif s_val['type'] == 'BOOLEAN':
-                self.fields[s_field] = forms.BooleanField(**setting_kwargs)
 
-            # Add optional attributes from plugin (#404)
-            # NOTE: Experimental! Use at your own risk!
-            self.fields[s_field].widget.attrs.update(s_widget_attrs)
-
-            # Set initial value
-            if self.instance.pk:
-                self.initial[s_field] = self.app_settings.get(
-                    plugin_name=plugin_name,
-                    setting_name=s_key,
-                    project=self.instance,
-                )
-            else:
-                self.initial[s_field] = self.app_settings.get_default(
-                    plugin_name=plugin_name,
-                    setting_name=s_key,
-                    project=None,
-                )
+        # Add optional attributes from plugin (#404)
+        # NOTE: Experimental! Use at your own risk!
+        self.fields[s_field].widget.attrs.update(s_widget_attrs)
+        # Set initial value
+        value = self.app_settings.get(
+            plugin_name=plugin_name,
+            setting_name=s_key,
+            project=self.instance if self.instance.pk else None,
+        )
+        if s_val['type'] == 'JSON':
+            value = json.dumps(value)
+        self.initial[s_field] = value
 
     def _set_app_setting_notes(self, s_field, s_val, plugin):
         """

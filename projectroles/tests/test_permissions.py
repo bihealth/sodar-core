@@ -1999,7 +1999,7 @@ class TestTargetSiteViews(
             self.user_no_roles,
             self.anonymous,
         ]
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(url, bad_users, 302, redirect_anon=reverse('home'))
 
     def test_get_role_create(self):
         """Test RoleAssignmentCreateView GET"""

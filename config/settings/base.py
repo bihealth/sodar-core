@@ -23,7 +23,7 @@ APPS_DIR = ROOT_DIR.path(SITE_PACKAGE)
 env = environ.Env()
 
 # .env file, should load only in development environment
-READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', default=False)
+READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', False)
 
 if READ_DOT_ENV_FILE:
     # Operating System Environment variables have precedence over variables
@@ -151,9 +151,7 @@ MANAGERS = ADMINS
 # See: https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 # Uses django-environ to accept uri format
 # See: https://django-environ.readthedocs.io/en/latest/#supported-types
-DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres:///sodar_core')
-}
+DATABASES = {'default': env.db('DATABASE_URL', 'postgres:///sodar_core')}
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 # Set default auto field (for Django 3.2+)
@@ -529,8 +527,6 @@ SODAR_API_MEDIA_TYPE = 'application/your.application+json'
 SODAR_API_DEFAULT_HOST = env.url(
     'SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000'
 )
-# Default page size for paginated REST API list views
-SODAR_API_PAGE_SIZE = env.int('SODAR_API_PAGE_SIZE', 100)
 
 
 # Projectroles app settings
@@ -582,10 +578,10 @@ PROJECTROLES_SEARCH_OMIT_APPS = env.list(
     'PROJECTROLES_SEARCH_OMIT_APPS', None, []
 )
 PROJECTROLES_TARGET_SYNC_ENABLE = env.bool(
-    'PROJECTROLES_TARGET_SYNC_ENABLE', default=False
+    'PROJECTROLES_TARGET_SYNC_ENABLE', False
 )
 PROJECTROLES_TARGET_SYNC_INTERVAL = env.int(
-    'PROJECTROLES_TARGET_SYNC_INTERVAL', default=5
+    'PROJECTROLES_TARGET_SYNC_INTERVAL', 5
 )
 
 # Optional projectroles settings

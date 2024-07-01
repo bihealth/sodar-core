@@ -265,7 +265,7 @@ class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     ``PROJECT_TYPE_PROJECT``, as defined in SODAR constants, by setting the
     ``project_type`` attribute in the view.
 
-    NOTE: The SODARAPIBaseMixin inheritance will be removed in
+    NOTE: The SODARAPIBaseMixin inheritance will be removed in v1.1 (see #1401).
     """
 
     permission_classes = [SODARAPIProjectPermission]

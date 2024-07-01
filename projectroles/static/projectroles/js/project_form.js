@@ -10,17 +10,10 @@ $(document).ready(function() {
     if ($('#sodar-pr-project-form-title').attr('data-project-type') === 'PROJECT') {
         $('div[id^="div_id_settings"]').each(function () {
             var $parentDiv = $(this);
-            var $projectElements = $parentDiv.find('select[data-project-types="project"]')
-                .add($parentDiv.find('input[data-project-types="project"]'))
-                .add($parentDiv.find('textarea[data-project-types="project"]'))
-                .add($parentDiv.find('select[data-project-types="project,category"]'))
-                .add($parentDiv.find('input[data-project-types="project,category"]'))
-                .add($parentDiv.find('textarea[data-project-types="project,category"]'));
-            if ($projectElements.length > 0) {
-                $parentDiv.show();
-            } else {
-                $parentDiv.hide();
-            }
+            var $projectElements = $parentDiv.find('[data-project-types="project"]')
+                .add($parentDiv.find('[data-project-types="project,category"]'));
+            if ($projectElements.length > 0) $parentDiv.show();
+            else $parentDiv.hide();
         });
         $('#div_id_public_guest_access').show();
         $('div[id^="div_id_remote_site"]').show();
@@ -28,17 +21,10 @@ $(document).ready(function() {
     if ($('#sodar-pr-project-form-title').attr('data-project-type') === 'CATEGORY') {
         $('div[id^="div_id_settings"]').each(function () {
             var $parentDiv = $(this);
-            var $categoryElements = $parentDiv.find('select[data-project-types="category"]')
-                .add($parentDiv.find('input[data-project-types="category"]'))
-                .add($parentDiv.find('textarea[data-project-types="category"]'))
-                .add($parentDiv.find('select[data-project-types="project,category"]'))
-                .add($parentDiv.find('input[data-project-types="project,category"]'))
-                .add($parentDiv.find('textarea[data-project-types="project,category"]'));
-            if ($categoryElements.length > 0) {
-                $parentDiv.show();
-            } else {
-                $parentDiv.hide();
-            }
+            var $categoryElements = $parentDiv.find('[data-project-types="category"]')
+                .add($parentDiv.find('[data-project-types="project,category"]'));
+            if ($categoryElements.length > 0) $parentDiv.show();
+            else $parentDiv.hide();
         });
     }
     // Show settings fields if selected type is project/category in update form
@@ -46,34 +32,20 @@ $(document).ready(function() {
         if ($('#div_id_type .form-control').val() === 'PROJECT') {
             $('div[id^="div_id_settings"]').each(function () {
                 var $parentDiv = $(this);
-                var $projectElements = $parentDiv.find('select[data-project-types="project"]')
-                    .add($parentDiv.find('input[data-project-types="project"]'))
-                    .add($parentDiv.find('textarea[data-project-types="project"]'))
-                    .add($parentDiv.find('select[data-project-types="project,category"]'))
-                    .add($parentDiv.find('input[data-project-types="project,category"]'))
-                    .add($parentDiv.find('textarea[data-project-types="project,category"]'));
-                if ($projectElements.length > 0) {
-                    $parentDiv.show();
-                } else {
-                    $parentDiv.hide();
-                }
+                var $projectElements = $parentDiv.find('[data-project-types="project"]')
+                    .add($parentDiv.find('[data-project-types="project,category"]'));
+                if ($projectElements.length > 0) $parentDiv.show();
+                else $parentDiv.hide();
                 $('#div_id_public_guest_access').show();
                 $('div[id^="div_id_remote_site"]').show();
             });
         } else if ($('#div_id_type .form-control').val() === 'CATEGORY') {
             $('div[id^="div_id_settings"]').each(function () {
                 var $parentDiv = $(this);
-                var $categoryElements = $parentDiv.find('select[data-project-types="category"]')
-                    .add($parentDiv.find('input[data-project-types="category"]'))
-                    .add($parentDiv.find('textarea[data-project-types="category"]'))
-                    .add($parentDiv.find('select[data-project-types="project,category"]'))
-                    .add($parentDiv.find('input[data-project-types="project,category"]'))
-                    .add($parentDiv.find('textarea[data-project-types="project,category"]'));
-                if ($categoryElements.length > 0) {
-                    $parentDiv.show();
-                } else {
-                    $parentDiv.hide();
-                }
+                var $categoryElements = $parentDiv.find('[data-project-types="category"]')
+                    .add($parentDiv.find('[data-project-types="project,category"]'));
+                if ($categoryElements.length > 0) $parentDiv.show();
+                else $parentDiv.hide();
                 $('#div_id_public_guest_access').hide();
                 $('div[id^="div_id_remote_site"]').hide();
             });
