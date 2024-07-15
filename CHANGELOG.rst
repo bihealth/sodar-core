@@ -47,6 +47,8 @@ Added
     - ``SODARUser.get_auth_type()`` helper (#1367)
     - ``ProjectInvite.is_ldap()`` helper (#1367)
     - ``AppSettingAPI.is_set()`` helper (#1450)
+    - ``checks`` module for Django checks (#504)
+    - Django check for enabled auth methods (#1451)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
