@@ -142,6 +142,7 @@ Removed
     - ``user_email_additional`` app setting (#874)
     - ``get_visible_projects()`` template tag (#1432)
     - App setting value max length limit (#1443)
+    - Redundant project permission in ``UserSettingRetrieveAPIView`` (#1449)
 
 
 v0.13.4 (2024-02-16)

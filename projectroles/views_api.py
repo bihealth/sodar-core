@@ -1237,8 +1237,6 @@ class UserSettingRetrieveAPIView(
     - ``setting_name``: Setting name (string)
     """
 
-    # NOTE: Update project settings perm is checked manually
-    permission_required = 'projectroles.view_project'
     schema = AutoSchema(operation_id_base='AppSettingUser')
     serializer_class = AppSettingSerializer
 
