@@ -14,6 +14,7 @@ Added
 - **General**
     - Python v3.11 support (#1157)
     - Flake8 rule in ``Makefile`` (#1387)
+    - OpenID Connect (OIDC) authentication support (#1367)
 - **Adminalerts**
     - Admin alert email sending (#415)
     - ``notify_email_alert`` app setting (#415)
@@ -43,6 +44,8 @@ Added
     - Remote project access status updating in project detail view (#1358)
     - ``SidebarContentAjaxView`` for sidebar and project dropdown content retrieval (#1366)
     - ``UserDropdownContentAjaxView`` for user dropdown content retrieval (#1366, #1392)
+    - ``SODARUser.get_auth_type()`` helper (#1367)
+    - ``ProjectInvite.is_ldap()`` helper (#1367)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
@@ -86,6 +89,7 @@ Changed
     - Enforce project and site uniqueness in ``RemoteProject`` model (#1433)
     - Remove redundant permission check in ``project_detail.html`` (#1438)
     - Move sidebar, project dropdown and user dropdown creation to ``utils`` (#1366)
+    - Refactor ``ProjectInviteProcessMixin.get_invite_type()`` into ``ProjectInvite.is_ldap()`` (#1367)
 - **Sodarcache**
     - Rewrite REST API views (#498, #1389)
     - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)

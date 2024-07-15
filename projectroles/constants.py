@@ -41,8 +41,13 @@ SODAR_CONSTANTS = {
         'CATEGORY': {'default': 'category', 'plural': 'categories'},
         'PROJECT': {'default': 'project', 'plural': 'projects'},
     },
+    # User types
+    'AUTH_TYPE_LOCAL': 'LOCAL',
+    'AUTH_TYPE_LDAP': 'LDAP',
+    'AUTH_TYPE_OIDC': 'OIDC',
     # System user group
     'SYSTEM_USER_GROUP': 'system',
+    'OIDC_USER_GROUP': 'oidc',
     # Project modification
     'PROJECT_ACTION_CREATE': 'CREATE',
     'PROJECT_ACTION_UPDATE': 'UPDATE',

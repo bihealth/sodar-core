@@ -53,6 +53,7 @@ REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 SOURCE_SITE_NAME = 'Test source site'
@@ -157,6 +158,7 @@ class RemoteProjectAPITestBase(RoleMixin, TestCase):
         self.init_roles()
 
 
+@override_settings(AUTH_LDAP_USERNAME_DOMAIN=SOURCE_USER_DOMAIN)
 class TestGetSourceData(
     ProjectMixin,
     RoleAssignmentMixin,
@@ -336,6 +338,7 @@ class TestGetSourceData(
 
     def test_get_read_roles(self):
         """Test getting data with READ_ROLES level"""
+        self.maxDiff = None
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -1238,6 +1241,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
 
         remote_data = self.default_data
         remote_data['users'][SOURCE_USER_UUID]['username'] = 'source_admin'
+        remote_data['users'][SOURCE_USER_UUID]['groups'] = [SYSTEM_USER_GROUP]
         remote_data['projects'][SOURCE_CATEGORY_UUID]['roles'][
             SOURCE_CATEGORY_ROLE_UUID
         ]['user'] = 'source_admin'
@@ -1343,7 +1347,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'last_name': SOURCE_USER_LAST_NAME,
             'email': SOURCE_USER_EMAIL,
             'additional_emails': [],
-            'groups': ['system'],
+            'groups': [SYSTEM_USER_GROUP],
         }
         remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
             'user': local_user_username,
@@ -1375,7 +1379,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'last_name': SOURCE_USER_LAST_NAME,
             'email': SOURCE_USER_EMAIL,
             'additional_emails': [],
-            'groups': ['system'],
+            'groups': [SYSTEM_USER_GROUP],
         }
         remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
             'user': local_user_username,
@@ -1405,7 +1409,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'last_name': SOURCE_USER_LAST_NAME,
             'email': SOURCE_USER_EMAIL,
             'additional_emails': [],
-            'groups': ['system'],
+            'groups': [SYSTEM_USER_GROUP],
         }
         remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
             'user': local_user_username,
@@ -1436,7 +1440,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'last_name': SOURCE_USER_LAST_NAME,
             'email': SOURCE_USER_EMAIL,
             'additional_emails': [],
-            'groups': ['system'],
+            'groups': [SYSTEM_USER_GROUP],
         }
         remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
             role_uuid: {
@@ -1471,7 +1475,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'last_name': SOURCE_USER_LAST_NAME,
             'email': SOURCE_USER_EMAIL,
             'additional_emails': [],
-            'groups': ['system'],
+            'groups': [SYSTEM_USER_GROUP],
         }
         remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
             role_uuid: {
@@ -1980,7 +1984,7 @@ class TestSyncRemoteDataUpdate(
             'last_name': local_name.split(' ')[1],
             'email': 'some@example.com',
             'additional_emails': [],
-            'groups': [SOURCE_USER_GROUP],
+            'groups': [SYSTEM_USER_GROUP],
         }
         self.assertEqual(User.objects.all().count(), 3)
         self.remote_api.sync_remote_data(self.source_site, remote_data)

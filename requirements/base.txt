@@ -35,6 +35,9 @@ pytz>=2024.1
 # SVG icon support
 django-iconify==0.3  # NOTE: v0.4 requires Python>=3.10
 
+# OpenID Connect (OIDC) authentication support
+social-auth-app-django>=5.4.0, <5.5
+
 # Online documentation via django-docs
 docutils==0.20.1
 Sphinx==7.2.6

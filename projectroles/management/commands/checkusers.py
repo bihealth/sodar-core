@@ -9,6 +9,7 @@ import sys
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 
 from projectroles.management.logging import ManagementCommandLogger
 
@@ -166,7 +167,19 @@ class Command(BaseCommand):
             return
         self._check_search_base_setting(primary=True)
         self._check_search_base_setting(primary=False)
-        users = User.objects.filter(username__contains='@').order_by('username')
+        u_query = Q(
+            username__endswith='@{}'.format(
+                settings.AUTH_LDAP_USERNAME_DOMAIN.upper()
+            )
+        )
+        if settings.ENABLE_LDAP_SECONDARY:
+            q_secondary = Q(
+                username__endswith='@{}'.format(
+                    settings.AUTH_LDAP2_USERNAME_DOMAIN.upper()
+                )
+            )
+            u_query.add(q_secondary, Q.OR)
+        users = User.objects.filter(u_query).order_by('username')
         limit = options.get('limit')
         if not limit or limit == 'ldap1':
             self._check_ldap_users(

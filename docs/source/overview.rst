@@ -53,8 +53,8 @@ develop a user friendly system for accessing, browsing and/or manipulating
 research data. The data may belong to several different projects, with different
 research groups or scientists working on it. This data may be confidential in
 nature, so access control is required, preferably using the organization's
-existing LDAP/AD servers. The organization wants to provide a web-based GUI as
-well as programmatic API views.
+existing LDAP/AD servers or single sign-on logins via OpenID Connect (OIDC). The
+organization wants to provide a web-based GUI as well as programmatic API views.
 
 Site Setup
 ----------
@@ -99,13 +99,14 @@ Using the Site
 --------------
 
 The researchers will log in to the site on their web browser, in most cases
-using the standard LDAP credentials provided by their organization. They will
-see the projects they have been granted access to and can use whichever
-applications have been enabled or developed for the site, according to their
-assigned user rights. SODAR Core provides common navigation, overview and search
-views for all enabled apps, including the one(s) developed by the organization.
-The same user access management features are shared for all apps, along with
-possible REST APIs developed by the organization.
+using the standard LDAP credentials provided by their organization or a single
+sign-on OIDC account. They will see the projects they have been granted access
+to and can use whichever applications have been enabled or developed for the
+site, according to their assigned user rights. SODAR Core provides common
+navigation, overview and search views for all enabled apps, including the one(s)
+developed by the organization. The same user access management features are
+shared for all apps, along with possible REST APIs developed by the
+organization.
 
 
 Next Steps

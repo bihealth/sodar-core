@@ -645,6 +645,9 @@ span.select2-selection__rendered {
 
 /* Misc --------------------------------------------------------------------- */
 
+hr {
+  border-color: #dfdfdf;
+}
 
 img.sodar-navbar-logo {
   height: 36px;

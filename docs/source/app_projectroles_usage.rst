@@ -318,11 +318,18 @@ Invites
 -------
 
 Invites are accepted by the responding user clicking on a link supplied in their
-invite email and either logging in to the site with their LDAP/AD credentials or
-creating a local user. The latter is only allowed if local users are enabled in
-the site's Django settings and the user email domain is not associated with
-configured LDAP domains. Invites expire after a certain time and can be reissued
-or revoked on the **Project Invites** page.
+invite email. Depending on how the site is configured, users can then either
+login to the site using their LDAP/OIDC credentials or create a local user. The
+latter is only allowed if local users are enabled in the site's Django settings
+and the user email domain is not associated with configured LDAP domains.
+Invites expire after a certain time and can be reissued or revoked on the
+:guilabel:`Project Invites` page.
+
+.. note::
+
+    If the site enables both LDAP and OpenID Connect (OIDC) authentication,
+    LDAP will take precedent over OIDC login in invites if a configured LDAP
+    domain is recognized in the user email address.
 
 Batch Member Modifications
 --------------------------

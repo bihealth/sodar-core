@@ -18,6 +18,7 @@ Release Highlights
 
 - Upgrade to Django v4.2 and Postgres v16
 - Add Python v3.11 support
+- Add OpenID Connect (OIDC) authentication support
 - Add app specific and semantic REST API versioning
 - Add REST API versioning independent from repo/site versions
 - Add timeline REST API
@@ -40,7 +41,7 @@ Release Highlights
 - Rename base test classes
 - Remove app setting max length limit
 - Remove Python v3.8 support
-- Remove SAML SSO support
+- Remove SAML authentication support
 
 Breaking Changes
 ================
@@ -85,17 +86,6 @@ General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your
     project.
-
-SAML SSO Support Removed
-------------------------
-
-Support for SAML SSO authentication has been removed in this release. It will
-soon be replaced with support OpenID Connect authentication. The library we
-previously used is no longer compatible with Django v4.2 and we are not aware of
-SODAR Core based projects requiring SAML at this time. If there are specific
-needs to use SAML on a SODAR Core based site, we are happy to review pull
-requests to re-introduce it. Please note the implementation has to support
-Django v4.2+.
 
 REST API Versioning Overhaul
 ----------------------------
@@ -276,6 +266,33 @@ Django Settings Changed
 ``PROJECTROLES_HIDE_APP_LINKS`` Removed
     The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting, which was deprecated in
     v0.13, has been removed. Use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead.
+
+SAML Authentication Support Removed
+-----------------------------------
+
+SAML support has been removed and replaced with the possibility to set up OpenID
+Connect (OIDC) authentication. The library previously used for SAML in SODAR
+Core is incompatible with Django v4.x. We are unaware of SODAR Core based
+projects requiring SAML at this time. If there are specific needs to use SAML on
+a SODAR Core based site, we are happy to review pull requests to reintroduce it.
+Please note the implementation has to support Django v4.2+.
+
+OpenID Connect (OIDC) Authentication Support Added
+--------------------------------------------------
+
+This version adds OIDC support using the ``social_django`` app. In order to
+provide OIDC authentication access to your users, you need to add the app and
+its URLs to your site config along with appropriate Django settings. See
+:ref:`OIDC settings documentation <app_projectroles_settings_oidc>` for
+instructions on how to to configure OIDC on your site.
+
+Login Template Updated
+----------------------
+
+The default login template ``login.html`` has been updated by adding OpenID
+Connect (OIDC) controls and removing SAML controls. If you have overridden the
+login template with your own and wish to use OIDC authentication, make sure to
+update your template accordingly.
 
 Base Test Classes Renamed
 -------------------------

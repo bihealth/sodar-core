@@ -1,7 +1,6 @@
 """Models for the projectroles app"""
 
 import logging
-import re
 import uuid
 
 from django.apps import apps
@@ -34,6 +33,9 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
+AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
+AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
 
 # Local constants
 ROLE_RANKING = {
@@ -65,6 +67,7 @@ ADD_EMAIL_ALREADY_SET_MSG = 'Email already set as {email_type} email for user'
 REMOTE_PROJECT_UNIQUE_MSG = (
     'RemoteProject with the same project UUID and site anready exists'
 )
+AUTH_PROVIDER_OIDC = 'oidc'
 
 
 # Project ----------------------------------------------------------------------
@@ -1098,6 +1101,31 @@ class ProjectInvite(models.Model):
         values = (self.project.title, self.email, self.role.name, self.active)
         return 'ProjectInvite({})'.format(', '.join(repr(v) for v in values))
 
+    # Custom row-level functions
+
+    def is_ldap(self):
+        """
+        Return True if invite is intended for an LDAP user.
+
+        :return: Boolean
+        """
+        # Only consider LDAP if enabled in Django settings
+        if not settings.ENABLE_LDAP:
+            return False
+        # Check if domain is associated with LDAP
+        domain = self.email.split('@')[1].lower()
+        domain_no_tld = domain.split('.')[0].lower()
+        ldap_domains = [
+            getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').lower(),
+            getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').lower(),
+        ]
+        alt_domains = [
+            a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])
+        ]
+        if domain_no_tld in ldap_domains or domain in alt_domains:
+            return True
+        return False
+
 
 # RemoteSite -------------------------------------------------------------------
 
@@ -1343,19 +1371,59 @@ class SODARUser(AbstractUser):
             ret += ' <{}>'.format(self.email)
         return ret
 
+    def get_auth_type(self):
+        """
+        Return user authentication type: OIDC, LDAP or local.
+
+        :return: String which may equal AUTH_TYPE_OIDC, AUTH_TYPE_LDAP or
+                 AUTH_TYPE_LOCAL.
+        """
+        groups = [g.name for g in self.groups.all()]
+        if 'oidc' in groups:
+            return AUTH_TYPE_OIDC
+        elif (
+            self.username.find('@') != -1
+            and self.username.split('@')[1].lower() in groups
+        ):
+            return AUTH_TYPE_LDAP
+        return AUTH_TYPE_LOCAL
+
+    def is_local(self):
+        """
+        Return True if user is of type AUTH_TYPE_LOCAL.
+
+        :return: Boolean
+        """
+        return self.get_auth_type() == AUTH_TYPE_LOCAL
+
     def set_group(self):
-        """Set user group based on user name."""
-        if self.username.find('@') != -1:
+        """Set user group based on user name or social auth provider"""
+        social_auth = getattr(self, 'social_auth', None)
+        if social_auth:
+            social_auth = social_auth.first()
+        ldap_domains = [
+            getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').upper(),
+            getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').upper(),
+        ]
+        # OIDC user group
+        if social_auth and social_auth.provider == AUTH_PROVIDER_OIDC:
+            group_name = AUTH_PROVIDER_OIDC
+        # LDAP domain user groups
+        elif (
+            self.username.find('@') != -1
+            and self.username.split('@')[1] in ldap_domains
+        ):
             group_name = self.username.split('@')[1].lower()
+        # System user group for local users
         else:
             group_name = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
         group, created = Group.objects.get_or_create(name=group_name)
         if group not in self.groups.all():
             group.user_set.add(self)
+            logger.info(
+                'Set user group "{}" for {}'.format(group_name, self.username)
+            )
             return group_name
-
-    def is_local(self):
-        return not bool(re.search('@[A-Za-z0-9._-]+$', self.username))
 
     def update_full_name(self):
         """

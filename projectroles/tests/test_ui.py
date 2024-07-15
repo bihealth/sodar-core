@@ -2361,6 +2361,49 @@ class TestProjectInviteCreateView(UITestBase):
         )
 
 
+class TestProjectInviteProcessLocalView(ProjectInviteMixin, UITestBase):
+    """Tests for ProjectInviteProcessLocalView UI"""
+
+    def setUp(self):
+        super().setUp()
+        self.invite = self.make_invite(
+            email='test@example.com',
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user_owner,
+            message='',
+        )
+        self.url = self.build_selenium_url(
+            reverse(
+                'projectroles:invite_process_new_user',
+                kwargs={'secret': self.invite.secret},
+            )
+        )
+
+    def test_get(self):
+        """Test ProjectInviteProcessLocalView GET"""
+        # NOTE: No login
+        self.selenium.get(self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-login-oidc-link')
+        elem = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-btn-submit-once'
+        )
+        self.assertEqual(elem.text, 'Create')
+
+    @override_settings(ENABLE_OIDC=True)
+    def test_get_oidc(self):
+        """Test GET with OIDC authentication enabled"""
+        self.selenium.get(self.url)
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-login-oidc-link')
+        )
+        elem = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-btn-submit-once'
+        )
+        self.assertEqual(elem.text, 'Create')
+
+
 class TestRemoteSiteListView(RemoteSiteMixin, UITestBase):
     """Tests for RemoteSiteListView UI"""
 

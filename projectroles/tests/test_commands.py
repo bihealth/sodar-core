@@ -79,7 +79,7 @@ CUSTOM_PASSWORD = 'custompass'
 REMOTE_SITE_NAME = 'Test Site'
 REMOTE_SITE_URL = 'https://example.com'
 REMOTE_SITE_SECRET = build_secret(32)
-USER_DOMAIN = 'EXAMPLE'
+LDAP_DOMAIN = 'EXAMPLE'
 
 
 class TestAddRemoteSite(
@@ -904,26 +904,28 @@ class TestSyncGroups(TestCase):
         self.assertIsNotNone(group)
         self.assertEqual(group.name, SYSTEM_USER_GROUP)
 
-    def test_sync_domain(self):
-        """Test sync with domain username"""
-        user = self.make_user('user@' + USER_DOMAIN)
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_sync_ldap(self):
+        """Test sync with LDAP user"""
+        user = self.make_user('user@' + LDAP_DOMAIN)
         user.groups.all().delete()
         self.assertEqual(user.groups.count(), 0)
         self.command.handle()
         self.assertEqual(user.groups.count(), 1)
         group = user.groups.first()
         self.assertIsNotNone(group)
-        self.assertEqual(group.name, USER_DOMAIN.lower())
+        self.assertEqual(group.name, LDAP_DOMAIN.lower())
 
-    def test_sync_domain_existing(self):
-        """Test sync with domain username and existing group"""
-        user = self.make_user('user@' + USER_DOMAIN)
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_sync_ldap_existing(self):
+        """Test sync with LDAP user and existing group"""
+        user = self.make_user('user@' + LDAP_DOMAIN)
         self.assertEqual(user.groups.count(), 1)
         self.command.handle()
         self.assertEqual(user.groups.count(), 1)
         group = user.groups.first()
         self.assertIsNotNone(group)
-        self.assertEqual(group.name, USER_DOMAIN.lower())
+        self.assertEqual(group.name, LDAP_DOMAIN.lower())
 
 
 @override_settings(DEBUG=True)

@@ -91,7 +91,6 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     def get_context_data(self, **kwargs):
         result = super().get_context_data(**kwargs)
         result['user_settings'] = list(self._get_user_settings())
-        result['local_user'] = self.request.user.is_local()
         result['add_emails'] = SODARUserAdditionalEmail.objects.filter(
             user=self.request.user
         ).order_by('email')

@@ -67,6 +67,7 @@ from projectroles.tests.test_models import (
     RemoteTargetMixin,
 )
 from projectroles.views import (
+    ProjectInviteProcessMixin,
     FORM_INVALID_MSG,
     PROJECT_WELCOME_MSG,
     USER_PROFILE_LDAP_MSG,
@@ -128,6 +129,7 @@ REMOTE_SITE_FIELD = 'remote_site.{}'.format(REMOTE_SITE_UUID)
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 INVALID_SETTING_VALUE = 'INVALID VALUE'
+LDAP_DOMAIN = 'EXAMPLE'
 
 HIDDEN_PROJECT_SETTINGS = [
     'settings.example_project_app.project_hidden_setting',
@@ -4190,7 +4192,7 @@ class TestProjectInviteCreateView(
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
     def test_post_local_users_not_allowed(self):
-        """Test POST for local user with local users not allowed"""
+        """Test POST for local/OIDC user with local users not allowed"""
         data = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,
@@ -4201,9 +4203,25 @@ class TestProjectInviteCreateView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ProjectInvite.objects.all().count(), 0)
 
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_post_local_users_allowed(self):
-        """Test POST for local user with local users allowed"""
+        """Test POST for local/OIDC user with local users allowed"""
+        data = {
+            'email': INVITE_EMAIL,
+            'project': self.project.pk,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        invite = ProjectInvite.objects.get(
+            project=self.project, email=INVITE_EMAIL, active=True
+        )
+        self.assertIsNotNone(invite)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    @override_settings(ENABLE_OIDC=True)
+    def test_post_oidc_users_allowed(self):
+        """Test POST with for local/OIDC user with OIDC users allowed"""
         data = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,
@@ -4220,7 +4238,7 @@ class TestProjectInviteCreateView(
     @override_settings(
         PROJECTROLES_ALLOW_LOCAL_USERS=False,
         ENABLE_LDAP=True,
-        AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE',
+        AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN,
     )
     def test_post_local_users_email_domain(self):
         """Test POST for local user with email domain in AUTH_LDAP_USERNAME_DOMAIN"""
@@ -4259,7 +4277,11 @@ class TestProjectInviteCreateView(
 
 
 class TestProjectInviteAcceptView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
+    ProjectMixin,
+    RoleAssignmentMixin,
+    ProjectInviteMixin,
+    ProjectInviteProcessMixin,
+    ViewTestBase,
 ):
     """Tests for ProjectInviteAcceptView and related helper views"""
 
@@ -4272,52 +4294,48 @@ class TestProjectInviteAcceptView(
             self.project, self.user, self.role_owner
         )
         self.user_new = self.make_user('user_new')
-        self.project_url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid},
-        )
-
-    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
-    def test_get_ldap(self):
-        """Test ProjectInviteAcceptView GET with LDAP invite"""
-        invite = self.make_invite(
+        self.invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
             issuer=self.user,
             message='',
         )
+        self.url = reverse(
+            'projectroles:invite_accept',
+            kwargs={'secret': self.invite.secret},
+        )
+        self.url_process_login = reverse(
+            'projectroles:invite_process_login',
+            kwargs={'secret': self.invite.secret},
+        )
+        self.url_process_new = reverse(
+            'projectroles:invite_process_new_user',
+            kwargs={'secret': self.invite.secret},
+        )
+        self.url_project = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_get_ldap(self):
+        """Test ProjectInviteAcceptView GET with LDAP invite"""
+        # NOTE: Adding sanity checks for invite type in these tests
+        self.assertEqual(self.invite.is_ldap(), True)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        self.assertEqual(
+        self.assertFalse(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            0,
+                project=self.project, user=self.user_new
+            ).exists()
         )
         self.assertEqual(len(mail.outbox), 0)
 
         with self.login(self.user_new):
-            response = self.client.get(
-                reverse(
-                    'projectroles:invite_accept',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
+            response = self.client.get(self.url, follow=True)
         self.assertListEqual(
             response.redirect_chain,
-            [
-                (
-                    reverse(
-                        'projectroles:invite_process_ldap',
-                        kwargs={'secret': invite.secret},
-                    ),
-                    302,
-                ),
-                (self.project_url, 302),
-            ],
+            [(self.url_process_login, 302), (self.url_project, 302)],
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
@@ -4328,13 +4346,10 @@ class TestProjectInviteAcceptView(
             ),
         )
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
-        self.assertEqual(
+        self.assertTrue(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            1,
+                project=self.project, user=self.user_new
+            ).exists()
         )
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(
@@ -4346,179 +4361,95 @@ class TestProjectInviteAcceptView(
             mail.outbox[0].subject,
         )
 
-    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
     def test_get_ldap_disable_email(self):
         """Test GET with LDAP invite and disabled email notifications"""
+        self.assertEqual(self.invite.is_ldap(), True)
         app_settings.set(APP_NAME, 'notify_email_role', False, user=self.user)
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
         with self.login(self.user_new):
-            self.client.get(
-                reverse(
-                    'projectroles:invite_accept',
-                    kwargs={'secret': invite.secret},
-                ),
-            )
+            self.client.get(self.url)
         self.assertEqual(len(mail.outbox), 0)
 
     @override_settings(
-        AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE',
+        AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN,
         ENABLE_LDAP=True,
         LDAP_ALT_DOMAINS=['alt.org'],
         PROJECTROLES_ALLOW_LOCAL_USERS=False,
     )
     def test_get_ldap_alt_domain(self):
         """Test GET with LDAP invite and email in LDAP_ALT_DOMAINS"""
-        alt_email = 'user@alt.org'
-        invite = self.make_invite(
-            email=alt_email,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
+        self.invite.email = 'user@alt.org'
+        self.invite.save()
+        self.assertEqual(self.invite.is_ldap(), True)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        self.assertEqual(
+        self.assertFalse(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            0,
+                project=self.project, user=self.user_new
+            ).exists()
         )
-
         with self.login(self.user_new):
-            response = self.client.get(
-                reverse(
-                    'projectroles:invite_accept',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
+            response = self.client.get(self.url, follow=True)
         self.assertListEqual(
             response.redirect_chain,
-            [
-                (
-                    reverse(
-                        'projectroles:invite_process_ldap',
-                        kwargs={'secret': invite.secret},
-                    ),
-                    302,
-                ),
-                (self.project_url, 302),
-            ],
+            [(self.url_process_login, 302), (self.url_project, 302)],
         )
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
-        self.assertEqual(
+        self.assertTrue(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            1,
+                project=self.project, user=self.user_new
+            ).exists()
         )
 
     @override_settings(
-        AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE',
         ENABLE_LDAP=True,
-        LDAP_ALT_DOMAINS=[],
+        AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN,
         PROJECTROLES_ALLOW_LOCAL_USERS=False,
     )
     def test_get_ldap_email_not_listed(self):
         """Test GET with LDAP invite and email not in LDAP_ALT_DOMAINS"""
-        alt_email = 'user@alt.org'
-        invite = self.make_invite(
-            email=alt_email,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
+        self.invite.email = 'user@alt.org'
+        self.invite.save()
+        self.assertEqual(self.invite.is_ldap(), False)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        self.assertEqual(
+        self.assertFalse(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            0,
+                project=self.project, user=self.user_new
+            ).exists()
         )
-
         with self.login(self.user_new):
-            response = self.client.get(
-                reverse(
-                    'projectroles:invite_accept',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
+            response = self.client.get(self.url, follow=True)
         self.assertListEqual(response.redirect_chain, [(reverse('home'), 302)])
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        self.assertEqual(
+        self.assertFalse(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            0,
+                project=self.project, user=self.user_new
+            ).exists()
         )
 
-    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE', ENABLE_LDAP=True)
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
     def test_get_ldap_expired(self):
         """Test GET with expired LDAP invite"""
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-            date_expire=timezone.now(),
-        )
+        self.invite.date_expire = timezone.now()
+        self.invite.save()
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        self.assertEqual(
+        self.assertFalse(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            0,
+                project=self.project, user=self.user_new
+            ).exists()
         )
         self.assertEqual(len(mail.outbox), 0)
 
         with self.login(self.user_new):
-            response = self.client.get(
-                reverse(
-                    'projectroles:invite_accept',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
+            response = self.client.get(self.url, follow=True)
         self.assertListEqual(
             response.redirect_chain,
-            [
-                (
-                    reverse(
-                        'projectroles:invite_process_ldap',
-                        kwargs={'secret': invite.secret},
-                    ),
-                    302,
-                ),
-                (reverse('home'), 302),
-            ],
+            [(self.url_process_login, 302), (reverse('home'), 302)],
         )
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
-        self.assertEqual(
+        self.assertFalse(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            0,
+                project=self.project, user=self.user_new
+            ).exists()
         )
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(
@@ -4529,219 +4460,177 @@ class TestProjectInviteAcceptView(
             mail.outbox[0].subject,
         )
 
-    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE', ENABLE_LDAP=True)
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
     def test_get_ldap_expired_disable_email(self):
         """Test GET with expired LDAP invite and disabled email notifications"""
         app_settings.set(APP_NAME, 'notify_email_role', False, user=self.user)
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-            date_expire=timezone.now(),
-        )
+        self.invite.date_expire = timezone.now()
+        self.invite.save()
         with self.login(self.user_new):
-            self.client.get(
-                reverse(
-                    'projectroles:invite_accept',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
+            self.client.get(self.url, follow=True)
         self.assertEqual(len(mail.outbox), 0)
 
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_get_local(self):
-        """Test GET with local invite and nonexistent user with no user logged in"""
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
-        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+        """Test GET with local invite for nonexistent user with no user logged in"""
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, self.url_process_new)
 
-        response = self.client.get(
-            reverse(
-                'projectroles:invite_accept',
-                kwargs={'secret': invite.secret},
-            ),
-            follow=True,
-        )
-        self.assertRedirects(
-            response,
-            reverse(
-                'projectroles:invite_process_local',
-                kwargs={'secret': invite.secret},
-            ),
-        )
-
-        response = self.client.get(
-            reverse(
-                'projectroles:invite_process_local',
-                kwargs={'secret': invite.secret},
-            ),
-        )
-        email = response.context['form']['email'].value()
-        username = response.context['form']['username'].value()
-        self.assertEqual(email, invite.email)
-        self.assertEqual(username, invite.email.split('@')[0])
-        self.assertEqual(User.objects.count(), 2)
-
-        # NOTE: We must face HTTP_REFERER here for it to be included
-        response = self.client.post(
-            reverse(
-                'projectroles:invite_process_local',
-                kwargs={'secret': invite.secret},
-            ),
-            data={
-                'first_name': 'First',
-                'last_name': 'Last',
-                'username': username,
-                'email': email,
-                'password': 'asd',
-                'password_confirm': 'asd',
-            },
-            follow=True,
-            HTTP_REFERER=reverse(
-                'projectroles:invite_process_local',
-                kwargs={'secret': invite.secret},
-            ),
-        )
-        self.assertListEqual(
-            response.redirect_chain,
-            [
-                (self.project_url, 302),
-                (reverse('login') + '?next=' + self.project_url, 302),
-            ],
-        )
-        self.assertEqual(
-            list(get_messages(response.wsgi_request))[1].message, LOGIN_MSG
-        )
-        user = User.objects.get(username=username)
-        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
-        self.assertEqual(
-            RoleAssignment.objects.filter(
-                project=self.project,
-                user=user,
-                role=self.role_contributor,
-            ).count(),
-            1,
-        )
-        with self.login(user, password='asd'):
-            response = self.client.get(self.project_url)
-        self.assertEqual(response.status_code, 200)
-
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_get_expired_local(self):
         """Test GET with expired local invite"""
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-            date_expire=timezone.now(),
-        )
+        self.invite.date_expire = timezone.now()
+        self.invite.save()
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        self.assertEqual(
+        self.assertFalse(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            0,
+                project=self.project, user=self.user_new
+            ).exists()
         )
-
-        response = self.client.get(
-            reverse(
-                'projectroles:invite_accept',
-                kwargs={'secret': invite.secret},
-            ),
-            follow=True,
-        )
+        response = self.client.get(self.url, follow=True)
         self.assertListEqual(
             response.redirect_chain,
             [
-                (
-                    reverse(
-                        'projectroles:invite_process_local',
-                        kwargs={'secret': invite.secret},
-                    ),
-                    302,
-                ),
+                (self.url_process_new, 302),
                 (reverse('home'), 302),
                 (reverse('login') + '?next=/', 302),
             ],
         )
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
-        self.assertEqual(
+        self.assertFalse(
             RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.user_new,
-                role=self.role_contributor,
-            ).count(),
-            0,
+                project=self.project, user=self.user_new
+            ).exists()
         )
 
-    @override_settings(
-        ENABLE_LDAP=True,
-        PROJECTROLES_ALLOW_LOCAL_USERS=True,
-        AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE',
-        AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE',
-    )
-    def test_get_process_ldap_wrong_type_local(self):
-        """Test ProjectInviteProcessLDAPView GET with local invite"""
-        invite = self.make_invite(
-            email='test@different.com',
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
+    def test_get_role_exists(self):
+        """Test GET for user with roles in project"""
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+        self.make_assignment(self.project, invited_user, self.role_guest)
+        self.assertTrue(self.invite.active)
+        self.assertIsNone(
+            TimelineEvent.objects.filter(event_name='invite_accept').first()
         )
-        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        response = self.client.get(
-            reverse(
-                'projectroles:invite_process_ldap',
-                kwargs={'secret': invite.secret},
-            ),
+        with self.login(invited_user):
+            response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, self.url_project)
+        self.invite.refresh_from_db()
+        self.assertFalse(self.invite.active)
+        # No timeline event should be created
+        self.assertIsNone(
+            TimelineEvent.objects.filter(event_name='invite_accept').first()
         )
-        # LDAP expects user to be logged in
+
+    @override_settings(ENABLE_OIDC=True, PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_get_oidc_enabled(self):
+        """Test GET with local/OIDC invite, logged in user and local users enabled"""
+        # NOTE: This is for OIDC redirects from the user form
+        response = self.client.get(self.url, follow=True)
+        # Should redirect to logged in handler view via login
         self.assertRedirects(
-            response,
-            reverse('login')
-            + '?next='
-            + reverse(
-                'projectroles:invite_process_ldap',
-                kwargs={'secret': invite.secret},
-            ),
+            response, reverse('login') + '?next=' + self.url_process_login
         )
 
-    @override_settings(
-        ENABLE_LDAP=True,
-        PROJECTROLES_ALLOW_LOCAL_USERS=True,
-        AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE',
-        AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE',
-    )
-    def test_get_process_local_wrong_type_ldap(self):
-        """Test ProjectInviteProcessLocalView GET with LDAP invite"""
-        invite = self.make_invite(
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_get_oidc_disabled_local_disabled(self):
+        """Test GET with OIDC and local users disabled"""
+        response = self.client.get(self.url, follow=True)
+        self.assertListEqual(
+            response.redirect_chain,
+            [(reverse('home'), 302), (reverse('login') + '?next=/', 302)],
+        )
+
+
+class TestProjectInviteProcessLoginView(
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
+):
+    """Tests for ProjectInviteProcessLoginView"""
+
+    def setUp(self):
+        super().setUp()
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+        self.user_new = self.make_user('user_new')
+        self.invite = self.make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
             issuer=self.user,
             message='',
         )
-        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        response = self.client.get(
-            reverse(
-                'projectroles:invite_process_local',
-                kwargs={'secret': invite.secret},
-            ),
-            follow=True,
+        self.url = reverse(
+            'projectroles:invite_process_login',
+            kwargs={'secret': self.invite.secret},
         )
+
+    @override_settings(
+        ENABLE_LDAP=True,
+        AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN,
+        AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE',
+    )
+    def test_get_wrong_type_local(self):
+        """Test ProjectInviteProcessLoginView GET with local invite"""
+        self.invite.email = 'test@different.com'
+        self.invite.save()
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+        response = self.client.get(self.url)
+        # LDAP expects user to be logged in
+        self.assertRedirects(response, reverse('login') + '?next=' + self.url)
+
+
+class TestProjectInviteProcessNewUserView(
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
+):
+    """Tests for ProjectInviteProcessNewUserView"""
+
+    def setUp(self):
+        super().setUp()
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+        self.user_new = self.make_user('user_new')
+        self.invite = self.make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+        self.url = reverse(
+            'projectroles:invite_process_new_user',
+            kwargs={'secret': self.invite.secret},
+        )
+        self.url_project = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test ProjectInviteProcessNewUserView GET"""
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+        response = self.client.get(self.url)
+        self.assertEqual(response.context['invite'], self.invite)
+        email = response.context['form']['email'].value()
+        username = response.context['form']['username'].value()
+        self.assertEqual(email, self.invite.email)
+        self.assertEqual(username, self.invite.email.split('@')[0])
+
+    @override_settings(
+        ENABLE_LDAP=True,
+        AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN,
+        AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE',
+    )
+    def test_get_wrong_type_ldap(self):
+        """Test GET with LDAP invite"""
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+        response = self.client.get(self.url, follow=True)
         self.assertRedirects(
             response, reverse('login') + '?next=' + reverse('home')
         )
@@ -4751,46 +4640,10 @@ class TestProjectInviteAcceptView(
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
-    def test_get_local_user_disabled(self):
+    def test_get_local_users_disabled(self):
         """Test GET with local users disabled"""
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        response = self.client.get(
-            reverse(
-                'projectroles:invite_accept',
-                kwargs={'secret': invite.secret},
-            ),
-            follow=True,
-        )
-        self.assertListEqual(
-            response.redirect_chain,
-            [(reverse('home'), 302), (reverse('login') + '?next=/', 302)],
-        )
-
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
-    def test_get_process_local_disabled(self):
-        """Test ProjectInviteProcessLocalView GET with local users disabled"""
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
-        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        response = self.client.get(
-            reverse(
-                'projectroles:invite_process_local',
-                kwargs={'secret': invite.secret},
-            ),
-            follow=True,
-        )
+        response = self.client.get(self.url, follow=True)
         self.assertRedirects(
             response, reverse('login') + '?next=' + reverse('home')
         )
@@ -4799,82 +4652,53 @@ class TestProjectInviteAcceptView(
             INVITE_LOCAL_NOT_ALLOWED_MSG,
         )
 
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_get_process_local_no_user_different_user_logged(self):
-        """Test ProjectInviteProcessLocalView GET with nonexistent user and different user logged in"""
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
+    def test_get_no_user_different_user_logged(self):
+        """Test GET with nonexistent user and different user logged in"""
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'projectroles:invite_process_local',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
+            response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             INVITE_LOGGED_IN_ACCEPT_MSG,
         )
 
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_get_process_local_user_exists_different_user_logged(self):
-        """Test ProjectInviteProcessLocalView GET with existing user and different user logged in"""
+    def test_get_user_exists_different_user_logged(self):
+        """Test GET with existing user and different user logged in"""
         invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
         invited_user.email = INVITE_EMAIL
         invited_user.save()
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'projectroles:invite_process_local',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
+            response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             INVITE_USER_NOT_EQUAL_MSG,
         )
 
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_get_process_local_user_exists_is_logged(self):
-        """Test ProjectInviteProcessLocalView GET with with existing and logged in user"""
+    def test_get_user_exists_not_logged(self):
+        """Test GET with existing user and no user logged in"""
         invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
         invited_user.email = INVITE_EMAIL
         invited_user.save()
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, reverse('login') + '?next=' + self.url)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            INVITE_USER_EXISTS_MSG,
         )
+
+    def test_get_user_exists_is_logged(self):
+        """Test GET with with existing and logged in user"""
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
         with self.login(invited_user):
-            response = self.client.get(
-                reverse(
-                    'projectroles:invite_process_local',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
-        self.assertRedirects(response, self.project_url)
+            response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, self.url_project)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             PROJECT_WELCOME_MSG.format(
@@ -4884,75 +4708,45 @@ class TestProjectInviteAcceptView(
             ),
         )
 
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_get_process_local_user_exists_not_logged(self):
-        """Test ProjectInviteProcessLocalView GET with existing user and no user logged in"""
-        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
-        invited_user.email = INVITE_EMAIL
-        invited_user.save()
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
+    def test_post(self):
+        """Test POST"""
+        self.assertFalse(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).exists()
         )
-        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
-        response = self.client.get(
-            reverse(
-                'projectroles:invite_process_local',
-                kwargs={'secret': invite.secret},
-            ),
+        # NOTE: We must set HTTP_REFERER here for it to be included
+        response = self.client.post(
+            self.url,
+            data={
+                'first_name': 'First',
+                'last_name': 'Last',
+                'username': 'test',
+                'email': INVITE_EMAIL,
+                'password': 'asd',
+                'password_confirm': 'asd',
+            },
             follow=True,
+            HTTP_REFERER=self.url,
         )
-        self.assertRedirects(
-            response,
-            reverse(
-                'login',
-            )
-            + '?next='
-            + reverse(
-                'projectroles:invite_process_local',
-                kwargs={'secret': invite.secret},
-            ),
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (self.url_project, 302),
+                (reverse('login') + '?next=' + self.url_project, 302),
+            ],
         )
         self.assertEqual(
-            list(get_messages(response.wsgi_request))[0].message,
-            INVITE_USER_EXISTS_MSG,
+            list(get_messages(response.wsgi_request))[1].message, LOGIN_MSG
         )
-
-    def test_get_role_exists(self):
-        """Test GET for user with roles in project"""
-        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
-        invited_user.email = INVITE_EMAIL
-        invited_user.save()
-        invite = self.make_invite(
-            email=INVITE_EMAIL,
-            project=self.project,
-            role=self.role_contributor,
-            issuer=self.user,
-            message='',
-        )
-        self.make_assignment(self.project, invited_user, self.role_guest)
-        self.assertTrue(invite.active)
-        self.assertIsNone(
-            TimelineEvent.objects.filter(event_name='invite_accept').first()
-        )
-
-        with self.login(invited_user):
-            response = self.client.get(
-                reverse(
-                    'projectroles:invite_accept',
-                    kwargs={'secret': invite.secret},
-                ),
-                follow=True,
-            )
-        self.assertRedirects(response, self.project_url)
-        invite.refresh_from_db()
-        self.assertFalse(invite.active)
-        # No timeline event should be created
-        self.assertIsNone(
-            TimelineEvent.objects.filter(event_name='invite_accept').first()
+        user = User.objects.get(username='test')
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+        self.assertTrue(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=user,
+                role=self.role_contributor,
+            ).exists()
         )
 
 
@@ -5588,7 +5382,7 @@ class TestUserUpdateView(TestCase):
 
     def setUp(self):
         self.user_local = self.make_user('local_user')
-        self.user_ldap = self.make_user('ldap_user@EXAMPLE')
+        self.user_ldap = self.make_user('ldap_user@' + LDAP_DOMAIN)
         self.url = reverse('projectroles:user_update')
 
     def test_get_local_user(self):
@@ -5597,6 +5391,7 @@ class TestUserUpdateView(TestCase):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
 
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
     def test_get_ldap_user(self):
         """Test GET with LDAP user"""
         with self.login(self.user_ldap):

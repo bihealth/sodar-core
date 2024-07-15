@@ -5,19 +5,32 @@
 {% load crispy_forms_filters %}
 
 {% block title %}
+  {% get_django_setting 'ENABLE_OIDC' as enable_oidc %}
+  {% if invite and enable_oidc %}Login or{% endif %}
   {% if object %}Update{% else %}Create{% endif %} Local User
 {% endblock title %}
 
 {% block projectroles %}
+{% get_django_setting 'ENABLE_OIDC' as enable_oidc %}
+{% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
 
 <div class="container-fluid sodar-subtitle-container">
   <h2>
     <i class="iconify" data-icon="mdi:account"></i>
+    {% if invite and enable_oidc %}Login or{% endif %}
     {% if object %}Update{% else %}Create{% endif %} Local User
   </h2>
 </div>
 
 <div class="container-fluid sodar-page-container">
+  {% if invite and enable_oidc %}
+    <div class="col-md-4 mt-1 mb-4 ml-0 pl-0">
+      <p>Please log in if you have a single sign-on account.</p>
+      {% url 'projectroles:invite_process_login' secret=invite.secret as oidc_redirect_url %}
+      {% include 'projectroles/_login_oidc.html' %}
+    </div>
+    <hr />
+  {% endif %}
   <form method="post">
     {% csrf_token %}
     {{ form | crispy }}

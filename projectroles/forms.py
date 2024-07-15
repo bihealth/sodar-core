@@ -1144,6 +1144,7 @@ class ProjectInviteForm(SODARModelForm):
             ]
             if (
                 not settings.PROJECTROLES_ALLOW_LOCAL_USERS
+                and not settings.ENABLE_OIDC
                 and domain
                 not in [
                     x.lower() for x in getattr(settings, 'LDAP_ALT_DOMAINS', [])
@@ -1153,8 +1154,8 @@ class ProjectInviteForm(SODARModelForm):
             ):
                 self.add_error(
                     'email',
-                    'Local users not allowed, email domain {} not recognized '
-                    'for LDAP users'.format(domain),
+                    'Local/OIDC users not allowed, email domain {} not'
+                    'recognized for LDAP users'.format(domain),
                 )
 
         # Delegate checks

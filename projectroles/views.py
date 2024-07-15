@@ -104,22 +104,21 @@ CAT_ARCHIVE_ERR_MSG = 'Setting archival is not allowed for {}.'.format(
     get_display_name(PROJECT_TYPE_CATEGORY, plural=True)
 )
 USER_PROFILE_UPDATE_MSG = 'User profile updated, please log in again.'
-USER_PROFILE_LDAP_MSG = 'Error: Profile editing not allowed for LDAP users.'
+USER_PROFILE_LDAP_MSG = 'Profile editing not allowed for LDAP users.'
+INVITE_NOT_FOUND_MSG = 'Invite not found.'
 INVITE_LDAP_LOCAL_VIEW_MSG = (
-    'Error: Invite was issued for LDAP user, but local invite view '
-    'was requested.'
+    'Invite was issued for LDAP user, but local invite view was requested.'
 )
-INVITE_LOCAL_NOT_ALLOWED_MSG = (
-    'Error: Invite of non-LDAP user, but local users are not allowed.'
-)
+INVITE_LOCAL_NOT_ALLOWED_MSG = 'Local users are not allowed.'
+
 INVITE_LOGGED_IN_ACCEPT_MSG = (
-    'Error: Logged in user is not allowed to accept invites for other users.'
+    'Logged in user is not allowed to accept invites for other users.'
 )
 INVITE_USER_NOT_EQUAL_MSG = (
-    'Error: Invited user exists, but logged in user is not invited user.'
+    'Invited user exists, but logged in user is not invited user.'
 )
 INVITE_USER_EXISTS_MSG = (
-    'A user with that email already exists. Please login to accept the invite.'
+    'User with that email already exists. Please login to accept the invite.'
 )
 ROLE_CREATE_MSG = 'Membership granted with the role of "{role}".'
 ROLE_UPDATE_MSG = 'Member role changed to "{role}".'
@@ -2550,27 +2549,6 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
     """Mixin for accepting and processing project invites"""
 
     @classmethod
-    def get_invite_type(cls, invite):
-        """Return invite type ("ldap", "local" or "error")"""
-        # Check if domain is associated with LDAP
-        domain = invite.email.split('@')[1].lower()
-        domain_no_tld = domain.split('.')[0].lower()
-        ldap_domains = [
-            getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').lower(),
-            getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').lower(),
-        ]
-        alt_domains = [
-            a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])
-        ]
-        if settings.ENABLE_LDAP and (
-            domain_no_tld in ldap_domains or domain in alt_domains
-        ):
-            return 'ldap'
-        elif settings.PROJECTROLES_ALLOW_LOCAL_USERS:
-            return 'local'
-        return 'error'
-
-    @classmethod
     def revoke_invite(
         cls, invite, user=None, failed=True, fail_desc='', timeline=None
     ):
@@ -2698,7 +2676,6 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
 
         # Deactivate the invite
         self.revoke_invite(invite, user, failed=False, timeline=timeline)
-
         # Finally, redirect user to the project front page
         messages.success(
             self.request,
@@ -2708,18 +2685,29 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 role=invite.role.name,
             ),
         )
-        return True
+
+    def redirect_error(self, msg=None):
+        if msg:
+            messages.error(self.request, msg)
+        return redirect(reverse('home'))
 
 
 class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
     """View to handle accepting a project invite"""
 
+    def _redirect_process(self, login=True):
+        """Redirect to the proper process view"""
+        url = 'projectroles:invite_process_{}'.format(
+            'login' if login else 'new_user'
+        )
+        kw = {'secret': self.kwargs.get('secret')}
+        return redirect(reverse(url, kwargs=kw))
+
     def get(self, *args, **kwargs):
         invite = self.get_invite(secret=kwargs['secret'])
         if not invite:
-            return redirect(reverse('home'))
+            return self.redirect_error(INVITE_NOT_FOUND_MSG)
         user = self.request.user
-
         if (
             not user.is_anonymous
             and user.is_authenticated
@@ -2732,49 +2720,33 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
                     kwargs={'project': invite.project.sodar_uuid},
                 )
             )
-
-        invite_type = self.get_invite_type(invite)
-        if invite_type == 'ldap':
-            return redirect(
-                reverse(
-                    'projectroles:invite_process_ldap',
-                    kwargs={'secret': kwargs['secret']},
-                )
-            )
-        elif invite_type == 'local':
-            return redirect(
-                reverse(
-                    'projectroles:invite_process_local',
-                    kwargs={'secret': kwargs['secret']},
-                )
-            )
-        # Error
-        messages.error(
-            self.request, 'Local users are not allowed on this site.'
+        if (settings.ENABLE_LDAP and invite.is_ldap()) or (
+            settings.ENABLE_OIDC and not settings.PROJECTROLES_ALLOW_LOCAL_USERS
+        ):
+            return self._redirect_process()
+        elif settings.PROJECTROLES_ALLOW_LOCAL_USERS:
+            return self._redirect_process(False)
+        return self.redirect_error(
+            'Local or OIDC users are not enabled on this site.'
         )
-        return redirect(reverse('home'))
 
 
-class ProjectInviteProcessLDAPView(
+class ProjectInviteProcessLoginView(
     LoginRequiredMixin, ProjectInviteProcessMixin, View
 ):
-    """View to handle accepting a project LDAP invite"""
+    """
+    View for processing project invite with a logged in LDAP/OIDC user. Requires
+    login and then creates project assignment for the invited user.
+    """
 
     def get(self, *args, **kwargs):
         invite = self.get_invite(kwargs['secret'])
         if not invite:
-            return redirect(reverse('home'))
+            return self.redirect_error(INVITE_NOT_FOUND_MSG)
         timeline = get_backend_api('timeline_backend')
-        # Check if invite has correct type
-        if self.get_invite_type(invite) == 'local':
-            messages.error(
-                self.request,
-                'Invite was issued for local user, but LDAP invite view was '
-                'requested.',
-            )
-            return redirect(reverse('home'))
-        # Check if user already accepted the invite
+        # Check if user has already accepted the invite
         if self.user_role_exists(invite, self.request.user):
+            # NOTE: No message, simply redirect
             return redirect(
                 reverse(
                     'projectroles:detail',
@@ -2783,12 +2755,12 @@ class ProjectInviteProcessLDAPView(
             )
         # Check if invite expired
         if self.is_invite_expired(invite, self.request.user):
-            return redirect(reverse('home'))
-        # If we get this far, create RoleAssignment..
-        if not self.create_assignment(
-            invite, self.request.user, timeline=timeline
-        ):
-            return redirect(reverse('home'))
+            return self.redirect_error()
+        # Create RoleAssignment
+        try:
+            self.create_assignment(invite, self.request.user, timeline=timeline)
+        except Exception as ex:
+            return self.redirect_error(ex)
         return redirect(
             reverse(
                 'projectroles:detail',
@@ -2797,72 +2769,75 @@ class ProjectInviteProcessLDAPView(
         )
 
 
-class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
-    """View to handle accepting a project local invite"""
+class ProjectInviteProcessNewUserView(ProjectInviteProcessMixin, FormView):
+    """
+    View for processing a local/OIDC project invite as a newly created user.
+    Also provides an OIDC login element to login instead of creating a local
+    user account.
+    """
 
     form_class = LocalUserForm
     template_name = 'projectroles/user_form.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['invite'] = self.get_invite(self.kwargs['secret'])
+        return context
+
     def get(self, *args, **kwargs):
         invite = self.get_invite(self.kwargs['secret'])
         if not invite:
-            return redirect(reverse('home'))
+            return self.redirect_error(INVITE_NOT_FOUND_MSG)
         timeline = get_backend_api('timeline_backend')
-        # Check if local users are enabled
-        if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
-            messages.error(self.request, INVITE_LOCAL_NOT_ALLOWED_MSG)
-            return redirect(reverse('home'))
+        # Redirect to login process view if OIDC is enabled but local isn't
+        if settings.ENABLE_OIDC and not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
+            return redirect(
+                reverse(
+                    'projectroles:invite_process_login',
+                    kwargs={'secret': invite.secret},
+                )
+            )
+        # If local users are not allowed but OIDC is, redirect to home
+        elif not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
+            return self.redirect_error(INVITE_LOCAL_NOT_ALLOWED_MSG)
         # Check invite for correct type
-        if self.get_invite_type(invite) == 'ldap':
-            messages.error(self.request, INVITE_LDAP_LOCAL_VIEW_MSG)
-            return redirect(reverse('home'))
-
+        if invite.is_ldap():
+            return self.redirect_error(INVITE_LDAP_LOCAL_VIEW_MSG)
         # Check if invited user exists
         user = User.objects.filter(email=invite.email).first()
         # Check if invite has expired
         if self.is_invite_expired(invite, user):
-            return redirect(reverse('home'))
+            return self.redirect_error()  # Error message already added
 
         # A user is not logged in
         if self.request.user.is_anonymous:
-            # Redirect to login if user exists and
+            # Redirect to login if user exists
             if user:
-                messages.info(
-                    self.request,
-                    INVITE_USER_EXISTS_MSG,
-                )
+                messages.info(self.request, INVITE_USER_EXISTS_MSG)
                 return redirect(
                     reverse('login')
                     + '?next='
                     + reverse(
-                        'projectroles:invite_process_local',
+                        'projectroles:invite_process_new_user',
                         kwargs={'secret': invite.secret},
                     )
                 )
-            # Show form if user doesn't exists and no user is logged in
+            # Show form if user doesn't exist and no user is logged in
             return super().get(*args, **kwargs)
         # Logged in but the invited user does not exist yet
         if not user:
-            messages.error(
-                self.request,
-                INVITE_LOGGED_IN_ACCEPT_MSG,
-            )
-            return redirect(reverse('home'))
+            return self.redirect_error(INVITE_LOGGED_IN_ACCEPT_MSG)
         # Logged in user is not invited user
-        if not self.request.user == user:
-            messages.error(
-                self.request,
-                INVITE_USER_NOT_EQUAL_MSG,
-            )
-            return redirect(reverse('home'))
+        if self.request.user != user:
+            return self.redirect_error(INVITE_USER_NOT_EQUAL_MSG)
         # User exists but is not local
         if not user.is_local():
-            messages.error(self.request, 'User exists, but is not local.')
-            return redirect(reverse('home'))
-        # Create role if user exists
-        if not self.create_assignment(invite, user, timeline=timeline):
-            return redirect(reverse('home'))
-
+            return self.redirect_error('User exists, but is not local.')
+        # Create RoleAssignment
+        try:
+            self.create_assignment(invite, self.request.user, timeline=timeline)
+        except Exception as ex:
+            return self.redirect_error(ex)
         return redirect(
             reverse(
                 'projectroles:detail',
@@ -2897,26 +2872,21 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
 
         # Check if local users are allowed
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
-            messages.error(
-                self.request,
+            return self.redirect_error(
                 'Invite was issued to non-LDAP user, but local users are not '
-                'allowed.',
+                'allowed.'
             )
-            return redirect(reverse('home'))
-
         # Check invite for correct type
-        if self.get_invite_type(invite) == 'ldap':
-            messages.error(
-                self.request,
+        if invite.is_ldap():
+            return self.redirect_error(
                 'Invite was issued for LDAP user, but local invite view was '
-                'requested.',
+                'requested.'
             )
-            return redirect(reverse('home'))
-
         # Check if invite is expired
         if self.is_invite_expired(invite):
-            return redirect(reverse('home'))
+            return self.redirect_error()
 
+        # Create user and RoleAssignment
         user = User.objects.create_user(
             form.cleaned_data['username'],
             email=form.cleaned_data['email'],
@@ -2931,11 +2901,11 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                     kwargs={'project': invite.project.sodar_uuid},
                 )
             )
-
-        # If we get this far, create RoleAssignment..
-        if not self.create_assignment(invite, user, timeline=timeline):
+        try:
+            self.create_assignment(invite, user, timeline=timeline)
+        except Exception as ex:
             user.delete()
-            redirect(reverse('home'))
+            return self.redirect_error(ex)
         return redirect(
             reverse(
                 'projectroles:detail',
@@ -2957,7 +2927,7 @@ class ProjectInviteResendView(
                 sodar_uuid=self.kwargs['projectinvite'], active=True
             )
         except ProjectInvite.DoesNotExist:
-            messages.error(self.request, 'Invite not found.')
+            messages.error(self.request, INVITE_NOT_FOUND_MSG)
             return redirect(
                 reverse(
                     'projectroles:invites',

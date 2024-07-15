@@ -360,8 +360,8 @@ LDAP/AD Configuration (Optional)
 ================================
 
 If you want to utilize LDAP/AD user logins as configured by projectroles, you
-can add the following configuration. Make sure to also add the related env
-variables to your configuration.
+can add the following configuration. Make sure to also add the related
+environment variables to your configuration.
 
 This part of the setup is **optional**.
 
@@ -473,18 +473,120 @@ This part of the setup is **optional**.
             )
 
 
+.. _app_projectroles_settings_oidc:
+
+OpenID Connect (OIDC) Configuration (Optional)
+==============================================
+
+SODAR Core supports single sign-on authentication via OIDC from v1.0 onwards. To
+enable OIDC logins, add the following Django settings and related environment
+variables to your configuration.
+
+This part of the setup is **optional**.
+
+OIDC support is implemented using the ``social_django`` app. You first need to
+add the app to your ``INSTALLED_APPS``:
+
+.. code-block:: python
+
+    THIRD_PARTY_APPS = [
+        # ...
+        'social_django',  # For OIDC authentication
+    ]
+
+Next, you must add the app's URL patterns in ``config/urls.py``:
+
+.. code-block:: python
+
+    urlpatterns = [
+        # ...
+        # Social auth for OIDC support
+        path('social/', include('social_django.urls')),
+    ]
+
+Finally, you should add the following Django settings in your ``base.py``
+settings file:
+
+.. code-block:: python
+
+    ENABLE_OIDC = env.bool('ENABLE_OIDC', False)
+
+    if ENABLE_OIDC:
+        AUTHENTICATION_BACKENDS = tuple(
+            itertools.chain(
+                ('social_core.backends.open_id_connect.OpenIdConnectAuth',),
+                AUTHENTICATION_BACKENDS,
+            )
+        )
+        TEMPLATES[0]['OPTIONS']['context_processors'] += [
+            'social_django.context_processors.backends',
+            'social_django.context_processors.login_redirect',
+        ]
+        SOCIAL_AUTH_JSONFIELD_ENABLED = True
+        SOCIAL_AUTH_JSONFIELD_CUSTOM = 'django.db.models.JSONField'
+        SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
+        SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
+            'username',
+            'name',
+            'first_name',
+            'last_name',
+            'email',
+        ]
+        SOCIAL_AUTH_OIDC_OIDC_ENDPOINT = env.str(
+            'SOCIAL_AUTH_OIDC_OIDC_ENDPOINT', None
+        )
+        SOCIAL_AUTH_OIDC_KEY = env.str('SOCIAL_AUTH_OIDC_KEY', 'CHANGEME')
+        SOCIAL_AUTH_OIDC_SECRET = env.str('SOCIAL_AUTH_OIDC_SECRET', 'CHANGEME')
+        SOCIAL_AUTH_OIDC_USERNAME_KEY = env.str(
+            'SOCIAL_AUTH_OIDC_USERNAME_KEY', 'username'
+        )
+
+Critical settings which should be provided through environment variables:
+
+``SOCIAL_AUTH_OIDC_OIDC_ENDPOINT``
+    Endpoint URL for the OIDC provider. The configuration file
+    ``.well-known/openid-configuration`` is expected to be found under this URL.
+``SOCIAL_AUTH_OIDC_KEY``
+    Your client ID in the OIDC provider.
+``SOCIAL_AUTH_OIDC_SECRET``
+    Secret for the OIDC provider.
+``SOCIAL_AUTH_OIDC_USERNAME_KEY``
+    If the username key of the browser is expected to be something other than
+    the default ``username``, it can be configured here. The values in this must
+    be unique and should preferably be human readable. If the OIDC provider does
+    not return such a username directly, it is possible to e.g. use the user
+    email as a unique user name.
+
+If you want to provide a custom template for directing login to your OIDC
+provider, add it as ``{PROJECTROLES_TEMPLATE_INCLUDE_PATH}/_login_oidc.html``
+(by default: ``your_site/templates/include/_login_oidc.html``). The include will
+be displayed as an element in the login view.
+
+Below is an example of a custom template. You can e.g. change the content of the
+link to the logo of your OIDC provider. Note that the login URL must equal
+``{% url 'social:begin' 'oidc' %}?next={{ oidc_redirect_url|default:'/' }}`` to
+ensure it works in all views.
+
+.. code-block:: django
+
+    <a role="button" class="btn btn-md btn-info btn-block" id="sodar-login-oidc-link"
+       href="{% url 'social:begin' 'oidc' %}?next={{ oidc_redirect_url|default:'/' }}">
+      <i class="iconify" data-icon="mdi:login-variant"></i> OpenID Connect Login
+    </a>
+
+
 SAML SSO Configuration (Removed in v1.0)
 ========================================
 
 .. note::
 
-    In the current dev version of SODAR Core (v1.1.0-WIP), SAML support has been
-    removed. It will soon be replaced with support OpenID Connect
-    authentication. The library we previously used is no longer compatible with
-    Django v4.2 and we are not aware of SODAR Core based projects requiring SAML
-    at this time. If there are specific needs to use SAML on a SODAR Core based
-    site, we are happy to review pull requests to re-introduce it. Please note
-    the implementation has to support Django v4.2+.
+    SAML support has been removed in SODAR Core v1.0. It has been replaced with
+    the possibility to set up OpenID Connect (OIDC) authentication. The library
+    previously used for SAML in SODAR Core is incompatible with Django v4.x. We
+    are unaware of SODAR Core based projects requiring SAML at this time. If
+    there are specific needs to use SAML on a SODAR Core based site, we are
+    happy to review pull requests to reintroduce it. Please note the
+    implementation has to support Django v4.2+.
 
 
 Global JS/CSS Include Modifications (Optional)

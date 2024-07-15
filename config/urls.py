@@ -27,6 +27,8 @@ urlpatterns = [
     path('api/auth/', include('knox.urls')),
     # Iconify SVG icons
     path('icons/', include('dj_iconify.urls')),
+    # Social auth for OIDC support
+    path('social/', include('social_django.urls')),
     # Projectroles URLs
     path('project/', include('projectroles.urls')),
     # Admin Alerts URLs
@@ -54,7 +56,6 @@ urlpatterns = [
     # Example site app URLs
     path('examples/site/', include('example_site_app.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit

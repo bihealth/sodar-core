@@ -52,6 +52,7 @@ REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -79,6 +80,9 @@ class RemoteProjectAPI:
 
         #: Updated parent projects in current sync operation
         self.updated_parents = []
+
+        #: User name/UUID lookup
+        self.user_lookup = {}
 
     # Internal Source Site Functions -------------------------------------------
 
@@ -371,6 +375,19 @@ class RemoteProjectAPI:
     # Internal Target Site Functions -------------------------------------------
 
     @staticmethod
+    def _is_local_user(user_data):
+        """
+        Return True if user data denotes a local user.
+
+        :param user_data: Dict
+        :return: Boolean
+        """
+        return (
+            not user_data.get('groups')
+            or SYSTEM_USER_GROUP in user_data['groups']
+        )
+
+    @staticmethod
     def _update_obj(obj, obj_data, fields):
         """
         Update object for target site sync.
@@ -413,16 +430,16 @@ class RemoteProjectAPI:
 
     def _sync_user(self, uuid, user_data):
         """
-        Synchronize LDAP or local user on target site. For local users, will
-        only update an existing user object. Local users must be manually
-        created. If local users are not allowed, data is not synchronized.
+        Synchronize user on target site. For local users, will only update an
+        existing user object. Local users must be manually created. If local
+        users are not allowed, data is not synchronized.
 
         :param uuid: User UUID (string)
         :param user_data: User sync data (dict)
         """
         # Don't sync local users if disallowed
         allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
-        if '@' not in user_data['username'] and not allow_local:
+        if self._is_local_user(user_data) and not allow_local:
             logger.info(NO_LOCAL_USERS_MSG)
             return
         # Add UUID to user_data to ensure it gets synced
@@ -477,7 +494,7 @@ class RemoteProjectAPI:
 
         # Create new user
         except User.DoesNotExist:
-            if '@' not in user_data['username']:
+            if self._is_local_user(user_data):
                 logger.warning(
                     'Local user "{}" not found: local users must '
                     'be manually created before they can be synced'.format(
@@ -724,8 +741,11 @@ class RemoteProjectAPI:
                 continue
 
             # Ensure the user is valid
+            local_user = self._is_local_user(
+                self.remote_data['users'][self.user_lookup[r['user']]]
+            )
             if (
-                '@' not in r['user']
+                local_user
                 and not allow_local
                 and r['role'] != PROJECT_ROLE_OWNER
             ):
@@ -735,10 +755,9 @@ class RemoteProjectAPI:
                 )
                 self._handle_user_error(error_msg, project, r_uuid)
                 continue
-
             # If local user, ensure they exist
             elif (
-                '@' not in r['user']
+                local_user
                 and allow_local
                 and r['role'] != PROJECT_ROLE_OWNER
                 and not User.objects.filter(username=r['user']).first()
@@ -749,21 +768,20 @@ class RemoteProjectAPI:
                 )
                 self._handle_user_error(error_msg, project, r_uuid)
                 continue
-
-            # Use the default owner, if owner role for a non-LDAP user and local
+            # Use the default owner, if owner role is for local user and local
             # users are not allowed
             if (
-                r['role'] == PROJECT_ROLE_OWNER
+                local_user
+                and r['role'] == PROJECT_ROLE_OWNER
                 and (
                     not allow_local
                     or not User.objects.filter(username=r['user']).first()
                 )
-                and '@' not in r['user']
             ):
                 role_user = self.default_owner
                 # Notify of assigning role to default owner
                 status_msg = (
-                    'Non-LDAP/AD user "{}" set as owner, assigning role '
+                    'Local user "{}" set as owner, assigning role '
                     'to user "{}"'.format(
                         r['user'], self.default_owner.username
                     )
@@ -1118,10 +1136,13 @@ class RemoteProjectAPI:
                 )
                 return
         if user_name:
+            local_user = self._is_local_user(
+                self.remote_data['users'][user_uuid]
+            )
             allow_local = getattr(
                 settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False
             )
-            if '@' not in user_name and not allow_local:
+            if local_user and not allow_local:
                 logger.info(skip_msg + NO_LOCAL_USERS_MSG)
                 return
             user = User.objects.filter(sodar_uuid=user_uuid).first()
@@ -1270,6 +1291,8 @@ class RemoteProjectAPI:
         # NOTE: Add all users here, only update local users within _sync_user()
         for u_uuid, u_data in self.remote_data['users'].items():
             self._sync_user(u_uuid, u_data)
+            # HACK: Populate user lookup
+            self.user_lookup[u_data['username']] = u_uuid
         logger.info('User sync OK')
 
         # Categories and Projects

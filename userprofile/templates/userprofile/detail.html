@@ -43,7 +43,7 @@
     <div class="card-header">
       <h4>
         <i class="iconify" data-icon="mdi:account-details"></i> Details
-        {% if local_user %}
+        {% if request.user.is_local %}
           <span class="sodar-header-input-group pull-right">
             <a role="button"
                class="btn btn-primary"

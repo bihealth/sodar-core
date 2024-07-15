@@ -95,14 +95,14 @@ urls_ui = [
         name='invite_accept',
     ),
     path(
-        route='invites/process/ldap/<str:secret>',
-        view=views.ProjectInviteProcessLDAPView.as_view(),
-        name='invite_process_ldap',
+        route='invites/process/login/<str:secret>',
+        view=views.ProjectInviteProcessLoginView.as_view(),
+        name='invite_process_login',
     ),
     path(
-        route='invites/process/local/<str:secret>',
-        view=views.ProjectInviteProcessLocalView.as_view(),
-        name='invite_process_local',
+        route='invites/process/new-user/<str:secret>',
+        view=views.ProjectInviteProcessNewUserView.as_view(),
+        name='invite_process_new_user',
     ),
     path(
         route='invites/resend/<uuid:projectinvite>',

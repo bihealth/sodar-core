@@ -88,6 +88,7 @@ EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
 
 EX_APP_NAME = 'example_project_app'
 TEST_SERVER_URL = 'http://testserver'
+LDAP_DOMAIN = 'EXAMPLE'
 
 
 # Base Classes -----------------------------------------------------------------
@@ -3214,24 +3215,26 @@ class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
         self.assertEqual(AppSetting.objects.count(), 0)
 
 
+@override_settings(AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
 class TestUserListAPIView(ProjectrolesAPIViewTestBase):
     """Tests for UserListAPIView"""
 
     def setUp(self):
         super().setUp()
         # Create additional users
-        self.domain_user = self.make_user('domain_user@domain')
+        self.user_ldap = self.make_user('user_ldap@' + LDAP_DOMAIN)
+        # TODO: Add OIDC user to tests
         self.url = reverse('projectroles:api_user_list')
 
     def test_get(self):
         """Test UserListAPIView GET as regular user"""
         response = self.request_knox(
-            self.url, token=self.get_token(self.domain_user)
+            self.url, token=self.get_token(self.user_ldap)
         )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)  # System users not returned
-        expected = [self.get_serialized_user(self.domain_user)]
+        expected = [self.get_serialized_user(self.user_ldap)]
         self.assertEqual(response_data, expected)
 
     def test_get_superuser(self):
@@ -3244,7 +3247,7 @@ class TestUserListAPIView(ProjectrolesAPIViewTestBase):
             self.get_serialized_user(self.user),
             self.get_serialized_user(self.user_owner_cat),
             self.get_serialized_user(self.user_owner),
-            self.get_serialized_user(self.domain_user),
+            self.get_serialized_user(self.user_ldap),
         ]
         self.assertEqual(response_data, expected)
 
@@ -3271,23 +3274,23 @@ class TestCurrentUserRetrieveAPIView(
     def setUp(self):
         super().setUp()
         # Create additional users
-        self.domain_user = self.make_user('domain_user@domain')
+        self.user_ldap = self.make_user('user_ldap@' + LDAP_DOMAIN)
         self.url = reverse('projectroles:api_user_current')
 
     def test_get(self):
-        """Test CurrentUserRetrieveAPIView GET as regular user"""
+        """Test CurrentUserRetrieveAPIView GET as LDAP user"""
         response = self.request_knox(
-            self.url, token=self.get_token(self.domain_user)
+            self.url, token=self.get_token(self.user_ldap)
         )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         expected = {
-            'username': self.domain_user.username,
-            'name': self.domain_user.name,
-            'email': self.domain_user.email,
+            'username': self.user_ldap.username,
+            'name': self.user_ldap.name,
+            'email': self.user_ldap.email,
             'additional_emails': [],
             'is_superuser': False,
-            'sodar_uuid': str(self.domain_user.sodar_uuid),
+            'sodar_uuid': str(self.user_ldap.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
 
@@ -3308,19 +3311,19 @@ class TestCurrentUserRetrieveAPIView(
 
     def test_get_additional_email(self):
         """Test CurrentUserRetrieveAPIView GET with additional email"""
-        self.make_email(self.domain_user, ADD_EMAIL)
+        self.make_email(self.user_ldap, ADD_EMAIL)
         response = self.request_knox(
-            self.url, token=self.get_token(self.domain_user)
+            self.url, token=self.get_token(self.user_ldap)
         )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         expected = {
-            'username': self.domain_user.username,
-            'name': self.domain_user.name,
-            'email': self.domain_user.email,
+            'username': self.user_ldap.username,
+            'name': self.user_ldap.name,
+            'email': self.user_ldap.email,
             'additional_emails': [ADD_EMAIL],
             'is_superuser': False,
-            'sodar_uuid': str(self.domain_user.sodar_uuid),
+            'sodar_uuid': str(self.user_ldap.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
 

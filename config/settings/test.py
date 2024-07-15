@@ -77,6 +77,18 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
 REST_FRAMEWORK['PAGE_SIZE'] = 1
 
 
+# LDAP configuration
+# ------------------------------------------------------------------------------
+
+ENABLE_LDAP = False
+
+
+# OpenID Connect (OIDC) configuration
+# ------------------------------------------------------------------------------
+
+ENABLE_OIDC = False
+
+
 # Logging
 # ------------------------------------------------------------------------------
 

@@ -3,6 +3,7 @@
 import uuid
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.urls import reverse
@@ -41,6 +42,10 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
+AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
+AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
+OIDC_USER_GROUP = SODAR_CONSTANTS['OIDC_USER_GROUP']
 
 # Local constants
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
@@ -51,6 +56,7 @@ REMOTE_SITE_SECRET = build_secret()
 REMOTE_SITE_USER_DISPLAY = True
 ADD_EMAIL = 'additional@example.com'
 ADD_EMAIL_SECRET = build_secret()
+LDAP_DOMAIN = 'EXAMPLE'
 
 
 class ProjectMixin:
@@ -283,7 +289,7 @@ class RemoteTargetMixin(RemoteSiteMixin, RemoteProjectMixin):
 
 
 class SODARUserMixin:
-    """Helper mixin for LDAP SodarUser creation"""
+    """Helper mixin for SodarUser creation"""
 
     def make_sodar_user(
         self,
@@ -981,6 +987,43 @@ class TestProjectInvite(
         )
         self.assertEqual(repr(self.invite), expected)
 
+    def test_is_ldap_not_enabled(self):
+        """Test is_ldap() with LDAP not enabled"""
+        self.assertEqual(self.invite.is_ldap(), False)
+
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_is_ldap_enabled(self):
+        """Test is_ldap() with LDAP enabled"""
+        self.assertEqual(self.invite.is_ldap(), True)
+
+    @override_settings(ENABLE_LDAP=False, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_is_ldap_not_enabled_domain(self):
+        """Test is_ldap() with domain in email but LDAP not enabled"""
+        self.assertEqual(self.invite.is_ldap(), False)
+
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN='xyz')
+    def test_is_ldap_non_ldap_domain(self):
+        """Test is_ldap() with non-LDAP domain in email"""
+        self.assertEqual(self.invite.is_ldap(), False)
+
+    @override_settings(
+        ENABLE_LDAP=True,
+        AUTH_LDAP_USERNAME_DOMAIN='xyz',
+        AUTH_LDAP2_USERNAME_DOMAIN=LDAP_DOMAIN,
+    )
+    def test_is_ldap_secondary(self):
+        """Test is_ldap() with email in secondary domain"""
+        self.assertEqual(self.invite.is_ldap(), True)
+
+    @override_settings(
+        ENABLE_LDAP=True,
+        AUTH_LDAP_USERNAME_DOMAIN='xyz',
+        LDAP_ALT_DOMAINS=[LDAP_DOMAIN + '.com'],
+    )
+    def test_is_ldap_alt_domain(self):
+        """Test is_ldap() with alt domain in email"""
+        self.assertEqual(self.invite.is_ldap(), True)
+
 
 class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
     """Tests for ProjectManager"""
@@ -1608,6 +1651,29 @@ class TestSODARUser(TestCase):
             self.user.get_form_label(email=True),
             'Full Name (testuser) <testuser@example.com>',
         )
+
+    def test_get_auth_type_local(self):
+        """Test get_auth_type() with local user"""
+        self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_LOCAL)
+
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='TEST')
+    def test_get_auth_type_ldap(self):
+        """Test get_auth_type() with LDAP user"""
+        self.user.username = 'testuser@TEST'
+        self.user.save()  # NOTE: set_group() is called on user save()
+        self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_LDAP)
+
+    def test_get_auth_type_ldap_no_group(self):
+        """Test get_auth_type() with LDAP username but no user group"""
+        self.user.username = 'testuser@TEST'
+        self.user.save()
+        self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_LOCAL)
+
+    def test_get_auth_type_oidc(self):
+        """Test get_auth_type() with OIDC user"""
+        group, _ = Group.objects.get_or_create(name=OIDC_USER_GROUP)
+        group.user_set.add(self.user)
+        self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_OIDC)
 
     def test_update_full_name(self):
         """Test update_full_name()"""

@@ -61,6 +61,7 @@ THIRD_PARTY_APPS = [
     'markupfield',  # For markdown
     'rest_framework',  # For API views
     'knox',  # For token auth
+    'social_django',  # For OIDC authentication
     'docs',  # For the online user documentation/manual
     'db_file_storage',  # For filesfolders
     'dal',  # For user search combo box
@@ -433,6 +434,42 @@ if ENABLE_LDAP:
                 AUTHENTICATION_BACKENDS,
             )
         )
+
+
+# OpenID Connect (OIDC) configuration
+# ------------------------------------------------------------------------------
+
+ENABLE_OIDC = env.bool('ENABLE_OIDC', False)
+
+if ENABLE_OIDC:
+    AUTHENTICATION_BACKENDS = tuple(
+        itertools.chain(
+            ('social_core.backends.open_id_connect.OpenIdConnectAuth',),
+            AUTHENTICATION_BACKENDS,
+        )
+    )
+    TEMPLATES[0]['OPTIONS']['context_processors'] += [
+        'social_django.context_processors.backends',
+        'social_django.context_processors.login_redirect',
+    ]
+    SOCIAL_AUTH_JSONFIELD_ENABLED = True
+    SOCIAL_AUTH_JSONFIELD_CUSTOM = 'django.db.models.JSONField'
+    SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
+    SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
+        'username',
+        'name',
+        'first_name',
+        'last_name',
+        'email',
+    ]
+    SOCIAL_AUTH_OIDC_OIDC_ENDPOINT = env.str(
+        'SOCIAL_AUTH_OIDC_OIDC_ENDPOINT', None
+    )
+    SOCIAL_AUTH_OIDC_KEY = env.str('SOCIAL_AUTH_OIDC_KEY', 'CHANGEME')
+    SOCIAL_AUTH_OIDC_SECRET = env.str('SOCIAL_AUTH_OIDC_SECRET', 'CHANGEME')
+    SOCIAL_AUTH_OIDC_USERNAME_KEY = env.str(
+        'SOCIAL_AUTH_OIDC_USERNAME_KEY', 'username'
+    )
 
 
 # Logging
