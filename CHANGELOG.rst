@@ -124,6 +124,7 @@ Fixed
     - OpenAPI ``generateschema`` compatibility (#1440, #1442)
     - ``ProjectCreateView`` allows ``POST`` with disabled target project creation (#1448)
     - Plugin existence not explicitly checked in ``AppSettingAPI.set()`` update query (#1452)
+    - ``search_advanced.html`` header layout (#1453)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 - **Timeline**
