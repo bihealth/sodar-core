@@ -33,6 +33,7 @@ Release Highlights
 - Add checkusers management command
 - Add Ajax views for sidebar, project dropdown and user dropdown retrieval
 - Add CC and BCC field support in sending generic emails
+- Add is_set() helper in AppSettingAPI
 - Rewrite sodarcache REST API views
 - Rewrite user additional email storing
 - Rename AppSettingAPI "app_name" arguments to "plugin_name"

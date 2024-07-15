@@ -46,6 +46,7 @@ Added
     - ``UserDropdownContentAjaxView`` for user dropdown content retrieval (#1366, #1392)
     - ``SODARUser.get_auth_type()`` helper (#1367)
     - ``ProjectInvite.is_ldap()`` helper (#1367)
+    - ``AppSettingAPI.is_set()`` helper (#1450)
 - **Timeline**
     - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
     - REST API views (#1350)
@@ -122,6 +123,7 @@ Fixed
     - ``RemoteSite.get_access_date()`` invalid date sorting (#1437)
     - OpenAPI ``generateschema`` compatibility (#1440, #1442)
     - ``ProjectCreateView`` allows ``POST`` with disabled target project creation (#1448)
+    - Plugin existence not explicitly checked in ``AppSettingAPI.set()`` update query (#1452)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 - **Timeline**

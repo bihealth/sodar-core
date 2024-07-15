@@ -584,6 +584,8 @@ class AppSettingAPI:
             q_kwargs = {'name': setting_name, 'project': project, 'user': user}
             if not plugin_name == 'projectroles':
                 q_kwargs['app_plugin__name'] = plugin_name
+            else:
+                q_kwargs['app_plugin'] = None
             setting = AppSetting.objects.get(**q_kwargs)
             if cls._compare_value(setting, value):
                 return False
@@ -643,6 +645,29 @@ class AppSettingAPI:
                 'Create', plugin_name, setting_name, value, project, user
             )
             return True
+
+    @classmethod
+    def is_set(cls, plugin_name, setting_name, project=None, user=None):
+        """
+        Return True if the setting has been set, instead of retrieving the
+        default value from the definition.
+
+        NOTE: Also returns True if the current set value equals the default.
+
+        :param plugin_name: App plugin name (string, equals "name" in plugin)
+        :param setting_name: Setting name (string)
+        :param project: Project object (optional)
+        :param user: User object (optional)
+        :return: Boolean
+        """
+        s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
+        cls._check_project_and_user(s_def.get('scope', None), project, user)
+        q_kwargs = {'name': setting_name, 'project': project, 'user': user}
+        if not plugin_name == 'projectroles':
+            q_kwargs['app_plugin__name'] = plugin_name
+        else:
+            q_kwargs['app_plugin'] = None
+        return AppSetting.objects.filter(**q_kwargs).exists()
 
     @classmethod
     def delete(cls, plugin_name, setting_name, project=None, user=None):

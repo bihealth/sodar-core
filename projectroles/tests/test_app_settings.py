@@ -335,6 +335,77 @@ class TestAppSettingAPI(
         )
         self.assertEqual(type(val), str)
 
+    def test_is_set_no_object(self):
+        """Test is_set() with no setting object set"""
+        n = 'project_star'
+        kw = {'project': self.project, 'user': self.user}
+        self.assertFalse(
+            AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
+        )
+        self.assertFalse(
+            app_settings.is_set(
+                plugin_name='projectroles', setting_name=n, **kw
+            )
+        )
+
+    def test_is_set_object_exists(self):
+        """Test is_set() with existing setting object"""
+        n = 'project_star'
+        kw = {'project': self.project, 'user': self.user}
+        app_settings.set(
+            plugin_name='projectroles', setting_name=n, value=True, **kw
+        )
+        self.assertTrue(
+            AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
+        )
+        self.assertTrue(
+            app_settings.is_set(
+                plugin_name='projectroles', setting_name=n, **kw
+            )
+        )
+
+    def test_is_set_default_value(self):
+        """Test is_set() with existing setting object and default value"""
+        n = 'project_star'
+        kw = {'project': self.project, 'user': self.user}
+        app_settings.set(
+            plugin_name='projectroles', setting_name=n, value=False, **kw
+        )
+        self.assertTrue(
+            AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
+        )
+        self.assertTrue(
+            app_settings.is_set(
+                plugin_name='projectroles', setting_name=n, **kw
+            )
+        )
+
+    def test_is_set_plugin(self):
+        """Test is_set() with plugin setting"""
+        n = 'project_str_setting'
+        kw = {'project': self.project}
+        # NOTE: Already created in setUp()
+        self.assertTrue(
+            AppSetting.objects.filter(
+                app_plugin__name=EXAMPLE_APP_NAME, name=n, **kw
+            ).exists()
+        )
+        self.assertTrue(
+            app_settings.is_set(
+                plugin_name=EXAMPLE_APP_NAME, setting_name=n, **kw
+            )
+        )
+
+    def test_is_set_invalid_user(self):
+        """Test is_set() with invalid user arg"""
+        with self.assertRaises(ValueError):
+            app_settings.is_set(
+                plugin_name='projectroles',
+                setting_name='project_star',
+                project=self.project,
+                user=None,
+            )
+
     def test_set(self):
         """Test set()"""
         for setting in self.settings:
