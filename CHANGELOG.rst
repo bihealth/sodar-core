@@ -70,6 +70,7 @@ Changed
     - Add ``AUTH_LDAP_USER_SEARCH_BASE`` as a Django setting (#1410)
     - Change ``ATOMIC_REQUESTS`` recommendation and default to ``True`` (#1281)
     - Add OpenAPI dependencies (#1444)
+    - Squash migrations (#1446)
 - **Filesfolders**
     - Add migration required by Django v4.2 (#1396)
     - Add app specific media type and versioning (#1278)
