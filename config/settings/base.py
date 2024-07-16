@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import environ
+import itertools
 import os
 
 from projectroles.constants import get_sodar_constants
@@ -352,7 +353,6 @@ LDAP_DEBUG = env.bool('LDAP_DEBUG', False)
 LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, default=[])
 
 if ENABLE_LDAP:
-    import itertools
     import ldap
     from django_auth_ldap.config import LDAPSearch
 
