@@ -4,16 +4,20 @@ import json
 
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
+from projectroles.models import AppSetting, SODAR_CONSTANTS
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
 )
 from projectroles.tests.test_views import (
-    TestViewsBase,
+    ViewTestBase,
     PROJECT_TYPE_CATEGORY,
     PROJECT_TYPE_PROJECT,
 )
@@ -23,7 +27,15 @@ from projectroles.tests.test_views_api import SerializedObjectMixin
 app_settings = AppSettingAPI()
 
 
-class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+# SODAR constants
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+
+# Local constants
+INVALID_UUID = '11111111-1111-1111-1111-111111111111'
+
+
+class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     """Tests for ProjectListAjaxView"""
 
     def setUp(self):
@@ -241,7 +253,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
 
 class TestProjectListColumnAjaxView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for ProjectListColumnAjaxView"""
 
@@ -320,7 +332,7 @@ class TestProjectListColumnAjaxView(
 
 
 class TestProjectListRoleAjaxView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for ProjectListRoleAjaxView"""
 
@@ -409,9 +421,15 @@ class TestProjectListRoleAjaxView(
 
 
 class TestProjectStarringAjaxView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for ProjectStarringAjaxView"""
+
+    def _assert_setting_count(self, count):
+        qs = AppSetting.objects.filter(
+            app_plugin=None, project=self.project, name='project_star'
+        )
+        self.assertEqual(qs.count(), count)
 
     def setUp(self):
         super().setUp()
@@ -424,6 +442,7 @@ class TestProjectStarringAjaxView(
 
     def test_project_star(self):
         """Test Starring a Project"""
+        self._assert_setting_count(0)
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -432,6 +451,7 @@ class TestProjectStarringAjaxView(
                 )
             )
         self.assertEqual(response.status_code, 200)
+        self._assert_setting_count(1)
         star = app_settings.get(
             'projectroles', 'project_star', self.project, self.user
         )
@@ -448,7 +468,547 @@ class TestProjectStarringAjaxView(
         star = app_settings.get(
             'projectroles', 'project_star', self.project, self.user
         )
+        self._assert_setting_count(1)
         self.assertEqual(star, False)
+
+
+class TestRemoteProjectAccessAjaxView(
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    ViewTestBase,
+):
+    """Tests for RemoteProjectAccessAjaxView"""
+
+    @classmethod
+    def _get_query_string(cls, *args):
+        """Get query string for GET requests"""
+        return '?' + '&'.join(['rp={}'.format(rp.sodar_uuid) for rp in args])
+
+    def setUp(self):
+        super().setUp()
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+        self.remote_site = self.make_site(
+            name='RemoteSite',
+            url='https://remote.site',
+            mode=SITE_MODE_TARGET,
+        )
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.rp_uuid = str(self.remote_project.sodar_uuid)
+        self.remote_site2 = self.make_site(
+            name='RemoteSite2',
+            url='https://remote.site2',
+            mode=SITE_MODE_TARGET,
+        )
+        self.remote_project2 = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site2,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.rp_uuid2 = str(self.remote_project2.sodar_uuid)
+        self.query_string = self._get_query_string(
+            self.remote_project, self.remote_project2
+        )
+        self.url = reverse(
+            'projectroles:ajax_remote_access',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test RemoteProjectAccessAjaxView GET"""
+        with self.login(self.user):
+            response = self.client.get(self.url + self.query_string)
+        self.assertEqual(response.status_code, 200)
+        expected = {self.rp_uuid: False, self.rp_uuid2: False}
+        self.assertEqual(response.data, expected)
+
+    def test_get_accessed(self):
+        """Test GET with one remote project accessed"""
+        self.remote_project.date_access = timezone.now()
+        self.remote_project.save()
+        with self.login(self.user):
+            response = self.client.get(self.url + self.query_string)
+        self.assertEqual(response.status_code, 200)
+        expected = {self.rp_uuid: True, self.rp_uuid2: False}
+        self.assertEqual(response.data, expected)
+
+    def test_get_accessed_multiple(self):
+        """Test GET with multiple remote projects accessed"""
+        self.remote_project.date_access = timezone.now()
+        self.remote_project.save()
+        self.remote_project2.date_access = timezone.now()
+        self.remote_project2.save()
+        with self.login(self.user):
+            response = self.client.get(self.url + self.query_string)
+        self.assertEqual(response.status_code, 200)
+        expected = {self.rp_uuid: True, self.rp_uuid2: True}
+        self.assertEqual(response.data, expected)
+
+    def test_get_wrong_project(self):
+        """Test GET with remote project for a different project"""
+        new_project = self.make_project(
+            'NewProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        new_rp = self.make_remote_project(
+            new_project.sodar_uuid,
+            self.remote_site,
+            REMOTE_LEVEL_READ_ROLES,
+            project=new_project,
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                self.url + self._get_query_string(new_rp)
+            )
+        self.assertEqual(response.status_code, 400)
+
+    def test_get_invalid_uuid(self):
+        """Test GET with invalid remote project UUID"""
+        with self.login(self.user):
+            response = self.client.get(self.url + '?rp=' + INVALID_UUID)
+        self.assertEqual(response.status_code, 404)
+
+
+class TestSidebarContentAjaxView(
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+):
+    """Tests for SidebarContentAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+    def test_get(self):
+        """Test sidebar content retrieval"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:ajax_sidebar',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'links': [
+                {
+                    'name': 'project-detail',
+                    'url': f'/project/{self.project.sodar_uuid}',
+                    'label': 'Project Overview',
+                    'icon': 'mdi:cube',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-bgjobs',
+                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                    'label': 'Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-example_project_app',
+                    'url': f'/examples/project/{self.project.sodar_uuid}',
+                    'label': 'Example Project App',
+                    'icon': 'mdi:rocket-launch',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-filesfolders',
+                    'url': f'/files/{self.project.sodar_uuid}',
+                    'label': 'Files',
+                    'icon': 'mdi:file',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-timeline',
+                    'url': f'/timeline/{self.project.sodar_uuid}',
+                    'label': 'Timeline',
+                    'icon': 'mdi:clock-time-eight',
+                    'active': False,
+                },
+                {
+                    'name': 'project-roles',
+                    'url': f'/project/members/{self.project.sodar_uuid}',
+                    'label': 'Members',
+                    'icon': 'mdi:account-multiple',
+                    'active': False,
+                },
+                {
+                    'name': 'project-update',
+                    'url': f'/project/update/{self.project.sodar_uuid}',
+                    'label': 'Update Project',
+                    'icon': 'mdi:lead-pencil',
+                    'active': False,
+                },
+            ],
+        }
+        self.assertEqual(response.json(), expected)
+
+    def test_get_app_links(self):
+        """Test sidebar content retrieval with specific app links"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:ajax_sidebar',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+                + '?app_name=filesfolders'
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'links': [
+                {
+                    'name': 'project-detail',
+                    'url': f'/project/{self.project.sodar_uuid}',
+                    'label': 'Project Overview',
+                    'icon': 'mdi:cube',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-bgjobs',
+                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                    'label': 'Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-example_project_app',
+                    'url': f'/examples/project/{self.project.sodar_uuid}',
+                    'label': 'Example Project App',
+                    'icon': 'mdi:rocket-launch',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-filesfolders',
+                    'url': f'/files/{self.project.sodar_uuid}',
+                    'label': 'Files',
+                    'icon': 'mdi:file',
+                    'active': True,
+                },
+                {
+                    'name': 'app-plugin-timeline',
+                    'url': f'/timeline/{self.project.sodar_uuid}',
+                    'label': 'Timeline',
+                    'icon': 'mdi:clock-time-eight',
+                    'active': False,
+                },
+                {
+                    'name': 'project-roles',
+                    'url': f'/project/members/{self.project.sodar_uuid}',
+                    'label': 'Members',
+                    'icon': 'mdi:account-multiple',
+                    'active': False,
+                },
+                {
+                    'name': 'project-update',
+                    'url': f'/project/update/{self.project.sodar_uuid}',
+                    'label': 'Update Project',
+                    'icon': 'mdi:lead-pencil',
+                    'active': False,
+                },
+            ],
+        }
+        self.assertEqual(response.json(), expected)
+
+    def test_get_no_access(self):
+        """Test sidebar content retrieval with no access"""
+        new_user = self.make_user('new_user')
+        with self.login(new_user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:ajax_sidebar',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 403)
+
+
+class TestUserDropdownContentAjaxView(ViewTestBase):
+    """Tests for UserDropdownContentAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.user = self.make_user('user')
+        self.user.is_superuser = True
+        self.user.save()
+        self.reg_user = self.make_user('reg_user')
+
+    def test_regular_user(self):
+        """Test UserDropdownContentAjaxView with regular user"""
+        with self.login(self.reg_user):
+            response = self.client.get(
+                reverse('projectroles:ajax_user_dropdown')
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'links': [
+                {
+                    'name': 'appalerts',
+                    'url': '/alerts/app/list',
+                    'label': 'App Alerts',
+                    'icon': 'mdi:alert-octagram',
+                    'active': False,
+                },
+                {
+                    'name': 'example_site_app',
+                    'url': '/examples/site/example',
+                    'label': 'Example Site App',
+                    'icon': 'mdi:rocket-launch-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'timeline_site',
+                    'url': '/timeline/site',
+                    'label': 'Site-Wide Events',
+                    'icon': 'mdi:clock-time-eight-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'tokens',
+                    'url': '/tokens/',
+                    'label': 'API Tokens',
+                    'icon': 'mdi:key-chain-variant',
+                    'active': False,
+                },
+                {
+                    'name': 'userprofile',
+                    'url': '/user/profile',
+                    'label': 'User Profile',
+                    'icon': 'mdi:account-details',
+                    'active': False,
+                },
+                {
+                    'name': 'sign-out',
+                    'url': '/logout/',
+                    'label': 'Logout',
+                    'icon': 'mdi:logout-variant',
+                    'active': False,
+                },
+            ]
+        }
+        self.assertEqual(response.json(), expected)
+
+    def test_superuser(self):
+        """Test UserDropdownContentAjaxView with superuser"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:ajax_user_dropdown')
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'links': [
+                {
+                    'name': 'adminalerts',
+                    'url': '/alerts/adm/list',
+                    'label': 'Admin Alerts',
+                    'icon': 'mdi:alert',
+                    'active': False,
+                },
+                {
+                    'name': 'appalerts',
+                    'url': '/alerts/app/list',
+                    'label': 'App Alerts',
+                    'icon': 'mdi:alert-octagram',
+                    'active': False,
+                },
+                {
+                    'name': 'bgjobs_site',
+                    'url': '/bgjobs/list',
+                    'label': 'Site Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'example_site_app',
+                    'url': '/examples/site/example',
+                    'label': 'Example Site App',
+                    'icon': 'mdi:rocket-launch-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'remotesites',
+                    'url': '/project/remote/sites',
+                    'label': 'Remote Site Access',
+                    'icon': 'mdi:cloud-sync',
+                    'active': False,
+                },
+                {
+                    'name': 'siteinfo',
+                    'url': '/siteinfo/info',
+                    'label': 'Site Info',
+                    'icon': 'mdi:bar-chart',
+                    'active': False,
+                },
+                {
+                    'name': 'timeline_site',
+                    'url': '/timeline/site',
+                    'label': 'Site-Wide Events',
+                    'icon': 'mdi:clock-time-eight-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'timeline_site_admin',
+                    'url': '/timeline/site/all',
+                    'label': 'All Timeline Events',
+                    'icon': 'mdi:web-clock',
+                    'active': False,
+                },
+                {
+                    'name': 'tokens',
+                    'url': '/tokens/',
+                    'label': 'API Tokens',
+                    'icon': 'mdi:key-chain-variant',
+                    'active': False,
+                },
+                {
+                    'name': 'userprofile',
+                    'url': '/user/profile',
+                    'label': 'User Profile',
+                    'icon': 'mdi:account-details',
+                    'active': False,
+                },
+                {
+                    'name': 'admin',
+                    'url': '/admin/',
+                    'label': 'Django Admin',
+                    'icon': 'mdi:cogs',
+                    'active': False,
+                },
+                {
+                    'name': 'sign-out',
+                    'url': '/logout/',
+                    'label': 'Logout',
+                    'icon': 'mdi:logout-variant',
+                    'active': False,
+                },
+            ]
+        }
+        self.assertEqual(response.json(), expected)
+
+    def test_superuser_app_links(self):
+        """Test UserDropdownContentAjaxView with superuser"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:ajax_user_dropdown')
+                + '?app_name=example_site_app'
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'links': [
+                {
+                    'name': 'adminalerts',
+                    'url': '/alerts/adm/list',
+                    'label': 'Admin Alerts',
+                    'icon': 'mdi:alert',
+                    'active': False,
+                },
+                {
+                    'name': 'appalerts',
+                    'url': '/alerts/app/list',
+                    'label': 'App Alerts',
+                    'icon': 'mdi:alert-octagram',
+                    'active': False,
+                },
+                {
+                    'name': 'bgjobs_site',
+                    'url': '/bgjobs/list',
+                    'label': 'Site Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'example_site_app',
+                    'url': '/examples/site/example',
+                    'label': 'Example Site App',
+                    'icon': 'mdi:rocket-launch-outline',
+                    'active': True,
+                },
+                {
+                    'name': 'remotesites',
+                    'url': '/project/remote/sites',
+                    'label': 'Remote Site Access',
+                    'icon': 'mdi:cloud-sync',
+                    'active': False,
+                },
+                {
+                    'name': 'siteinfo',
+                    'url': '/siteinfo/info',
+                    'label': 'Site Info',
+                    'icon': 'mdi:bar-chart',
+                    'active': False,
+                },
+                {
+                    'name': 'timeline_site',
+                    'url': '/timeline/site',
+                    'label': 'Site-Wide Events',
+                    'icon': 'mdi:clock-time-eight-outline',
+                    'active': False,
+                },
+                {
+                    'name': 'timeline_site_admin',
+                    'url': '/timeline/site/all',
+                    'label': 'All Timeline Events',
+                    'icon': 'mdi:web-clock',
+                    'active': False,
+                },
+                {
+                    'name': 'tokens',
+                    'url': '/tokens/',
+                    'label': 'API Tokens',
+                    'icon': 'mdi:key-chain-variant',
+                    'active': False,
+                },
+                {
+                    'name': 'userprofile',
+                    'url': '/user/profile',
+                    'label': 'User Profile',
+                    'icon': 'mdi:account-details',
+                    'active': False,
+                },
+                {
+                    'name': 'admin',
+                    'url': '/admin/',
+                    'label': 'Django Admin',
+                    'icon': 'mdi:cogs',
+                    'active': False,
+                },
+                {
+                    'name': 'sign-out',
+                    'url': '/logout/',
+                    'label': 'Logout',
+                    'icon': 'mdi:logout-variant',
+                    'active': False,
+                },
+            ]
+        }
+        self.assertEqual(response.json(), expected)
 
 
 class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):

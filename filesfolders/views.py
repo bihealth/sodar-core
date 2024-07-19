@@ -132,7 +132,7 @@ class FilesfoldersTimelineMixin:
             event_name='{}_{}'.format(obj_type, view_action),
             description=tl_desc,
             extra_data=extra_data,
-            status_type='OK',
+            status_type=timeline.TL_STATUS_OK,
         )
         tl_event.add_object(
             obj=obj,
@@ -207,14 +207,16 @@ class DeleteSuccessMixin(DeletionMixin):
                 user=self.request.user,
                 event_name='{}_delete'.format(obj_type),
                 description='delete {} {{{}}}'.format(obj_type, obj_type),
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
             tl_event.add_object(
                 obj=self.object,
                 label=obj_type,
-                name=self.object.get_path()
-                if isinstance(self.object, Folder)
-                else self.object.name,
+                name=(
+                    self.object.get_path()
+                    if isinstance(self.object, Folder)
+                    else self.object.name
+                ),
             )
 
         messages.success(
@@ -281,7 +283,7 @@ class FileServeMixin:
                     event_name='file_serve',
                     description='serve file {file}',
                     classified=True,
-                    status_type='INFO',
+                    status_type=timeline.TL_STATUS_INFO,
                 )
                 tl_event.add_object(file, 'file', file.name)
         return response
@@ -546,7 +548,7 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
                     'new_folders': [f.name for f in new_folders],
                     'new_files': [f.name for f in new_files],
                 },
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
 
         messages.success(
@@ -843,15 +845,23 @@ class BatchEditView(
                     self.batch_action,
                     edit_count,
                     edit_suffix,
-                    '({} failed)'.format(len(self.failed))
-                    if len(self.failed) > 0
-                    else '',
-                    'to {target_folder}'
-                    if self.batch_action == 'move' and target_folder
-                    else '',
+                    (
+                        '({} failed)'.format(len(self.failed))
+                        if len(self.failed) > 0
+                        else ''
+                    ),
+                    (
+                        'to {target_folder}'
+                        if self.batch_action == 'move' and target_folder
+                        else ''
+                    ),
                 ),
                 extra_data=extra_data,
-                status_type='OK' if edit_count > 0 else 'FAILED',
+                status_type=(
+                    timeline.TL_STATUS_OK
+                    if edit_count > 0
+                    else timeline.TL_STATUS_FAILED
+                ),
             )
             if self.batch_action == 'move' and target_folder:
                 tl_event.add_object(

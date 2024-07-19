@@ -1,4 +1,5 @@
 """Ajax API views for the timeline app"""
+
 import html
 
 from django.http import HttpResponseForbidden
@@ -14,7 +15,7 @@ from projectroles.views_ajax import (
     SODARBaseAjaxView,
 )
 
-from timeline.models import ProjectEvent, ProjectEventStatus
+from timeline.models import TimelineEvent, TimelineEventStatus
 from timeline.templatetags.timeline_tags import get_status_style
 
 
@@ -27,19 +28,16 @@ class EventDetailMixin:
             'timeline.view_event_extra_data', status.event.project
         ):
             return None
-        else:
-            return reverse(
-                'timeline:ajax_extra_status',
-                kwargs={
-                    'eventstatus': status.sodar_uuid,
-                },
-            )
+        return reverse(
+            'timeline:ajax_extra_status',
+            kwargs={'eventstatus': status.sodar_uuid},
+        )
 
     def get_event_details(self, event, request):
         """
         Return event details.
 
-        :param event: ProjectEvent object
+        :param event: TimelineEvent object
         :param request: Django request object
         :return: Dict
         """
@@ -153,8 +151,8 @@ class EventExtraDataMixin:
     def get_event_extra(self, event, status=None):
         """
         Return event extra data.
-        :param event: ProjectEvent object
-        :param status: ProjectEventStatus object
+        :param event: TimelineEvent object
+        :param status: TimelineEventStatus object
         :return: JSON-serializable dict
         """
         extra = status.extra_data if status else event.extra_data
@@ -177,8 +175,8 @@ class ProjectEventDetailAjaxView(EventDetailMixin, SODARBaseProjectAjaxView):
     permission_required = 'timeline.view_timeline'
 
     def get(self, request, *args, **kwargs):
-        event = ProjectEvent.objects.filter(
-            sodar_uuid=self.kwargs['projectevent']
+        event = TimelineEvent.objects.filter(
+            sodar_uuid=self.kwargs['timelineevent']
         ).first()
         if event.classified and not request.user.has_perm(
             'timeline.view_classified_event', event.project
@@ -193,14 +191,13 @@ class ProjectEventExtraAjaxView(EventExtraDataMixin, SODARBaseProjectAjaxView):
     permission_required = 'timeline.view_event_extra_data'
 
     def get(self, request, *args, **kwargs):
-        event = ProjectEvent.objects.filter(
-            sodar_uuid=self.kwargs['projectevent']
+        event = TimelineEvent.objects.filter(
+            sodar_uuid=self.kwargs['timelineevent']
         ).first()
         if event.classified and not request.user.has_perm(
             'timeline.view_classified_event', event.project
         ):
             return HttpResponseForbidden()
-
         return Response(self.get_event_extra(event), status=200)
 
 
@@ -210,8 +207,8 @@ class SiteEventDetailAjaxView(EventDetailMixin, SODARBasePermissionAjaxView):
     permission_required = 'timeline.view_site_timeline'
 
     def get(self, request, *args, **kwargs):
-        event = ProjectEvent.objects.filter(
-            sodar_uuid=self.kwargs['projectevent']
+        event = TimelineEvent.objects.filter(
+            sodar_uuid=self.kwargs['timelineevent']
         ).first()
         if event.classified and not request.user.has_perm(
             'timeline.view_classified_site_event'
@@ -226,8 +223,8 @@ class SiteEventExtraAjaxView(EventExtraDataMixin, SODARBasePermissionAjaxView):
     permission_required = 'timeline.view_event_extra_data'
 
     def get(self, request, *args, **kwargs):
-        event = ProjectEvent.objects.filter(
-            sodar_uuid=self.kwargs['projectevent']
+        event = TimelineEvent.objects.filter(
+            sodar_uuid=self.kwargs['timelineevent']
         ).first()
         if event.classified and not request.user.has_perm(
             'timeline.view_classified_site_event'
@@ -240,33 +237,17 @@ class EventStatusExtraAjaxView(EventExtraDataMixin, SODARBaseAjaxView):
     """Ajax view for retrieving event status extra data for events"""
 
     def get(self, request, *args, **kwargs):
-        status = ProjectEventStatus.objects.filter(
+        status = TimelineEventStatus.objects.filter(
             sodar_uuid=self.kwargs['eventstatus']
         ).first()
         event = status.event
-        if event.project:
-            if (
-                not event.classified
-                and not request.user.has_perm(
-                    'timeline.view_event_extra_data', event.project
-                )
-                or event.classified
-                and not request.user.has_perm(
-                    'timeline.view_classified_event', event.project
-                )
-            ):
-                return HttpResponseForbidden()
+        if event.classified and event.project:
+            perm = 'view_classified_event'
+        elif event.classified:
+            perm = 'view_classified_site_event'
         else:
-            if (
-                not event.classified
-                and not request.user.has_perm('timeline.view_event_extra_data')
-                or event.classified
-                and not request.user.has_perm(
-                    'timeline.view_classified_site_event'
-                )
-            ):
-                return HttpResponseForbidden()
-        return Response(
-            self.get_event_extra(status.event, status),
-            status=200,
-        )
+            perm = 'view_event_extra_data'
+        project = getattr(event, 'project', None)
+        if not request.user.has_perm('timeline.' + perm, project):
+            return HttpResponseForbidden()
+        return Response(self.get_event_extra(status.event, status), status=200)

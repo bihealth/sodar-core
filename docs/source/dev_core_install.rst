@@ -26,7 +26,8 @@ system of choice.
 System Dependencies
 ===================
 
-To get started, install the OS dependencies, PostgreSQL >=11 and Python >=3.8.
+To get started, install the OS dependencies, Python >=3.9 (3.11 recommended) and
+PostgreSQL >=12 (16 recommended).
 
 .. code-block:: console
 
@@ -58,6 +59,13 @@ Example of the database URL variable as set within an ``.env`` file:
 .. code-block:: console
 
     DATABASE_URL=postgres://your-db:your-db@127.0.0.1/your-db
+
+Asynchronous Celery tasks require running a Redis server. For development, you
+can install it with the following script:
+
+.. code-block:: console
+
+    $ sudo utility/install_redis.sh
 
 
 Repository and Environment Setup
@@ -134,7 +142,9 @@ Optional Steps
 
 For creating a group of example users for your development site, you can run the
 ``createdevusers`` management command. This creates the users "alice", "bob",
-"carol", "dan" and "erin", all with the password "password".
+"carol", "dan" and "erin". The users will be created with the password
+"sodarpass", unless a custom password is supplied via the ``-p`` or
+``--password`` argument.
 
 .. code-block:: console
 

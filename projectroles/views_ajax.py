@@ -22,17 +22,14 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     RoleAssignment,
+    RemoteProject,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import get_active_plugins, get_backend_api
-from projectroles.utils import get_display_name
-from projectroles.views import (
-    ProjectAccessMixin,
-    APP_NAME,
-    User,
-)
+from projectroles.plugins import get_active_plugins
+from projectroles.utils import get_display_name, AppLinkContent
+from projectroles.views import ProjectAccessMixin, User
 from projectroles.views_api import (
     SODARAPIProjectPermission,
     CurrentUserRetrieveAPIView,
@@ -49,6 +46,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -66,6 +64,7 @@ class SODARBaseAjaxMixin:
     allow_anonymous = False
     authentication_classes = [SessionAuthentication]
     renderer_classes = [JSONRenderer]
+    schema = None
 
     @property
     def permission_classes(self):
@@ -418,38 +417,109 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         # HACK: Manually refuse access to anonymous as this view is an exception
         if request.user.is_anonymous:
             return Response({'detail': 'Anonymous access denied'}, status=401)
-
         project = self.get_project()
         user = request.user
-        timeline = get_backend_api('timeline_backend')
         project_star = app_settings.get(
             'projectroles', 'project_star', project, user
         )
-        action_str = '{}star'.format('un' if project_star else '')
-        if project_star:
-            app_settings.delete('projectroles', 'project_star', project, user)
-        else:
-            app_settings.set(
-                app_name='projectroles',
-                setting_name='project_star',
-                value=True,
-                project=project,
-                user=user,
-                validate=False,
-            )
+        value = False if project_star else True
+        app_settings.set(
+            plugin_name='projectroles',
+            setting_name='project_star',
+            value=value,
+            project=project,
+            user=user,
+            validate=False,
+        )
+        return Response(1 if value else 0, status=200)
 
-        # Add event in Timeline
-        if timeline:
-            timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=user,
-                event_name='project_{}'.format(action_str),
-                description='{} project'.format(action_str),
-                classified=True,
-                status_type='INFO',
-            )
-        return Response(0 if project_star else 1, status=200)
+
+class RemoteProjectAccessAjaxView(SODARBaseProjectAjaxView):
+    """View to check whether a remote project has been accessed by sync"""
+
+    permission_required = 'projectroles.view_project'
+
+    def get(self, request, *args, **kwargs):
+        project = self.get_project()
+        rp_uuids = request.GET.getlist('rp')
+        ret = {}
+        for u in rp_uuids:
+            rp = RemoteProject.objects.filter(sodar_uuid=u).first()
+            if not rp:
+                return Response(
+                    {'detail': 'RemoteProject not found'}, status=404
+                )
+            if (
+                rp.project_uuid != project.sodar_uuid
+                or rp.site.mode == SITE_MODE_SOURCE
+            ):
+                return Response({'detail': 'Invalid RemoteProject'}, status=400)
+            ret[str(rp.sodar_uuid)] = rp.date_access is not None
+        return Response(ret, status=200)
+
+
+class SidebarContentAjaxView(SODARBaseProjectAjaxView):
+    """
+    Return sidebar and project dropdown links to be displayed in a client-side
+    application. This can be used as an alternative to rendering server-side
+    sidebar and project dropdonwn elements.
+
+    All returned links are inactive by default. To get correct "active"
+    attribute for each of the links, you must provide the app_name as GET
+    parameter. The app_name refers to the current app name
+    (request.resolver_match.app_name).
+
+    Return data (for each link):
+
+    - ``name``: Internal ID (string)
+    - ``url``: View URL (string)
+    - ``label``: Text label to be displayed for link (string)
+    - ``icon``: Icon namespace and ID (string, example: "mdi:cube")
+    - ``active``: Whether link is currently active (boolean)
+    """
+
+    permission_required = 'projectroles.view_project'
+
+    def get(self, request, *args, **kwargs):
+        project = self.get_project()
+        app_name = request.GET.get('app_name')
+        # Get the content for the sidebar
+        app_link_content = AppLinkContent()
+        sidebar_links = app_link_content.get_project_app_links(
+            request.user, project, app_name=app_name
+        )
+        return JsonResponse({'links': sidebar_links})
+
+
+class UserDropdownContentAjaxView(SODARBaseAjaxView):
+    """
+    Return user dropdown links to be displayed in a client-side application.
+    This can be used as an alternative to rendering the server-side dropdown.
+
+    All returned links are inactive by default. To get correct "active"
+    attribute for each of the links, you must provide the app_name as GET
+    parameter. The app_name refers to the current app name
+    (request.resolver_match.app_name).
+
+    Return data (for each link):
+
+    - ``name``: Internal ID (string)
+    - ``url``: View URL (string)
+    - ``label``: Text label to be displayed for link (string)
+    - ``icon``: Icon namespace and ID (string, example: "mdi:cube")
+    - ``active``: Whether link is currently active (boolean)
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        app_name = request.GET.get('app_name')
+        # Get the content for the user dropdown
+        app_link_content = AppLinkContent()
+        user_dropdown_links = app_link_content.get_user_links(
+            request.user, app_name=app_name
+        )
+        return JsonResponse({'links': user_dropdown_links})
 
 
 class CurrentUserRetrieveAjaxView(

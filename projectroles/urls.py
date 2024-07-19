@@ -12,22 +12,22 @@ urls_ui = [
         name='detail',
     ),
     path(
-        route='project/update/<uuid:project>',
+        route='update/<uuid:project>',
         view=views.ProjectUpdateView.as_view(),
         name='update',
     ),
     path(
-        route='project/create',
+        route='create',
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
     path(
-        route='project/create/<uuid:project>',
+        route='create/<uuid:project>',
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
     path(
-        route='project/archive/<uuid:project>',
+        route='archive/<uuid:project>',
         view=views.ProjectArchiveView.as_view(),
         name='archive',
     ),
@@ -95,14 +95,14 @@ urls_ui = [
         name='invite_accept',
     ),
     path(
-        route='invites/process/ldap/<str:secret>',
-        view=views.ProjectInviteProcessLDAPView.as_view(),
-        name='invite_process_ldap',
+        route='invites/process/login/<str:secret>',
+        view=views.ProjectInviteProcessLoginView.as_view(),
+        name='invite_process_login',
     ),
     path(
-        route='invites/process/local/<str:secret>',
-        view=views.ProjectInviteProcessLocalView.as_view(),
-        name='invite_process_local',
+        route='invites/process/new-user/<str:secret>',
+        view=views.ProjectInviteProcessNewUserView.as_view(),
+        name='invite_process_new_user',
     ),
     path(
         route='invites/resend/<uuid:projectinvite>',
@@ -178,6 +178,21 @@ urls_ajax = [
         route='ajax/star/<uuid:project>',
         view=views_ajax.ProjectStarringAjaxView.as_view(),
         name='ajax_star',
+    ),
+    path(
+        route='ajax/remote/access/<uuid:project>',
+        view=views_ajax.RemoteProjectAccessAjaxView.as_view(),
+        name='ajax_remote_access',
+    ),
+    path(
+        route='ajax/sidebar/<uuid:project>',
+        view=views_ajax.SidebarContentAjaxView.as_view(),
+        name='ajax_sidebar',
+    ),
+    path(
+        route='ajax/dropdown',
+        view=views_ajax.UserDropdownContentAjaxView.as_view(),
+        name='ajax_user_dropdown',
     ),
     path(
         route='ajax/user/current',

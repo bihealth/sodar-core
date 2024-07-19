@@ -11,8 +11,28 @@ urlpatterns = [
         name='detail',
     ),
     path(
-        route='profile/settings/update',
+        route='settings/update',
         view=views.UserSettingsView.as_view(),
         name='settings_update',
+    ),
+    path(
+        route='email/create',
+        view=views.UserEmailCreateView.as_view(),
+        name='email_create',
+    ),
+    path(
+        route='email/verify/<str:secret>',
+        view=views.UserEmailVerifyView.as_view(),
+        name='email_verify',
+    ),
+    path(
+        route='email/resend/<uuid:sodaruseradditionalemail>',
+        view=views.UserEmailVerifyResendView.as_view(),
+        name='email_verify_resend',
+    ),
+    path(
+        route='email/delete/<uuid:sodaruseradditionalemail>',
+        view=views.UserEmailDeleteView.as_view(),
+        name='email_delete',
     ),
 ]

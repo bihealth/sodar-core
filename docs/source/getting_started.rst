@@ -17,7 +17,7 @@ the package is under active development and breaking changes are expected.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.13.4
+    pip install django-sodar-core==1.0.0
 
 Please note that the django-sodar-core package only installs
 :term:`Django apps<Django App>`, which you need to include in a
@@ -56,9 +56,9 @@ your Django site are listed below. For a complete requirement list, see the
 - Ubuntu (20.04 Focal recommended and supported) / CentOS 7
 - System library requirements (see the ``utility`` directory and/or your own
   Django project)
-- Python >=3.8 (**NOTE:** Python 3.7 no longer supported in SODAR Core v0.10.8+)
-- Django 3.2
-- PostgreSQL >=11 and psycopg2-binary
+- Python 3.9-3.11 (3.11 recommended)
+- Django 4.2
+- PostgreSQL >=12 (16 recommended) and psycopg2-binary
 - Bootstrap 4.x
 - JQuery 3.3.x
 - Shepherd and Tether

@@ -37,7 +37,7 @@ REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_SECRET = build_secret()
 
 
-class TestPermissionMixin:
+class PermissionTestMixin:
     """Helper class for permission tests"""
 
     def send_request(self, url, method, req_kwargs):
@@ -117,7 +117,7 @@ class IPAllowMixin(AppSettingMixin):
     def setup_ip_allowing(self, ip_list):
         # Init IP restrict setting
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_restrict',
             setting_type='BOOLEAN',
             value=True,
@@ -125,7 +125,7 @@ class IPAllowMixin(AppSettingMixin):
         )
         # Init IP allowlist setting
         self.make_setting(
-            app_name='projectroles',
+            plugin_name='projectroles',
             name='ip_allowlist',
             setting_type='JSON',
             value=None,
@@ -134,7 +134,7 @@ class IPAllowMixin(AppSettingMixin):
         )
 
 
-class TestPermissionBase(TestPermissionMixin, TestCase):
+class PermissionTestBase(PermissionTestMixin, TestCase):
     """
     Base class for permission tests for UI views.
 
@@ -142,12 +142,12 @@ class TestPermissionBase(TestPermissionMixin, TestCase):
     """
 
 
-class TestProjectPermissionBase(
+class ProjectPermissionTestBase(
     ProjectMixin,
     RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
-    TestPermissionBase,
+    PermissionTestBase,
 ):
     """
     Base class for testing project permissions.
@@ -220,12 +220,12 @@ class TestProjectPermissionBase(
         )
 
 
-class TestSiteAppPermissionBase(
+class SiteAppPermissionTestBase(
     ProjectMixin,
     RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
-    TestPermissionBase,
+    PermissionTestBase,
 ):
     """Base class for testing site app permissions"""
 
@@ -240,7 +240,7 @@ class TestSiteAppPermissionBase(
         self.anonymous = None
 
 
-class TestGeneralViews(TestProjectPermissionBase):
+class TestGeneralViews(ProjectPermissionTestBase):
     """Tests for general non-project UI view permissions"""
 
     def test_get_home(self):
@@ -459,7 +459,7 @@ class TestGeneralViews(TestProjectPermissionBase):
         )
 
 
-class TestProjectDetailView(TestProjectPermissionBase):
+class TestProjectDetailView(ProjectPermissionTestBase):
     """Tests for ProjectDetailView permissions"""
 
     def setUp(self):
@@ -571,7 +571,7 @@ class TestProjectDetailView(TestProjectPermissionBase):
         self.assert_response(self.url_cat, bad_users, 302)
 
 
-class TestProjectCreateView(TestProjectPermissionBase):
+class TestProjectCreateView(ProjectPermissionTestBase):
     """Tests for ProjectCreateView permissions"""
 
     def setUp(self):
@@ -642,7 +642,7 @@ class TestProjectCreateView(TestProjectPermissionBase):
         )
 
 
-class TestProjectUpdateView(TestProjectPermissionBase):
+class TestProjectUpdateView(ProjectPermissionTestBase):
     """Tests for ProjectUpdateView permissions"""
 
     def setUp(self):
@@ -740,7 +740,7 @@ class TestProjectUpdateView(TestProjectPermissionBase):
         )
 
 
-class TestProjectArchiveView(TestProjectPermissionBase):
+class TestProjectArchiveView(ProjectPermissionTestBase):
     """Tests for ProjectArchiveView permissions"""
 
     def setUp(self):
@@ -847,7 +847,7 @@ class TestProjectArchiveView(TestProjectPermissionBase):
         self.assert_response(self.url_cat, self.user_no_roles, 302)
 
 
-class TestProjectRoleView(TestProjectPermissionBase):
+class TestProjectRoleView(ProjectPermissionTestBase):
     """Tests for ProjectRoleView permissions"""
 
     def setUp(self):
@@ -931,7 +931,7 @@ class TestProjectRoleView(TestProjectPermissionBase):
             self.category.set_public()
 
 
-class TestRoleAssignmentCreateView(TestProjectPermissionBase):
+class TestRoleAssignmentCreateView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentCreateView permissions"""
 
     def setUp(self):
@@ -1024,7 +1024,7 @@ class TestRoleAssignmentCreateView(TestProjectPermissionBase):
             self.category.set_public()
 
 
-class TestRoleAssignmentUpdateView(TestProjectPermissionBase):
+class TestRoleAssignmentUpdateView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentUpdateView permissions"""
 
     def setUp(self):
@@ -1185,7 +1185,7 @@ class TestRoleAssignmentUpdateView(TestProjectPermissionBase):
         self.assert_response(url, self.user_no_roles, 302)
 
 
-class TestRoleAssignmentDeleteView(TestProjectPermissionBase):
+class TestRoleAssignmentDeleteView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentDeleteView permissions"""
 
     def setUp(self):
@@ -1347,7 +1347,7 @@ class TestRoleAssignmentDeleteView(TestProjectPermissionBase):
         self.assert_response(url, self.user_no_roles, 302)
 
 
-class TestRoleAssignmentOwnerTransferView(TestProjectPermissionBase):
+class TestRoleAssignmentOwnerTransferView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentOwnerTransferView permissions"""
 
     def setUp(self):
@@ -1413,7 +1413,7 @@ class TestRoleAssignmentOwnerTransferView(TestProjectPermissionBase):
         self.assert_response(self.url, self.user_no_roles, 302)
 
 
-class TestProjectInviteView(TestProjectPermissionBase):
+class TestProjectInviteView(ProjectPermissionTestBase):
     """Tests for ProjectInviteView permissions"""
 
     def setUp(self):
@@ -1500,12 +1500,12 @@ class TestProjectInviteView(TestProjectPermissionBase):
         ]
         self.assert_response(self.url_cat, good_users, 200)
         self.assert_response(self.url_cat, bad_users, 302)
-        # public guest access is temporally disabled for categories
+        # Public guest access is temporally disabled for categories
         with self.assertRaises(ValidationError):
             self.category.set_public()
 
 
-class TestProjectInviteCreateView(TestProjectPermissionBase):
+class TestProjectInviteCreateView(ProjectPermissionTestBase):
     """Tests for ProjectInviteCreateView permissions"""
 
     def setUp(self):
@@ -1598,7 +1598,7 @@ class TestProjectInviteCreateView(TestProjectPermissionBase):
         self.assert_response(self.url_cat, self.user_no_roles, 302)
 
 
-class TestProjectInviteResendView(TestProjectPermissionBase):
+class TestProjectInviteResendView(ProjectPermissionTestBase):
     """Tests for ProjectInviteResendView permissions"""
 
     def setUp(self):
@@ -1688,7 +1688,7 @@ class TestProjectInviteResendView(TestProjectPermissionBase):
         self.assert_response(self.url, self.user_no_roles, 302)
 
 
-class TestProjectInviteRevokeView(TestProjectPermissionBase):
+class TestProjectInviteRevokeView(ProjectPermissionTestBase):
     """Tests for ProjectInviteRevokeView permissions"""
 
     def setUp(self):
@@ -1762,7 +1762,7 @@ class TestProjectInviteRevokeView(TestProjectPermissionBase):
         self.assert_response(self.url, self.user_no_roles, 302)
 
 
-class TestRemoteSiteViews(RemoteSiteMixin, TestSiteAppPermissionBase):
+class TestRemoteSiteViews(RemoteSiteMixin, SiteAppPermissionTestBase):
     """Tests for UI view permissions in remote site views"""
 
     def setUp(self):
@@ -1838,7 +1838,7 @@ class TestRemoteSiteViews(RemoteSiteMixin, TestSiteAppPermissionBase):
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestTargetSiteViews(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectPermissionBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
 ):
     """Tests for UI view permissions on target site"""
 
@@ -1999,7 +1999,7 @@ class TestTargetSiteViews(
             self.user_no_roles,
             self.anonymous,
         ]
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(url, bad_users, 302, redirect_anon=reverse('home'))
 
     def test_get_role_create(self):
         """Test RoleAssignmentCreateView GET"""
@@ -2156,7 +2156,7 @@ class TestTargetSiteViews(
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestRevokedRemoteProjectViews(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectPermissionBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
 ):
     """
     Tests for UI view permissions with revoked remote project on target site.
@@ -2233,7 +2233,7 @@ class TestRevokedRemoteProjectViews(
         self.assert_response(url, bad_users, 302)
 
 
-class TestIPAllowing(IPAllowMixin, TestProjectPermissionBase):
+class TestIPAllowing(IPAllowMixin, ProjectPermissionTestBase):
     """Tests for IP allow list permissions with ProjectDetailView"""
 
     def setUp(self):
@@ -2520,7 +2520,7 @@ class TestIPAllowing(IPAllowMixin, TestProjectPermissionBase):
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestIPAllowingTargetSite(
-    IPAllowMixin, RemoteSiteMixin, RemoteProjectMixin, TestProjectPermissionBase
+    IPAllowMixin, RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
 ):
     """Tests for IP allow list permissions on target site"""
 

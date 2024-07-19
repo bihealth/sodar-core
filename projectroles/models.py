@@ -1,7 +1,6 @@
 """Models for the projectroles app"""
 
 import logging
-import re
 import uuid
 
 from django.apps import apps
@@ -12,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from djangoplugins.models import Plugin
 from markupfield.fields import MarkupField
@@ -34,6 +33,9 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
+AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
+AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
 
 # Local constants
 ROLE_RANKING = {
@@ -51,7 +53,6 @@ APP_SETTING_TYPE_CHOICES = [
     ('STRING', 'String'),
     ('JSON', 'Json'),
 ]
-APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
@@ -61,6 +62,12 @@ CAT_DELIMITER_ERROR_MSG = 'String "{}" is not allowed in title'.format(
 ROLE_PROJECT_TYPE_ERROR_MSG = (
     'Invalid project type "{project_type}" for ' 'role "{role_name}"'
 )
+CAT_PUBLIC_ACCESS_MSG = 'Public guest access is not allowed for categories'
+ADD_EMAIL_ALREADY_SET_MSG = 'Email already set as {email_type} email for user'
+REMOTE_PROJECT_UNIQUE_MSG = (
+    'RemoteProject with the same project UUID and site anready exists'
+)
+AUTH_PROVIDER_OIDC = 'oidc'
 
 
 # Project ----------------------------------------------------------------------
@@ -107,7 +114,7 @@ class Project(models.Model):
     type = models.CharField(
         max_length=64,
         choices=PROJECT_TYPE_CHOICES,
-        default=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
+        default=PROJECT_TYPE_PROJECT,
         help_text='Type of project ("CATEGORY", "PROJECT")',
     )
 
@@ -197,13 +204,16 @@ class Project(models.Model):
         self._validate_archive()
         # Update full title of self and children
         self.full_title = self._get_full_title()
+        # TODO: Save with commit=False with other args to avoid double save()?
+        super().save(*args, **kwargs)
         if self.type == PROJECT_TYPE_CATEGORY:
             for child in self.children.all():
                 child.save()
         # Update public children
         # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
-        self.has_public_children = self._has_public_children()
-        super().save(*args, **kwargs)
+        if self._has_public_children():
+            self.has_public_children = True
+            super().save(*args, **kwargs)
 
     def _validate_parent(self):
         """
@@ -214,23 +224,21 @@ class Project(models.Model):
 
     def _validate_parent_type(self):
         """Validate parent value to ensure parent can not be a project"""
-        if (
-            self.parent
-            and self.parent.type == SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-        ):
+        if self.parent and self.parent.type == PROJECT_TYPE_PROJECT:
             raise ValidationError(
                 'Subprojects are only allowed within categories'
             )
 
     def _validate_public_guest_access(self):
-        """Validate public guest access to ensure it is not set on categories"""
-        if (
-            self.public_guest_access
-            and self.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
-        ):
-            raise ValidationError(
-                'Public guest access is not allowed for categories'
-            )
+        """
+        Validate public guest access to ensure it is not set on categories.
+
+        NOTE: Does not prevent saving but forces the value to be False, see
+              issue #1404.
+        """
+        if self.type == PROJECT_TYPE_CATEGORY and self.public_guest_access:
+            logger.warning(CAT_PUBLIC_ACCESS_MSG + ', setting to False')
+            self.public_guest_access = False
 
     def _validate_title(self):
         """
@@ -250,10 +258,7 @@ class Project(models.Model):
         Validate archive status against project type to ensure archiving is only
         applied to projects.
         """
-        if (
-            self.archive
-            and self.type != SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-        ):
+        if self.archive and self.type != PROJECT_TYPE_PROJECT:
             raise ValidationError(
                 'Archiving a category is not currently supported'
             )
@@ -653,6 +658,9 @@ class Project(models.Model):
     def set_public(self, public=True):
         """Helper for setting value of public_guest_access"""
         if public != self.public_guest_access:
+            # NOTE: Validation no longer raises an exception (see ¤1404)
+            if self.type == PROJECT_TYPE_CATEGORY and public:
+                raise ValidationError(CAT_PUBLIC_ACCESS_MSG)
             self.public_guest_access = public
             self.save()
             self._update_public_children()  # Update for parents
@@ -852,14 +860,14 @@ class AppSettingManager(models.Manager):
     """Manager for custom table-level AppSetting queries"""
 
     def get_setting_value(
-        self, app_name, setting_name, project=None, user=None
+        self, plugin_name, setting_name, project=None, user=None
     ):
         """
-        Return value of setting_name for app_name in project or for user.
+        Return value of setting_name for plugin_name in project or for user.
 
         Note that project and/or user must be set.
 
-        :param app_name: App plugin name (string)
+        :param plugin_name: App plugin name (string)
         :param setting_name: Name of setting (string)
         :param project: Project object or pk
         :param user: User object or pk
@@ -871,8 +879,8 @@ class AppSettingManager(models.Manager):
             'project': project,
             'user': user,
         }
-        if not app_name == 'projectroles':
-            query_parameters['app_plugin__name'] = app_name
+        if not plugin_name == 'projectroles':
+            query_parameters['app_plugin__name'] = plugin_name
         setting = super().get_queryset().get(**query_parameters)
         return setting.get_value()
 
@@ -929,7 +937,6 @@ class AppSetting(models.Model):
 
     #: Value of the setting
     value = models.CharField(
-        max_length=APP_SETTING_VAL_MAXLENGTH,
         unique=False,
         null=True,
         blank=True,
@@ -1094,6 +1101,31 @@ class ProjectInvite(models.Model):
         values = (self.project.title, self.email, self.role.name, self.active)
         return 'ProjectInvite({})'.format(', '.join(repr(v) for v in values))
 
+    # Custom row-level functions
+
+    def is_ldap(self):
+        """
+        Return True if invite is intended for an LDAP user.
+
+        :return: Boolean
+        """
+        # Only consider LDAP if enabled in Django settings
+        if not settings.ENABLE_LDAP:
+            return False
+        # Check if domain is associated with LDAP
+        domain = self.email.split('@')[1].lower()
+        domain_no_tld = domain.split('.')[0].lower()
+        ldap_domains = [
+            getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').lower(),
+            getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').lower(),
+        ]
+        alt_domains = [
+            a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])
+        ]
+        if domain_no_tld in ldap_domains or domain in alt_domains:
+            return True
+        return False
+
 
 # RemoteSite -------------------------------------------------------------------
 
@@ -1141,16 +1173,24 @@ class RemoteSite(models.Model):
         help_text='Secret token for connecting to the source site',
     )
 
+    #: RemoteSite visibilty to users
+    user_display = models.BooleanField(
+        default=True, unique=False, help_text='Display site to users'
+    )
+
+    #: RemoteSite project access modifiability for owners and delegates
+    owner_modifiable = models.BooleanField(
+        default=True,
+        unique=False,
+        help_text='Allow owners and delegates to modify project access for '
+        'this site',
+    )
+
     #: RemoteSite relation UUID (local)
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
         help_text='RemoteSite relation UUID (local)',
-    )
-
-    #: RemoteSite's link visibilty for users
-    user_display = models.BooleanField(
-        default=True, unique=False, help_text='RemoteSite visibility to users'
     )
 
     class Meta:
@@ -1180,8 +1220,10 @@ class RemoteSite(models.Model):
 
     def get_access_date(self):
         """Return date of latest project access by remote site"""
-        projects = RemoteProject.objects.filter(site=self).order_by(
-            '-date_access'
+        projects = (
+            RemoteProject.objects.filter(site=self)
+            .exclude(date_access__isnull=True)
+            .order_by('-date_access')
         )
         if projects.count() > 0:
             return projects.first().date_access
@@ -1250,6 +1292,15 @@ class RemoteProject(models.Model):
     class Meta:
         ordering = ['site__name', 'project_uuid']
 
+    def save(self, *args, **kwargs):
+        # NOTE: Can't use unique constraint with foreign key relation
+        rp = self.__class__.objects.filter(
+            project_uuid=self.project_uuid, site=self.site
+        ).first()
+        if rp and rp.id != self.id:
+            raise ValidationError(REMOTE_PROJECT_UNIQUE_MSG)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return '{}: {} ({})'.format(
             self.site.name, str(self.project_uuid), self.site.mode
@@ -1269,7 +1320,7 @@ class RemoteProject(models.Model):
         )
 
 
-# Abstract User Model ----------------------------------------------------------
+# User Models ------------------------------------------------------------------
 
 
 class SODARUser(AbstractUser):
@@ -1320,19 +1371,59 @@ class SODARUser(AbstractUser):
             ret += ' <{}>'.format(self.email)
         return ret
 
+    def get_auth_type(self):
+        """
+        Return user authentication type: OIDC, LDAP or local.
+
+        :return: String which may equal AUTH_TYPE_OIDC, AUTH_TYPE_LDAP or
+                 AUTH_TYPE_LOCAL.
+        """
+        groups = [g.name for g in self.groups.all()]
+        if 'oidc' in groups:
+            return AUTH_TYPE_OIDC
+        elif (
+            self.username.find('@') != -1
+            and self.username.split('@')[1].lower() in groups
+        ):
+            return AUTH_TYPE_LDAP
+        return AUTH_TYPE_LOCAL
+
+    def is_local(self):
+        """
+        Return True if user is of type AUTH_TYPE_LOCAL.
+
+        :return: Boolean
+        """
+        return self.get_auth_type() == AUTH_TYPE_LOCAL
+
     def set_group(self):
-        """Set user group based on user name."""
-        if self.username.find('@') != -1:
+        """Set user group based on user name or social auth provider"""
+        social_auth = getattr(self, 'social_auth', None)
+        if social_auth:
+            social_auth = social_auth.first()
+        ldap_domains = [
+            getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').upper(),
+            getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').upper(),
+        ]
+        # OIDC user group
+        if social_auth and social_auth.provider == AUTH_PROVIDER_OIDC:
+            group_name = AUTH_PROVIDER_OIDC
+        # LDAP domain user groups
+        elif (
+            self.username.find('@') != -1
+            and self.username.split('@')[1] in ldap_domains
+        ):
             group_name = self.username.split('@')[1].lower()
+        # System user group for local users
         else:
             group_name = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
         group, created = Group.objects.get_or_create(name=group_name)
         if group not in self.groups.all():
             group.user_set.add(self)
+            logger.info(
+                'Set user group "{}" for {}'.format(group_name, self.username)
+            )
             return group_name
-
-    def is_local(self):
-        return not bool(re.search('@[A-Za-z0-9._-]+$', self.username))
 
     def update_full_name(self):
         """
@@ -1341,11 +1432,19 @@ class SODARUser(AbstractUser):
         :return: String
         """
         # Save user name from first_name and last_name into name
-        if self.name in ['', None] and self.first_name != '':
-            self.name = self.first_name + (
+        full_name = ''
+        if self.first_name != '':
+            full_name = self.first_name + (
                 ' ' + self.last_name if self.last_name != '' else ''
             )
-        self.save()
+        if self.name != full_name:
+            self.name = full_name
+            self.save()
+            logger.info(
+                'Full name updated for user {}: {}'.format(
+                    self.username, self.name
+                )
+            )
         return self.name
 
     def update_ldap_username(self):
@@ -1363,3 +1462,89 @@ class SODARUser(AbstractUser):
             self.username = u_split[0] + '@' + u_split[1].upper()
             self.save()
         return self.username
+
+
+class SODARUserAdditionalEmail(models.Model):
+    """
+    Model representing an additional email address for a user. Stores
+    information for email verification.
+    """
+
+    #: User for whom the email is assigned
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        related_name='additional_emails',
+        help_text='User for whom the email is assigned',
+        on_delete=models.CASCADE,
+    )
+
+    #: Email address
+    email = models.EmailField(
+        unique=False,
+        null=False,
+        blank=False,
+        help_text='Email address',
+    )
+
+    #: Email verification status
+    verified = models.BooleanField(
+        default=False, help_text='Email verification status'
+    )
+
+    #: Secret token for email verification
+    secret = models.CharField(
+        max_length=255,
+        unique=True,
+        blank=False,
+        null=False,
+        help_text='Secret token for email verification',
+    )
+
+    #: DateTime of creation
+    date_created = models.DateTimeField(
+        auto_now_add=True, help_text='DateTime of creation'
+    )
+
+    #: DateTime of last modification
+    date_modified = models.DateTimeField(
+        auto_now=True, help_text='DateTime of last modification'
+    )
+
+    #: SODARUserAdditionalEmail SODAR UUID
+    sodar_uuid = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        help_text='SODARUserAdditionalEmail SODAR UUID',
+    )
+
+    class Meta:
+        ordering = ['user__username', 'email']
+        unique_together = ['user', 'email']
+
+    def __str__(self):
+        return '{}: {}'.format(self.user.username, self.email)
+
+    def __repr__(self):
+        values = (
+            self.user.username,
+            self.email,
+            str(self.verified),
+            self.secret,
+            str(self.sodar_uuid),
+        )
+        return 'SODARUserAdditionalEmail({})'.format(
+            ', '.join(repr(v) for v in values)
+        )
+
+    def _validate_email_unique(self):
+        """
+        Assert the same email has not yet been set for the user.
+        """
+        if self.email == self.user.email:
+            raise ValidationError(
+                ADD_EMAIL_ALREADY_SET_MSG.format(email_type='primary')
+            )
+
+    def save(self, *args, **kwargs):
+        self._validate_email_unique()
+        super().save(*args, **kwargs)

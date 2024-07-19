@@ -6,9 +6,9 @@ sync
 import re
 import sys
 
+from django.conf import settings
 from django.contrib import auth
 from django.core.management.base import BaseCommand
-from django.db import transaction
 
 from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
@@ -81,6 +81,16 @@ class Command(BaseCommand):
             type=bool,
             help='User display of the remote site',
         )
+        parser.add_argument(
+            '-o',
+            '--owner-modifiable',
+            dest='owner_modifiable',
+            default=True,
+            required=False,
+            type=bool,
+            help='Allow owners and delegates to modify project access for this '
+            'site',
+        )
         # Additional Arguments
         parser.add_argument(
             '-s',
@@ -93,10 +103,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        timeline = get_backend_api('timeline_backend')
         logger.info('Creating remote site..')
         name = options['name']
         url = options['url']
-        # Validate url
+
+        # Validate URL
         if not url.startswith('http://') and not url.startswith('https://'):
             url = ''.join(['http://', url])
         pattern = re.compile(r'(http|https)://.*\..*')
@@ -104,54 +116,54 @@ class Command(BaseCommand):
             logger.error('Invalid URL "{}"'.format(url))
             sys.exit(1)
 
-        mode = options['mode'].upper()
-        # Validate mode
-        if mode not in [SITE_MODE_SOURCE, SITE_MODE_TARGET]:
-            if mode in [SITE_MODE_PEER]:
-                logger.error('Creating PEER sites is not allowed')
-            else:
-                logger.error('Unkown mode "{}"'.format(mode))
+        # Validate site mode
+        site_mode = options['mode'].upper()
+        host_mode = settings.PROJECTROLES_SITE_MODE
+        if site_mode not in [SITE_MODE_SOURCE, SITE_MODE_TARGET]:
+            logger.error('Invalid mode "{}"'.format(site_mode))
+            sys.exit(1)
+        if site_mode == host_mode:
+            logger.error('Attempting to create site with the same mode as host')
             sys.exit(1)
 
-        description = options['description']
-        secret = options['secret']
-        user_diplsay = options['user_display']
-        suppress_error = options['suppress_error']
-
         # Validate whether site exists
-        name_exists = bool(len(RemoteSite.objects.filter(name=name)))
-        url_exists = bool(len(RemoteSite.objects.filter(url=url)))
+        name_exists = RemoteSite.objects.filter(name=name).count()
+        url_exists = RemoteSite.objects.filter(url=url).count()
         if name_exists or url_exists:
             err_msg = 'Remote site exists with {} "{}"'.format(
                 'name' if name_exists else 'URL', name if name_exists else url
             )
-            if not suppress_error:
+            if not options['suppress_error']:
                 logger.error(err_msg)
                 sys.exit(1)
             else:
                 logger.info(err_msg)
                 sys.exit(0)
 
-        with transaction.atomic():
-            create_values = {
-                'name': name,
-                'url': url,
-                'mode': mode,
-                'description': description,
-                'secret': secret,
-                'user_display': user_diplsay,
-            }
-            site = RemoteSite.objects.create(**create_values)
+        create_kw = {
+            'name': name,
+            'url': url,
+            'mode': site_mode,
+            'description': options['description'],
+            'secret': options['secret'],
+            'user_display': options['user_display'],
+            'owner_modifiable': options['owner_modifiable'],
+        }
+        site = RemoteSite.objects.create(**create_kw)
 
-        timeline = get_backend_api('timeline_backend')
-        timeline.add_event(
-            project=None,
-            app_name='projectroles',
-            event_name='remote_site_create',
-            description=description,
-            classified=True,
-            status_type='OK',
-        )
+        if timeline:
+            tl_event = timeline.add_event(
+                project=None,
+                app_name='projectroles',
+                user=None,
+                event_name='{}_site_create'.format(site_mode.lower()),
+                description='create {} remote site {{{}}} via management '
+                'command'.format(site_mode.lower(), 'remote_site'),
+                classified=True,
+                status_type=timeline.TL_STATUS_OK,
+                extra_data=create_kw,
+            )
+            tl_event.add_object(obj=site, label='remote_site', name=site.name)
         logger.info(
             'Created remote site "{}" with mode {}'.format(site.name, site.mode)
         )

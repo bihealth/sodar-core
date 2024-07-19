@@ -27,9 +27,9 @@ copyright = '2018-2024, Berlin Institute of Health'
 author = 'BIH Core Unit Bioinformatics'
 
 # The short X.Y version
-version = '0.13'
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = '0.13.4'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------

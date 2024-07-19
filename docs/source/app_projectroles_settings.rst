@@ -69,16 +69,14 @@ following apps need to be included in the list in order for SODAR Core to work:
 Database
 ========
 
-Under ``DATABASES``, the setting below is recommended:
+Under ``DATABASES``, we recommend setting ``ATOMIC_REQUESTS`` to ``True`` as in
+the following sample. This ensures transactions to be atomic on a view-level.
+It is still possible to ensure atomicity of specific blocks of code with
+Django's ``transaction.atomic`` decorator or context manager.
 
 .. code-block:: python
 
-    DATABASES['default']['ATOMIC_REQUESTS'] = False
-
-.. note::
-
-    If this conflicts with your existing set up, you can modify the code in your
-    other apps to use e.g. ``@transaction.atomic``.
+    DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 
 Templates
@@ -244,9 +242,6 @@ The following projectroles settings are **optional**:
     app views and URLs are still accessible via other links or knowing the URL.
     The names should correspond to the ``name`` property in project app plugins
     (list)
-``PROJECTROLES_HIDE_APP_LINKS``
-    **DEPRECATED**, use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead. This will be
-    removed in v1.0
 ``PROJECTROLES_DELEGATE_LIMIT``
     The number of delegate roles allowed per project. The amount is limited to 1
     per project if not set, unlimited if set to 0. Will be ignored for remote
@@ -333,38 +328,40 @@ information see :ref:`dev_backend_app`.
     ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
 
 
-API View Settings (Optional)
+REST API Settings (Optional)
 ============================
 
-If you want to build an API to your site using SODAR Core functionality, it is
-recommended to base your API views on ``projectroles.views.SODARAPIBaseView``.
-Using this base class also allows you to define your API media type, version
-number and allowed versions via Django settings.
+.. warning::
 
-The recommended API setup uses accept header versioning. The
-``SODAR_API_MEDIA_TYPE`` setting should be changed to your organization and API
-identification if API views are introduced. The ``SODAR_API_DEFAULT_HOST``
-setting should post to the externally visible host of your server and be
-configured in your environment settings.
+    General site-based REST API versioning settings have been deprecated in
+    SODAR Core v1.0. They will be removed in v1.1. You are expected to provide
+    your own app-based media type and versioning schema. For more information,
+    see :ref:`dev_project_app_rest_api`.
 
-These settings are **optional**. Default values will be used if they are unset.
-
-Example:
+If your site provides a REST API, the ``SODAR_API_DEFAULT_HOST`` setting should
+point to the externally visible host of your server and be configured in your
+environment settings. Example:
 
 .. code-block:: python
 
-    SODAR_API_DEFAULT_VERSION = '0.1'
-    SODAR_API_ACCEPTED_VERSIONS = [SODAR_API_DEFAULT_VERSION]
-    SODAR_API_MEDIA_TYPE = 'application/your.application+json'  # Change this
-    SODAR_API_DEFAULT_HOST = SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
+    SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
+
+For enabling page size customization for pagination, it's recommended to set
+``REST_FRAMEWORK['PAGE_SIZE']`` using an environment variable as follows:
+
+.. code-block:: python
+
+    REST_FRAMEWORK = {
+        'PAGE_SIZE': env.int('SODAR_API_PAGE_SIZE', 100),
+    }
 
 
 LDAP/AD Configuration (Optional)
 ================================
 
 If you want to utilize LDAP/AD user logins as configured by projectroles, you
-can add the following configuration. Make sure to also add the related env
-variables to your configuration.
+can add the following configuration. Make sure to also add the related
+environment variables to your configuration.
 
 This part of the setup is **optional**.
 
@@ -389,6 +386,7 @@ This part of the setup is **optional**.
     ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
     ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
     LDAP_DEBUG = env.bool('LDAP_DEBUG', False)
+    LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, default=[])
 
     if ENABLE_LDAP:
         import itertools
@@ -409,20 +407,20 @@ This part of the setup is **optional**.
         AUTH_LDAP_SERVER_URI = env.str('AUTH_LDAP_SERVER_URI', None)
         AUTH_LDAP_BIND_DN = env.str('AUTH_LDAP_BIND_DN', None)
         AUTH_LDAP_BIND_PASSWORD = env.str('AUTH_LDAP_BIND_PASSWORD', None)
-        AUTH_LDAP_START_TLS = env.str('AUTH_LDAP_START_TLS', False)
+        AUTH_LDAP_START_TLS = env.bool('AUTH_LDAP_START_TLS', False)
         AUTH_LDAP_CA_CERT_FILE = env.str('AUTH_LDAP_CA_CERT_FILE', None)
         AUTH_LDAP_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
-        if AUTH_LDAP_CA_CERT_FILE is not None:
-            AUTH_LDAP_CONNECTION_OPTIONS[
-                ldap.OPT_X_TLS_CACERTFILE
-            ] = AUTH_LDAP_CA_CERT_FILE
+        if AUTH_LDAP_CA_CERT_FILE:
+            AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = (
+                AUTH_LDAP_CA_CERT_FILE
+            )
             AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
         AUTH_LDAP_USER_FILTER = env.str(
             'AUTH_LDAP_USER_FILTER', '(sAMAccountName=%(user)s)'
         )
-
+        AUTH_LDAP_USER_SEARCH_BASE = env.str('AUTH_LDAP_USER_SEARCH_BASE', None)
         AUTH_LDAP_USER_SEARCH = LDAPSearch(
-            env.str('AUTH_LDAP_USER_SEARCH_BASE', None),
+            AUTH_LDAP_USER_SEARCH_BASE,
             ldap.SCOPE_SUBTREE,
             AUTH_LDAP_USER_FILTER,
         )
@@ -431,7 +429,6 @@ This part of the setup is **optional**.
         AUTH_LDAP_DOMAIN_PRINTABLE = env.str(
             'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN
         )
-
         AUTHENTICATION_BACKENDS = tuple(
             itertools.chain(
                 ('projectroles.auth_backends.PrimaryLDAPBackend',),
@@ -444,20 +441,22 @@ This part of the setup is **optional**.
             AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
             AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
             AUTH_LDAP2_BIND_PASSWORD = env.str('AUTH_LDAP2_BIND_PASSWORD', None)
-            AUTH_LDAP2_START_TLS = env.str('AUTH_LDAP2_START_TLS', False)
+            AUTH_LDAP2_START_TLS = env.bool('AUTH_LDAP2_START_TLS', False)
             AUTH_LDAP2_CA_CERT_FILE = env.str('AUTH_LDAP2_CA_CERT_FILE', None)
             AUTH_LDAP2_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
-            if AUTH_LDAP2_CA_CERT_FILE is not None:
-                AUTH_LDAP2_CONNECTION_OPTIONS[
-                    ldap.OPT_X_TLS_CACERTFILE
-                ] = AUTH_LDAP2_CA_CERT_FILE
+            if AUTH_LDAP2_CA_CERT_FILE:
+                AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = (
+                    AUTH_LDAP2_CA_CERT_FILE
+                )
                 AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
             AUTH_LDAP2_USER_FILTER = env.str(
                 'AUTH_LDAP2_USER_FILTER', '(sAMAccountName=%(user)s)'
             )
-
+            AUTH_LDAP2_USER_SEARCH_BASE = env.str(
+                'AUTH_LDAP2_USER_SEARCH_BASE', None
+            )
             AUTH_LDAP2_USER_SEARCH = LDAPSearch(
-                env.str('AUTH_LDAP2_USER_SEARCH_BASE', None),
+                AUTH_LDAP2_USER_SEARCH_BASE,
                 ldap.SCOPE_SUBTREE,
                 AUTH_LDAP2_USER_FILTER,
             )
@@ -466,7 +465,6 @@ This part of the setup is **optional**.
             AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
                 'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP2_USERNAME_DOMAIN
             )
-
             AUTHENTICATION_BACKENDS = tuple(
                 itertools.chain(
                     ('projectroles.auth_backends.SecondaryLDAPBackend',),
@@ -475,137 +473,120 @@ This part of the setup is **optional**.
             )
 
 
-SAML SSO Configuration (Optional)
-=================================
+.. _app_projectroles_settings_oidc:
 
-Optional Single Sign-On (SSO) authorization via SAML is also available. To
-enable this feature, set ``ENABLE_SAML=1`` in your environment. Configuring SAML
-for SSO requires proper configuration of the Keycloak SSO server and the SAML
-client library.
+OpenID Connect (OIDC) Configuration (Optional)
+==============================================
 
-Keycloak
---------
+SODAR Core supports single sign-on authentication via OIDC from v1.0 onwards. To
+enable OIDC logins, add the following Django settings and related environment
+variables to your configuration.
 
-Create a new client in Keycloak and configure it as follows. Please note that
-**Client ID** can be chosen however you like, but it must match the setting
-in the client.
+This part of the setup is **optional**.
 
-.. figure:: _static/saml/keycloak_client_config.png
-
-To generate the ``metadata.xml`` file required for the client, go to the
-**Realm Settings** page and in the **General** tab, click
-``SAML 2.0 Identity Provider Metadata`` to download the xml data. Save it
-somewhere on the client, the preferred name is ``metadata.xml``.
-
-.. figure:: _static/saml/keycloak_metadata_download.png
-
-For the signing of the request send to the Keycloak server you will require a
-certificate and key provided by the Keycloak server and incorporated into the
-configuration of the client. Switch to the ``SAML Keys``. Make sure to select
-``PKCS12`` as **Archive Format**.
-
-.. figure:: _static/saml/keycloak_saml_key_download1.png
-.. figure:: _static/saml/keycloak_saml_key_download2.png
-
-Convert the archive on the commandline with the follow command and store them in
-some place on your client.
-
-.. code::
-
-    openssl pkcs12 -in keystore.p12 -password "pass:<PASSWORD>" -nodes | openssl x509 -out cert.pem
-    openssl pkcs12 -in keystore.p12 -password "pass:<PASSWORD>" -nodes -nocerts | openssl rsa -out key.pem
-
-SODAR Core
-----------
-
-Make sure that your ``config/settings/base.py`` contains the following
-configuration:
+OIDC support is implemented using the ``social_django`` app. You first need to
+add the app to your ``INSTALLED_APPS``:
 
 .. code-block:: python
 
-    ENABLE_SAML = env.bool('ENABLE_SAML', False)
-    SAML2_AUTH = {
-        # Required setting
-        # Pysaml2 Saml client settings
-        # See: https://pysaml2.readthedocs.io/en/latest/howto/config.html
-        'SAML_CLIENT_SETTINGS': {
-            # Optional entity ID string to be passed in the 'Issuer' element of
-            # authn request, if required by the IDP.
-            'entityid': env.str('SAML_CLIENT_ENTITY_ID', 'SODARcore'),
-            'entitybaseurl': env.str(
-                'SAML_CLIENT_ENTITY_URL', 'https://localhost:8000'
-            ),
-            # The auto(dynamic) metadata configuration URL of SAML2
-            'metadata': {
-                'local': [
-                    env.str('SAML_CLIENT_METADATA_FILE', 'metadata.xml'),
-                ],
-            },
-            'service': {
-                'sp': {
-                    'idp': env.str(
-                        'SAML_CLIENT_IPD',
-                        'https://sso.hpc.bihealth.org/auth/realms/cubi',
-                    ),
-                    # Keycloak expects client signature
-                    'authn_requests_signed': 'true',
-                    # Enforce POST binding which is required by keycloak
-                    'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-                },
-            },
-            'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
-            'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
-            'xmlsec_binary': env.str('SAML_CLIENT_XMLSEC1', '/usr/bin/xmlsec1'),
-            'encryption_keypairs': [
-                {
-                    'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
-                    'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
-                }
-            ],
-        },
-        # Custom target redirect URL after the user get logged in.
-        # Defaults to /admin if not set. This setting will be overwritten if you
-        # have parameter ?next= specified in the login URL.
-        'DEFAULT_NEXT_URL': '/',
-        # # Optional settings below
-        # 'NEW_USER_PROFILE': {
-        #     'USER_GROUPS': [],  # The default group name when a new user logs in
-        #     'ACTIVE_STATUS': True,  # The default active status for new users
-        #     'STAFF_STATUS': True,  # The staff status for new users
-        #     'SUPERUSER_STATUS': False,  # The superuser status for new users
-        # },
-        # 'ATTRIBUTES_MAP': env.dict(
-        #     'SAML_ATTRIBUTES_MAP',
-        #     default={
-        #         Change values to corresponding SAML2 userprofile attributes.
-        #         'email': 'Email',
-        #         'username': 'UserName',
-        #         'first_name': 'FirstName',
-        #         'last_name': 'LastName',
-        #     }
-        # ),
-        # 'TRIGGER': {
-        #     'FIND_USER': 'path.to.your.find.user.hook.method',
-        #     'NEW_USER': 'path.to.your.new.user.hook.method',
-        #     'CREATE_USER': 'path.to.your.create.user.hook.method',
-        #     'BEFORE_LOGIN': 'path.to.your.login.hook.method',
-        # },
-        # Custom URL to validate incoming SAML requests against
-        # 'ASSERTION_URL': 'https://your.url.here',
-    }
+    THIRD_PARTY_APPS = [
+        # ...
+        'social_django',  # For OIDC authentication
+    ]
 
-Add the following settings to your environment variables:
+Next, you must add the app's URL patterns in ``config/urls.py``:
 
-.. code-block::
+.. code-block:: python
 
-    ENABLE_SAML=1
-    SAML_CLIENT_ENTITY_ID=<Entity ID configured in Keycloak>
-    SAML_CLIENT_ENTITY_URL=<Client URL, e.g. https://sodar-core.bihealth.org>
-    SAML_CLIENT_METADATA_FILE=<e.g. metadata.xml>
-    SAML_CLIENT_IPO=<SSO server URL, e.g. https://sso.hpc.bihealth.org/auth/realms/cubi>
-    SAML_CLIENT_KEY_FILE=<e.g. key.pem>
-    SAML_CLIENT_CERT_FILE=<e.g. cert.pem>
-    SAML_CLIENT_XMLSEC1=<e.g. /usr/bin/xmlsec1>
+    urlpatterns = [
+        # ...
+        # Social auth for OIDC support
+        path('social/', include('social_django.urls')),
+    ]
+
+Finally, you should add the following Django settings in your ``base.py``
+settings file:
+
+.. code-block:: python
+
+    ENABLE_OIDC = env.bool('ENABLE_OIDC', False)
+
+    if ENABLE_OIDC:
+        AUTHENTICATION_BACKENDS = tuple(
+            itertools.chain(
+                ('social_core.backends.open_id_connect.OpenIdConnectAuth',),
+                AUTHENTICATION_BACKENDS,
+            )
+        )
+        TEMPLATES[0]['OPTIONS']['context_processors'] += [
+            'social_django.context_processors.backends',
+            'social_django.context_processors.login_redirect',
+        ]
+        SOCIAL_AUTH_JSONFIELD_ENABLED = True
+        SOCIAL_AUTH_JSONFIELD_CUSTOM = 'django.db.models.JSONField'
+        SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
+        SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
+            'username',
+            'name',
+            'first_name',
+            'last_name',
+            'email',
+        ]
+        SOCIAL_AUTH_OIDC_OIDC_ENDPOINT = env.str(
+            'SOCIAL_AUTH_OIDC_OIDC_ENDPOINT', None
+        )
+        SOCIAL_AUTH_OIDC_KEY = env.str('SOCIAL_AUTH_OIDC_KEY', 'CHANGEME')
+        SOCIAL_AUTH_OIDC_SECRET = env.str('SOCIAL_AUTH_OIDC_SECRET', 'CHANGEME')
+        SOCIAL_AUTH_OIDC_USERNAME_KEY = env.str(
+            'SOCIAL_AUTH_OIDC_USERNAME_KEY', 'username'
+        )
+
+Critical settings which should be provided through environment variables:
+
+``SOCIAL_AUTH_OIDC_OIDC_ENDPOINT``
+    Endpoint URL for the OIDC provider. The configuration file
+    ``.well-known/openid-configuration`` is expected to be found under this URL.
+``SOCIAL_AUTH_OIDC_KEY``
+    Your client ID in the OIDC provider.
+``SOCIAL_AUTH_OIDC_SECRET``
+    Secret for the OIDC provider.
+``SOCIAL_AUTH_OIDC_USERNAME_KEY``
+    If the username key of the browser is expected to be something other than
+    the default ``username``, it can be configured here. The values in this must
+    be unique and should preferably be human readable. If the OIDC provider does
+    not return such a username directly, it is possible to e.g. use the user
+    email as a unique user name.
+
+If you want to provide a custom template for directing login to your OIDC
+provider, add it as ``{PROJECTROLES_TEMPLATE_INCLUDE_PATH}/_login_oidc.html``
+(by default: ``your_site/templates/include/_login_oidc.html``). The include will
+be displayed as an element in the login view.
+
+Below is an example of a custom template. You can e.g. change the content of the
+link to the logo of your OIDC provider. Note that the login URL must equal
+``{% url 'social:begin' 'oidc' %}?next={{ oidc_redirect_url|default:'/' }}`` to
+ensure it works in all views.
+
+.. code-block:: django
+
+    <a role="button" class="btn btn-md btn-info btn-block" id="sodar-login-oidc-link"
+       href="{% url 'social:begin' 'oidc' %}?next={{ oidc_redirect_url|default:'/' }}">
+      <i class="iconify" data-icon="mdi:login-variant"></i> OpenID Connect Login
+    </a>
+
+
+SAML SSO Configuration (Removed in v1.0)
+========================================
+
+.. note::
+
+    SAML support has been removed in SODAR Core v1.0. It has been replaced with
+    the possibility to set up OpenID Connect (OIDC) authentication. The library
+    previously used for SAML in SODAR Core is incompatible with Django v4.x. We
+    are unaware of SODAR Core based projects requiring SAML at this time. If
+    there are specific needs to use SAML on a SODAR Core based site, we are
+    happy to review pull requests to reintroduce it. Please note the
+    implementation has to support Django v4.2+.
 
 
 Global JS/CSS Include Modifications (Optional)

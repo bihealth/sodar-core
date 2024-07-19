@@ -7,7 +7,7 @@ from django.urls import reverse
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
-from projectroles.tests.test_ui import TestUIBase
+from projectroles.tests.test_ui import UITestBase
 from projectroles.utils import build_secret
 
 from filesfolders.tests.test_models import (
@@ -32,8 +32,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 APP_NAME = 'filesfolders'
 
 
-class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
-    """Tests for filesfolders main file list view UI"""
+class TestProjectFileView(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
+    """Tests for ProjectFileView UI"""
 
     def setUp(self):
         super().setUp()
@@ -388,7 +388,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         )
 
 
-class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
+class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
     """Tests for the project search UI functionalities"""
 
     def setUp(self):
@@ -561,7 +561,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
 
-class TestHomeView(TestUIBase):
+class TestHomeView(UITestBase):
     """Tests for appearance of filesfolders specific data in the home view"""
 
     def test_project_list(self):

@@ -10,15 +10,21 @@ from django.utils.text import Truncator
 
 # Projectroles dependency
 from projectroles.models import Project, RemoteSite
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import get_app_plugin, PluginObjectLink
 from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
 
 from timeline.models import (
-    ProjectEvent,
-    ProjectEventObjectRef,
+    TimelineEvent,
+    TimelineEventObjectRef,
     EVENT_STATUS_TYPES,
     OBJ_REF_UNNAMED,
+    TL_STATUS_OK,
+    TL_STATUS_INIT,
+    TL_STATUS_SUBMIT,
+    TL_STATUS_FAILED,
+    TL_STATUS_INFO,
+    TL_STATUS_CANCEL,
 )
 
 
@@ -31,10 +37,23 @@ APP_NAMES = get_app_names()
 LABEL_MAX_WIDTH = 32
 UNKNOWN_LABEL = '(unknown)'
 PLUGIN_NOT_FOUND_MSG = 'Plugin not found: {plugin_name}'
+DEPRECATE_LINK_DICT_MSG = (
+    'Returning dicts from get_object_link() has been deprecated and will no '
+    'longer be supported in v1.1. Return a PluginObjectLink object instead.'
+)
 
 
 class TimelineAPI:
     """Timeline backend API to be used by Django apps."""
+
+    # Attributes --------------------------------------------------------------
+
+    TL_STATUS_OK = TL_STATUS_OK
+    TL_STATUS_INIT = TL_STATUS_INIT
+    TL_STATUS_SUBMIT = TL_STATUS_SUBMIT
+    TL_STATUS_FAILED = TL_STATUS_FAILED
+    TL_STATUS_INFO = TL_STATUS_INFO
+    TL_STATUS_CANCEL = TL_STATUS_CANCEL
 
     # Internal Helpers ---------------------------------------------------------
 
@@ -119,7 +138,7 @@ class TimelineAPI:
         Get reference object description for event description, or unknown label
         if not found.
 
-        :param event: ProjectEvent object
+        :param event: TimelineEvent object
         :param ref_label: Label for the reference object (string)
         :param app_plugin: App plugin or None
         :param request: Request object or None
@@ -132,10 +151,10 @@ class TimelineAPI:
 
         # Get object reference
         try:
-            obj_ref = ProjectEventObjectRef.objects.get(
+            obj_ref = TimelineEventObjectRef.objects.get(
                 event=event, label=ref_label
             )
-        except ProjectEventObjectRef.DoesNotExist:
+        except TimelineEventObjectRef.DoesNotExist:
             return UNKNOWN_LABEL
 
         # Special case: User model
@@ -163,7 +182,7 @@ class TimelineAPI:
         # Apps with plugins
         else:
             try:
-                link_data = app_plugin.get_object_link(
+                link = app_plugin.get_object_link(
                     obj_ref.object_model, obj_ref.object_uuid
                 )
             except Exception as ex:
@@ -174,23 +193,27 @@ class TimelineAPI:
                 )
                 if settings.DEBUG:
                     raise ex
-                link_data = None
-            if link_data:
-                if not link_data['label']:
+                link = None
+            if link:
+                # TODO: Remove in v1.1 (see #1398)
+                if isinstance(link, dict):
+                    logger.warning(DEPRECATE_LINK_DICT_MSG)
+                    link = PluginObjectLink(
+                        url=link['url'],
+                        name=link['label'],
+                        blank=link['blank'],
+                    )
+                if not link.name:
                     logger.warning(
-                        'Empty label returned by plugin "{}" for object '
+                        'Empty name returned by plugin "{}" for object '
                         'reference "{}" ({})"'.format(
                             app_plugin.name, obj_ref, obj_ref.object_uuid
                         )
                     )
                 return '<a href="{}" {}>{}</a> {}'.format(
-                    link_data['url'],
-                    (
-                        'target="_blank"'
-                        if 'blank' in link_data and link_data['blank'] is True
-                        else ''
-                    ),
-                    cls._get_ref_label(link_data['label']),
+                    link.url,
+                    'target="_blank"' if link.blank else '',
+                    cls._get_ref_label(link.name),
                     cls._get_history_link(obj_ref),
                 )
             else:
@@ -230,7 +253,7 @@ class TimelineAPI:
         :param status_extra_data: Extra data for initial status (dict, optional)
         :param plugin_name: Name of plugin to which the event is related
             (optional, plugin with the name of the app is assumed if unset)
-        :return: ProjectEvent object
+        :return: TimelineEvent object
         :raise: ValueError if app_name or status_type is invalid
         """
         if app_name not in APP_NAMES:
@@ -250,7 +273,7 @@ class TimelineAPI:
         if user and user.is_anonymous:
             user = None
 
-        event = ProjectEvent()
+        event = TimelineEvent()
         event.project = project
         event.app = app_name
         event.plugin = plugin_name
@@ -263,8 +286,8 @@ class TimelineAPI:
         event.save()
 
         # Always add "INIT" status when creating, except for "INFO"
-        if status_type not in ['INFO', 'INIT']:
-            event.set_status('INIT')
+        if status_type not in [TL_STATUS_INFO, TL_STATUS_INIT]:
+            event.set_status(TL_STATUS_INIT)
         # Add additional status if set (use if e.g. event is immediately "OK")
         if status_type:
             event.set_status(status_type, status_desc, status_extra_data)
@@ -279,7 +302,7 @@ class TimelineAPI:
         :param classified: Include classified (boolean)
         :return: QuerySet
         """
-        events = ProjectEvent.objects.filter(project=project)
+        events = TimelineEvent.objects.filter(project=project)
         if not classified:
             events = events.filter(classified=False)
         return events
@@ -289,7 +312,7 @@ class TimelineAPI:
         """
         Return the description of a timeline event as HTML.
 
-        :param event: ProjectEvent object
+        :param event: TimelineEvent object
         :param plugin_lookup: App plugin lookup dict (optional)
         :param request: Request object (optional)
         :return: String (contains HTML)
@@ -368,8 +391,8 @@ class TimelineAPI:
     @classmethod
     def get_models(cls):
         """
-        Return project event model classes for custom/advanced queries.
+        Return timeline event model classes for custom/advanced queries.
 
-        :return: ProjectEvent, ProjectEventObjectRef
+        :return: TimelineEvent, TimelineEventObjectRef
         """
-        return ProjectEvent, ProjectEventObjectRef
+        return TimelineEvent, TimelineEventObjectRef

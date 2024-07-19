@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.utils.timezone import localtime
 
 from projectroles.app_settings import AppSettingAPI
+from projectroles.models import SODARUserAdditionalEmail
+from projectroles.plugins import get_app_plugin
 from projectroles.utils import build_invite_url, get_display_name
 
 
@@ -25,6 +27,7 @@ DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
 
 # Local constants
+APP_NAME = 'projectroles'
 EMAIL_RE = re.compile(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)')
 
 
@@ -50,6 +53,11 @@ MESSAGE_FOOTER = r'''
 
 For support and reporting issues regarding {site_title},
 contact {admin_name} ({admin_email}).
+'''
+
+SETTINGS_LINK = r'''
+You can manage receiving of automated emails in your user settings:
+{url}
 '''
 
 
@@ -275,23 +283,33 @@ def get_email_header(header):
     return getattr(settings, 'PROJECTROLES_EMAIL_HEADER', None) or header
 
 
-def get_email_footer():
+def get_email_footer(request, settings_link=True):
     """
     Return the email footer.
 
+    :param request: HttpRequest object
+    :param settings_link: Include link to user settings if True (optional)
     :return: string
     """
+    footer = ''
     custom_footer = getattr(settings, 'PROJECTROLES_EMAIL_FOOTER', None)
-    if custom_footer:
-        return '\n' + custom_footer
     admin_recipient = settings.ADMINS[0] if settings.ADMINS else None
-    if admin_recipient:
-        return MESSAGE_FOOTER.format(
+    if custom_footer:
+        footer += '\n' + custom_footer
+    elif admin_recipient:
+        footer += MESSAGE_FOOTER.format(
             site_title=SITE_TITLE,
             admin_name=admin_recipient[0],
             admin_email=admin_recipient[1],
         )
-    return ''
+    # Add user settings link if enabled and userprofile app is active
+    if request and settings_link and get_app_plugin('userprofile'):
+        footer += SETTINGS_LINK.format(
+            url=request.build_absolute_uri(
+                reverse('userprofile:settings_update')
+            )
+        )
+    return footer
 
 
 def get_invite_subject(project):
@@ -329,7 +347,7 @@ def get_role_change_subject(change_type, project):
 
 
 def get_role_change_body(
-    change_type, project, user_name, role_name, issuer, project_url
+    change_type, project, user_name, role_name, issuer, request
 ):
     """
     Return role change email body.
@@ -339,9 +357,12 @@ def get_role_change_body(
     :param user_name: Name of target user
     :param role_name: Name of role as string
     :param issuer: User object for issuing user
-    :param project_url: URL for the project
+    :param request: HttpRequest object
     :return: String
     """
+    project_url = request.build_absolute_uri(
+        reverse('projectroles:detail', kwargs={'project': project.sodar_uuid})
+    )
     body = get_email_header(
         MESSAGE_HEADER.format(recipient=user_name, site_title=SITE_TITLE)
     )
@@ -373,49 +394,48 @@ def get_role_change_body(
         )
     if not issuer.email and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         body += NO_REPLY_NOTE
-    body += get_email_footer()
+    body += get_email_footer(request)
     return body
 
 
 def get_user_addr(user):
     """
-    Return all the email addresses for a user as a list. Emails set with
-    user_email_additional are included. If a user has no main email set but
-    additional emails exist, the latter are returned.
+    Return all the email addresses for a user as a list. Verified emails set as
+    SODARUserAdditionalEmail objects are included. If a user has no main email
+    set but additional emails exist, the latter are returned.
 
     :param user: User object
     :return: list
     """
-
-    def _validate(user, email):
-        if re.match(EMAIL_RE, email):
-            return True
-        logger.error(
-            'Invalid email for user {}: {}'.format(user.username, email)
-        )
-
     ret = []
-    if user.email and _validate(user, user.email):
+    if user.email:
         ret.append(user.email)
-    add_email = app_settings.get(
-        'projectroles', 'user_email_additional', user=user
-    )
-    if add_email:
-        for e in add_email.strip().split(';'):
-            if _validate(user, e):
-                ret.append(e)
+    for e in SODARUserAdditionalEmail.objects.filter(
+        user=user, verified=True
+    ).order_by('email'):
+        ret.append(e.email)
     return ret
 
 
-def send_mail(subject, message, recipient_list, request=None, reply_to=None):
+def send_mail(
+    subject,
+    message,
+    recipient_list,
+    request=None,
+    reply_to=None,
+    cc=None,
+    bcc=None,
+):
     """
     Wrapper for send_mail() with logging and error messaging.
 
     :param subject: Message subject (string)
     :param message: Message body (string)
     :param recipient_list: Recipients of email (list)
-    :param request: Request object (optional)
+    :param request: HttpRequest object (optional)
     :param reply_to: List of emails for the "reply-to" header (optional)
+    :param cc: List of emails for "cc" field (optional)
+    :param bcc: List of emails for "bcc" field (optional)
     :return: Amount of sent email (int)
     """
     try:
@@ -425,6 +445,8 @@ def send_mail(subject, message, recipient_list, request=None, reply_to=None):
             from_email=EMAIL_SENDER,
             to=recipient_list,
             reply_to=reply_to if isinstance(reply_to, list) else [],
+            cc=cc if isinstance(cc, list) else [],
+            bcc=bcc if isinstance(bcc, list) else [],
         )
         ret = e.send(fail_silently=False)
         logger.debug(
@@ -433,7 +455,6 @@ def send_mail(subject, message, recipient_list, request=None, reply_to=None):
             )
         )
         return ret
-
     except Exception as ex:
         error_msg = 'Error sending email: {}'.format(str(ex))
         logger.error(error_msg)
@@ -455,12 +476,9 @@ def send_role_change_mail(change_type, project, user, role, request):
     :param project: Project object
     :param user: User object
     :param role: Role object (can be None for deletion)
-    :param request: HTTP request
+    :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
-    project_url = request.build_absolute_uri(
-        reverse('projectroles:detail', kwargs={'project': project.sodar_uuid})
-    )
     subject = get_role_change_subject(change_type, project)
     message = get_role_change_body(
         change_type=change_type,
@@ -468,7 +486,7 @@ def send_role_change_mail(change_type, project, user, role, request):
         user_name=user.get_full_name(),
         role_name=role.name if role else '',
         issuer=request.user,
-        project_url=project_url,
+        request=request,
     )
     issuer_emails = get_user_addr(request.user)
     return send_mail(
@@ -481,7 +499,7 @@ def send_invite_mail(invite, request):
     Send an email invitation to user not yet registered in the system.
 
     :param invite: ProjectInvite object
-    :param request: HTTP request
+    :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     invite_url = build_invite_url(invite, request)
@@ -495,7 +513,7 @@ def send_invite_mail(invite, request):
         ),
     )
     message += get_invite_message(invite.message)
-    message += get_email_footer()
+    message += get_email_footer(request, settings_link=False)
     subject = get_invite_subject(invite.project)
     issuer_emails = get_user_addr(invite.issuer)
     return send_mail(subject, message, [invite.email], request, issuer_emails)
@@ -507,7 +525,7 @@ def send_accept_note(invite, request, user):
     accepts the invitation.
 
     :param invite: ProjectInvite object
-    :param request: HTTP request
+    :param request: HttpRequest object
     :param user: User invited
     :return: Amount of sent email (int)
     """
@@ -531,7 +549,7 @@ def send_accept_note(invite, request, user):
 
     if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         message += NO_REPLY_NOTE
-    message += get_email_footer()
+    message += get_email_footer(request)
     return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
@@ -541,7 +559,7 @@ def send_expiry_note(invite, request, user_name):
     attempts to accept an expired invitation.
 
     :param invite: ProjectInvite object
-    :param request: HTTP request
+    :param request: HttpRequest object
     :param user_name: User name of invited user
     :return: Amount of sent email (int)
     """
@@ -565,7 +583,7 @@ def send_expiry_note(invite, request, user_name):
 
     if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         message += NO_REPLY_NOTE
-    message += get_email_footer()
+    message += get_email_footer(request)
     return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
@@ -575,7 +593,7 @@ def send_project_create_mail(project, request):
     they are a different user than the project creator.
 
     :param project: Project object for the newly created project
-    :param request: Request object
+    :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     parent = project.parent
@@ -606,7 +624,7 @@ def send_project_create_mail(project, request):
             )
         ),
     )
-    message += get_email_footer()
+    message += get_email_footer(request)
     return send_mail(
         subject,
         message,
@@ -622,7 +640,7 @@ def send_project_move_mail(project, request):
     they are a different user than the project creator.
 
     :param project: Project object for the newly created project
-    :param request: Request object
+    :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     parent = project.parent
@@ -653,7 +671,7 @@ def send_project_move_mail(project, request):
             )
         ),
     )
-    message += get_email_footer()
+    message += get_email_footer(request)
     return send_mail(
         subject,
         message,
@@ -669,11 +687,16 @@ def send_project_archive_mail(project, action, request):
 
     :param project: Project object
     :param action: String ("archive" or "unarchive")
-    :param request: HTTP request
+    :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     user = request.user
-    project_users = [a.user for a in project.get_roles() if a.user != user]
+    project_users = [
+        a.user
+        for a in project.get_roles()
+        if a.user != user
+        and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
+    ]
     project_users = list(set(project_users))  # Remove possible dupes (see #710)
     if not project_users:
         return 0
@@ -711,23 +734,33 @@ def send_project_archive_mail(project, action, request):
         message += body_final
         if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
             message += NO_REPLY_NOTE
-        message += get_email_footer()
+        message += get_email_footer(request)
         mail_count += send_mail(subject, message, get_user_addr(user), request)
     return mail_count
 
 
 def send_generic_mail(
-    subject_body, message_body, recipient_list, request=None, reply_to=None
+    subject_body,
+    message_body,
+    recipient_list,
+    request=None,
+    reply_to=None,
+    cc=None,
+    bcc=None,
+    settings_link=True,
 ):
     """
-    Send a notification email to the issuer of an invitation when a user
-    attempts to accept an expired invitation.
+    Send a generic mail with standard header and footer and no-reply
+    notifications.
 
     :param subject_body: Subject body without prefix (string)
     :param message_body: Message body before header or footer (string)
     :param recipient_list: Recipients (list of User objects or email strings)
+    :param request: HttpRequest object (optional)
     :param reply_to: List of emails for the "reply-to" header (optional)
-    :param request: Request object (optional)
+    :param cc: List of emails for "cc" field (optional)
+    :param bcc: List of emails for "bcc" field (optional)
+    :param settings_link: Include link to user settings if True (optional)
     :return: Amount of mail sent (int)
     """
     subject = SUBJECT_PREFIX + subject_body
@@ -745,6 +778,8 @@ def send_generic_mail(
         message += message_body
         if not reply_to and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
             message += NO_REPLY_NOTE
-        message += get_email_footer()
-        ret += send_mail(subject, message, recp_addr, request, reply_to)
+        message += get_email_footer(request, settings_link)
+        ret += send_mail(
+            subject, message, recp_addr, request, reply_to, cc, bcc
+        )
     return ret

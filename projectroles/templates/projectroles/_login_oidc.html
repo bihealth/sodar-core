@@ -1,0 +1,14 @@
+{# Display custom or default OIDC login element #}
+{% load projectroles_common_tags %}
+
+{% template_exists template_include_path|add:'/_login_oidc.html' as tpl_oidc %}
+
+{% if tpl_oidc %}
+  {% include template_include_path|add:'/_login_oidc.html' %}
+{% else %}
+  <a role="button" class="btn btn-md btn-info btn-block"
+     id="sodar-login-oidc-link"
+     href="{% url 'social:begin' 'oidc' %}?next={{ oidc_redirect_url|default:'/' }}">
+    <i class="iconify" data-icon="mdi:login-variant"></i> OpenID Connect Login
+  </a>
+{% endif %}

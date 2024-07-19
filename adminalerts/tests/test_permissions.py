@@ -4,12 +4,12 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestSiteAppPermissionBase
+from projectroles.tests.test_permissions import SiteAppPermissionTestBase
 
 from adminalerts.tests.test_models import AdminAlertMixin
 
 
-class AdminalertsPermissionTestBase(AdminAlertMixin, TestSiteAppPermissionBase):
+class AdminalertsPermissionTestBase(AdminAlertMixin, SiteAppPermissionTestBase):
     """Base test class for adminalerts UI view permission tests"""
 
     def setUp(self):

@@ -13,7 +13,7 @@ from projectroles.views import (
     ProjectPermissionMixin,
 )
 
-from timeline.models import ProjectEvent
+from timeline.models import TimelineEvent
 
 
 # Local variables
@@ -50,7 +50,7 @@ class EventTimelineMixin:
             )
         ) or (not project_uuid and not self.request.user.is_superuser):
             set_kwargs['classified'] = False
-        return ProjectEvent.objects.filter(**set_kwargs).order_by('-pk')
+        return TimelineEvent.objects.filter(**set_kwargs).order_by('-pk')
 
 
 class ProjectTimelineView(
@@ -65,7 +65,7 @@ class ProjectTimelineView(
 
     permission_required = 'timeline.view_timeline'
     template_name = 'timeline/timeline.html'
-    model = ProjectEvent
+    model = TimelineEvent
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
 
@@ -76,7 +76,7 @@ class SiteTimelineView(
 
     permission_required = 'timeline.view_site_timeline'
     template_name = 'timeline/timeline_site.html'
-    model = ProjectEvent
+    model = TimelineEvent
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
 
@@ -90,11 +90,11 @@ class AdminTimelineView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
         return context
 
     def get_queryset(self):
-        return ProjectEvent.objects.order_by('-pk')
+        return TimelineEvent.objects.order_by('-pk')
 
     permission_required = 'timeline.view_site_admin'
     template_name = 'timeline/timeline_site.html'
-    model = ProjectEvent
+    model = TimelineEvent
     paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
 
@@ -117,7 +117,7 @@ class ObjectTimelineMixin:
                 sodar_uuid=self.kwargs['project']
             ).first()
             classified_perm = 'timeline.view_classified_event'
-        queryset = ProjectEvent.objects.get_object_events(
+        queryset = TimelineEvent.objects.get_object_events(
             project=project,
             object_model=self.kwargs['object_model'],
             object_uuid=self.kwargs['object_uuid'],

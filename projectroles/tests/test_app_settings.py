@@ -4,13 +4,14 @@ from django.test import override_settings
 
 from test_plus.test import TestCase
 
-from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
-from projectroles.plugins import get_app_plugin
 from projectroles.app_settings import (
     AppSettingAPI,
     get_example_setting_default,
     get_example_setting_options,
+    LOCAL_DEPRECATE_MSG,
 )
+from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
+from projectroles.plugins import get_app_plugin
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -45,6 +46,15 @@ EXISTING_SETTING = 'project_bool_setting'
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_SETTING_VALUE = 'INVALID VALUE'
 INVALID_SETTING_MSG = 'INVALID_SETTING_VALUE detected'
+APP_SETTINGS_TEST = {
+    'project_star': {
+        'scope': APP_SETTING_SCOPE_PROJECT_USER,
+        'type': 'BOOLEAN',
+        'default': False,
+        'local': True,  # Deprecated
+        'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
+    },
+}
 
 
 class AppSettingInitMixin:
@@ -55,7 +65,7 @@ class AppSettingInitMixin:
         # TODO: Rename these to match the settings in example_project_app
         # Init test project settings
         self.project_str_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting',
             'setting_type': 'STRING',
@@ -64,7 +74,7 @@ class AppSettingInitMixin:
             'non_valid_value': False,
         }
         self.project_int_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting',
             'setting_type': 'INTEGER',
@@ -73,7 +83,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'Nan',
         }
         self.project_str_setting_options = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting_options',
             'setting_type': 'STRING',
@@ -83,7 +93,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'string3',
         }
         self.project_int_setting_options = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting_options',
             'setting_type': 'INTEGER',
@@ -93,7 +103,7 @@ class AppSettingInitMixin:
             'non_valid_value': 2,
         }
         self.project_bool_settings = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_bool_setting',
             'setting_type': 'BOOLEAN',
@@ -102,7 +112,7 @@ class AppSettingInitMixin:
             'non_valid_value': 170,
         }
         self.project_json_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_json_setting',
             'setting_type': 'JSON',
@@ -116,7 +126,7 @@ class AppSettingInitMixin:
         }
         # Init test user settings
         self.user_str_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_str_setting',
             'setting_type': 'STRING',
@@ -125,7 +135,7 @@ class AppSettingInitMixin:
             'non_valid_value': False,
         }
         self.user_int_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_int_setting',
             'setting_type': 'INTEGER',
@@ -134,7 +144,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'Nan',
         }
         self.user_str_setting_options = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_str_setting_options',
             'setting_type': 'STRING',
@@ -144,7 +154,7 @@ class AppSettingInitMixin:
             'non_valid_value': False,
         }
         self.user_int_setting_options = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_int_setting_options',
             'setting_type': 'INTEGER',
@@ -154,7 +164,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'Nan',
         }
         self.user_bool_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_bool_setting',
             'setting_type': 'BOOLEAN',
@@ -163,7 +173,7 @@ class AppSettingInitMixin:
             'non_valid_value': 170,
         }
         self.user_json_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_json_setting',
             'setting_type': 'JSON',
@@ -177,7 +187,7 @@ class AppSettingInitMixin:
         }
         # Init test PROJECT_USER settings
         self.project_user_str_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
             'name': 'project_user_str_setting',
@@ -187,7 +197,7 @@ class AppSettingInitMixin:
             'non_valid_value': False,
         }
         self.project_user_int_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
             'name': 'project_user_int_setting',
@@ -197,7 +207,7 @@ class AppSettingInitMixin:
             'non_valid_value': 'Nan',
         }
         self.project_user_bool_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
             'name': 'project_user_bool_setting',
@@ -207,7 +217,7 @@ class AppSettingInitMixin:
             'non_valid_value': 170,
         }
         self.project_user_json_setting = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
             'name': 'project_user_json_setting',
@@ -241,7 +251,7 @@ class AppSettingInitMixin:
         ]
         for s in self.settings:
             kwargs = {
-                'app_name': s['app_name'],
+                'plugin_name': s['plugin_name'],
                 'name': s['name'],
                 'setting_type': s['setting_type'],
                 'value': s['value'] if s['setting_type'] != 'JSON' else '',
@@ -285,7 +295,7 @@ class TestAppSettingAPI(
         """Test get()"""
         for setting in self.settings:
             data = {
-                'app_name': setting['app_name'],
+                'plugin_name': setting['plugin_name'],
                 'setting_name': setting['name'],
             }
             if 'project' in setting:
@@ -300,17 +310,17 @@ class TestAppSettingAPI(
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         default_val = app_plugin.app_settings[EXISTING_SETTING]['default']
         val = app_settings.get(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
             project=self.project,
         )
         self.assertEqual(val, default_val)
 
     def test_get_with_nonexisting(self):
-        """Test get_() with non-existing setting"""
+        """Test get() with non-existing setting"""
         with self.assertRaises(KeyError):
             app_settings.get(
-                app_name=EXAMPLE_APP_NAME,
+                plugin_name=EXAMPLE_APP_NAME,
                 setting_name='NON-EXISTING SETTING',
                 project=self.project,
             )
@@ -318,18 +328,89 @@ class TestAppSettingAPI(
     def test_get_with_post_safe(self):
         """Test get() with JSON setting and post_safe=True"""
         val = app_settings.get(
-            app_name=self.project_json_setting['app_name'],
+            plugin_name=self.project_json_setting['plugin_name'],
             setting_name=self.project_json_setting['name'],
             project=self.project_json_setting['project'],
             post_safe=True,
         )
         self.assertEqual(type(val), str)
 
+    def test_is_set_no_object(self):
+        """Test is_set() with no setting object set"""
+        n = 'project_star'
+        kw = {'project': self.project, 'user': self.user}
+        self.assertFalse(
+            AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
+        )
+        self.assertFalse(
+            app_settings.is_set(
+                plugin_name='projectroles', setting_name=n, **kw
+            )
+        )
+
+    def test_is_set_object_exists(self):
+        """Test is_set() with existing setting object"""
+        n = 'project_star'
+        kw = {'project': self.project, 'user': self.user}
+        app_settings.set(
+            plugin_name='projectroles', setting_name=n, value=True, **kw
+        )
+        self.assertTrue(
+            AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
+        )
+        self.assertTrue(
+            app_settings.is_set(
+                plugin_name='projectroles', setting_name=n, **kw
+            )
+        )
+
+    def test_is_set_default_value(self):
+        """Test is_set() with existing setting object and default value"""
+        n = 'project_star'
+        kw = {'project': self.project, 'user': self.user}
+        app_settings.set(
+            plugin_name='projectroles', setting_name=n, value=False, **kw
+        )
+        self.assertTrue(
+            AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
+        )
+        self.assertTrue(
+            app_settings.is_set(
+                plugin_name='projectroles', setting_name=n, **kw
+            )
+        )
+
+    def test_is_set_plugin(self):
+        """Test is_set() with plugin setting"""
+        n = 'project_str_setting'
+        kw = {'project': self.project}
+        # NOTE: Already created in setUp()
+        self.assertTrue(
+            AppSetting.objects.filter(
+                app_plugin__name=EXAMPLE_APP_NAME, name=n, **kw
+            ).exists()
+        )
+        self.assertTrue(
+            app_settings.is_set(
+                plugin_name=EXAMPLE_APP_NAME, setting_name=n, **kw
+            )
+        )
+
+    def test_is_set_invalid_user(self):
+        """Test is_set() with invalid user arg"""
+        with self.assertRaises(ValueError):
+            app_settings.is_set(
+                plugin_name='projectroles',
+                setting_name='project_star',
+                project=self.project,
+                user=None,
+            )
+
     def test_set(self):
         """Test set()"""
         for setting in self.settings:
             data = {
-                'app_name': setting['app_name'],
+                'plugin_name': setting['plugin_name'],
                 'setting_name': setting['name'],
             }
             if 'project' in setting:
@@ -348,7 +429,7 @@ class TestAppSettingAPI(
         """Test set() with unchanged value"""
         for setting in self.settings:
             data = {
-                'app_name': setting['app_name'],
+                'plugin_name': setting['plugin_name'],
                 'setting_name': setting['name'],
             }
             if 'project' in setting:
@@ -364,7 +445,7 @@ class TestAppSettingAPI(
                 ret,
                 False,
                 msg='setting={}.{}'.format(
-                    setting['app_name'], setting['name']
+                    setting['plugin_name'], setting['name']
                 ),
             )
             val = app_settings.get(**data)
@@ -372,7 +453,7 @@ class TestAppSettingAPI(
                 val,
                 setting['value'],
                 msg='setting={}.{}'.format(
-                    setting['app_name'], setting['name']
+                    setting['plugin_name'], setting['name']
                 ),
             )
 
@@ -386,14 +467,14 @@ class TestAppSettingAPI(
         self.assertEqual(bool(int(val)), False)
 
         ret = app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
             value=True,
             project=self.project,
         )
         self.assertEqual(ret, True)
         val = app_settings.get(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
             project=self.project,
         )
@@ -409,7 +490,7 @@ class TestAppSettingAPI(
         """Test set() with undefined setting (should fail)"""
         with self.assertRaises(ValueError):
             app_settings.set(
-                app_name=EXAMPLE_APP_NAME,
+                plugin_name=EXAMPLE_APP_NAME,
                 setting_name='new_setting',
                 value='new',
                 project=self.project,
@@ -420,7 +501,7 @@ class TestAppSettingAPI(
         # Set up second user
         new_user = self.make_user('new_user')
         ret = app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name='project_user_str_setting',
             project=self.project,
             user=self.user,
@@ -428,7 +509,7 @@ class TestAppSettingAPI(
         )
         self.assertEqual(ret, True)
         ret = app_settings.set(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             setting_name='project_user_str_setting',
             project=self.project,
             user=new_user,
@@ -438,11 +519,11 @@ class TestAppSettingAPI(
 
     def test_set_invalid_project_types(self):
         """Test set() with invalid project types scope"""
-        # Should fail because project_category_bool_setting has CATEGORY scope
+        # Should fail because category_bool_setting has CATEGORY scope
         with self.assertRaises(ValueError):
             app_settings.set(
-                app_name=EXAMPLE_APP_NAME,
-                setting_name='project_category_bool_setting',
+                plugin_name=EXAMPLE_APP_NAME,
+                setting_name='category_bool_setting',
                 project=self.project,
                 value=True,
             )
@@ -457,7 +538,6 @@ class TestAppSettingAPI(
         app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
         self.assertEqual(AppSetting.objects.filter(**args).count(), 1)
 
-    # TODO: Test local setting on remote project
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_set_target_local_remote(self):
         """Test setting local setting on target site and remote project"""
@@ -507,6 +587,24 @@ class TestAppSettingAPI(
             app_settings.set(EXAMPLE_APP_NAME, n, True, project=self.project)
         self.assertEqual(AppSetting.objects.filter(name=n, value=1).count(), 0)
 
+    def test_set_user_global(self):
+        """Test setting global user setting on source site"""
+        n = 'notify_email_project'
+        v = '0'
+        self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
+        app_settings.set('projectroles', n, False, user=self.user)
+        self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 1)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_set_user_global_target(self):
+        """Test setting global user setting on target site"""
+        n = 'notify_email_project'
+        v = '0'
+        self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
+        with self.assertRaises(ValueError):
+            app_settings.set('projectroles', n, False, user=self.user)
+        self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
+
     def test_validate_boolean(self):
         """Test validate() with type BOOLEAN"""
         for setting in self.settings:
@@ -540,8 +638,8 @@ class TestAppSettingAPI(
         with self.assertRaises(ValueError):
             app_settings.validate('INVALID_TYPE', 'value', None)
 
-    def test_get_def_plugin(self):
-        """Test get_def() with plugin"""
+    def test_get_definition_plugin(self):
+        """Test get_definition() with plugin"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
@@ -557,8 +655,8 @@ class TestAppSettingAPI(
         )
         self.assertEqual(s_def, expected)
 
-    def test_get_def_app_name(self):
-        """Test get_def() with app name"""
+    def test_get_definition_app_name(self):
+        """Test get_definition() with app name"""
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': 'STRING',
@@ -569,12 +667,12 @@ class TestAppSettingAPI(
             'user_modifiable': True,
         }
         s_def = app_settings.get_definition(
-            'project_str_setting', app_name=EXAMPLE_APP_NAME
+            'project_str_setting', plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(s_def, expected)
 
-    def test_get_def_user(self):
-        """Test get_def() with user setting"""
+    def test_get_definition_user(self):
+        """Test get_definition() with user setting"""
         expected = {
             'scope': APP_SETTING_SCOPE_USER,
             'type': 'STRING',
@@ -585,26 +683,26 @@ class TestAppSettingAPI(
             'user_modifiable': True,
         }
         s_def = app_settings.get_definition(
-            'user_str_setting', app_name=EXAMPLE_APP_NAME
+            'user_str_setting', plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(s_def, expected)
 
-    def test_get_invalid(self):
-        """Test get_def() with innvalid input"""
+    def test_get_definition_invalid(self):
+        """Test get_definition() with innvalid input"""
         with self.assertRaises(ValueError):
             app_settings.get_definition(
-                'non_existing_setting', app_name=EXAMPLE_APP_NAME
+                'non_existing_setting', plugin_name=EXAMPLE_APP_NAME
             )
         with self.assertRaises(ValueError):
             app_settings.get_definition(
-                'project_str_setting', app_name='non_existing_app_name'
+                'project_str_setting', plugin_name='non_existing_app_name'
             )
         # Both app_name and plugin unset
         with self.assertRaises(ValueError):
             app_settings.get_definition('project_str_setting')
 
-    def test_get_defs_project(self):
-        """Test get_defs() with PROJECT scope"""
+    def test_get_definitions_project(self):
+        """Test get_definitions() with PROJECT scope"""
         expected = {
             'project_str_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
@@ -659,7 +757,7 @@ class TestAppSettingAPI(
                 'default': False,
                 'description': 'Example global boolean project setting',
                 'user_modifiable': True,
-                'local': False,
+                'global': True,
             },
             'project_json_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
@@ -705,7 +803,7 @@ class TestAppSettingAPI(
                 'description': 'Example callable project setting with options',
                 'user_modifiable': True,
             },
-            'project_category_bool_setting': {
+            'category_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
                 'type': 'BOOLEAN',
                 'label': 'Category boolean setting',
@@ -716,12 +814,12 @@ class TestAppSettingAPI(
             },
         }
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
-    def test_get_defs_user(self):
-        """Test get_defs() with USER scope"""
+    def test_get_definitions_user(self):
+        """Test get_definitions() with USER scope"""
         expected = {
             'user_str_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
@@ -807,12 +905,12 @@ class TestAppSettingAPI(
             },
         }
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_USER, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_USER, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
-    def test_get_defs_project_user(self):
-        """Test get_defs() with PROJECT_USER scope"""
+    def test_get_definitions_project_user(self):
+        """Test get_definitions() with PROJECT_USER scope"""
         expected = {
             'project_user_str_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
@@ -853,16 +951,17 @@ class TestAppSettingAPI(
                 'type': 'STRING',
                 'default': get_example_setting_default,
                 'options': get_example_setting_options,
-                'description': 'Example callable project user setting with options',
+                'description': 'Example callable project user setting with '
+                'options',
             },
         }
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_PROJECT_USER, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_PROJECT_USER, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
-    def test_get_defs_site(self):
-        """Test get_defs() with SITE scope"""
+    def test_get_definitions_site(self):
+        """Test get_definitions() with SITE scope"""
         expected = {
             'site_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
@@ -874,28 +973,28 @@ class TestAppSettingAPI(
             }
         }
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_SITE, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_SITE, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
-    def test_get_defs_modifiable(self):
-        """Test get_defs() with user_modifiable arg"""
+    def test_get_definitions_modifiable(self):
+        """Test get_definitions() with user_modifiable arg"""
         defs = app_settings.get_definitions(
-            APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
+            APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(len(defs), 12)
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT,
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
         self.assertEqual(len(defs), 10)
 
-    def test_get_defs_invalid_scope(self):
-        """Test get_defs() with invalid scope"""
+    def test_get_definitions_invalid_scope(self):
+        """Test get_definitions() with invalid scope"""
         with self.assertRaises(ValueError):
             app_settings.get_definitions(
-                'Ri4thai8aez5ooRa', app_name=EXAMPLE_APP_NAME
+                'Ri4thai8aez5ooRa', plugin_name=EXAMPLE_APP_NAME
             )
 
     def test_get_defaults_project(self):
@@ -1093,6 +1192,37 @@ class TestAppSettingAPI(
                 APP_SETTING_SCOPE_USER,
                 project=self.project,
                 user=self.user,
+            )
+
+    def test_get_global_value(self):
+        """Test get_global_value() with set value"""
+        s_def = app_settings.get_definition(
+            'project_global_setting', plugin_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(app_settings.get_global_value(s_def), True)
+
+    def test_get_global_value_unset(self):
+        """Test get_global_value() with unset value"""
+        s_def = app_settings.get_definition(
+            'project_str_setting', plugin_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(app_settings.get_global_value(s_def), False)  # Default
+
+    # TODO: Remove in v1.1 (see #1394)
+    @override_settings(PROJECTROLES_APP_SETTINGS_TEST=APP_SETTINGS_TEST)
+    def test_get_global_value_local(self):
+        """Test get_global_value() with deprecated local value"""
+        s_def = app_settings.get_definition(
+            'project_star', plugin_name='projectroles'
+        )
+        # Should be inverse of "local" value
+        with self.assertLogs(
+            logger='projectroles.app_settings', level='WARNING'
+        ) as log:
+            self.assertEqual(app_settings.get_global_value(s_def), False)
+            self.assertIn(
+                'WARNING:projectroles.app_settings:' + LOCAL_DEPRECATE_MSG,
+                log.output,
             )
 
     def test_validate_form_app_settings(self):

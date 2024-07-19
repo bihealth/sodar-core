@@ -4,14 +4,14 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestProjectPermissionBase
+from projectroles.tests.test_permissions import ProjectPermissionTestBase
 from projectroles.tests.test_models import AppSettingMixin
 
 # Filesfolders dependency
 from filesfolders.tests.test_models import FolderMixin
 
 
-class TestExampleView(FolderMixin, AppSettingMixin, TestProjectPermissionBase):
+class TestExampleView(FolderMixin, AppSettingMixin, ProjectPermissionTestBase):
     """Permission tests for ExampleView"""
 
     def test_get(self):

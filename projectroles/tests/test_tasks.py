@@ -94,7 +94,7 @@ class TestSyncRemoteSiteTask(
         """
         sync_remote_site_task()
         app_settings.set(
-            app_name='projectroles',
+            plugin_name='projectroles',
             setting_name='ip_restrict',
             project=self.project_source,
             value=True,
@@ -106,7 +106,7 @@ class TestSyncRemoteSiteTask(
         self.assertEqual(RemoteProject.objects.all().count(), 2)
         self.assertEqual(
             app_settings.get(
-                app_name='projectroles',
+                plugin_name='projectroles',
                 setting_name='ip_restrict',
                 project=self.project_source,
             ),

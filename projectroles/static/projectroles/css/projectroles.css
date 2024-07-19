@@ -392,6 +392,10 @@ dl dd {
   border-radius: .25rem;
 }
 
+/* Fix for incorrect highlight color after DAL upgrade (#1412) */
+.select2-results__option--highlighted {
+  color: #ffffff !important;
+}
 
 /* HACK for Bootstrap v4 button group alignment with dropdown enabled */
 .btn {
@@ -404,6 +408,12 @@ dl dd {
 
 .btn-group {
   height: 2.35em;
+}
+
+/* Enable disabling button-style anchors */
+a.btn[disabled='disabled'] {
+  pointer-events: none;
+  opacity: 75%;
 }
 
 .sodar-list-btn-group {
@@ -435,6 +445,7 @@ a.sodar-pr-btn-copy-secret i {
 
 .sodar-pr-sidebar-nav-item a {
   padding-bottom: 2px !important;
+  word-break: break-word;
 }
 
 .sodar-pr-sidebar-alt-btn {
@@ -634,6 +645,9 @@ span.select2-selection__rendered {
 
 /* Misc --------------------------------------------------------------------- */
 
+hr {
+  border-color: #dfdfdf;
+}
 
 img.sodar-navbar-logo {
   height: 36px;

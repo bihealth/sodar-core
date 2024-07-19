@@ -53,7 +53,7 @@ to set up a fresh app generated in the standard way with
 
 It is also assumed that apps are more or less created according to best
 practices defined by `Two Scoops <https://www.twoscoopspress.com/>`_, with the
-use of `Class-Based Views <https://docs.djangoproject.com/en/3.2/topics/class-based-views//>`_
+use of `Class-Based Views <https://docs.djangoproject.com/en/4.2/topics/class-based-views/>`_
 being a requirement.
 
 
@@ -96,7 +96,7 @@ To provide a unique identifier for objects in the SODAR context, add a
 
     When updating an existing Django model with an existing database, the
     ``sodar_uuid`` field needs to be populated. See
-    `instructions in Django documentation <https://docs.djangoproject.com/en/3.2/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+    `instructions in Django documentation <https://docs.djangoproject.com/en/4.2/howto/writing-migrations/#migrations-that-add-unique-fields>`_
     on how to create the required migrations.
 
 Model Example
@@ -247,12 +247,13 @@ Implementing the following is **optional**:
     List of names for app-specific Django settings to be displayed for
     administrators in the siteinfo app.
 ``get_object_link()``
-    Return object link for a Timeline event.
+    Return object link for a Timeline event. Expected to return a
+    ``PluginObjectLink`` object or ``None``.
 ``get_extra_data_link()``
     Return extra data link for a Timeline event.
 ``search()``
     Function called when searching for data related to the app if search is
-    enabled.
+    enabled. Expected to return a list of ``PluginSearchResult`` objects.
 ``get_statistics()``
     Return statistics for the siteinfo app. See details in
     :ref:`the siteinfo documentation <app_siteinfo>`.
@@ -595,7 +596,7 @@ Project Search API and Template
 ===============================
 
 If you want to implement search in your project app, you need to implement the
-``search()`` method in your plugin as well as a template for displaying the
+``search()`` method in your plugin, as well as a template for displaying the
 results.
 
 .. hint::
@@ -627,29 +628,33 @@ See the signature of ``search()`` in
 
 .. note::
 
-   Within this function, you are expected to verify appropriate access of the
+   Within this method, you are expected to verify appropriate access of the
    searching user yourself!
 
-.. warning::
-
-    The old expected signature of providing a single ``search_term`` argument
-    has been deprecated in v0.9 and will be removed in the next major release!
-
-The return data is a dictionary, which is split by groups in case your app can
-return multiple different lists for data. This is useful where e.g. the same
-type of HTML list isn't suitable for all returnable types. If only returning one
-type of data, you can just use e.g. ``all`` as your only category. Example of
-the result:
+The return data is a list of one or more ``PluginSearchResult`` objects. The
+objects are expected to be split between search categories, of which there can
+be one or multiple. This is useful where e.g. the same type of HTML list isn't
+suitable for all returnable types. If only returning one type of data, you can
+use e.g. ``all`` as your only category. Example of a return data:
 
 .. code-block:: python
 
-   return {
-       'all': {                     # 1-N categories to be included
-           'title': 'List title',   # Title of the result list to be displayed
-           'search_types': [],      # Object types included in this category
-           'items': []              # The actual objects returned
-           }
-       }
+    from projectroles.plugins import PluginSearchResult
+    # ...
+    return [
+        PluginSearchResult(
+            category='all',  # Category ID to be used in your search template
+            title='List title',  # Title of the result set
+            search_types=[],  # Object types included in this category
+            items=[],  # List or QuerySet of objects returned by search
+        )
+    ]
+
+.. warning::
+
+    The earlier search implementation expected a ``dict`` as return data. This
+    has been deprecated and support for it will be removed in SODAR Core v1.1.
+
 
 Search Template
 ---------------
@@ -700,6 +705,8 @@ API Views
 
 API view usage in project apps is detailed in this section.
 
+.. _dev_project_app_rest_api:
+
 Rest API Views
 --------------
 
@@ -713,14 +720,40 @@ methods of authentication: Knox tokens and Django session auth. These can of
 course be modified by overriding/extending the base classes.
 
 For versioning we strongly recommend using accept header versioning, which is
-what is supported by the SODAR Core base classes. For this, supply your custom
-media type and version data using the corresponding ``SODAR_API_*`` settings.
-For details on these, see :ref:`app_projectroles_settings`.
+what is supported by the SODAR Core base classes. From SODAR Core v1.0 onwards,
+each app is expected to use its own media type and API versioning, preferably
+based on semantic versioning. For this, you should supply your own versioning
+mixin to be used in your views. Example:
+
+.. code-block:: python
+
+    from rest_framework.renderers import JSONRenderer
+    from rest_framework.versioning import AcceptHeaderVersioning
+    from rest_framework.views import APIView
+    from projectroles.views_api import SODARAPIGenericProjectMixin
+
+    YOURAPP_API_MEDIA_TYPE = application/vnd.yourorg.yoursite.yourapp+json
+    YOURAPP_API_DEFAULT_VERSION = '1.0'
+    YOURAPP_API_ALLOWED_VERSIONS = ['1.0']
+
+    class YourAPIVersioningMixin:
+
+        class YourAPIRenderer(JSONRenderer):
+            media_type = YOURAPP_API_MEDIA_TYPE
+
+        class YourAPIVersioning(AcceptHeaderVersioning):
+            allowed_versions = YOURAPP_API_ALLOWED_VERSIONS
+            default_version = YOURAPP_API_DEFAULT_VERSION
+
+        render_classes = [YourAPIRenderer]
+        versioning_class = YourAPIVersioning
+
+    class YourAPIView(YourAPIVersioningMixin, SODARAPIGenericProjectMixin, APIView):
+        # ...
 
 The base classes provide permission checks via SODAR Core project objects
-similar to UI view mixins.
-
-Base REST API classes without a project context can also be used in site apps.
+similar to UI view mixins. Base REST API classes without a project context can
+also be used in site apps.
 
 See the
 :ref:`base REST API class documentation <app_projectroles_api_django_rest>` for
@@ -732,13 +765,14 @@ An example "hello world" REST API view for SODAR apps is available in
 .. note::
 
     Internal SODAR Core REST API views, specifically ones used in apps provided
-    by the django-sodar-core package, use different media type and versioning
-    from views to be implemented on your site. This is to prevent version number
-    clashes and not require changes from your API when SODAR Core is updated.
+    by the django-sodar-core package, use different media types and versioning
+    from views to be implemented on your site. From SODAR Core v1.0 onwards,
+    each app is expected to provide their own versioning.
 
     For implementing your own API views, make sure to use the ``SODARAPI*``
     base classes, **not** the ``CoreAPI`` classes. Similarly, in testing make
-    sure to use the base class helpers of the site API instead of the core API.
+    sure to use the base class helpers of the general API instead of the core
+    API.
 
 Ajax API Views
 --------------
@@ -871,8 +905,8 @@ with the name of your application as specified in its ``ProjectAppPlugin``.
 
 .. code-block:: python
 
-    from timeline.models import ProjectEvent
-    ProjectEvent.objects.filter(app='app_name').delete()
+    from timeline.models import TimelineEvent
+    TimelineEvent.objects.filter(app='app_name').delete()
 
 Next you should delete existing database objects defined by the models in your
 app. This is also most easily done via the Django shell. Example:

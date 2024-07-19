@@ -4,10 +4,10 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import TestProjectPermissionBase
+from projectroles.tests.test_permissions import ProjectPermissionTestBase
 
 
-class TestProjectTimelineView(TestProjectPermissionBase):
+class TestProjectTimelineView(ProjectPermissionTestBase):
     """Tests for ProjectTimelineView permissions"""
 
     def setUp(self):
@@ -64,7 +64,7 @@ class TestProjectTimelineView(TestProjectPermissionBase):
         self.assert_response(self.url, self.anonymous, 302)
 
 
-class TestSiteTimelineView(TestProjectPermissionBase):
+class TestSiteTimelineView(ProjectPermissionTestBase):
     """Tests for SiteTimelineView permissions"""
 
     def setUp(self):
@@ -95,7 +95,7 @@ class TestSiteTimelineView(TestProjectPermissionBase):
         self.assert_response(self.url, self.anonymous, 302)
 
 
-class TestAdminTimelineView(TestProjectPermissionBase):
+class TestAdminTimelineView(ProjectPermissionTestBase):
     """Tests for AdminTimelineView permissions"""
 
     def setUp(self):
@@ -127,7 +127,7 @@ class TestAdminTimelineView(TestProjectPermissionBase):
         self.assert_response(self.url, self.anonymous, 302)
 
 
-class TestProjectObjectTimelineView(TestProjectPermissionBase):
+class TestProjectObjectTimelineView(ProjectPermissionTestBase):
     """Tests for ProjectObjectTimelineView permissions"""
 
     def setUp(self):
@@ -189,7 +189,7 @@ class TestProjectObjectTimelineView(TestProjectPermissionBase):
         self.assert_response(self.url, self.anonymous, 302)
 
 
-class TestSiteObjectTimelineView(TestProjectPermissionBase):
+class TestSiteObjectTimelineView(ProjectPermissionTestBase):
     """Tests for SiteObjectTimelineView permissions"""
 
     def setUp(self):

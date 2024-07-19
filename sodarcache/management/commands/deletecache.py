@@ -61,8 +61,10 @@ class Command(BaseCommand):
             'Deleted {} cached data item{} from {}'.format(
                 item_count,
                 's' if item_count != 1 else '',
-                'project {}'.format(project.get_log_title())
-                if project
-                else 'all projects',
+                (
+                    'project {}'.format(project.get_log_title())
+                    if project
+                    else 'all projects'
+                ),
             )
         )

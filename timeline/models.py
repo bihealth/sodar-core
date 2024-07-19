@@ -12,25 +12,37 @@ from projectroles.models import Project
 
 
 logger = logging.getLogger(__name__)
-
-
 # Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-# Event status types
-EVENT_STATUS_TYPES = ['OK', 'INIT', 'SUBMIT', 'FAILED', 'INFO', 'CANCEL']
+
+# Local constants
+TL_STATUS_OK = 'OK'
+TL_STATUS_INIT = 'INIT'
+TL_STATUS_SUBMIT = 'SUBMIT'
+TL_STATUS_FAILED = 'FAILED'
+TL_STATUS_INFO = 'INFO'
+TL_STATUS_CANCEL = 'CANCEL'
+EVENT_STATUS_TYPES = [
+    TL_STATUS_OK,
+    TL_STATUS_INIT,
+    TL_STATUS_SUBMIT,
+    TL_STATUS_FAILED,
+    TL_STATUS_INFO,
+    TL_STATUS_CANCEL,
+]
 DEFAULT_MESSAGES = {
-    'OK': 'All OK',
-    'INIT': 'Event initialized',
-    'SUBMIT': 'Job submitted asynchronously',
-    'FAILED': 'Failed (unknown problem)',
-    'INFO': 'Info level action',
-    'CANCEL': 'Action cancelled',
+    TL_STATUS_OK: 'All OK',
+    TL_STATUS_INIT: 'Event initialized',
+    TL_STATUS_SUBMIT: 'Job submitted asynchronously',
+    TL_STATUS_FAILED: 'Failed (unknown problem)',
+    TL_STATUS_INFO: 'Info level action',
+    TL_STATUS_CANCEL: 'Action cancelled',
 }
 OBJ_REF_UNNAMED = '(unnamed)'
 
 
-class ProjectEventManager(models.Manager):
-    """Manager for custom table-level ProjectEvent queries"""
+class TimelineEventManager(models.Manager):
+    """Manager for custom table-level TimelineEvent queries"""
 
     def get_object_events(
         self, project, object_model, object_uuid, order_by='-pk'
@@ -44,7 +56,7 @@ class ProjectEventManager(models.Manager):
         :param order_by: Ordering (default = pk descending)
         :return: QuerySet
         """
-        return ProjectEvent.objects.filter(
+        return TimelineEvent.objects.filter(
             project=project,
             event_objects__object_model=object_model,
             event_objects__object_uuid=object_uuid,
@@ -56,7 +68,7 @@ class ProjectEventManager(models.Manager):
 
         :param search_terms: Search terms (list of strings)
         :param keywords: Optional search keywords as key/value pairs (dict)
-        :return: QuerySet of ProjectEvent objects
+        :return: QuerySet of TimelineEvent objects
         """
         search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
         term_query = Q()
@@ -73,7 +85,7 @@ class ProjectEventManager(models.Manager):
         return items[:search_limit]
 
 
-class ProjectEvent(models.Model):
+class TimelineEvent(models.Model):
     """
     Class representing a Project event. Can also be a site-wide event not linked
     to a specific project.
@@ -137,7 +149,7 @@ class ProjectEvent(models.Model):
     )
 
     # Set manager for custom queries
-    objects = ProjectEventManager()
+    objects = TimelineEventManager()
 
     def __str__(self):
         return '{}{}{}'.format(
@@ -147,7 +159,7 @@ class ProjectEvent(models.Model):
         )
 
     def __repr__(self):
-        return 'ProjectEvent({})'.format(
+        return 'TimelineEvent({})'.format(
             ', '.join(repr(v) for v in self.get_repr_values())
         )
 
@@ -172,6 +184,10 @@ class ProjectEvent(models.Model):
             '{}pk'.format('-' if reverse else '')
         )
 
+    def get_project(self):
+        """Return the project for the event"""
+        return self.project
+
     def add_object(self, obj, label, name, extra_data=None):
         """
         Add object reference to an event.
@@ -180,9 +196,9 @@ class ProjectEvent(models.Model):
         :param label: Label for the object in the event description (string)
         :param name: Name or title of the object (string)
         :param extra_data: Additional data related to object (dict, optional)
-        :return: ProjectEventObjectRef object
+        :return: TimelineEventObjectRef object
         """
-        ref = ProjectEventObjectRef()
+        ref = TimelineEventObjectRef()
         ref.event = self
         ref.label = label
         if not name:
@@ -207,7 +223,7 @@ class ProjectEvent(models.Model):
         :param status_type: Status type string (see EVENT_STATUS_TYPES)
         :param status_desc: Description string (optional)
         :param extra_data: Extra data for the status (dict, optional)
-        :return: ProjectEventStatus object
+        :return: TimelineEventStatus object
         :raise: TypeError if status_type is invalid
         """
         if status_type not in EVENT_STATUS_TYPES:
@@ -217,7 +233,7 @@ class ProjectEvent(models.Model):
                 )
             )
 
-        status = ProjectEventStatus()
+        status = TimelineEventStatus()
         status.event = self
         status.status_type = status_type
         status.description = (
@@ -229,13 +245,15 @@ class ProjectEvent(models.Model):
         return status
 
 
-class ProjectEventObjectRef(models.Model):
-    """Class representing a reference to an object (existing or removed)
-    related to a Timeline event status"""
+class TimelineEventObjectRef(models.Model):
+    """
+    Class representing a reference to an object (existing or removed)
+    related to a timeline event status.
+    """
 
     #: Event to which the object belongs
     event = models.ForeignKey(
-        ProjectEvent,
+        TimelineEvent,
         related_name='event_objects',
         help_text='Event to which the object belongs',
         on_delete=models.CASCADE,
@@ -275,6 +293,11 @@ class ProjectEventObjectRef(models.Model):
         default=dict, help_text='Additional data related to the object as JSON'
     )
 
+    #: UUID for this object reference
+    sodar_uuid = models.UUIDField(
+        default=uuid.uuid4, unique=True, help_text='Object reference SODAR UUID'
+    )
+
     def __str__(self):
         return '{} ({})'.format(
             self.event.__str__(),
@@ -283,17 +306,21 @@ class ProjectEventObjectRef(models.Model):
 
     def __repr__(self):
         values = self.event.get_repr_values() + [self.name]
-        return 'ProjectEventObjectRef({})'.format(
+        return 'TimelineEventObjectRef({})'.format(
             ', '.join(repr(v) for v in values)
         )
 
+    def get_project(self):
+        """Return the project for the event"""
+        return self.event.project
 
-class ProjectEventStatus(models.Model):
-    """Class representing a Timeline event status"""
+
+class TimelineEventStatus(models.Model):
+    """Class representing a timeline event status"""
 
     #: Event to which the status change belongs
     event = models.ForeignKey(
-        ProjectEvent,
+        TimelineEvent,
         related_name='status_changes',
         help_text='Event to which the status change belongs',
         on_delete=models.CASCADE,
@@ -335,7 +362,7 @@ class ProjectEventStatus(models.Model):
 
     def __repr__(self):
         values = self.event.get_repr_values() + [self.status_type]
-        return 'ProjectEventStatus({})'.format(
+        return 'TimelineEventStatus({})'.format(
             ', '.join(repr(v) for v in values)
         )
 

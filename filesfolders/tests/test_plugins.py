@@ -3,11 +3,12 @@
 import uuid
 
 from django.urls import reverse
+
 from test_plus.test import TestCase
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import ProjectAppPluginPoint
+from projectroles.plugins import ProjectAppPluginPoint, PluginObjectLink
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -47,7 +48,7 @@ class TestPlugins(
     RoleAssignmentMixin,
     TestCase,
 ):
-    """Test filesfolders plugin"""
+    """Tests for filesfolders project plugin"""
 
     def setUp(self):
         # Init superuser
@@ -118,9 +119,10 @@ class TestPlugins(
             kwargs={'file': self.file.sodar_uuid, 'file_name': self.file.name},
         )
         ret = plugin.get_object_link('File', self.file.sodar_uuid)
-        self.assertEqual(ret['url'], url)
-        self.assertEqual(ret['label'], self.file.name)
-        self.assertEqual(ret['blank'], True)
+        self.assertIsInstance(ret, PluginObjectLink)
+        self.assertEqual(ret.url, url)
+        self.assertEqual(ret.name, self.file.name)
+        self.assertEqual(ret.blank, True)
 
     def test_get_object_link_folder(self):
         """Test get_object_link() for a Folder object"""
@@ -129,16 +131,17 @@ class TestPlugins(
             'filesfolders:list', kwargs={'folder': self.folder.sodar_uuid}
         )
         ret = plugin.get_object_link('Folder', self.folder.sodar_uuid)
-        self.assertEqual(ret['url'], url)
-        self.assertEqual(ret['label'], self.folder.name)
+        self.assertEqual(ret.url, url)
+        self.assertEqual(ret.name, self.folder.name)
+        self.assertEqual(ret.blank, False)
 
     def test_get_object_link_hyperlink(self):
         """Test get_object_link() for a HyperLink object"""
         plugin = ProjectAppPluginPoint.get_plugin(PLUGIN_NAME)
         ret = plugin.get_object_link('HyperLink', self.hyperlink.sodar_uuid)
-        self.assertEqual(ret['url'], self.hyperlink.url)
-        self.assertEqual(ret['label'], self.hyperlink.name)
-        self.assertEqual(ret['blank'], True)
+        self.assertEqual(ret.url, self.hyperlink.url)
+        self.assertEqual(ret.name, self.hyperlink.name)
+        self.assertEqual(ret.blank, True)
 
     def test_get_object_link_fail(self):
         """Test get_object_link() with a non-existent object"""

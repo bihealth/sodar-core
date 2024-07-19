@@ -4,10 +4,15 @@ from django.urls import reverse
 from django.utils import timezone
 
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import SiteAppPluginPoint
 
 from adminalerts.models import AdminAlert
 from adminalerts.urls import urlpatterns
+
+
+# SODAR constants
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -21,6 +26,22 @@ class SiteAppPlugin(SiteAppPluginPoint):
 
     #: UI URLs
     urls = urlpatterns
+
+    #: App settings definition
+    app_settings = {
+        'notify_email_alert': {
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': 'BOOLEAN',
+            'default': True,
+            'label': 'Receive email for admin alerts',
+            'description': (
+                'Receive email for important administrator alerts regarding '
+                'e.g. site downtime.'
+            ),
+            'user_modifiable': True,
+            'global': False,
+        }
+    }
 
     #: Iconify icon
     icon = 'mdi:alert'

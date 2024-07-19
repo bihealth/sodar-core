@@ -1,8 +1,8 @@
 from django.contrib import admin
 
-from .models import ProjectEvent, ProjectEventObjectRef, ProjectEventStatus
+from .models import TimelineEvent, TimelineEventObjectRef, TimelineEventStatus
 
 
-admin.site.register(ProjectEvent)
-admin.site.register(ProjectEventObjectRef)
-admin.site.register(ProjectEventStatus)
+admin.site.register(TimelineEvent)
+admin.site.register(TimelineEventObjectRef)
+admin.site.register(TimelineEventStatus)

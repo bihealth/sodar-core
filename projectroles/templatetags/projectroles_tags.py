@@ -6,15 +6,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import (
-    RoleAssignment,
-    RemoteProject,
-    SODAR_CONSTANTS,
-)
+from projectroles.models import RemoteProject, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
+from projectroles.utils import AppLinkContent
 
 
 register = template.Library()
+app_links = AppLinkContent()
 app_settings = AppSettingAPI()
 
 
@@ -89,9 +87,6 @@ def is_app_visible(plugin, project, user):
     app_hidden = False
     if plugin.name in getattr(settings, 'PROJECTROLES_HIDE_PROJECT_APPS', []):
         app_hidden = True
-    # TODO: Remove this in SODAR Core v1.0 (see issue #1143)
-    elif plugin.name in getattr(settings, 'PROJECTROLES_HIDE_APP_LINKS', []):
-        app_hidden = True
     if (
         can_view_app
         and not app_hidden
@@ -155,20 +150,6 @@ def get_help_highlight(user):
         if delta_days < highlight:
             return 'font-weight-bold text-warning'
     return ''
-
-
-@register.simple_tag
-def get_role_import_action(source_as, dest_project):
-    """Return label for role import action based on existing assignment"""
-    try:
-        target_as = RoleAssignment.objects.get(
-            project=dest_project, user=source_as.user
-        )
-        if target_as.role == source_as.role:
-            return 'No action'
-        return 'Update'
-    except RoleAssignment.DoesNotExist:
-        return 'Import'
 
 
 @register.simple_tag
@@ -288,3 +269,28 @@ def get_admin_warning():
         '</a></p>'.format(reverse('admin:index'))
     )
     return ret
+
+
+@register.simple_tag
+def get_user_links(request):
+    """Return user dropdown links"""
+    if isinstance(request, str):
+        return []
+    return app_links.get_user_links(
+        request.user,
+        app_name=request.resolver_match.app_name,
+        url_name=request.resolver_match.url_name,
+    )
+
+
+@register.simple_tag
+def get_project_app_links(request, project=None):
+    """Return sidebar links"""
+    if isinstance(request, str):
+        return []
+    return app_links.get_project_app_links(
+        request.user,
+        project,
+        app_name=request.resolver_match.app_name,
+        url_name=request.resolver_match.url_name,
+    )

@@ -7,11 +7,18 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
+from django.forms.models import model_to_dict
 from django.test import override_settings
 from djangoplugins.models import Plugin
 
 from test_plus.test import TestCase
 
+# Timeline dependency
+from timeline.models import TimelineEvent
+
+from projectroles.management.commands.addremotesite import (
+    Command as AddRemoteSiteCommand,
+)
 from projectroles.management.commands.batchupdateroles import (
     Command as BatchUpdateRolesCommand,
 )
@@ -24,11 +31,18 @@ from projectroles.management.commands.cleanappsettings import (
     DELETE_PROJECT_TYPE_MSG,
     DELETE_SCOPE_MSG,
 )
-from projectroles.management.commands.createdevusers import DEV_USER_NAMES
+from projectroles.management.commands.createdevusers import (
+    DEV_USER_NAMES,
+    DEFAULT_PASSWORD,
+)
+from projectroles.management.commands.syncgroups import (
+    Command as SyncGroupsCommand,
+)
 
 from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
+    RemoteSite,
     AppSetting,
     SODAR_CONSTANTS,
 )
@@ -38,7 +52,9 @@ from projectroles.tests.test_models import (
     RoleAssignmentMixin,
     ProjectInviteMixin,
     AppSettingMixin,
+    RemoteSiteMixin,
 )
+from projectroles.utils import build_secret
 
 
 User = get_user_model()
@@ -51,25 +67,163 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 EXAMPLE_APP_NAME = 'example_project_app'
 CLEAN_LOG_PREFIX = 'INFO:projectroles.management.commands.cleanappsettings:'
+CUSTOM_PASSWORD = 'custompass'
+REMOTE_SITE_NAME = 'Test Site'
+REMOTE_SITE_URL = 'https://example.com'
+REMOTE_SITE_SECRET = build_secret(32)
+LDAP_DOMAIN = 'EXAMPLE'
 
 
-class BatchUpdateRolesMixin:
-    """Helpers for batchupdateroles testing"""
+class TestAddRemoteSite(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    TestCase,
+):
+    """Tests for addremotesite command"""
 
-    file = None
+    def setUp(self):
+        self.user = self.make_user('superuser')
+        self.user.is_superuser = True
+        self.user.save()
+        self.command = AddRemoteSiteCommand()
+        self.options = {
+            'name': REMOTE_SITE_NAME,
+            'url': REMOTE_SITE_URL,
+            'mode': SITE_MODE_TARGET,
+            'description': '',
+            'secret': REMOTE_SITE_SECRET,
+            'user_display': True,
+            'owner_modifiable': False,
+            'suppress_error': False,
+        }
 
-    def write_file(self, data):
-        """Write data to temporary CSV file"""
-        if not isinstance(data[0], list):
-            data = [data]
-        self.file.write(
-            bytes('\n'.join([';'.join(r) for r in data]), encoding='utf-8')
+    def test_add(self):
+        """Test adding new remote site"""
+        tl_kwargs = {'event_name': 'target_site_create'}
+        self.assertEqual(RemoteSite.objects.count(), 0)
+        self.assertEqual(TimelineEvent.objects.filter(**tl_kwargs).count(), 0)
+        self.command.handle(**self.options)
+
+        self.assertEqual(RemoteSite.objects.count(), 1)
+        site = RemoteSite.objects.first()
+        expected = {
+            'id': site.pk,
+            'name': REMOTE_SITE_NAME,
+            'url': REMOTE_SITE_URL,
+            'mode': SITE_MODE_TARGET,
+            'description': '',
+            'secret': REMOTE_SITE_SECRET,
+            'sodar_uuid': site.sodar_uuid,
+            'user_display': True,
+            'owner_modifiable': False,
+        }
+        self.assertEqual(model_to_dict(site), expected)
+        self.assertEqual(TimelineEvent.objects.filter(**tl_kwargs).count(), 1)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_add_source_on_target(self):
+        """Test adding source site on target site"""
+        tl_kwargs = {'event_name': 'source_site_create'}
+        self.options['mode'] = SITE_MODE_SOURCE
+        self.assertEqual(RemoteSite.objects.count(), 0)
+        self.assertEqual(TimelineEvent.objects.filter(**tl_kwargs).count(), 0)
+        self.command.handle(**self.options)
+        self.assertEqual(RemoteSite.objects.count(), 1)
+        self.assertEqual(TimelineEvent.objects.filter(**tl_kwargs).count(), 1)
+
+    def test_add_source_on_source(self):
+        """Test adding source site on source site (should fail)"""
+        self.options['mode'] = SITE_MODE_SOURCE
+        self.assertEqual(RemoteSite.objects.count(), 0)
+        with self.assertRaises(SystemExit) as cm:
+            self.command.handle(**self.options)
+        self.assertEqual(cm.exception.code, 1)
+        self.assertEqual(RemoteSite.objects.count(), 0)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_add_target_on_target(self):
+        """Test adding target site on target site (should fail)"""
+        self.assertEqual(RemoteSite.objects.count(), 0)
+        with self.assertRaises(SystemExit) as cm:
+            self.command.handle(**self.options)
+        self.assertEqual(cm.exception.code, 1)
+        self.assertEqual(RemoteSite.objects.count(), 0)
+
+    def test_add_peer_on_source(self):
+        """Test adding peer site on source site (should fail)"""
+        self.options['mode'] = SITE_MODE_PEER
+        self.assertEqual(RemoteSite.objects.count(), 0)
+        with self.assertRaises(SystemExit) as cm:
+            self.command.handle(**self.options)
+        self.assertEqual(cm.exception.code, 1)
+        self.assertEqual(RemoteSite.objects.count(), 0)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_add_peer_on_target(self):
+        """Test adding peer site on target site (should fail)"""
+        self.options['mode'] = SITE_MODE_PEER
+        self.assertEqual(RemoteSite.objects.count(), 0)
+        with self.assertRaises(SystemExit) as cm:
+            self.command.handle(**self.options)
+        self.assertEqual(cm.exception.code, 1)
+        self.assertEqual(RemoteSite.objects.count(), 0)
+
+    def test_add_second_target(self):
+        """Test adding second target site"""
+        self.make_site('Existing Site', 'https://another.site.org')
+        self.assertEqual(RemoteSite.objects.count(), 1)
+        self.command.handle(**self.options)
+        self.assertEqual(RemoteSite.objects.count(), 2)
+
+    def test_add_second_target_existing_name(self):
+        """Test adding second target site with existing name (should fail)"""
+        self.make_site(REMOTE_SITE_NAME, 'https://another.site.org')
+        self.assertEqual(RemoteSite.objects.count(), 1)
+        with self.assertRaises(SystemExit) as cm:
+            self.command.handle(**self.options)
+        self.assertEqual(cm.exception.code, 1)
+        self.assertEqual(RemoteSite.objects.count(), 1)
+
+    def test_add_second_target_existing_url(self):
+        """Test adding second target site with existing URL (should fail)"""
+        self.make_site('Existing Site', REMOTE_SITE_URL)
+        self.assertEqual(RemoteSite.objects.count(), 1)
+        with self.assertRaises(SystemExit) as cm:
+            self.command.handle(**self.options)
+        self.assertEqual(cm.exception.code, 1)
+        self.assertEqual(RemoteSite.objects.count(), 1)
+
+    def test_add_second_target_existing_url_suppress(self):
+        """Test adding second target site with suppressed error"""
+        self.options['suppress_error'] = True
+        self.make_site('Existing Site', REMOTE_SITE_URL)
+        self.assertEqual(RemoteSite.objects.count(), 1)
+        with self.assertRaises(SystemExit) as cm:
+            self.command.handle(**self.options)
+        self.assertEqual(cm.exception.code, 0)  # No error
+        self.assertEqual(RemoteSite.objects.count(), 1)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_add_second_source(self):
+        """Test adding second source site (should fail)"""
+        self.make_site(
+            'Existing Site', 'https://another.site.org', mode=SITE_MODE_SOURCE
         )
-        self.file.close()
+        self.assertEqual(RemoteSite.objects.count(), 1)
+        with self.assertRaises(SystemExit) as cm:
+            self.command.handle(**self.options)
+        self.assertEqual(cm.exception.code, 1)
+        self.assertEqual(RemoteSite.objects.count(), 1)
 
 
 class TestBatchUpdateRoles(
@@ -77,10 +231,18 @@ class TestBatchUpdateRoles(
     RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
-    BatchUpdateRolesMixin,
     TestCase,
 ):
     """Tests for batchupdateroles command"""
+
+    def _write_file(self, data):
+        """Write data to temporary CSV file"""
+        if not isinstance(data[0], list):
+            data = [data]
+        self.file.write(
+            bytes('\n'.join([';'.join(r) for r in data]), encoding='utf-8')
+        )
+        self.file.close()
 
     def setUp(self):
         super().setUp()
@@ -126,7 +288,7 @@ class TestBatchUpdateRoles(
         email = 'new@example.com'
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -145,7 +307,7 @@ class TestBatchUpdateRoles(
         self.make_invite(email, self.project, self.role_guest, self.user_owner)
         self.assertEqual(ProjectInvite.objects.count(), 1)
 
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -163,7 +325,7 @@ class TestBatchUpdateRoles(
             [self.project_uuid, email, PROJECT_ROLE_GUEST],
             [self.project_uuid, email2, PROJECT_ROLE_GUEST],
         ]
-        self.write_file(fd)
+        self._write_file(fd)
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -180,7 +342,7 @@ class TestBatchUpdateRoles(
             [self.category_uuid, email, PROJECT_ROLE_GUEST],
             [self.project_uuid, email, PROJECT_ROLE_GUEST],
         ]
-        self.write_file(fd)
+        self._write_file(fd)
         # NOTE: Using user_owner_cat as they have perms for both projects
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner_cat.username}
@@ -196,7 +358,7 @@ class TestBatchUpdateRoles(
 
     def test_invite_owner(self):
         """Test inviting an owner (should fail)"""
-        self.write_file(
+        self._write_file(
             [self.project_uuid, 'new@example.com', PROJECT_ROLE_OWNER]
         )
         self.command.handle(
@@ -207,7 +369,7 @@ class TestBatchUpdateRoles(
 
     def test_invite_delegate(self):
         """Test inviting a delegate"""
-        self.write_file(
+        self._write_file(
             [self.project_uuid, 'new@example.com', PROJECT_ROLE_DELEGATE]
         )
         self.command.handle(
@@ -221,7 +383,7 @@ class TestBatchUpdateRoles(
         """Test inviting a delegate without perms (should fail)"""
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
-        self.write_file(
+        self._write_file(
             [self.project_uuid, 'new@example.com', PROJECT_ROLE_DELEGATE]
         )
         self.command.handle(
@@ -234,7 +396,7 @@ class TestBatchUpdateRoles(
         """Test inviting a delegate with limit reached (should fail)"""
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
-        self.write_file(
+        self._write_file(
             [self.project_uuid, 'new@example.com', PROJECT_ROLE_DELEGATE]
         )
         self.command.handle(
@@ -251,7 +413,7 @@ class TestBatchUpdateRoles(
         user_new.save()
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -277,7 +439,7 @@ class TestBatchUpdateRoles(
             1,
         )
 
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -293,7 +455,7 @@ class TestBatchUpdateRoles(
         self.user_owner.email = email
         self.user_owner.save()
 
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_CONTRIBUTOR])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -320,7 +482,7 @@ class TestBatchUpdateRoles(
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
 
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_DELEGATE])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': user_delegate.username}
         )
@@ -340,7 +502,7 @@ class TestBatchUpdateRoles(
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
 
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_DELEGATE])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_DELEGATE])
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -352,7 +514,7 @@ class TestBatchUpdateRoles(
 
     def test_role_add_inherited_owner(self):
         """Test adding role with inherited owner rank (should fail)"""
-        self.write_file(
+        self._write_file(
             [
                 self.project_uuid,
                 self.user_owner_cat.email,
@@ -378,7 +540,7 @@ class TestBatchUpdateRoles(
         user_new.email = 'user_new@example.com'
         self.make_assignment(self.category, user_new, self.role_guest)
 
-        self.write_file(
+        self._write_file(
             [
                 self.project_uuid,
                 user_new.email,
@@ -404,7 +566,7 @@ class TestBatchUpdateRoles(
         user_new.email = 'user_new@example.com'
         self.make_assignment(self.category, user_new, self.role_contributor)
 
-        self.write_file(
+        self._write_file(
             [
                 self.project_uuid,
                 user_new.email,
@@ -430,7 +592,9 @@ class TestBatchUpdateRoles(
         user_new.email = 'user_new@example.com'
         self.make_assignment(self.category, user_new, self.role_contributor)
 
-        self.write_file([self.project_uuid, user_new.email, PROJECT_ROLE_GUEST])
+        self._write_file(
+            [self.project_uuid, user_new.email, PROJECT_ROLE_GUEST]
+        )
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -457,7 +621,7 @@ class TestBatchUpdateRoles(
             [self.project_uuid, email, PROJECT_ROLE_GUEST],
             [self.project_uuid, email2, PROJECT_ROLE_GUEST],
         ]
-        self.write_file(fd)
+        self._write_file(fd)
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
@@ -477,7 +641,7 @@ class TestBatchUpdateRoles(
         admin.is_superuser = True
         admin.save()
         email = 'new@example.com'
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(**{'file': self.file.name, 'issuer': None})
         invite = ProjectInvite.objects.first()
         self.assertEqual(invite.issuer, admin)
@@ -486,7 +650,7 @@ class TestBatchUpdateRoles(
         """Test invite with issuer who lacks permissions for a project"""
         issuer = self.make_user('issuer')
         email = 'new@example.com'
-        self.write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
+        self._write_file([self.project_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(
             **{'file': self.file.name, 'issuer': issuer.username}
         )
@@ -525,7 +689,7 @@ class TestCleanAppSettings(
 
         # Init test setting
         self.setting_str_values = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting',
             'setting_type': 'STRING',
@@ -534,7 +698,7 @@ class TestCleanAppSettings(
             'non_valid_value': False,
         }
         self.setting_int_values = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting',
             'setting_type': 'INTEGER',
@@ -543,7 +707,7 @@ class TestCleanAppSettings(
             'non_valid_value': 'Nan',
         }
         self.setting_bool_values = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_bool_setting',
             'setting_type': 'BOOLEAN',
@@ -552,7 +716,7 @@ class TestCleanAppSettings(
             'non_valid_value': 170,
         }
         self.setting_json_values = {
-            'app_name': EXAMPLE_APP_NAME,
+            'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_json_setting',
             'setting_type': 'JSON',
@@ -565,7 +729,7 @@ class TestCleanAppSettings(
             'non_valid_value': self.project,
         }
         self.setting_iprestrict_values = {
-            'app_name': 'projectroles',
+            'plugin_name': 'projectroles',
             'project': self.project,
             'name': 'ip_restrict',
             'setting_type': 'BOOLEAN',
@@ -582,7 +746,7 @@ class TestCleanAppSettings(
         ]
         for s in self.settings:
             self.make_setting(
-                app_name=s['app_name'],
+                plugin_name=s['plugin_name'],
                 name=s['name'],
                 setting_type=s['setting_type'],
                 value=s['value'] if s['setting_type'] != 'JSON' else '',
@@ -713,6 +877,57 @@ class TestCleanAppSettings(
             )
 
 
+class TestSyncGroups(TestCase):
+    """Tests for syncgroups command"""
+
+    def setUp(self):
+        self.command = SyncGroupsCommand()
+
+    def test_sync_system(self):
+        """Test sync with system username"""
+        user = self.make_user('user')
+        user.groups.all().delete()  # Remove groups
+        self.assertEqual(user.groups.count(), 0)
+        self.command.handle()
+        self.assertEqual(user.groups.count(), 1)
+        group = user.groups.first()
+        self.assertIsNotNone(group)
+        self.assertEqual(group.name, SYSTEM_USER_GROUP)
+
+    def test_sync_system_existing(self):
+        """Test sync with system username and existing group"""
+        user = self.make_user('user')
+        self.assertEqual(user.groups.count(), 1)
+        self.command.handle()
+        self.assertEqual(user.groups.count(), 1)
+        group = user.groups.first()
+        self.assertIsNotNone(group)
+        self.assertEqual(group.name, SYSTEM_USER_GROUP)
+
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_sync_ldap(self):
+        """Test sync with LDAP user"""
+        user = self.make_user('user@' + LDAP_DOMAIN)
+        user.groups.all().delete()
+        self.assertEqual(user.groups.count(), 0)
+        self.command.handle()
+        self.assertEqual(user.groups.count(), 1)
+        group = user.groups.first()
+        self.assertIsNotNone(group)
+        self.assertEqual(group.name, LDAP_DOMAIN.lower())
+
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_sync_ldap_existing(self):
+        """Test sync with LDAP user and existing group"""
+        user = self.make_user('user@' + LDAP_DOMAIN)
+        self.assertEqual(user.groups.count(), 1)
+        self.command.handle()
+        self.assertEqual(user.groups.count(), 1)
+        group = user.groups.first()
+        self.assertIsNotNone(group)
+        self.assertEqual(group.name, LDAP_DOMAIN.lower())
+
+
 @override_settings(DEBUG=True)
 class TestCreateDevUsers(TestCase):
     """Tests for createdevusers command"""
@@ -731,6 +946,14 @@ class TestCreateDevUsers(TestCase):
                 email='{}@example.com'.format(u),
             ).first()
             self.assertIsNotNone(user)
+            self.assertEqual(user.check_password(DEFAULT_PASSWORD), True)
+
+    def test_create_custom_password(self):
+        """Test creating users with custom password"""
+        call_command('createdevusers', password=CUSTOM_PASSWORD)
+        for u in DEV_USER_NAMES:
+            user = User.objects.filter(username=u).first()
+            self.assertEqual(user.check_password(CUSTOM_PASSWORD), True)
 
     def test_create_existing(self):
         """Test creating users with existing user in list"""

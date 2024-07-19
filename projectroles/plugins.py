@@ -165,7 +165,7 @@ class ProjectModifyPluginMixin:
 
     def perform_project_setting_update(
         self,
-        app_name,
+        plugin_name,
         setting_name,
         value,
         old_value,
@@ -176,8 +176,8 @@ class ProjectModifyPluginMixin:
         Perform additional actions when updating a single app setting with
         PROJECT scope.
 
-        :param app_name: Name of app plugin for the setting, "projectroles" is
-                         used for projectroles settings (string)
+        :param plugin_name: Name of app plugin for the setting, "projectroles"
+                            is used for projectroles settings (string)
         :param setting_name: Setting name (string)
         :param value: New value for setting
         :param old_value: Previous value for setting
@@ -189,7 +189,7 @@ class ProjectModifyPluginMixin:
 
     def revert_project_setting_update(
         self,
-        app_name,
+        plugin_name,
         setting_name,
         value,
         old_value,
@@ -200,8 +200,8 @@ class ProjectModifyPluginMixin:
         Revert updating a single app setting with PROJECT scope if errors have
         occurred in other apps.
 
-        :param app_name: Name of app plugin for the setting, "projectroles" is
-                         used for projectroles settings (string)
+        :param plugin_name: Name of app plugin for the setting, "projectroles"
+                            is used for projectroles settings (string)
         :param setting_name: Setting name (string)
         :param value: New value for setting
         :param old_value: Previous value for setting
@@ -356,12 +356,12 @@ class ProjectAppPluginPoint(PluginPoint):
 
     def get_object_link(self, model_str, uuid):
         """
-        Return URL referring to an object used by the app, along with a label to
+        Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
 
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
-        :return: Dict or None if not found
+        :return: PluginObjectLink or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
@@ -384,17 +384,11 @@ class ProjectAppPluginPoint(PluginPoint):
         :param user: User object for user initiating the search
         :param search_type: String
         :param keywords: List (optional)
-        :return: Dict
+        :return: List of PluginSearchResult objects
         """
         # TODO: Implement this in your app plugin
         # TODO: Implement display of results in the app's search template
-        return {
-            'all': {  # You can add 1-N lists of result items
-                'title': 'Title to be displayed',
-                'search_types': [],
-                'items': [],
-            }
-        }
+        return []
 
     def update_cache(self, name=None, project=None, user=None):
         """
@@ -497,12 +491,12 @@ class BackendPluginPoint(PluginPoint):
 
     def get_object_link(self, model_str, uuid):
         """
-        Return URL referring to an object used by the app, along with a label to
+        Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
 
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
-        :return: Dict or None if not found
+        :return: PluginObjectLink or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
@@ -604,12 +598,12 @@ class SiteAppPluginPoint(PluginPoint):
 
     def get_object_link(self, model_str, uuid):
         """
-        Return URL referring to an object used by the app, along with a label to
+        Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
 
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
-        :return: Dict or None if not found
+        :return: PluginObjectLink or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
@@ -632,6 +626,73 @@ class SiteAppPluginPoint(PluginPoint):
         """
         # TODO: Implement this in your app plugin (optional)
         return None
+
+
+# Data Classes -----------------------------------------------------------------
+
+
+class PluginObjectLink:
+    """
+    Class representing a hyperlink to an object used by the app. Expected to be
+    returned from get_object_link() implementations.
+    """
+
+    #: URL to the object (string)
+    url = None
+    #: Name of the object to be displayed in link (string, formerly "label")
+    name = None
+    #: Open the link in a blank browser tab (boolean, default=False)
+    blank = False
+
+    def __init__(self, url, name, blank=False):
+        """
+        Initialize PluginObjectLink.
+
+        :param url: URL to the object (string)
+        :param name: Name of the object to be displayed in link (string,
+                     formerly "label")
+        :param blank: Open the link in a blank browser tab (boolean,
+                      default=False)
+        """
+        self.url = url
+        self.name = name
+        self.blank = blank
+
+
+class PluginSearchResult:
+    """
+    Class representing a list of search results from a specific plugin for one
+    or more search types. Expected to be returned from search() implementations.
+    """
+
+    #: Category of the result set, used in templates (string)
+    category = None
+    #: Title to be displayed for this set of search results in the UI (string)
+    title = None
+    #: List of one or more search type keywords for these results
+    search_types = []
+    #: List or QuerySet of result objects
+    items = []
+
+    def __init__(self, category, title, search_types, items):
+        """
+        Initialize PluginSearchResult.
+
+        :param category: Category of the result set, used in templates (string)
+        :param title: Title to be displayed for this set of search results in
+                      the UI (string)
+        :param search_types: List of one or more search type keywords for the
+                             results
+        :param items: List or QuerySet of result objects
+        """
+        self.category = category
+        self.title = title
+        self.search_types = search_types
+        if not isinstance(search_types, list) or len(search_types) < 1:
+            raise ValueError(
+                'At least one type keyword must be provided in search_types'
+            )
+        self.items = items
 
 
 # Plugin API -------------------------------------------------------------------
@@ -667,9 +728,11 @@ def get_active_plugins(plugin_type='project_app', custom_order=False):
         ]
         return sorted(
             ret,
-            key=lambda x: x.plugin_ordering
-            if custom_order and plugin_type == 'project_app'
-            else x.name,
+            key=lambda x: (
+                x.plugin_ordering
+                if custom_order and plugin_type == 'project_app'
+                else x.name
+            ),
         )
     return None
 

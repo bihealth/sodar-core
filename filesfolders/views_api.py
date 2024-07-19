@@ -5,11 +5,17 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     GenericAPIView,
 )
+from rest_framework.renderers import JSONRenderer
+from rest_framework.schemas.openapi import AutoSchema
+from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.views_api import CoreAPIGenericProjectMixin
+from projectroles.views_api import (
+    CoreAPIGenericProjectMixin,
+    SODARPageNumberPagination,
+)
 
 from filesfolders.models import Folder
 from filesfolders.serializers import (
@@ -28,8 +34,32 @@ from filesfolders.views import (
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
+# Local constants
+FILESFOLDERS_API_MEDIA_TYPE = (
+    'application/vnd.bihealth.sodar-core.filesfolders+json'
+)
+FILESFOLDERS_API_DEFAULT_VERSION = '1.0'
+FILESFOLDERS_API_ALLOWED_VERSIONS = ['1.0']
+
 
 # Base Classes and Mixins ------------------------------------------------------
+
+
+class FilesfoldersAPIVersioningMixin:
+    """
+    Filesfolders API view versioning mixin for overriding media type and
+    accepted versions.
+    """
+
+    class FilesfoldersAPIRenderer(JSONRenderer):
+        media_type = FILESFOLDERS_API_MEDIA_TYPE
+
+    class FilesfoldersAPIVersioning(AcceptHeaderVersioning):
+        allowed_versions = FILESFOLDERS_API_ALLOWED_VERSIONS
+        default_version = FILESFOLDERS_API_DEFAULT_VERSION
+
+    renderer_classes = [FilesfoldersAPIRenderer]
+    versioning_class = FilesfoldersAPIVersioning
 
 
 class ListCreateAPITimelineMixin(FilesfoldersTimelineMixin):
@@ -92,14 +122,16 @@ class RetrieveUpdateDestroyAPITimelineMixin(FilesfoldersTimelineMixin):
                 user=self.request.user,
                 event_name='{}_delete'.format(obj_type),
                 description='delete {} {{{}}}'.format(obj_type, obj_type),
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
             tl_event.add_object(
                 obj=instance,
                 label=obj_type,
-                name=instance.get_path()
-                if isinstance(instance, Folder)
-                else instance.name,
+                name=(
+                    instance.get_path()
+                    if isinstance(instance, Folder)
+                    else instance.name
+                ),
             )
 
 
@@ -136,15 +168,24 @@ class RetrieveUpdateDestroyPermissionMixin:
 class FolderListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
     """
     List folders or create a folder.
 
+    Supports optional pagination for listing by providing the ``page`` query
+    string. This will return results in the Django Rest Framework
+    ``PageNumberPagination`` format.
+
     **URL:** ``/files/api/folder/list-create/{Project.sodar_uuid}``
 
     **Methods:** ``GET``, ``POST``
+
+    **Parameters for GET:**
+
+    - ``page``: Page number for paginated results (int, optional)
 
     **Parameters for POST:**
 
@@ -155,13 +196,16 @@ class FolderListCreateAPIView(
     - ``description``: Folder description (string, optional)
     """
 
+    pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
+    schema = AutoSchema(operation_id_base='ListCreateFolder')
     serializer_class = FolderSerializer
 
 
 class FolderRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
@@ -184,12 +228,14 @@ class FolderRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'folder'
     project_type = PROJECT_TYPE_PROJECT
+    schema = AutoSchema(operation_id_base='UpdateDestroyFolder')
     serializer_class = FolderSerializer
 
 
 class FileListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
@@ -197,9 +243,17 @@ class FileListCreateAPIView(
     List files or upload a file. For uploads, the request must be made in the
     ``multipart`` format.
 
+    Supports optional pagination for listing by providing the ``page`` query
+    string. This will return results in the Django Rest Framework
+    ``PageNumberPagination`` format.
+
     **URL:** ``/files/api/file/list-create/{Project.sodar_uuid}``
 
     **Methods:** ``GET``, ``POST``
+
+    **Parameters for GET:**
+
+    - ``page``: Page number for paginated results (int, optional)
 
     **Parameters for POST:**
 
@@ -212,13 +266,16 @@ class FileListCreateAPIView(
     - ``file``: File to be uploaded
     """
 
+    pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
+    schema = AutoSchema(operation_id_base='ListCreateFile')
     serializer_class = FileSerializer
 
 
 class FileRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
@@ -243,11 +300,15 @@ class FileRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'file'
     project_type = PROJECT_TYPE_PROJECT
+    schema = AutoSchema(operation_id_base='UpdateDestroyFile')
     serializer_class = FileSerializer
 
 
 class FileServeAPIView(
-    CoreAPIGenericProjectMixin, FileServeMixin, GenericAPIView
+    FilesfoldersAPIVersioningMixin,
+    CoreAPIGenericProjectMixin,
+    FileServeMixin,
+    GenericAPIView,
 ):
     """
     Serve the file content.
@@ -260,20 +321,30 @@ class FileServeAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'file'
     permission_required = 'filesfolders.view_data'
+    schema = None
 
 
 class HyperLinkListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
     """
     List hyperlinks or create a hyperlink.
 
+    Supports optional pagination for listing by providing the ``page`` query
+    string. This will return results in the Django Rest Framework
+    ``PageNumberPagination`` format.
+
     **URL:** ``/files/api/hyperlink/list-create/{Project.sodar_uuid}``
 
     **Methods:** ``GET``, ``POST``
+
+    **Parameters for GET:**
+
+    - ``page``: Page number for paginated results (int, optional)
 
     **Parameters for POST:**
 
@@ -285,13 +356,16 @@ class HyperLinkListCreateAPIView(
     - ``url``: URL for the link (string)
     """
 
+    pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
+    schema = AutoSchema(operation_id_base='ListCreateHyperLink')
     serializer_class = HyperLinkSerializer
 
 
 class HyperLinkRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
+    FilesfoldersAPIVersioningMixin,
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
@@ -315,4 +389,5 @@ class HyperLinkRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'hyperlink'
     project_type = PROJECT_TYPE_PROJECT
+    schema = AutoSchema(operation_id_base='UpdateDestroyHyperLink')
     serializer_class = HyperLinkSerializer

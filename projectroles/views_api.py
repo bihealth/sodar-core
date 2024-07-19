@@ -1,6 +1,6 @@
 """REST API views for the projectroles app"""
 
-import re
+import sys
 
 from ipaddress import ip_address, ip_network
 
@@ -23,6 +23,7 @@ from rest_framework.generics import (
     UpdateAPIView,
     DestroyAPIView,
 )
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
     BasePermission,
     AllowAny,
@@ -30,10 +31,10 @@ from rest_framework.permissions import (
 )
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
-from projectroles import __version__ as core_version
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
@@ -85,6 +86,7 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
 ]
 
 # API constants for external SODAR Core sites
+# DEPRECATED: To be removed in SODAR Core v1.1 (see #1401)
 SODAR_API_MEDIA_TYPE = getattr(
     settings, 'SODAR_API_MEDIA_TYPE', 'application/UNDEFINED+json'
 )
@@ -94,11 +96,18 @@ SODAR_API_DEFAULT_VERSION = getattr(
 SODAR_API_ALLOWED_VERSIONS = getattr(
     settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
 )
-CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-CORE_API_DEFAULT_VERSION = re.match(
-    r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
-)[1]
-CORE_API_ALLOWED_VERSIONS = ['0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4']
+
+# API constants for projectroles APIs
+PROJECTROLES_API_MEDIA_TYPE = (
+    'application/vnd.bihealth.sodar-core.projectroles+json'
+)
+PROJECTROLES_API_DEFAULT_VERSION = '1.0'
+PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0']
+SYNC_API_MEDIA_TYPE = (
+    'application/vnd.bihealth.sodar-core.projectroles.sync+json'
+)
+SYNC_API_DEFAULT_VERSION = '1.0'
+SYNC_API_ALLOWED_VERSIONS = ['1.0']
 
 # Local constants
 INVALID_PROJECT_TYPE_MSG = (
@@ -204,18 +213,27 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         return request.user.has_perm(perm, project)
 
 
+# TODO: Remove in v1.1 (see #1401)
 class SODARAPIVersioning(AcceptHeaderVersioning):
-    """Accept header versioning class for SODAR API views"""
+    """
+    Accept header versioning class for SODAR API views.
+
+    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You need to
+    provide version identifiers specific to your API providing app.
+    """
 
     allowed_versions = SODAR_API_ALLOWED_VERSIONS
     default_version = SODAR_API_DEFAULT_VERSION
-    version_param = 'version'
 
 
+# TODO: Remove in v1.1 (see #1401)
 class SODARAPIRenderer(JSONRenderer):
     """
     SODAR API JSON renderer with a site-specific media type retrieved from
     Django settings.
+
+    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You must define
+    a media type specific for your API providing app.
     """
 
     media_type = SODAR_API_MEDIA_TYPE
@@ -224,13 +242,20 @@ class SODARAPIRenderer(JSONRenderer):
 # Base API View Mixins ---------------------------------------------------------
 
 
+# TODO: Remove in v1.1 (see #1401)
 class SODARAPIBaseMixin:
-    """Base SODAR API mixin to be used by external SODAR Core based sites"""
+    """
+    Base SODAR API mixin to be used by external SODAR Core based sites.
+
+    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You must define
+    a base renderer and a versioning class specific to your API providing app.
+    """
 
     renderer_classes = [SODARAPIRenderer]
     versioning_class = SODARAPIVersioning
 
 
+# TODO: Remove SODARAPIBaseMixin inheritance in v1.1 (see #1401)
 class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     """
     API view mixin for the base DRF ``APIView`` class with project permission
@@ -239,6 +264,8 @@ class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     Project type can be restricted to ``PROJECT_TYPE_CATEGORY`` or
     ``PROJECT_TYPE_PROJECT``, as defined in SODAR constants, by setting the
     ``project_type`` attribute in the view.
+
+    NOTE: The SODARAPIBaseMixin inheritance will be removed in v1.1 (see #1401).
     """
 
     permission_classes = [SODARAPIProjectPermission]
@@ -257,6 +284,8 @@ class APIProjectContextMixin(ProjectAccessMixin):
 
     def get_serializer_context(self, *args, **kwargs):
         context = super().get_serializer_context(*args, **kwargs)
+        if sys.argv[1:2] == ['generateschema']:
+            return context
         context['project'] = self.get_project(request=context['request'])
         return context
 
@@ -304,30 +333,29 @@ class ProjectQuerysetMixin:
         return Project.objects.all()
 
 
+class SODARPageNumberPagination(PageNumberPagination):
+    """
+    Override of PageNumberPagination to provide optional pagination.
+
+    If the "page" query string is not present, results will be provided as a
+    full unpaginated list.
+
+    If the "page" query string is included, results will be presented in the
+    default ``PageNumberPagination`` dict format.
+
+    See: https://www.django-rest-framework.org/api-guide/pagination/#pagenumberpagination
+    """
+
+    def paginate_queryset(self, queryset, request, view=None):
+        if not request.query_params.get('page'):
+            return None
+        return super().paginate_queryset(queryset, request, view)
+
+
 # SODAR Core Base Views and Mixins ---------------------------------------------
 
 
-class CoreAPIVersioning(AcceptHeaderVersioning):
-    allowed_versions = CORE_API_ALLOWED_VERSIONS
-    default_version = CORE_API_DEFAULT_VERSION
-    version_param = 'version'
-
-
-class CoreAPIRenderer(JSONRenderer):
-    media_type = CORE_API_MEDIA_TYPE
-
-
-class CoreAPIBaseMixin:
-    """
-    SODAR Core API view mixin, which overrides versioning and renderer classes
-    with ones intended for use with internal SODAR Core API views.
-    """
-
-    renderer_classes = [CoreAPIRenderer]
-    versioning_class = CoreAPIVersioning
-
-
-class CoreAPIBaseProjectMixin(ProjectAccessMixin, CoreAPIBaseMixin):
+class CoreAPIBaseProjectMixin(ProjectAccessMixin):
     """
     SODAR Core API view mixin for the base DRF ``APIView`` class with project
     permission checking, but without serializers and other generic view
@@ -347,7 +375,38 @@ class CoreAPIGenericProjectMixin(
     queryset_project_field = 'project'  # Replace if no direct project relation
 
 
-# Projectroles Specific Base Views and Mixins ----------------------------------
+class ProjectrolesAPIVersioningMixin:
+    """
+    Projectroles API view versioning mixin for overriding media type
+    and accepted versions.
+    """
+
+    class ProjectrolesAPIVersioning(AcceptHeaderVersioning):
+        allowed_versions = PROJECTROLES_API_ALLOWED_VERSIONS
+        default_version = PROJECTROLES_API_DEFAULT_VERSION
+
+    class ProjectrolesAPIRenderer(JSONRenderer):
+        media_type = PROJECTROLES_API_MEDIA_TYPE
+
+    renderer_classes = [ProjectrolesAPIRenderer]
+    versioning_class = ProjectrolesAPIVersioning
+
+
+class RemoteSyncAPIVersioningMixin:
+    """
+    Projectroles remote sync API view versioning mixin for overriding media type
+    and accepted versions.
+    """
+
+    class RemoteSyncAPIRenderer(JSONRenderer):
+        media_type = SYNC_API_MEDIA_TYPE
+
+    class RemoteSyncAPIVersioning(AcceptHeaderVersioning):
+        allowed_versions = SYNC_API_ALLOWED_VERSIONS
+        default_version = SYNC_API_DEFAULT_VERSION
+
+    renderer_classes = [RemoteSyncAPIRenderer]
+    versioning_class = RemoteSyncAPIVersioning
 
 
 class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
@@ -375,34 +434,48 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
 # API Views --------------------------------------------------------------------
 
 
-class ProjectListAPIView(APIView):
+class ProjectListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     """
     List all projects and categories for which the requesting user has access.
+
+    Supports optional pagination by providing the ``page`` query string. This
+    will return results in the Django Rest Framework ``PageNumberPagination``
+    format.
 
     **URL:** ``/project/api/list``
 
     **Methods:** ``GET``
 
+    **Parameters:**
+
+    - ``page``: Page number for paginated results (int, optional)
+
     **Returns:**
 
-    List of project details (see ``ProjectRetrieveAPIView``). For project finder
-    role, only lists title and UUID of projects.
+    List of ``Project`` objects (see ``ProjectRetrieveAPIView``). For project
+    finder role, only lists title and UUID of projects.
     """
 
+    pagination_class = SODARPageNumberPagination
     permission_classes = [IsAuthenticated]
-    renderer_classes = [CoreAPIRenderer]
-    versioning_class = CoreAPIVersioning
+    serializer_class = ProjectSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
+        """
+        Override get_queryset() to return categories and projects to which the
+        user has access. NOTE: Returns a list, not a QuerySet.
+
+        :return: List of Project objects
+        """
         projects_all = Project.objects.all().order_by('full_title')
-        if request.user.is_superuser:
-            ret = projects_all
+        if self.request.user.is_superuser:
+            qs = projects_all
         else:
-            ret = []
+            qs = []
             role_cats = []
             projects_local = [
                 a.project
-                for a in RoleAssignment.objects.filter(user=request.user)
+                for a in RoleAssignment.objects.filter(user=self.request.user)
             ]
             for p in projects_all:
                 local_role = p in projects_local
@@ -411,17 +484,17 @@ class ProjectListAPIView(APIView):
                     or p.public_guest_access
                     or any(p.full_title.startswith(c) for c in role_cats)
                 ):
-                    ret.append(p)
+                    qs.append(p)
                 if local_role and p.type == PROJECT_TYPE_CATEGORY:
                     role_cats.append(p.full_title + CAT_DELIMITER)
-        serializer = ProjectSerializer(
-            ret, many=True, context={'request': request}
-        )
-        return Response(serializer.data, status=200)
+        return qs
 
 
 class ProjectRetrieveAPIView(
-    ProjectQuerysetMixin, CoreAPIGenericProjectMixin, RetrieveAPIView
+    ProjectQuerysetMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIGenericProjectMixin,
+    RetrieveAPIView,
 ):
     """
     Retrieve a project or category by its UUID.
@@ -446,7 +519,9 @@ class ProjectRetrieveAPIView(
     serializer_class = ProjectSerializer
 
 
-class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
+class ProjectCreateAPIView(
+    ProjectrolesAPIVersioningMixin, ProjectAccessMixin, CreateAPIView
+):
     """
     Create a project or a category.
 
@@ -466,13 +541,14 @@ class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
     """
 
     permission_classes = [ProjectCreatePermission]
-    renderer_classes = [CoreAPIRenderer]
     serializer_class = ProjectSerializer
-    versioning_class = CoreAPIVersioning
 
 
 class ProjectUpdateAPIView(
-    ProjectQuerysetMixin, CoreAPIGenericProjectMixin, UpdateAPIView
+    ProjectQuerysetMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIGenericProjectMixin,
+    UpdateAPIView,
 ):
     """
     Update the metadata of a project or a category.
@@ -502,6 +578,8 @@ class ProjectUpdateAPIView(
 
     def get_serializer_context(self, *args, **kwargs):
         context = super().get_serializer_context(*args, **kwargs)
+        if sys.argv[1:2] == ['generateschema']:
+            return context
         project = self.get_project(request=context['request'])
         context['parent'] = (
             str(project.parent.sodar_uuid) if project.parent else None
@@ -509,7 +587,9 @@ class ProjectUpdateAPIView(
         return context
 
 
-class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
+class RoleAssignmentCreateAPIView(
+    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, CreateAPIView
+):
     """
     Create a role assignment in a project.
 
@@ -527,7 +607,9 @@ class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
     serializer_class = RoleAssignmentSerializer
 
 
-class RoleAssignmentUpdateAPIView(CoreAPIGenericProjectMixin, UpdateAPIView):
+class RoleAssignmentUpdateAPIView(
+    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, UpdateAPIView
+):
     """
     Update the role assignment for a user in a project.
 
@@ -549,7 +631,10 @@ class RoleAssignmentUpdateAPIView(CoreAPIGenericProjectMixin, UpdateAPIView):
 
 
 class RoleAssignmentDestroyAPIView(
-    RoleAssignmentDeleteMixin, CoreAPIGenericProjectMixin, DestroyAPIView
+    RoleAssignmentDeleteMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIGenericProjectMixin,
+    DestroyAPIView,
 ):
     """
     Destroy a role assignment.
@@ -590,7 +675,10 @@ class RoleAssignmentDestroyAPIView(
 
 
 class RoleAssignmentOwnerTransferAPIView(
-    RoleAssignmentOwnerTransferMixin, CoreAPIBaseProjectMixin, APIView
+    RoleAssignmentOwnerTransferMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIBaseProjectMixin,
+    APIView,
 ):
     """
     Trensfer project ownership to another user with a role in the project.
@@ -708,19 +796,28 @@ class ProjectInviteAPIMixin:
             raise serializers.ValidationError('Invite is not active')
 
 
-class ProjectInviteListAPIView(CoreAPIBaseProjectMixin, ListAPIView):
+class ProjectInviteListAPIView(
+    ProjectrolesAPIVersioningMixin, CoreAPIBaseProjectMixin, ListAPIView
+):
     """
     List user invites for a project.
+
+    Supports optional pagination by providing the ``page`` query string. This
+    will return results in the Django Rest Framework ``PageNumberPagination``
+    format.
 
     **URL:** ``/project/api/invites/list/{Project.sodar_uuid}``
 
     **Methods:** ``GET``
 
-    **Returns:** List of project invite details
+    **Parameters:**
+
+    - ``page``: Page number for paginated results (int, optional)
+
+    **Returns:** List or paginated dict of project invite details
     """
 
-    # lookup_field = 'project__sodar_uuid'
-    # lookup_url_kwarg = 'projectinvite'
+    pagination_class = SODARPageNumberPagination
     permission_required = 'projectroles.invite_users'
     serializer_class = ProjectInviteSerializer
 
@@ -730,7 +827,9 @@ class ProjectInviteListAPIView(CoreAPIBaseProjectMixin, ListAPIView):
         ).order_by('pk')
 
 
-class ProjectInviteCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
+class ProjectInviteCreateAPIView(
+    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, CreateAPIView
+):
     """
     Create a project invite.
 
@@ -749,7 +848,11 @@ class ProjectInviteCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
 
 
 class ProjectInviteRevokeAPIView(
-    ProjectInviteMixin, ProjectInviteAPIMixin, CoreAPIBaseProjectMixin, APIView
+    ProjectInviteMixin,
+    ProjectInviteAPIMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIBaseProjectMixin,
+    APIView,
 ):
     """
     Revoke a project invite.
@@ -780,7 +883,11 @@ class ProjectInviteRevokeAPIView(
 
 
 class ProjectInviteResendAPIView(
-    ProjectInviteMixin, ProjectInviteAPIMixin, CoreAPIBaseProjectMixin, APIView
+    ProjectInviteMixin,
+    ProjectInviteAPIMixin,
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIBaseProjectMixin,
+    APIView,
 ):
     """
     Resend email for a project invite.
@@ -814,17 +921,17 @@ class AppSettingMixin:
     """Helpers for app setting API views"""
 
     @classmethod
-    def get_and_validate_def(cls, app_name, setting_name, allowed_scopes):
+    def get_and_validate_def(cls, plugin_name, setting_name, allowed_scopes):
         """
         Return settings definition or raise a validation error.
 
-        :param app_name: Name of app plugin for the setting (string)
+        :param plugin_name: Name of app plugin for the setting (string)
         :param setting_name: Setting name (string)
         :param allowed_scopes: Allowed scopes for the setting (list)
         """
         try:
             s_def = app_settings.get_definition(
-                name=setting_name, app_name=app_name
+                name=setting_name, plugin_name=plugin_name
             )
         except Exception as ex:
             raise serializers.ValidationError(ex)
@@ -876,11 +983,13 @@ class AppSettingMixin:
                 )
 
     @classmethod
-    def _get_setting_obj(cls, app_name, setting_name, project=None, user=None):
+    def _get_setting_obj(
+        cls, plugin_name, setting_name, project=None, user=None
+    ):
         """
         Return the database object for a setting. Returns None if not available.
 
-        :param app_name: Name of the app plugin (string or None)
+        :param plugin_name: Name of the app plugin (string or None)
         :param setting_name: Setting name (string)
         :param project: Project object or None
         :param user: User object or None
@@ -893,48 +1002,53 @@ class AppSettingMixin:
             'project': project,
             'user': user,
         }
-        if app_name == 'projectroles':
+        if plugin_name == 'projectroles':
             q_kwargs['app_plugin'] = None
         else:
-            q_kwargs['app_plugin__name'] = app_name
+            q_kwargs['app_plugin__name'] = plugin_name
         return AppSetting.objects.get(**q_kwargs)
 
     @classmethod
     def get_setting_for_api(
-        cls, app_name, setting_name, project=None, user=None
+        cls, plugin_name, setting_name, project=None, user=None
     ):
         """
         Return the database object for a setting for API serving. Will create
         the object if not yet created.
 
-        :param app_name: Name of the app plugin (string or None)
+        :param plugin_name: Name of the app plugin (string or None)
         :param setting_name: Setting name (string)
         :param project: Project object or None
         :param user: User object or None
         :return: AppSetting object
         """
         try:
-            return cls._get_setting_obj(app_name, setting_name, project, user)
+            return cls._get_setting_obj(
+                plugin_name, setting_name, project, user
+            )
         except AppSetting.DoesNotExist:
             try:
                 app_settings.set(
-                    app_name=app_name,
+                    plugin_name=plugin_name,
                     setting_name=setting_name,
                     value=app_settings.get_default(
-                        app_name, setting_name, project=project, user=user
+                        plugin_name, setting_name, project=project, user=user
                     ),
                     project=project,
                     user=user,
                 )
                 return cls._get_setting_obj(
-                    app_name, setting_name, project, user
+                    plugin_name, setting_name, project, user
                 )
             except Exception as ex:
                 raise serializers.ValidationError(ex)
 
 
 class ProjectSettingRetrieveAPIView(
-    CoreAPIBaseProjectMixin, AppSettingMixin, RetrieveAPIView
+    ProjectrolesAPIVersioningMixin,
+    CoreAPIBaseProjectMixin,
+    AppSettingMixin,
+    RetrieveAPIView,
 ):
     """
     API view for retrieving an app setting with the PROJECT or PROJECT_USER
@@ -946,22 +1060,23 @@ class ProjectSettingRetrieveAPIView(
 
     **Parameters:**
 
-    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     - ``user``: User UUID for a PROJECT_USER setting (string or None, optional)
     """
 
     # NOTE: Update project settings perm is checked manually
     permission_required = 'projectroles.view_project'
+    schema = AutoSchema(operation_id_base='AppSettingProject')
     serializer_class = AppSettingSerializer
 
     def get_object(self):
-        app_name = self.request.GET.get('app_name')
+        plugin_name = self.request.GET.get('plugin_name')
         setting_name = self.request.GET.get('setting_name')
 
         # Get and validate definition
         s_def = self.get_and_validate_def(
-            app_name,
+            plugin_name,
             setting_name,
             [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER],
         )
@@ -979,11 +1094,12 @@ class ProjectSettingRetrieveAPIView(
 
         # Return new object with default setting if not set
         return self.get_setting_for_api(
-            app_name, setting_name, project, setting_user
+            plugin_name, setting_name, project, setting_user
         )
 
 
 class ProjectSettingSetAPIView(
+    ProjectrolesAPIVersioningMixin,
     CoreAPIBaseProjectMixin,
     AppSettingMixin,
     ProjectModifyPluginViewMixin,
@@ -999,7 +1115,7 @@ class ProjectSettingSetAPIView(
 
     **Parameters:**
 
-    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     - ``value``: Setting value (string, may contain JSON for JSON settings)
     - ``user``: User UUID for a PROJECT_USER setting (string or None, optional)
@@ -1012,12 +1128,12 @@ class ProjectSettingSetAPIView(
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         timeline = get_backend_api('timeline_backend')
-        app_name = request.data.get('app_name')
+        plugin_name = request.data.get('plugin_name')
         setting_name = request.data.get('setting_name')
 
         # Get and validate definition
         s_def = self.get_and_validate_def(
-            app_name,
+            plugin_name,
             setting_name,
             [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER],
         )
@@ -1038,10 +1154,10 @@ class ProjectSettingSetAPIView(
         # Set setting value with validation, return possible errors
         try:
             old_value = app_settings.get(
-                app_name, setting_name, project=project, user=setting_user
+                plugin_name, setting_name, project=project, user=setting_user
             )
             app_settings.set(
-                app_name=app_name,
+                plugin_name=plugin_name,
                 setting_name=setting_name,
                 value=value,
                 project=project,
@@ -1054,7 +1170,7 @@ class ProjectSettingSetAPIView(
                 False,
             ):
                 args = [
-                    app_name,
+                    plugin_name,
                     setting_name,
                     value,
                     old_value,
@@ -1071,12 +1187,12 @@ class ProjectSettingSetAPIView(
 
         if timeline:
             tl_desc = 'set value of {}.settings.{}'.format(
-                app_name, setting_name
+                plugin_name, setting_name
             )
             if setting_user:
                 tl_desc += ' for user {{{}}}'.format('user')
             setting_obj = self._get_setting_obj(
-                app_name, setting_name, project, setting_user
+                plugin_name, setting_name, project, setting_user
             )
             tl_extra_data = {'value': setting_obj.get_value()}
             tl_event = timeline.add_event(
@@ -1087,7 +1203,7 @@ class ProjectSettingSetAPIView(
                 description=tl_desc,
                 classified=True,
                 extra_data=tl_extra_data,
-                status_type='OK',
+                status_type=timeline.TL_STATUS_OK,
             )
             if setting_user:
                 tl_event.add_object(setting_user, 'user', setting_user.username)
@@ -1095,7 +1211,7 @@ class ProjectSettingSetAPIView(
             {
                 'detail': 'Set value of {}.settings.{} '
                 '(project={}; user={})'.format(
-                    app_name,
+                    plugin_name,
                     setting_name,
                     project.sodar_uuid,
                     setting_user.sodar_uuid if setting_user else None,
@@ -1106,7 +1222,7 @@ class ProjectSettingSetAPIView(
 
 
 class UserSettingRetrieveAPIView(
-    CoreAPIBaseMixin, AppSettingMixin, RetrieveAPIView
+    ProjectrolesAPIVersioningMixin, AppSettingMixin, RetrieveAPIView
 ):
     """
     API view for retrieving an app setting with the USER scope.
@@ -1117,30 +1233,31 @@ class UserSettingRetrieveAPIView(
 
     **Parameters:**
 
-    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     """
 
-    # NOTE: Update project settings perm is checked manually
-    permission_required = 'projectroles.view_project'
+    schema = AutoSchema(operation_id_base='AppSettingUser')
     serializer_class = AppSettingSerializer
 
     def get_object(self):
         if not self.request.user.is_authenticated:
             raise PermissionDenied(ANON_ACCESS_MSG)
-        app_name = self.request.GET.get('app_name')
+        plugin_name = self.request.GET.get('plugin_name')
         setting_name = self.request.GET.get('setting_name')
         # Get and validate definition
         self.get_and_validate_def(
-            app_name, setting_name, [APP_SETTING_SCOPE_USER]
+            plugin_name, setting_name, [APP_SETTING_SCOPE_USER]
         )
         # Return new object with default setting if not set
         return self.get_setting_for_api(
-            app_name, setting_name, user=self.request.user
+            plugin_name, setting_name, user=self.request.user
         )
 
 
-class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
+class UserSettingSetAPIView(
+    ProjectrolesAPIVersioningMixin, AppSettingMixin, APIView
+):
     """
     API view for setting the value of an app setting with the USER scope. Only
     allows the user to set the value of their own settings.
@@ -1151,7 +1268,7 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
 
     **Parameters:**
 
-    - ``app_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
+    - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     - ``value``: Setting value (string, may contain JSON for JSON settings)
     """
@@ -1161,10 +1278,10 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             raise PermissionDenied(ANON_ACCESS_MSG)
-        app_name = request.data.get('app_name')
+        plugin_name = request.data.get('plugin_name')
         setting_name = request.data.get('setting_name')
         s_def = self.get_and_validate_def(
-            app_name, setting_name, [APP_SETTING_SCOPE_USER]
+            plugin_name, setting_name, [APP_SETTING_SCOPE_USER]
         )
         if s_def.get('user_modifiable') is False:
             raise PermissionDenied(USER_MODIFIABLE_MSG)
@@ -1172,7 +1289,7 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
 
         try:
             app_settings.set(
-                app_name=app_name,
+                plugin_name=plugin_name,
                 setting_name=setting_name,
                 value=value,
                 user=request.user,
@@ -1182,26 +1299,35 @@ class UserSettingSetAPIView(CoreAPIBaseMixin, AppSettingMixin, APIView):
         return Response(
             {
                 'detail': 'Set value of {}.settings.{}'.format(
-                    app_name, setting_name
+                    plugin_name, setting_name
                 )
             },
             status=200,
         )
 
 
-class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
+class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     """
     Return a list of all users on the site. Excludes system users, unless called
     with superuser access.
+
+    Supports optional pagination by providing the ``page`` query string. This
+    will return results in the Django Rest Framework ``PageNumberPagination``
+    format.
 
     **URL:** ``/project/api/users/list``
 
     **Methods:** ``GET``
 
-    **Returns**: List of serializers users (see ``CurrentUserRetrieveAPIView``)
+    **Parameters:**
+
+    - ``page``: Page number for paginated results (int, optional)
+
+    **Returns**: List or paginated dict of serializers users (see ``CurrentUserRetrieveAPIView``)
     """
 
     lookup_field = 'project__sodar_uuid'
+    pagination_class = SODARPageNumberPagination
     permission_classes = [IsAuthenticated]
     serializer_class = SODARUserSerializer
 
@@ -1216,7 +1342,9 @@ class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
         return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
 
 
-class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
+class CurrentUserRetrieveAPIView(
+    ProjectrolesAPIVersioningMixin, RetrieveAPIView
+):
     """
     Return information on the user making the request.
 
@@ -1228,6 +1356,7 @@ class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
 
     For current user:
 
+    - ``additional_emails``: Additional verified email addresses for user (list of strings)
     - ``email``: Email address of the user (string)
     - ``is_superuser``: Superuser status (boolean)
     - ``name``: Full name of the user (string)
@@ -1243,7 +1372,7 @@ class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
 
 
 # TODO: Update this for new API base classes
-class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
+class RemoteProjectGetAPIView(RemoteSyncAPIVersioningMixin, APIView):
     """API view for retrieving remote projects from a source site"""
 
     permission_classes = (AllowAny,)  # We check the secret in get()
@@ -1262,7 +1391,7 @@ class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
         if accept_header and 'version=' in accept_header:
             req_version = accept_header[accept_header.find('version=') + 8 :]
         else:
-            req_version = CORE_API_DEFAULT_VERSION
+            req_version = SYNC_API_DEFAULT_VERSION
         sync_data = remote_api.get_source_data(target_site, req_version)
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())

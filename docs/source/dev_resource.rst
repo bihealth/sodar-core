@@ -306,9 +306,10 @@ The rest of the attributes are listed below:
     Default value for the setting. This is returned if no value has been set.
     Can alternatively be a callable with the signature
     ``callable(project=None, user=None)``.
-``local``
-    Boolean for allowing/disallowing editing in target sites for synchronized
-    projects.
+``global``
+    Boolean for allowing/disallowing editing in target sites for remote
+    projects. Relevant to ``SOURCE`` sites. If set ``True``, the value can not
+    be edited on target sites, the default value being ``False`` (optional).
 ``label``
     Label string to be displayed in forms for ``PROJECT`` and ``USER`` scope
     settings (optional).
@@ -341,7 +342,7 @@ docs, see
 
     from projectroles.app_settings import AppSettingAPI
     app_settings = AppSettingAPI()
-    app_settings.get('app_name', 'setting_name', project_object)  # Etc..
+    app_settings.get('plugin_name', 'setting_name', project_object)  # Etc..
 
 There is no need to separately generate settings for projects or users. If the
 setting object does not exist in the Django database when

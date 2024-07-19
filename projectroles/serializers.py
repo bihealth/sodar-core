@@ -14,6 +14,7 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     AppSetting,
+    SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ROLE_RANKING,
     CAT_DELIMITER,
@@ -147,9 +148,26 @@ class SODARNestedListSerializer(SODARModelSerializer):
 class SODARUserSerializer(SODARModelSerializer):
     """Serializer for the user model used in SODAR Core based sites"""
 
+    additional_emails = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['username', 'name', 'email', 'is_superuser', 'sodar_uuid']
+        fields = [
+            'username',
+            'name',
+            'email',
+            'additional_emails',
+            'is_superuser',
+            'sodar_uuid',
+        ]
+
+    def get_additional_emails(self, obj):
+        return [
+            e.email
+            for e in SODARUserAdditionalEmail.objects.filter(
+                user=obj, verified=True
+            ).order_by('email')
+        ]
 
 
 # Projectroles Serializers -----------------------------------------------------
@@ -367,10 +385,12 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'readme',
             'public_guest_access',
             'archive',
+            'full_title',
             'owner',
             'roles',
             'sodar_uuid',
         ]
+        read_only_fields = ['full_title']
 
     def _validate_parent(self, parent, attrs, current_user, disable_categories):
         """Validate parent field"""
@@ -546,7 +566,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             title=ret['title'],
             **{'parent__sodar_uuid': parent} if parent else {},
         )
-        # Return only title and UUID for projects with finder role
+        # Return only title, full title and UUID for projects with finder role
         user = self.context['request'].user
         if (
             project.type == PROJECT_TYPE_PROJECT
@@ -560,6 +580,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             ):
                 return {
                     'title': project.title,
+                    'full_title': project.full_title,
                     'sodar_uuid': str(project.sodar_uuid),
                 }
         # Else return full serialization
@@ -575,6 +596,8 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 ret['roles'][k]['inherited'] = (
                     True if role_as.project != project else False
                 )
+        # Set full_title manually
+        ret['full_title'] = project.full_title
         return ret
 
 
@@ -585,13 +608,13 @@ class AppSettingSerializer(SODARProjectModelSerializer):
     directly is not the intended way to set/get app settings.
     """
 
-    app_name = serializers.CharField(read_only=True)
+    plugin_name = serializers.CharField(read_only=True)
     user = SODARUserSerializer(read_only=True)
 
     class Meta:
         model = AppSetting
         fields = [
-            'app_name',
+            'plugin_name',
             'project',
             'user',
             'name',
@@ -605,8 +628,8 @@ class AppSettingSerializer(SODARProjectModelSerializer):
         """Override to clean up data for serialization"""
         ret = super().to_representation(instance)
         if instance.app_plugin:
-            ret['app_name'] = instance.app_plugin.name
+            ret['plugin_name'] = instance.app_plugin.name
         else:
-            ret['app_name'] = 'projectroles'
+            ret['plugin_name'] = 'projectroles'
         ret['value'] = instance.get_value()
         return ret

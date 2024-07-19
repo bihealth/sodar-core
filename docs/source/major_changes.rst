@@ -10,6 +10,314 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.0 (2024-07-19)
+*******************
+
+Release Highlights
+==================
+
+- Upgrade to Django v4.2 and Postgres v16
+- Add Python v3.11 support
+- Add OpenID Connect (OIDC) authentication support
+- Add app specific and semantic REST API versioning
+- Add REST API versioning independent from repo/site versions
+- Add timeline REST API
+- Add optional pagination for REST API list views
+- Add admin alert email sending to all users
+- Add improved additional email address management and verification
+- Add user opt-out settings for email notifications
+- Add remote sync controls for owners and delegates in project form
+- Add target site user UUID updating in remote sync
+- Add remote sync of existing target local users
+- Add remote sync of USER scope app settings
+- Add checkusers management command
+- Add Ajax views for sidebar, project dropdown and user dropdown retrieval
+- Add CC and BCC field support in sending generic emails
+- Add is_set() helper in AppSettingAPI
+- Rewrite sodarcache REST API views
+- Rewrite user additional email storing
+- Rename AppSettingAPI "app_name" arguments to "plugin_name"
+- Plugin API return data updates and deprecations
+- Rename timeline app models
+- Rename base test classes
+- Remove app setting max length limit
+- Remove Python v3.8 support
+- Remove SAML authentication support
+
+Breaking Changes
+================
+
+Django v4.2 Upgrade
+-------------------
+
+This release updates SODAR Core from Django v3.2 to v4.2. This is a breaking
+change which causes many updates and also requires updating several
+dependencies.
+
+Please update the Django requirement along with your site's other Python
+requirements to match ones in ``requirements/*.txt``. See
+`Django deprecation documentation <https://docs.djangoproject.com/en/dev/internals/deprecation/>`_
+for details about what has been deprecated in Django and which changes are
+mandatory.
+
+Common known issues:
+
+- Minimum version of PostgreSQL has been bumped to v12.
+- Replace ``django.utils.translation.ugettext_lazy`` imports with
+  ``gettext_lazy``.
+- Replace ``django.conf.urls.url`` imports with ``django.urls.re_path``.
+- Calls for ``related_managers`` for unsaved objects raises ``ValueError``. This
+  can be handled by e.g. calling ``model.save(commit=False)`` before trying to
+  access foreign key relations.
+
+System Prerequisites
+--------------------
+
+PostgreSQL
+    The minimum required PostgreSQL version has been bumped to v12. We recommend
+    PostgreSQL v16 which is used in CI for this repo. However, any version from
+    v12 onwards should work with this release. We strongly recommended to make
+    backups of your production databases before upgrading.
+Python v3.11 Support Added
+    Python v3.11 support has been officially added in this version. 3.11 is also
+    the recommended Python version.
+Python v3.8 Support Dropped
+    This release no longer supports Python v3.8.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project.
+
+REST API Versioning Overhaul
+----------------------------
+
+The REST API versioning system has been overhauled. Before, we used two separate
+accept header versioning systems: 1) API views in SODAR Core apps with
+``CORE_API_MEDIA_TYPE``, and 2) API views of the site built on SODAR Core with
+``SODAR_API_MEDIA_TYPE``. The version number has been expected to match the
+SODAR Core or the site version number, respectively.
+
+In the new system there are two critical changes to this versioning scheme:
+
+1. Each app is expected to provide its own media type and API version number.
+2. Each API should use a version number independent from the site version,
+   ideally following semantic versioning. Versions will start at ``1.0``.
+
+SODAR Core REST APIs are now be provided under the following media types, each
+available initially under version ``1.0``:
+
+:ref:`Projectroles <app_projectroles_api_rest>`
+    ``application/vnd.bihealth.sodar-core.projectroles+json``
+Projectroles Remote Sync (only used internally by SODAR Core sites)
+    ``application/vnd.bihealth.sodar-core.projectroles.sync+json``
+:ref:`Filesfolders <app_filesfolders_api_rest>`
+    ``application/vnd.bihealth.sodar-core.filesfolders+json``
+:ref:`Sodarcache <app_sodarcache_api_rest>`
+    ``application/vnd.bihealth.sodar-core.sodarcache+json``
+:ref:`Timeline <app_timeline_api_rest>`
+    ``application/vnd.bihealth.sodar-core.timeline+json``
+
+If you have previously used the ``SODAR_API_*`` accept header versioning, you
+should update your own views to the new scheme. To do this, you need to provide
+your custom renderer and versioning class for each app providing a REST API. For
+instructions and an example on how to do this, see
+:ref:`dev_project_app_rest_api`.
+
+.. note::
+
+    Legacy ``SODAR_API_*`` is deprecated but will still be supported in this
+    release. Support will be removed in v1.1, after which you will be required
+    to provide your own versioning and rendering classes. Calls to updated API
+    views using legacy versioning will not work with SODAR Core v1.0.
+
+.. warning::
+
+    The legacy API versioning for SODAR Core API views (projectroles and
+    filesfolders) is no longer working as of v1.0. Make sure to update your
+    clients for the new version number and see the API changes below. After this
+    overhaul, we aim to provide backwards compatibility for old API versions
+    whereever possible.
+
+REST API Pagination Support
+---------------------------
+
+This release adds optional pagination support for REST API list views. To
+paginate your results, provide the ``?page=1`` query string in your request.
+If paginated, the results will correspond to the Django Rest Framework
+``PageNumberPagination`` results. For more, see
+`DRF documentation <https://www.django-rest-framework.org/api-guide/pagination/#pagenumberpagination>`_.
+
+Requests to the views without the pagination query string return full results
+as a list as they did in previous releases. Hence, this change should not
+equire breaking changes in clients using the REST API.
+
+To support REST API list view pagination on your site, it is recommended to add
+the following in your Django settings:
+
+.. code-block:: python
+
+    REST_FRAMEWORK = {
+        # ...
+        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+        'PAGE_SIZE': env.int('SODAR_API_PAGE_SIZE', 100),
+    }
+
+REST API View Changes
+---------------------
+
+The following breaking changes have been made into specific REST API endpoints
+in this release:
+
+``ProjectRetrieveAPIView`` (``project/api/retrieve/<uuid:project>``)
+    Add ``full_title`` field to return data. Also affects list view.
+``ProjectSettingRetrieveAPIView`` (``project/api/settings/retrieve/<uuid:project>``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``ProjectSettingSetAPIView`` (``project/api/settings/set/<uuid:project>``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``UserSettingRetrieveAPIView`` (``project/api/settings/retrieve/user``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+``UserSettingSetAPIView`` (``project/api/settings/set/user``)
+    Rename ``app_name`` parameter to ``plugin_name``.
+:ref:`Sodarcache REST API <app_sodarcache_api_rest>`
+    The entire sodarcache REST API has been rewritten to conform to our general
+    REST API conventions regarding URLs and return data. See the API
+    documentation and refactor your client code accordingly.
+
+Timeline Models Renamed
+-----------------------
+
+Models in the timeline app have been renamed from ``ProjectEvent*`` to
+``TimelineEvent*``. This is done to better reflect the fact that events are not
+necessarily tied to projects.
+
+If your site only accesses these models through ``TimelineAPI`` and
+``TimelineAPI.get_model()``, which is the strongly recommended way, no changes
+should be required.
+
+AppSettingAPI Plugin Name Arguments Updated
+-------------------------------------------
+
+In ``AppSettingAPI``, all method arguments called ``app_name`` have been renamed
+into ``plugin_name``. This is to remove confusion as the argument does in fact
+refer specifically to a plugin, not the app name itself. If the argument is
+provided as a kwarg, references to it should be renamed.
+
+App Settings "Local" Attribute Deprecated
+-----------------------------------------
+
+The optional ``local`` attribute in app settings definitions has been
+depreacted. You should instead use ``global`` and the inverse value of your
+existing ``local`` settings. Support for ``local`` will be removed in SODAR Core
+v1.1. This is only relevant to sites being deployed as ``SOURCE`` sites.
+
+Plugin API get_object_link() Changes
+------------------------------------
+
+Implementations of ``get_object_link()`` in app plugins are now expected to
+return a ``PluginObjectLink`` object or ``None``. Returning a ``dict`` has been
+deprecated and support for it will be removed in v1.1.
+
+Furthermore, the return data is now expected to return the object name in the
+``name`` attribute, instead of ``label`` in the old implementation.
+
+Plugin API search() Changes
+---------------------------
+
+Similar to ``get_object_link()``, expected return data for ``search()`` has
+changed. Implementations are now expected to return a list of
+``PluginSearchResult`` objects. Returning a ``dict`` has been deprecated and
+support for it will be removed in v1.1.
+
+Note that a dict using the ``category`` variable as a key will still be
+provided for your app's search template. Hence, modifying the template should
+not be required after updating the method.
+
+User Additional Email Changes
+-----------------------------
+
+The ``user_email_additional`` app setting has been removed. Instead, additional
+user email addresses can be accessed via the ``SODARUserAdditionalEmail`` model
+if needed. Using ``email.get_user_addr()`` to retrieve all user email addresses
+is strongly recommended.
+
+Remote Sync User Update Changes
+-------------------------------
+
+UUIDs Updated to Match Source Site
+    User UUIDs on target sites are now correctly created and updated in remote
+    sync to match the UUIDs of similarly named users on the source site. This
+    should only be a breaking change in case you are storing existing user UUIDs
+    outside your site and using them in e.g. REST API queries. Otherwise this
+    change should require no actions.
+Local User Details Updated on Target Site
+    If local users are enabled, local users are updated to match target site
+    users similar to what was before done for LDAP/AD users. Note that creation
+    of local users must still be done manually: they will not be automatically
+    created by remote sync.
+
+Django Settings Changed
+-----------------------
+
+``AUTH_LDAP*_USER_SEARCH_BASE`` Added
+    The user search base values for primary and secondary LDAP servers have been
+    included as directly accessible Django settings. This is require for the
+    ``checkuser`` management command to work. It is recommended to update your
+    site's LDAP settings accordingly.
+``PROJECTROLES_HIDE_APP_LINKS`` Removed
+    The ``PROJECTROLES_HIDE_APP_LINKS`` Django setting, which was deprecated in
+    v0.13, has been removed. Use ``PROJECTROLES_HIDE_PROJECT_APPS`` instead.
+
+SAML Authentication Support Removed
+-----------------------------------
+
+SAML support has been removed and replaced with the possibility to set up OpenID
+Connect (OIDC) authentication. The library previously used for SAML in SODAR
+Core is incompatible with Django v4.x. We are unaware of SODAR Core based
+projects requiring SAML at this time. If there are specific needs to use SAML on
+a SODAR Core based site, we are happy to review pull requests to reintroduce it.
+Please note the implementation has to support Django v4.2+.
+
+OpenID Connect (OIDC) Authentication Support Added
+--------------------------------------------------
+
+This version adds OIDC support using the ``social_django`` app. In order to
+provide OIDC authentication access to your users, you need to add the app and
+its URLs to your site config along with appropriate Django settings. See
+:ref:`OIDC settings documentation <app_projectroles_settings_oidc>` for
+instructions on how to to configure OIDC on your site.
+
+Login Template Updated
+----------------------
+
+The default login template ``login.html`` has been updated by adding OpenID
+Connect (OIDC) controls and removing SAML controls. If you have overridden the
+login template with your own and wish to use OIDC authentication, make sure to
+update your template accordingly.
+
+Base Test Classes Renamed
+-------------------------
+
+A number of base test classes in the :ref:`Projectroles app <app_projectroles>`
+have been renamed for consistency. If you use these base classes in your site's
+tests, you will have to rename them accordingly. The changes are as follows:
+
+- ``projectroles.tests.test_permissions``
+    * ``TestPermissionBase`` -> ``PermissionTestBase``
+    * ``TestPermissionMixin`` -> ``PermissionTestMixin``
+    * ``TestProjectPermissionBase`` -> ``ProjectPermissionTestBase``
+    * ``TestSiteAppPermissionBase`` -> ``SiteAppPermissionTestBase``
+- ``projectroles.tests.test_permissions_api``
+    * ``TestProjectAPIPermissionBase`` -> ``ProjectAPIPermissionTestBase``
+- ``projectroles.tests.test_templatetags``
+    * ``TestTemplateTagsBase`` -> ``TemplateTagTestBase``
+- ``projectroles.tests.test_ui``
+    * ``TestUIBase`` -> ``UITestBase``
+- ``projectroles.tests.test_views``
+    * ``TestViewsBase`` -> ``ViewTestBase``
+- ``projectroles.tests.test_views_api``
+    * ``TestAPIViewsBase`` -> ``APIViewTestBase``
+
+
 v0.13.4 (2024-02-16)
 ********************
 

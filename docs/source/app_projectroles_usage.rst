@@ -25,14 +25,19 @@ Core based Django site.
 
 One can either log in using a local Django user or, if LDAP/AD is enabled, their
 LDAP/AD credentials from a supported site. In the latter case, the user domain
-must be appended to the user name in form of ``user@DOMAIN``. Single sign-on
-with SAML can also be made available.
+must be appended to the user name in form of ``user@DOMAIN``.
+
+If OpenID Connect (OIDC) single-sign on authentication is enabled, an extra
+login element will be displayed next to the standard login controls. This will
+take the user to the login view of the OIDC provider. The element can be
+replaced with a custom template to e.g. use specific graphics recommended by the
+provider.
 
 .. figure:: _static/app_projectroles/sodar_login.png
     :align: center
     :scale: 75%
 
-    SODAR login form
+    SODAR Core login form
 
 
 User Interface
@@ -198,6 +203,16 @@ specifically granting it.
     Public guest access can only be set for projects. Categories will be visible
     for users with access to any category or project under them.
 
+Access on Remote Sites
+----------------------
+
+In the project create/update view, owners and delegates can modify remote site
+access to projects. This is available for sites where these controls have been
+enabled by administrators. The sites will appear as checkboxes as
+:guilabel:`Enable project on {SITE-NAME}`.
+
+For more information, see :ref:`app_projectroles_usage_remote`.
+
 App Settings
 ------------
 
@@ -309,11 +324,12 @@ Invites
 -------
 
 Invites are accepted by the responding user clicking on a link supplied in their
-invite email and either logging in to the site with their LDAP/AD credentials or
-creating a local user. The latter is only allowed if local users are enabled in
-the site's Django settings and the user email domain is not associated with
-configured LDAP domains. Invites expire after a certain time and can be reissued
-or revoked on the **Project Invites** page.
+invite email. Depending on how the site is configured, users can then either
+login to the site using their LDAP/OIDC credentials or create a local user. The
+latter is only allowed if local users are enabled in the site's Django settings
+and the user email domain is not associated with configured LDAP domains.
+Invites expire after a certain time and can be reissued or revoked on the
+:guilabel:`Project Invites` page.
 
 Batch Member Modifications
 --------------------------
@@ -323,6 +339,19 @@ project permissions, or by a site admin using the ``batchupdateroles``
 management command. The latter supports multiple projects in one batch. It is
 also able to send invites to users who have not yet signed up on the site.
 
+User Status Checking
+--------------------
+
+An administrator can check status of external LDAP user accounts using the
+``checkusers`` management command. This will list accounts disabled or locked
+out of the LDAP server. Use the ``-h`` flag to see additional options.
+
+.. code-block:: console
+
+    $ ./manage.py checkusers
+
+
+.. _app_projectroles_usage_remote:
 
 Remote Projects
 ===============
@@ -345,7 +374,8 @@ project data can be provided. A target site can define exactly one source site,
 from which project data can be retrieved from.
 
 To enable remote project data and member synchronization, you must first set up
-either a target or a source site depending on the role of your own SODAR site.
+either a target or a source site depending on the role of your own SODAR Core
+based site.
 
 .. figure:: _static/app_projectroles/sodar_remote_sites.png
     :align: center
@@ -362,10 +392,33 @@ specifying the remote site. A secret string is generated automatically. You
 need to provide this to the administrator of the target site in question for
 accessing your site.
 
-Here you also have the option to hide the remote project link from your users.
-Users viewing the project on the source site then won't see a link to the target
-site. Owners and superusers will still see the link (greyed out). This is most
-commonly used for internal test sites which only needs to be used by admins.
+Fields for target remote site creation:
+
+Name
+    Name of the remote site.
+URL
+    URL for the remote site, e.g. ``https://sodar-core-site.example.com``.
+Description
+    Text description for the site.
+User display
+    If set false, this will hide the remote project links from your users.
+    Users viewing the project on the source site then won't see a link to the
+    target site. Owners and superusers will still see the link (greyed out).
+    This is most commonly used for internal test sites which only needs to be
+    used by admins.
+Owner modifiable
+    If this and :guilabel:`User display` are checked, owners and delegates can
+    control project visibility on this site in the project create/update view.
+Secret
+    Secret token for the project, which must be set to an identical value
+    between source and target sites.
+
+.. figure:: _static/app_projectroles/sodar_remote_site_form.png
+    :align: center
+    :scale: 50%
+
+    Remote site create/update view viewed as a source site
+
 
 Once created, you can access the list of projects on your site in regards to the
 created target site. For each project, you may select an access level, of which
@@ -380,6 +433,15 @@ Revoked Access
     Previously available access which has been revoked. The project will still
     remain in the target site, but only superusers, the project owner or the
     project delegate(s) can access it.
+
+Once desired access to specific projects has been granted and confirmed, the
+target site will sync the data by sending a request to the source site.
+
+.. figure:: _static/app_projectroles/sodar_remote_projects.png
+    :align: center
+    :scale: 50%
+
+    Remote project list viewed as a source site
 
 .. note::
 
@@ -404,15 +466,6 @@ Revoked Access
     project also publicly accessible on the target site, it needs to be
     explicitly set by the project owner, delegate or a superuser in the
     :guilabel:`Update Project` form.
-
-Once desired access to specific projects has been granted and confirmed, the
-target site will sync the data by sending a request to the source site.
-
-.. figure:: _static/app_projectroles/sodar_remote_projects.png
-    :align: center
-    :scale: 50%
-
-    Remote project list in source mode
 
 As Target Site
 --------------
@@ -450,7 +503,29 @@ Alternatively, the following management command can be used:
     If a local user is the owner of a synchronized project on the source site,
     the user defined in the ``PROJECTROLES_DEFAULT_ADMIN`` will be given the
     owner role. Hence you **must** have this setting defined if you are
-    implementing a SODAR site in target mode.
+    implementing a SODAR Core based site in target mode.
+
+.. note::
+
+    Local non-owner users can be granted roles if
+    ``PROJECTROLES_ALLOW_LOCAL_USERS`` is set on the target site. However, local
+    users must be manually created by a target site admin in order for their
+    data and roles to be synchronized.
+
+Project Detail View Links
+-------------------------
+
+Links to the same project on other sites will appear in the
+:guilabel:`Project on Other Sites` card in the project detail view. If the
+remote site has not yet synchronized this project, the link will appear grayed
+out and unclickable. On a remote site, the source project will be labeled as
+such.
+
+.. figure:: _static/app_projectroles/sodar_remote_project_links.png
+    :align: center
+    :scale: 75%
+
+    Remote project links in the project detail view
 
 
 Search

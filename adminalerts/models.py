@@ -73,9 +73,11 @@ class AdminAlert(models.Model):
     def __str__(self):
         return '{}{}'.format(
             self.message,
-            ' [ACTIVE]'
-            if (self.active and self.date_expire > timezone.now())
-            else '',
+            (
+                ' [ACTIVE]'
+                if (self.active and self.date_expire > timezone.now())
+                else ''
+            ),
         )
 
     def __repr__(self):

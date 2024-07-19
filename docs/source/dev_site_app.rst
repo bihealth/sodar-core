@@ -119,7 +119,8 @@ Implementing the following is **optional**:
     Return statistics for the siteinfo app. See details in
     :ref:`the siteinfo documentation <app_siteinfo>`.
 ``get_object_link()``
-    Return object link for a Timeline event.
+    Return object link for a Timeline event. Expected to return a
+    ``PluginObjectLink`` object or ``None``.
 ``get_extra_data_link()``
     Return extra data link for a Timeline event.
 

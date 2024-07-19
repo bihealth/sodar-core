@@ -13,10 +13,12 @@ from projectroles.tests.test_models import (
 )
 
 from timeline.models import (
-    ProjectEvent,
-    ProjectEventObjectRef,
-    ProjectEventStatus,
+    TimelineEvent,
+    TimelineEventObjectRef,
+    TimelineEventStatus,
     OBJ_REF_UNNAMED,
+    TL_STATUS_OK,
+    TL_STATUS_FAILED,
 )
 
 
@@ -29,8 +31,12 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
-class ProjectEventMixin:
-    """Helper mixin for ProjectEvent creation"""
+# Local constants
+EXTRA_DATA = {'test_key': 'test_val'}
+
+
+class TimelineEventMixin:
+    """Helper mixin for TimelineEvent creation"""
 
     @classmethod
     def make_event(
@@ -54,13 +60,13 @@ class ProjectEventMixin:
             'extra_data': extra_data or {},
             'plugin': plugin,
         }
-        result = ProjectEvent(**values)
+        result = TimelineEvent(**values)
         result.save()
         return result
 
 
-class ProjectEventObjectRefMixin:
-    """Helper mixin for ProjectEventObjectRef creation"""
+class TimelineEventObjectRefMixin:
+    """Helper mixin for TimelineEventObjectRef creation"""
 
     @classmethod
     def make_object_ref(cls, event, obj, label, name, uuid, extra_data=None):
@@ -72,13 +78,13 @@ class ProjectEventObjectRefMixin:
             'object_uuid': uuid,
             'extra_data': extra_data or {},
         }
-        result = ProjectEventObjectRef(**values)
+        result = TimelineEventObjectRef(**values)
         result.save()
         return result
 
 
-class ProjectEventStatusMixin:
-    """Helper mixin for ProjectEventStatus creation"""
+class TimelineEventStatusMixin:
+    """Helper mixin for TimelineEventStatus creation"""
 
     @classmethod
     def make_event_status(
@@ -90,12 +96,12 @@ class ProjectEventStatusMixin:
             'description': description,
             'extra_data': extra_data or {'test': 'test'},
         }
-        result = ProjectEventStatus(**values)
+        result = TimelineEventStatus(**values)
         result.save()
         return result
 
 
-class TestProjectEventBase(
+class TimelineEventTestBase(
     ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase
 ):
     def setUp(self):
@@ -112,11 +118,11 @@ class TestProjectEventBase(
         )
 
 
-class TestProjectEvent(
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
-    TestProjectEventBase,
-    ProjectEventObjectRefMixin,
+class TestTimelineEvent(
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    TimelineEventObjectRefMixin,
+    TimelineEventTestBase,
 ):
     def setUp(self):
         super().setUp()
@@ -127,7 +133,7 @@ class TestProjectEvent(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
 
         self.obj_ref = self.make_object_ref(
@@ -136,11 +142,11 @@ class TestProjectEvent(
             label='test_label',
             name='test_object_name',
             uuid=self.assignment_owner.sodar_uuid,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
 
     def test_initialization(self):
-        """Test ProjectEvent initialization"""
+        """Test TimelineEvent initialization"""
         expected = {
             'id': self.event.pk,
             'project': self.project.pk,
@@ -150,13 +156,13 @@ class TestProjectEvent(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': EXTRA_DATA,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
 
     def test_initialization_no_project(self):
-        """Test ProjectEvent initialization with no project"""
+        """Test TimelineEvent initialization with no project"""
         self.event = self.make_event(
             project=None,
             app='projectroles',
@@ -164,7 +170,7 @@ class TestProjectEvent(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
         expected = {
             'id': self.event.pk,
@@ -175,13 +181,13 @@ class TestProjectEvent(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': EXTRA_DATA,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
 
     def test_initialization_no_user(self):
-        """Test ProjectEvent initialization with no user"""
+        """Test TimelineEvent initialization with no user"""
         self.event = self.make_event(
             project=self.project,
             app='projectroles',
@@ -189,7 +195,7 @@ class TestProjectEvent(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
         expected = {
             'id': self.event.pk,
@@ -200,13 +206,13 @@ class TestProjectEvent(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': EXTRA_DATA,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
 
     def test_initialization_plugin(self):
-        """Test ProjectEvent initialization with specific plugin name"""
+        """Test TimelineEvent initialization with specific plugin name"""
         self.event = self.make_event(
             project=None,
             app='projectroles',
@@ -215,7 +221,7 @@ class TestProjectEvent(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
         expected = {
             'id': self.event.pk,
@@ -226,32 +232,32 @@ class TestProjectEvent(
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': EXTRA_DATA,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
 
     def test_str(self):
-        """Test ProjectEvent __str__()"""
+        """Test TimelineEvent __str__()"""
         expected = 'TestProject: test_event/owner'
         self.assertEqual(str(self.event), expected)
 
     def test_str_no_user(self):
-        """Test ProjectEvent __str__() with no user"""
+        """Test TimelineEvent __str__() with no user"""
         self.event.user = None
         self.event.save()
         expected = 'TestProject: test_event'
         self.assertEqual(str(self.event), expected)
 
     def test_str_no_project(self):
-        """Test ProjectEvent __str__() with no project"""
+        """Test TimelineEvent __str__() with no project"""
         self.event.project = None
         self.event.save()
         expected = 'test_event/owner'
         self.assertEqual(str(self.event), expected)
 
     def test_str_no_project_no_user(self):
-        """Test ProjectEvent __str__() with no project or user"""
+        """Test TimelineEvent __str__() with no project or user"""
         self.event.project = None
         self.event.user = None
         self.event.save()
@@ -259,30 +265,30 @@ class TestProjectEvent(
         self.assertEqual(str(self.event), expected)
 
     def test_repr(self):
-        """Test ProjectEventStatus __repr__()"""
-        expected = "ProjectEvent('TestProject', 'test_event', 'owner')"
+        """Test TimelineEvent __repr__()"""
+        expected = "TimelineEvent('TestProject', 'test_event', 'owner')"
         self.assertEqual(repr(self.event), expected)
 
     def test_repr_no_user(self):
-        """Test ProjectEventStatus __repr__() with no user"""
+        """Test TimelineEvent __repr__() with no user"""
         self.event.user = None
         self.event.save()
-        expected = "ProjectEvent('TestProject', 'test_event', 'N/A')"
+        expected = "TimelineEvent('TestProject', 'test_event', 'N/A')"
         self.assertEqual(repr(self.event), expected)
 
     def test_repr_no_project(self):
-        """Test ProjectEventStatus __repr__() with no project"""
+        """Test TimelineEvent __repr__() with no project"""
         self.event.project = None
         self.event.save()
-        expected = "ProjectEvent('N/A', 'test_event', 'owner')"
+        expected = "TimelineEvent('N/A', 'test_event', 'owner')"
         self.assertEqual(repr(self.event), expected)
 
     def test_repr_no_project_no_user(self):
-        """Test ProjectEventStatus __repr__() with no project or user"""
+        """Test TimelineEvent __repr__() with no project or user"""
         self.event.project = None
         self.event.user = None
         self.event.save()
-        expected = "ProjectEvent('N/A', 'test_event', 'N/A')"
+        expected = "TimelineEvent('N/A', 'test_event', 'N/A')"
         self.assertEqual(repr(self.event), expected)
 
     def test_add_object(self):
@@ -303,6 +309,7 @@ class TestProjectEvent(
             'object_uuid': new_as.sodar_uuid,
             'object_model': 'RoleAssignment',
             'extra_data': {},
+            'sodar_uuid': new_obj.sodar_uuid,
         }
         self.assertEqual(model_to_dict(new_obj), expected)
 
@@ -316,31 +323,31 @@ class TestProjectEvent(
         self.assertEqual(new_obj.name, OBJ_REF_UNNAMED)
 
     def test_find_name(self):
-        """Test ProjectEvent.find() with event name"""
-        objects = ProjectEvent.objects.find(['test_event'])
+        """Test TimelineEvent.find() with event name"""
+        objects = TimelineEvent.objects.find(['test_event'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
     def test_find_description(self):
-        """Test ProjectEvent.find() with event description"""
-        objects = ProjectEvent.objects.find(['description'])
+        """Test TimelineEvent.find() with event description"""
+        objects = TimelineEvent.objects.find(['description'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
     def test_find_object(self):
-        """Test ProjectEvent.find() with object reference"""
-        objects = ProjectEvent.objects.find(['test_object_name'])
+        """Test TimelineEvent.find() with object reference"""
+        objects = TimelineEvent.objects.find(['test_object_name'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
     def test_find_fail(self):
-        """Test ProjectEvent.find() with no matches"""
-        objects = ProjectEvent.objects.find(['asdfasdfafasdf'])
+        """Test TimelineEvent.find() with no matches"""
+        objects = TimelineEvent.objects.find(['asdfasdfafasdf'])
         self.assertEqual(len(objects), 0)
 
 
-class TestProjectEventObjectRef(
-    ProjectEventMixin, ProjectEventObjectRefMixin, TestProjectEventBase
+class TestTimelineEventObjectRef(
+    TimelineEventMixin, TimelineEventObjectRefMixin, TimelineEventTestBase
 ):
     def setUp(self):
         super().setUp()
@@ -351,7 +358,7 @@ class TestProjectEventObjectRef(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
         self.obj_ref = self.make_object_ref(
             event=self.event,
@@ -359,11 +366,11 @@ class TestProjectEventObjectRef(
             label='test_label',
             name='test_name',
             uuid=self.assignment_owner.sodar_uuid,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
 
     def test_initialization(self):
-        """Test ProjectEventObject initialization"""
+        """Test TimelineEventObjectRef initialization"""
         expected = {
             'id': self.obj_ref.pk,
             'event': self.event.pk,
@@ -371,26 +378,27 @@ class TestProjectEventObjectRef(
             'name': 'test_name',
             'object_model': 'RoleAssignment',
             'object_uuid': self.assignment_owner.sodar_uuid,
-            'extra_data': {'test_key': 'test_val'},
+            'extra_data': EXTRA_DATA,
+            'sodar_uuid': self.obj_ref.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.obj_ref), expected)
 
     def test__str__(self):
-        """Test ProjectEventObject __str__()"""
+        """Test TimelineEventObjectRef __str__()"""
         expected = 'TestProject: test_event/owner (test_name)'
         self.assertEqual(str(self.obj_ref), expected)
 
     def test__repr__(self):
-        """Test ProjectEventObject __repr__()"""
+        """Test TimelineEventObjectRef __repr__()"""
         expected = (
-            "ProjectEventObjectRef('TestProject', 'test_event', "
+            "TimelineEventObjectRef('TestProject', 'test_event', "
             "'owner', 'test_name')"
         )
         self.assertEqual(repr(self.obj_ref), expected)
 
     def test_get_object_events(self):
-        """Test get_object_events() in ProjectEventManager"""
-        events = ProjectEvent.objects.get_object_events(
+        """Test get_object_events() in TimelineEventManager"""
+        events = TimelineEvent.objects.get_object_events(
             project=self.project,
             object_model=self.obj_ref.object_model,
             object_uuid=self.obj_ref.object_uuid,
@@ -399,8 +407,8 @@ class TestProjectEventObjectRef(
         self.assertEqual(events[0], self.event)
 
 
-class TestProjectEventStatus(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase
+class TestTimelineEventStatus(
+    TimelineEventMixin, TimelineEventStatusMixin, TimelineEventTestBase
 ):
     def setUp(self):
         super().setUp()
@@ -411,42 +419,42 @@ class TestProjectEventStatus(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
         self.event_status_submit = self.make_event_status(
             event=self.event,
             status_type='SUBMIT',
             description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
         self.event_status_ok = self.make_event_status(
             event=self.event,
-            status_type='OK',
-            description='OK',
-            extra_data={'test_key': 'test_val'},
+            status_type=TL_STATUS_OK,
+            description=TL_STATUS_OK,
+            extra_data=EXTRA_DATA,
         )
 
     def test_initialization(self):
-        """Test ProjectEventStatus init"""
+        """Test TimelineEventStatus init"""
         expected = {
             'id': self.event_status_ok.pk,
             'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
-            'status_type': 'OK',
-            'description': 'OK',
-            'extra_data': {'test_key': 'test_val'},
+            'status_type': TL_STATUS_OK,
+            'description': TL_STATUS_OK,
+            'extra_data': EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(self.event_status_ok), expected)
 
     def test_initialization_no_user(self):
-        """Test ProjectEventStatus without user"""
+        """Test TimelineEventStatus without user"""
         expected = {
             'id': self.event_status_ok.pk,
             'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
-            'status_type': 'OK',
-            'description': 'OK',
-            'extra_data': {'test_key': 'test_val'},
+            'status_type': TL_STATUS_OK,
+            'description': TL_STATUS_OK,
+            'extra_data': EXTRA_DATA,
         }
         self.event = self.make_event(
             project=self.project,
@@ -455,80 +463,78 @@ class TestProjectEventStatus(
             event_name='test_event',
             description='description',
             classified=False,
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
         self.assertEqual(model_to_dict(self.event_status_ok), expected)
 
     def test__str__(self):
-        """Test ProjectEventStatus __str__()"""
-        expected = 'TestProject: test_event/owner (OK)'
+        """Test TimelineEventStatus __str__()"""
+        expected = f'TestProject: test_event/owner ({TL_STATUS_OK})'
         self.assertEqual(str(self.event_status_ok), expected)
 
     def test__str__no_user(self):
         """Test __str__() with no user"""
         self.event.user = None
         self.event.save()
-        expected = 'TestProject: test_event (OK)'
+        expected = f'TestProject: test_event ({TL_STATUS_OK})'
         self.assertEqual(str(self.event_status_ok), expected)
 
     def test__repr__(self):
-        """Test ProjectEventStatus __repr__()"""
-        expected = (
-            "ProjectEventStatus('TestProject', 'test_event', 'owner', 'OK')"
-        )
+        """Test TimelineEventStatus __repr__()"""
+        expected = f"TimelineEventStatus('TestProject', 'test_event', 'owner', '{TL_STATUS_OK}')"
         self.assertEqual(repr(self.event_status_ok), expected)
 
     def test__repr__no_user(self):
         """Test __repr__() with no user"""
         self.event.user = None
         self.event.save()
-        expected = (
-            "ProjectEventStatus('TestProject', 'test_event', 'N/A', 'OK')"
-        )
+        expected = f"TimelineEventStatus('TestProject', 'test_event', 'N/A', '{TL_STATUS_OK}')"
         self.assertEqual(repr(self.event_status_ok), expected)
 
     def test_get_status(self):
-        """Test the get_status() function of ProjectEvent"""
+        """Test TimelineEventStatus get_status()"""
         status = self.event.get_status()
         expected = {
             'id': status.pk,
             'sodar_uuid': self.event_status_ok.sodar_uuid,
             'event': self.event.pk,
-            'status_type': 'OK',
-            'description': 'OK',
-            'extra_data': {'test_key': 'test_val'},
+            'status_type': TL_STATUS_OK,
+            'description': TL_STATUS_OK,
+            'extra_data': EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(status), expected)
 
     def test_get_timestamp(self):
-        """Test the get_timestamp() function of ProjectEvent"""
+        """Test TimelineEventStatus get_timestamp()"""
         timestamp = self.event.get_timestamp()
         self.assertEqual(timestamp, self.event_status_ok.timestamp)
 
     def test_get_status_changes(self):
-        """Test the get_status_changes() function of ProjectEvent"""
+        """Test TimelineEventStatus get_status_changes()"""
         status_changes = self.event.get_status_changes()
         self.assertEqual(status_changes.count(), 2)
         self.assertEqual(status_changes[0], self.event_status_submit)
 
     def test_get_status_changes_reverse(self):
-        """Test the get_status_changes() function of ProjectEvent with
+        """Test the get_status_changes() function of TimelineEvent with
         reverse=True"""
         status_changes = self.event.get_status_changes(reverse=True)
         self.assertEqual(status_changes.count(), 2)
         self.assertEqual(status_changes[0], self.event_status_ok)
 
     def test_set_status(self):
-        """Test the set_status() function of ProjectEvent"""
+        """Test TimelineEventStatus set_status()"""
         new_status = self.event.set_status(
-            'FAILED', status_desc='FAILED', extra_data={'test_key': 'test_val'}
+            TL_STATUS_FAILED,
+            status_desc=TL_STATUS_FAILED,
+            extra_data=EXTRA_DATA,
         )
         expected = {
             'id': new_status.pk,
             'sodar_uuid': new_status.sodar_uuid,
             'event': self.event.pk,
-            'status_type': 'FAILED',
-            'description': 'FAILED',
-            'extra_data': {'test_key': 'test_val'},
+            'status_type': TL_STATUS_FAILED,
+            'description': TL_STATUS_FAILED,
+            'extra_data': EXTRA_DATA,
         }
         self.assertEqual(model_to_dict(new_status), expected)

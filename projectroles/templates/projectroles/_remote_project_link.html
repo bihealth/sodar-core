@@ -1,0 +1,17 @@
+{% load projectroles_common_tags %}
+
+<a class="btn {% if site.user_display %}btn-info{% else %}btn-secondary{% endif %}
+          mr-1 mb-1 sodar-pr-link-remote sodar-pr-link-remote-{{ site.mode|lower }}"
+   href="{{ site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
+   data-uuid="{{ rp.sodar_uuid }}"
+   role="button"
+   {% if site.description %}title="{{ site.description }}" data-toggle="tooltip"{% endif %}
+   {% if site.mode != 'SOURCE' and not site.get_access_date %}
+     disabled="disabled"
+   {% endif %}
+   target="_blank">
+  <i class="iconify" data-icon="mdi:cloud-outline"></i> {{ site.name }}
+  {% if site.mode == 'SOURCE' %}
+    (Source {% get_display_name object.type title=True %})
+  {% endif %}
+</a>

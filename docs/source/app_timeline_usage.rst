@@ -24,14 +24,18 @@ All Timeline Events
 
 .. figure:: _static/app_timeline/sodar_timeline.png
     :align: center
-    :scale: 50%
+    :scale: 65%
 
     Timeline project event list view
 
-The event list layout is practically similar for each view. By clicking on the
-time stamp for each event, you can view the details on different status updates
+The event list layout is mostly similar for each view. By clicking on the
+timestamp for each event, you can view the details on different status updates
 for the execution of the event. This is used e.g. in case of asynchronous
 events.
+
+The event description contains a badge with the event name, which can be used
+to refer to similar events and e.g. search for events of a specific type using
+the site search.
 
 By clicking on the clock icon next to an object link in the event description,
 you can view the event history of that object. The link itself will take you
@@ -152,9 +156,9 @@ Defining Status States
     need to pay attention to this functionality right now.
 
 By default, ``timeline.add_event()`` treats events as synchronous and
-automatically saves them with the status of ``OK``. However, in case of e.g.
-asynchronous requests, you can alter this by setting the ``status_type`` and
-(optionally) ``status_desc`` types upon creation.
+automatically saves them with the status of ``TL_STATUS_OK``. However, in case
+of e.g. asynchronous requests, you can alter this by setting the ``status_type``
+and (optionally) ``status_desc`` types upon creation.
 
 .. code-block:: python
 
@@ -164,7 +168,7 @@ asynchronous requests, you can alter this by setting the ``status_type`` and
         user=request.user,
         event_name='some_event',
         description='Description',
-        status_type='SUBMIT',
+        status_type=TL_STATUS_SUBMIT
         status_desc='Just submitted this')
 
 After that, you can add new status states for the event using the object
@@ -172,18 +176,18 @@ returned by ``timeline.add_event()``:
 
 .. code-block:: python
 
-    tl_event.set_status('OK', 'Submission was successful!')
+    tl_event.set_status(timeline.TL_STATUS_SUBMIT, 'Submission was successful!')
 
 Currently supported status types are listed below, some only applicable to async
 events:
 
-- ``OK``: All OK, event successfully performed
-- ``INFO``: Used for events which do not change anything, e.g. viewing something
-  within an app
-- ``INIT``: Initializing the event in progress
-- ``SUBMIT``: Event submitted asynchronously
-- ``FAILED``: Asynchronous event submission failed
-- ``CANCEL``: Event cancelled
+- ``TL_STATUS_OK``: All OK, event successfully performed
+- ``TL_STATUS_INFO``: Used for events which do not change anything, e.g. viewing
+  something within an app
+- ``TL_STATUS_INIT``: Initializing the event in progress
+- ``TL_STATUS_SUBMIT``: Event submitted asynchronously
+- ``TL_STATUS_FAILED``: Asynchronous event submission failed
+- ``TL_STATUS_CANCEL``: Event cancelled
 
 Extra Data
 ----------

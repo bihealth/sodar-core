@@ -50,7 +50,7 @@
                 {% include 'timeline/_list_item.html' %}
               {% endfor %}
             {% else %}
-              <td class="bg-faded font-italic text-center" colspan="5">
+              <td class="bg-faded font-italic text-center" colspan="4">
                 No timeline events found for this
                 {% if timeline_mode == 'project' %}
                   {% get_display_name 'PROJECT' %}.

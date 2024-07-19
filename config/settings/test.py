@@ -23,6 +23,11 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default='CHANGEME!!!')
 ADMINS = [('Admin User', 'admin@example.com')]
 MANAGERS = ADMINS
 
+# DATABASE CONFIGURATION
+# ------------------------------------------------------------------------------
+# Set False to support parallel testing, see issue #1428
+DATABASES['default']['ATOMIC_REQUESTS'] = False
+
 # Mail settings
 # ------------------------------------------------------------------------------
 EMAIL_HOST = 'localhost'
@@ -31,6 +36,7 @@ EMAIL_PORT = 1025
 # In-memory email backend stores messages in django.core.mail.outbox
 # for unit testing purposes
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+EMAIL_SENDER = 'noreply@example.com'
 
 # CACHING
 # ------------------------------------------------------------------------------
@@ -63,6 +69,25 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
         ],
     ]
 ]
+
+# Django REST framework
+# ------------------------------------------------------------------------------
+
+# Set pagination page size to 1 for easy testing
+REST_FRAMEWORK['PAGE_SIZE'] = 1
+
+
+# LDAP configuration
+# ------------------------------------------------------------------------------
+
+ENABLE_LDAP = False
+
+
+# OpenID Connect (OIDC) configuration
+# ------------------------------------------------------------------------------
+
+ENABLE_OIDC = False
+
 
 # Logging
 # ------------------------------------------------------------------------------

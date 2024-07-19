@@ -3,6 +3,7 @@
 import uuid
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.urls import reverse
@@ -19,6 +20,7 @@ from projectroles.models import (
     AppSetting,
     RemoteSite,
     RemoteProject,
+    SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ROLE_RANKING,
     CAT_DELIMITER,
@@ -37,6 +39,13 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
+AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
+AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
+OIDC_USER_GROUP = SODAR_CONSTANTS['OIDC_USER_GROUP']
 
 # Local constants
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
@@ -45,6 +54,9 @@ REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.example.org'
 REMOTE_SITE_SECRET = build_secret()
 REMOTE_SITE_USER_DISPLAY = True
+ADD_EMAIL = 'additional@example.com'
+ADD_EMAIL_SECRET = build_secret()
+LDAP_DOMAIN = 'EXAMPLE'
 
 
 class ProjectMixin:
@@ -62,7 +74,7 @@ class ProjectMixin:
         archive=False,
         sodar_uuid=None,
     ):
-        """Make and save a Project"""
+        """Create a Project object"""
         values = {
             'title': title,
             'type': type,
@@ -109,7 +121,7 @@ class RoleAssignmentMixin:
 
     @classmethod
     def make_assignment(cls, project, user, role):
-        """Make and save a RoleAssignment"""
+        """Create a RoleAssignment object"""
         values = {'project': project, 'user': user, 'role': role}
         result = RoleAssignment(**values)
         result.save()
@@ -130,19 +142,21 @@ class ProjectInviteMixin:
         date_expire=None,
         secret=None,
     ):
-        """Make and save a ProjectInvite"""
+        """Create a ProjectInvite object"""
         values = {
             'email': email,
             'project': project,
             'role': role,
             'issuer': issuer,
             'message': message,
-            'date_expire': date_expire
-            if date_expire
-            else (
-                timezone.now()
-                + timezone.timedelta(
-                    days=settings.PROJECTROLES_INVITE_EXPIRY_DAYS
+            'date_expire': (
+                date_expire
+                if date_expire
+                else (
+                    timezone.now()
+                    + timezone.timedelta(
+                        days=settings.PROJECTROLES_INVITE_EXPIRY_DAYS
+                    )
                 )
             ),
             'secret': secret or SECRET,
@@ -159,7 +173,7 @@ class AppSettingMixin:
     @classmethod
     def make_setting(
         cls,
-        app_name,
+        plugin_name,
         name,
         setting_type,
         value,
@@ -169,11 +183,13 @@ class AppSettingMixin:
         user=None,
         sodar_uuid=None,
     ):
-        """Make and save a AppSetting"""
+        """Create an AppSetting object"""
         values = {
-            'app_plugin': None
-            if app_name == 'projectroles'
-            else get_app_plugin(app_name).get_model(),
+            'app_plugin': (
+                None
+                if plugin_name == 'projectroles'
+                else get_app_plugin(plugin_name).get_model()
+            ),
             'project': project,
             'name': name,
             'type': setting_type,
@@ -198,11 +214,13 @@ class RemoteSiteMixin:
         name,
         url,
         user_display=REMOTE_SITE_USER_DISPLAY,
+        owner_modifiable=True,
         mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
         description='',
         secret=build_secret(),
+        sodar_uuid=None,
     ):
-        """Make and save a RemoteSite"""
+        """Create a RemoteSite object"""
         values = {
             'name': name,
             'url': url,
@@ -210,6 +228,8 @@ class RemoteSiteMixin:
             'description': description,
             'secret': secret,
             'user_display': user_display,
+            'owner_modifiable': owner_modifiable,
+            'sodar_uuid': sodar_uuid or uuid.uuid4(),
         }
         site = RemoteSite(**values)
         site.save()
@@ -223,7 +243,7 @@ class RemoteProjectMixin:
     def make_remote_project(
         cls, project_uuid, site, level, date_access=None, project=None
     ):
-        """Make and save a RemoteProject"""
+        """Create a RemoteProject object"""
         if isinstance(project_uuid, str):
             project_uuid = uuid.UUID(project_uuid)
         values = {
@@ -231,9 +251,11 @@ class RemoteProjectMixin:
             'site': site,
             'level': level,
             'date_access': date_access,
-            'project': project
-            if project
-            else Project.objects.filter(sodar_uuid=project_uuid).first(),
+            'project': (
+                project
+                if project
+                else Project.objects.filter(sodar_uuid=project_uuid).first()
+            ),
         }
         remote_project = RemoteProject(**values)
         remote_project.save()
@@ -260,14 +282,14 @@ class RemoteTargetMixin(RemoteSiteMixin, RemoteProjectMixin):
                     project_uuid=project.sodar_uuid,
                     project=project,
                     site=source_site,
-                    level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+                    level=REMOTE_LEVEL_READ_ROLES,
                 )
             )
         return source_site, remote_projects
 
 
 class SODARUserMixin:
-    """Helper mixin for LDAP SodarUser creation"""
+    """Helper mixin for SodarUser creation"""
 
     def make_sodar_user(
         self,
@@ -279,6 +301,7 @@ class SODARUserMixin:
         sodar_uuid=None,
         password='password',
     ):
+        """Create a SODARUser object"""
         user = self.make_user(username, password)
         user.name = name
         user.first_name = first_name
@@ -291,8 +314,23 @@ class SODARUserMixin:
         return user
 
 
+class SODARUserAdditionalEmailMixin:
+    """Helper mixin for SODARUserAdditionalEmail creation"""
+
+    def make_email(self, user, email, verified=True, secret=None):
+        values = {
+            'user': user,
+            'email': email,
+            'verified': verified,
+            'secret': secret or build_secret(32),
+        }
+        email = SODARUserAdditionalEmail(**values)
+        email.save()
+        return email
+
+
 class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
-    """Tests for model.Project"""
+    """Tests for Project"""
 
     def setUp(self):
         # Set up category and project
@@ -381,14 +419,20 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
             )
 
     def test_validate_public_guest_access(self):
-        """Test public guest access validation with project"""
+        """Test _validate_public_guest_access() with project"""
+        self.assertEqual(self.project.public_guest_access, False)
         # Test with project
         self.project.public_guest_access = True
         self.project.save()
-        # Test with category
-        with self.assertRaises(ValidationError):
-            self.category.public_guest_access = True
-            self.category.save()
+        self.assertEqual(self.project.public_guest_access, True)
+
+    def test_validate_public_guest_access_category(self):
+        """Test _validate_public_guest_access() with category"""
+        # NOTE: Does not raise error but forces value to be False, see #1404
+        self.assertEqual(self.category.public_guest_access, False)
+        self.category.public_guest_access = True
+        self.category.save()
+        self.assertEqual(self.category.public_guest_access, False)
 
     def test_get_absolute_url(self):
         """Test get_absolute_url()"""
@@ -399,41 +443,41 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         self.assertEqual(self.project.get_absolute_url(), expected_url)
 
     def test_get_children_category(self):
-        """Test children getting function for top category"""
+        """Test get_children() with top category"""
         children = self.category.get_children()
         self.assertEqual(children[0], self.project)
 
     def test_get_children_project(self):
-        """Test children getting function for sub project"""
+        """Test get_children() with sub project"""
         children = self.project.get_children()
         self.assertEqual(children.count(), 0)
 
     def test_get_depth_category(self):
-        """Test project depth getting function for top category"""
+        """Test get_depth() with top category"""
         self.assertEqual(self.category.get_depth(), 0)
 
     def test_get_depth_project(self):
-        """Test children getting function for sub project"""
+        """Test get_depth() with sub project"""
         self.assertEqual(self.project.get_depth(), 1)
 
     def test_get_parents_category(self):
-        """Test get parents function for top category"""
+        """Test get_parents() with top category"""
         self.assertEqual(self.category.get_parents(), [])
 
     def test_get_parents_project(self):
-        """Test get parents function for sub project"""
+        """Test get_parents() with sub project"""
         self.assertEqual(list(self.project.get_parents()), [self.category])
 
     def test_is_remote(self):
-        """Test Project.is_remote() without remote projects"""
+        """Test is_remote() without remote projects"""
         self.assertEqual(self.project.is_remote(), False)
 
     def test_is_revoked(self):
-        """Test Project.is_revoked() without remote projects"""
+        """Test is_revoked() without remote projects"""
         self.assertEqual(self.project.is_revoked(), False)
 
     def test_set_public(self):
-        """Test Project.set_public()"""
+        """Test set_public()"""
         self.assertFalse(self.project.public_guest_access)
         self.project.set_public()  # Default = True
         self.assertTrue(self.project.public_guest_access)
@@ -441,9 +485,11 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         self.assertFalse(self.project.public_guest_access)
         self.project.set_public(True)
         self.assertTrue(self.project.public_guest_access)
+        with self.assertRaises(ValidationError):
+            self.category.set_public(True)
 
     def test_set_archive(self):
-        """Test Project.set_archive()"""
+        """Test set_archive()"""
         self.assertFalse(self.project.archive)
         self.project.set_archive()  # Default = True
         self.assertTrue(self.project.archive)
@@ -453,13 +499,13 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         self.assertTrue(self.project.archive)
 
     def test_set_archive_category(self):
-        """Test Project.set_archive() for a category (should fail)"""
+        """Test set_archive() with category (should fail)"""
         self.assertFalse(self.category.archive)
         with self.assertRaises(ValidationError):
             self.category.set_archive()
 
     def test_get_log_title(self):
-        """Test Project.get_log_title()"""
+        """Test get_log_title()"""
         expected = '"{}" ({})'.format(
             self.project.title, self.project.sodar_uuid
         )
@@ -477,7 +523,7 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         self.assertEqual(self.project.get_role(self.user_bob), project_as)
 
     def test_get_role_inherit_only(self):
-        """Test get_role() with only an inherited role"""
+        """Test get_role() with only inherited role"""
         self.assertEqual(
             self.project.get_role(self.user_alice), self.owner_as_cat
         )
@@ -740,7 +786,7 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
 
 class TestRole(RoleMixin, TestCase):
-    """Tests for models.Role"""
+    """Tests for Role"""
 
     def setUp(self):
         self.init_roles()
@@ -781,7 +827,7 @@ class TestRole(RoleMixin, TestCase):
 class TestRoleAssignment(
     ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase
 ):
-    """Tests for model.RoleAssignment"""
+    """Tests for RoleAssignment"""
 
     def setUp(self):
         # Set up category and project
@@ -941,6 +987,43 @@ class TestProjectInvite(
         )
         self.assertEqual(repr(self.invite), expected)
 
+    def test_is_ldap_not_enabled(self):
+        """Test is_ldap() with LDAP not enabled"""
+        self.assertEqual(self.invite.is_ldap(), False)
+
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_is_ldap_enabled(self):
+        """Test is_ldap() with LDAP enabled"""
+        self.assertEqual(self.invite.is_ldap(), True)
+
+    @override_settings(ENABLE_LDAP=False, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_is_ldap_not_enabled_domain(self):
+        """Test is_ldap() with domain in email but LDAP not enabled"""
+        self.assertEqual(self.invite.is_ldap(), False)
+
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN='xyz')
+    def test_is_ldap_non_ldap_domain(self):
+        """Test is_ldap() with non-LDAP domain in email"""
+        self.assertEqual(self.invite.is_ldap(), False)
+
+    @override_settings(
+        ENABLE_LDAP=True,
+        AUTH_LDAP_USERNAME_DOMAIN='xyz',
+        AUTH_LDAP2_USERNAME_DOMAIN=LDAP_DOMAIN,
+    )
+    def test_is_ldap_secondary(self):
+        """Test is_ldap() with email in secondary domain"""
+        self.assertEqual(self.invite.is_ldap(), True)
+
+    @override_settings(
+        ENABLE_LDAP=True,
+        AUTH_LDAP_USERNAME_DOMAIN='xyz',
+        LDAP_ALT_DOMAINS=[LDAP_DOMAIN + '.com'],
+    )
+    def test_is_ldap_alt_domain(self):
+        """Test is_ldap() with alt domain in email"""
+        self.assertEqual(self.invite.is_ldap(), True)
+
 
 class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
     """Tests for ProjectManager"""
@@ -959,8 +1042,8 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
             description='YYY',
         )
 
-    def test_find_all(self):
-        """Test find() with any project type"""
+    def test_find(self):
+        """Test find()"""
         result = Project.objects.find(['test'], project_type=None)
         self.assertEqual(len(result), 2)
         result = Project.objects.find(['ThisFails'], project_type=None)
@@ -1016,10 +1099,10 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.assertEqual(len(result), 2)
 
 
-class TestProjectSetting(
+class TestProjectAppSetting(
     ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
 ):
-    """Tests for model.AppSetting with user == None"""
+    """Tests for AppSetting with PROJECT scope"""
 
     def setUp(self):
         # Init project
@@ -1036,7 +1119,7 @@ class TestProjectSetting(
 
         # Init test setting
         self.setting_str = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='str_setting',
             setting_type='STRING',
             value='test',
@@ -1044,7 +1127,7 @@ class TestProjectSetting(
         )
         # Init integer setting
         self.setting_int = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='int_setting',
             setting_type='INTEGER',
             value=170,
@@ -1052,7 +1135,7 @@ class TestProjectSetting(
         )
         # Init boolean setting
         self.setting_bool = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='bool_setting',
             setting_type='BOOLEAN',
             value=True,
@@ -1060,7 +1143,7 @@ class TestProjectSetting(
         )
         # Init JSON setting
         self.setting_json = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='json_setting',
             setting_type='JSON',
             value=None,
@@ -1154,7 +1237,7 @@ class TestProjectSetting(
         self.assertEqual(val, {'Testing': 'good'})
 
 
-class TestUserSetting(
+class TestUserAppSetting(
     ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
 ):
     """Tests for AppSetting with USER scope"""
@@ -1164,28 +1247,28 @@ class TestUserSetting(
         self.user = self.make_user('owner')
         # Init settings
         self.setting_str = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='str_setting',
             setting_type='STRING',
             value='test',
             user=self.user,
         )
         self.setting_int = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='int_setting',
             setting_type='INTEGER',
             value=170,
             user=self.user,
         )
         self.setting_bool = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='bool_setting',
             setting_type='BOOLEAN',
             value=True,
             user=self.user,
         )
         self.setting_json = self.make_setting(
-            app_name=EXAMPLE_APP_NAME,
+            plugin_name=EXAMPLE_APP_NAME,
             name='json_setting',
             setting_type='JSON',
             value=None,
@@ -1278,9 +1361,13 @@ class TestUserSetting(
 
 
 class TestRemoteSite(
-    ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, TestCase
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestCase,
 ):
-    """Tests for model.RemoteSite"""
+    """Tests for RemoteSite"""
 
     def setUp(self):
         # Init project
@@ -1315,6 +1402,7 @@ class TestRemoteSite(
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': self.site.sodar_uuid,
             'user_display': REMOTE_SITE_USER_DISPLAY,
+            'owner_modifiable': True,
         }
         self.assertEqual(model_to_dict(self.site), expected)
 
@@ -1335,13 +1423,60 @@ class TestRemoteSite(
         self.assertEqual(repr(self.site), expected)
 
     def test_validate_mode(self):
-        """Test _validate_mode() with an invalid mode (should fail)"""
+        """Test _validate_mode() with invalid mode (should fail)"""
         with self.assertRaises(ValidationError):
             self.make_site(
                 name='New site',
                 url='http://example.com',
                 mode='uGaj9eicQueib1th',
             )
+
+    def test_get_access_date_no_projects(self):
+        """Test get_access_date() with no remote projects"""
+        self.assertEqual(self.site.get_access_date(), None)
+
+    def test_get_access_date_not_accessed(self):
+        """Test get_access_date() with non-accessed project"""
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+            date_access=None,
+        )
+        self.assertEqual(self.site.get_access_date(), None)
+
+    def test_get_access_date_accessed(self):
+        """Test get_access_date() with accessed project"""
+        date_access = timezone.now()
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+            date_access=date_access,
+        )
+        self.assertEqual(self.site.get_access_date(), date_access)
+
+    def test_get_access_date_both_access_types(self):
+        """Test get_access_date() with accessed and non-accessed projects"""
+        date_access = timezone.now()
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+            date_access=date_access,
+        )
+        project2 = self.make_project('Project2', PROJECT_TYPE_PROJECT, None)
+        self.make_remote_project(
+            project_uuid=project2.sodar_uuid,
+            site=self.site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=project2,
+            date_access=None,
+        )
+        self.assertEqual(self.site.get_access_date(), date_access)
 
 
 class TestRemoteProject(
@@ -1351,7 +1486,7 @@ class TestRemoteProject(
     RemoteProjectMixin,
     TestCase,
 ):
-    """Tests for model.RemoteProject"""
+    """Tests for RemoteProject"""
 
     def setUp(self):
         # Init project
@@ -1381,7 +1516,7 @@ class TestRemoteProject(
         self.remote_project = self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+            level=REMOTE_LEVEL_VIEW_AVAIL,
             project=self.project,
         )
 
@@ -1392,7 +1527,7 @@ class TestRemoteProject(
             'project_uuid': self.project.sodar_uuid,
             'project': self.project.pk,
             'site': self.site.pk,
-            'level': SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+            'level': REMOTE_LEVEL_VIEW_AVAIL,
             'date_access': None,
             'sodar_uuid': self.remote_project.sodar_uuid,
         }
@@ -1440,23 +1575,21 @@ class TestRemoteProject(
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
         self.assertEqual(self.project.is_revoked(), False)
-        self.remote_project.level = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+        self.remote_project.level = REMOTE_LEVEL_REVOKED
         self.remote_project.save()
         self.assertEqual(self.project.is_revoked(), True)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=1)
     def test_validate_remote_delegates(self):
-        """Test delegate validation: can add for remote project with limit"""
+        """Test remot project delegate validation"""
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
         self.make_assignment(self.project, self.user_bob, self.role_delegate)
-        try:
-            self.make_assignment(
-                self.project, self.user_alice, self.role_delegate
-            )
-        except ValidationError as e:
-            self.fail(e)
+        remote_as = self.make_assignment(
+            self.project, self.user_alice, self.role_delegate
+        )
+        self.assertIsNotNone(remote_as)
 
     def test_get_project(self):
         """Test get_project() with project and project_uuid"""
@@ -1468,15 +1601,25 @@ class TestRemoteProject(
         self.remote_project.save()
         self.assertEqual(self.remote_project.get_project(), self.project)
 
+    def test_create_duplicate(self):
+        """Test creating duplicate remote project for site (should fail)"""
+        with self.assertRaises(ValidationError):
+            self.make_remote_project(
+                project_uuid=self.project.sodar_uuid,
+                site=self.site,
+                level=REMOTE_LEVEL_READ_ROLES,
+                project=self.project,
+            )
+
 
 class TestSODARUser(TestCase):
-    """Tests for the SODARUser class"""
+    """Tests for SODARUser"""
 
     def setUp(self):
         self.user = self.make_user()
 
     def test__str__(self):
-        """Test __str__()"""
+        """Test SODARUser __str__()"""
         self.assertEqual(
             self.user.__str__(), 'testuser'
         )  # This is the default username for self.make_user()
@@ -1509,9 +1652,43 @@ class TestSODARUser(TestCase):
             'Full Name (testuser) <testuser@example.com>',
         )
 
+    def test_get_auth_type_local(self):
+        """Test get_auth_type() with local user"""
+        self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_LOCAL)
+
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='TEST')
+    def test_get_auth_type_ldap(self):
+        """Test get_auth_type() with LDAP user"""
+        self.user.username = 'testuser@TEST'
+        self.user.save()  # NOTE: set_group() is called on user save()
+        self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_LDAP)
+
+    def test_get_auth_type_ldap_no_group(self):
+        """Test get_auth_type() with LDAP username but no user group"""
+        self.user.username = 'testuser@TEST'
+        self.user.save()
+        self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_LOCAL)
+
+    def test_get_auth_type_oidc(self):
+        """Test get_auth_type() with OIDC user"""
+        group, _ = Group.objects.get_or_create(name=OIDC_USER_GROUP)
+        group.user_set.add(self.user)
+        self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_OIDC)
+
     def test_update_full_name(self):
         """Test update_full_name()"""
         self.assertEqual(self.user.name, '')
+        self.user.first_name = 'Full'
+        self.user.last_name = 'Name'
+        self.user.update_full_name()
+        self.assertEqual(self.user.name, 'Full Name')
+
+    def test_update_full_name_non_empty(self):
+        """Test update_full_name() with previously non-empty name"""
+        self.user.first_name = 'Old'
+        self.user.last_name = 'Placeholder'
+        self.user.update_full_name()
+        self.assertEqual(self.user.name, 'Old Placeholder')
         self.user.first_name = 'Full'
         self.user.last_name = 'Name'
         self.user.update_full_name()
@@ -1522,3 +1699,53 @@ class TestSODARUser(TestCase):
         self.user.username = 'user@example'
         self.user.update_ldap_username()
         self.assertEqual(self.user.username, 'user@EXAMPLE')
+
+
+class TestSODARUserAdditionalEmail(SODARUserAdditionalEmailMixin, TestCase):
+    """Tests for SODARUserAdditionalEmail"""
+
+    def setUp(self):
+        self.user = self.make_user('user')
+        self.email = self.make_email(
+            user=self.user,
+            email=ADD_EMAIL,
+            verified=True,
+            secret=ADD_EMAIL_SECRET,
+        )
+
+    def test_initialization(self):
+        """Test SODARUserAdditionalEmail initialization"""
+        expected = {
+            'id': self.email.pk,
+            'user': self.user.pk,
+            'email': ADD_EMAIL,
+            'verified': True,
+            'secret': ADD_EMAIL_SECRET,
+            'sodar_uuid': self.email.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.email), expected)
+
+    def test__str__(self):
+        """Test SODARUserAdditionalEmail __str__()"""
+        self.assertEqual(self.email.__str__(), 'user: additional@example.com')
+
+    def test__repr__(self):
+        """Test SODARUserAdditionalEmail __repr__()"""
+        expected = 'SODARUserAdditionalEmail(\'{}\')'.format(
+            '\', \''.join(
+                [
+                    self.email.user.username,
+                    self.email.email,
+                    str(self.email.verified),
+                    self.email.secret,
+                    str(self.email.sodar_uuid),
+                ]
+            )
+        )
+        self.assertEqual(self.email.__repr__(), expected)
+
+    def test_validate_email_unique(self):
+        """Test _validate_email_unique()"""
+        with self.assertRaises(ValidationError):
+            self.email.email = self.user.email
+            self.email.save()

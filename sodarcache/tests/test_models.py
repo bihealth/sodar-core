@@ -26,7 +26,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 TEST_APP_NAME = 'sodarcache'
 
 
-class JsonCacheItemMixin:
+class JSONCacheItemMixin:
     """Helper mixin for JSONCacheItem creation"""
 
     @classmethod
@@ -43,7 +43,7 @@ class JsonCacheItemMixin:
         return result
 
 
-class TestJsonCacheItemBase(
+class JSONCacheItemTestBase(
     ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase
 ):
     def setUp(self):
@@ -60,7 +60,7 @@ class TestJsonCacheItemBase(
         )
 
 
-class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
+class TestJSONCacheItem(JSONCacheItemMixin, JSONCacheItemTestBase):
     def setUp(self):
         super().setUp()
         self.item = self.make_item(

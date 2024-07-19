@@ -103,7 +103,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'default': False,
             'description': 'Example global boolean project setting',
             'user_modifiable': True,
-            'local': False,
+            'global': True,
         },
         'project_json_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
@@ -272,7 +272,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'options': get_example_setting_options,
             'description': 'Example callable project user setting with options',
         },
-        'project_category_bool_setting': {
+        'category_bool_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
             'type': 'BOOLEAN',
             'label': 'Category boolean setting',

@@ -102,7 +102,7 @@ class HyperLinkMixin:
 
 
 class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
-    """Tests for model.Folder"""
+    """Tests for Folder"""
 
     def setUp(self):
         # Make owner user
@@ -234,7 +234,7 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
 
 
 class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
-    """Tests for model.File"""
+    """Tests for File"""
 
     def setUp(self):
         # Make owner user
@@ -332,7 +332,7 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
 class TestHyperLink(
     FileMixin, FolderMixin, ProjectMixin, HyperLinkMixin, TestCase
 ):
-    """Tests for model.File"""
+    """Tests for HyperLink"""
 
     def setUp(self):
         # Make owner user

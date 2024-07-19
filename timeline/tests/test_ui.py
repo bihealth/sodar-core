@@ -1,4 +1,5 @@
 """UI tests for the timeline app"""
+
 import json
 
 from django.urls import reverse
@@ -12,11 +13,12 @@ from selenium.webdriver.support import expected_conditions as EC
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.tests.test_ui import TestUIBase
+from projectroles.tests.test_ui import UITestBase
 
 from timeline.tests.test_models import (
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    EXTRA_DATA,
 )
 
 
@@ -30,7 +32,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestProjectListView(
-    ProjectEventMixin, ProjectEventStatusMixin, TestUIBase
+    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
 ):
     """Tests for the timeline project list view UI"""
 
@@ -45,8 +47,8 @@ class TestProjectListView(
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
-            status_type='OK',
+            extra_data=EXTRA_DATA,
+            status_type=self.timeline.TL_STATUS_OK,
         )
 
         # Init classified event
@@ -56,7 +58,7 @@ class TestProjectListView(
             user=self.superuser,
             event_name='classified_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
             classified=True,
         )
 
@@ -146,7 +148,9 @@ class TestProjectListView(
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
 
-class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+class TestSiteListView(
+    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
+):
     """Tests for the timeline site-wide list view UI"""
 
     def setUp(self):
@@ -160,8 +164,8 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
-            status_type='OK',
+            extra_data=EXTRA_DATA,
+            status_type=self.timeline.TL_STATUS_OK,
         )
 
         # Init classified event
@@ -171,7 +175,7 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='classified_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
             classified=True,
         )
 
@@ -242,7 +246,9 @@ class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             pass
 
 
-class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+class TestAdminListView(
+    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
+):
     """Test for the timeline view of all events in UI"""
 
     def setUp(self):
@@ -256,8 +262,8 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
-            status_type='OK',
+            extra_data=EXTRA_DATA,
+            status_type=self.timeline.TL_STATUS_OK,
         )
         # Init default site event
         self.site_event = self.timeline.add_event(
@@ -266,8 +272,8 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='test_site_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
-            status_type='OK',
+            extra_data=EXTRA_DATA,
+            status_type=self.timeline.TL_STATUS_OK,
         )
         # Init classified event
         self.classified_event = self.timeline.add_event(
@@ -276,7 +282,7 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='classified_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
             classified=True,
         )
 
@@ -293,7 +299,7 @@ class TestAdminListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         self.assertIsNotNone(self.selenium.find_element(By.CLASS_NAME, 'badge'))
 
 
-class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
     """Test UI of modals in timeline event list"""
 
     def setUp(self):
@@ -307,11 +313,11 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data=json.dumps({'test_key': 'test_val'}),
-            status_type='OK',
+            extra_data=json.dumps(EXTRA_DATA),
+            status_type=self.timeline.TL_STATUS_OK,
         )
         self.event_status_init = self.event.set_status(
-            'INIT',
+            self.timeline.TL_STATUS_INIT,
             'Event initialized',
             extra_data={'example_data': 'example_extra_data'},
         )
@@ -366,7 +372,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
 
     def test_details_content(self):
-        """Test details modal's content"""
+        """Test details modal content"""
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
@@ -385,13 +391,18 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
         title = self.selenium.find_element(By.CLASS_NAME, 'modal-title')
         self.assertIn('Event Details: ', title.text)
-        table = self.selenium.find_element(By.CLASS_NAME, 'table')
-        check_list = ['Timestamp', 'Event', 'Description', 'Status', 'INIT']
-        for check in check_list:
-            self.assertIn(check, table.text)
+        table = self.selenium.find_element(By.ID, 'sodar-tl-table-detail')
+        expected = [
+            'Timestamp',
+            'Description',
+            'Status',
+            self.timeline.TL_STATUS_INIT,
+        ]
+        for e in expected:
+            self.assertIn(e, table.text)
 
     def test_extra_content(self):
-        """Test extra data modal's content"""
+        """Test extra data modal content"""
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
@@ -429,7 +440,7 @@ class TestModals(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         btn.click()
 
 
-class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
     """Tests for the project search UI functionalities"""
 
     def setUp(self):
@@ -443,15 +454,15 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
-            status_type='OK',
+            extra_data=EXTRA_DATA,
+            status_type=self.timeline.TL_STATUS_OK,
         )
 
         self.make_event_status(
             event=self.event,
-            status_type='SUBMIT',
-            description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            status_type=self.timeline.TL_STATUS_SUBMIT,
+            description=self.timeline.TL_STATUS_SUBMIT,
+            extra_data=EXTRA_DATA,
         )
 
         # Init default site event
@@ -461,15 +472,15 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='test_site_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
-            status_type='OK',
+            extra_data=EXTRA_DATA,
+            status_type=self.timeline.TL_STATUS_OK,
         )
 
         self.make_event_status(
             event=self.site_event,
-            status_type='SUBMIT',
-            description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            status_type=self.timeline.TL_STATUS_SUBMIT,
+            description=self.timeline.TL_STATUS_SUBMIT,
+            extra_data=EXTRA_DATA,
         )
 
         # Init classified event
@@ -479,15 +490,15 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='classified_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
             classified=True,
         )
 
         self.make_event_status(
             event=self.classified_event,
-            status_type='SUBMIT',
-            description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            status_type=self.timeline.TL_STATUS_SUBMIT,
+            description=self.timeline.TL_STATUS_SUBMIT,
+            extra_data=EXTRA_DATA,
         )
 
         self.classified_site_event = self.timeline.add_event(
@@ -496,15 +507,15 @@ class TestSearch(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             user=self.superuser,
             event_name='classified_site_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
             classified=True,
         )
 
         self.make_event_status(
             event=self.classified_site_event,
-            status_type='SUBMIT',
-            description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
+            status_type=self.timeline.TL_STATUS_SUBMIT,
+            description=self.timeline.TL_STATUS_SUBMIT,
+            extra_data=EXTRA_DATA,
         )
 
     def test_search_results(self):

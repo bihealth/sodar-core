@@ -3,19 +3,14 @@ table#sodar-tl-table {
   display: inline-table;
 }
 table#sodar-tl-table tbody tr td:nth-child(1),
-table#sodar-tl-table tbody tr td:nth-child(2),
-table#sodar-tl-table tbody tr td:nth-child(3) {
+table#sodar-tl-table tbody tr td:nth-child(2) {
   white-space: nowrap;
 }
 table#sodar-tl-table tbody tr td:nth-child(2) {
-  width: 200px;
-  max-width: 200px;
-}
-table#sodar-tl-table tbody tr td:nth-child(3) {
   width: 220px;
   max-width: 220px;
 }
-table#sodar-tl-table tbody tr td:nth-child(4) {
+table#sodar-tl-table tbody tr td:nth-child(3) {
   width: 100%;
 }
 
@@ -49,25 +44,30 @@ a.sodar-tl-link-status-extra-data:hover {
   font-size: 100%; /* Fix for Bootstrap 4.4 */
 }
 
+span.sodar-tl-event-badge {
+  vertical-align: top;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+span.sodar-tl-event-badge a {
+  color: inherit;
+}
+
 /* Responsive modifications */
-@media screen and (max-width: 1300px) {
+@media screen and (max-width: 1000px) {
+  .table#sodar-tl-table tbody tr td:nth-child(1) {
+    white-space: normal;
+  }
   .table#sodar-tl-table thead tr th:nth-child(2),
   .table#sodar-tl-table tbody tr td:nth-child(2) {
     display: none;
   }
 }
-@media screen and (max-width: 1100px) {
-  .table#sodar-tl-table tbody tr td:nth-child(1) {
-    white-space: normal;
-  }
-  .table#sodar-tl-table thead tr th:nth-child(3),
-  .table#sodar-tl-table tbody tr td:nth-child(3) {
-    display: none;
-  }
-}
 @media screen and (max-width: 700px) {
-  .table#sodar-tl-table thead tr th:nth-child(5),
-  .table#sodar-tl-table tbody tr td:nth-child(5) {
+  .table#sodar-tl-table thead tr th:nth-child(4),
+  .table#sodar-tl-table tbody tr td:nth-child(4) {
       display: none;
   }
 }

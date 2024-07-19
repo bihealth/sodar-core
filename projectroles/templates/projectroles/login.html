@@ -7,6 +7,7 @@
 {% block title %}Login{% endblock title %}
 
 {% block content %}
+{% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
 
 <div class="container-fluid">
   {# Django messages / site app messages #}
@@ -26,7 +27,6 @@
 
   <div class="col-md-4 mx-auto mt-5">
     <h2 class="sodar-pr-content-title">Login</h2>
-
     {% autoescape off %}
       {% get_login_info %}
     {% endautoescape %}
@@ -46,18 +46,17 @@
         <i class="iconify" data-icon="mdi:login-variant"></i> Login
       </button>
     </form>
-    {% get_django_setting 'ENABLE_SAML' as enable_saml %}
-    {% if enable_saml %}
-      <hr class="my-3" />
-      <p>To log in with your SSO provider, please click below.</p>
-      <a href="/sso/login" class="btn btn-md btn-info btn-block">
-        <i class="iconify" data-icon="mdi:login-variant"></i> Single Sign-On
-      </a>
-    {% endif %}
   </div>
 
+  {# OpenID Connect (OIDC) auth #}
+  {% get_django_setting 'ENABLE_OIDC' as enable_oidc %}
+  {% if enable_oidc %}
+    <div class="col-md-4 mx-auto mt-4">
+      {% include 'projectroles/_login_oidc.html' %}
+    </div>
+  {% endif %}
+
   {# Optional template for additional login page HTML #}
-  {% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
   {% template_exists template_include_path|add:'/_login_extend.html' as login_extend %}
   {% if login_extend %}
     {% include template_include_path|add:'/_login_extend.html' %}

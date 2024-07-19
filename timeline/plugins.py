@@ -6,11 +6,12 @@ from projectroles.plugins import (
     ProjectAppPluginPoint,
     BackendPluginPoint,
     SiteAppPluginPoint,
+    PluginSearchResult,
 )
 from projectroles.utils import get_display_name
 
 from timeline.api import TimelineAPI
-from timeline.models import ProjectEvent
+from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 
 
@@ -72,7 +73,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         return {
             'event_count': {
                 'label': 'Events',
-                'value': ProjectEvent.objects.all().count(),
+                'value': TimelineEvent.objects.all().count(),
             }
         }
 
@@ -101,24 +102,19 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :param user: User object for user initiating the search
         :param search_type: String
         :param keywords: List (optional)
-        :return: Dict
+        :return: List of PluginSearchResult objects
         """
         items = []
         if not search_type or search_type == 'timeline':
-            events = ProjectEvent.objects.find(search_terms, keywords)
-        if events:
-            items = [
-                event
-                for event in list(events)
-                if self.check_permission(user, event)
-            ]
-        return {
-            'all': {
-                'title': 'Timeline Events',
-                'search_types': ['timeline'],
-                'items': items,
-            }
-        }
+            events = list(TimelineEvent.objects.find(search_terms, keywords))
+            items = [e for e in events if self.check_permission(user, e)]
+        ret = PluginSearchResult(
+            category='all',
+            title='Timeline Event',
+            search_types=['timeline'],
+            items=items,
+        )
+        return [ret]
 
 
 class BackendPlugin(BackendPluginPoint):

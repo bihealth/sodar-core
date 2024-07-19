@@ -9,10 +9,10 @@ from knox.models import AuthToken
 from selenium.webdriver.common.by import By
 
 # Projectroles dependency
-from projectroles.tests.test_ui import TestUIBase
+from projectroles.tests.test_ui import UITestBase
 
 
-class TestTokenList(TestUIBase):
+class TestTokenList(UITestBase):
     """Tests for token list"""
 
     def setUp(self):
@@ -31,17 +31,18 @@ class TestTokenList(TestUIBase):
         self.token_no_expiry = AuthToken.objects.create(
             self.regular_user, None
         )[0]
+        self.url = reverse('tokens:list')
 
     def test_list_items(self):
         """Test visibility of items in token list"""
         expected = [(self.superuser, 0), (self.regular_user, 2)]
-        url = reverse('tokens:list')
-        self.assert_element_count(expected, url, 'sodar-tk-list-item', 'class')
+        self.assert_element_count(
+            expected, self.url, 'sodar-tk-list-item', 'class'
+        )
 
     def test_list_expiry(self):
         """Test token expiry dates in token list"""
-        url = reverse('tokens:list')
-        self.login_and_redirect(self.regular_user, url)
+        self.login_and_redirect(self.regular_user, self.url)
         items = self.selenium.find_elements(By.CLASS_NAME, 'sodar-tk-list-item')
         self.assertEqual(len(items), 2)
         expiry_time = timezone.localtime(self.token.expiry).strftime(

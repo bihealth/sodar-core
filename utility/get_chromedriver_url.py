@@ -17,7 +17,7 @@ API_URL = (
     'last-known-good-versions.json'
 )
 DL_URL = (
-    'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/'
+    'https://storage.googleapis.com/chrome-for-testing-public/'
     '{driver_version}/{platform}/chromedriver-linux64.zip'
 )
 PLATFORM = 'linux64'

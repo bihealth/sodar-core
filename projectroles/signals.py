@@ -9,6 +9,8 @@ from django.contrib.auth.signals import (
     user_login_failed,
 )
 
+from projectroles.models import AUTH_PROVIDER_OIDC
+
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +22,27 @@ def handle_ldap_login(sender, user, **kwargs):
     """Signal for LDAP login handling"""
     try:
         if hasattr(user, 'ldap_username'):
+            logger.debug('Updating LDAP user..')
             user.update_full_name()
             user.update_ldap_username()
     except Exception as ex:
         logger.error('Exception in handle_ldap_login(): {}'.format(ex))
+        if settings.DEBUG:
+            raise ex
+
+
+def handle_oidc_login(sender, user, **kwargs):
+    """Signal for OIDC login handling"""
+    social_auth = getattr(user, 'social_auth', None)
+    if not social_auth:
+        return
+    try:
+        social_auth = social_auth.first()
+        if social_auth and social_auth.provider == AUTH_PROVIDER_OIDC:
+            logger.debug('Updating OIDC user..')
+            user.update_full_name()
+    except Exception as ex:
+        logger.error('Exception in handle_oidc_login(): {}'.format(ex))
         if settings.DEBUG:
             raise ex
 
@@ -55,6 +74,7 @@ def log_user_login_failure(sender, credentials, **kwargs):
 
 
 user_logged_in.connect(handle_ldap_login)
+user_logged_in.connect(handle_oidc_login)
 user_logged_in.connect(assign_user_group)
 user_logged_in.connect(log_user_login)
 user_logged_out.connect(log_user_logout)

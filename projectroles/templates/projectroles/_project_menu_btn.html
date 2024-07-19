@@ -20,82 +20,14 @@
       <i class="iconify" data-icon="mdi:home"></i> Home
     </a>
 
-    {# Project stuff #}
-    {% if project %}
-
-      {# Overview #}
-      <a class="dropdown-item {% get_pr_link_state projectroles_urls request 'detail' %}"
-          href="{% url 'projectroles:detail' project=project.sodar_uuid %}"
-          title="Overview"
-          id="sodar-pr-alt-link-overview">
-        {% if project.type == PROJECT_TYPE_CATEGORY %}
-          <i class="iconify" data-icon="mdi:rhombus-split"></i>
-        {% else %}
-          <i class="iconify" data-icon="mdi:cube"></i>
-        {% endif %}
-        Overview
+    {% get_project_app_links request project as dropdown_links %}
+    {% for link in dropdown_links %}
+      <a class="dropdown-item{% if link.active %} active{% endif %}"
+          href="{{ link.url }}"
+          title="{{ link.title }}"
+          id="sodar-pr-alt-link-{{ link.name }}">
+        <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
       </a>
-
-      {# App plugins #}
-      {% for plugin in app_plugins %}
-        {% is_app_visible plugin project request.user as app_link_visible %}
-        {% if app_link_visible %}
-          <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
-             href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
-             title="{{ plugin.title }}"
-             id="sodar-pr-alt-link-app-plugin-{{ plugin.name }}">
-            <i class="iconify" data-icon="{{ plugin.icon }}"></i> {{ plugin.title }}
-          </a>
-        {% endif %}
-      {% endfor %}
-
-      {# Role and project editing #}
-      {% if can_view_roles %}
-        <a class="dropdown-item {% get_pr_link_state projectroles_urls request role_urls %}"
-           href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
-           title="Members"
-           id="sodar-pr-alt-link-project-roles">
-         <i class="iconify" data-icon="mdi:account-multiple"></i> Members
-        </a>
-      {% endif %}
-      {% if can_update_project %}
-        <a class="dropdown-item {% get_pr_link_state projectroles_urls request 'update' %}"
-           href="{% url 'projectroles:update' project=project.sodar_uuid %}"
-           title="Update {% get_display_name 'PROJECT' title=True %}"
-           id="sodar-pr-alt-link-project-update">
-          <i class="iconify" data-icon="mdi:lead-pencil"></i> Update {% get_display_name project.type title=True %}
-        </a>
-     {% endif %}
-
-   {% endif %}
-
-    {# Project and Category Creation #}
-
-    {% if project and project.type == 'CATEGORY' %}
-      {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
-      {% if allow_creation and can_create_project and not project.is_remote %}
-         <a class="dropdown-item"
-            href="{% url 'projectroles:create' project=project.sodar_uuid %}"
-            id="sodar-pr-alt-link-project-create">
-           <i class="iconify" data-icon="mdi:plus-thick"></i> Create {% get_display_name 'PROJECT' title=True %} or {% get_display_name 'CATEGORY' title=True %}
-         </a>
-      {% endif %}
-    {% elif disable_categories and request.user.is_superuser %} {# Allow project creation under root #}
-      <a class="dropdown-item"
-         href="{% url 'projectroles:create' %}"
-         id="sodar-pr-alt-link-project-create">
-       <i class="iconify" data-icon="mdi:plus-thick"></i> Create {% get_display_name 'PROJECT' title=True %}
-     </a>
-    {% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
-      {% has_perm 'projectroles.create_project' request.user as can_create_project %}
-      {% if allow_creation and can_create_project %}
-        <a class="dropdown-item"
-           href="{% url 'projectroles:create' %}"
-           id="sodar-pr-alt-link-home-create">
-          <i class="iconify" data-icon="mdi:plus-thick"></i> Create {% get_display_name 'CATEGORY' title=True %}
-        </a>
-      {% endif %}
-    {% endif %}
-
- </div>
+    {% endfor %}
+  </div>
 </div>

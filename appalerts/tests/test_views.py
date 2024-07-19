@@ -7,7 +7,7 @@ from test_plus.test import TestCase
 from appalerts.tests.test_models import AppAlertMixin
 
 
-class TestViewsBase(AppAlertMixin, TestCase):
+class ViewTestBase(AppAlertMixin, TestCase):
     """Base class for appalerts view testing"""
 
     def setUp(self):
@@ -26,7 +26,7 @@ class TestViewsBase(AppAlertMixin, TestCase):
         )
 
 
-class TestAppAlertListView(TestViewsBase):
+class TestAppAlertListView(ViewTestBase):
     """Tests for the alert list view"""
 
     def test_render_superuser(self):
@@ -54,7 +54,7 @@ class TestAppAlertListView(TestViewsBase):
             self.assertEqual(response.context['object_list'].count(), 0)
 
 
-class TestAppAlertRedirectView(TestViewsBase):
+class TestAppAlertRedirectView(ViewTestBase):
     """Tests for the alert redirect view"""
 
     list_url = reverse('appalerts:list')
@@ -102,7 +102,7 @@ class TestAppAlertRedirectView(TestViewsBase):
         self.assertEqual(self.alert.active, True)
 
 
-class TestAppAlertStatusAjaxView(TestViewsBase):
+class TestAppAlertStatusAjaxView(ViewTestBase):
     """Tests for the alert status ajax view"""
 
     def test_get_user_with_alerts(self):
@@ -120,7 +120,7 @@ class TestAppAlertStatusAjaxView(TestViewsBase):
         self.assertEqual(response.data['alerts'], 0)
 
 
-class TestAppAlertDismissAjaxView(TestViewsBase):
+class TestAppAlertDismissAjaxView(ViewTestBase):
     """Tests for the alert dismissal ajax view"""
 
     def test_post_superuser(self):

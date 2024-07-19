@@ -2,12 +2,14 @@
 Django settings for the SODAR Core Example Site project.
 
 For more information on this file, see
-https://docs.djangoproject.com/en/dev/topics/settings/
+https://docs.djangoproject.com/en/4.2/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/3.2/ref/settings/
+https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+
 import environ
+import itertools
 import os
 
 from projectroles.constants import get_sodar_constants
@@ -22,7 +24,7 @@ APPS_DIR = ROOT_DIR.path(SITE_PACKAGE)
 env = environ.Env()
 
 # .env file, should load only in development environment
-READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', default=False)
+READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', False)
 
 if READ_DOT_ENV_FILE:
     # Operating System Environment variables have precedence over variables
@@ -60,12 +62,12 @@ THIRD_PARTY_APPS = [
     'markupfield',  # For markdown
     'rest_framework',  # For API views
     'knox',  # For token auth
+    'social_django',  # For OIDC authentication
     'docs',  # For the online user documentation/manual
     'db_file_storage',  # For filesfolders
     'dal',  # For user search combo box
     'dal_select2',
     'dj_iconify.apps.DjIconifyConfig',  # Iconify for SVG icons
-    'django_saml2_auth',  # SAML2 support
 ]
 
 # Project apps
@@ -143,18 +145,16 @@ ADMINS = [
     for x in env.list('ADMINS', default=['Admin User:admin@example.com'])
 ]
 
-# See: https://docs.djangoproject.com/en/3.2/ref/settings/#managers
+# See: https://docs.djangoproject.com/en/4.2/ref/settings/#managers
 MANAGERS = ADMINS
 
 # DATABASE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+# See: https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 # Uses django-environ to accept uri format
 # See: https://django-environ.readthedocs.io/en/latest/#supported-types
-DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres:///sodar_core')
-}
-DATABASES['default']['ATOMIC_REQUESTS'] = False
+DATABASES = {'default': env.db('DATABASE_URL', 'postgres:///sodar_core')}
+DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 # Set default auto field (for Django 3.2+)
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -171,24 +171,24 @@ DEFAULT_FILE_STORAGE = 'db_file_storage.storage.DatabaseFileStorage'
 # In a Windows environment this must be set to your system time zone.
 TIME_ZONE = 'Europe/Berlin'
 
-# See: https://docs.djangoproject.com/en/3.2/ref/settings/#language-code
+# See: https://docs.djangoproject.com/en/4.2/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
 
-# See: https://docs.djangoproject.com/en/3.2/ref/settings/#site-id
+# See: https://docs.djangoproject.com/en/4.2/ref/settings/#site-id
 SITE_ID = 1
 
-# See: https://docs.djangoproject.com/en/3.2/ref/settings/#use-i18n
+# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-i18n
 USE_I18N = False
 
-# See: https://docs.djangoproject.com/en/3.2/ref/settings/#use-l10n
+# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-l10n
 USE_L10N = True
 
-# See: https://docs.djangoproject.com/en/3.2/ref/settings/#use-tz
+# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-tz
 USE_TZ = True
 
 # TEMPLATE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/3.2/ref/settings/#templates
+# See: https://docs.djangoproject.com/en/4.2/ref/settings/#templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -316,14 +316,23 @@ CELERYD_TASK_TIME_LIMIT = 5 * 60
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
 
 
-# Django REST framework default auth classes
+# Django REST framework
+# ------------------------------------------------------------------------------
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'knox.auth.TokenAuthentication',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': (
+        'rest_framework.pagination.PageNumberPagination'
+    ),
+    'PAGE_SIZE': env.int('SODAR_API_PAGE_SIZE', 100),
 }
+
+# Additional authentication settings
+# ------------------------------------------------------------------------------
 
 # Knox settings
 TOKEN_TTL = None
@@ -344,7 +353,6 @@ LDAP_DEBUG = env.bool('LDAP_DEBUG', False)
 LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, default=[])
 
 if ENABLE_LDAP:
-    import itertools
     import ldap
     from django_auth_ldap.config import LDAPSearch
 
@@ -366,15 +374,16 @@ if ENABLE_LDAP:
     AUTH_LDAP_CA_CERT_FILE = env.str('AUTH_LDAP_CA_CERT_FILE', None)
     AUTH_LDAP_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
     if AUTH_LDAP_CA_CERT_FILE:
-        AUTH_LDAP_CONNECTION_OPTIONS[
-            ldap.OPT_X_TLS_CACERTFILE
-        ] = AUTH_LDAP_CA_CERT_FILE
+        AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = (
+            AUTH_LDAP_CA_CERT_FILE
+        )
         AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
     AUTH_LDAP_USER_FILTER = env.str(
         'AUTH_LDAP_USER_FILTER', '(sAMAccountName=%(user)s)'
     )
+    AUTH_LDAP_USER_SEARCH_BASE = env.str('AUTH_LDAP_USER_SEARCH_BASE', None)
     AUTH_LDAP_USER_SEARCH = LDAPSearch(
-        env.str('AUTH_LDAP_USER_SEARCH_BASE', None),
+        AUTH_LDAP_USER_SEARCH_BASE,
         ldap.SCOPE_SUBTREE,
         AUTH_LDAP_USER_FILTER,
     )
@@ -399,15 +408,18 @@ if ENABLE_LDAP:
         AUTH_LDAP2_CA_CERT_FILE = env.str('AUTH_LDAP2_CA_CERT_FILE', None)
         AUTH_LDAP2_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
         if AUTH_LDAP2_CA_CERT_FILE:
-            AUTH_LDAP2_CONNECTION_OPTIONS[
-                ldap.OPT_X_TLS_CACERTFILE
-            ] = AUTH_LDAP2_CA_CERT_FILE
+            AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = (
+                AUTH_LDAP2_CA_CERT_FILE
+            )
             AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
         AUTH_LDAP2_USER_FILTER = env.str(
             'AUTH_LDAP2_USER_FILTER', '(sAMAccountName=%(user)s)'
         )
+        AUTH_LDAP2_USER_SEARCH_BASE = env.str(
+            'AUTH_LDAP2_USER_SEARCH_BASE', None
+        )
         AUTH_LDAP2_USER_SEARCH = LDAPSearch(
-            env.str('AUTH_LDAP2_USER_SEARCH_BASE', None),
+            AUTH_LDAP2_USER_SEARCH_BASE,
             ldap.SCOPE_SUBTREE,
             AUTH_LDAP2_USER_FILTER,
         )
@@ -424,80 +436,40 @@ if ENABLE_LDAP:
         )
 
 
-# SAML configuration
+# OpenID Connect (OIDC) configuration
 # ------------------------------------------------------------------------------
 
+ENABLE_OIDC = env.bool('ENABLE_OIDC', False)
 
-ENABLE_SAML = env.bool('ENABLE_SAML', False)
-SAML2_AUTH = {
-    # Required setting
-    # Pysaml2 Saml client settings
-    # See: https://pysaml2.readthedocs.io/en/latest/howto/config.html
-    'SAML_CLIENT_SETTINGS': {
-        # Optional entity ID string to be passed in the 'Issuer' element of
-        # authn request, if required by the IDP.
-        'entityid': env.str('SAML_CLIENT_ENTITY_ID', 'SODARcore'),
-        'entitybaseurl': env.str(
-            'SAML_CLIENT_ENTITY_URL', 'https://localhost:8000'
-        ),
-        # The auto(dynamic) metadata configuration URL of SAML2
-        'metadata': {
-            'local': [
-                env.str('SAML_CLIENT_METADATA_FILE', 'metadata.xml'),
-            ],
-        },
-        'service': {
-            'sp': {
-                'idp': env.str(
-                    'SAML_CLIENT_IPD',
-                    'https://sso.hpc.bihealth.org/auth/realms/cubi',
-                ),
-                # Keycloak expects client signature
-                'authn_requests_signed': 'true',
-                # Enforce POST binding which is required by keycloak
-                'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-            },
-        },
-        'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
-        'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
-        'xmlsec_binary': env.str('SAML_CLIENT_XMLSEC1', '/usr/bin/xmlsec1'),
-        'encryption_keypairs': [
-            {
-                'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
-                'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
-            }
-        ],
-    },
-    # Custom target redirect URL after the user get logged in.
-    # Defaults to /admin if not set. This setting will be overwritten if you
-    # have parameter ?next= specificed in the login URL.
-    'DEFAULT_NEXT_URL': '/',
-    # # Optional settings below
-    # 'NEW_USER_PROFILE': {
-    #     'USER_GROUPS': [],  # The default group name when a new user logs in
-    #     'ACTIVE_STATUS': True,  # The default active status for new users
-    #     'STAFF_STATUS': True,  # The staff status for new users
-    #     'SUPERUSER_STATUS': False,  # The superuser status for new users
-    # },
-    # 'ATTRIBUTES_MAP': env.dict(
-    #     'SAML_ATTRIBUTES_MAP',
-    #     default={
-    #         Change values to corresponding SAML2 userprofile attributes.
-    #         'email': 'Email',
-    #         'username': 'UserName',
-    #         'first_name': 'FirstName',
-    #         'last_name': 'LastName',
-    #     }
-    # ),
-    # 'TRIGGER': {
-    #     'FIND_USER': 'path.to.your.find.user.hook.method',
-    #     'NEW_USER': 'path.to.your.new.user.hook.method',
-    #     'CREATE_USER': 'path.to.your.create.user.hook.method',
-    #     'BEFORE_LOGIN': 'path.to.your.login.hook.method',
-    # },
-    # Custom URL to validate incoming SAML requests against
-    # 'ASSERTION_URL': 'https://your.url.here',
-}
+if ENABLE_OIDC:
+    AUTHENTICATION_BACKENDS = tuple(
+        itertools.chain(
+            ('social_core.backends.open_id_connect.OpenIdConnectAuth',),
+            AUTHENTICATION_BACKENDS,
+        )
+    )
+    TEMPLATES[0]['OPTIONS']['context_processors'] += [
+        'social_django.context_processors.backends',
+        'social_django.context_processors.login_redirect',
+    ]
+    SOCIAL_AUTH_JSONFIELD_ENABLED = True
+    SOCIAL_AUTH_JSONFIELD_CUSTOM = 'django.db.models.JSONField'
+    SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
+    SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
+        'username',
+        'name',
+        'first_name',
+        'last_name',
+        'email',
+    ]
+    SOCIAL_AUTH_OIDC_OIDC_ENDPOINT = env.str(
+        'SOCIAL_AUTH_OIDC_OIDC_ENDPOINT', None
+    )
+    SOCIAL_AUTH_OIDC_KEY = env.str('SOCIAL_AUTH_OIDC_KEY', 'CHANGEME')
+    SOCIAL_AUTH_OIDC_SECRET = env.str('SOCIAL_AUTH_OIDC_SECRET', 'CHANGEME')
+    SOCIAL_AUTH_OIDC_USERNAME_KEY = env.str(
+        'SOCIAL_AUTH_OIDC_USERNAME_KEY', 'username'
+    )
 
 
 # Logging
@@ -584,9 +556,11 @@ ENABLED_BACKEND_PLUGINS = env.list(
 )
 
 # SODAR API settings
+# DEPRECATED: To be removed in SODAR Core v1.1 (see #1401)
 SODAR_API_DEFAULT_VERSION = '0.1'
 SODAR_API_ALLOWED_VERSIONS = [SODAR_API_DEFAULT_VERSION]
 SODAR_API_MEDIA_TYPE = 'application/your.application+json'
+# SODAR API host URL
 SODAR_API_DEFAULT_HOST = env.url(
     'SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000'
 )
@@ -641,10 +615,10 @@ PROJECTROLES_SEARCH_OMIT_APPS = env.list(
     'PROJECTROLES_SEARCH_OMIT_APPS', None, []
 )
 PROJECTROLES_TARGET_SYNC_ENABLE = env.bool(
-    'PROJECTROLES_TARGET_SYNC_ENABLE', default=False
+    'PROJECTROLES_TARGET_SYNC_ENABLE', False
 )
 PROJECTROLES_TARGET_SYNC_INTERVAL = env.int(
-    'PROJECTROLES_TARGET_SYNC_INTERVAL', default=5
+    'PROJECTROLES_TARGET_SYNC_INTERVAL', 5
 )
 
 # Optional projectroles settings
@@ -662,8 +636,6 @@ PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 PROJECTROLES_HIDE_PROJECT_APPS = env.list(
     'PROJECTROLES_HIDE_PROJECT_APPS', None, []
 )
-# NOTE: This setting has been deprecated and will be removed in v0.14
-PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 
 # Set limit for delegate roles per project (if 0, no limit is applied)
 PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)

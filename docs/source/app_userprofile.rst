@@ -81,12 +81,40 @@ app plugins.
 User settings defined in the ``projectroles`` app, available for all SODAR Core
 using sites:
 
+Receive Email for Admin Alerts
+    Receive email for :ref:`admin alerts <app_adminalerts>`.
 Display Project UUID Copying Link
     If set true, display a link in the project title bar for copying the project
     UUID into the clipboard.
-Additional Email
-    In addition to the default user email, also send email notifications to
-    these addresses.
+Receive Email for Project Updates
+    Receive email notifications for project or category creation, updating,
+    moving and archiving.
+Receive Email for Project Membership Updates
+    Receive email notifications for project or category membership updates and
+    invitation activity.
 
 In the development setup, the SODAR Core example site apps also provide
 additional settings for demonstrating settings features.
+
+
+Additional Emails
+=================
+
+The user can configure additional emails for their user account in case they
+want to receive automated emails to addresses other than their primary address.
+The user profile view displays additional emails and provides controls for
+managing these addresses.
+
+.. hint::
+
+    Managing addresses is only possible on a source site. On a target site,
+    emails will be visible but not mofifiable.
+
+A new additional email address can be added with a form accessible by clicking
+on the :guilabel:`Add Email` button. After creation, a verification email will
+be sent to the specified address. Opening a link contained in the email and
+logging into the site will verify the email. Only verified email addresses will
+receive automated emails from the site.
+
+For each email address displayed in the list, there are controls to re-send the
+verification email (in case of an unverified email) and deleting the address.

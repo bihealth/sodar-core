@@ -7,7 +7,6 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path
 from django.views import defaults as default_views
 
-import django_saml2_auth.views
 
 # Projectroles dependency
 from projectroles.views import HomeView
@@ -28,6 +27,8 @@ urlpatterns = [
     path('api/auth/', include('knox.urls')),
     # Iconify SVG icons
     path('icons/', include('dj_iconify.urls')),
+    # Social auth for OIDC support
+    path('social/', include('social_django.urls')),
     # Projectroles URLs
     path('project/', include('projectroles.urls')),
     # Admin Alerts URLs
@@ -54,23 +55,7 @@ urlpatterns = [
     path('examples/project/', include('example_project_app.urls')),
     # Example site app URLs
     path('examples/site/', include('example_site_app.urls')),
-    # These are the SAML2 related URLs. You can change "^saml2_auth/" regex to
-    # any path you want, like "^sso_auth/", "^sso_login/", etc. (required)
-    path('saml2_auth/', include('django_saml2_auth.urls')),
-    # The following line will replace the default user login with SAML2 (optional)
-    # If you want to specific the after-login-redirect-URL, use parameter "?next=/the/path/you/want"
-    # with this view.
-    path('sso/login/', django_saml2_auth.views.signin),
-    # The following line will replace the admin login with SAML2 (optional)
-    # If you want to specific the after-login-redirect-URL, use parameter "?next=/the/path/you/want"
-    # with this view.
-    path('sso/admin/login/', django_saml2_auth.views.signin),
-    # The following line will replace the default user logout with the signout page (optional)
-    path('sso/logout/', django_saml2_auth.views.signout),
-    # The following line will replace the default admin user logout with the signout page (optional)
-    path('sso/admin/logout/', django_saml2_auth.views.signout),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit

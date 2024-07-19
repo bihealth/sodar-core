@@ -5,6 +5,150 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.0.0 (2024-07-19)
+===================
+
+Added
+-----
+
+- **General**
+    - Python v3.11 support (#1157)
+    - Flake8 rule in ``Makefile`` (#1387)
+    - OpenID Connect (OIDC) authentication support (#1367)
+- **Adminalerts**
+    - Admin alert email sending (#415)
+    - ``notify_email_alert`` app setting (#415)
+- **Filesfolders**
+    - Optional pagination for REST API list views (#1313)
+- **Projectroles**
+    - ``full_title`` field in ``ProjectSerializer`` and API views (#1314)
+    - Custom password argument in ``createdevusers`` management command (#1393)
+    - ``PluginObjectLink`` data class in plugins (#1343)
+    - ``PluginSearchResult`` data class in plugins (#1399)
+    - Target user ``sodar_uuid`` updating in remote sync (#1316, #1317)
+    - Update local user data in remote sync (#1407)
+    - ``USER`` scope settings in remote sync (#1322)
+    - ``AppLinkContent`` utility class (#1380, #1381)
+    - ``checkusers`` management command (#1410)
+    - ``SODARPageNumberPagination`` pagination class (#1313)
+    - Optional pagination for REST API list views (#1313)
+    - Email notification opt-out settings (#1417, #1418)
+    - CC and BCC field support in sending generic emails (#415)
+    - ``SODARUserAdditionalEmail`` model (#874)
+    - ``is_source_site()`` and ``is_target_site()`` rule predicates
+    - ``settings_link`` kwarg in ``send_generic_email()`` (#1418)
+    - ``addremotesite`` and ``syncgroups`` command tests (#352)
+    - ``RemoteSite.owner_modifiable`` field (#817)
+    - ``assert_displayed()`` UI test helper
+    - ``RemoteProjectAccessAjaxView`` Ajax view (#1358)
+    - Remote project access status updating in project detail view (#1358)
+    - ``SidebarContentAjaxView`` for sidebar and project dropdown content retrieval (#1366)
+    - ``UserDropdownContentAjaxView`` for user dropdown content retrieval (#1366, #1392)
+    - ``SODARUser.get_auth_type()`` helper (#1367)
+    - ``ProjectInvite.is_ldap()`` helper (#1367)
+    - ``AppSettingAPI.is_set()`` helper (#1450)
+    - ``checks`` module for Django checks (#504)
+    - Django check for enabled auth methods (#1451)
+- **Timeline**
+    - ``sodar_uuid`` field in ``TimelineEventObjectRef`` model (#1415)
+    - REST API views (#1350)
+    - ``get_project()`` helpers in ``TimelineEvent`` and ``TimelineEventObjectRef`` (#1350)
+    - Optional pagination for REST API list views (#1313)
+- **Userprofile**
+    - Additional email address management and verification (#874)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v4.2 (#880)
+    - Upgrade minimum PostgreSQL version to v12 (#1074)
+    - Upgrade to PostgreSQL v16 in CI (#1074)
+    - Upgrade general Python dependencies (#1374)
+    - Reformat with black v24.3.0 (#1374)
+    - Update download URL in ``get_chromedriver_url.py`` (#1385)
+    - Add ``AUTH_LDAP_USER_SEARCH_BASE`` as a Django setting (#1410)
+    - Change ``ATOMIC_REQUESTS`` recommendation and default to ``True`` (#1281)
+    - Add OpenAPI dependencies (#1444)
+    - Squash migrations (#1446)
+- **Filesfolders**
+    - Add migration required by Django v4.2 (#1396)
+    - Add app specific media type and versioning (#1278)
+- **Projectroles**
+    - Rename ``AppSettingAPI`` ``app_name`` arguments to ``plugin_name`` (#1285)
+    - Default password in ``createdevusers`` management command (#1390)
+    - Deprecate ``local`` in app settings, use ``global`` instead (#1319)
+    - Enforce optional handling of app settings ``global`` attributes (#1395)
+    - Expect ``get_object_link()`` plugin methods to return ``PluginObjectLink`` (#1343)
+    - Deprecate returning ``dict`` from ``get_object_link()`` (#1343)
+    - Expect ``search()`` plugin methods to return list of ``PluginSearchResult`` objects (#1399)
+    - Deprecate returning ``dict`` from ``search()`` (#1399)
+    - Update core API view media type and versioning (#1278, #1406)
+    - Separate projectroles and remote sync API media types and versioning (#1278)
+    - Rename base test classes for consistency (#1259)
+    - Prevent setting global user app settings on target site in ``AppSettingAPI`` (#1329)
+    - Move project app link logic in ``AppLinkContent`` (#1380)
+    - Move user dropdown link logic in ``AppLinkContent`` (#1381, #1413)
+    - Do not recreate ``AppSetting`` objects on remote sync update (#1409)
+    - Enforce project and site uniqueness in ``RemoteProject`` model (#1433)
+    - Remove redundant permission check in ``project_detail.html`` (#1438)
+    - Move sidebar, project dropdown and user dropdown creation to ``utils`` (#1366)
+    - Refactor ``ProjectInviteProcessMixin.get_invite_type()`` into ``ProjectInvite.is_ldap()`` (#1367)
+- **Sodarcache**
+    - Rewrite REST API views (#498, #1389)
+    - Raise ``update_cache()`` exception for ``synccache`` in debug mode (#1375)
+- **Timeline**
+    - Update ``get_object_link()`` usage for ``PluginObjectLink`` return data (#1343)
+    - Rename ``ProjectEvent*`` models to ``TimelineEvent*`` (#1414)
+    - Move event name from separate column into badge (#1370)
+    - Use constants for event status types (#973)
+- **Userprofile**
+    - Disable global user settings on target site in ``UserSettingsForm`` (#1329)
+
+Fixed
+-----
+
+- **General**
+    - ``README.rst`` badge rendering (#1402)
+- **Filesfolders**
+    - OpenAPI ``generateschema`` errors and warnings (#1442)
+- **Projectroles**
+    - ``SODARUser.update_full_name()`` not working with existing name (#1371)
+    - Legacy public guest access in child category breaks category updating (#1404)
+    - Incorrect DAL widget highlight colour after upgrade (#1412)
+    - ``ProjectStarringAjaxView`` creating redundant database objects (#1416)
+    - ``addremotesite`` crash in ``TimelineAPI.add_event()`` (#1425)
+    - ``addremotesite`` allows creation of site with mode identical to host (#1426)
+    - Public guest access field not correctly hidden in project form (#1429)
+    - Revoked remote projects displayed in project detail view (#1432)
+    - Invalid URLs for remote peer projects in project detail view (#1435)
+    - Redundant ``Project.get_source_site()`` calls in project detail view (#1436)
+    - ``RemoteSite.get_access_date()`` invalid date sorting (#1437)
+    - OpenAPI ``generateschema`` compatibility (#1440, #1442)
+    - ``ProjectCreateView`` allows ``POST`` with disabled target project creation (#1448)
+    - Plugin existence not explicitly checked in ``AppSettingAPI.set()`` update query (#1452)
+    - ``search_advanced.html`` header layout (#1453)
+- **Sodarcache**
+    - REST API set view ``app_name`` incorrectly set (#1405)
+- **Timeline**
+    - OpenAPI ``generateschema`` warnings (#1442)
+
+Removed
+-------
+
+- **General**
+    - SAML support (#1368)
+    - Python v3.8 support (#1382)
+- **Projectroles**
+    - ``PROJECTROLES_HIDE_APP_LINKS`` setting (#1143)
+    - ``CORE_API_*`` Django settings (#1278)
+    - Project starring timeline event creation (#1294)
+    - ``user_email_additional`` app setting (#874)
+    - ``get_visible_projects()`` template tag (#1432)
+    - App setting value max length limit (#1443)
+    - Redundant project permission in ``UserSettingRetrieveAPIView`` (#1449)
+
+
 v0.13.4 (2024-02-16)
 ====================
 

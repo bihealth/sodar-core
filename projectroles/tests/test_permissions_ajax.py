@@ -4,8 +4,8 @@ from django.test import override_settings
 from django.urls import reverse
 
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_permissions import TestProjectPermissionBase
-
+from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
+from projectroles.tests.test_permissions import ProjectPermissionTestBase
 
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -14,9 +14,11 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 
-class TestProjectListAjaxViews(TestProjectPermissionBase):
+class TestProjectListAjaxViews(ProjectPermissionTestBase):
     """Tests for project list Ajax view permissions"""
 
     def test_get_project_list(self):
@@ -169,7 +171,7 @@ class TestProjectListAjaxViews(TestProjectPermissionBase):
         )
 
 
-class TestProjectStarringAjaxView(TestProjectPermissionBase):
+class TestProjectStarringAjaxView(ProjectPermissionTestBase):
     """Tests for ProjectStarringAjaxView permissions"""
 
     def setUp(self):
@@ -237,7 +239,185 @@ class TestProjectStarringAjaxView(TestProjectPermissionBase):
         self.assert_response(self.url_cat, self.anonymous, 401, method='POST')
 
 
-class TestUserAjaxViews(TestProjectPermissionBase):
+class TestRemoteProjectAccessAjaxView(
+    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
+):
+    """Tests for RemoteProjectAccessAjaxView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.remote_site = self.make_site(
+            name='RemoteSite',
+            url='https://remote.site',
+            mode=SITE_MODE_TARGET,
+        )
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.url = reverse(
+            'projectroles:ajax_remote_access',
+            kwargs={'project': self.project.sodar_uuid},
+        ) + '?rp={}'.format(self.remote_project.sodar_uuid)
+
+    def test_get(self):
+        """Test RemoteProjectAccessAjaxView GET"""
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 403)
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.project.set_public()
+        self.assert_response(self.url, self.anonymous, 200)
+
+    def test_get_archive(self):
+        """Test GET with archived project"""
+        self.project.set_archive()
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 403)
+
+
+class TestSidebarContentAjaxView(ProjectPermissionTestBase):
+    """Tests for SidebarContentAjaxView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'projectroles:ajax_sidebar',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.url_cat = reverse(
+            'projectroles:ajax_sidebar',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test SidebarContentAjaxView GET"""
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 403)
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.project.set_public()
+        self.assert_response(self.url, self.anonymous, 200)
+
+    def test_get_archive(self):
+        """Test GET with archived project"""
+        self.project.set_archive()
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 403)
+
+    def test_get_category(self):
+        """Test GET with category"""
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        bad_users = [self.user_no_roles, self.anonymous]
+        self.assert_response(self.url_cat, good_users, 200)
+        self.assert_response(self.url_cat, bad_users, 403)
+        self.project.set_public()
+        self.assert_response(self.url_cat, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_category_anon(self):
+        """Test GET with category and anonymous access"""
+        self.project.set_public()
+        self.assert_response(self.url_cat, self.anonymous, 200)
+
+
+class TestUserDropdownContentAjaxView(ProjectPermissionTestBase):
+    """Tests for UserDropdownContentAjaxView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:ajax_user_dropdown')
+
+    def test_get(self):
+        """Test UserDropdownContentAjaxView GET"""
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_finder_cat,
+            self.user_no_roles,
+        ]
+        bad_users = [self.anonymous]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 403)
+
+
+class TestUserAjaxViews(ProjectPermissionTestBase):
     """Tests for user Ajax view permissions"""
 
     def test_get_current_user(self):

@@ -7,9 +7,10 @@ from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
 from timeline.tests.test_models import (
-    TestProjectEventBase,
-    ProjectEventMixin,
-    ProjectEventStatusMixin,
+    TimelineEventTestBase,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    EXTRA_DATA,
 )
 
 
@@ -22,8 +23,8 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
-class TestViewsBase(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase
+class ViewTestBase(
+    TimelineEventMixin, TimelineEventStatusMixin, TimelineEventTestBase
 ):
     """Base class for timeline view testing"""
 
@@ -57,15 +58,15 @@ class TestViewsBase(
             user=self.user,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
 
 
-class TestProjectEventListView(TestViewsBase):
-    """Tests for the timeline project event list view"""
+class TestProjectTimelineView(ViewTestBase):
+    """Tests for ProjectTimelineView"""
 
-    def test_render(self):
-        """Test rendering the list view for a project"""
+    def test_get(self):
+        """Test ProjectTimelineView GET"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -73,14 +74,12 @@ class TestProjectEventListView(TestViewsBase):
                     kwargs={'project': self.project.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context['object_list']), 1)
-            self.assertEqual(
-                response.context['object_list'].first(), self.event
-            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['object_list']), 1)
+        self.assertEqual(response.context['object_list'].first(), self.event)
 
-    def test_render_category(self):
-        """Test rendering the list view for a category"""
+    def test_get_category(self):
+        """Test GET with category"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -88,11 +87,11 @@ class TestProjectEventListView(TestViewsBase):
                     kwargs={'project': self.category.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
 
-class TestProjectObjectListView(TestViewsBase):
-    """Tests for the timeline project object list view"""
+class TestProjectObjectTimelineView(ViewTestBase):
+    """Tests for ProjectObjectTimelineView"""
 
     def setUp(self):
         super().setUp()
@@ -101,8 +100,8 @@ class TestProjectObjectListView(TestViewsBase):
             obj=self.user, label='user', name=self.user.username
         )
 
-    def test_render(self):
-        """Test to ensure the view renders correctly"""
+    def test_get(self):
+        """Test ProjectObjectTimelineView GET"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -114,11 +113,11 @@ class TestProjectObjectListView(TestViewsBase):
                     },
                 )
             )
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
 
-class TestSiteEventListView(TestViewsBase):
-    """Tests for the timeline site-wide event list view"""
+class TestSiteTimelineView(ViewTestBase):
+    """Tests for SiteTimelineView"""
 
     def setUp(self):
         super().setUp()
@@ -128,26 +127,22 @@ class TestSiteEventListView(TestViewsBase):
             user=self.user,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
 
-    def test_render(self):
-        """Test rendering the site-wide list view"""
+    def test_get(self):
+        """Test SiteTimelineView GET"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'timeline:list_site',
-                )
-            )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context['object_list']), 1)
-            self.assertEqual(
-                response.context['object_list'].first(), self.event_site
-            )
+            response = self.client.get(reverse('timeline:list_site'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['object_list']), 1)
+        self.assertEqual(
+            response.context['object_list'].first(), self.event_site
+        )
 
 
-class TestSiteObjectListView(TestViewsBase):
-    """Tests for the timeline site-wide objectlist view"""
+class TestSiteObjectTimelineView(ViewTestBase):
+    """Tests for SiteObjectTimelineView"""
 
     def setUp(self):
         super().setUp()
@@ -157,15 +152,14 @@ class TestSiteObjectListView(TestViewsBase):
             user=self.user,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
-        # Add user as an object reference
         self.obj_ref = self.event_site.add_object(
             obj=self.user, label='user', name=self.user.username
         )
 
-    def test_render(self):
-        """Test rendering the site-wide list view"""
+    def test_get(self):
+        """Test SiteObjectTimelineView GET"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -176,15 +170,15 @@ class TestSiteObjectListView(TestViewsBase):
                     },
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context['object_list']), 1)
-            self.assertEqual(
-                response.context['object_list'].first(), self.event_site
-            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['object_list']), 1)
+        self.assertEqual(
+            response.context['object_list'].first(), self.event_site
+        )
 
 
-class TestAdminEventListView(TestViewsBase):
-    """Tests for the admin timeline list view"""
+class TestAdminTimelineView(ViewTestBase):
+    """Tests for AdminTimelineView"""
 
     def setUp(self):
         super().setUp()
@@ -194,11 +188,11 @@ class TestAdminEventListView(TestViewsBase):
             user=self.user,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'},
+            extra_data=EXTRA_DATA,
         )
 
-    def test_render(self):
-        """Test rendering the admin list view"""
+    def test_get(self):
+        """Test AdminTimelineView GET"""
         with self.login(self.user):
             response = self.client.get(reverse('timeline:list_admin'))
         self.assertEqual(response.status_code, 200)

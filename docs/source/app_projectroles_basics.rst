@@ -121,7 +121,7 @@ Among the data which can be synchronized:
 - General project information such as title, description and readme
 - Project category structure
 - User roles in projects
-- User accounts for LDAP/AD users (required for the previous step)
+- User accounts for LDAP/AD and OIDC users (required for the previous step)
 - Information of other Target Sites linking a common project
 
 Target sites read remote project information from the source site. When
