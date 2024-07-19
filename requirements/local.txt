@@ -10,5 +10,6 @@ django-debug-toolbar>=4.3.0, <4.4
 ipdb>=0.13.13, <0.14
 
 # OpenAPI support
-uritemplate>=4.1.1, <4.2
+inflection>=0.5.1, <0.6
 pyyaml>=6.0.1, <6.1
+uritemplate>=4.1.1, <4.2

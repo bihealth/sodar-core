@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.0.0 (WIP)
-************
+v1.0.0 (2024-07-19)
+*******************
 
 Release Highlights
 ==================
@@ -51,11 +51,11 @@ Django v4.2 Upgrade
 -------------------
 
 This release updates SODAR Core from Django v3.2 to v4.2. This is a breaking
-change which causes many updates and also potentially requires updating several
+change which causes many updates and also requires updating several
 dependencies.
 
-To upgrade, please update the Django requirement along with your site's other
-Python requirements to match ones in ``requirements/*.txt``. See
+Please update the Django requirement along with your site's other Python
+requirements to match ones in ``requirements/*.txt``. See
 `Django deprecation documentation <https://docs.djangoproject.com/en/dev/internals/deprecation/>`_
 for details about what has been deprecated in Django and which changes are
 mandatory.
@@ -74,13 +74,13 @@ System Prerequisites
 --------------------
 
 PostgreSQL
-    The minimum required PostgreSQL version has been bumped to v12. In CI we
-    currently use PostgreSQL v16, but anything from v12 to above should work
-    with this SODAR Core release. It is strongly recommended to make backups of
-    your production databases before upgrading.
+    The minimum required PostgreSQL version has been bumped to v12. We recommend
+    PostgreSQL v16 which is used in CI for this repo. However, any version from
+    v12 onwards should work with this release. We strongly recommended to make
+    backups of your production databases before upgrading.
 Python v3.11 Support Added
-    Python v3.11 support has been officially added in this version. 3.11 is now
-    also the recommended Python version to use.
+    Python v3.11 support has been officially added in this version. 3.11 is also
+    the recommended Python version.
 Python v3.8 Support Dropped
     This release no longer supports Python v3.8.
 General Python Dependencies
@@ -91,11 +91,11 @@ General Python Dependencies
 REST API Versioning Overhaul
 ----------------------------
 
-The REST API versioning system has been overhauled in this release. Before, we
-used two separate accept header versioning systems: 1) API views in SODAR Core
-apps with ``CORE_API_MEDIA_TYPE``, and 2) API views of the site built on SODAR
-Core with ``SODAR_API_MEDIA_TYPE``. The version number has been expected to
-match the SODAR Core or the site version number, respectively.
+The REST API versioning system has been overhauled. Before, we used two separate
+accept header versioning systems: 1) API views in SODAR Core apps with
+``CORE_API_MEDIA_TYPE``, and 2) API views of the site built on SODAR Core with
+``SODAR_API_MEDIA_TYPE``. The version number has been expected to match the
+SODAR Core or the site version number, respectively.
 
 In the new system there are two critical changes to this versioning scheme:
 
@@ -193,7 +193,6 @@ necessarily tied to projects.
 If your site only accesses these models through ``TimelineAPI`` and
 ``TimelineAPI.get_model()``, which is the strongly recommended way, no changes
 should be required.
-
 
 AppSettingAPI Plugin Name Arguments Updated
 -------------------------------------------

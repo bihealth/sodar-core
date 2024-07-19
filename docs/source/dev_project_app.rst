@@ -643,10 +643,10 @@ use e.g. ``all`` as your only category. Example of a return data:
     # ...
     return [
         PluginSearchResult(
-            'category': 'all',  # Category ID to be used in your search template
-            'title': 'List title',  # Title of the result set
-            'search_types': [],  # Object types included in this category
-            'items': [],  # List or QuerySet of objects returned by search
+            category='all',  # Category ID to be used in your search template
+            title='List title',  # Title of the result set
+            search_types=[],  # Object types included in this category
+            items=[],  # List or QuerySet of objects returned by search
         )
     ]
 

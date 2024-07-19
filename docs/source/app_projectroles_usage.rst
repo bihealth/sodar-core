@@ -27,11 +27,17 @@ One can either log in using a local Django user or, if LDAP/AD is enabled, their
 LDAP/AD credentials from a supported site. In the latter case, the user domain
 must be appended to the user name in form of ``user@DOMAIN``.
 
+If OpenID Connect (OIDC) single-sign on authentication is enabled, an extra
+login element will be displayed next to the standard login controls. This will
+take the user to the login view of the OIDC provider. The element can be
+replaced with a custom template to e.g. use specific graphics recommended by the
+provider.
+
 .. figure:: _static/app_projectroles/sodar_login.png
     :align: center
     :scale: 75%
 
-    SODAR login form
+    SODAR Core login form
 
 
 User Interface
@@ -325,12 +331,6 @@ and the user email domain is not associated with configured LDAP domains.
 Invites expire after a certain time and can be reissued or revoked on the
 :guilabel:`Project Invites` page.
 
-.. note::
-
-    If the site enables both LDAP and OpenID Connect (OIDC) authentication,
-    LDAP will take precedent over OIDC login in invites if a configured LDAP
-    domain is recognized in the user email address.
-
 Batch Member Modifications
 --------------------------
 
@@ -374,7 +374,8 @@ project data can be provided. A target site can define exactly one source site,
 from which project data can be retrieved from.
 
 To enable remote project data and member synchronization, you must first set up
-either a target or a source site depending on the role of your own SODAR site.
+either a target or a source site depending on the role of your own SODAR Core
+based site.
 
 .. figure:: _static/app_projectroles/sodar_remote_sites.png
     :align: center
@@ -502,7 +503,7 @@ Alternatively, the following management command can be used:
     If a local user is the owner of a synchronized project on the source site,
     the user defined in the ``PROJECTROLES_DEFAULT_ADMIN`` will be given the
     owner role. Hence you **must** have this setting defined if you are
-    implementing a SODAR site in target mode.
+    implementing a SODAR Core based site in target mode.
 
 .. note::
 

@@ -156,9 +156,9 @@ Defining Status States
     need to pay attention to this functionality right now.
 
 By default, ``timeline.add_event()`` treats events as synchronous and
-automatically saves them with the status of ``TL_STATUS_OK``. However, in case of e.g.
-asynchronous requests, you can alter this by setting the ``status_type`` and
-(optionally) ``status_desc`` types upon creation.
+automatically saves them with the status of ``TL_STATUS_OK``. However, in case
+of e.g. asynchronous requests, you can alter this by setting the ``status_type``
+and (optionally) ``status_desc`` types upon creation.
 
 .. code-block:: python
 
@@ -182,8 +182,8 @@ Currently supported status types are listed below, some only applicable to async
 events:
 
 - ``TL_STATUS_OK``: All OK, event successfully performed
-- ``TL_STATUS_INFO``: Used for events which do not change anything, e.g. viewing something
-  within an app
+- ``TL_STATUS_INFO``: Used for events which do not change anything, e.g. viewing
+  something within an app
 - ``TL_STATUS_INIT``: Initializing the event in progress
 - ``TL_STATUS_SUBMIT``: Event submitted asynchronously
 - ``TL_STATUS_FAILED``: Asynchronous event submission failed
