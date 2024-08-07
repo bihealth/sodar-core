@@ -8,9 +8,17 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - Previously removed ``BatchUpdateRolesMixin`` (#1464)
+
 Fixed
 -----
 
+- **Projectroles**
+    - ``BatchUpdateRolesMixin`` removal breaking tests in other repos (#1464)
 - **Timeline**
     - Deprecated link dict ``blank`` field assumed as mandatory (#1462)
 
