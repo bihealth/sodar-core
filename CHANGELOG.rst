@@ -17,6 +17,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade minimum Django version to v4.2.15 (#1466)
 - **Timeline**
     - Rename search item category to ``Timeline Events`` (#1465)
 
