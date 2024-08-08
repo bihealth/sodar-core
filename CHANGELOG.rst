@@ -14,6 +14,12 @@ Added
 - **Projectroles**
     - Previously removed ``BatchUpdateRolesMixin`` (#1464)
 
+Changed
+-------
+
+- **Timeline**
+    - Rename search item category to ``Timeline Events`` (#1465)
+
 Fixed
 -----
 
