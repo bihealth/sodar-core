@@ -110,7 +110,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             items = [e for e in events if self.check_permission(user, e)]
         ret = PluginSearchResult(
             category='all',
-            title='Timeline Event',
+            title='Timeline Events',
             search_types=['timeline'],
             items=items,
         )

@@ -10,6 +10,25 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.1 (2024-08-08)
+*******************
+
+Release Highlights
+==================
+
+- Add erroneously removed BatchUpdateRolesMixin test helper
+- Fix handling of deprecated "blank" field in timeline object links
+- General bug fixes and minor updates
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v4.2.15.
+
+
 v1.0.0 (2024-07-19)
 *******************
 

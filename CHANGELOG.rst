@@ -5,6 +5,32 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.0.1 (2024-08-08)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - Previously removed ``BatchUpdateRolesMixin`` (#1464)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v4.2.15 (#1466)
+- **Timeline**
+    - Rename search item category to ``Timeline Events`` (#1465)
+
+Fixed
+-----
+
+- **Projectroles**
+    - ``BatchUpdateRolesMixin`` removal breaking tests in other repos (#1464)
+- **Timeline**
+    - Deprecated link dict ``blank`` field assumed as mandatory (#1462)
+
+
 v1.0.0 (2024-07-19)
 ===================
 

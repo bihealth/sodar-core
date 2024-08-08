@@ -201,7 +201,7 @@ class TimelineAPI:
                     link = PluginObjectLink(
                         url=link['url'],
                         name=link['label'],
-                        blank=link['blank'],
+                        blank=link.get('blank', False),
                     )
                 if not link.name:
                     logger.warning(
