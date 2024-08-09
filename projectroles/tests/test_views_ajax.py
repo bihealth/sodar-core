@@ -626,20 +626,6 @@ class TestSidebarContentAjaxView(
                     'active': False,
                 },
                 {
-                    'name': 'app-plugin-bgjobs',
-                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
-                    'label': 'Background Jobs',
-                    'icon': 'mdi:server',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-example_project_app',
-                    'url': f'/examples/project/{self.project.sodar_uuid}',
-                    'label': 'Example Project App',
-                    'icon': 'mdi:rocket-launch',
-                    'active': False,
-                },
-                {
                     'name': 'app-plugin-filesfolders',
                     'url': f'/files/{self.project.sodar_uuid}',
                     'label': 'Files',
@@ -651,6 +637,20 @@ class TestSidebarContentAjaxView(
                     'url': f'/timeline/{self.project.sodar_uuid}',
                     'label': 'Timeline',
                     'icon': 'mdi:clock-time-eight',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-bgjobs',
+                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                    'label': 'Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-example_project_app',
+                    'url': f'/examples/project/{self.project.sodar_uuid}',
+                    'label': 'Example Project App',
+                    'icon': 'mdi:rocket-launch',
                     'active': False,
                 },
                 {
@@ -692,20 +692,6 @@ class TestSidebarContentAjaxView(
                     'active': False,
                 },
                 {
-                    'name': 'app-plugin-bgjobs',
-                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
-                    'label': 'Background Jobs',
-                    'icon': 'mdi:server',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-example_project_app',
-                    'url': f'/examples/project/{self.project.sodar_uuid}',
-                    'label': 'Example Project App',
-                    'icon': 'mdi:rocket-launch',
-                    'active': False,
-                },
-                {
                     'name': 'app-plugin-filesfolders',
                     'url': f'/files/{self.project.sodar_uuid}',
                     'label': 'Files',
@@ -717,6 +703,20 @@ class TestSidebarContentAjaxView(
                     'url': f'/timeline/{self.project.sodar_uuid}',
                     'label': 'Timeline',
                     'icon': 'mdi:clock-time-eight',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-bgjobs',
+                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                    'label': 'Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-example_project_app',
+                    'url': f'/examples/project/{self.project.sodar_uuid}',
+                    'label': 'Example Project App',
+                    'icon': 'mdi:rocket-launch',
                     'active': False,
                 },
                 {

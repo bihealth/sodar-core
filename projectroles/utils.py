@@ -206,7 +206,7 @@ class AppLinkContent:
                 }
             )
             # Add app plugins links
-            app_plugins = get_active_plugins()
+            app_plugins = get_active_plugins(custom_order=True)
             for plugin in app_plugins:
                 if self._is_app_visible(plugin, project, user):
                     ret.append(
