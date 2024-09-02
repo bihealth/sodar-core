@@ -8,11 +8,18 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - Truncate app setting values in ``remoteproject_sync.html`` (#1474)
+
 Fixed
 -----
 
 - **Projectroles**
     - Incorrect app plugin link order in ``get_project_app_links()`` (#1468)
+    - Empty JSON value rendering in ``remoteproject_sync.html`` (#1472)
 
 
 v1.0.1 (2024-08-08)

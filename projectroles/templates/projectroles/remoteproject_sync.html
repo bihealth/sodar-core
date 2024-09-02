@@ -252,15 +252,15 @@
                     <td>
                       {% if a.app_plugin %}{{ a.app_plugin }}{% else %}projectroles{% endif %}
                     </td>
-                    <td>
-                      {% if a.type == 'JSON' %}
-                        {{ a.value_json }}
-                      {% elif a.type == 'BOOLEAN' %}
-                        {% if a.value == '1' %}True{% else %}False{% endif %}
-                      {% else %}
-                        {{ a.value }}
-                      {% endif %}
-                    </td>
+                    {% if a.type == 'JSON' and a.value_json %}
+                      <td class="text-muted font-italic">JSON</td>
+                    {% elif a.type == 'JSON' %}
+                      <td class="text-muted font-italic">Empty</td>
+                    {% elif a.type == 'BOOLEAN' %}
+                      <td class="text-monospace">{% if a.value == '1' %}True{% else %}False{% endif %}</td>
+                    {% else %}
+                      <td class="text-monospace">{{ a.value | truncatechars:255 }}</td>
+                    {% endif %}
                     <td>{{ a.status | title }}</td>
                   </tr>
                 {% endif %}

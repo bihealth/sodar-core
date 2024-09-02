@@ -16,7 +16,9 @@ v1.0.2 (WIP)
 Release Highlights
 ==================
 
-TBA
+- Update app setting rendering in remote sync UI
+- Fix project sidebar and dropdown app plugin link order
+- General bug fixes and minor updates
 
 
 v1.0.1 (2024-08-08)
