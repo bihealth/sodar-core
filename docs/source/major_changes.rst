@@ -18,6 +18,7 @@ Release Highlights
 
 - Update app setting rendering in remote sync UI
 - Fix project sidebar and dropdown app plugin link order
+- Fix remote sync crash on updating user with additional email
 - General bug fixes and minor updates
 
 

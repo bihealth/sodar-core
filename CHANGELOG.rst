@@ -44,6 +44,7 @@ Fixed
 
 - **Projectroles**
     - ``BatchUpdateRolesMixin`` removal breaking tests in other repos (#1464)
+    - Remote sync crash on updating user with additional email (#1476)
 - **Timeline**
     - Deprecated link dict ``blank`` field assumed as mandatory (#1462)
 

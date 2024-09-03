@@ -32,6 +32,7 @@ from projectroles.models import (
     AppSetting,
 )
 from projectroles.plugins import get_backend_api
+from projectroles.utils import build_secret
 
 
 app_settings = AppSettingAPI()
@@ -530,8 +531,13 @@ class RemoteProjectAPI:
                 )
             )
         for e in add_emails:
+            if SODARUserAdditionalEmail.objects.filter(
+                user=user, email=e
+            ).exists():
+                continue
+            # TODO: Remove redundant secret once #1477 is implemented
             email_obj = SODARUserAdditionalEmail.objects.create(
-                user=user, email=e, verified=True
+                user=user, email=e, verified=True, secret=build_secret(16)
             )
             logger.info(
                 'Created user {} additional email "{}"'.format(

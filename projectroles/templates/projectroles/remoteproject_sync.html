@@ -257,9 +257,9 @@
                     {% elif a.type == 'JSON' %}
                       <td class="text-muted font-italic">Empty</td>
                     {% elif a.type == 'BOOLEAN' %}
-                      <td class="text-monospace">{% if a.value == '1' %}True{% else %}False{% endif %}</td>
+                      <td><code>{% if a.value == '1' %}True{% else %}False{% endif %}</code></td>
                     {% else %}
-                      <td class="text-monospace">{{ a.value | truncatechars:255 }}</td>
+                      <td><code>{{ a.value | truncatechars:255 }}</code></td>
                     {% endif %}
                     <td>{{ a.status | title }}</td>
                   </tr>
