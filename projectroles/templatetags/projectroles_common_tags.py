@@ -65,6 +65,7 @@ def get_user_by_uuid(sodar_uuid):
     """Return SODARUser by sodar_uuid"""
     return User.objects.filter(sodar_uuid=sodar_uuid).first()
 
+
 @register.simple_tag
 def get_user_by_username(username):
     """Return User by username"""

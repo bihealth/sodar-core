@@ -1175,7 +1175,7 @@ class RemoteProjectAPI:
                 set_data['status'] = 'skipped'
                 return
             # Skip if value is identical
-            if app_settings._compare_value(
+            if app_settings.compare_value(
                 obj, ad['value_json'] if obj.type == 'JSON' else ad['value']
             ):
                 logger.info(

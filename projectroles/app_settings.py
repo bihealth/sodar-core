@@ -303,24 +303,6 @@ class AppSettingAPI:
             raise ValueError('Value is not valid JSON: {}'.format(value))
 
     @classmethod
-    def _compare_value(cls, obj, input_value):
-        """
-        Compare input value to value in an AppSetting object. Return True if
-        values match, False if there is a mismatch.
-
-        :param obj: AppSetting object
-        :param input_value: Input value (string, int, bool or dict)
-        :return: Bool
-        """
-        if obj.type == 'JSON':
-            return (
-                not obj.value_json and not input_value
-            ) or obj.value_json == cls._get_json_value(input_value)
-        elif obj.type == 'BOOLEAN':
-            return bool(int(obj.value)) == input_value
-        return obj.value == str(input_value)
-
-    @classmethod
     def _log_set_debug(
         cls, action, plugin_name, setting_name, value, project, user
     ):
@@ -587,7 +569,7 @@ class AppSettingAPI:
             else:
                 q_kwargs['app_plugin'] = None
             setting = AppSetting.objects.get(**q_kwargs)
-            if cls._compare_value(setting, value):
+            if cls.compare_value(setting, value):
                 return False
             if validate:
                 cls.validate(
@@ -911,6 +893,26 @@ class AppSettingAPI:
             logger.warning(LOCAL_DEPRECATE_MSG)
             return not setting_def['local']  # Inverse value
         return setting_def.get('global', APP_SETTING_GLOBAL_DEFAULT)
+
+    @classmethod
+    def compare_value(cls, obj, input_value):
+        """
+        Compare input value to value in an AppSetting object. Return True if
+        values match, False if there is a mismatch.
+
+        :param obj: AppSetting object
+        :param input_value: Input value (string, int, bool or dict)
+        :return: Bool
+        """
+        if obj.type == 'JSON':
+            return (
+                not obj.value_json and not input_value
+            ) or obj.value_json == cls._get_json_value(input_value)
+        elif obj.type == 'BOOLEAN':
+            if isinstance(input_value, str):
+                input_value = bool(int(input_value))
+            return bool(int(obj.value)) == input_value
+        return obj.value == str(input_value)
 
 
 def get_example_setting_default(project=None, user=None):

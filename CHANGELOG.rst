@@ -20,6 +20,7 @@ Changed
 - **Projectroles**
     - Truncate app setting values in ``remoteproject_sync.html`` (#1474)
     - JSON app setting value rendering in ``remoteproject_sync.html`` (#1472)
+    - Change ``AppSettingAPI.compare_value()`` into public method (#1479)
 
 Fixed
 -----
@@ -28,6 +29,8 @@ Fixed
     - Incorrect app plugin link order in ``get_project_app_links()`` (#1468)
     - Remote sync crash on updating user with additional email (#1476)
     - User scope app setting display in ``remoteproject_sync.html`` (#1478)
+    - Incorrect boolean comparison in ``AppSettingAPI._compare_value()`` with string value (#1473)
+    - Boolean app setting update status in remote sync (#1473)
 
 
 v1.0.1 (2024-08-08)
