@@ -12,14 +12,22 @@ Added
 -----
 
 - **Projectroles**
+    - ``get_user_by_uuid()`` common template tag (#1478)
+
+Changed
+-------
+
+- **Projectroles**
     - Truncate app setting values in ``remoteproject_sync.html`` (#1474)
+    - JSON app setting value rendering in ``remoteproject_sync.html`` (#1472)
 
 Fixed
 -----
 
 - **Projectroles**
     - Incorrect app plugin link order in ``get_project_app_links()`` (#1468)
-    - Empty JSON value rendering in ``remoteproject_sync.html`` (#1472)
+    - Remote sync crash on updating user with additional email (#1476)
+    - User scope app setting display in ``remoteproject_sync.html`` (#1478)
 
 
 v1.0.1 (2024-08-08)
@@ -44,7 +52,6 @@ Fixed
 
 - **Projectroles**
     - ``BatchUpdateRolesMixin`` removal breaking tests in other repos (#1464)
-    - Remote sync crash on updating user with additional email (#1476)
 - **Timeline**
     - Deprecated link dict ``blank`` field assumed as mandatory (#1462)
 

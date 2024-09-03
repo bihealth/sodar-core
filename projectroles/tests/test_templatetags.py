@@ -114,12 +114,19 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         self.assertEqual(c_tags.check_backend('sodar_cache'), True)
         self.assertEqual(c_tags.check_backend('NON_EXISTING_PLUGIN'), False)
 
-    def test_get_projcet_by_uuid(self):
+    def test_get_project_by_uuid(self):
         """Test get_project_by_uuid()"""
         self.assertEqual(
             c_tags.get_project_by_uuid(self.project.sodar_uuid), self.project
         )
         self.assertEqual(c_tags.get_project_by_uuid(NON_EXISTING_UUID), None)
+
+    def test_get_user_by_uuid(self):
+        """Test get_user_by_uuid()"""
+        self.assertEqual(
+            c_tags.get_user_by_uuid(self.user.sodar_uuid), self.user
+        )
+        self.assertEqual(c_tags.get_user_by_uuid(NON_EXISTING_UUID), None)
 
     def test_get_user_by_username(self):
         """Test get_user_by_username()"""

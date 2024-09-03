@@ -57,19 +57,18 @@ def check_backend(name):
 @register.simple_tag
 def get_project_by_uuid(sodar_uuid):
     """Return Project by sodar_uuid"""
-    try:
-        return Project.objects.get(sodar_uuid=sodar_uuid)
-    except Project.DoesNotExist:
-        return None
+    return Project.objects.filter(sodar_uuid=sodar_uuid).first()
 
+
+@register.simple_tag
+def get_user_by_uuid(sodar_uuid):
+    """Return SODARUser by sodar_uuid"""
+    return User.objects.filter(sodar_uuid=sodar_uuid).first()
 
 @register.simple_tag
 def get_user_by_username(username):
     """Return User by username"""
-    try:
-        return User.objects.get(username=username)
-    except User.DoesNotExist:
-        return None
+    return User.objects.filter(username=username).first()
 
 
 # Django helpers ---------------------------------------------------------------

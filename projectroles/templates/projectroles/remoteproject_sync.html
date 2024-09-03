@@ -228,7 +228,7 @@
                  id="sodar-pr-remote-update-table-settings">
             <thead>
               <tr>
-                <th>{% get_display_name 'PROJECT' title=True %}</th>
+                <th>{% get_display_name 'PROJECT' title=True %}/User</th>
                 <th>Name</th>
                 <th>Plugin</th>
                 <th>Value</th>
@@ -244,8 +244,10 @@
                       {% if p_obj %}
                         {% get_project_link p_obj full_title=True as p_link %}
                         {{ p_link | safe }}
-                      {% else %}
-                        {{ p.title }}
+                      {% elif a.user_uuid %}
+                        {% get_user_by_uuid a.user_uuid as u_obj %}
+                        {% get_user_html u_obj as u_html %}
+                        {{ u_html | safe }}
                       {% endif %}
                     </td>
                     <td>{{ a.name }}</td>
