@@ -81,14 +81,12 @@ class Migration(migrations.Migration):
                     'date_created',
                     models.DateTimeField(
                         auto_now_add=True,
-                        default=django.utils.timezone.now,
                         help_text='DateTime of creation',
                     ),
                 ),
                 (
                     'user',
                     models.ForeignKey(
-                        default=1,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='background_jobs',
                         to=settings.AUTH_USER_MODEL,

@@ -25,6 +25,8 @@ Changed
 Fixed
 -----
 
+- **Bgjobs**
+    - Non-migrated changes reported by squashed migrations (#1475)
 - **Projectroles**
     - Incorrect app plugin link order in ``get_project_app_links()`` (#1468)
     - Remote sync crash on updating user with additional email (#1476)
