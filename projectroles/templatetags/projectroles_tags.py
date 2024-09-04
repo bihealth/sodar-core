@@ -288,7 +288,7 @@ def get_project_app_links(request, project=None):
     """Return sidebar links"""
     if isinstance(request, str):
         return []
-    return app_links.get_project_app_links(
+    return app_links.get_project_links(
         request.user,
         project,
         app_name=request.resolver_match.app_name,

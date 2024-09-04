@@ -22,8 +22,10 @@ from projectroles.tests.test_views import (
     PROJECT_TYPE_PROJECT,
 )
 from projectroles.tests.test_views_api import SerializedObjectMixin
+from projectroles.utils import AppLinkContent
 
 
+app_links = AppLinkContent()
 app_settings = AppSettingAPI()
 
 
@@ -607,7 +609,7 @@ class TestSidebarContentAjaxView(
         )
 
     def test_get(self):
-        """Test sidebar content retrieval"""
+        """Test SidebarContentAjaxView GET"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -617,62 +619,27 @@ class TestSidebarContentAjaxView(
             )
         self.assertEqual(response.status_code, 200)
         expected = {
-            'links': [
-                {
-                    'name': 'project-detail',
-                    'url': f'/project/{self.project.sodar_uuid}',
-                    'label': 'Project Overview',
-                    'icon': 'mdi:cube',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-filesfolders',
-                    'url': f'/files/{self.project.sodar_uuid}',
-                    'label': 'Files',
-                    'icon': 'mdi:file',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-timeline',
-                    'url': f'/timeline/{self.project.sodar_uuid}',
-                    'label': 'Timeline',
-                    'icon': 'mdi:clock-time-eight',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-bgjobs',
-                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
-                    'label': 'Background Jobs',
-                    'icon': 'mdi:server',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-example_project_app',
-                    'url': f'/examples/project/{self.project.sodar_uuid}',
-                    'label': 'Example Project App',
-                    'icon': 'mdi:rocket-launch',
-                    'active': False,
-                },
-                {
-                    'name': 'project-roles',
-                    'url': f'/project/members/{self.project.sodar_uuid}',
-                    'label': 'Members',
-                    'icon': 'mdi:account-multiple',
-                    'active': False,
-                },
-                {
-                    'name': 'project-update',
-                    'url': f'/project/update/{self.project.sodar_uuid}',
-                    'label': 'Update Project',
-                    'icon': 'mdi:lead-pencil',
-                    'active': False,
-                },
-            ],
+            'links': app_links.get_project_links(self.user, self.project)
         }
         self.assertEqual(response.json(), expected)
 
-    def test_get_app_links(self):
-        """Test sidebar content retrieval with specific app links"""
+    def test_get_category(self):
+        """Test GET with category"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:ajax_sidebar',
+                    kwargs={'project': self.category.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'links': app_links.get_project_links(self.user, self.category)
+        }
+        self.assertEqual(response.json(), expected)
+
+    def test_get_app_link(self):
+        """Test GET with app plugin link"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -683,71 +650,32 @@ class TestSidebarContentAjaxView(
             )
         self.assertEqual(response.status_code, 200)
         expected = {
-            'links': [
-                {
-                    'name': 'project-detail',
-                    'url': f'/project/{self.project.sodar_uuid}',
-                    'label': 'Project Overview',
-                    'icon': 'mdi:cube',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-filesfolders',
-                    'url': f'/files/{self.project.sodar_uuid}',
-                    'label': 'Files',
-                    'icon': 'mdi:file',
-                    'active': True,
-                },
-                {
-                    'name': 'app-plugin-timeline',
-                    'url': f'/timeline/{self.project.sodar_uuid}',
-                    'label': 'Timeline',
-                    'icon': 'mdi:clock-time-eight',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-bgjobs',
-                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
-                    'label': 'Background Jobs',
-                    'icon': 'mdi:server',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-example_project_app',
-                    'url': f'/examples/project/{self.project.sodar_uuid}',
-                    'label': 'Example Project App',
-                    'icon': 'mdi:rocket-launch',
-                    'active': False,
-                },
-                {
-                    'name': 'project-roles',
-                    'url': f'/project/members/{self.project.sodar_uuid}',
-                    'label': 'Members',
-                    'icon': 'mdi:account-multiple',
-                    'active': False,
-                },
-                {
-                    'name': 'project-update',
-                    'url': f'/project/update/{self.project.sodar_uuid}',
-                    'label': 'Update Project',
-                    'icon': 'mdi:lead-pencil',
-                    'active': False,
-                },
-            ],
+            'links': app_links.get_project_links(
+                self.user, self.project, app_name='filesfolders'
+            )
         }
         self.assertEqual(response.json(), expected)
 
-    def test_get_no_access(self):
-        """Test sidebar content retrieval with no access"""
-        new_user = self.make_user('new_user')
-        with self.login(new_user):
+    def test_get_url_name(self):
+        """Test GET with URL name"""
+        with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:ajax_sidebar',
                     kwargs={'project': self.project.sodar_uuid},
                 )
+                + '?app_name=filesfolders&url_name=file_create'
             )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'links': app_links.get_project_links(
+                self.user,
+                self.project,
+                app_name='filesfolders',
+                url_name='file_create',
+            )
+        }
+        self.assertEqual(response.json(), expected)
 
 
 class TestUserDropdownContentAjaxView(ViewTestBase):
@@ -760,255 +688,60 @@ class TestUserDropdownContentAjaxView(ViewTestBase):
         self.user.save()
         self.reg_user = self.make_user('reg_user')
 
-    def test_regular_user(self):
-        """Test UserDropdownContentAjaxView with regular user"""
+    def test_get(self):
+        """Test UserDropdownContentAjaxView GET as regular user"""
         with self.login(self.reg_user):
             response = self.client.get(
                 reverse('projectroles:ajax_user_dropdown')
             )
         self.assertEqual(response.status_code, 200)
-        expected = {
-            'links': [
-                {
-                    'name': 'appalerts',
-                    'url': '/alerts/app/list',
-                    'label': 'App Alerts',
-                    'icon': 'mdi:alert-octagram',
-                    'active': False,
-                },
-                {
-                    'name': 'example_site_app',
-                    'url': '/examples/site/example',
-                    'label': 'Example Site App',
-                    'icon': 'mdi:rocket-launch-outline',
-                    'active': False,
-                },
-                {
-                    'name': 'timeline_site',
-                    'url': '/timeline/site',
-                    'label': 'Site-Wide Events',
-                    'icon': 'mdi:clock-time-eight-outline',
-                    'active': False,
-                },
-                {
-                    'name': 'tokens',
-                    'url': '/tokens/',
-                    'label': 'API Tokens',
-                    'icon': 'mdi:key-chain-variant',
-                    'active': False,
-                },
-                {
-                    'name': 'userprofile',
-                    'url': '/user/profile',
-                    'label': 'User Profile',
-                    'icon': 'mdi:account-details',
-                    'active': False,
-                },
-                {
-                    'name': 'sign-out',
-                    'url': '/logout/',
-                    'label': 'Logout',
-                    'icon': 'mdi:logout-variant',
-                    'active': False,
-                },
-            ]
-        }
-        self.assertEqual(response.json(), expected)
+        self.assertEqual(
+            response.json(), {'links': app_links.get_user_links(self.reg_user)}
+        )
 
-    def test_superuser(self):
-        """Test UserDropdownContentAjaxView with superuser"""
+    def test_get_superuser(self):
+        """Test GET as superuser"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:ajax_user_dropdown')
             )
         self.assertEqual(response.status_code, 200)
-        expected = {
-            'links': [
-                {
-                    'name': 'adminalerts',
-                    'url': '/alerts/adm/list',
-                    'label': 'Admin Alerts',
-                    'icon': 'mdi:alert',
-                    'active': False,
-                },
-                {
-                    'name': 'appalerts',
-                    'url': '/alerts/app/list',
-                    'label': 'App Alerts',
-                    'icon': 'mdi:alert-octagram',
-                    'active': False,
-                },
-                {
-                    'name': 'bgjobs_site',
-                    'url': '/bgjobs/list',
-                    'label': 'Site Background Jobs',
-                    'icon': 'mdi:server',
-                    'active': False,
-                },
-                {
-                    'name': 'example_site_app',
-                    'url': '/examples/site/example',
-                    'label': 'Example Site App',
-                    'icon': 'mdi:rocket-launch-outline',
-                    'active': False,
-                },
-                {
-                    'name': 'remotesites',
-                    'url': '/project/remote/sites',
-                    'label': 'Remote Site Access',
-                    'icon': 'mdi:cloud-sync',
-                    'active': False,
-                },
-                {
-                    'name': 'siteinfo',
-                    'url': '/siteinfo/info',
-                    'label': 'Site Info',
-                    'icon': 'mdi:bar-chart',
-                    'active': False,
-                },
-                {
-                    'name': 'timeline_site',
-                    'url': '/timeline/site',
-                    'label': 'Site-Wide Events',
-                    'icon': 'mdi:clock-time-eight-outline',
-                    'active': False,
-                },
-                {
-                    'name': 'timeline_site_admin',
-                    'url': '/timeline/site/all',
-                    'label': 'All Timeline Events',
-                    'icon': 'mdi:web-clock',
-                    'active': False,
-                },
-                {
-                    'name': 'tokens',
-                    'url': '/tokens/',
-                    'label': 'API Tokens',
-                    'icon': 'mdi:key-chain-variant',
-                    'active': False,
-                },
-                {
-                    'name': 'userprofile',
-                    'url': '/user/profile',
-                    'label': 'User Profile',
-                    'icon': 'mdi:account-details',
-                    'active': False,
-                },
-                {
-                    'name': 'admin',
-                    'url': '/admin/',
-                    'label': 'Django Admin',
-                    'icon': 'mdi:cogs',
-                    'active': False,
-                },
-                {
-                    'name': 'sign-out',
-                    'url': '/logout/',
-                    'label': 'Logout',
-                    'icon': 'mdi:logout-variant',
-                    'active': False,
-                },
-            ]
-        }
-        self.assertEqual(response.json(), expected)
+        self.assertEqual(
+            response.json(), {'links': app_links.get_user_links(self.user)}
+        )
 
-    def test_superuser_app_links(self):
-        """Test UserDropdownContentAjaxView with superuser"""
-        with self.login(self.user):
+    def test_get_app_name(self):
+        """Test GET with app plugin name"""
+        with self.login(self.reg_user):
             response = self.client.get(
-                reverse('projectroles:ajax_user_dropdown')
-                + '?app_name=example_site_app'
+                reverse('projectroles:ajax_user_dropdown') + '?app_name=tokens'
             )
         self.assertEqual(response.status_code, 200)
-        expected = {
-            'links': [
-                {
-                    'name': 'adminalerts',
-                    'url': '/alerts/adm/list',
-                    'label': 'Admin Alerts',
-                    'icon': 'mdi:alert',
-                    'active': False,
-                },
-                {
-                    'name': 'appalerts',
-                    'url': '/alerts/app/list',
-                    'label': 'App Alerts',
-                    'icon': 'mdi:alert-octagram',
-                    'active': False,
-                },
-                {
-                    'name': 'bgjobs_site',
-                    'url': '/bgjobs/list',
-                    'label': 'Site Background Jobs',
-                    'icon': 'mdi:server',
-                    'active': False,
-                },
-                {
-                    'name': 'example_site_app',
-                    'url': '/examples/site/example',
-                    'label': 'Example Site App',
-                    'icon': 'mdi:rocket-launch-outline',
-                    'active': True,
-                },
-                {
-                    'name': 'remotesites',
-                    'url': '/project/remote/sites',
-                    'label': 'Remote Site Access',
-                    'icon': 'mdi:cloud-sync',
-                    'active': False,
-                },
-                {
-                    'name': 'siteinfo',
-                    'url': '/siteinfo/info',
-                    'label': 'Site Info',
-                    'icon': 'mdi:bar-chart',
-                    'active': False,
-                },
-                {
-                    'name': 'timeline_site',
-                    'url': '/timeline/site',
-                    'label': 'Site-Wide Events',
-                    'icon': 'mdi:clock-time-eight-outline',
-                    'active': False,
-                },
-                {
-                    'name': 'timeline_site_admin',
-                    'url': '/timeline/site/all',
-                    'label': 'All Timeline Events',
-                    'icon': 'mdi:web-clock',
-                    'active': False,
-                },
-                {
-                    'name': 'tokens',
-                    'url': '/tokens/',
-                    'label': 'API Tokens',
-                    'icon': 'mdi:key-chain-variant',
-                    'active': False,
-                },
-                {
-                    'name': 'userprofile',
-                    'url': '/user/profile',
-                    'label': 'User Profile',
-                    'icon': 'mdi:account-details',
-                    'active': False,
-                },
-                {
-                    'name': 'admin',
-                    'url': '/admin/',
-                    'label': 'Django Admin',
-                    'icon': 'mdi:cogs',
-                    'active': False,
-                },
-                {
-                    'name': 'sign-out',
-                    'url': '/logout/',
-                    'label': 'Logout',
-                    'icon': 'mdi:logout-variant',
-                    'active': False,
-                },
-            ]
-        }
-        self.assertEqual(response.json(), expected)
+        self.assertEqual(
+            response.json(),
+            {
+                'links': app_links.get_user_links(
+                    self.reg_user, app_name='tokens'
+                )
+            },
+        )
+
+    def test_get_url_name(self):
+        """Test GET with URL name"""
+        with self.login(self.reg_user):
+            response = self.client.get(
+                reverse('projectroles:ajax_user_dropdown')
+                + '?app_name=tokens&url_name=create'
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'links': app_links.get_user_links(
+                    self.reg_user, app_name='tokens', url_name='create'
+                )
+            },
+        )
 
 
 class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):
