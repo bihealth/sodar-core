@@ -7,8 +7,6 @@ from django.urls import reverse
 from projectroles.plugins import get_active_plugins
 from projectroles.models import SODAR_CONSTANTS
 
-# Settings
-SECRET_LENGTH = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -47,6 +45,7 @@ def get_display_name(key, title=False, count=1, plural=False):
     return ret.lower() if not title else ret.title()
 
 
+# TODO: Deprecate (see #1487)
 def get_user_display_name(user, inc_user=False):
     """
     Return full name of user for displaying.
@@ -61,13 +60,15 @@ def get_user_display_name(user, inc_user=False):
     return user.username
 
 
-def build_secret(length=SECRET_LENGTH):
+def build_secret(length=None):
     """
     Return secret string for e.g. public URLs.
 
-    :param length: Length of string if specified, default value from settings
+    :param length: Length of string, use None for default (integer or None)
     :return: Randomized secret (string)
     """
+    if not length:
+        length = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
     length = int(length) if int(length) <= 255 else 255
     return ''.join(
         random.SystemRandom().choice(string.ascii_lowercase + string.digits)
