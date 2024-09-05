@@ -21,6 +21,14 @@ Release Highlights
 - Fix remote sync crash on updating user with additional email
 - General bug fixes and minor updates
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v4.2.16.
+
 
 v1.0.1 (2024-08-08)
 *******************

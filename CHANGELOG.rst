@@ -28,6 +28,8 @@ Changed
 Fixed
 -----
 
+- **General**
+    - Upgrade minimum Django version to v4.2.16 (#1481)
 - **Bgjobs**
     - Non-migrated changes reported by squashed migrations (#1475)
 - **Projectroles**
