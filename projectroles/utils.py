@@ -77,19 +77,6 @@ def build_secret(length=SECRET_LENGTH):
     )
 
 
-def build_invite_url(invite, request):
-    """
-    Return invite URL for a project invitation.
-
-    :param invite: ProjectInvite object
-    :param request: HTTP request
-    :return: URL (string)
-    """
-    return request.build_absolute_uri(
-        reverse('projectroles:invite_accept', kwargs={'secret': invite.secret})
-    )
-
-
 def get_expiry_date():
     """
     Return expiry date based on current date + INVITE_EXPIRY_DAYS

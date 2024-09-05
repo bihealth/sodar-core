@@ -12,7 +12,7 @@ from django.utils.timezone import localtime
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODARUserAdditionalEmail
 from projectroles.plugins import get_app_plugin
-from projectroles.utils import build_invite_url, get_display_name
+from projectroles.utils import get_display_name
 
 
 app_settings = AppSettingAPI()
@@ -502,12 +502,11 @@ def send_invite_mail(invite, request):
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
-    invite_url = build_invite_url(invite, request)
     message = get_invite_body(
         project=invite.project,
         issuer=invite.issuer,
         role_name=invite.role.name,
-        invite_url=invite_url,
+        invite_url=invite.get_url(request),
         date_expire_str=localtime(invite.date_expire).strftime(
             '%Y-%m-%d %H:%M'
         ),

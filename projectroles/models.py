@@ -1126,6 +1126,19 @@ class ProjectInvite(models.Model):
             return True
         return False
 
+    def get_url(self, request):
+        """
+        Return invite URL for a project invitation.
+
+        :param request: HttpRequest object
+        :return: URL (string)
+        """
+        return request.build_absolute_uri(
+            reverse(
+                'projectroles:invite_accept', kwargs={'secret': self.secret}
+            )
+        )
+
 
 # RemoteSite -------------------------------------------------------------------
 

@@ -13,6 +13,7 @@ Added
 
 - **Projectroles**
     - ``get_user_by_uuid()`` common template tag (#1478)
+    - ``ProjectInvite.get_url()`` helper (#1485)
 
 Changed
 -------
@@ -34,6 +35,12 @@ Fixed
     - User scope app setting display in ``remoteproject_sync.html`` (#1478)
     - Incorrect boolean comparison in ``AppSettingAPI._compare_value()`` with string value (#1473)
     - Boolean app setting update status in remote sync (#1473)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``build_invite_url()`` utility method (#1485)
 
 
 v1.0.1 (2024-08-08)

@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
-from django.test import override_settings
+from django.test import RequestFactory, override_settings
 
 from test_plus.test import TestCase
 
@@ -1005,6 +1005,16 @@ class TestProjectInvite(
     def test_is_ldap_non_ldap_domain(self):
         """Test is_ldap() with non-LDAP domain in email"""
         self.assertEqual(self.invite.is_ldap(), False)
+
+    def test_get_url(self):
+        """Test get_url()"""
+        url = reverse(
+            'projectroles:invite_accept', kwargs={'secret': self.invite.secret}
+        )
+        request = RequestFactory().get(url)
+        self.assertEqual(
+            self.invite.get_url(request), request.build_absolute_uri()
+        )
 
     @override_settings(
         ENABLE_LDAP=True,
