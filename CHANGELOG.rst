@@ -14,6 +14,7 @@ Added
 - **Projectroles**
     - ``get_user_by_uuid()`` common template tag (#1478)
     - ``ProjectInvite.get_url()`` helper (#1485)
+    - ``ProjectInvite.refresh_date_expire()`` helper (#1486)
 
 Changed
 -------
@@ -41,6 +42,7 @@ Removed
 
 - **Projectroles**
     - ``build_invite_url()`` utility method (#1485)
+    - ``get_expiry_date()`` utility method (#1486)
 
 
 v1.0.1 (2024-08-08)

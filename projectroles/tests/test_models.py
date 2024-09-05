@@ -2,7 +2,6 @@
 
 import uuid
 
-from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
@@ -149,16 +148,7 @@ class ProjectInviteMixin:
             'role': role,
             'issuer': issuer,
             'message': message,
-            'date_expire': (
-                date_expire
-                if date_expire
-                else (
-                    timezone.now()
-                    + timezone.timedelta(
-                        days=settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-                    )
-                )
-            ),
+            'date_expire': date_expire,
             'secret': secret or SECRET,
             'active': True,
         }
@@ -1015,6 +1005,14 @@ class TestProjectInvite(
         self.assertEqual(
             self.invite.get_url(request), request.build_absolute_uri()
         )
+
+    def test_reset_date_expire(self):
+        """Test reset_date_expire()"""
+        old_date = self.invite.date_expire
+        self.assertIsNotNone(old_date)
+        self.invite.reset_date_expire()
+        self.assertNotEqual(self.invite.date_expire, old_date)
+        self.assertTrue(self.invite.date_expire > old_date)
 
     @override_settings(
         ENABLE_LDAP=True,

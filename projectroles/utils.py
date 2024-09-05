@@ -3,14 +3,12 @@ import string
 
 from django.conf import settings
 from django.urls import reverse
-from django.utils import timezone
 
 from projectroles.plugins import get_active_plugins
 from projectroles.models import SODAR_CONSTANTS
 
 # Settings
 SECRET_LENGTH = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
-INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -75,15 +73,6 @@ def build_secret(length=SECRET_LENGTH):
         random.SystemRandom().choice(string.ascii_lowercase + string.digits)
         for _ in range(length)
     )
-
-
-def get_expiry_date():
-    """
-    Return expiry date based on current date + INVITE_EXPIRY_DAYS
-
-    :return: DateTime object
-    """
-    return timezone.now() + timezone.timedelta(days=INVITE_EXPIRY_DAYS)
 
 
 def get_app_names():
