@@ -24,6 +24,8 @@ Changed
     - JSON app setting value rendering in ``remoteproject_sync.html`` (#1472)
     - Change ``AppSettingAPI.compare_value()`` into public method (#1479)
     - Refactor ``AppLinkContent`` (#1470, #1483)
+- **Userprofile**
+    - Improve user settings list layout (#1490)
 
 Fixed
 -----
