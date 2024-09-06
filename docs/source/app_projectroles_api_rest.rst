@@ -101,6 +101,25 @@ field upon a successfully processed request.
 For creation views, the ``sodar_uuid`` of the created object is returned
 along with other object fields.
 
+Pagination
+----------
+
+From SODAR Core V1.0 onwards, list views support pagination unless otherwise
+specified. Pagination can be enabled by providing the ``?page=x`` query string
+in the API request. This will change the return data into a paginated format.
+Example:
+
+.. code-block:: python
+
+    {
+        'count' 170,
+        'next': 'api/url?page=3',
+        'previous': 'api/url?page=1',
+        'results': [
+            # ...
+        ]
+    }
+
 
 Projectroles REST API Versioning
 ================================
