@@ -228,7 +228,7 @@
                  id="sodar-pr-remote-update-table-settings">
             <thead>
               <tr>
-                <th>{% get_display_name 'PROJECT' title=True %}</th>
+                <th>{% get_display_name 'PROJECT' title=True %}/User</th>
                 <th>Name</th>
                 <th>Plugin</th>
                 <th>Value</th>
@@ -244,23 +244,25 @@
                       {% if p_obj %}
                         {% get_project_link p_obj full_title=True as p_link %}
                         {{ p_link | safe }}
-                      {% else %}
-                        {{ p.title }}
+                      {% elif a.user_uuid %}
+                        {% get_user_by_uuid a.user_uuid as u_obj %}
+                        {% get_user_html u_obj as u_html %}
+                        {{ u_html | safe }}
                       {% endif %}
                     </td>
                     <td>{{ a.name }}</td>
                     <td>
                       {% if a.app_plugin %}{{ a.app_plugin }}{% else %}projectroles{% endif %}
                     </td>
-                    <td>
-                      {% if a.type == 'JSON' %}
-                        {{ a.value_json }}
-                      {% elif a.type == 'BOOLEAN' %}
-                        {% if a.value == '1' %}True{% else %}False{% endif %}
-                      {% else %}
-                        {{ a.value }}
-                      {% endif %}
-                    </td>
+                    {% if a.type == 'JSON' and a.value_json %}
+                      <td class="text-muted font-italic">JSON</td>
+                    {% elif a.type == 'JSON' %}
+                      <td class="text-muted font-italic">Empty</td>
+                    {% elif a.type == 'BOOLEAN' %}
+                      <td><code>{% if a.value == '1' %}True{% else %}False{% endif %}</code></td>
+                    {% else %}
+                      <td><code>{{ a.value | truncatechars:255 }}</code></td>
+                    {% endif %}
                     <td>{{ a.status | title }}</td>
                   </tr>
                 {% endif %}

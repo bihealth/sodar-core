@@ -2398,6 +2398,23 @@ class TestSyncRemoteDataUpdate(
         self.assertEqual(email.email, ADD_EMAIL)
         self.assertEqual(email.verified, True)
 
+    def test_update_user_add_email_exists(self):
+        """Test sync with existing additional email on user"""
+        target_user = User.objects.get(sodar_uuid=SOURCE_USER_UUID)
+        SODARUserAdditionalEmail.objects.create(
+            user=target_user,
+            email=ADD_EMAIL,
+            verified=True,
+            secret=build_secret(16),
+        )
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 1)
+        remote_data = self.default_data
+        remote_data['users'][SOURCE_USER_UUID]['additional_emails'] = [
+            ADD_EMAIL
+        ]
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
+        self.assertEqual(SODARUserAdditionalEmail.objects.count(), 1)
+
     def test_update_user_add_email_delete(self):
         """Test sync with deleting existing additional email on user"""
         self.make_email(self.user_target, ADD_EMAIL)

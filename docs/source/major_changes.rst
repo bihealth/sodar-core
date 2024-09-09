@@ -10,6 +10,32 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.2 (2024-09-09)
+*******************
+
+Release Highlights
+==================
+
+- Update app setting rendering in remote sync UI
+- Fix project sidebar and dropdown app plugin link order
+- Fix remote sync crash on updating user with additional email
+- Fix Celery process issues
+- General bug fixes and minor updates
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v4.2.16.
+Celery Support
+    It is recommended to install the ``python3.11-gdbm`` package (or equivalent
+    for the Python version in use) to ensure full compatibility of the current
+    Celery implementation.
+
+
 v1.0.1 (2024-08-08)
 *******************
 

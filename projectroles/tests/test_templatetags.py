@@ -114,12 +114,19 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         self.assertEqual(c_tags.check_backend('sodar_cache'), True)
         self.assertEqual(c_tags.check_backend('NON_EXISTING_PLUGIN'), False)
 
-    def test_get_projcet_by_uuid(self):
+    def test_get_project_by_uuid(self):
         """Test get_project_by_uuid()"""
         self.assertEqual(
             c_tags.get_project_by_uuid(self.project.sodar_uuid), self.project
         )
         self.assertEqual(c_tags.get_project_by_uuid(NON_EXISTING_UUID), None)
+
+    def test_get_user_by_uuid(self):
+        """Test get_user_by_uuid()"""
+        self.assertEqual(
+            c_tags.get_user_by_uuid(self.user.sodar_uuid), self.user
+        )
+        self.assertEqual(c_tags.get_user_by_uuid(NON_EXISTING_UUID), None)
 
     def test_get_user_by_username(self):
         """Test get_user_by_username()"""
@@ -605,20 +612,6 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'active': True,
                 },
                 {
-                    'name': 'app-plugin-bgjobs',
-                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
-                    'label': 'Background Jobs',
-                    'icon': 'mdi:server',
-                    'active': False,
-                },
-                {
-                    'name': 'app-plugin-example_project_app',
-                    'url': f'/examples/project/{self.project.sodar_uuid}',
-                    'label': 'Example Project App',
-                    'icon': 'mdi:rocket-launch',
-                    'active': False,
-                },
-                {
                     'name': 'app-plugin-filesfolders',
                     'url': f'/files/{self.project.sodar_uuid}',
                     'label': 'Files',
@@ -630,6 +623,20 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'url': f'/timeline/{self.project.sodar_uuid}',
                     'label': 'Timeline',
                     'icon': 'mdi:clock-time-eight',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-bgjobs',
+                    'url': f'/bgjobs/list/{self.project.sodar_uuid}',
+                    'label': 'Background Jobs',
+                    'icon': 'mdi:server',
+                    'active': False,
+                },
+                {
+                    'name': 'app-plugin-example_project_app',
+                    'url': f'/examples/project/{self.project.sodar_uuid}',
+                    'label': 'Example Project App',
+                    'icon': 'mdi:rocket-launch',
                     'active': False,
                 },
                 {

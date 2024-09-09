@@ -58,7 +58,7 @@ from projectroles.plugins import (
     get_backend_api,
 )
 from projectroles.remote_projects import RemoteProjectAPI
-from projectroles.utils import get_expiry_date, get_display_name
+from projectroles.utils import get_display_name
 
 
 app_settings = AppSettingAPI()
@@ -2935,8 +2935,7 @@ class ProjectInviteResendView(
                 )
             )
         # Reset invite expiration date
-        invite.date_expire = get_expiry_date()
-        invite.save()
+        invite.reset_date_expire()
         # Resend mail and add to timeline
         self.handle_invite(invite=invite, request=self.request, resend=True)
         return redirect(

@@ -12,12 +12,13 @@ Installation
 ============
 
 The ``django-sodar-core`` package can be installed into your Django project
-from PyPI as follows. It is strongly recommended to specify a version tag, as
-the package is under active development and breaking changes are expected.
+from PyPI as follows. It is strongly recommended to pin the import to a specific
+version tag, as the package is under active development and breaking changes are
+expected.
 
 .. code-block:: console
 
-    pip install django-sodar-core==1.0.1
+    pip install django-sodar-core==x.y.z
 
 Please note that the django-sodar-core package only installs
 :term:`Django apps<Django App>`, which you need to include in a

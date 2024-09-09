@@ -18,7 +18,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.views import RoleAssignmentModifyMixin, ProjectInviteMixin
-from projectroles.utils import get_expiry_date, build_secret
+from projectroles.utils import build_secret
 
 
 logger = ManagementCommandLogger(__name__)
@@ -116,7 +116,6 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             project=project,
             role=role,
             issuer=self.issuer,
-            date_expire=get_expiry_date(),
             secret=build_secret(),
         )
         self.handle_invite(invite, self.request, add_message=False)

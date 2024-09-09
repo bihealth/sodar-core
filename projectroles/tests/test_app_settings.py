@@ -1260,3 +1260,69 @@ class TestAppSettingAPI(
             app_settings, user=self.user
         )
         self.assertEqual(errors, {'user_str_setting': INVALID_SETTING_MSG})
+
+    def test_compare_value_string(self):
+        """Test compare_value() with string values"""
+        n = 'project_str_setting'
+        v = 'value'
+        vf = 'valueXYZ'
+        app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
+        obj = AppSetting.objects.get(
+            app_plugin__name=EXAMPLE_APP_NAME, name=n, project=self.project
+        )
+        self.assertEqual(app_settings.compare_value(obj, v), True)
+        self.assertEqual(app_settings.compare_value(obj, vf), False)
+
+    def test_compare_value_int(self):
+        """Test compare_value() with int values"""
+        n = 'project_int_setting'
+        v = 0
+        vf = 1
+        app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
+        obj = AppSetting.objects.get(
+            app_plugin__name=EXAMPLE_APP_NAME, name=n, project=self.project
+        )
+        self.assertEqual(app_settings.compare_value(obj, v), True)
+        self.assertEqual(app_settings.compare_value(obj, vf), False)
+        self.assertEqual(app_settings.compare_value(obj, str(v)), True)
+        self.assertEqual(app_settings.compare_value(obj, str(vf)), False)
+
+    def test_compare_value_bool(self):
+        """Test compare_value() with boolean values"""
+        n = 'project_bool_setting'
+        v = True
+        vf = False
+        app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
+        obj = AppSetting.objects.get(
+            app_plugin__name=EXAMPLE_APP_NAME, name=n, project=self.project
+        )
+        self.assertEqual(app_settings.compare_value(obj, v), True)
+        self.assertEqual(app_settings.compare_value(obj, vf), False)
+        self.assertEqual(app_settings.compare_value(obj, '1'), True)
+        self.assertEqual(app_settings.compare_value(obj, '0'), False)
+
+    def test_compare_value_json(self):
+        """Test compare_value() with JSON values"""
+        n = 'project_json_setting'
+        v = {'x': 1, 'y': 2}
+        vf = {'a': 3, 'b': 4}
+        app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
+        obj = AppSetting.objects.get(
+            app_plugin__name=EXAMPLE_APP_NAME, name=n, project=self.project
+        )
+        self.assertEqual(app_settings.compare_value(obj, v), True)
+        self.assertEqual(app_settings.compare_value(obj, vf), False)
+
+    def test_compare_value_json_empty(self):
+        """Test compare_value() with empty JSON values"""
+        n = 'project_json_setting'
+        v = {}
+        vf = {'x': 1, 'y': 2}
+        app_settings.set(EXAMPLE_APP_NAME, n, v, project=self.project)
+        obj = AppSetting.objects.get(
+            app_plugin__name=EXAMPLE_APP_NAME, name=n, project=self.project
+        )
+        self.assertEqual(app_settings.compare_value(obj, v), True)
+        self.assertEqual(app_settings.compare_value(obj, vf), False)
+        self.assertEqual(app_settings.compare_value(obj, None), True)
+        self.assertEqual(app_settings.compare_value(obj, ''), True)

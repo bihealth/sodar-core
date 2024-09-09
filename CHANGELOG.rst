@@ -5,6 +5,55 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.0.2 (2024-09-09)
+===================
+
+Added
+-----
+
+- **General**
+    - ``python3.11-gdbm`` dependency (#1491)
+- **Projectroles**
+    - ``get_user_by_uuid()`` common template tag (#1478)
+    - ``ProjectInvite.get_url()`` helper (#1485)
+    - ``ProjectInvite.refresh_date_expire()`` helper (#1486)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v4.2.16 (#1481)
+- **Projectroles**
+    - Truncate app setting values in ``remoteproject_sync.html`` (#1474)
+    - JSON app setting value rendering in ``remoteproject_sync.html`` (#1472)
+    - Change ``AppSettingAPI.compare_value()`` into public method (#1479)
+    - Refactor ``AppLinkContent`` (#1470, #1483)
+- **Userprofile**
+    - Improve user settings list layout (#1490)
+
+Fixed
+-----
+
+- **General**
+    - Celery process raising ``dbm.error`` (#1491)
+    - Celery process raising ``broker_connection_retry`` warning (#1493)
+- **Bgjobs**
+    - Non-migrated changes reported by squashed migrations (#1475)
+- **Projectroles**
+    - Incorrect app plugin link order in ``get_project_app_links()`` (#1468)
+    - Remote sync crash on updating user with additional email (#1476)
+    - User scope app setting display in ``remoteproject_sync.html`` (#1478)
+    - Incorrect boolean comparison in ``AppSettingAPI._compare_value()`` with string value (#1473)
+    - Boolean app setting update status in remote sync (#1473)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``build_invite_url()`` utility method (#1485)
+    - ``get_expiry_date()`` utility method (#1486)
+
+
 v1.0.1 (2024-08-08)
 ===================
 

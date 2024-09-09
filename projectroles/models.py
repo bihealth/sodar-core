@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from djangoplugins.models import Plugin
@@ -1101,6 +1102,22 @@ class ProjectInvite(models.Model):
         values = (self.project.title, self.email, self.role.name, self.active)
         return 'ProjectInvite({})'.format(', '.join(repr(v) for v in values))
 
+    @classmethod
+    def _get_date_expire(cls):
+        """
+        Return expiry date based on current date + INVITE_EXPIRY_DAYS
+
+        :return: DateTime object
+        """
+        return timezone.now() + timezone.timedelta(
+            days=settings.PROJECTROLES_INVITE_EXPIRY_DAYS
+        )
+
+    def save(self, *args, **kwargs):
+        if not self.pk and not self.date_expire:  # Set date_expire on create
+            self.date_expire = self._get_date_expire()
+        super().save(*args, **kwargs)
+
     # Custom row-level functions
 
     def is_ldap(self):
@@ -1125,6 +1142,27 @@ class ProjectInvite(models.Model):
         if domain_no_tld in ldap_domains or domain in alt_domains:
             return True
         return False
+
+    def get_url(self, request):
+        """
+        Return invite URL for a project invitation.
+
+        :param request: HttpRequest object
+        :return: URL (string)
+        """
+        return request.build_absolute_uri(
+            reverse(
+                'projectroles:invite_accept', kwargs={'secret': self.secret}
+            )
+        )
+
+    def reset_date_expire(self):
+        """
+        Reset date_expire to current date plus defined expiry days. Saves the
+        object.
+        """
+        self.date_expire = self._get_date_expire()
+        self.save()
 
 
 # RemoteSite -------------------------------------------------------------------

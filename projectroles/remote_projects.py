@@ -17,10 +17,7 @@ from django.urls.base import reverse
 
 from djangoplugins.models import Plugin
 
-from projectroles.app_settings import (
-    AppSettingAPI,
-    APP_SETTING_GLOBAL_DEFAULT,
-)
+from projectroles.app_settings import AppSettingAPI, APP_SETTING_GLOBAL_DEFAULT
 from projectroles.models import (
     Project,
     Role,
@@ -32,6 +29,7 @@ from projectroles.models import (
     AppSetting,
 )
 from projectroles.plugins import get_backend_api
+from projectroles.utils import build_secret
 
 
 app_settings = AppSettingAPI()
@@ -530,8 +528,13 @@ class RemoteProjectAPI:
                 )
             )
         for e in add_emails:
+            if SODARUserAdditionalEmail.objects.filter(
+                user=user, email=e
+            ).exists():
+                continue
+            # TODO: Remove redundant secret once #1477 is implemented
             email_obj = SODARUserAdditionalEmail.objects.create(
-                user=user, email=e, verified=True
+                user=user, email=e, verified=True, secret=build_secret(16)
             )
             logger.info(
                 'Created user {} additional email "{}"'.format(
@@ -1169,7 +1172,7 @@ class RemoteProjectAPI:
                 set_data['status'] = 'skipped'
                 return
             # Skip if value is identical
-            if app_settings._compare_value(
+            if app_settings.compare_value(
                 obj, ad['value_json'] if obj.type == 'JSON' else ad['value']
             ):
                 logger.info(
@@ -1269,7 +1272,7 @@ class RemoteProjectAPI:
             return self.remote_data
 
         # Peer Sites
-        logger.info('Synchronizing Peer Sites...')
+        logger.info('Synchronizing peer sites..')
         if self.remote_data.get('peer_sites', None):
             for remote_site_uuid, site_data in self.remote_data[
                 'peer_sites'
@@ -1282,9 +1285,9 @@ class RemoteProjectAPI:
                     self._update_peer_site(remote_site_uuid, site_data)
                 else:
                     self._create_peer_site(remote_site_uuid, site_data)
-            logger.info('Peer Site Sync OK')
+            logger.info('Peer site sync OK')
         else:
-            logger.info('No new Peer Sites to sync')
+            logger.info('No peer sites to sync')
 
         # Users
         logger.info('Synchronizing users..')

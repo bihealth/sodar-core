@@ -484,8 +484,8 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         app_name = request.GET.get('app_name')
         # Get the content for the sidebar
-        app_link_content = AppLinkContent()
-        sidebar_links = app_link_content.get_project_app_links(
+        app_links = AppLinkContent()
+        sidebar_links = app_links.get_project_links(
             request.user, project, app_name=app_name
         )
         return JsonResponse({'links': sidebar_links})
@@ -515,8 +515,8 @@ class UserDropdownContentAjaxView(SODARBaseAjaxView):
     def get(self, request, *args, **kwargs):
         app_name = request.GET.get('app_name')
         # Get the content for the user dropdown
-        app_link_content = AppLinkContent()
-        user_dropdown_links = app_link_content.get_user_links(
+        app_links = AppLinkContent()
+        user_dropdown_links = app_links.get_user_links(
             request.user, app_name=app_name
         )
         return JsonResponse({'links': user_dropdown_links})

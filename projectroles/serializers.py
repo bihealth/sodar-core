@@ -21,7 +21,7 @@ from projectroles.models import (
     CAT_DELIMITER_ERROR_MSG,
     ROLE_PROJECT_TYPE_ERROR_MSG,
 )
-from projectroles.utils import build_secret, get_expiry_date
+from projectroles.utils import build_secret
 from projectroles.views import (
     ProjectModifyMixin,
     RoleAssignmentModifyMixin,
@@ -349,7 +349,7 @@ class ProjectInviteSerializer(
 
     def create(self, validated_data):
         validated_data['issuer'] = self.context['request'].user
-        validated_data['date_expire'] = get_expiry_date()
+        # validated_data['date_expire'] = get_expiry_date()
         validated_data['secret'] = build_secret()
         return super().create(validated_data)
 

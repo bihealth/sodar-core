@@ -2,13 +2,12 @@
 
 import uuid
 
-from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
-from django.test import override_settings
+from django.test import RequestFactory, override_settings
 
 from test_plus.test import TestCase
 
@@ -149,16 +148,7 @@ class ProjectInviteMixin:
             'role': role,
             'issuer': issuer,
             'message': message,
-            'date_expire': (
-                date_expire
-                if date_expire
-                else (
-                    timezone.now()
-                    + timezone.timedelta(
-                        days=settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-                    )
-                )
-            ),
+            'date_expire': date_expire,
             'secret': secret or SECRET,
             'active': True,
         }
@@ -1005,6 +995,24 @@ class TestProjectInvite(
     def test_is_ldap_non_ldap_domain(self):
         """Test is_ldap() with non-LDAP domain in email"""
         self.assertEqual(self.invite.is_ldap(), False)
+
+    def test_get_url(self):
+        """Test get_url()"""
+        url = reverse(
+            'projectroles:invite_accept', kwargs={'secret': self.invite.secret}
+        )
+        request = RequestFactory().get(url)
+        self.assertEqual(
+            self.invite.get_url(request), request.build_absolute_uri()
+        )
+
+    def test_reset_date_expire(self):
+        """Test reset_date_expire()"""
+        old_date = self.invite.date_expire
+        self.assertIsNotNone(old_date)
+        self.invite.reset_date_expire()
+        self.assertNotEqual(self.invite.date_expire, old_date)
+        self.assertTrue(self.invite.date_expire > old_date)
 
     @override_settings(
         ENABLE_LDAP=True,

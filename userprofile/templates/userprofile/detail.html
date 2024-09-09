@@ -94,14 +94,14 @@
     <div class="card-body">
       <dl class="row">
         {% for setting in user_settings %}
-          <dt class="col-md-4 font-weight-bold">
+          <dt class="col-md-5 font-weight-bold">
             {{ setting.label }}
           {% if setting.description %}
             {% get_info_link setting.description as info_link %}
             <span class="pull-right">{{ info_link | safe }}</span>
           {% endif %}
           </dt>
-          <dd class="col-md-8">
+          <dd class="col-md-7">
             {% if setting.value == None or setting.value == '' %}
               <span class="text-muted">N/A</span>
             {% else %}

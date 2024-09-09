@@ -3,14 +3,10 @@ import string
 
 from django.conf import settings
 from django.urls import reverse
-from django.utils import timezone
 
 from projectroles.plugins import get_active_plugins
 from projectroles.models import SODAR_CONSTANTS
 
-# Settings
-SECRET_LENGTH = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
-INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -49,6 +45,7 @@ def get_display_name(key, title=False, count=1, plural=False):
     return ret.lower() if not title else ret.title()
 
 
+# TODO: Deprecate (see #1487)
 def get_user_display_name(user, inc_user=False):
     """
     Return full name of user for displaying.
@@ -63,40 +60,20 @@ def get_user_display_name(user, inc_user=False):
     return user.username
 
 
-def build_secret(length=SECRET_LENGTH):
+def build_secret(length=None):
     """
     Return secret string for e.g. public URLs.
 
-    :param length: Length of string if specified, default value from settings
+    :param length: Length of string, use None for default (integer or None)
     :return: Randomized secret (string)
     """
+    if not length:
+        length = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
     length = int(length) if int(length) <= 255 else 255
     return ''.join(
         random.SystemRandom().choice(string.ascii_lowercase + string.digits)
         for _ in range(length)
     )
-
-
-def build_invite_url(invite, request):
-    """
-    Return invite URL for a project invitation.
-
-    :param invite: ProjectInvite object
-    :param request: HTTP request
-    :return: URL (string)
-    """
-    return request.build_absolute_uri(
-        reverse('projectroles:invite_accept', kwargs={'secret': invite.secret})
-    )
-
-
-def get_expiry_date():
-    """
-    Return expiry date based on current date + INVITE_EXPIRY_DAYS
-
-    :return: DateTime object
-    """
-    return timezone.now() + timezone.timedelta(days=INVITE_EXPIRY_DAYS)
 
 
 def get_app_names():
@@ -115,10 +92,11 @@ def get_app_names():
 class AppLinkContent:
     """Class for generating application links for the UI"""
 
+    @classmethod
     def _is_active_projectroles(
-        self, app_name=None, url_name=None, link_names=None
+        cls, app_name=None, url_name=None, link_names=None
     ):
-        """Check if current URL is active under the projectroles app."""
+        """Check if current URL is active under the projectroles app"""
         if not app_name and not url_name:
             return False
         # HACK: Avoid circular import
@@ -130,10 +108,9 @@ class AppLinkContent:
             not link_names or url_name in link_names
         )
 
-    def _is_active_plugin(self, app_plugin, app_name=None, url_name=None):
-        """
-        Check if current URL is active for a specific app plugin.
-        """
+    @classmethod
+    def _is_active_plugin(cls, app_plugin, app_name=None, url_name=None):
+        """Check if current URL is active for a specific app plugin"""
         if not app_name and not url_name:
             return False
         if app_plugin.name.startswith(app_name) and (
@@ -150,8 +127,9 @@ class AppLinkContent:
             return True
         return False
 
-    def _is_app_visible(self, plugin, project, user):
-        """Check if app should be visible for user in a specific project."""
+    @classmethod
+    def _is_app_visible(cls, plugin, project, user):
+        """Check if app should be visible for user in a specific project"""
         can_view_app = user.has_perm(plugin.app_permission, project)
         app_hidden = False
         if plugin.name in getattr(
@@ -166,8 +144,9 @@ class AppLinkContent:
             return True
         return False
 
-    def _allow_project_creation(self):
-        """Check whether creating a project is allowed on the site."""
+    @classmethod
+    def _allow_project_creation(cls):
+        """Check whether creating a project is allowed on the site"""
         if (
             settings.PROJECTROLES_SITE_MODE
             == SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -176,14 +155,17 @@ class AppLinkContent:
             return False
         return True
 
-    def get_project_app_links(
+    def get_project_links(
         self, user, project=None, app_name=None, url_name=None
     ):
-        """Return project app links based on the current project and user."""
+        """Return project links based on the current project and user"""
         ret = []
+        pr_display = get_display_name(PROJECT_TYPE_PROJECT, title=True)
+        cat_display = get_display_name(PROJECT_TYPE_CATEGORY, title=True)
+
         # Add project related links
         if project:
-            project_display_name = get_display_name(project.type, title=True)
+            current_display = get_display_name(project.type, title=True)
             # Add project overview link
             ret.append(
                 {
@@ -192,7 +174,7 @@ class AppLinkContent:
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
                     ),
-                    'label': f'{project_display_name} Overview',
+                    'label': f'{current_display} Overview',
                     'icon': (
                         'mdi:rhombus-split'
                         if project.type == PROJECT_TYPE_CATEGORY
@@ -206,7 +188,7 @@ class AppLinkContent:
                 }
             )
             # Add app plugins links
-            app_plugins = get_active_plugins()
+            app_plugins = get_active_plugins(custom_order=True)
             for plugin in app_plugins:
                 if self._is_app_visible(plugin, project, user):
                     ret.append(
@@ -250,7 +232,7 @@ class AppLinkContent:
                             'projectroles:update',
                             kwargs={'project': project.sodar_uuid},
                         ),
-                        'label': f'Update {project_display_name}',
+                        'label': f'Update {current_display}',
                         'icon': 'mdi:lead-pencil',
                         'active': self._is_active_projectroles(
                             link_names=['update'],
@@ -260,69 +242,45 @@ class AppLinkContent:
                     }
                 )
 
-        # Add project and category creation links
+        # Add project/category creation link
+        allow_create = self._allow_project_creation()
+        create_active = self._is_active_projectroles(
+            link_names=['create'], app_name=app_name, url_name=url_name
+        )
+        link = {
+            'name': 'project-create',
+            'icon': 'mdi:plus-thick',
+            'active': create_active,
+        }
         if (
             project
             and project.type == PROJECT_TYPE_CATEGORY
             and user.has_perm('projectroles.create_project', project)
-            and self._allow_project_creation()
+            and allow_create
             and not project.is_remote()
         ):
-            ret.append(
-                {
-                    'name': 'project-create',
-                    'url': reverse(
-                        'projectroles:create',
-                        kwargs={'project': project.sodar_uuid},
-                    ),
-                    'label': 'Create '
-                    f'{get_display_name(PROJECT_TYPE_PROJECT, title=True)} '
-                    f'or {get_display_name(PROJECT_TYPE_CATEGORY, title=True)}',
-                    'icon': 'mdi:plus-thick',
-                    'active': self._is_active_projectroles(
-                        link_names=['create'],
-                        app_name=app_name,
-                        url_name=url_name,
-                    ),
-                }
+            link['url'] = reverse(
+                'projectroles:create',
+                kwargs={'project': project.sodar_uuid},
             )
+            link['label'] = f'Create {pr_display} or {cat_display}'
+            ret.append(link)
+        elif (
+            (url_name == 'home' or app_name == 'projectroles' and not project)
+            and user.has_perm('projectroles.create_project')
+            and allow_create
+        ):
+            link['name'] = 'home-project-create'
+            link['url'] = reverse('projectroles:create')
+            link['label'] = f'Create {cat_display}'
+            ret.append(link)
         elif (
             getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
             and user.is_superuser
         ):
-            ret.append(
-                {
-                    'name': 'project-create',
-                    'url': reverse('projectroles:create'),
-                    'label': 'Create '
-                    f'{get_display_name(PROJECT_TYPE_PROJECT, title=True)}',
-                    'icon': 'mdi:plus-thick',
-                    'active': self._is_active_projectroles(
-                        link_names=['create'],
-                        app_name=app_name,
-                        url_name=url_name,
-                    ),
-                }
-            )
-        elif (
-            (url_name == 'home' or app_name == 'projectroles' and not project)
-            and user.has_perm('projectroles.create_project')
-            and self._allow_project_creation()
-        ):
-            ret.append(
-                {
-                    'name': 'home-project-create',
-                    'url': reverse('projectroles:create'),
-                    'label': 'Create '
-                    f'{get_display_name(PROJECT_TYPE_CATEGORY, title=True)}',
-                    'icon': 'mdi:plus-thick',
-                    'active': self._is_active_projectroles(
-                        link_names=['create'],
-                        app_name=app_name,
-                        url_name=url_name,
-                    ),
-                }
-            )
+            link['url'] = reverse('projectroles:create')
+            link['label'] = f'Create {pr_display}'
+            ret.append(link)
         return ret
 
     def get_user_links(self, user, app_name=None, url_name=None):

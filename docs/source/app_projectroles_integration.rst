@@ -81,11 +81,11 @@ chapter.
 
 First, add the ``django-sodar-core`` dependency into your
 ``requirements/base.txt`` file. Make sure you are pointing to the desired
-release tag or commit ID.
+release tag.
 
 .. code-block:: console
 
-    django-sodar-core==1.0.1
+    django-sodar-core==x.y.z
 
 Install the requirements for development:
 
