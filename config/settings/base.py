@@ -314,6 +314,8 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERYD_TASK_TIME_LIMIT = 5 * 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
 CELERYD_TASK_SOFT_TIME_LIMIT = 60
+# https://docs.celeryq.dev/en/latest/userguide/configuration.html#broker-connection-retry-on-startup
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 
 
 # Django REST framework

@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - ``python3.*-gdbm`` dependency (#1491)
 - **Projectroles**
     - ``get_user_by_uuid()`` common template tag (#1478)
     - ``ProjectInvite.get_url()`` helper (#1485)
@@ -19,6 +21,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade minimum Django version to v4.2.16 (#1481)
 - **Projectroles**
     - Truncate app setting values in ``remoteproject_sync.html`` (#1474)
     - JSON app setting value rendering in ``remoteproject_sync.html`` (#1472)
@@ -31,7 +35,8 @@ Fixed
 -----
 
 - **General**
-    - Upgrade minimum Django version to v4.2.16 (#1481)
+    - Celery process raising ``dbm.error`` (#1491)
+    - Celery process raising ``broker_connection_retry`` warning (#1493)
 - **Bgjobs**
     - Non-migrated changes reported by squashed migrations (#1475)
 - **Projectroles**
