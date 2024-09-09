@@ -17,10 +17,7 @@ from django.urls.base import reverse
 
 from djangoplugins.models import Plugin
 
-from projectroles.app_settings import (
-    AppSettingAPI,
-    APP_SETTING_GLOBAL_DEFAULT,
-)
+from projectroles.app_settings import AppSettingAPI, APP_SETTING_GLOBAL_DEFAULT
 from projectroles.models import (
     Project,
     Role,
@@ -1275,7 +1272,7 @@ class RemoteProjectAPI:
             return self.remote_data
 
         # Peer Sites
-        logger.info('Synchronizing Peer Sites...')
+        logger.info('Synchronizing peer sites..')
         if self.remote_data.get('peer_sites', None):
             for remote_site_uuid, site_data in self.remote_data[
                 'peer_sites'
@@ -1288,9 +1285,9 @@ class RemoteProjectAPI:
                     self._update_peer_site(remote_site_uuid, site_data)
                 else:
                     self._create_peer_site(remote_site_uuid, site_data)
-            logger.info('Peer Site Sync OK')
+            logger.info('Peer site sync OK')
         else:
-            logger.info('No new Peer Sites to sync')
+            logger.info('No peer sites to sync')
 
         # Users
         logger.info('Synchronizing users..')

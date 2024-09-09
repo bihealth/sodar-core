@@ -5,14 +5,14 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.0.2 (2024-09-09)
+===================
 
 Added
 -----
 
 - **General**
-    - ``python3.*-gdbm`` dependency (#1491)
+    - ``python3.11-gdbm`` dependency (#1491)
 - **Projectroles**
     - ``get_user_by_uuid()`` common template tag (#1478)
     - ``ProjectInvite.get_url()`` helper (#1485)
