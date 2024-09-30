@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.3 (WIP)
+************
+
+Release Highlights
+==================
+
+- Fix requiring deprecated SODAR API settings in tests
+
+
 v1.0.2 (2024-09-09)
 *******************
 
