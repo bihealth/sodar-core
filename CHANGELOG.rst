@@ -14,6 +14,12 @@ Added
 - **Userprofile**
     - Authentication type in user details (#1500)
 
+Changed
+-------
+
+- **Projectroles**
+    - Update default OIDC login button template (#1503)
+
 Fixed
 -----
 
