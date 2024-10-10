@@ -16,6 +16,7 @@ v1.0.3 (WIP)
 Release Highlights
 ==================
 
+- Add auth type in user profile details card
 - Fix requiring deprecated SODAR API settings in tests
 
 

@@ -73,6 +73,8 @@
         <dd class="col-md-10"><code>{{ request.user.sodar_uuid }}</code></dd>
         <dt class="col-md-2">Date Joined</dt>
         <dd class="col-md-10">{{ request.user.date_joined | date:'Y-m-d H:i' }}</dd>
+        <dt class="col-md-2">Authentication</dt>
+        <dd class="col-md-10">{{ request.user.get_auth_type }}</dd>
       </dl>
     </div>
   </div>

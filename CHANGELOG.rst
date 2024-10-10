@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Userprofile**
+    - Authentication type in user details (#1500)
+
 Fixed
 -----
 
