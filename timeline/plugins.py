@@ -15,6 +15,10 @@ from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 
 
+# Local constants
+STATS_DESC_USER_COUNT = 'Amount of users who have initiated events'
+
+
 class ProjectAppPlugin(ProjectAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
@@ -69,28 +73,34 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: Names of plugin specific Django settings to display in siteinfo
     info_settings = ['TIMELINE_PAGINATION', 'TIMELINE_SEARCH_LIMIT']
 
+    @classmethod
+    def _check_permission(cls, user, event):
+        """Check if user has permission to view event"""
+        if event.project and event.classified:
+            return user.has_perm(
+                'timeline.view_classified_event', event.project
+            )
+        elif event.project:
+            return user.has_perm('timeline.view_timeline', event.project)
+        elif event.classified:
+            return user.has_perm('timeline.view_classified_site_event')
+        return user.has_perm('timeline.view_site_timeline')
+
     def get_statistics(self):
         return {
             'event_count': {
                 'label': 'Events',
                 'value': TimelineEvent.objects.all().count(),
-            }
+            },
+            'user_count': {
+                'label': 'Users',
+                'description': STATS_DESC_USER_COUNT,
+                'value': TimelineEvent.objects.exclude(user__isnull=True)
+                .values('user')
+                .distinct()
+                .count(),
+            },
         }
-
-    def check_permission(self, user, event):
-        """Check if user has permission to view event"""
-        if event.project is not None:
-            if event.classified:
-                return user.has_perm(
-                    'timeline.view_classified_event', event.project
-                )
-            else:
-                return user.has_perm('timeline.view_timeline', event.project)
-        else:
-            if event.classified:
-                return user.has_perm('timeline.view_classified_site_event')
-            else:
-                return user.has_perm('timeline.view_site_timeline')
 
     def search(self, search_terms, user, search_type=None, keywords=None):
         """
@@ -107,7 +117,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         items = []
         if not search_type or search_type == 'timeline':
             events = list(TimelineEvent.objects.find(search_terms, keywords))
-            items = [e for e in events if self.check_permission(user, e)]
+            items = [e for e in events if self._check_permission(user, e)]
         ret = PluginSearchResult(
             category='all',
             title='Timeline Events',

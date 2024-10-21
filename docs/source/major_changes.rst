@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add auth type in user profile details card
+- Add user count in timeline siteinfo statistics
 - Fix requiring deprecated SODAR API settings in tests
 
 

@@ -11,6 +11,9 @@ Unreleased
 Added
 -----
 
+- **Timeline**
+    - User count in siteinfo stats (#1504)
+    - Plugin tests (#1506)
 - **Userprofile**
     - Authentication type in user details (#1500)
 
