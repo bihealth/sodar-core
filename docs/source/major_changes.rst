@@ -18,6 +18,7 @@ Release Highlights
 
 - Add auth type in user profile details card
 - Add user count in timeline siteinfo statistics
+- Fix invite create view redirect failing in categories
 - Fix requiring deprecated SODAR API settings in tests
 
 

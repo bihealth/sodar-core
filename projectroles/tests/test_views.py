@@ -4118,8 +4118,8 @@ class TestProjectInviteCreateView(
             form.fields['role'].choices,
         )
 
-    def test_get_from_roleassignment(self):
-        """Test GET with forwarded values from RoleAssignment Form"""
+    def test_get_query_string(self):
+        """Test GET with query string from RoleAssignment form"""
         data = {
             'e': 'test@example.com',
             'r': self.role_contributor.pk,
@@ -4139,6 +4139,26 @@ class TestProjectInviteCreateView(
             form.fields['role'].initial, str(self.role_contributor.pk)
         )
         self.assertEqual(form.fields['email'].initial, 'test@example.com')
+
+    def test_get_query_string_category(self):
+        """Test GET with query string in category"""
+        category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category, self.user, self.role_owner)
+        data = {
+            'e': 'test@example.com',
+            'r': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': category.sodar_uuid},
+                ),
+                data,
+            )
+        self.assertEqual(response.status_code, 200)
 
     def test_get_not_found(self):
         """Test GET with invalid project UUID"""
