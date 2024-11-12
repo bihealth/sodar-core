@@ -141,17 +141,17 @@
             showCancelLink: true
         });
     }
-    if ($('.sodar-pr-role-dropdown-owner').length) {
+    if ($('.sodar-pr-role-btn-owner').length) {
         tour.addStep('role_dropdown_owner', {
             title: 'Owner Dropdown',
             text: 'Ownership can be transferred to another user from this ' +
                   'dropdown.',
-            attachTo: '.sodar-pr-role-dropdown-owner left',
+            attachTo: '.sodar-pr-role-btn-owner left',
             advanceOn: '.docs-link click',
             showCancelLink: true,
         });
     }
-    if ($('.sodar-pr-role-dropdown').length) {
+    if ($('.sodar-pr-role-btn').length) {
         tour.addStep('role_dropdown', {
             title: 'Member Dropdown',
             text: 'For a non-owner member, you can update or remove the ' +
@@ -160,18 +160,18 @@
                   'allowed. To remove such a role, navigate to the parent ' +
                   '{% get_display_name 'CATEGORY' %} and remove the ' +
                   'membership there.',
-            attachTo: '.sodar-pr-role-dropdown left',
+            attachTo: '.sodar-pr-role-btn left',
             advanceOn: '.docs-link click',
             showCancelLink: true,
         });
     }
-    if ($('#sodar-pr-role-ops-dropdown').length) {
+    if ($('#sodar-pr-role-ops-btn').length) {
         tour.addStep('role_ops', {
             title: 'Member Operations Dropdown',
             text: 'From this dropdown you can access operations for adding ' +
                   'new members to the {% get_display_name 'PROJECT' %} and ' +
                   'inviting users not yet on the site.',
-            attachTo: '#sodar-pr-role-ops-dropdown left',
+            attachTo: '#sodar-pr-role-ops-btn left',
             advanceOn: '.docs-link click',
             showCancelLink: true
         });
