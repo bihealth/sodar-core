@@ -32,6 +32,7 @@
 {% block projectroles_extend %}
 
 {% get_role_perms project request.user as role_perms %}
+{% get_info_link finder_info as finder_info_link %}
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h3>
@@ -87,6 +88,9 @@
                 {% else %}
                   <i class="iconify" data-icon="{% get_role_icon role_as.role %}"></i>
                   {{ role_display }}
+                  {% if role_as.role.name == 'project finder' %}
+                    {{ finder_info_link | safe }}
+                  {% endif %}
                 {% endif %}
               </td>
               <td>

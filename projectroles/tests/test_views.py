@@ -71,6 +71,7 @@ from projectroles.views import (
     FORM_INVALID_MSG,
     PROJECT_WELCOME_MSG,
     USER_PROFILE_LDAP_MSG,
+    ROLE_FINDER_INFO,
     INVITE_LDAP_LOCAL_VIEW_MSG,
     INVITE_LOCAL_NOT_ALLOWED_MSG,
     INVITE_LOGGED_IN_ACCEPT_MSG,
@@ -2617,6 +2618,12 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             [model_to_dict(m) for m in response.context['roles']], expected
         )
         self.assertNotIn('remote_role_url', response.context)
+        self.assertEqual(
+            response.context['finder_info'],
+            ROLE_FINDER_INFO.format(
+                categories='categories', projects='projects'
+            ),
+        )
 
     def test_get_not_found(self):
         """Test GET view with invalid project UUID"""

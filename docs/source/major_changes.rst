@@ -18,8 +18,10 @@ Release Highlights
 
 - Add auth type in user profile details card
 - Add user count in timeline siteinfo statistics
+- Add finder role info link in member list
 - Fix invite create view redirect failing in categories
 - Fix requiring deprecated SODAR API settings in tests
+- General bug fixes and minor updates
 
 
 v1.0.2 (2024-09-09)

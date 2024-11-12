@@ -122,6 +122,10 @@ INVITE_USER_EXISTS_MSG = (
 )
 ROLE_CREATE_MSG = 'Membership granted with the role of "{role}".'
 ROLE_UPDATE_MSG = 'Member role changed to "{role}".'
+ROLE_FINDER_INFO = (
+    'User can see nested {categories} and {projects}, but can not access them '
+    'without having a role explicitly assigned.'
+)
 SEARCH_DICT_DEPRECATE_MSG = (
     'Results from search() as a dict have been deprecated and support will be '
     'removed in v1.1. Provide results as a list of PluginSearchResult objects '
@@ -1719,6 +1723,10 @@ class ProjectRoleView(
             ] = project.get_source_site().url + reverse(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
             )
+        context['finder_info'] = ROLE_FINDER_INFO.format(
+            categories=get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
+            projects=get_display_name(PROJECT_TYPE_PROJECT, plural=True),
+        )
         return context
 
 

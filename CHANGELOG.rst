@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **Projectroles**
+    - Info link for finder role in ``ProjectRoleView`` (#1511)
 - **Timeline**
     - User count in siteinfo stats (#1504)
     - Plugin tests (#1506)
