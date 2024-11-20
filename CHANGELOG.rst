@@ -32,6 +32,7 @@ Fixed
     - Deprecated ``SODAR_API_*`` settings required in tests (#1495)
     - Add workaround to ``ProjectInviteCreateView`` returning 404 with category and query string (#1510)
     - Broken tour help attachments in ``ProjectRoleView`` (#1512)
+    - ``RoleAssignmentCreateView`` crash as delegate with promoting and delegate limit reached (#1515)
 
 
 v1.0.2 (2024-09-09)

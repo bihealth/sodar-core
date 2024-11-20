@@ -71,6 +71,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -2022,9 +2023,32 @@ class RoleAssignmentCreateView(
         # Validate inherited role promotion if set
         if self.kwargs.get('promote_as'):
             project = self.get_project()
+            redirect_url = reverse(
+                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+            )
             self.promote_as = RoleAssignment.objects.filter(
                 sodar_uuid=self.kwargs['promote_as']
             ).first()
+
+            # Check for reached delegate limit
+            del_count = RoleAssignment.objects.filter(
+                project=project, role__name=PROJECT_ROLE_DELEGATE
+            ).count()
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            if (
+                self.promote_as
+                and self.promote_as.role.rank
+                >= ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR]
+                and del_count >= del_limit
+            ):
+                messages.warning(
+                    request,
+                    'Local delegate limit ({}) reached, no available roles for '
+                    'promotion.'.format(del_limit),
+                )
+                return redirect(redirect_url)
+
+            # Check for invalid roles
             if (
                 not self.promote_as
                 or self.promote_as.role.rank
@@ -2035,12 +2059,7 @@ class RoleAssignmentCreateView(
                 messages.error(
                     request, 'Invalid role assignment for promotion.'
                 )
-                return redirect(
-                    reverse(
-                        'projectroles:roles',
-                        kwargs={'project': project.sodar_uuid},
-                    )
-                )
+                return redirect(redirect_url)
         return super().get(request, *args, **kwargs)
 
 

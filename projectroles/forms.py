@@ -899,7 +899,7 @@ class RoleAssignmentForm(SODARModelForm):
                 self.fields['role'].initial = max(
                     [c[0] for c in self.fields['role'].choices]
                 )
-            if not promote_as:
+            else:
                 self.fields['role'].initial = Role.objects.get(
                     name=PROJECT_ROLE_GUEST
                 ).pk

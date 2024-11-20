@@ -20,6 +20,7 @@ Release Highlights
 - Add user count in timeline siteinfo statistics
 - Add finder role info link in member list
 - Fix invite create view redirect failing in categories
+- Fix role promoting crash as delegate with delegate limit reached
 - Fix requiring deprecated SODAR API settings in tests
 - General bug fixes and minor updates
 
