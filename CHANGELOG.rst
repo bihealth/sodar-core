@@ -24,6 +24,7 @@ Changed
 
 - **Projectroles**
     - Update default OIDC login button template (#1503)
+    - Update ownership transfer timeline event data (#1514)
 
 Fixed
 -----

@@ -2180,14 +2180,16 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         else:
             return timeline.TL_STATUS_FAILED
 
-    def _create_timeline_event(self, old_owner, new_owner, project):
+    def _create_timeline_event(
+        self, old_owner, new_owner, old_owner_role, project
+    ):
         timeline = get_backend_api('timeline_backend')
         # Init Timeline event
         if not timeline:
             return None
-        tl_desc = 'transfer ownership from {{{}}} to {{{}}}'.format(
-            'prev_owner', 'new_owner'
-        )
+        tl_desc = (
+            'transfer ownership from {{{}}} to {{{}}}, set old owner as "{}"'
+        ).format('prev_owner', 'new_owner', old_owner_role.name)
         tl_event = timeline.add_event(
             project=project,
             app_name=APP_NAME,
@@ -2197,6 +2199,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
             extra_data={
                 'prev_owner': old_owner.username,
                 'new_owner': new_owner.username,
+                'old_owner_role': old_owner_role.name,
             },
         )
         tl_event.add_object(old_owner, 'prev_owner', old_owner.username)
@@ -2277,7 +2280,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         new_inh_owner = (
             True if new_inh_as and new_inh_as.role == self.role_owner else False
         )
-        tl_event = self._create_timeline_event(old_owner, new_owner, project)
+        tl_event = self._create_timeline_event(
+            old_owner, new_owner, old_owner_role, project
+        )
 
         try:
             self._handle_transfer(
