@@ -295,7 +295,7 @@ def get_remote_icon(project, request):
 @register.simple_tag
 def render_markdown(raw_markdown):
     """Markdown field rendering helper"""
-    return mistune.markdown(raw_markdown)
+    return mistune.html(raw_markdown)
 
 
 @register.filter

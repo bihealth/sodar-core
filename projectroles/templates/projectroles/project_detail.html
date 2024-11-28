@@ -56,11 +56,10 @@
     <div class="card-header">
       <h4><i class="iconify" data-icon="mdi:book-open-page-variant"></i> ReadMe</h4>
     </div>
-    <div class="card-body">
+    <div class="card-body sodar-markdown-content">
       {% if object.readme.rendered|length > 0 %}
-        {% autoescape off %}
-          {% render_markdown object.readme.raw %}
-        {% endautoescape %}
+        {% render_markdown object.readme.raw as readme %}
+        {{ readme | safe }}
       {% else %}
         <p>
           No ReadMe is currently set for this {% get_display_name object.type title=False %}.

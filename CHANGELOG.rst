@@ -13,6 +13,7 @@ Added
 
 - **Projectroles**
     - Info link for finder role in ``ProjectRoleView`` (#1511)
+    - Table and strikethrough support in ``render_markdown()`` (#1272)
 - **Timeline**
     - User count in siteinfo stats (#1504)
     - Plugin tests (#1506)

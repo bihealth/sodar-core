@@ -19,6 +19,7 @@ Release Highlights
 - Add auth type in user profile details card
 - Add user count in timeline siteinfo statistics
 - Add finder role info link in member list
+- Add table and strikethrough support for markdown content
 - Fix invite create view redirect failing in categories
 - Fix role promoting crash as delegate with delegate limit reached
 - Fix requiring deprecated SODAR API settings in tests

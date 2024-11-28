@@ -37,10 +37,9 @@
           <dd class="col-md-12 px-0 mx-0">
             <hr />
           </dd>
-          <dd class="col-md-12 my-0">
-            {% autoescape off %}
-              {% render_markdown object.description.raw %}
-            {% endautoescape %}
+          <dd class="col-md-12 my-0 sodar-markdown-content">
+            {% render_markdown object.description.raw as desc %}
+            {{ desc | safe }}
           </dd>
         {% endif %}
       </dl>
