@@ -52,7 +52,7 @@ versioneer==0.29
 ######################
 
 # Django-plugins (with Django v4.2 support)
-django-plugins-bihealth==0.5.2
+django-plugins-bihealth>=0.5.2, <0.6
 
 # Rules for permissions
 rules>=3.3, <3.4
@@ -61,7 +61,7 @@ rules>=3.3, <3.4
 djangorestframework>=3.15.2, <3.16
 
 # Keyed list addon for DRF
-drf-keyed-list-bihealth==0.2.1
+drf-keyed-list-bihealth>=0.2.1, <0.3
 
 # Token authentication
 django-rest-knox>=4.2.0, <4.3
@@ -82,4 +82,4 @@ redis>=5.0.2
 celery>=5.3.6, <5.4
 
 # Django autocomplete light (DAL)
-django-autocomplete-light==3.11.0  # See issue #1224
+django-autocomplete-light==3.11.0
