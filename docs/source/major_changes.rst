@@ -23,6 +23,7 @@ Release Highlights
 - Fix invite create view redirect failing in categories
 - Fix role promoting crash as delegate with delegate limit reached
 - Fix requiring deprecated SODAR API settings in tests
+- Fix syncremote management command crash
 - General bug fixes and minor updates
 
 Breaking Changes

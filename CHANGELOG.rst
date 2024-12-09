@@ -29,6 +29,7 @@ Changed
 - **Projectroles**
     - Update default OIDC login button template (#1503)
     - Update ownership transfer timeline event data (#1514)
+    - Refactor ``syncremote`` management command (#1518)
 
 Fixed
 -----
@@ -38,6 +39,7 @@ Fixed
     - Add workaround to ``ProjectInviteCreateView`` returning 404 with category and query string (#1510)
     - Broken tour help attachments in ``ProjectRoleView`` (#1512)
     - ``RoleAssignmentCreateView`` crash as delegate with promoting and delegate limit reached (#1515)
+    - ``syncremote`` command crash from legacy API media type and version (#1517)
 
 
 v1.0.2 (2024-09-09)
