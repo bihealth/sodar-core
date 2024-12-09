@@ -25,6 +25,14 @@ Release Highlights
 - Fix requiring deprecated SODAR API settings in tests
 - General bug fixes and minor updates
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v4.2.17.
+
 
 v1.0.2 (2024-09-09)
 *******************

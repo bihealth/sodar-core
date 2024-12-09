@@ -24,6 +24,7 @@ Changed
 -------
 
 - **General**
+    - Upgrade minimum Django version to v4.2.17 (#1516)
     - Update dependency pinning (#1509)
 - **Projectroles**
     - Update default OIDC login button template (#1503)
