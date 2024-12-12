@@ -546,12 +546,10 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
         project_uuid = self.forwarded.get('project', None)
         exclude_uuids = self.forwarded.get('exclude', None)
         scope = self.forwarded.get('scope', 'all')
+        qs = User.objects.all()
 
         # If project UUID is given, only show users that are in the project
-        if scope in ['project', 'project_exclude'] and project_uuid not in [
-            '',
-            None,
-        ]:
+        if scope in ['project', 'project_exclude'] and project_uuid:
             project = Project.objects.filter(sodar_uuid=project_uuid).first()
             # If user has no permission for the project, return None
             if not self.request.user.has_perm(
@@ -560,12 +558,9 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
                 return User.objects.none()
             project_users = [a.user.pk for a in project.get_roles()]
             if scope == 'project':  # Limit choices to current project users
-                qs = User.objects.filter(pk__in=project_users)
+                qs = qs.filter(pk__in=project_users)
             elif scope == 'project_exclude':  # Exclude project users
-                qs = User.objects.exclude(pk__in=project_users)
-        # Else include all users
-        else:
-            qs = User.objects.all()
+                qs = qs.exclude(pk__in=project_users)
 
         # Exclude users in the system group unless local users are allowed
         allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
@@ -598,7 +593,6 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return HttpResponseForbidden()
-
         return super().get(request, *args, **kwargs)
 
 
@@ -610,7 +604,6 @@ class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
 
     def get_create_option(self, context, q):
         """Form the correct email invite option to append to results"""
-        create_option = []
         validator = EmailValidator()
         display_create_option = False
 
@@ -632,22 +625,18 @@ class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
                     display_create_option = False
 
         if display_create_option:
-            create_option = [
-                {
-                    'id': q,
-                    'text': ('Send an invite to "%(new_value)s"')
-                    % {'new_value': q},
-                    'create_id': True,
-                }
-            ]
-        return create_option
+            create_option = {
+                'id': q,
+                'text': 'Send an invite to "{}"'.format(q),
+                'create_id': True,
+            }
+            return [create_option]
+        return []
 
-    def post(self, request):
-        """Send the invite form url to which the forwarded values will be
-        send"""
+    def post(self, request, *args, **kwargs):
+        # Return JSON with redirect URL
         project_uuid = self.request.POST.get('project', None)
         project = Project.objects.filter(sodar_uuid=project_uuid).first()
-        # create JSON with address to redirect to
         redirect_url = reverse(
             'projectroles:invite_create', kwargs={'project': project.sodar_uuid}
         )
