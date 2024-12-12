@@ -765,29 +765,37 @@ pre#sodar-email-body {
   }
 }
 
+/* Tables within markdown elements */
+
+.sodar-markdown-content table {
+  margin-bottom: 12px !important;
+}
+
+.sodar-markdown-content table,
+.sodar-markdown-content table thead th,
+.sodar-markdown-content table tbody td {
+  border: 1px solid #ced4da;
+  padding-left: 5px;
+  padding-right: 5px;
+}
 
 /* Responsive modifications ------------------------------------------------- */
 
-
-/*
- Used to hide/show extra content based on browser window width.
- */
-
+/* Used to hide/show extra content based on browser window width. */
 
 .sodar-navbar-alt-item {
   display: none;
 }
 
-/* Navbar (width)*/
+/* Navbar (width) */
+
 @media screen and (max-width: 990px) {
   .sodar-navbar-user-dropdown {
     display: none;
   }
-
   .sodar-navbar-alt-item {
     display: inherit;
   }
-
   .sodar-navbar-search {
     width: 250px;
     padding-top: 10px;

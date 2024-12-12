@@ -71,6 +71,7 @@ from projectroles.views import (
     FORM_INVALID_MSG,
     PROJECT_WELCOME_MSG,
     USER_PROFILE_LDAP_MSG,
+    ROLE_FINDER_INFO,
     INVITE_LDAP_LOCAL_VIEW_MSG,
     INVITE_LOCAL_NOT_ALLOWED_MSG,
     INVITE_LOGGED_IN_ACCEPT_MSG,
@@ -2617,6 +2618,12 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             [model_to_dict(m) for m in response.context['roles']], expected
         )
         self.assertNotIn('remote_role_url', response.context)
+        self.assertEqual(
+            response.context['finder_info'],
+            ROLE_FINDER_INFO.format(
+                categories='categories', projects='projects'
+            ),
+        )
 
     def test_get_not_found(self):
         """Test GET view with invalid project UUID"""
@@ -2875,6 +2882,44 @@ class TestRoleAssignmentCreateView(
                     kwargs={
                         'project': self.project.sodar_uuid,
                         'promote_as': self.owner_as_cat.sodar_uuid,
+                    },
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+
+    def test_get_promote_delegate_limit_reached(self):
+        """Test GET with inherited contributor and delegate limit reached"""
+        user_delegate = self.make_user('user_delegate')
+        self.make_assignment(self.project, user_delegate, self.role_delegate)
+        contrib_as_cat = self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        with self.login(user_delegate):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': contrib_as_cat.sodar_uuid,
+                    },
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+
+    def test_get_promote_delegate_limit_reached_superuser(self):
+        """Test GET with inherited contributor and delegate limit reached as superuser"""
+        user_delegate = self.make_user('user_delegate')
+        self.make_assignment(self.project, user_delegate, self.role_delegate)
+        contrib_as_cat = self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': contrib_as_cat.sodar_uuid,
                     },
                 )
             )
@@ -4118,8 +4163,8 @@ class TestProjectInviteCreateView(
             form.fields['role'].choices,
         )
 
-    def test_get_from_roleassignment(self):
-        """Test GET with forwarded values from RoleAssignment Form"""
+    def test_get_query_string(self):
+        """Test GET with query string from RoleAssignment form"""
         data = {
             'e': 'test@example.com',
             'r': self.role_contributor.pk,
@@ -4139,6 +4184,26 @@ class TestProjectInviteCreateView(
             form.fields['role'].initial, str(self.role_contributor.pk)
         )
         self.assertEqual(form.fields['email'].initial, 'test@example.com')
+
+    def test_get_query_string_category(self):
+        """Test GET with query string in category"""
+        category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category, self.user, self.role_owner)
+        data = {
+            'e': 'test@example.com',
+            'r': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': category.sodar_uuid},
+                ),
+                data,
+            )
+        self.assertEqual(response.status_code, 200)
 
     def test_get_not_found(self):
         """Test GET with invalid project UUID"""

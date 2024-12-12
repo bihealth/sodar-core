@@ -89,6 +89,12 @@ urls_ui = [
         view=views.ProjectInviteCreateView.as_view(),
         name='invite_create',
     ),
+    # Workaround for issue #1510
+    path(
+        route='invites/create/<uuid:project>?e=<str:email>&r=<int:role>',
+        view=views.ProjectInviteCreateView.as_view(),
+        name='invite_create',
+    ),
     path(
         route='invites/accept/<str:secret>',
         view=views.ProjectInviteAcceptView.as_view(),

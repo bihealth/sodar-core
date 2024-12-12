@@ -772,7 +772,7 @@ def get_app_plugin(plugin_name, plugin_type=None):
 
     :param plugin_name: Plugin name (string)
     :param plugin_type: Plugin type (string or None for all types)
-    :return: Plugin object or None if not found
+    :return: Plugin object or None if not found or inactive
     """
     if plugin_type:
         plugin_types = [PLUGIN_TYPES[plugin_type]]

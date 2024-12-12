@@ -71,6 +71,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -122,6 +123,10 @@ INVITE_USER_EXISTS_MSG = (
 )
 ROLE_CREATE_MSG = 'Membership granted with the role of "{role}".'
 ROLE_UPDATE_MSG = 'Member role changed to "{role}".'
+ROLE_FINDER_INFO = (
+    'User can see nested {categories} and {projects}, but can not access them '
+    'without having a role explicitly assigned.'
+)
 SEARCH_DICT_DEPRECATE_MSG = (
     'Results from search() as a dict have been deprecated and support will be '
     'removed in v1.1. Provide results as a list of PluginSearchResult objects '
@@ -1719,6 +1724,10 @@ class ProjectRoleView(
             ] = project.get_source_site().url + reverse(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
             )
+        context['finder_info'] = ROLE_FINDER_INFO.format(
+            categories=get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
+            projects=get_display_name(PROJECT_TYPE_PROJECT, plural=True),
+        )
         return context
 
 
@@ -2014,9 +2023,32 @@ class RoleAssignmentCreateView(
         # Validate inherited role promotion if set
         if self.kwargs.get('promote_as'):
             project = self.get_project()
+            redirect_url = reverse(
+                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+            )
             self.promote_as = RoleAssignment.objects.filter(
                 sodar_uuid=self.kwargs['promote_as']
             ).first()
+
+            # Check for reached delegate limit
+            del_count = RoleAssignment.objects.filter(
+                project=project, role__name=PROJECT_ROLE_DELEGATE
+            ).count()
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            if (
+                self.promote_as
+                and self.promote_as.role.rank
+                >= ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR]
+                and del_count >= del_limit
+            ):
+                messages.warning(
+                    request,
+                    'Local delegate limit ({}) reached, no available roles for '
+                    'promotion.'.format(del_limit),
+                )
+                return redirect(redirect_url)
+
+            # Check for invalid roles
             if (
                 not self.promote_as
                 or self.promote_as.role.rank
@@ -2027,12 +2059,7 @@ class RoleAssignmentCreateView(
                 messages.error(
                     request, 'Invalid role assignment for promotion.'
                 )
-                return redirect(
-                    reverse(
-                        'projectroles:roles',
-                        kwargs={'project': project.sodar_uuid},
-                    )
-                )
+                return redirect(redirect_url)
         return super().get(request, *args, **kwargs)
 
 
@@ -2153,14 +2180,16 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         else:
             return timeline.TL_STATUS_FAILED
 
-    def _create_timeline_event(self, old_owner, new_owner, project):
+    def _create_timeline_event(
+        self, old_owner, new_owner, old_owner_role, project
+    ):
         timeline = get_backend_api('timeline_backend')
         # Init Timeline event
         if not timeline:
             return None
-        tl_desc = 'transfer ownership from {{{}}} to {{{}}}'.format(
-            'prev_owner', 'new_owner'
-        )
+        tl_desc = (
+            'transfer ownership from {{{}}} to {{{}}}, set old owner as "{}"'
+        ).format('prev_owner', 'new_owner', old_owner_role.name)
         tl_event = timeline.add_event(
             project=project,
             app_name=APP_NAME,
@@ -2170,6 +2199,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
             extra_data={
                 'prev_owner': old_owner.username,
                 'new_owner': new_owner.username,
+                'old_owner_role': old_owner_role.name,
             },
         )
         tl_event.add_object(old_owner, 'prev_owner', old_owner.username)
@@ -2250,7 +2280,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         new_inh_owner = (
             True if new_inh_as and new_inh_as.role == self.role_owner else False
         )
-        tl_event = self._create_timeline_event(old_owner, new_owner, project)
+        tl_event = self._create_timeline_event(
+            old_owner, new_owner, old_owner_role, project
+        )
 
         try:
             self._handle_transfer(

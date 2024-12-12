@@ -145,8 +145,14 @@ documentation for more information on how to customize your widget.
 Markdown
 --------
 
-For fields supporting markdown, it is recommended to use the
+For fields supporting Markdown, it is recommended to use the
 ``SODARPagedownWidget`` found in ``projectroles.models``.
+
+.. hint::
+
+    When rendering Markdown fields in templates, add the
+    ``sodar-markdown-content`` CSS class to the field's parent container for
+    improved Markdown styling.
 
 Submit Multi-Click Protection
 -----------------------------

@@ -10,6 +10,31 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.3 (2024-12-12)
+*******************
+
+Release Highlights
+==================
+
+- Add auth type in user profile details card
+- Add user count in timeline siteinfo statistics
+- Add finder role info link in member list
+- Add table and strikethrough support for markdown content
+- Fix invite create view redirect failing in categories
+- Fix role promoting crash as delegate with delegate limit reached
+- Fix requiring deprecated SODAR API settings in tests
+- Fix syncremote management command crash
+- General bug fixes and minor updates
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v4.2.17.
+
+
 v1.0.2 (2024-09-09)
 *******************
 

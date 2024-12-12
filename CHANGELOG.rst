@@ -5,6 +5,44 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.0.3 (2024-12-12)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - Info link for finder role in ``ProjectRoleView`` (#1511)
+    - Table and strikethrough support in ``render_markdown()`` (#1272)
+    - ``sodar-markdown-content`` CSS class (#1272)
+- **Timeline**
+    - User count in siteinfo stats (#1504)
+    - Plugin tests (#1506)
+- **Userprofile**
+    - Authentication type in user details (#1500)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v4.2.17 (#1516)
+    - Update dependency pinning (#1509)
+- **Projectroles**
+    - Update default OIDC login button template (#1503)
+    - Update ownership transfer timeline event data (#1514)
+    - Refactor ``syncremote`` management command (#1518)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Deprecated ``SODAR_API_*`` settings required in tests (#1495)
+    - Add workaround to ``ProjectInviteCreateView`` returning 404 with category and query string (#1510)
+    - Broken tour help attachments in ``ProjectRoleView`` (#1512)
+    - ``RoleAssignmentCreateView`` crash as delegate with promoting and delegate limit reached (#1515)
+    - ``syncremote`` command crash from legacy API media type and version (#1517)
+
+
 v1.0.2 (2024-09-09)
 ===================
 
