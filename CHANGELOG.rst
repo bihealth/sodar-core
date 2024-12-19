@@ -5,6 +5,23 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Timeline**
+    - ``get_event_name()`` template tag (#1524)
+
+Changed
+-------
+
+- **Timeline**
+    - Capitalize event description in UI (#1522)
+    - Display event name in UI friendly format (#1524)
+
+
 v1.0.3 (2024-12-12)
 ===================
 

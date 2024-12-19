@@ -69,6 +69,11 @@ class TestTemplateTags(
         self.event_status.delete()
         self.assertEqual(tags.get_timestamp(self.event), 'N/A')
 
+    def test_get_event_name(self):
+        """Test get_event_name()"""
+        self.assertEqual(self.event.event_name, 'project_create')
+        self.assertEqual(tags.get_event_name(self.event), 'Project Create')
+
     def test_get_event_description(self):
         """Test get_event_description()"""
         request = self.get_request(self.user_owner, self.project)
