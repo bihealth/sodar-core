@@ -2,19 +2,12 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 {% load timeline_tags %}
-{% get_plugin_lookup as plugin_lookup %}
+
 
 <tr class="sodar-pr-project-list-item" id="sodar-pr-project-search-item-{{ event.sodar_uuid }}">
   <td>
     {% get_timestamp event as event_time %}
     {{ event_time }}
-  </td>
-  <td>
-    <div class="sodar-overflow-container">
-      {% get_app_icon_html event plugin_lookup as event_icon %}
-      {{ event_icon|safe }}
-      {{ event.event_name }}
-    </div>
   </td>
   <td {% if not event.user %}class="text-muted"{% endif %}>
     <div class="sodar-overflow-container">
@@ -29,6 +22,11 @@
   {% if event.description %}
     <td>
       <div class="sodar-overflow-container">
+        {% get_app_icon_html event plugin_lookup as event_icon %}
+        <span class="badge bg-secondary text-white mr-1 sodar-tl-event-badge">
+          {{ event_icon|safe }}
+          {% get_event_name event %}
+        </span>
         {% if event.project %}
           {% include 'projectroles/_project_badge.html' with project=event.project color='info' can_view=True %}
         {% endif %}

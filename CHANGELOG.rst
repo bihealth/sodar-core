@@ -20,6 +20,7 @@ Changed
 - **Timeline**
     - Capitalize event description in UI (#1522)
     - Display event name in UI friendly format (#1524)
+    - Display search results with new layout (#1521)
 
 
 v1.0.3 (2024-12-12)
