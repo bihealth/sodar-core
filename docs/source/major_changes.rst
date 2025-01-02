@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Update timeline event displaying in UI
+- Enable timeline search for display formatting of event name
 
 
 v1.0.3 (2024-12-12)

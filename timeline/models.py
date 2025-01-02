@@ -74,6 +74,7 @@ class TimelineEventManager(models.Manager):
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(event_name__icontains=t), Q.OR)
+            term_query.add(Q(event_name__icontains=t.replace(' ', '_')), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
             term_query.add(Q(event_objects__name__icontains=t), Q.OR)
         items = (
