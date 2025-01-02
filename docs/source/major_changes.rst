@@ -16,8 +16,11 @@ v1.0.4 (WIP)
 Release Highlights
 ==================
 
+- Add timeline search for display formatting of event name
+- Add check mode to cleanappsettings management command
+- Add support for all scopes in cleanappsettings undefined setting cleanup
 - Update timeline event displaying in UI
-- Enable timeline search for display formatting of event name
+- General bug fixes and minor updates
 
 
 v1.0.3 (2024-12-12)

@@ -11,12 +11,17 @@ Unreleased
 Added
 -----
 
+- **Projectroles**
+    - Check mode in ``cleanappsettings`` command (#1520)
+    - Support for all scopes in ``cleanappsettings`` undefined setting cleanup (#1526)
 - **Timeline**
     - ``get_event_name()`` template tag (#1524)
 
 Changed
 -------
 
+- **Projectroles**
+    - Optimize ``cleanappsettings`` database queries (#1527)
 - **Timeline**
     - Capitalize event description in UI (#1522)
     - Display event name in UI friendly format (#1524)

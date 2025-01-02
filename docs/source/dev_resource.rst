@@ -363,6 +363,12 @@ the Django database:
 
     $ ./manage.py cleanappsettings
 
+.. hint::
+
+    If you want to ensure desired effects for cleanup when developing, run the
+    command with the ``-c`` or ``--check`` argument. This will log changes to be
+    made without actually altering the database.
+
 
 Project Modifying API
 =====================

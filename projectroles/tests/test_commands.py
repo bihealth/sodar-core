@@ -23,9 +23,10 @@ from projectroles.management.commands.batchupdateroles import (
     Command as BatchUpdateRolesCommand,
 )
 from projectroles.management.commands.cleanappsettings import (
+    LOG_NONE_LABEL,
     START_MSG,
     END_MSG,
-    DEFINITION_NOT_FOUND_MSG,
+    DEF_NOT_FOUND_MSG,
     ALLOWED_TYPES_MSG,
     DELETE_PREFIX_MSG,
     DELETE_PROJECT_TYPE_MSG,
@@ -74,6 +75,7 @@ SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 EXAMPLE_APP_NAME = 'example_project_app'
+LOGGER_PREFIX = 'projectroles.management.commands.'
 CLEAN_LOG_PREFIX = 'INFO:projectroles.management.commands.cleanappsettings:'
 CUSTOM_PASSWORD = 'custompass'
 REMOTE_SITE_NAME = 'Test Site'
@@ -702,7 +704,7 @@ class TestCleanAppSettings(
         )
         self.plugin = Plugin.objects.get(name='example_project_app')
 
-        # Init test setting
+        # Init test settings
         self.setting_str_values = {
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
@@ -769,22 +771,22 @@ class TestCleanAppSettings(
                 project=s['project'],
             )
 
-    def test_command_undefined(self):
-        """Test cleanappsettings with undefined setting"""
-        undef_setting = AppSetting(
-            app_plugin=self.plugin,
-            project=self.project,
-            name='ghost',
-            type='BOOLEAN',
+        self.cmd_name = 'cleanappsettings'
+        self.logger_name = LOGGER_PREFIX + self.cmd_name
+
+    def test_command_undefined_project(self):
+        """Test cleanappsettings with undefined PROJECT scope setting"""
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='undefined',
+            setting_type='BOOLEAN',
             value=True,
+            project=self.project,
         )
-        undef_setting.save()
         self.assertEqual(AppSetting.objects.count(), 6)
 
-        with self.assertLogs(
-            'projectroles.management.commands.cleanappsettings', level='INFO'
-        ) as cm:
-            call_command('cleanappsettings')
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
+            call_command(self.cmd_name)
             self.assertEqual(
                 cm.output,
                 [
@@ -792,104 +794,160 @@ class TestCleanAppSettings(
                     (
                         CLEAN_LOG_PREFIX
                         + DELETE_PREFIX_MSG.format(
-                            'settings.example_project_app.ghost',
-                            self.project.title,
+                            s_name='settings.example_project_app.undefined',
+                            project=f'"{self.project.title}"',
+                            user=LOG_NONE_LABEL,
                         )
-                        + DEFINITION_NOT_FOUND_MSG
+                        + DEF_NOT_FOUND_MSG
                     ),
                     CLEAN_LOG_PREFIX + END_MSG,
                 ],
             )
         self.assertEqual(AppSetting.objects.count(), 5)
-        self.assertQuerysetEqual(
-            AppSetting.objects.filter(name='ghost'),
-            [],
-        )
+        self.assertIsNone(AppSetting.objects.filter(name='undefined').first())
 
-    def test_command_project_types(self):
-        """Test cleanappsettings with invalid project types"""
-        cat_setting = AppSetting(
-            app_plugin=self.plugin,
-            project=self.category,
-            name='project_user_bool_setting',
-            type='BOOLEAN',
+    def test_command_undefined_user(self):
+        """Test cleanappsettings with undefined USER scope setting"""
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='undefined',
+            setting_type='BOOLEAN',
             value=True,
+            user=self.user_owner,
         )
-        cat_setting.save()
+        self.assertEqual(AppSetting.objects.count(), 6)
+        call_command(self.cmd_name)
+        self.assertEqual(AppSetting.objects.count(), 5)
+
+    def test_command_undefined_project_user(self):
+        """Test cleanappsettings with undefined PROJECT_USER scope setting"""
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='undefined',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+            user=self.user_owner,
+        )
+        self.assertEqual(AppSetting.objects.count(), 6)
+        call_command(self.cmd_name)
+        self.assertEqual(AppSetting.objects.count(), 5)
+
+    def test_command_invalid_project_type(self):
+        """Test cleanappsettings with invalid project type"""
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='project_user_bool_setting',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.category,
+        )
         self.assertEqual(AppSetting.objects.count(), 6)
 
-        with self.assertLogs(
-            'projectroles.management.commands.cleanappsettings', level='INFO'
-        ) as cm:
-            call_command('cleanappsettings')
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
+            call_command(self.cmd_name)
+            self.assertEqual(len(cm.output), 3)
             self.assertEqual(
-                cm.output,
-                [
-                    CLEAN_LOG_PREFIX + START_MSG,
-                    (
-                        CLEAN_LOG_PREFIX
-                        + DELETE_PREFIX_MSG.format(
-                            'settings.example_project_app.'
-                            'project_user_bool_setting',
-                            self.category.title,
-                        )
-                        + DELETE_PROJECT_TYPE_MSG.format(
-                            self.category.type,
-                            ALLOWED_TYPES_MSG,
-                            '[\'PROJECT\']',
-                        )
-                    ),
-                    CLEAN_LOG_PREFIX + END_MSG,
-                ],
+                cm.output[1],
+                (
+                    CLEAN_LOG_PREFIX
+                    + DELETE_PREFIX_MSG.format(
+                        s_name='settings.example_project_app.'
+                        'project_user_bool_setting',
+                        project=f'"{self.category.title}"',
+                        user=LOG_NONE_LABEL,
+                    )
+                    + DELETE_PROJECT_TYPE_MSG.format(
+                        self.category.type, ALLOWED_TYPES_MSG, 'PROJECT'
+                    )
+                ),
             )
-            self.assertEqual(AppSetting.objects.count(), 5)
-            self.assertQuerysetEqual(
-                AppSetting.objects.filter(name='project_user_bool_setting'),
-                [],
-            )
+        self.assertEqual(AppSetting.objects.count(), 5)
+        self.assertIsNone(
+            AppSetting.objects.filter(name='project_user_bool_setting').first()
+        )
 
-    def test_command_project_user_scope(self):
-        """Test cleanappsettings with PROJECT_USER scope"""
+    def test_command_project_user_scope_no_role(self):
+        """Test cleanappsettings with PROJECT_USER scope and no role"""
         user_new = self.make_user('user_new')
-        user_new.save()
-        pu_setting = AppSetting(
-            app_plugin=self.plugin,
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='project_user_bool_setting',
+            setting_type='BOOLEAN',
+            value=True,
             project=self.project,
             user=user_new,
-            name='project_user_bool_setting',
-            type='BOOLEAN',
-            value=True,
         )
-        pu_setting.save()
         self.assertEqual(AppSetting.objects.count(), 6)
 
-        with self.assertLogs(
-            'projectroles.management.commands.cleanappsettings', level='INFO'
-        ) as cm:
-            call_command('cleanappsettings')
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
+            call_command(self.cmd_name)
+            self.assertEqual(len(cm.output), 3)
             self.assertEqual(
-                cm.output,
-                [
-                    CLEAN_LOG_PREFIX + START_MSG,
-                    (
-                        CLEAN_LOG_PREFIX
-                        + DELETE_PREFIX_MSG.format(
-                            'settings.example_project_app.'
-                            'project_user_bool_setting',
-                            self.project.title,
-                        )
-                        + DELETE_SCOPE_MSG.format(
-                            user_new.username,
-                        )
-                    ),
-                    CLEAN_LOG_PREFIX + END_MSG,
-                ],
+                cm.output[1],
+                (
+                    CLEAN_LOG_PREFIX
+                    + DELETE_PREFIX_MSG.format(
+                        s_name='settings.example_project_app.'
+                        'project_user_bool_setting',
+                        project=f'"{self.project.title}"',
+                        user=f'"{user_new.username}"',
+                    )
+                    + DELETE_SCOPE_MSG.format(user_new.username)
+                ),
             )
-            self.assertEqual(AppSetting.objects.count(), 5)
-            self.assertQuerysetEqual(
-                AppSetting.objects.filter(name='project_user_bool_setting'),
-                [],
-            )
+        self.assertEqual(AppSetting.objects.count(), 5)
+        self.assertIsNone(
+            AppSetting.objects.filter(name='project_user_bool_setting').first()
+        )
+
+    def test_command_project_user_scope_role(self):
+        """Test cleanappsettings with PROJECT_USER scope and existing role"""
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.project, user_new, self.role_contributor)
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='project_user_bool_setting',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+            user=user_new,
+        )
+        self.assertEqual(AppSetting.objects.count(), 6)
+        call_command(self.cmd_name)
+        self.assertEqual(AppSetting.objects.count(), 6)
+
+    def test_command_check(self):
+        """Test cleanappsettings with check mode enabled"""
+        user_new = self.make_user('user_new')
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='undefined',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+        )
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='project_user_bool_setting',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.category,
+        )
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='project_user_bool_setting',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+            user=user_new,
+        )
+        self.assertEqual(AppSetting.objects.count(), 8)
+
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
+            call_command(self.cmd_name, check=True)
+            self.assertEqual(len(cm.output), 6)
+        self.assertEqual(AppSetting.objects.count(), 8)
 
 
 class TestSyncGroups(TestCase):
@@ -947,10 +1005,14 @@ class TestSyncGroups(TestCase):
 class TestCreateDevUsers(TestCase):
     """Tests for createdevusers command"""
 
+    def setUp(self):
+        super().setUp()
+        self.cmd_name = 'createdevusers'
+
     def test_create(self):
         """Test creating users"""
         self.assertEqual(User.objects.count(), 0)
-        call_command('createdevusers')
+        call_command(self.cmd_name)
         self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
         for u in DEV_USER_NAMES:
             user = User.objects.filter(
@@ -965,7 +1027,7 @@ class TestCreateDevUsers(TestCase):
 
     def test_create_custom_password(self):
         """Test creating users with custom password"""
-        call_command('createdevusers', password=CUSTOM_PASSWORD)
+        call_command(self.cmd_name, password=CUSTOM_PASSWORD)
         for u in DEV_USER_NAMES:
             user = User.objects.filter(username=u).first()
             self.assertEqual(user.check_password(CUSTOM_PASSWORD), True)
@@ -974,14 +1036,14 @@ class TestCreateDevUsers(TestCase):
         """Test creating users with existing user in list"""
         self.make_user(DEV_USER_NAMES[0])
         self.assertEqual(User.objects.count(), 1)
-        call_command('createdevusers')
+        call_command(self.cmd_name)
         self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
 
     def test_create_existing_not_in_list(self):
         """Test creating users with existing user not in list"""
         self.make_user('user_new')
         self.assertEqual(User.objects.count(), 1)
-        call_command('createdevusers')
+        call_command(self.cmd_name)
         self.assertEqual(User.objects.count(), len(DEV_USER_NAMES) + 1)
 
     @override_settings(DEBUG=False)
@@ -989,5 +1051,5 @@ class TestCreateDevUsers(TestCase):
         """Test creating users with debug mode disabled (should fail)"""
         self.assertEqual(User.objects.count(), 0)
         with self.assertRaises(SystemExit):
-            call_command('createdevusers')
+            call_command(self.cmd_name)
         self.assertEqual(User.objects.count(), 0)
