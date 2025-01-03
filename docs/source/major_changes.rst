@@ -10,14 +10,24 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.0.5 (2025-02-17)
-*******************
+v1.1.0 (WIP)
+************
 
 Release Highlights
 ==================
 
-- Add project list query optimizations from v1.1 dev
-- Fix user group assignment on initial LDAP user login
+- Remove support for features deprecated in v1.0
+
+Breaking Changes
+================
+
+Deprecated Features Removed
+---------------------------
+
+Plugin Search Return Data
+    Plugins implementing ``search()`` must return results as as a list of
+    ``PluginSearchResult`` objects. Returning a ``dict`` was deprecated in v1.0
+    and support for it has been removed in v1.1.
 
 
 v1.0.4 (2025-01-03)

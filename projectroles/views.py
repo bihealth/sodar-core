@@ -127,11 +127,6 @@ ROLE_FINDER_INFO = (
     'User can see nested {categories} and {projects}, but can not access them '
     'without having a role explicitly assigned.'
 )
-SEARCH_DICT_DEPRECATE_MSG = (
-    'Results from search() as a dict have been deprecated and support will be '
-    'removed in v1.1. Provide results as a list of PluginSearchResult objects '
-    'instead.'
-)
 TARGET_CREATE_DISABLED_MSG = (
     'PROJECTROLES_TARGET_CREATE=False, creation not allowed.'
 )
@@ -691,32 +686,17 @@ class ProjectSearchMixin:
             }
             try:
                 search_res['results'] = plugin.search(**search_kwargs)
-                if isinstance(search_res['results'], dict):
-                    # TODO: Remove in v1.1 (see #1400)
-                    logger.warning(SEARCH_DICT_DEPRECATE_MSG)
-                    for v in search_res['results'].values():
-                        items = v.get('items')
-                        if items and (
-                            (isinstance(items, QuerySet) and items.count() > 0)
-                            or (isinstance(items, list) and len(items) > 0)
-                        ):
-                            search_res['has_results'] = True
-                            break
-                else:
-                    for r in search_res['results']:
-                        if r.items and (
-                            (
-                                isinstance(r.items, QuerySet)
-                                and r.items.count() > 0
-                            )
-                            or (isinstance(r.items, list) and len(r.items) > 0)
-                        ):
-                            search_res['has_results'] = True
-                            break
-                    # Build results into dict for easier use in templates
-                    search_res['results'] = {
-                        r.category: r for r in search_res['results']
-                    }
+                for r in search_res['results']:
+                    if r.items and (
+                        (isinstance(r.items, QuerySet) and r.items.count() > 0)
+                        or (isinstance(r.items, list) and len(r.items) > 0)
+                    ):
+                        search_res['has_results'] = True
+                        break
+                # Build results into dict for easier use in templates
+                search_res['results'] = {
+                    r.category: r for r in search_res['results']
+                }
             except Exception as ex:
                 if settings.DEBUG:
                     raise ex
@@ -754,23 +734,11 @@ class ProjectSearchMixin:
             if not results:
                 continue
             for k, r in results.items():
-                if isinstance(r, dict):
-                    # TODO: Remove in v1.1 (see #1400)
-                    type_match = True if search_type else False
-                    if (
-                        not type_match
-                        and 'search_types' in r
-                        and search_type in r['search_types']
-                    ):
-                        type_match = True
-                    if (type_match or not search_type) and (not r['items']):
-                        ret.append(r['title'])
-                else:
-                    type_match = True if search_type else False
-                    if not type_match and search_type in r.search_types:
-                        type_match = True
-                    if (type_match or not search_type) and (not r.items):
-                        ret.append(r.title)
+                type_match = True if search_type else False
+                if not type_match and search_type in r.search_types:
+                    type_match = True
+                if (type_match or not search_type) and (not r.items):
+                    ret.append(r.title)
         return ret
 
     def dispatch(self, request, *args, **kwargs):
