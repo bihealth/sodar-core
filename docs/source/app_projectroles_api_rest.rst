@@ -82,7 +82,7 @@ permission class, which includes ``SODARAPIBaseProjectMixin`` and
 
     from rest_framework.generics import RetrieveAPIView
     from projectroles.models import SODAR_CONSTANTS
-    from projectroles.views_api import CoreAPIGenericProjectMixin
+    from projectroles.views_api import SODARAPIGenericProjectMixin
 
     class YourAPIView(SODARAPIGenericProjectMixin, RetrieveAPIView):
         # ...

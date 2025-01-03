@@ -9,7 +9,7 @@ from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
 from projectroles.views_api import (
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     SODARPageNumberPagination,
 )
 
@@ -41,7 +41,7 @@ class TimelineAPIVersioningMixin:
 
 
 class ProjectTimelineEventListAPIView(
-    TimelineAPIVersioningMixin, CoreAPIGenericProjectMixin, ListAPIView
+    TimelineAPIVersioningMixin, SODARAPIGenericProjectMixin, ListAPIView
 ):
     """
     List ``TimelineEvent`` objects belonging in a category or project. Events

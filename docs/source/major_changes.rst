@@ -25,6 +25,11 @@ Breaking Changes
 Deprecated Features Removed
 ---------------------------
 
+Legacy API Versioning and Rendering
+    The following API base classes and mixins are removed: ``SODARAPIVersioning``,
+    ``SODARAPIRenderer`` and ``SODARAPIBaseMixin``. The legacy ``SODAR_API_*``
+    settings have also been removed. You need to provide your own versioning and
+    renderers to your site's API(s).
 Plugin Search Return Data
     Plugins implementing ``search()`` must return results as as a list of
     ``PluginSearchResult`` objects. Returning a ``dict`` was deprecated in v1.0

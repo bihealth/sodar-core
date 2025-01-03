@@ -17,25 +17,6 @@ For the most part, developing apps within the SODAR Core package follow the
 same guidelines as detailed in :ref:`dev_site`. However, there are certain
 exceptions.
 
-REST API Views
---------------
-
-For internal SODAR Core apps, you need to use core counterparts to the mixins
-than provided for SODAR Core using sites. The counterparts use different media
-type and versioning from views to be implemented on external sites. This is to
-prevent version number clashes requiring changes in external APIs. The classes
-can be found in ``projectroles.views_api`` and are as follows:
-
-- ``CoreAPIVersioning``
-- ``CoreAPIRenderer``
-- ``CoreAPIBaseMixin``
-- ``CoreAPIBaseProjectMixin``
-- ``CoreAPIGenericProjectMixin``
-
-For detailed API descriptions, see docstrings in the ``view_api`` module. The
-media type and versioning for these views are **hardcoded** and should not be
-changed, except version information upon a new release of SODAR Core.
-
 
 Projectroles App Development
 ============================

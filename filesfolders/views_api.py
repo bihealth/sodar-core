@@ -13,7 +13,7 @@ from rest_framework.versioning import AcceptHeaderVersioning
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.views_api import (
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     SODARPageNumberPagination,
 )
 
@@ -169,7 +169,7 @@ class FolderListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
     """
@@ -206,7 +206,7 @@ class FolderRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
     """
@@ -236,7 +236,7 @@ class FileListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
     """
@@ -276,7 +276,7 @@ class FileRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
     """
@@ -306,7 +306,7 @@ class FileRetrieveUpdateDestroyAPIView(
 
 class FileServeAPIView(
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     FileServeMixin,
     GenericAPIView,
 ):
@@ -328,7 +328,7 @@ class HyperLinkListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
     """
@@ -366,7 +366,7 @@ class HyperLinkRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
     """

@@ -50,10 +50,6 @@ from projectroles.tests.test_views import (
     REMOTE_SITE_SECRET,
 )
 from projectroles.utils import build_secret
-from projectroles.views_api import (
-    SODAR_API_MEDIA_TYPE,  # TODO: Remove in v1.1 (see #1401)
-    SODAR_API_DEFAULT_VERSION,  # TODO: Remove in v1.1 (see #1401)
-)
 
 
 app_settings = AppSettingAPI()
@@ -129,12 +125,6 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
     Mixin for SODAR and SODAR Core API views with accept headers, knox token
     authorization and general helper methods.
     """
-
-    # Default API header parameters are for external SODAR site APIs
-    # DEPRECATED: To be removed in SODAR Core v1.1 (see #1401)
-    # Instead, provide a media type and version specific to your app
-    media_type = SODAR_API_MEDIA_TYPE
-    api_version = SODAR_API_DEFAULT_VERSION
 
     # Copied from Knox tests
     @classmethod

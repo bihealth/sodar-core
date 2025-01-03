@@ -85,18 +85,6 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
 
-# API constants for external SODAR Core sites
-# DEPRECATED: To be removed in SODAR Core v1.1 (see #1401)
-SODAR_API_MEDIA_TYPE = getattr(
-    settings, 'SODAR_API_MEDIA_TYPE', 'application/UNDEFINED+json'
-)
-SODAR_API_DEFAULT_VERSION = getattr(
-    settings, 'SODAR_API_DEFAULT_VERSION', '0.1'
-)
-SODAR_API_ALLOWED_VERSIONS = getattr(
-    settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
-)
-
 # API constants for projectroles APIs
 PROJECTROLES_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles+json'
@@ -213,50 +201,10 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         return request.user.has_perm(perm, project)
 
 
-# TODO: Remove in v1.1 (see #1401)
-class SODARAPIVersioning(AcceptHeaderVersioning):
-    """
-    Accept header versioning class for SODAR API views.
-
-    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You need to
-    provide version identifiers specific to your API providing app.
-    """
-
-    allowed_versions = SODAR_API_ALLOWED_VERSIONS
-    default_version = SODAR_API_DEFAULT_VERSION
-
-
-# TODO: Remove in v1.1 (see #1401)
-class SODARAPIRenderer(JSONRenderer):
-    """
-    SODAR API JSON renderer with a site-specific media type retrieved from
-    Django settings.
-
-    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You must define
-    a media type specific for your API providing app.
-    """
-
-    media_type = SODAR_API_MEDIA_TYPE
-
-
 # Base API View Mixins ---------------------------------------------------------
 
 
-# TODO: Remove in v1.1 (see #1401)
-class SODARAPIBaseMixin:
-    """
-    Base SODAR API mixin to be used by external SODAR Core based sites.
-
-    DEPRECATED: To be removed in SODAR Core v1.1 (see #1401). You must define
-    a base renderer and a versioning class specific to your API providing app.
-    """
-
-    renderer_classes = [SODARAPIRenderer]
-    versioning_class = SODARAPIVersioning
-
-
-# TODO: Remove SODARAPIBaseMixin inheritance in v1.1 (see #1401)
-class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
+class SODARAPIBaseProjectMixin(ProjectAccessMixin):
     """
     API view mixin for the base DRF ``APIView`` class with project permission
     checking, but without serializers and other generic view functionality.
@@ -264,8 +212,6 @@ class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     Project type can be restricted to ``PROJECT_TYPE_CATEGORY`` or
     ``PROJECT_TYPE_PROJECT``, as defined in SODAR constants, by setting the
     ``project_type`` attribute in the view.
-
-    NOTE: The SODARAPIBaseMixin inheritance will be removed in v1.1 (see #1401).
     """
 
     permission_classes = [SODARAPIProjectPermission]
@@ -353,26 +299,6 @@ class SODARPageNumberPagination(PageNumberPagination):
 
 
 # SODAR Core Base Views and Mixins ---------------------------------------------
-
-
-class CoreAPIBaseProjectMixin(ProjectAccessMixin):
-    """
-    SODAR Core API view mixin for the base DRF ``APIView`` class with project
-    permission checking, but without serializers and other generic view
-    functionality.
-    """
-
-    permission_classes = [SODARAPIProjectPermission]
-
-
-class CoreAPIGenericProjectMixin(
-    APIProjectContextMixin, CoreAPIBaseProjectMixin
-):
-    """Generic API view mixin for internal SODAR Core API views"""
-
-    lookup_field = 'sodar_uuid'  # Use project__sodar_uuid for lists
-    lookup_url_kwarg = 'project'  # Replace with relevant model
-    queryset_project_field = 'project'  # Replace if no direct project relation
 
 
 class ProjectrolesAPIVersioningMixin:
@@ -493,7 +419,7 @@ class ProjectListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
 class ProjectRetrieveAPIView(
     ProjectQuerysetMixin,
     ProjectrolesAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     RetrieveAPIView,
 ):
     """
@@ -547,7 +473,7 @@ class ProjectCreateAPIView(
 class ProjectUpdateAPIView(
     ProjectQuerysetMixin,
     ProjectrolesAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     UpdateAPIView,
 ):
     """
@@ -588,7 +514,7 @@ class ProjectUpdateAPIView(
 
 
 class RoleAssignmentCreateAPIView(
-    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, CreateAPIView
+    ProjectrolesAPIVersioningMixin, SODARAPIGenericProjectMixin, CreateAPIView
 ):
     """
     Create a role assignment in a project.
@@ -608,7 +534,7 @@ class RoleAssignmentCreateAPIView(
 
 
 class RoleAssignmentUpdateAPIView(
-    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, UpdateAPIView
+    ProjectrolesAPIVersioningMixin, SODARAPIGenericProjectMixin, UpdateAPIView
 ):
     """
     Update the role assignment for a user in a project.
@@ -633,7 +559,7 @@ class RoleAssignmentUpdateAPIView(
 class RoleAssignmentDestroyAPIView(
     RoleAssignmentDeleteMixin,
     ProjectrolesAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     DestroyAPIView,
 ):
     """
@@ -677,7 +603,7 @@ class RoleAssignmentDestroyAPIView(
 class RoleAssignmentOwnerTransferAPIView(
     RoleAssignmentOwnerTransferMixin,
     ProjectrolesAPIVersioningMixin,
-    CoreAPIBaseProjectMixin,
+    SODARAPIBaseProjectMixin,
     APIView,
 ):
     """
@@ -797,7 +723,7 @@ class ProjectInviteAPIMixin:
 
 
 class ProjectInviteListAPIView(
-    ProjectrolesAPIVersioningMixin, CoreAPIBaseProjectMixin, ListAPIView
+    ProjectrolesAPIVersioningMixin, SODARAPIBaseProjectMixin, ListAPIView
 ):
     """
     List user invites for a project.
@@ -828,7 +754,7 @@ class ProjectInviteListAPIView(
 
 
 class ProjectInviteCreateAPIView(
-    ProjectrolesAPIVersioningMixin, CoreAPIGenericProjectMixin, CreateAPIView
+    ProjectrolesAPIVersioningMixin, SODARAPIGenericProjectMixin, CreateAPIView
 ):
     """
     Create a project invite.
@@ -851,7 +777,7 @@ class ProjectInviteRevokeAPIView(
     ProjectInviteMixin,
     ProjectInviteAPIMixin,
     ProjectrolesAPIVersioningMixin,
-    CoreAPIBaseProjectMixin,
+    SODARAPIBaseProjectMixin,
     APIView,
 ):
     """
@@ -886,7 +812,7 @@ class ProjectInviteResendAPIView(
     ProjectInviteMixin,
     ProjectInviteAPIMixin,
     ProjectrolesAPIVersioningMixin,
-    CoreAPIBaseProjectMixin,
+    SODARAPIBaseProjectMixin,
     APIView,
 ):
     """
@@ -1046,7 +972,7 @@ class AppSettingMixin:
 
 class ProjectSettingRetrieveAPIView(
     ProjectrolesAPIVersioningMixin,
-    CoreAPIBaseProjectMixin,
+    SODARAPIBaseProjectMixin,
     AppSettingMixin,
     RetrieveAPIView,
 ):
@@ -1100,7 +1026,7 @@ class ProjectSettingRetrieveAPIView(
 
 class ProjectSettingSetAPIView(
     ProjectrolesAPIVersioningMixin,
-    CoreAPIBaseProjectMixin,
+    SODARAPIBaseProjectMixin,
     AppSettingMixin,
     ProjectModifyPluginViewMixin,
     APIView,

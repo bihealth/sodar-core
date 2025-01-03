@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)
+
 Removed
 -------
 
@@ -16,6 +22,8 @@ Removed
 - **Projectroles**
     - Support for deprecated search results as dict (#1400)
     - Support for deprecated app setting ``local`` parameter (#1394)
+    - Deprecated API view base classes and mixins (#1401)
+    - Core API view base classes and mixins (#1401)
 - **Timeline**
     - Support for deprecated ``get_object_link()`` return values as dict (#1398)
 

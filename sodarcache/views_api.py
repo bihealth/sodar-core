@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.views_api import CoreAPIGenericProjectMixin
+from projectroles.views_api import SODARAPIGenericProjectMixin
 
 from sodarcache.serializers import JSONCacheItemSerializer
 
@@ -67,7 +67,7 @@ class SodarcacheAPIViewMixin:
 
 
 class CacheItemRetrieveAPIView(
-    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, RetrieveAPIView
+    SodarcacheAPIViewMixin, SODARAPIGenericProjectMixin, RetrieveAPIView
 ):
     """
     Retrieve a cache item along with its data. Returns 404 if cache item is not
@@ -110,7 +110,7 @@ class CacheItemRetrieveAPIView(
 
 
 class CacheItemDateRetrieveAPIView(
-    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, APIView
+    SodarcacheAPIViewMixin, SODARAPIGenericProjectMixin, APIView
 ):
     """
     Retrieve timestamp of the last update to a cache item. Returns 404 if cache
@@ -145,7 +145,7 @@ class CacheItemDateRetrieveAPIView(
 
 
 class CacheItemSetAPIView(
-    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, APIView
+    SodarcacheAPIViewMixin, SODARAPIGenericProjectMixin, APIView
 ):
     """
     Create or update a cache item. Replaces an existing item with the same
