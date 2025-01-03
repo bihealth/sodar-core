@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.0.4 (WIP)
-************
+v1.0.4 (2025-01-03)
+*******************
 
 Release Highlights
 ==================
@@ -20,7 +20,6 @@ Release Highlights
 - Add check mode to cleanappsettings management command
 - Add support for all scopes in cleanappsettings undefined setting cleanup
 - Update timeline event displaying in UI
-- General bug fixes and minor updates
 
 
 v1.0.3 (2024-12-12)
