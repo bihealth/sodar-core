@@ -28,6 +28,10 @@ Plugin Search Return Data
     Plugins implementing ``search()`` must return results as as a list of
     ``PluginSearchResult`` objects. Returning a ``dict`` was deprecated in v1.0
     and support for it has been removed in v1.1.
+Plugin Object Link Return Data
+    Plugins implementing ``get_object_link()`` must return a
+    ``PluginObjectLink`` object or ``None``. Returning a ``dict`` was deprecated
+    in v1.0 and support for it has been removed in v1.1.
 
 
 v1.0.4 (2025-01-03)

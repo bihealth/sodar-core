@@ -13,6 +13,8 @@ Removed
 
 - **Projectroles**
     - Support for deprecated search results as dict (#1400)
+- **Timeline**
+    - Support for deprecated ``get_object_link()`` return values as dict (#1398)
 
 
 v1.0.4 (2025-01-03)
