@@ -318,8 +318,20 @@ CELERYD_TASK_SOFT_TIME_LIMIT = 60
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 
 
+# API Settings
+# ------------------------------------------------------------------------------
+
+# SODAR API host URL
+SODAR_API_DEFAULT_HOST = env.url(
+    'SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000'
+)
+# SODAR API pagination page size
+SODAR_API_PAGE_SIZE = env.int('SODAR_API_PAGE_SIZE', 100)
+
+
 # Django REST framework
 # ------------------------------------------------------------------------------
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -330,7 +342,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': (
         'rest_framework.pagination.PageNumberPagination'
     ),
-    'PAGE_SIZE': env.int('SODAR_API_PAGE_SIZE', 100),
+    'PAGE_SIZE': SODAR_API_PAGE_SIZE,
 }
 
 # Additional authentication settings
@@ -555,11 +567,6 @@ ENABLED_BACKEND_PLUGINS = env.list(
         'timeline_backend',
         'example_backend_app',
     ],
-)
-
-# SODAR API host URL
-SODAR_API_DEFAULT_HOST = env.url(
-    'SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000'
 )
 
 
