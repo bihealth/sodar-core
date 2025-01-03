@@ -52,11 +52,6 @@ GLOBAL_PROJECT_ERR_MSG = (
 GLOBAL_USER_ERR_MSG = (
     'Overriding global user settings on target site not allowed'
 )
-# TODO: Remove in v1.1 (see #1394)
-LOCAL_DEPRECATE_MSG = (
-    'The "local" argument for app settings has been deprecated and will be '
-    'removed in SODAR Core v1.1: use "global" instead'
-)
 
 
 # Define App Settings for projectroles app
@@ -235,18 +230,6 @@ class AppSettingAPI:
                 )
             )
 
-    # TODO: Remove in v1.1 (see #1394)
-    @classmethod
-    def _check_local_attr(cls, setting_def):
-        """
-        Warn if the deprecated "local" attribute is included in a settings
-        definition instead of the new "global" attribute.
-
-        :param setting_def: Dict
-        """
-        if 'local' in setting_def:
-            logger.warning(LOCAL_DEPRECATE_MSG)
-
     @classmethod
     def _get_app_plugin(cls, plugin_name):
         """
@@ -363,8 +346,6 @@ class AppSettingAPI:
                 )
             )
 
-        # TODO: Remove _check_local_attr() in v1.1 (see #1394)
-        cls._check_local_attr(app_settings[setting_name])
         if callable(app_settings[setting_name].get('default')):
             try:
                 callable_setting = app_settings[setting_name]['default']
@@ -889,9 +870,6 @@ class AppSettingAPI:
         :param setting_def: Dict
         :return: Boolean
         """
-        if 'local' in setting_def:  # TODO: Remove in v1.1 (see #1394)
-            logger.warning(LOCAL_DEPRECATE_MSG)
-            return not setting_def['local']  # Inverse value
         return setting_def.get('global', APP_SETTING_GLOBAL_DEFAULT)
 
     @classmethod

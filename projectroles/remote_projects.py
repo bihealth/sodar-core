@@ -1187,7 +1187,7 @@ class RemoteProjectAPI:
 
         # Remove keys that are not available in the model
         ad.pop('global', None)
-        ad.pop('local', None)  # TODO: Remove in v1.1 (see #1394)
+        ad.pop('local', None)  # Deprecated in v1.0, remove just in case
         ad.pop('project_uuid', None)
         ad.pop('user_name', None)
         ad.pop('user_uuid', None)

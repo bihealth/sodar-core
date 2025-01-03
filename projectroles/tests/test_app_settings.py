@@ -8,7 +8,6 @@ from projectroles.app_settings import (
     AppSettingAPI,
     get_example_setting_default,
     get_example_setting_options,
-    LOCAL_DEPRECATE_MSG,
 )
 from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin
@@ -1207,23 +1206,6 @@ class TestAppSettingAPI(
             'project_str_setting', plugin_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(app_settings.get_global_value(s_def), False)  # Default
-
-    # TODO: Remove in v1.1 (see #1394)
-    @override_settings(PROJECTROLES_APP_SETTINGS_TEST=APP_SETTINGS_TEST)
-    def test_get_global_value_local(self):
-        """Test get_global_value() with deprecated local value"""
-        s_def = app_settings.get_definition(
-            'project_star', plugin_name='projectroles'
-        )
-        # Should be inverse of "local" value
-        with self.assertLogs(
-            logger='projectroles.app_settings', level='WARNING'
-        ) as log:
-            self.assertEqual(app_settings.get_global_value(s_def), False)
-            self.assertIn(
-                'WARNING:projectroles.app_settings:' + LOCAL_DEPRECATE_MSG,
-                log.output,
-            )
 
     def test_validate_form_app_settings(self):
         """Test validate_form_app_settings() with valid project setting value"""

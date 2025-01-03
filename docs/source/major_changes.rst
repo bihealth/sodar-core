@@ -32,6 +32,10 @@ Plugin Object Link Return Data
     Plugins implementing ``get_object_link()`` must return a
     ``PluginObjectLink`` object or ``None``. Returning a ``dict`` was deprecated
     in v1.0 and support for it has been removed in v1.1.
+App Settings Local Attribute
+    Support for the ``local`` attribute for app settings has been removed. Use
+    ``global`` instead. This is only relevant to sites being deployed as
+    ``SOURCE`` sites.
 
 
 v1.0.4 (2025-01-03)
