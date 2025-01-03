@@ -1,3 +1,6 @@
+"""General utility methods for projectroles and SODAR Core"""
+
+import logging
 import random
 import string
 
@@ -6,6 +9,9 @@ from django.urls import reverse
 
 from projectroles.plugins import get_active_plugins
 from projectroles.models import SODAR_CONSTANTS
+
+
+logger = logging.getLogger(__name__)
 
 
 # SODAR constants
@@ -25,6 +31,7 @@ ROLE_URLS = [
     'invite_resend',
     'invite_revoke',
 ]
+USER_DISPLAY_DEPRECATE_MSG = 'The get_user_display_name() utility method has been deprecated and will be removed in v1.2. Use User.get_display_name() instead.'
 
 
 def get_display_name(key, title=False, count=1, plural=False):
@@ -45,7 +52,7 @@ def get_display_name(key, title=False, count=1, plural=False):
     return ret.lower() if not title else ret.title()
 
 
-# TODO: Deprecate (see #1487)
+# TODO: Deprecated, remove in v1.2 (see #1488)
 def get_user_display_name(user, inc_user=False):
     """
     Return full name of user for displaying.
@@ -54,10 +61,8 @@ def get_user_display_name(user, inc_user=False):
     :param inc_user: Include user name if true (boolean)
     :return: String
     """
-    if user.name != '':
-        return user.name + (' (' + user.username + ')' if inc_user else '')
-    # If full name can't be found, return username
-    return user.username
+    logger.warning(USER_DISPLAY_DEPRECATE_MSG)
+    return user.get_display_name(inc_user)
 
 
 def build_secret(length=None):

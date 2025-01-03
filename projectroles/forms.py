@@ -29,11 +29,7 @@ from projectroles.models import (
 )
 
 from projectroles.plugins import get_active_plugins
-from projectroles.utils import (
-    get_display_name,
-    get_user_display_name,
-    build_secret,
-)
+from projectroles.utils import get_display_name, build_secret
 from projectroles.app_settings import AppSettingAPI
 
 
@@ -920,7 +916,7 @@ class RoleAssignmentForm(SODARModelForm):
                     'user',
                     'User {} already assigned as {}'.format(
                         existing_as.role.name,
-                        get_user_display_name(self.cleaned_data.get('user')),
+                        self.cleaned_data.get('user').get_display_name(),
                     ),
                 )
         # Updating a RoleAssignment

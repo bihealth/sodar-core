@@ -22,8 +22,19 @@ Release Highlights
 Breaking Changes
 ================
 
-Deprecated Features Removed
----------------------------
+Deprecated Features
+-------------------
+
+These features have been deprecated in v1.1 and will be removed in v1.2.
+
+``projectroles.utils.get_user_display_name()``
+    This utility method has been deprecated. Please use
+    ``SODARUser.get_display_name()`` instead.
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.0 and have been removed in v1.1.
 
 Legacy API Versioning and Rendering
     The following API base classes and mixins are removed: ``SODARAPIVersioning``,
@@ -32,12 +43,11 @@ Legacy API Versioning and Rendering
     renderers to your site's API(s).
 Plugin Search Return Data
     Plugins implementing ``search()`` must return results as as a list of
-    ``PluginSearchResult`` objects. Returning a ``dict`` was deprecated in v1.0
-    and support for it has been removed in v1.1.
+    ``PluginSearchResult`` objects. Returning a ``dict`` was deprecated in v1.0.
 Plugin Object Link Return Data
     Plugins implementing ``get_object_link()`` must return a
     ``PluginObjectLink`` object or ``None``. Returning a ``dict`` was deprecated
-    in v1.0 and support for it has been removed in v1.1.
+    in v1.0.
 App Settings Local Attribute
     Support for the ``local`` attribute for app settings has been removed. Use
     ``global`` instead. This is only relevant to sites being deployed as

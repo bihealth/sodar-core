@@ -1395,6 +1395,18 @@ class SODARUser(AbstractUser):
             return '{} {}'.format(self.first_name, self.last_name)
         return self.username
 
+    def get_display_name(self, inc_user=False):
+        """
+        Return user name for displaying in UI.
+
+        :param inc_user: Include username if true (boolean, default=False)
+        :return: String
+        """
+        ret = self.get_full_name()
+        if ret != self.username and inc_user:
+            ret += f' ({self.username})'
+        return ret
+
     def get_form_label(self, email=False):
         """
         Return user label with full name, username and optional email.

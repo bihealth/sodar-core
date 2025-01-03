@@ -1632,6 +1632,37 @@ class TestSODARUser(TestCase):
             self.user.__str__(), 'testuser'
         )  # This is the default username for self.make_user()
 
+    def test_get_full_name(self):
+        """Test get_full_name() with default user settings"""
+        self.assertEqual(self.user.get_full_name(), 'testuser')
+
+    def test_get_full_name_with_name(self):
+        """Test get_full_name() with name field set"""
+        self.user.name = 'Full Name'
+        self.assertEqual(self.user.get_full_name(), 'Full Name')
+
+    def test_get_full_name_first_last(self):
+        """Test get_full_name() with first_name and last_name set"""
+        self.user.first_name = 'Full'
+        self.user.last_name = 'Name'
+        self.assertEqual(self.user.get_full_name(), 'Full Name')
+
+    def test_get_display_name(self):
+        """Test get_display_name() with default user settings"""
+        self.assertEqual(self.user.get_display_name(), 'testuser')
+
+    def test_get_display_name_with_name(self):
+        """Test get_display_name() with name field set"""
+        self.user.name = 'Full Name'
+        self.assertEqual(self.user.get_display_name(), 'Full Name')
+
+    def test_get_display_name_inc_user(self):
+        """Test get_display_name() with inc_user set"""
+        self.user.name = 'Full Name'
+        self.assertEqual(
+            self.user.get_display_name(inc_user=True), 'Full Name (testuser)'
+        )
+
     def test_get_form_label(self):
         """Test get_form_label()"""
         self.assertEqual(self.user.get_form_label(), 'testuser')
@@ -1644,7 +1675,7 @@ class TestSODARUser(TestCase):
         )
 
     def test_get_form_label_name(self):
-        """Test get_form_label() with name"""
+        """Test get_form_label() with name field set"""
         self.user.name = 'Full Name'
         self.assertEqual(
             self.user.get_form_label(),
@@ -1652,7 +1683,7 @@ class TestSODARUser(TestCase):
         )
 
     def test_get_form_label_first_last(self):
-        """Test get_form_label() with first and last name"""
+        """Test get_form_label() with first_name and last_name set"""
         self.user.first_name = 'Full'
         self.user.last_name = 'Name'
         self.assertEqual(

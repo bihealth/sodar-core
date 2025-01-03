@@ -51,11 +51,7 @@ from projectroles.plugins import (
     get_backend_api,
     get_active_plugins,
 )
-from projectroles.utils import (
-    build_secret,
-    get_display_name,
-    get_user_display_name,
-)
+from projectroles.utils import build_secret, get_display_name
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -2683,7 +2679,7 @@ class TestRoleAssignmentCreateView(
         # Assert user with previously added role in project is not selectable
         choice = (
             self.user_owner.sodar_uuid,
-            get_user_display_name(self.user_owner, True),
+            self.user_owner.get_display_name(True),
         )
         self.assertNotIn([choice], form.fields['user'].choices)
         # Assert owner role is not selectable
@@ -2713,7 +2709,7 @@ class TestRoleAssignmentCreateView(
         # Assert user with previously added role in project is not selectable
         choice = (
             self.user_owner_cat.sodar_uuid,
-            get_user_display_name(self.user_owner_cat, True),
+            self.user_owner_cat.get_display_name(True),
         )
         self.assertNotIn([choice], form.fields['user'].choices)
         self.assertNotIn(

@@ -8,11 +8,19 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``SODARUser.get_display_name()`` helper (#1487)
+
 Changed
 -------
 
 - **General**
     - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)
+- **Projectroles**
+    - Deprecate ``get_user_display_name()``, use ``SODARUser.get_display_name()`` (#1487)
 
 Removed
 -------
