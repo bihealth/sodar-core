@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Remove support for features deprecated in v1.0
+- Remove squashed migrations
 
 Breaking Changes
 ================
@@ -36,6 +37,13 @@ App Settings Local Attribute
     Support for the ``local`` attribute for app settings has been removed. Use
     ``global`` instead. This is only relevant to sites being deployed as
     ``SOURCE`` sites.
+
+Squashed Migrations Removed
+---------------------------
+
+Migrations squashed in v1.0 have been removed in v1.1. In order to upgrade your
+SODAR Core using site to v1.1, you must first upgrade to v1.0 and run
+``manage.py migrate`` on v1.0 for any development and production instances.
 
 
 v1.0.4 (2025-01-03)

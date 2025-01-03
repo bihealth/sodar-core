@@ -11,6 +11,8 @@ Unreleased
 Removed
 -------
 
+- **General**
+    - Migrations squashed in v1.0 (#1455)
 - **Projectroles**
     - Support for deprecated search results as dict (#1400)
     - Support for deprecated app setting ``local`` parameter (#1394)
