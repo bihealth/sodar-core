@@ -42,6 +42,12 @@ def get_timestamp(event):
 
 
 @register.simple_tag
+def get_event_name(event):
+    """Return timeline event name in a user friendly format"""
+    return event.event_name.replace('_', ' ').title()
+
+
+@register.simple_tag
 def get_event_description(event, plugin_lookup, request=None):
     """Return printable version of event description"""
     return timeline.get_event_description(event, plugin_lookup, request)

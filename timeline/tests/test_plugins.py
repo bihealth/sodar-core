@@ -41,6 +41,7 @@ SITE_PLUGIN_NAME = 'timeline_site'
 SITE_PLUGIN_TITLE = 'Site-Wide Events'
 ADMIN_PLUGIN_NAME = 'timeline_site_admin'
 ADMIN_PLUGIN_TITLE = 'All Timeline Events'
+EVENT_NAME = 'test_event'
 SEARCH_TERMS = ['test']
 SEARCH_RET_CAT = 'all'
 SEARCH_RET_TITLE = 'Timeline Events'
@@ -89,7 +90,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
             'project': self.project,
             'app_name': 'projectroles',
             'user': self.user,
-            'event_name': 'test_event',
+            'event_name': EVENT_NAME,
             'description': 'description',
         }
         self.timeline = get_backend_api('timeline_backend')
@@ -164,6 +165,22 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].items), 2)
         self.assertEqual(ret[0].items[0], event2)
         self.assertEqual(ret[0].items[1], event)
+
+    def test_search_event_name(self):
+        """Test search() with event name"""
+        event = self.timeline.add_event(**self.event_kw)
+        ret = self.plugin.search([EVENT_NAME], self.user)
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(len(ret[0].items), 1)
+        self.assertEqual(ret[0].items[0], event)
+
+    def test_search_event_name_display(self):
+        """Test search() with event name in display formatting"""
+        event = self.timeline.add_event(**self.event_kw)
+        ret = self.plugin.search(['Test Event'], self.user)
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(len(ret[0].items), 1)
+        self.assertEqual(ret[0].items[0], event)
 
     def test_search_invalid_terms(self):
         """Test search() with invalid terms"""

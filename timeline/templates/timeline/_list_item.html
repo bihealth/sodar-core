@@ -34,13 +34,13 @@
     {% get_app_icon_html event plugin_lookup as event_icon %}
     <span class="badge bg-secondary text-white mr-1 sodar-tl-event-badge">
       {{ event_icon|safe }}
-      {{ event.event_name }}
+      {% get_event_name event %}
     </span>
     {% if event.project and user.is_superuser and timeline_mode == 'admin' %}
       {% include 'projectroles/_project_badge.html' with project=event.project color='info' can_view=True %}
     {% endif %}
     {% get_event_description event plugin_lookup request as event_desc %}
-    {{ event_desc|safe }}
+    {{ event_desc|safe|capfirst }}
     {% if not details_card_mode and event.extra_data %}
       {% if event.project and can_view_extra_data %}
         <a class="sodar-tl-link-extra-data text-primary pull-right"

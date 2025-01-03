@@ -10,6 +10,18 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.4 (2025-01-03)
+*******************
+
+Release Highlights
+==================
+
+- Add timeline search for display formatting of event name
+- Add check mode to cleanappsettings management command
+- Add support for all scopes in cleanappsettings undefined setting cleanup
+- Update timeline event displaying in UI
+
+
 v1.0.3 (2024-12-12)
 *******************
 

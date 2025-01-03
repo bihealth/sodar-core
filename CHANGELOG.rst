@@ -5,6 +5,30 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.0.4 (2025-01-03)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - Check mode in ``cleanappsettings`` command (#1520)
+    - Support for all scopes in ``cleanappsettings`` undefined setting cleanup (#1526)
+- **Timeline**
+    - ``get_event_name()`` template tag (#1524)
+
+Changed
+-------
+
+- **Projectroles**
+    - Optimize ``cleanappsettings`` database queries (#1527)
+- **Timeline**
+    - Capitalize event description in UI (#1522)
+    - Display event name in UI friendly format (#1524)
+    - Display search results with new layout (#1521)
+    - Enable search for display formatting of event name (#1525)
+
+
 v1.0.3 (2024-12-12)
 ===================
 

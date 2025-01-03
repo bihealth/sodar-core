@@ -21,7 +21,7 @@ TBA
 - [ ] Review and update doc entries if needed
 - [ ] Ensure all relevant updates are in `CHANGELOG` and major changes doc
 - [ ] Ensure REST API versions are up to date and documented
-- [ ] Upgrade version number of pypi package references in `README` and docs
+- [ ] Upgrade version number of pypi package references in `README`
 - [ ] Upgrade docs config version number (usually at `x.y.z-WIP` when developing)
 - [ ] Update latest version info in `codemeta.json`
 - [ ] Update version number and date in `CHANGELOG`
