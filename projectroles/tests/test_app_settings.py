@@ -39,6 +39,10 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 EXISTING_SETTING = 'project_bool_setting'
@@ -48,7 +52,7 @@ INVALID_SETTING_MSG = 'INVALID_SETTING_VALUE detected'
 APP_SETTINGS_TEST = {
     'project_star': {
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
-        'type': 'BOOLEAN',
+        'type': APP_SETTING_TYPE_BOOLEAN,
         'default': False,
         'local': True,  # Deprecated
         'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
@@ -67,7 +71,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting',
-            'setting_type': 'STRING',
+            'setting_type': APP_SETTING_TYPE_STRING,
             'value': 'test',
             'update_value': 'better test',
             'non_valid_value': False,
@@ -76,7 +80,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting',
-            'setting_type': 'INTEGER',
+            'setting_type': APP_SETTING_TYPE_INTEGER,
             'value': 0,
             'update_value': 170,
             'non_valid_value': 'Nan',
@@ -85,7 +89,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting_options',
-            'setting_type': 'STRING',
+            'setting_type': APP_SETTING_TYPE_STRING,
             'value': 'string1',
             'options': ['string1', 'string2'],
             'update_value': 'string2',
@@ -95,7 +99,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting_options',
-            'setting_type': 'INTEGER',
+            'setting_type': APP_SETTING_TYPE_INTEGER,
             'value': 0,
             'options': [0, 1],
             'update_value': 1,
@@ -105,7 +109,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_bool_setting',
-            'setting_type': 'BOOLEAN',
+            'setting_type': APP_SETTING_TYPE_BOOLEAN,
             'value': False,
             'update_value': True,
             'non_valid_value': 170,
@@ -114,7 +118,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_json_setting',
-            'setting_type': 'JSON',
+            'setting_type': APP_SETTING_TYPE_JSON,
             'value': {
                 'Example': 'Value',
                 'list': [1, 2, 3, 4, 5],
@@ -128,7 +132,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_str_setting',
-            'setting_type': 'STRING',
+            'setting_type': APP_SETTING_TYPE_STRING,
             'value': 'test',
             'update_value': 'better test',
             'non_valid_value': False,
@@ -137,7 +141,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_int_setting',
-            'setting_type': 'INTEGER',
+            'setting_type': APP_SETTING_TYPE_INTEGER,
             'value': 0,
             'update_value': 170,
             'non_valid_value': 'Nan',
@@ -146,7 +150,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_str_setting_options',
-            'setting_type': 'STRING',
+            'setting_type': APP_SETTING_TYPE_STRING,
             'value': 'string1',
             'update_value': 'string2',
             'options': ['string1', 'string2'],
@@ -156,7 +160,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_int_setting_options',
-            'setting_type': 'INTEGER',
+            'setting_type': APP_SETTING_TYPE_INTEGER,
             'value': 0,
             'update_value': 1,
             'options': [0, 1],
@@ -166,7 +170,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_bool_setting',
-            'setting_type': 'BOOLEAN',
+            'setting_type': APP_SETTING_TYPE_BOOLEAN,
             'value': False,
             'update_value': True,
             'non_valid_value': 170,
@@ -175,7 +179,7 @@ class AppSettingInitMixin:
             'plugin_name': EXAMPLE_APP_NAME,
             'user': self.user,
             'name': 'user_json_setting',
-            'setting_type': 'JSON',
+            'setting_type': APP_SETTING_TYPE_JSON,
             'value': {
                 'Example': 'Value',
                 'list': [1, 2, 3, 4, 5],
@@ -190,7 +194,7 @@ class AppSettingInitMixin:
             'project': self.project,
             'user': self.user,
             'name': 'project_user_str_setting',
-            'setting_type': 'STRING',
+            'setting_type': APP_SETTING_TYPE_STRING,
             'value': 'test',
             'update_value': 'better test',
             'non_valid_value': False,
@@ -200,7 +204,7 @@ class AppSettingInitMixin:
             'project': self.project,
             'user': self.user,
             'name': 'project_user_int_setting',
-            'setting_type': 'INTEGER',
+            'setting_type': APP_SETTING_TYPE_INTEGER,
             'value': 0,
             'update_value': 170,
             'non_valid_value': 'Nan',
@@ -210,7 +214,7 @@ class AppSettingInitMixin:
             'project': self.project,
             'user': self.user,
             'name': 'project_user_bool_setting',
-            'setting_type': 'BOOLEAN',
+            'setting_type': APP_SETTING_TYPE_BOOLEAN,
             'value': False,
             'update_value': True,
             'non_valid_value': 170,
@@ -220,7 +224,7 @@ class AppSettingInitMixin:
             'project': self.project,
             'user': self.user,
             'name': 'project_user_json_setting',
-            'setting_type': 'JSON',
+            'setting_type': APP_SETTING_TYPE_JSON,
             'value': {
                 'Example': 'Value',
                 'list': [1, 2, 3, 4, 5],
@@ -253,8 +257,16 @@ class AppSettingInitMixin:
                 'plugin_name': s['plugin_name'],
                 'name': s['name'],
                 'setting_type': s['setting_type'],
-                'value': s['value'] if s['setting_type'] != 'JSON' else '',
-                'value_json': s['value'] if s['setting_type'] == 'JSON' else {},
+                'value': (
+                    s['value']
+                    if s['setting_type'] != APP_SETTING_TYPE_JSON
+                    else ''
+                ),
+                'value_json': (
+                    s['value']
+                    if s['setting_type'] == APP_SETTING_TYPE_JSON
+                    else {}
+                ),
             }
             if 'project' in s:
                 kwargs['project'] = s['project']
@@ -615,7 +627,7 @@ class TestAppSettingAPI(
                 ),
                 True,
             )
-            if setting['setting_type'] == 'STRING':
+            if setting['setting_type'] == APP_SETTING_TYPE_STRING:
                 continue
             with self.assertRaises(ValueError):
                 app_settings.validate(
@@ -626,11 +638,17 @@ class TestAppSettingAPI(
 
     def test_validate_int(self):
         """Test validate() with type INTEGER"""
-        self.assertEqual(app_settings.validate('INTEGER', 170, None), True)
+        self.assertEqual(
+            app_settings.validate(APP_SETTING_TYPE_INTEGER, 170, None), True
+        )
         # NOTE: String is also OK if it corresponds to an int
-        self.assertEqual(app_settings.validate('INTEGER', '170', None), True)
+        self.assertEqual(
+            app_settings.validate(APP_SETTING_TYPE_INTEGER, '170', None), True
+        )
         with self.assertRaises(ValueError):
-            app_settings.validate('INTEGER', 'not an integer', None)
+            app_settings.validate(
+                APP_SETTING_TYPE_INTEGER, 'not an integer', None
+            )
 
     def test_validate_invalid(self):
         """Test validate() with invalid type"""
@@ -642,7 +660,7 @@ class TestAppSettingAPI(
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting',
             'default': '',
             'description': 'Example string project setting',
@@ -658,7 +676,7 @@ class TestAppSettingAPI(
         """Test get_definition() with app name"""
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting',
             'default': '',
             'description': 'Example string project setting',
@@ -674,7 +692,7 @@ class TestAppSettingAPI(
         """Test get_definition() with user setting"""
         expected = {
             'scope': APP_SETTING_SCOPE_USER,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting',
             'default': '',
             'description': 'Example string user setting',
@@ -705,7 +723,7 @@ class TestAppSettingAPI(
         expected = {
             'project_str_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'String setting',
                 'default': '',
                 'description': 'Example string project setting',
@@ -714,7 +732,7 @@ class TestAppSettingAPI(
             },
             'project_int_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'INTEGER',
+                'type': APP_SETTING_TYPE_INTEGER,
                 'label': 'Integer setting',
                 'default': 0,
                 'description': 'Example integer project setting',
@@ -724,7 +742,7 @@ class TestAppSettingAPI(
             },
             'project_str_setting_options': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'String setting with options',
                 'default': 'string1',
                 'options': ['string1', 'string2'],
@@ -733,7 +751,7 @@ class TestAppSettingAPI(
             },
             'project_int_setting_options': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'INTEGER',
+                'type': APP_SETTING_TYPE_INTEGER,
                 'label': 'Integer setting with options',
                 'default': 0,
                 'options': [0, 1],
@@ -743,15 +761,15 @@ class TestAppSettingAPI(
             },
             'project_bool_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'BOOLEAN',
+                'type': APP_SETTING_TYPE_BOOLEAN,
                 'label': 'Boolean setting',
                 'default': False,
                 'description': 'Example boolean project setting',
                 'user_modifiable': True,
             },
             'project_global_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-                'type': 'BOOLEAN',
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': APP_SETTING_TYPE_BOOLEAN,
                 'label': 'Global boolean setting',
                 'default': False,
                 'description': 'Example global boolean project setting',
@@ -760,7 +778,7 @@ class TestAppSettingAPI(
             },
             'project_json_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'JSON',
+                'type': APP_SETTING_TYPE_JSON,
                 'label': 'JSON setting',
                 'default': {
                     'Example': 'Value',
@@ -773,7 +791,7 @@ class TestAppSettingAPI(
             },
             'project_hidden_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'Hidden setting',
                 'default': '',
                 'description': 'Example hidden project setting',
@@ -781,21 +799,21 @@ class TestAppSettingAPI(
             },
             'project_hidden_json_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'JSON',
+                'type': APP_SETTING_TYPE_JSON,
                 'label': 'Hidden JSON setting',
                 'description': 'Example hidden JSON project setting',
                 'user_modifiable': False,
             },
             'project_callable_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'Callable project setting',
                 'default': get_example_setting_default,
                 'description': 'Example callable project setting',
             },
             'project_callable_setting_options': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'Callable setting with options',
                 'default': get_example_setting_default,
                 'options': get_example_setting_options,
@@ -803,8 +821,8 @@ class TestAppSettingAPI(
                 'user_modifiable': True,
             },
             'category_bool_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-                'type': 'BOOLEAN',
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': APP_SETTING_TYPE_BOOLEAN,
                 'label': 'Category boolean setting',
                 'default': False,
                 'description': 'Example boolean project category setting',
@@ -822,7 +840,7 @@ class TestAppSettingAPI(
         expected = {
             'user_str_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'String setting',
                 'default': '',
                 'description': 'Example string user setting',
@@ -831,7 +849,7 @@ class TestAppSettingAPI(
             },
             'user_int_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'INTEGER',
+                'type': APP_SETTING_TYPE_INTEGER,
                 'label': 'Integer setting',
                 'default': 0,
                 'description': 'Example integer user setting',
@@ -841,7 +859,7 @@ class TestAppSettingAPI(
             },
             'user_str_setting_options': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'String setting with options',
                 'default': 'string1',
                 'options': ['string1', 'string2'],
@@ -850,7 +868,7 @@ class TestAppSettingAPI(
             },
             'user_int_setting_options': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'INTEGER',
+                'type': APP_SETTING_TYPE_INTEGER,
                 'label': 'Integer setting with options',
                 'default': 0,
                 'options': [0, 1],
@@ -860,7 +878,7 @@ class TestAppSettingAPI(
             },
             'user_bool_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'BOOLEAN',
+                'type': APP_SETTING_TYPE_BOOLEAN,
                 'label': 'Boolean setting',
                 'default': False,
                 'description': 'Example boolean user setting',
@@ -868,7 +886,7 @@ class TestAppSettingAPI(
             },
             'user_json_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'JSON',
+                'type': APP_SETTING_TYPE_JSON,
                 'label': 'JSON setting',
                 'default': {
                     'Example': 'Value',
@@ -881,21 +899,21 @@ class TestAppSettingAPI(
             },
             'user_hidden_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'default': '',
                 'description': 'Example hidden user setting',
                 'user_modifiable': False,
             },
             'user_callable_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'Callable user setting',
                 'default': get_example_setting_default,
                 'description': 'Example callable user setting',
             },
             'user_callable_setting_options': {
                 'scope': APP_SETTING_SCOPE_USER,
-                'type': 'STRING',
+                'type': APP_SETTING_TYPE_STRING,
                 'label': 'Callable setting with options',
                 'default': get_example_setting_default,
                 'options': get_example_setting_options,
@@ -912,26 +930,26 @@ class TestAppSettingAPI(
         """Test get_definitions() with PROJECT_USER scope"""
         expected = {
             'project_user_str_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-                'type': 'STRING',
+                'scope': APP_SETTING_SCOPE_PROJECT_USER,
+                'type': APP_SETTING_TYPE_STRING,
                 'default': '',
                 'description': 'Example string project user setting',
             },
             'project_user_int_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-                'type': 'INTEGER',
+                'scope': APP_SETTING_SCOPE_PROJECT_USER,
+                'type': APP_SETTING_TYPE_INTEGER,
                 'default': 0,
                 'description': 'Example int project user setting',
             },
             'project_user_bool_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-                'type': 'BOOLEAN',
+                'scope': APP_SETTING_SCOPE_PROJECT_USER,
+                'type': APP_SETTING_TYPE_BOOLEAN,
                 'default': False,
                 'description': 'Example bool project user setting',
             },
             'project_user_json_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-                'type': 'JSON',
+                'scope': APP_SETTING_SCOPE_PROJECT_USER,
+                'type': APP_SETTING_TYPE_JSON,
                 'default': {
                     'Example': 'Value',
                     'list': [1, 2, 3, 4, 5],
@@ -940,14 +958,14 @@ class TestAppSettingAPI(
                 'description': 'Example json project user setting',
             },
             'project_user_callable_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-                'type': 'STRING',
+                'scope': APP_SETTING_SCOPE_PROJECT_USER,
+                'type': APP_SETTING_TYPE_STRING,
                 'default': get_example_setting_default,
                 'description': 'Example callable project user setting',
             },
             'project_user_callable_setting_options': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-                'type': 'STRING',
+                'scope': APP_SETTING_SCOPE_PROJECT_USER,
+                'type': APP_SETTING_TYPE_STRING,
                 'default': get_example_setting_default,
                 'options': get_example_setting_options,
                 'description': 'Example callable project user setting with '
@@ -963,9 +981,9 @@ class TestAppSettingAPI(
         """Test get_definitions() with SITE scope"""
         expected = {
             'site_bool_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
+                'scope': APP_SETTING_SCOPE_SITE,
                 'label': 'Site boolean setting',
-                'type': 'BOOLEAN',
+                'type': APP_SETTING_TYPE_BOOLEAN,
                 'default': False,
                 'description': 'Example boolean site setting',
                 'user_modifiable': True,

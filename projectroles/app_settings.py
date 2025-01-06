@@ -14,16 +14,20 @@ logger = logging.getLogger(__name__)
 
 
 # SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
-PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
-SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
-SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_SETTING_GLOBAL_DEFAULT = False
@@ -34,10 +38,10 @@ APP_SETTING_SCOPES = [
     APP_SETTING_SCOPE_SITE,
 ]
 APP_SETTING_DEFAULT_VALUES = {
-    'STRING': '',
-    'INTEGER': 0,
-    'BOOLEAN': False,
-    'JSON': {},
+    APP_SETTING_TYPE_BOOLEAN: False,
+    APP_SETTING_TYPE_INTEGER: 0,
+    APP_SETTING_TYPE_JSON: {},
+    APP_SETTING_TYPE_STRING: '',
 }
 APP_SETTING_SCOPE_ARGS = {
     APP_SETTING_SCOPE_PROJECT: {'project': True, 'user': False},
@@ -62,7 +66,7 @@ PROJECTROLES_APP_SETTINGS = {
     #:
     #:     'example_setting': {
     #:         'scope': 'PROJECT',  # PROJECT/USER/PROJECT-USER/SITE
-    #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN/JSON
+    #:         'type': APP_SETTING_TYPE_STRING,  # STRING/INTEGER/BOOLEAN/JSON
     #:         'default': 'example',
     #:         'label': 'Project setting',  # Optional, defaults to name/key
     #:         'placeholder': 'Enter example setting here',  # Optional
@@ -77,7 +81,7 @@ PROJECTROLES_APP_SETTINGS = {
     #:     }
     'ip_restrict': {
         'scope': APP_SETTING_SCOPE_PROJECT,
-        'type': 'BOOLEAN',
+        'type': APP_SETTING_TYPE_BOOLEAN,
         'default': False,
         'label': 'IP restrict',
         'description': 'Restrict project access by an allowed IP list',
@@ -86,7 +90,7 @@ PROJECTROLES_APP_SETTINGS = {
     },
     'ip_allowlist': {
         'scope': APP_SETTING_SCOPE_PROJECT,
-        'type': 'JSON',
+        'type': APP_SETTING_TYPE_JSON,
         'default': [],
         'label': 'IP allow list',
         'description': 'List of allowed IPs for project access',
@@ -95,14 +99,14 @@ PROJECTROLES_APP_SETTINGS = {
     },
     'project_star': {
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
-        'type': 'BOOLEAN',
+        'type': APP_SETTING_TYPE_BOOLEAN,
         'default': False,
         'global': False,
         'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
     },
     'notify_email_project': {
         'scope': APP_SETTING_SCOPE_USER,
-        'type': 'BOOLEAN',
+        'type': APP_SETTING_TYPE_BOOLEAN,
         'default': True,
         'label': 'Receive email for {} updates'.format(
             get_display_name(PROJECT_TYPE_PROJECT)
@@ -119,7 +123,7 @@ PROJECTROLES_APP_SETTINGS = {
     },
     'notify_email_role': {
         'scope': APP_SETTING_SCOPE_USER,
-        'type': 'BOOLEAN',
+        'type': APP_SETTING_TYPE_BOOLEAN,
         'default': True,
         'label': 'Receive email for {} membership updates'.format(
             get_display_name(PROJECT_TYPE_PROJECT)
@@ -188,7 +192,11 @@ class AppSettingAPI:
         :param setting_options: List of options (Strings or Integers)
         :raise: ValueError if type is not recognized
         """
-        if setting_type not in ['INTEGER', 'STRING'] and setting_options:
+        if (
+            setting_type
+            not in [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
+            and setting_options
+        ):
             raise ValueError(
                 'Options are only allowed for settings of type INTEGER and '
                 'STRING'
@@ -359,7 +367,7 @@ class AppSettingAPI:
                 return APP_SETTING_DEFAULT_VALUES[
                     app_settings[setting_name]['type']
                 ]
-        elif app_settings[setting_name]['type'] == 'JSON':
+        elif app_settings[setting_name]['type'] == APP_SETTING_TYPE_JSON:
             json_default = app_settings[setting_name].get('default')
             if not json_default:
                 if isinstance(json_default, dict):
@@ -560,7 +568,7 @@ class AppSettingAPI:
                     project=project,
                     user=user,
                 )
-            if setting.type == 'JSON':
+            if setting.type == APP_SETTING_TYPE_JSON:
                 setting.value_json = cls._get_json_value(value)
             else:
                 setting.value = value
@@ -578,7 +586,11 @@ class AppSettingAPI:
                 app_plugin = get_app_plugin(plugin_name)
                 app_plugin_model = app_plugin.get_model()
             if validate:
-                v = cls._get_json_value(value) if s_type == 'JSON' else value
+                v = (
+                    cls._get_json_value(value)
+                    if s_type == APP_SETTING_TYPE_JSON
+                    else value
+                )
                 cls.validate(
                     s_type,
                     v,
@@ -599,7 +611,7 @@ class AppSettingAPI:
                 'type': s_type,
                 'user_modifiable': s_mod,
             }
-            if s_type == 'JSON':
+            if s_type == APP_SETTING_TYPE_JSON:
                 s_vals['value_json'] = cls._get_json_value(value)
             else:
                 s_vals['value'] = value
@@ -732,14 +744,14 @@ class AppSettingAPI:
         if callable(setting_value):
             setting_value(project, user)
 
-        if setting_type == 'BOOLEAN':
+        if setting_type == APP_SETTING_TYPE_BOOLEAN:
             if not isinstance(setting_value, bool):
                 raise ValueError(
                     'Please enter a valid boolean value ({})'.format(
                         setting_value
                     )
                 )
-        elif setting_type == 'INTEGER':
+        elif setting_type == APP_SETTING_TYPE_INTEGER:
             if (
                 not isinstance(setting_value, int)
                 and not str(setting_value).isdigit()
@@ -749,7 +761,7 @@ class AppSettingAPI:
                         setting_value
                     )
                 )
-        elif setting_type == 'JSON':
+        elif setting_type == APP_SETTING_TYPE_JSON:
             try:
                 json.dumps(setting_value)
             except TypeError:
@@ -882,11 +894,11 @@ class AppSettingAPI:
         :param input_value: Input value (string, int, bool or dict)
         :return: Bool
         """
-        if obj.type == 'JSON':
+        if obj.type == APP_SETTING_TYPE_JSON:
             return (
                 not obj.value_json and not input_value
             ) or obj.value_json == cls._get_json_value(input_value)
-        elif obj.type == 'BOOLEAN':
+        elif obj.type == APP_SETTING_TYPE_BOOLEAN:
             if isinstance(input_value, str):
                 input_value = bool(int(input_value))
             return bool(int(obj.value)) == input_value

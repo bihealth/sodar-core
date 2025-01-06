@@ -21,6 +21,16 @@ from example_project_app.urls import urlpatterns
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 EXAMPLE_MODIFY_API_MSG = (
@@ -51,8 +61,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     # TODO: Unify naming
     app_settings = {
         'project_str_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting',
             'default': '',
             'description': 'Example string project setting',
@@ -60,8 +70,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'user_modifiable': True,
         },
         'project_int_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'INTEGER',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_INTEGER,
             'label': 'Integer setting',
             'default': 0,
             'description': 'Example integer project setting',
@@ -70,8 +80,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'widget_attrs': {'class': 'text-success'},
         },
         'project_str_setting_options': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting with options',
             'default': 'string1',
             'description': 'Example string project setting with options',
@@ -79,8 +89,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'user_modifiable': True,
         },
         'project_int_setting_options': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'INTEGER',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_INTEGER,
             'label': 'Integer setting with options',
             'default': 0,
             'description': 'Example integer project setting with options',
@@ -89,16 +99,16 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'widget_attrs': {'class': 'text-success'},
         },
         'project_bool_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'BOOLEAN',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'label': 'Boolean setting',
             'default': False,
             'description': 'Example boolean project setting',
             'user_modifiable': True,
         },
         'project_global_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'BOOLEAN',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'label': 'Global boolean setting',
             'default': False,
             'description': 'Example global boolean project setting',
@@ -106,8 +116,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'global': True,
         },
         'project_json_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'JSON',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_JSON,
             'label': 'JSON setting',
             'default': {
                 'Example': 'Value',
@@ -119,23 +129,23 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'widget_attrs': {'class': 'text-danger'},
         },
         'project_hidden_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'Hidden setting',
             'default': '',
             'description': 'Example hidden project setting',
             'user_modifiable': False,
         },
         'project_hidden_json_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'JSON',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_JSON,
             'label': 'Hidden JSON setting',
             'description': 'Example hidden JSON project setting',
             'user_modifiable': False,
         },
         'user_str_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting',
             'default': '',
             'description': 'Example string user setting',
@@ -143,8 +153,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'user_modifiable': True,
         },
         'user_int_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'INTEGER',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_INTEGER,
             'label': 'Integer setting',
             'default': 0,
             'description': 'Example integer user setting',
@@ -153,8 +163,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'widget_attrs': {'class': 'text-success'},
         },
         'user_str_setting_options': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting with options',
             'default': 'string1',
             'options': ['string1', 'string2'],
@@ -162,8 +172,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'user_modifiable': True,
         },
         'user_int_setting_options': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'INTEGER',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_INTEGER,
             'label': 'Integer setting with options',
             'default': 0,
             'options': [0, 1],
@@ -172,16 +182,16 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'widget_attrs': {'class': 'text-success'},
         },
         'user_bool_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'BOOLEAN',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'label': 'Boolean setting',
             'default': False,
             'description': 'Example boolean user setting',
             'user_modifiable': True,
         },
         'user_json_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'JSON',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_JSON,
             'label': 'JSON setting',
             'default': {
                 'Example': 'Value',
@@ -193,33 +203,33 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'widget_attrs': {'class': 'text-danger'},
         },
         'user_hidden_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_STRING,
             'default': '',
             'description': 'Example hidden user setting',
             'user_modifiable': False,
         },
         'project_user_str_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_PROJECT_USER,
+            'type': APP_SETTING_TYPE_STRING,
             'default': '',
             'description': 'Example string project user setting',
         },
         'project_user_int_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-            'type': 'INTEGER',
+            'scope': APP_SETTING_SCOPE_PROJECT_USER,
+            'type': APP_SETTING_TYPE_INTEGER,
             'default': 0,
             'description': 'Example int project user setting',
         },
         'project_user_bool_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-            'type': 'BOOLEAN',
+            'scope': APP_SETTING_SCOPE_PROJECT_USER,
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'default': False,
             'description': 'Example bool project user setting',
         },
         'project_user_json_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-            'type': 'JSON',
+            'scope': APP_SETTING_SCOPE_PROJECT_USER,
+            'type': APP_SETTING_TYPE_JSON,
             'default': {
                 'Example': 'Value',
                 'list': [1, 2, 3, 4, 5],
@@ -228,28 +238,28 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'description': 'Example json project user setting',
         },
         'project_callable_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'Callable project setting',
             'default': get_example_setting_default,
             'description': 'Example callable project setting',
         },
         'user_callable_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'Callable user setting',
             'default': get_example_setting_default,
             'description': 'Example callable user setting',
         },
         'project_user_callable_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_PROJECT_USER,
+            'type': APP_SETTING_TYPE_STRING,
             'default': get_example_setting_default,
             'description': 'Example callable project user setting',
         },
         'project_callable_setting_options': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'Callable setting with options',
             'default': get_example_setting_default,
             'options': get_example_setting_options,
@@ -257,8 +267,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'user_modifiable': True,
         },
         'user_callable_setting_options': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_STRING,
             'label': 'Callable setting with options',
             'default': get_example_setting_default,
             'options': get_example_setting_options,
@@ -266,15 +276,15 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'user_modifiable': True,
         },
         'project_user_callable_setting_options': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
-            'type': 'STRING',
+            'scope': APP_SETTING_SCOPE_PROJECT_USER,
+            'type': APP_SETTING_TYPE_STRING,
             'default': get_example_setting_default,
             'options': get_example_setting_options,
             'description': 'Example callable project user setting with options',
         },
         'category_bool_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
-            'type': 'BOOLEAN',
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'label': 'Category boolean setting',
             'default': False,
             'description': 'Example boolean project category setting',
@@ -282,8 +292,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             'project_types': [PROJECT_TYPE_CATEGORY],
         },
         'site_bool_setting': {
-            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE'],
-            'type': 'BOOLEAN',
+            'scope': APP_SETTING_SCOPE_SITE,
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'label': 'Site boolean setting',
             'default': False,
             'description': 'Example boolean site setting',

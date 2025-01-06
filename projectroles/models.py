@@ -34,6 +34,10 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
 AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
 AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
@@ -47,12 +51,11 @@ ROLE_RANKING = {
     PROJECT_ROLE_FINDER: 50,
 }
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
-APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING', 'JSON']
-APP_SETTING_TYPE_CHOICES = [
-    ('BOOLEAN', 'Boolean'),
-    ('INTEGER', 'Integer'),
-    ('STRING', 'String'),
-    ('JSON', 'Json'),
+APP_SETTING_TYPES = [
+    APP_SETTING_TYPE_BOOLEAN,
+    APP_SETTING_TYPE_INTEGER,
+    APP_SETTING_TYPE_STRING,
+    APP_SETTING_TYPE_JSON,
 ]
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
@@ -989,9 +992,9 @@ class AppSetting(models.Model):
 
     def save(self, *args, **kwargs):
         """Version of save() to convert 'value' data according to 'type'"""
-        if self.type == 'BOOLEAN':
+        if self.type == APP_SETTING_TYPE_BOOLEAN:
             self.value = str(int(self.value))
-        elif self.type == 'INTEGER':
+        elif self.type == APP_SETTING_TYPE_INTEGER:
             self.value = str(self.value)
         super().save(*args, **kwargs)
 
@@ -999,11 +1002,11 @@ class AppSetting(models.Model):
 
     def get_value(self):
         """Return value of the setting in the format specified in 'type'"""
-        if self.type == 'INTEGER':
+        if self.type == APP_SETTING_TYPE_INTEGER:
             return int(self.value)
-        elif self.type == 'BOOLEAN':
+        elif self.type == APP_SETTING_TYPE_BOOLEAN:
             return bool(int(self.value))
-        elif self.type == 'JSON':
+        elif self.type == APP_SETTING_TYPE_JSON:
             return self.value_json
         return self.value
 

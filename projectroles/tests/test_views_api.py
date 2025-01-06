@@ -65,6 +65,10 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 CORE_API_MEDIA_TYPE_LEGACY = 'application/vnd.bihealth.sodar-core+json'
@@ -2722,7 +2726,7 @@ class TestProjectSettingRetrievePIView(
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': self.project_str_setting['value'],
             'user_modifiable': True,
         }
@@ -2748,7 +2752,7 @@ class TestProjectSettingRetrievePIView(
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': default_value,
             'user_modifiable': True,
         }
@@ -2772,7 +2776,7 @@ class TestProjectSettingRetrievePIView(
             'project': str(self.project.sodar_uuid),
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': self.project_user_str_setting['value'],
             'user_modifiable': True,
         }
@@ -2803,7 +2807,7 @@ class TestProjectSettingRetrievePIView(
             'project': str(self.project.sodar_uuid),
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': default_value,
             'user_modifiable': True,
         }
@@ -2830,7 +2834,7 @@ class TestProjectSettingRetrievePIView(
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
-            'type': 'JSON',
+            'type': APP_SETTING_TYPE_JSON,
             'value': self.project_json_setting['value'],
             'user_modifiable': True,
         }
@@ -2848,7 +2852,7 @@ class TestProjectSettingRetrievePIView(
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': '',
             'user_modifiable': False,
         }
@@ -3062,7 +3066,7 @@ class TestUserSettingRetrievePIView(
             'project': None,
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': self.user_str_setting['value'],
             'user_modifiable': True,
         }
@@ -3087,7 +3091,7 @@ class TestUserSettingRetrievePIView(
             'project': None,
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': default_value,
             'user_modifiable': True,
         }
@@ -3106,7 +3110,7 @@ class TestUserSettingRetrievePIView(
             'project': None,
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': '',
             'user_modifiable': False,
         }
@@ -3449,7 +3453,7 @@ class TestRemoteProjectGetAPIView(
         set_star = self.make_setting(
             plugin_name='projectroles',
             name='project_star',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
             user=self.user,
@@ -3510,7 +3514,7 @@ class TestIPAllowing(AppSettingMixin, ProjectrolesAPIViewTestBase):
         self.make_setting(
             plugin_name='projectroles',
             name='ip_restrict',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
         )
@@ -3518,7 +3522,7 @@ class TestIPAllowing(AppSettingMixin, ProjectrolesAPIViewTestBase):
         self.make_setting(
             plugin_name='projectroles',
             name='ip_allowlist',
-            setting_type='JSON',
+            setting_type=APP_SETTING_TYPE_JSON,
             value=None,
             value_json=ip_list,
             project=self.project,

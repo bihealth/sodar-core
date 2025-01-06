@@ -13,6 +13,7 @@ from adminalerts.urls import urlpatterns
 
 # SODAR constants
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -31,7 +32,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     app_settings = {
         'notify_email_alert': {
             'scope': APP_SETTING_SCOPE_USER,
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'default': True,
             'label': 'Receive email for admin alerts',
             'description': (

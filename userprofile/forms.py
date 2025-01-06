@@ -28,6 +28,10 @@ app_settings = AppSettingAPI()
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 
 class UserSettingsForm(SODARForm):
@@ -76,26 +80,26 @@ class UserSettingsForm(SODARForm):
                 choices=[
                     (
                         (int(option), int(option))
-                        if s_val['type'] == 'INTEGER'
+                        if s_val['type'] == APP_SETTING_TYPE_INTEGER
                         else (option, option)
                     )
                     for option in s_val['options']
                 ],
                 **setting_kwargs,
             )
-        elif s_val['type'] == 'STRING':
+        elif s_val['type'] == APP_SETTING_TYPE_STRING:
             self.fields[s_field] = forms.CharField(
                 widget=forms.TextInput(attrs=s_widget_attrs),
                 **setting_kwargs,
             )
-        elif s_val['type'] == 'INTEGER':
+        elif s_val['type'] == APP_SETTING_TYPE_INTEGER:
             self.fields[s_field] = forms.IntegerField(
                 widget=forms.NumberInput(attrs=s_widget_attrs),
                 **setting_kwargs,
             )
-        elif s_val['type'] == 'BOOLEAN':
+        elif s_val['type'] == APP_SETTING_TYPE_BOOLEAN:
             self.fields[s_field] = forms.BooleanField(**setting_kwargs)
-        elif s_val['type'] == 'JSON':
+        elif s_val['type'] == APP_SETTING_TYPE_JSON:
             # NOTE: Attrs MUST be supplied here (#404)
             if 'class' in s_widget_attrs:
                 s_widget_attrs['class'] += ' sodar-json-input'
@@ -111,7 +115,7 @@ class UserSettingsForm(SODARForm):
         value = app_settings.get(
             plugin_name=plugin_name, setting_name=s_key, user=self.user
         )
-        if s_val['type'] == 'JSON':
+        if s_val['type'] == APP_SETTING_TYPE_JSON:
             value = json.dumps(value)
         self.initial[s_field] = value
 
@@ -162,7 +166,7 @@ class UserSettingsForm(SODARForm):
                 s_field = '.'.join(['settings', p_name, s_key])
                 p_settings[s_key] = self.cleaned_data.get(s_field)
 
-                if s_val['type'] == 'JSON':
+                if s_val['type'] == APP_SETTING_TYPE_JSON:
                     if not self.cleaned_data.get(s_field):
                         self.cleaned_data[s_field] = '{}'
                     try:
@@ -171,7 +175,7 @@ class UserSettingsForm(SODARForm):
                         )
                     except json.JSONDecodeError as err:
                         self.add_error(s_field, 'Invalid JSON\n' + str(err))
-                elif s_val['type'] == 'INTEGER':
+                elif s_val['type'] == APP_SETTING_TYPE_INTEGER:
                     # Convert integers from select fields
                     self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
 

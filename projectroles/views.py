@@ -86,6 +86,7 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 PROJECT_ACTION_CREATE = SODAR_CONSTANTS['PROJECT_ACTION_CREATE']
 PROJECT_ACTION_UPDATE = SODAR_CONSTANTS['PROJECT_ACTION_UPDATE']
 
@@ -988,7 +989,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     continue
                 if s_data is None and not instance:
                     s_data = app_settings.get_default(name, s_key)
-                if s_val['type'] == 'JSON':
+                if s_val['type'] == APP_SETTING_TYPE_JSON:
                     if s_data is None:
                         s_data = {}
                     project_settings[s_name] = json.dumps(s_data)
@@ -1038,7 +1039,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             s_name = k.split('.')[2]
             s_def = app_settings.get_definition(s_name, plugin_name=p_name)
             old_v = app_settings.get(p_name, s_name, project)
-            if s_def['type'] == 'JSON':
+            if s_def['type'] == APP_SETTING_TYPE_JSON:
                 v = json.loads(v)
             if old_v != v:
                 extra_data[k] = v
@@ -1142,7 +1143,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 p_name = k.split('.')[1]
                 s_name = k.split('.')[2]
                 s_def = app_settings.get_definition(s_name, plugin_name=p_name)
-                if s_def['type'] == 'JSON':
+                if s_def['type'] == APP_SETTING_TYPE_JSON:
                     v = json.loads(v)
                 extra_data[k] = v
 

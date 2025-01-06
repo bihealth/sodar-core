@@ -1,7 +1,13 @@
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import SiteAppPluginPoint
 
 from userprofile.urls import urlpatterns
+
+
+# SODAR constants
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -30,8 +36,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
 
     app_settings = {
         'enable_project_uuid_copy': {
-            'scope': 'USER',
-            'type': 'BOOLEAN',
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'label': 'Display project UUID copying link',
             'default': False,
             'user_modifiable': True,

@@ -54,6 +54,10 @@ REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 SOURCE_SITE_NAME = 'Test source site'
@@ -460,14 +464,14 @@ class TestGetSourceData(
         set_ip_restrict = self.make_setting(
             plugin_name='projectroles',
             name='ip_restrict',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
         )
         set_ip_allowlist = self.make_setting(
             plugin_name='projectroles',
             name='ip_allowlist',
-            setting_type='JSON',
+            setting_type=APP_SETTING_TYPE_JSON,
             value=None,
             value_json=['127.0.0.1'],
             project=self.project,
@@ -475,7 +479,7 @@ class TestGetSourceData(
         set_star = self.make_setting(
             plugin_name='projectroles',
             name='project_star',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
             user=self.user_source,
@@ -484,7 +488,7 @@ class TestGetSourceData(
         set_local = self.make_setting(
             plugin_name='projectroles',
             name='project_star',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=local_project,
             user=self.user_source,
@@ -538,14 +542,14 @@ class TestGetSourceData(
         user_global_setting = self.make_setting(
             plugin_name='projectroles',
             name='notify_email_project',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=False,
             user=self.user_source,
         )
         user_local_setting = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='user_str_setting',
-            setting_type='STRING',
+            setting_type=APP_SETTING_TYPE_STRING,
             value='Local value',
             user=self.user_source,
         )
@@ -559,7 +563,7 @@ class TestGetSourceData(
         self.assertEqual(len(sync_data['app_settings']), 2)
         expected = {
             'name': 'notify_email_project',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '0',
             'value_json': {},
             'app_plugin': None,
@@ -574,7 +578,7 @@ class TestGetSourceData(
         )
         expected = {
             'name': 'user_str_setting',
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': 'Local value',
             'value_json': {},
             'app_plugin': EXAMPLE_APP_NAME,
@@ -743,7 +747,7 @@ class SyncRemoteDataTestBase(
             'app_settings': {
                 SET_IP_RESTRICT_UUID: {
                     'name': 'ip_restrict',
-                    'type': 'BOOLEAN',
+                    'type': APP_SETTING_TYPE_BOOLEAN,
                     'value': False,
                     'value_json': {},
                     'app_plugin': None,  # None is for 'projectroles' app
@@ -753,7 +757,7 @@ class SyncRemoteDataTestBase(
                 },
                 SET_IP_ALLOWLIST_UUID: {
                     'name': 'ip_allowlist',
-                    'type': 'JSON',
+                    'type': APP_SETTING_TYPE_JSON,
                     'value': '',
                     'value_json': [],
                     'app_plugin': None,  # None is for 'projectroles' app
@@ -763,7 +767,7 @@ class SyncRemoteDataTestBase(
                 },
                 SET_STAR_UUID: {
                     'name': 'project_star',
-                    'type': 'BOOLEAN',
+                    'type': APP_SETTING_TYPE_BOOLEAN,
                     'value': '1',
                     'value_json': {},
                     'app_plugin': None,
@@ -1057,7 +1061,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         # Assert app settings
         expected = {
             'name': 'ip_restrict',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '0',
             'value_json': {},
             'project': project_obj.id,
@@ -1068,7 +1072,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
             'name': 'ip_allowlist',
-            'type': 'JSON',
+            'type': APP_SETTING_TYPE_JSON,
             'value': '',
             'value_json': [],
             'project': project_obj.id,
@@ -1079,7 +1083,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         self.assert_app_setting(SET_IP_ALLOWLIST_UUID, expected)
         expected = {
             'name': 'project_star',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '1',
             'value_json': {},
             'app_plugin': None,
@@ -1501,7 +1505,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         local_set_uuid = str(uuid.uuid4())
         remote_data['app_settings'][global_set_uuid] = {
             'name': 'notify_email_project',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '0',
             'value_json': {},
             'app_plugin': None,
@@ -1512,7 +1516,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         }
         remote_data['app_settings'][local_set_uuid] = {
             'name': 'user_str_setting',
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': 'Local value',
             'value_json': {},
             'app_plugin': EXAMPLE_APP_NAME,
@@ -1534,7 +1538,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'app_plugin': None,
             'project': None,
             'name': 'notify_email_project',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'user': target_user.pk,
             'value': '0',
             'value_json': {},
@@ -1552,7 +1556,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'app_plugin': app_plugin.pk,
             'project': None,
             'name': 'user_str_setting',
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'user': target_user.pk,
             'value': 'Local value',
             'value_json': {},
@@ -1663,7 +1667,7 @@ class TestSyncRemoteDataUpdate(
         self.make_setting(
             plugin_name='projectroles',
             name='ip_restrict',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=False,
             project=self.project_obj,
             sodar_uuid=SET_IP_RESTRICT_UUID,
@@ -1671,7 +1675,7 @@ class TestSyncRemoteDataUpdate(
         self.make_setting(
             plugin_name='projectroles',
             name='ip_allowlist',
-            setting_type='JSON',
+            setting_type=APP_SETTING_TYPE_JSON,
             value=None,
             value_json=[],
             project=self.project_obj,
@@ -1680,7 +1684,7 @@ class TestSyncRemoteDataUpdate(
         self.make_setting(
             plugin_name='projectroles',
             name='project_star',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=False,
             project=self.project_obj,
             user=self.user_target,
@@ -1874,7 +1878,7 @@ class TestSyncRemoteDataUpdate(
         # NOTE: Global app settings should not be updated
         expected = {
             'name': 'ip_restrict',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '1',
             'value_json': {},
             'project': self.project_obj.id,
@@ -1885,7 +1889,7 @@ class TestSyncRemoteDataUpdate(
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
             'name': 'ip_allowlist',
-            'type': 'JSON',
+            'type': APP_SETTING_TYPE_JSON,
             'value': '',
             'value_json': ['192.168.1.1'],
             'project': self.project_obj.id,
@@ -1896,7 +1900,7 @@ class TestSyncRemoteDataUpdate(
         self.assert_app_setting(SET_IP_ALLOWLIST_UUID, expected)
         expected = {
             'name': 'project_star',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '0',
             'value_json': {},
             'app_plugin': None,
@@ -2039,7 +2043,7 @@ class TestSyncRemoteDataUpdate(
 
         expected = {
             'name': 'ip_restrict',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '0',
             'value_json': {},
             'project': self.project_obj.id,
@@ -2050,7 +2054,7 @@ class TestSyncRemoteDataUpdate(
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
             'name': 'ip_allowlist',
-            'type': 'JSON',
+            'type': APP_SETTING_TYPE_JSON,
             'value': None,
             'value_json': [],
             'project': self.project_obj.id,
@@ -2061,7 +2065,7 @@ class TestSyncRemoteDataUpdate(
         self.assert_app_setting(SET_IP_ALLOWLIST_UUID, expected)
         expected = {
             'name': 'project_star',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '0',
             'value_json': {},
             'app_plugin': None,
@@ -2088,7 +2092,7 @@ class TestSyncRemoteDataUpdate(
         # Change projectroles app settings
         remote_data['app_settings'][setting_uuid] = {
             'name': setting_name,
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': False,
             'value_json': {},
             'app_plugin': 'NOT_A_VALID_APP',
@@ -2106,14 +2110,14 @@ class TestSyncRemoteDataUpdate(
         target_global_setting = self.make_setting(
             plugin_name='projectroles',
             name='notify_email_project',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             user=self.user_target,
         )
         target_local_setting = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='user_str_setting',
-            setting_type='STRING',
+            setting_type=APP_SETTING_TYPE_STRING,
             value='Target value',
             user=self.user_target,
         )
@@ -2124,7 +2128,7 @@ class TestSyncRemoteDataUpdate(
         local_set_uuid = str(uuid.uuid4())
         remote_data['app_settings'][global_set_uuid] = {
             'name': 'notify_email_project',
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'value': '0',
             'value_json': {},
             'app_plugin': None,
@@ -2135,7 +2139,7 @@ class TestSyncRemoteDataUpdate(
         }
         remote_data['app_settings'][local_set_uuid] = {
             'name': 'user_str_setting',
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'value': 'Source value',
             'value_json': {},
             'app_plugin': EXAMPLE_APP_NAME,

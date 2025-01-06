@@ -45,6 +45,10 @@ AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
 AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
 AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
 OIDC_USER_GROUP = SODAR_CONSTANTS['OIDC_USER_GROUP']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
@@ -1129,7 +1133,7 @@ class TestProjectAppSetting(
         self.setting_str = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='str_setting',
-            setting_type='STRING',
+            setting_type=APP_SETTING_TYPE_STRING,
             value='test',
             project=self.project,
         )
@@ -1137,7 +1141,7 @@ class TestProjectAppSetting(
         self.setting_int = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='int_setting',
-            setting_type='INTEGER',
+            setting_type=APP_SETTING_TYPE_INTEGER,
             value=170,
             project=self.project,
         )
@@ -1145,7 +1149,7 @@ class TestProjectAppSetting(
         self.setting_bool = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='bool_setting',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
         )
@@ -1153,7 +1157,7 @@ class TestProjectAppSetting(
         self.setting_json = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='json_setting',
-            setting_type='JSON',
+            setting_type=APP_SETTING_TYPE_JSON,
             value=None,
             value_json={'Testing': 'good'},
             project=self.project,
@@ -1166,7 +1170,7 @@ class TestProjectAppSetting(
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
             'project': self.project.pk,
             'name': 'str_setting',
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'user': None,
             'value': 'test',
             'value_json': {},
@@ -1182,7 +1186,7 @@ class TestProjectAppSetting(
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
             'project': self.project.pk,
             'name': 'int_setting',
-            'type': 'INTEGER',
+            'type': APP_SETTING_TYPE_INTEGER,
             'user': None,
             'value': '170',
             'value_json': {},
@@ -1198,7 +1202,7 @@ class TestProjectAppSetting(
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
             'project': self.project.pk,
             'name': 'json_setting',
-            'type': 'JSON',
+            'type': APP_SETTING_TYPE_JSON,
             'user': None,
             'value': None,
             'value_json': {'Testing': 'good'},
@@ -1257,28 +1261,28 @@ class TestUserAppSetting(
         self.setting_str = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='str_setting',
-            setting_type='STRING',
+            setting_type=APP_SETTING_TYPE_STRING,
             value='test',
             user=self.user,
         )
         self.setting_int = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='int_setting',
-            setting_type='INTEGER',
+            setting_type=APP_SETTING_TYPE_INTEGER,
             value=170,
             user=self.user,
         )
         self.setting_bool = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='bool_setting',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             user=self.user,
         )
         self.setting_json = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='json_setting',
-            setting_type='JSON',
+            setting_type=APP_SETTING_TYPE_JSON,
             value=None,
             value_json={'Testing': 'good'},
             user=self.user,
@@ -1291,7 +1295,7 @@ class TestUserAppSetting(
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
             'project': None,
             'name': 'str_setting',
-            'type': 'STRING',
+            'type': APP_SETTING_TYPE_STRING,
             'user': self.user.pk,
             'value': 'test',
             'value_json': {},
@@ -1307,7 +1311,7 @@ class TestUserAppSetting(
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
             'project': None,
             'name': 'int_setting',
-            'type': 'INTEGER',
+            'type': APP_SETTING_TYPE_INTEGER,
             'user': self.user.pk,
             'value': '170',
             'value_json': {},
@@ -1323,7 +1327,7 @@ class TestUserAppSetting(
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
             'project': None,
             'name': 'json_setting',
-            'type': 'JSON',
+            'type': APP_SETTING_TYPE_JSON,
             'user': self.user.pk,
             'value': None,
             'value_json': {'Testing': 'good'},

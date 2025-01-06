@@ -30,6 +30,10 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 REMOTE_SITE_NAME = 'Test site'
@@ -119,7 +123,7 @@ class IPAllowMixin(AppSettingMixin):
         self.make_setting(
             plugin_name='projectroles',
             name='ip_restrict',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
         )
@@ -127,7 +131,7 @@ class IPAllowMixin(AppSettingMixin):
         self.make_setting(
             plugin_name='projectroles',
             name='ip_allowlist',
-            setting_type='JSON',
+            setting_type=APP_SETTING_TYPE_JSON,
             value=None,
             value_json=ip_list,
             project=self.project,

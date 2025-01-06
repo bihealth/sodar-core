@@ -46,6 +46,10 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
@@ -443,7 +447,7 @@ class ProjectForm(SODARModelForm):
                 choices=[
                     (
                         (int(option), int(option))
-                        if s_val['type'] == 'INTEGER'
+                        if s_val['type'] == APP_SETTING_TYPE_INTEGER
                         else (option, option)
                     )
                     for option in s_val['options']
@@ -451,18 +455,18 @@ class ProjectForm(SODARModelForm):
                 **setting_kwargs
             )
         # Other types
-        elif s_val['type'] == 'STRING':
+        elif s_val['type'] == APP_SETTING_TYPE_STRING:
             self.fields[s_field] = forms.CharField(
                 widget=forms.TextInput(attrs=s_widget_attrs), **setting_kwargs
             )
-        elif s_val['type'] == 'INTEGER':
+        elif s_val['type'] == APP_SETTING_TYPE_INTEGER:
             self.fields[s_field] = forms.IntegerField(
                 widget=forms.NumberInput(attrs=s_widget_attrs), **setting_kwargs
             )
-        elif s_val['type'] == 'BOOLEAN':
+        elif s_val['type'] == APP_SETTING_TYPE_BOOLEAN:
             self.fields[s_field] = forms.BooleanField(**setting_kwargs)
         # JSON
-        elif s_val['type'] == 'JSON':
+        elif s_val['type'] == APP_SETTING_TYPE_JSON:
             # NOTE: Attrs MUST be supplied here (#404)
             if 'class' in s_widget_attrs:
                 s_widget_attrs['class'] += ' sodar-json-input'
@@ -481,7 +485,7 @@ class ProjectForm(SODARModelForm):
             setting_name=s_key,
             project=self.instance if self.instance.pk else None,
         )
-        if s_val['type'] == 'JSON':
+        if s_val['type'] == APP_SETTING_TYPE_JSON:
             value = json.dumps(value)
         self.initial[s_field] = value
 
@@ -567,7 +571,7 @@ class ProjectForm(SODARModelForm):
                 s_field = '.'.join(['settings', p_name, s_key])
                 p_settings[s_key] = cleaned_data.get(s_field)
 
-                if s_val['type'] == 'JSON':
+                if s_val['type'] == APP_SETTING_TYPE_JSON:
                     if not p_settings[s_key]:
                         cleaned_data[s_field] = '{}'
                     try:
@@ -576,7 +580,7 @@ class ProjectForm(SODARModelForm):
                         )
                     except json.JSONDecodeError as err:
                         errors.append((s_field, 'Invalid JSON\n' + str(err)))
-                elif s_val['type'] == 'INTEGER':
+                elif s_val['type'] == APP_SETTING_TYPE_INTEGER:
                     # Convert integers from select fields
                     cleaned_data[s_field] = int(cleaned_data[s_field])
 

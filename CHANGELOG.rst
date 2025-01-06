@@ -13,6 +13,7 @@ Added
 
 - **Projectroles**
     - ``SODARUser.get_display_name()`` helper (#1487)
+    - App setting type constants (#1458)
 
 Changed
 -------

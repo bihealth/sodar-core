@@ -40,6 +40,10 @@ User = auth.get_user_model()
 
 # SODAR constants
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 INVALID_VALUE = 'INVALID VALUE'
@@ -96,7 +100,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         self.setting_str = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='user_str_setting',
-            setting_type='STRING',
+            setting_type=APP_SETTING_TYPE_STRING,
             value='test',
             user=self.user,
         )
@@ -104,7 +108,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         self.setting_int = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='user_int_setting',
-            setting_type='INTEGER',
+            setting_type=APP_SETTING_TYPE_INTEGER,
             value=170,
             user=self.user,
         )
@@ -112,7 +116,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         self.setting_str_options = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='user_str_setting_options',
-            setting_type='STRING',
+            setting_type=APP_SETTING_TYPE_STRING,
             value='string1',
             user=self.user,
         )
@@ -120,7 +124,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         self.setting_int_options = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='user_int_setting_options',
-            setting_type='INTEGER',
+            setting_type=APP_SETTING_TYPE_INTEGER,
             value=0,
             user=self.user,
         )
@@ -128,7 +132,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         self.setting_bool = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='user_bool_setting',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             user=self.user,
         )
@@ -136,7 +140,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         self.setting_json = self.make_setting(
             plugin_name=EXAMPLE_APP_NAME,
             name='user_json_setting',
-            setting_type='JSON',
+            setting_type=APP_SETTING_TYPE_JSON,
             value=None,
             value_json={'Test': 'More'},
             user=self.user,

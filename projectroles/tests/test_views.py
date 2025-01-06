@@ -105,6 +105,10 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -137,26 +141,26 @@ UPDATED_HIDDEN_JSON_SETTING = {'updated': 'value'}
 
 APP_SETTINGS_TEST = {
     'test_setting': {
-        'scope': APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER
-        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'scope': APP_SETTING_SCOPE_PROJECT,
+        'type': APP_SETTING_TYPE_BOOLEAN,
         'default': False,
-        'label': 'Test setting',  # Optional, defaults to name/key
-        'description': 'Test setting',  # Optional
-        'user_modifiable': True,  # Optional, show/hide in forms
+        'label': 'Test setting',
+        'description': 'Test setting',
+        'user_modifiable': True,
         'global': True,
     },
     'test_setting_local': {
-        'scope': APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER
-        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'scope': APP_SETTING_SCOPE_PROJECT,
+        'type': APP_SETTING_TYPE_BOOLEAN,
         'default': False,
-        'label': 'Test setting',  # Optional, defaults to name/key
-        'description': 'Test setting',  # Optional
-        'user_modifiable': True,  # Optional, show/hide in forms
+        'label': 'Test setting',
+        'description': 'Test setting',
+        'user_modifiable': True,
         'global': False,
     },
     'project_star': {  # NOTE: We have to include this for view tests
         'scope': APP_SETTING_SCOPE_PROJECT_USER,
-        'type': 'BOOLEAN',
+        'type': APP_SETTING_TYPE_BOOLEAN,
         'default': False,
         'global': True,
     },

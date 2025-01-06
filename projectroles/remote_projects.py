@@ -51,6 +51,10 @@ REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -1173,7 +1177,12 @@ class RemoteProjectAPI:
                 return
             # Skip if value is identical
             if app_settings.compare_value(
-                obj, ad['value_json'] if obj.type == 'JSON' else ad['value']
+                obj,
+                (
+                    ad['value_json']
+                    if obj.type == APP_SETTING_TYPE_JSON
+                    else ad['value']
+                ),
             ):
                 logger.info(
                     'Skipping setting {}: value unchanged'.format(str(obj))

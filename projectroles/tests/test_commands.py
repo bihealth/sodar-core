@@ -72,6 +72,10 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 EXAMPLE_APP_NAME = 'example_project_app'
@@ -709,7 +713,7 @@ class TestCleanAppSettings(
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_str_setting',
-            'setting_type': 'STRING',
+            'setting_type': APP_SETTING_TYPE_STRING,
             'value': 'test',
             'update_value': 'better test',
             'non_valid_value': False,
@@ -718,7 +722,7 @@ class TestCleanAppSettings(
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_int_setting',
-            'setting_type': 'INTEGER',
+            'setting_type': APP_SETTING_TYPE_INTEGER,
             'value': 0,
             'update_value': 170,
             'non_valid_value': 'Nan',
@@ -727,7 +731,7 @@ class TestCleanAppSettings(
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_bool_setting',
-            'setting_type': 'BOOLEAN',
+            'setting_type': APP_SETTING_TYPE_BOOLEAN,
             'value': False,
             'update_value': True,
             'non_valid_value': 170,
@@ -736,7 +740,7 @@ class TestCleanAppSettings(
             'plugin_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'name': 'project_json_setting',
-            'setting_type': 'JSON',
+            'setting_type': APP_SETTING_TYPE_JSON,
             'value': {
                 'Example': 'Value',
                 'list': [1, 2, 3, 4, 5],
@@ -749,7 +753,7 @@ class TestCleanAppSettings(
             'plugin_name': 'projectroles',
             'project': self.project,
             'name': 'ip_restrict',
-            'setting_type': 'BOOLEAN',
+            'setting_type': APP_SETTING_TYPE_BOOLEAN,
             'value': False,
             'update_value': True,
             'non_valid_value': 170,
@@ -766,8 +770,16 @@ class TestCleanAppSettings(
                 plugin_name=s['plugin_name'],
                 name=s['name'],
                 setting_type=s['setting_type'],
-                value=s['value'] if s['setting_type'] != 'JSON' else '',
-                value_json=s['value'] if s['setting_type'] == 'JSON' else {},
+                value=(
+                    s['value']
+                    if s['setting_type'] != APP_SETTING_TYPE_JSON
+                    else ''
+                ),
+                value_json=(
+                    s['value']
+                    if s['setting_type'] == APP_SETTING_TYPE_JSON
+                    else {}
+                ),
                 project=s['project'],
             )
 
@@ -779,7 +791,7 @@ class TestCleanAppSettings(
         self.make_setting(
             plugin_name=self.plugin.name,
             name='undefined',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
         )
@@ -811,7 +823,7 @@ class TestCleanAppSettings(
         self.make_setting(
             plugin_name=self.plugin.name,
             name='undefined',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             user=self.user_owner,
         )
@@ -824,7 +836,7 @@ class TestCleanAppSettings(
         self.make_setting(
             plugin_name=self.plugin.name,
             name='undefined',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
             user=self.user_owner,
@@ -838,7 +850,7 @@ class TestCleanAppSettings(
         self.make_setting(
             plugin_name=self.plugin.name,
             name='project_user_bool_setting',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.category,
         )
@@ -873,7 +885,7 @@ class TestCleanAppSettings(
         self.make_setting(
             plugin_name=self.plugin.name,
             name='project_user_bool_setting',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
             user=user_new,
@@ -908,7 +920,7 @@ class TestCleanAppSettings(
         self.make_setting(
             plugin_name=self.plugin.name,
             name='project_user_bool_setting',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
             user=user_new,
@@ -923,21 +935,21 @@ class TestCleanAppSettings(
         self.make_setting(
             plugin_name=self.plugin.name,
             name='undefined',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
         )
         self.make_setting(
             plugin_name=self.plugin.name,
             name='project_user_bool_setting',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.category,
         )
         self.make_setting(
             plugin_name=self.plugin.name,
             name='project_user_bool_setting',
-            setting_type='BOOLEAN',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
             user=user_new,

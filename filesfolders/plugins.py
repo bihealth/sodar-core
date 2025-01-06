@@ -15,6 +15,7 @@ from filesfolders.urls import urlpatterns
 
 # SODAR constants
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 
 # Local constants
 SHOW_LIST_COLUMNS = getattr(settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS', False)
@@ -40,7 +41,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     app_settings = {
         'allow_public_links': {
             'scope': APP_SETTING_SCOPE_PROJECT,
-            'type': 'BOOLEAN',
+            'type': APP_SETTING_TYPE_BOOLEAN,
             'default': False,
             'label': 'Allow public links',
             'description': 'Allow generation of public links for files',

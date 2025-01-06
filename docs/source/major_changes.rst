@@ -16,6 +16,7 @@ v1.1.0 (WIP)
 Release Highlights
 ==================
 
+- Add app setting type constants
 - Remove support for features deprecated in v1.0
 - Remove squashed migrations
 
