@@ -861,7 +861,7 @@ class AppSettingMixin:
             )
         except Exception as ex:
             raise serializers.ValidationError(ex)
-        if s_def['scope'] not in allowed_scopes:
+        if s_def.scope not in allowed_scopes:
             raise serializers.ValidationError('Invalid setting scope')
         return s_def
 
@@ -885,12 +885,12 @@ class AppSettingMixin:
         """
         Check permissions for project settings.
 
-        :param setting_def: Dict
+        :param setting_def: PluginAppSettingDef object
         :param project: Project object
         :param request_user: User object for requesting user
         :param setting_user: User object for the setting user or None
         """
-        if setting_def['scope'] == APP_SETTING_SCOPE_PROJECT:
+        if setting_def.scope == APP_SETTING_SCOPE_PROJECT:
             if not request_user.has_perm(
                 'projectroles.update_project_settings', project
             ):
@@ -898,7 +898,7 @@ class AppSettingMixin:
                     'User lacks permission to access PROJECT scope app '
                     'settings in this project'
                 )
-        elif setting_def['scope'] == APP_SETTING_SCOPE_PROJECT_USER:
+        elif setting_def.scope == APP_SETTING_SCOPE_PROJECT_USER:
             if not setting_user:
                 raise serializers.ValidationError(
                     'No user given for PROJECT_USER setting'
@@ -1063,7 +1063,7 @@ class ProjectSettingSetAPIView(
             setting_name,
             [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER],
         )
-        if s_def.get('user_modifiable') is False:
+        if not s_def.user_modifiable:
             raise PermissionDenied(USER_MODIFIABLE_MSG)
         # Get value
         value = self.get_request_value(request)
@@ -1090,7 +1090,7 @@ class ProjectSettingSetAPIView(
                 user=setting_user,
             )
             # Call for additional actions for project creation/update in plugins
-            if s_def['scope'] == APP_SETTING_SCOPE_PROJECT and (
+            if s_def.scope == APP_SETTING_SCOPE_PROJECT and (
                 settings,
                 'PROJECTROLES_ENABLE_MODIFY_API',
                 False,
@@ -1209,7 +1209,7 @@ class UserSettingSetAPIView(
         s_def = self.get_and_validate_def(
             plugin_name, setting_name, [APP_SETTING_SCOPE_USER]
         )
-        if s_def.get('user_modifiable') is False:
+        if not s_def.user_modifiable:
             raise PermissionDenied(USER_MODIFIABLE_MSG)
         value = self.get_request_value(request)
 

@@ -151,9 +151,7 @@ def delete_category_app_settings(apps, schema_editor):
         except ValueError:
             app_setting.delete()
             continue
-        if app_setting.project.type not in setting_def.get(
-            'project_types', ['PROJECT']
-        ):
+        if app_setting.project.type not in setting_def.project_types:
             # Delete app setting if it is not restricted to any project types
             app_setting.delete()
 

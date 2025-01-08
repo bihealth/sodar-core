@@ -976,20 +976,15 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     APP_SETTING_SCOPE_PROJECT, plugin_name=name, **p_kwargs
                 )
 
-            for s_key, s_val in p_settings.items():
-                s_name = 'settings.{}.{}'.format(name, s_key)
+            for s_def in p_settings.values():
+                s_name = 'settings.{}.{}'.format(name, s_def.name)
                 s_data = data.get(s_name)
 
-                if (
-                    not s_val.get('project_types', None)
-                    and not instance.type == PROJECT_TYPE_PROJECT
-                    or s_val.get('project_types', None)
-                    and instance.type not in s_val['project_types']
-                ):
+                if instance.type not in s_def.project_types:
                     continue
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default(name, s_key)
-                if s_val['type'] == APP_SETTING_TYPE_JSON:
+                    s_data = app_settings.get_default(name, s_def.name)
+                if s_def.type == APP_SETTING_TYPE_JSON:
                     if s_data is None:
                         s_data = {}
                     project_settings[s_name] = json.dumps(s_data)
@@ -1039,7 +1034,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             s_name = k.split('.')[2]
             s_def = app_settings.get_definition(s_name, plugin_name=p_name)
             old_v = app_settings.get(p_name, s_name, project)
-            if s_def['type'] == APP_SETTING_TYPE_JSON:
+            if s_def.type == APP_SETTING_TYPE_JSON:
                 v = json.loads(v)
             if old_v != v:
                 extra_data[k] = v
@@ -1104,7 +1099,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 s_def = app_settings.get_definition(
                     setting_name, plugin_name=plugin_name
                 )
-                if app_settings.get_global_value(s_def):
+                if s_def.global_edit:
                     continue
             app_settings.set(
                 plugin_name=k.split('.')[1],
@@ -1143,7 +1138,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 p_name = k.split('.')[1]
                 s_name = k.split('.')[2]
                 s_def = app_settings.get_definition(s_name, plugin_name=p_name)
-                if s_def['type'] == APP_SETTING_TYPE_JSON:
+                if s_def.type == APP_SETTING_TYPE_JSON:
                     v = json.loads(v)
                 extra_data[k] = v
 

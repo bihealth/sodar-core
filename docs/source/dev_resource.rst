@@ -263,6 +263,8 @@ Example:
     setup!
 
 
+.. _dev_resource_app_settings:
+
 App Settings
 ============
 
@@ -272,59 +274,56 @@ variables changeable in runtime for different purposes and scopes without the
 need to manage additional Django models in your apps. App settings are supported
 for plugins in project and site apps.
 
-The settings are defined as Python dictionaries in your project or site app's
-plugin. An example of a definition can be seen below:
+The settings are defined as a list of ``PluginAppSettingDef`` objects in your
+project or site app plugin. An example of a definition can be seen below:
 
 .. code-block:: python
 
+    from projectroles.models import SODAR_CONSTANTS
+    from projectroles.plugins import ProjectAppPluginPoint, PluginAppSettingDef
+
     class ProjectAppPlugin(ProjectAppPluginPoint):
         # ...
-        app_settings = {
-            'allow_public_links': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': 'BOOLEAN',
-                'default': False,
-                'label': 'Allow public links',
-                'description': 'Allow generation of public links for files',
-                'user_modifiable': True,
-            }
+        app_settings = [
+            PluginAppSettingDef(
+                name='allow_public_links',
+                scope=SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+                type=SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN'],
+                default=False,
+                label='Allow public links',
+                description='Allow generation of public links for files',
+            )
         }
 
-Each setting must define a ``scope``. The options for this are as follows, as
-defined in ``SODAR_CONSTANTS``:
+The mandatory and optional attributes for an app setting definition are as
+follows:
 
-``APP_SETTING_SCOPE_PROJECT``
-    Setting related to a project and displayed in the project create/update
-    form.
-``APP_SETTING_SCOPE_USER``
-    Site-wide setting related to a user and displayed in the user profile form.
-``APP_SETTING_SCOPE_PROJECT_USER``
-    User setting related to a project, managed by your project app.
-``APP_SETTING_SCOPE_SITE``
-    Site-wide setting similar to Django settings but modifiable in runtime.
-
-The rest of the attributes are listed below:
-
+``name``
+    Name for the setting. Preferably something short and clear to call in code.
+    Name must be unique within the settings of each plugin.
+``scope``
+    Scope of the setting, which determines whether the setting is unique per
+    project, user, project and user, or site. Must correspond to one of
+    ``APP_SETTING_SCOPE_*`` in ``SODAR_CONSTANTS``, see below for details
+    (string)
 ``type``
-    Value type for the settings. Available options are ``BOOLEAN``,
-    ``INTEGER``, ``STRING`` and ``JSON``.
+    Setting type, must correspond to one of ``APP_SETTING_TYPE_*`` in
+    ``SODAR_CONSTANTS``. Available options are ``APP_SETTING_TYPE_BOOLEAN``,
+    ``APP_SETTING_TYPE_INTEGER``, ``APP_SETTING_TYPE_STRING`` and
+    ``APP_SETTING_TYPE_JSON``.
 ``default``
     Default value for the setting. This is returned if no value has been set.
     Can alternatively be a callable with the signature
     ``callable(project=None, user=None)``.
-``global``
-    Boolean for allowing/disallowing editing in target sites for remote
-    projects. Relevant to ``SOURCE`` sites. If set ``True``, the value can not
-    be edited on target sites, the default value being ``False`` (optional).
 ``label``
-    Label string to be displayed in forms for ``PROJECT`` and ``USER`` scope
-    settings (optional).
+    Label to be displayed in forms for ``PROJECT`` and ``USER`` scope settings
+    (string, optional).
 ``placeholder``
     Placeholder string to be displayed in forms for ``PROJECT`` and ``USER``
     scope settings (optional).
 ``description``
     Description string shown in forms for ``PROJECT`` and ``USER`` scope
-    settings (optional).
+    settings (string, optional).
 ``options``
     List of selectable options for ``INTEGER`` and ``STRING`` type settings. Can
     alternatively be a callable with the signature
@@ -335,9 +334,27 @@ The rest of the attributes are listed below:
     user forms. If false, will be displayed only to superusers. Set to true if
     your app is expected to manage this setting. Applicable for ``PROJECT`` and
     ``USER`` scope settings (optional).
+``global_edit``
+    Allowing/disallow editing the setting on target sites for remote projects.
+    Relevant to ``SOURCE`` sites. If set ``True``, the value can not be edited
+    on target sites, the default value being ``False`` (boolean, optional).
 ``project_types``
-    List of project types this setting is allowed to be set for. Defaults to
-    ``[PROJECT_TYPE_PROJECT]`` (optional).
+    Project types for which this setting is allowed to be set. Defaults to
+    ``[PROJECT_TYPE_PROJECT]`` (list of strings, optional).
+``widget_attrs``
+    Form widget attributes (optional, dict)
+
+Available project scopes for the ``scope`` attribute:
+
+``APP_SETTING_SCOPE_PROJECT``
+    Setting related to a project and displayed in the project create/update
+    form.
+``APP_SETTING_SCOPE_USER``
+    Site-wide setting related to a user and displayed in the user profile form.
+``APP_SETTING_SCOPE_PROJECT_USER``
+    User setting related to a project, managed by your project app.
+``APP_SETTING_SCOPE_SITE``
+    Site-wide setting similar to Django settings but modifiable in runtime.
 
 The settings are retrieved using ``AppSettingAPI`` provided by the
 projectroles app. Below is an example of invoking the API. For the full API

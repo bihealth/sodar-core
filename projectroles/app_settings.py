@@ -5,8 +5,12 @@ import logging
 
 from django.conf import settings
 
-from projectroles.models import AppSetting, APP_SETTING_TYPES, SODAR_CONSTANTS
-from projectroles.plugins import get_app_plugin, get_active_plugins
+from projectroles.models import AppSetting, SODAR_CONSTANTS
+from projectroles.plugins import (
+    PluginAppSettingDef,
+    get_app_plugin,
+    get_active_plugins,
+)
 from projectroles.utils import get_display_name
 
 
@@ -31,12 +35,6 @@ APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_SETTING_GLOBAL_DEFAULT = False
-APP_SETTING_SCOPES = [
-    APP_SETTING_SCOPE_PROJECT,
-    APP_SETTING_SCOPE_USER,
-    APP_SETTING_SCOPE_PROJECT_USER,
-    APP_SETTING_SCOPE_SITE,
-]
 APP_SETTING_DEFAULT_VALUES = {
     APP_SETTING_TYPE_BOOLEAN: False,
     APP_SETTING_TYPE_INTEGER: 0,
@@ -56,94 +54,85 @@ GLOBAL_PROJECT_ERR_MSG = (
 GLOBAL_USER_ERR_MSG = (
     'Overriding global user settings on target site not allowed'
 )
+DEF_DICT_DEPRECATE_MSG = (
+    'Defining app settings as dict is deprecated and will be removed in v1.2. '
+    'Provide definitions as a list of PluginAppSettingDef '
+    'objects (plugin={plugin_name})'
+)
 
 
 # Define App Settings for projectroles app
-PROJECTROLES_APP_SETTINGS = {
-    #: App settings definition
-    #:
-    #: Example ::
-    #:
-    #:     'example_setting': {
-    #:         'scope': 'PROJECT',  # PROJECT/USER/PROJECT-USER/SITE
-    #:         'type': APP_SETTING_TYPE_STRING,  # STRING/INTEGER/BOOLEAN/JSON
-    #:         'default': 'example',
-    #:         'label': 'Project setting',  # Optional, defaults to name/key
-    #:         'placeholder': 'Enter example setting here',  # Optional
-    #:         'description': 'Example project setting',  # Optional
-    #:         'options': ['example', 'example2'],  # Optional, only for
-    #:                    settings of type STRING or INTEGER
-    #:         'user_modifiable': True,  # Optional, show/hide in forms
-    #:         'global': True,  # Only allow editing on target sites if False
-    #:                          # (optional, default True)
-    #:         'project_types': [PROJECT_TYPE_PROJECT],  # Optional, list may
-    #:          contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
-    #:     }
-    'ip_restrict': {
-        'scope': APP_SETTING_SCOPE_PROJECT,
-        'type': APP_SETTING_TYPE_BOOLEAN,
-        'default': False,
-        'label': 'IP restrict',
-        'description': 'Restrict project access by an allowed IP list',
-        'user_modifiable': True,
-        'global': True,
-    },
-    'ip_allowlist': {
-        'scope': APP_SETTING_SCOPE_PROJECT,
-        'type': APP_SETTING_TYPE_JSON,
-        'default': [],
-        'label': 'IP allow list',
-        'description': 'List of allowed IPs for project access',
-        'user_modifiable': True,
-        'global': True,
-    },
-    'project_star': {
-        'scope': APP_SETTING_SCOPE_PROJECT_USER,
-        'type': APP_SETTING_TYPE_BOOLEAN,
-        'default': False,
-        'global': False,
-        'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
-    },
-    'notify_email_project': {
-        'scope': APP_SETTING_SCOPE_USER,
-        'type': APP_SETTING_TYPE_BOOLEAN,
-        'default': True,
-        'label': 'Receive email for {} updates'.format(
+PROJECTROLES_APP_SETTINGS = [
+    PluginAppSettingDef(
+        name='ip_restrict',
+        scope=APP_SETTING_SCOPE_PROJECT,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='IP restrict',
+        description='Restrict project access by an allowed IP list',
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
+        name='ip_allowlist',
+        scope=APP_SETTING_SCOPE_PROJECT,
+        type=APP_SETTING_TYPE_JSON,
+        default=[],
+        label='IP allow list',
+        description='List of allowed IPs for project access',
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
+        name='project_star',
+        scope=APP_SETTING_SCOPE_PROJECT_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        global_edit=False,
+        project_types=[PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
+    ),
+    PluginAppSettingDef(
+        name='notify_email_project',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
+        label='Receive email for {} updates'.format(
             get_display_name(PROJECT_TYPE_PROJECT)
         ),
-        'description': (
+        description=(
             'Receive email notifications for {} or {} creation, updating, '
             'moving and archiving.'.format(
                 get_display_name(PROJECT_TYPE_CATEGORY),
                 get_display_name(PROJECT_TYPE_PROJECT),
             )
         ),
-        'user_modifiable': True,
-        'global': True,
-    },
-    'notify_email_role': {
-        'scope': APP_SETTING_SCOPE_USER,
-        'type': APP_SETTING_TYPE_BOOLEAN,
-        'default': True,
-        'label': 'Receive email for {} membership updates'.format(
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
+        name='notify_email_role',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
+        label='Receive email for {} membership updates'.format(
             get_display_name(PROJECT_TYPE_PROJECT)
         ),
-        'description': (
+        description=(
             'Receive email notifications for {} or {} membership updates and '
             'invitation activity.'.format(
                 get_display_name(PROJECT_TYPE_CATEGORY),
                 get_display_name(PROJECT_TYPE_PROJECT),
             )
         ),
-        'user_modifiable': True,
-        'global': True,
-    },
-}
+        user_modifiable=True,
+        global_edit=True,
+    ),
+]
 
 
 class AppSettingAPI:
     @classmethod
-    def _check_project_and_user(cls, scope, project, user):
+    def _validate_project_and_user(cls, scope, project, user):
         """
         Ensure project and user parameters are set according to scope.
 
@@ -157,53 +146,16 @@ class AppSettingAPI:
             'user': user is not None,
         }:
             raise ValueError(
-                'Project and/or user are set incorrect for setting '
-                'with {} scope'.format(scope)
+                'Project and/or user invalid for setting with {} scope '
+                '(project={}, user={})'.format(
+                    scope,
+                    project.get_log_title() if project else None,
+                    user.username if user else None,
+                )
             )
 
     @classmethod
-    def _check_scope(cls, scope):
-        """
-        Ensure the validity of a scope definition.
-
-        :param scope: String
-        :raise: ValueError if scope is not recognized
-        """
-        if scope not in APP_SETTING_SCOPES:
-            raise ValueError('Invalid scope "{}"'.format(scope))
-
-    @classmethod
-    def _check_type(cls, setting_type):
-        """
-        Ensure the validity of app setting type.
-
-        :param setting_type: String
-        :raise: ValueError if type is not recognized
-        """
-        if setting_type not in APP_SETTING_TYPES:
-            raise ValueError('Invalid setting type "{}"'.format(setting_type))
-
-    @classmethod
-    def _check_type_options(cls, setting_type, setting_options):
-        """
-        Ensure setting_type is allowed to have options.
-
-        :param setting_type: String
-        :param setting_options: List of options (Strings or Integers)
-        :raise: ValueError if type is not recognized
-        """
-        if (
-            setting_type
-            not in [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
-            and setting_options
-        ):
-            raise ValueError(
-                'Options are only allowed for settings of type INTEGER and '
-                'STRING'
-            )
-
-    @classmethod
-    def _check_value_in_options(
+    def _validate_value_in_options(
         cls, setting_value, setting_options, project=None, user=None
     ):
         """
@@ -257,7 +209,7 @@ class AppSettingAPI:
     @classmethod
     def _get_defs(cls, plugin=None, plugin_name=None):
         """
-        Ensure valid argument values for a settings def query.
+        Get app setting definitions for a plugin.
 
         :param plugin: Plugin object or None
         :param plugin_name: Name of the app plugin (string or None)
@@ -270,7 +222,31 @@ class AppSettingAPI:
             return cls.get_projectroles_defs()
         if not plugin:
             plugin = cls._get_app_plugin(plugin_name)
-        return plugin.app_settings
+        s_defs = plugin.app_settings
+        # TODO: Remove definition dict support in in v1.2 (#1532)
+        if isinstance(s_defs, dict):
+            logger.warning(
+                DEF_DICT_DEPRECATE_MSG.format(plugin_name=plugin.name)
+            )
+            return {
+                k: PluginAppSettingDef(
+                    name=k,
+                    scope=v.get('scope'),
+                    type=v.get('type'),
+                    default=v.get('default'),
+                    label=v.get('label'),
+                    placeholder=v.get('placeholder'),
+                    description=v.get('description'),
+                    options=v.get('options'),
+                    user_modifiable=v.get('user_modifiable', True),
+                    global_edit=v.get('global', APP_SETTING_GLOBAL_DEFAULT),
+                    project_types=v.get(
+                        'project_types', [PROJECT_TYPE_PROJECT]
+                    ),
+                )
+                for k, v in s_defs.items()
+            }
+        return {s.name: s for s in s_defs}
 
     @classmethod
     def _get_json_value(cls, value):
@@ -339,45 +315,32 @@ class AppSettingAPI:
         :raise: KeyError if nothing is found with setting_name
         """
         if plugin_name == 'projectroles':
-            app_settings = cls.get_projectroles_defs()
+            s_defs = cls.get_projectroles_defs()
         else:
-            app_plugin = get_app_plugin(plugin_name)
-            if not app_plugin:
-                raise ValueError(
-                    'App plugin not found: "{}"'.format(plugin_name)
-                )
-            app_settings = app_plugin.app_settings
-        if setting_name not in app_settings:
+            s_defs = cls._get_defs(plugin_name=plugin_name)
+        if setting_name not in s_defs:
             raise KeyError(
                 'Setting "{}" not found in app plugin "{}"'.format(
                     setting_name, plugin_name
                 )
             )
-
-        if callable(app_settings[setting_name].get('default')):
+        s_def = s_defs[setting_name]
+        if callable(s_def.default):
             try:
-                callable_setting = app_settings[setting_name]['default']
-                return callable_setting(project, user)
+                return s_def.default(project, user)
             except Exception:
                 logger.error(
                     'Error in callable setting "{}" for plugin "{}"'.format(
                         setting_name, plugin_name
                     )
                 )
-                return APP_SETTING_DEFAULT_VALUES[
-                    app_settings[setting_name]['type']
-                ]
-        elif app_settings[setting_name]['type'] == APP_SETTING_TYPE_JSON:
-            json_default = app_settings[setting_name].get('default')
-            if not json_default:
-                if isinstance(json_default, dict):
-                    return {}
-                elif isinstance(json_default, list):
-                    return []
+                return APP_SETTING_DEFAULT_VALUES[s_def.type]
+        elif s_def.type == APP_SETTING_TYPE_JSON:
+            if s_def.default is None:
                 return {}
             if post_safe:
-                return json.dumps(app_settings[setting_name]['default'])
-        return app_settings[setting_name]['default']
+                return json.dumps(s_def.default)
+        return s_def.default
 
     @classmethod
     def get(
@@ -421,6 +384,7 @@ class AppSettingAPI:
             return json.dumps(val)
         return val
 
+    # TODO: Remove, deprecate or refactor (see #1534)
     @classmethod
     def get_all(cls, project=None, user=None, post_safe=False):
         """
@@ -439,18 +403,18 @@ class AppSettingAPI:
         ret = {}
         app_plugins = get_active_plugins()
         for plugin in app_plugins:
-            p_settings = cls.get_definitions(
+            p_defs = cls.get_definitions(
                 APP_SETTING_SCOPE_PROJECT, plugin=plugin
             )
-            for s_key in p_settings:
+            for s_key in p_defs:
                 ret['settings.{}.{}'.format(plugin.name, s_key)] = cls.get(
                     plugin.name, s_key, project, user, post_safe
                 )
 
-        p_settings = cls.get_definitions(
+        p_defs = cls.get_definitions(
             APP_SETTING_SCOPE_PROJECT, plugin_name='projectroles'
         )
-        for s_key in p_settings:
+        for s_key in p_defs:
             ret['settings.{}.{}'.format('projectroles', s_key)] = cls.get(
                 'projectroles', s_key, post_safe
             )
@@ -467,13 +431,13 @@ class AppSettingAPI:
         :param post_safe: Whether POST safe values should be returned (bool)
         :return: Dict
         """
-        cls._check_scope(scope)
+        PluginAppSettingDef.validate_scope(scope)
         ret = {}
         app_plugins = get_active_plugins()
 
         for plugin in app_plugins:
-            p_settings = cls.get_definitions(scope, plugin=plugin)
-            for s_key in p_settings:
+            p_defs = cls.get_definitions(scope, plugin=plugin)
+            for s_key in p_defs:
                 ret['settings.{}.{}'.format(plugin.name, s_key)] = (
                     cls.get_default(
                         plugin.name,
@@ -484,8 +448,8 @@ class AppSettingAPI:
                     )
                 )
 
-        p_settings = cls.get_definitions(scope, plugin_name='projectroles')
-        for s_key in p_settings:
+        p_defs = cls.get_definitions(scope, plugin_name='projectroles')
+        for s_key in p_defs:
             ret['settings.{}.{}'.format('projectroles', s_key)] = (
                 cls.get_default(
                     'projectroles',
@@ -524,24 +488,16 @@ class AppSettingAPI:
         :raise: KeyError if setting name is not found in plugin specification
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
-        cls._check_scope(s_def.get('scope', None))
-        cls._check_project_and_user(s_def.get('scope', None), project, user)
+        cls._validate_project_and_user(s_def.scope, project, user)
         # Check project type
-        if (
-            project
-            and not s_def.get('project_types', None)
-            and not project.type == PROJECT_TYPE_PROJECT
-            or project
-            and s_def.get('project_types', None)
-            and project.type not in s_def['project_types']
-        ):
+        if project and project.type not in s_def.project_types:
             raise ValueError(
                 'Project type {} not allowed for setting {}'.format(
                     project.type, setting_name
                 )
             )
         # Prevent updating global setting on target site
-        if cls.get_global_value(s_def):
+        if s_def.global_edit:
             if project and project.is_remote():
                 raise ValueError(GLOBAL_PROJECT_ERR_MSG)
             if (
@@ -564,7 +520,7 @@ class AppSettingAPI:
                 cls.validate(
                     setting.type,
                     value,
-                    s_def.get('options'),
+                    s_def.options,
                     project=project,
                     user=user,
                 )
@@ -579,11 +535,11 @@ class AppSettingAPI:
             return True
 
         except AppSetting.DoesNotExist:  # Create new
-            s_type = s_def['type']
+            s_type = s_def.type
             if plugin_name == 'projectroles':
                 app_plugin_model = None
             else:
-                app_plugin = get_app_plugin(plugin_name)
+                app_plugin = cls._get_app_plugin(plugin_name)
                 app_plugin_model = app_plugin.get_model()
             if validate:
                 v = (
@@ -594,15 +550,11 @@ class AppSettingAPI:
                 cls.validate(
                     s_type,
                     v,
-                    s_def.get('options'),
+                    s_def.options,
                     project=project,
                     user=user,
                 )
-            s_mod = (
-                bool(s_def['user_modifiable'])
-                if 'user_modifiable' in s_def
-                else True
-            )
+            s_mod = bool(s_def.user_modifiable)
             s_vals = {
                 'app_plugin': app_plugin_model,
                 'project': project,
@@ -636,7 +588,7 @@ class AppSettingAPI:
         :return: Boolean
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
-        cls._check_project_and_user(s_def.get('scope', None), project, user)
+        cls._validate_project_and_user(s_def.scope, project, user)
         q_kwargs = {'name': setting_name, 'project': project, 'user': user}
         if not plugin_name == 'projectroles':
             q_kwargs['app_plugin__name'] = plugin_name
@@ -656,11 +608,9 @@ class AppSettingAPI:
         :param user: User object to delete setting from (optional)
         :raise: ValueError with invalid project/user args
         """
-        setting_def = cls.get_definition(setting_name, plugin_name=plugin_name)
-        if setting_def['scope'] != APP_SETTING_SCOPE_PROJECT_USER:
-            cls._check_project_and_user(
-                setting_def.get('scope', None), project, user
-            )
+        s_def = cls.get_definition(setting_name, plugin_name=plugin_name)
+        if s_def.scope != APP_SETTING_SCOPE_PROJECT_USER:
+            cls._validate_project_and_user(s_def.scope, project, user)
         elif not project:
             raise ValueError(
                 'Project must be set for {} scope settings'.format(
@@ -678,12 +628,10 @@ class AppSettingAPI:
             )
         )
         app_settings = AppSetting.objects.filter(**q_kwargs)
-        s_count = app_settings.count()
+        sc = app_settings.count()
         app_settings.delete()
         logger.debug(
-            'Deleted {} app setting{}'.format(
-                s_count, 's' if s_count != 1 else ''
-            )
+            'Deleted {} app setting{}'.format(sc, 's' if sc != 1 else '')
         )
 
     @classmethod
@@ -701,19 +649,12 @@ class AppSettingAPI:
         :param user: User object to delete setting from
         :raise: ValueError if scope, project or user are incorrect
         """
-        if not scope:
-            raise ValueError('Scope must be set')
-        cls._check_scope(scope)
-        cls._check_project_and_user(scope, project, user)
+        PluginAppSettingDef.validate_scope(scope)
+        cls._validate_project_and_user(scope, project, user)
         for plugin_name, app_settings in cls.get_all_defs().items():
-            for setting_name, setting_def in app_settings.items():
-                if setting_def['scope'] == scope:
-                    cls.delete(
-                        plugin_name,
-                        setting_name,
-                        project=project,
-                        user=user,
-                    )
+            for s_name, s_def in app_settings.items():
+                if s_def.scope == scope:
+                    cls.delete(plugin_name, s_name, project=project, user=user)
 
     @classmethod
     def validate(
@@ -727,47 +668,22 @@ class AppSettingAPI:
         """
         Validate setting value according to its type.
 
-        :param setting_type: Setting type
+        :param setting_type: Setting type (string)
         :param setting_value: Setting value
         :param setting_options: Setting options (can be None)
         :param project: Project object (optional)
         :param user: User object (optional)
         :raise: ValueError if setting_type or setting_value is invalid
         """
-        cls._check_type(setting_type)
-        cls._check_type_options(setting_type, setting_options)
-        cls._check_value_in_options(
+        PluginAppSettingDef.validate_type(setting_type)
+        cls._validate_value_in_options(
             setting_value, setting_options, project=project, user=user
         )
-
-        # Check callable
+        # Test callable value
         if callable(setting_value):
             setting_value(project, user)
-
-        if setting_type == APP_SETTING_TYPE_BOOLEAN:
-            if not isinstance(setting_value, bool):
-                raise ValueError(
-                    'Please enter a valid boolean value ({})'.format(
-                        setting_value
-                    )
-                )
-        elif setting_type == APP_SETTING_TYPE_INTEGER:
-            if (
-                not isinstance(setting_value, int)
-                and not str(setting_value).isdigit()
-            ):
-                raise ValueError(
-                    'Please enter a valid integer value ({})'.format(
-                        setting_value
-                    )
-                )
-        elif setting_type == APP_SETTING_TYPE_JSON:
-            try:
-                json.dumps(setting_value)
-            except TypeError:
-                raise ValueError(
-                    'Please enter valid JSON ({})'.format(setting_value)
-                )
+        else:  # Else validate normal value
+            PluginAppSettingDef.validate_value(setting_type, setting_value)
         return True
 
     @classmethod
@@ -790,10 +706,7 @@ class AppSettingAPI:
                     plugin_name or plugin.name, name
                 )
             )
-        ret = defs[name]
-        cls._check_type(ret['type'])
-        cls._check_type_options(ret['type'], ret.get('options'))
-        return ret
+        return defs[name]
 
     @classmethod
     def get_definitions(
@@ -815,28 +728,13 @@ class AppSettingAPI:
         :raise: ValueError if scope is invalid or if neither plugin_name nor
                 plugin are set
         """
-        cls._check_scope(scope)
+        PluginAppSettingDef.validate_scope(scope)
         defs = cls._get_defs(plugin, plugin_name)
-        ret = {
+        return {
             k: v
             for k, v in defs.items()
-            if (
-                'scope' in v
-                and v['scope'] == scope
-                and (
-                    not user_modifiable
-                    or (
-                        'user_modifiable' not in v
-                        or v['user_modifiable'] is True
-                    )
-                )
-            )
+            if v.scope == scope and (not user_modifiable or v.user_modifiable)
         }
-        # Ensure type validity
-        for k, v in ret.items():
-            cls._check_type(v['type'])
-            cls._check_type_options(v['type'], v.get('options'))
-        return ret
 
     @classmethod
     def get_projectroles_defs(cls):
@@ -853,7 +751,7 @@ class AppSettingAPI:
             )
         except AttributeError:
             app_settings = PROJECTROLES_APP_SETTINGS
-        return app_settings
+        return {s.name: s for s in app_settings}
 
     @classmethod
     def get_all_defs(cls):
@@ -870,9 +768,10 @@ class AppSettingAPI:
             + get_active_plugins('site_app')
         )
         for p in plugins:
-            ret[p.name] = p.app_settings
+            ret[p.name] = cls._get_defs(p)
         return ret
 
+    # TODO: Remove (see #1533)
     @classmethod
     def get_global_value(cls, setting_def):
         """
@@ -882,7 +781,7 @@ class AppSettingAPI:
         :param setting_def: Dict
         :return: Boolean
         """
-        return setting_def.get('global', APP_SETTING_GLOBAL_DEFAULT)
+        return setting_def.global_edit
 
     @classmethod
     def compare_value(cls, obj, input_value):
@@ -931,12 +830,9 @@ def get_example_setting_options(project=None, user=None):
     :param user: User object
     :return: List of tuples for ChoiceField
     """
-    response = [
-        ('N/A', 'No project or user for callable'),
-        'Example string option',
-    ]
+    ret = [('N/A', 'No project or user for callable'), 'Example string option']
     if project and user:
-        response.append(
+        ret.append(
             (
                 str(project.sodar_uuid),
                 'Project UUID {} by {}'.format(
@@ -945,14 +841,14 @@ def get_example_setting_options(project=None, user=None):
             )
         )
     elif project:
-        response.append(
+        ret.append(
             (
                 str(project.sodar_uuid),
                 'Project UUID: {}'.format(project.sodar_uuid),
             )
         )
     elif user:
-        response.append(
+        ret.append(
             (str(user.sodar_uuid), 'User UUID: {}'.format(user.sodar_uuid))
         )
-    return response
+    return ret

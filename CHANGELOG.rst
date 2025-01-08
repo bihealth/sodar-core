@@ -14,14 +14,18 @@ Added
 - **Projectroles**
     - ``SODARUser.get_display_name()`` helper (#1487)
     - App setting type constants (#1458)
+    - ``PluginAppSettingDef`` class for app setting definitions (#1456)
+    - Django check for unique app setting names within each plugin (#1456)
 
 Changed
 -------
 
 - **General**
     - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)
+    - Declare app setting definitions as ``PluginAppSettingDef`` objects (#1456)
 - **Projectroles**
     - Deprecate ``get_user_display_name()``, use ``SODARUser.get_display_name()`` (#1487)
+    - Deprecate declaring app setting definitions as dict (#1456)
 
 Removed
 -------

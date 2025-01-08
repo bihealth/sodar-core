@@ -17,17 +17,32 @@ Release Highlights
 ==================
 
 - Add app setting type constants
+- Add app setting definition as objects
 - Remove support for features deprecated in v1.0
 - Remove squashed migrations
 
 Breaking Changes
 ================
 
+AppSettingAPI Definition Getter Return Data
+-------------------------------------------
+
+With the upgrade of app setting definitions to ``PluginAppSettingDef`` objects
+instead of dict, the return data of ``AppSettingAPI.get_definition()`` and
+``AppSettingAPI.get_definitions()`` will contain definitions as objects of this
+class. The return data is the same even if definitions have been provided in the
+deprecated dictionary format.
+
 Deprecated Features
 -------------------
 
 These features have been deprecated in v1.1 and will be removed in v1.2.
 
+App Setting Definitions as Dict
+    Declaring definitions for app settings as a dict has been deprecated.
+    Instead, you should provide a list of ``PluginAppSettingDef`` objects. See
+    the :ref:`app settings documentation <dev_resource_app_settings>` for
+    details.
 ``projectroles.utils.get_user_display_name()``
     This utility method has been deprecated. Please use
     ``SODARUser.get_display_name()`` instead.
@@ -38,10 +53,10 @@ Previously Deprecated Features Removed
 These features were deprecated in v1.0 and have been removed in v1.1.
 
 Legacy API Versioning and Rendering
-    The following API base classes and mixins are removed: ``SODARAPIVersioning``,
-    ``SODARAPIRenderer`` and ``SODARAPIBaseMixin``. The legacy ``SODAR_API_*``
-    settings have also been removed. You need to provide your own versioning and
-    renderers to your site's API(s).
+    The following API base classes and mixins are removed:
+    ``SODARAPIVersioning``, ``SODARAPIRenderer`` and ``SODARAPIBaseMixin``. The
+    legacy ``SODAR_API_*`` settings have also been removed. You need to provide
+    your own versioning and renderers to your site's API(s).
 Plugin Search Return Data
     Plugins implementing ``search()`` must return results as as a list of
     ``PluginSearchResult`` objects. Returning a ``dict`` was deprecated in v1.0.

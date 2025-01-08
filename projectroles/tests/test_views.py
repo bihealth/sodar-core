@@ -48,6 +48,7 @@ from projectroles.models import (
     CAT_DELIMITER,
 )
 from projectroles.plugins import (
+    PluginAppSettingDef,
     get_backend_api,
     get_active_plugins,
 )
@@ -139,32 +140,35 @@ HIDDEN_PROJECT_SETTINGS = [
 UPDATED_HIDDEN_SETTING = 'Updated value'
 UPDATED_HIDDEN_JSON_SETTING = {'updated': 'value'}
 
-APP_SETTINGS_TEST = {
-    'test_setting': {
-        'scope': APP_SETTING_SCOPE_PROJECT,
-        'type': APP_SETTING_TYPE_BOOLEAN,
-        'default': False,
-        'label': 'Test setting',
-        'description': 'Test setting',
-        'user_modifiable': True,
-        'global': True,
-    },
-    'test_setting_local': {
-        'scope': APP_SETTING_SCOPE_PROJECT,
-        'type': APP_SETTING_TYPE_BOOLEAN,
-        'default': False,
-        'label': 'Test setting',
-        'description': 'Test setting',
-        'user_modifiable': True,
-        'global': False,
-    },
-    'project_star': {  # NOTE: We have to include this for view tests
-        'scope': APP_SETTING_SCOPE_PROJECT_USER,
-        'type': APP_SETTING_TYPE_BOOLEAN,
-        'default': False,
-        'global': True,
-    },
-}
+APP_SETTINGS_TEST = [
+    PluginAppSettingDef(
+        name='test_setting',
+        scope=APP_SETTING_SCOPE_PROJECT,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Test setting',
+        description='Test setting',
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
+        name='test_setting_local',
+        scope=APP_SETTING_SCOPE_PROJECT,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Test setting',
+        description='Test setting',
+        user_modifiable=True,
+        global_edit=False,
+    ),
+    PluginAppSettingDef(
+        name='project_star',
+        scope=APP_SETTING_SCOPE_PROJECT_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        global_edit=True,
+    ),
+]
 
 EX_PROJECT_UI_SETTINGS = [
     'project_str_setting',

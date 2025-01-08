@@ -5,7 +5,7 @@ from django.utils import timezone
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import SiteAppPluginPoint
+from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
 
 from adminalerts.models import AdminAlert
 from adminalerts.urls import urlpatterns
@@ -14,6 +14,21 @@ from adminalerts.urls import urlpatterns
 # SODAR constants
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+
+# Local constants
+ADMINALERTS_APP_SETTINGS = [
+    PluginAppSettingDef(
+        name='notify_email_alert',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
+        label='Receive email for admin alerts',
+        description=(
+            'Receive email for important administrator alerts regarding e.g. '
+            'site downtime.'
+        ),
+    )
+]
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -28,21 +43,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: UI URLs
     urls = urlpatterns
 
-    #: App settings definition
-    app_settings = {
-        'notify_email_alert': {
-            'scope': APP_SETTING_SCOPE_USER,
-            'type': APP_SETTING_TYPE_BOOLEAN,
-            'default': True,
-            'label': 'Receive email for admin alerts',
-            'description': (
-                'Receive email for important administrator alerts regarding '
-                'e.g. site downtime.'
-            ),
-            'user_modifiable': True,
-            'global': False,
-        }
-    }
+    #: App setting definitions
+    app_settings = ADMINALERTS_APP_SETTINGS
 
     #: Iconify icon
     icon = 'mdi:alert'

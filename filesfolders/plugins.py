@@ -5,6 +5,7 @@ from django.urls import reverse
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import (
     ProjectAppPluginPoint,
+    PluginAppSettingDef,
     PluginObjectLink,
     PluginSearchResult,
 )
@@ -37,17 +38,17 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties defined in ProjectAppPluginPoint -----------------------
 
-    #: App settings definition
-    app_settings = {
-        'allow_public_links': {
-            'scope': APP_SETTING_SCOPE_PROJECT,
-            'type': APP_SETTING_TYPE_BOOLEAN,
-            'default': False,
-            'label': 'Allow public links',
-            'description': 'Allow generation of public links for files',
-            'user_modifiable': True,
-        }
-    }
+    #: App setting definitions
+    app_settings = [
+        PluginAppSettingDef(
+            name='allow_public_links',
+            scope=APP_SETTING_SCOPE_PROJECT,
+            type=APP_SETTING_TYPE_BOOLEAN,
+            default=False,
+            label='Allow public links',
+            description='Allow generation of public links for files',
+        )
+    ]
 
     #: Iconify icon
     icon = 'mdi:file'

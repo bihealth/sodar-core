@@ -83,8 +83,8 @@ class Command(BaseCommand):
             try:
                 s_def = app_settings.get_definition(**def_kwargs)
                 # Get allowed project types (if unset, default is PROJECT only)
-                if s_def['scope'] != APP_SETTING_SCOPE_USER:
-                    p_types = s_def.get('project_types', [PROJECT_TYPE_PROJECT])
+                if s_def.scope != APP_SETTING_SCOPE_USER:
+                    p_types = s_def.project_types
             except ValueError:
                 logger.info(self._get_log_msg(s, DEF_NOT_FOUND_MSG, check))
                 if not check:

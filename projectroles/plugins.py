@@ -1,15 +1,39 @@
 """Plugin point definitions and plugin API for apps based on projectroles"""
 
+import json
+
 from django.conf import settings
 from djangoplugins.point import PluginPoint
 
+from projectroles.models import APP_SETTING_TYPES, SODAR_CONSTANTS
 
-# Local costants
+
+# SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
+
+# Local constants
 PLUGIN_TYPES = {
     'project_app': 'ProjectAppPluginPoint',
     'backend': 'BackendPluginPoint',
     'site_app': 'SiteAppPluginPoint',
 }
+APP_SETTING_SCOPES = [
+    APP_SETTING_SCOPE_PROJECT,
+    APP_SETTING_SCOPE_USER,
+    APP_SETTING_SCOPE_PROJECT_USER,
+    APP_SETTING_SCOPE_SITE,
+]
+APP_SETTING_OPTION_TYPES = [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
 
 # From djangoplugins
 ENABLED = 0
@@ -629,6 +653,182 @@ class SiteAppPluginPoint(PluginPoint):
 
 
 # Data Classes -----------------------------------------------------------------
+
+
+class PluginAppSettingDef:
+    """
+    Class representing an AppSetting definition. Expected to be used to define
+    app settings in the plugin app_settings variable.
+    """
+
+    def __init__(
+        self,
+        name,
+        scope,
+        type,
+        default=None,
+        label=None,
+        placeholder=None,
+        description=None,
+        options=None,
+        user_modifiable=True,
+        global_edit=False,
+        project_types=None,
+        widget_attrs=None,
+    ):
+        """
+        Initialize PluginAppSettingDef.
+
+        :param name: Setting name to be used internally (string)
+        :param scope: Setting scope, must correspond to one of
+                      APP_SETTING_SCOPE_* (string)
+        :param type: Setting type, must correspond to one of APP_SETTING_TYPE_*
+                     (string)
+        :param default: Default value, type depends on setting type. Can be a
+                        callable.
+        :param label: Display label (string, optional, name is used as default)
+        :param placeholder: Placeholder value to be displayed in forms (string,
+                            optional)
+        :param description: Detailed setting description (string, optional)
+        :param options: Limit value to given options. Can be callable (optional,
+                        only for STRING or INTEGER types)
+        :param user_modifiable: Display in forms for user if True (optional,
+                                default=True, only for PROJECT and USER scopes)
+        :param global_edit: Only allow editing on source site if True (optional,
+                            default=False)
+        :param project_types: Allowed project types (optional,
+                              default=[PROJECT_TYPE_PROJECT])
+        :parm widget_attrs: Form widget attributes (optional, dict)
+        :raise: ValueError if an argument is not valid
+        """
+        # Validate provided values
+        self.validate_scope(scope)
+        self.validate_type(type)
+        self.validate_type_options(type, options)
+        if not callable(default):
+            self.validate_value(type, default)
+        if (
+            default is not None
+            and options is not None
+            and not callable(default)
+            and not callable(options)
+        ):
+            self.validate_default_in_options(default, options)
+        # Set members
+        self.name = name
+        self.scope = scope
+        self.type = type
+        self.default = default
+        self.label = label
+        self.placeholder = placeholder
+        self.description = description
+        self.options = options or []
+        self.user_modifiable = user_modifiable
+        self.global_edit = global_edit
+        self.project_types = project_types or [PROJECT_TYPE_PROJECT]
+        self.widget_attrs = widget_attrs or {}
+
+    @classmethod
+    def validate_scope(cls, scope):
+        """
+        Validate the app setting scope.
+
+        :param scope: String
+        :raise: ValueError if scope is not recognized
+        """
+        if scope not in APP_SETTING_SCOPES:
+            raise ValueError('Invalid scope "{}"'.format(scope))
+
+    @classmethod
+    def validate_type(cls, setting_type):
+        """
+        Validate the app setting type.
+
+        :param setting_type: String
+        :raise: ValueError if type is not recognized
+        """
+        if setting_type not in APP_SETTING_TYPES:
+            raise ValueError('Invalid setting type "{}"'.format(setting_type))
+
+    @classmethod
+    def validate_type_options(cls, setting_type, setting_options):
+        """
+        Validate existence of options against setting type.
+
+        :param setting_type: String
+        :param setting_options: List of options (Strings or Integers)
+        :raise: ValueError if type is not recognized
+        """
+        if (
+            setting_type
+            not in [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
+            and setting_options
+        ):
+            raise ValueError(
+                'Options are only allowed for settings of type INTEGER and '
+                'STRING'
+            )
+
+    @classmethod
+    def validate_default_in_options(cls, setting_default, setting_options):
+        """
+        Validate existence of default value in uncallable options.
+
+        :param setting_default: Default value
+        :param setting_options: Setting options
+        :raise: ValueError if default is not found in options
+        """
+        if (
+            setting_options is not None
+            and not callable(setting_options)
+            and setting_default is not None
+            and not callable(setting_default)
+            and setting_default not in setting_options
+        ):
+            raise ValueError(
+                'Default value "{}" not found in options ({})'.format(
+                    setting_default,
+                    ', '.join([str(o) for o in setting_options]),
+                )
+            )
+
+    @classmethod
+    def validate_value(cls, setting_type, setting_value):
+        """
+        Validate non-callable value.
+
+        :param setting_type: Setting type (string)
+        :param setting_value: Setting value
+        :raise: ValueError if value is invalid
+        """
+        if setting_type == APP_SETTING_TYPE_BOOLEAN:
+            if not isinstance(setting_value, bool):
+                raise ValueError(
+                    'Please enter value as bool ({})'.format(setting_value)
+                )
+        elif setting_type == APP_SETTING_TYPE_INTEGER:
+            if (
+                not isinstance(setting_value, int)
+                and not str(setting_value).isdigit()
+            ):
+                raise ValueError(
+                    'Please enter a valid integer value ({})'.format(
+                        setting_value
+                    )
+                )
+        elif setting_type == APP_SETTING_TYPE_JSON:
+            if setting_value and not isinstance(setting_value, (dict, list)):
+                raise ValueError(
+                    'Please input JSON value as dict or list ({})'.format(
+                        setting_value
+                    )
+                )
+            try:
+                json.dumps(setting_value)
+            except TypeError:
+                raise ValueError(
+                    'Please enter valid JSON ({})'.format(setting_value)
+                )
 
 
 class PluginObjectLink:

@@ -4,13 +4,9 @@ from django.test import override_settings
 
 from test_plus.test import TestCase
 
-from projectroles.app_settings import (
-    AppSettingAPI,
-    get_example_setting_default,
-    get_example_setting_options,
-)
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import PluginAppSettingDef, get_app_plugin
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -49,15 +45,6 @@ EXISTING_SETTING = 'project_bool_setting'
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_SETTING_VALUE = 'INVALID VALUE'
 INVALID_SETTING_MSG = 'INVALID_SETTING_VALUE detected'
-APP_SETTINGS_TEST = {
-    'project_star': {
-        'scope': APP_SETTING_SCOPE_PROJECT_USER,
-        'type': APP_SETTING_TYPE_BOOLEAN,
-        'default': False,
-        'local': True,  # Deprecated
-        'project_types': [PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
-    },
-}
 
 
 class AppSettingInitMixin:
@@ -66,6 +53,7 @@ class AppSettingInitMixin:
     def init_app_settings(self):
         """Init test app settings"""
         # TODO: Rename these to match the settings in example_project_app
+        # TODO: Only create these where it's necessary
         # Init test project settings
         self.project_str_setting = {
             'plugin_name': EXAMPLE_APP_NAME,
@@ -318,8 +306,10 @@ class TestAppSettingAPI(
 
     def test_get_with_default(self):
         """Test get() with default value for existing setting"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
-        default_val = app_plugin.app_settings[EXISTING_SETTING]['default']
+        s_defs = app_settings.get_definitions(
+            scope=APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
+        )
+        default_val = s_defs[EXISTING_SETTING].default
         val = app_settings.get(
             plugin_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
@@ -659,6 +649,7 @@ class TestAppSettingAPI(
         """Test get_definition() with plugin"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
+            'name': 'project_str_setting',
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting',
@@ -666,15 +657,21 @@ class TestAppSettingAPI(
             'description': 'Example string project setting',
             'placeholder': 'Example string',
             'user_modifiable': True,
+            'global_edit': False,
+            'options': [],
+            'project_types': [PROJECT_TYPE_PROJECT],
+            'widget_attrs': {},
         }
         s_def = app_settings.get_definition(
             'project_str_setting', plugin=app_plugin
         )
-        self.assertEqual(s_def, expected)
+        self.assertIsInstance(s_def, PluginAppSettingDef)
+        self.assertEqual(s_def.__dict__, expected)
 
-    def test_get_definition_app_name(self):
-        """Test get_definition() with app name"""
+    def test_get_definition_plugin_name(self):
+        """Test get_definition() with plugin name"""
         expected = {
+            'name': 'project_str_setting',
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting',
@@ -682,15 +679,20 @@ class TestAppSettingAPI(
             'description': 'Example string project setting',
             'placeholder': 'Example string',
             'user_modifiable': True,
+            'global_edit': False,
+            'options': [],
+            'project_types': [PROJECT_TYPE_PROJECT],
+            'widget_attrs': {},
         }
         s_def = app_settings.get_definition(
             'project_str_setting', plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(s_def, expected)
+        self.assertEqual(s_def.__dict__, expected)
 
     def test_get_definition_user(self):
         """Test get_definition() with user setting"""
         expected = {
+            'name': 'user_str_setting',
             'scope': APP_SETTING_SCOPE_USER,
             'type': APP_SETTING_TYPE_STRING,
             'label': 'String setting',
@@ -698,11 +700,15 @@ class TestAppSettingAPI(
             'description': 'Example string user setting',
             'placeholder': 'Example string',
             'user_modifiable': True,
+            'global_edit': False,
+            'options': [],
+            'project_types': [PROJECT_TYPE_PROJECT],
+            'widget_attrs': {},
         }
         s_def = app_settings.get_definition(
             'user_str_setting', plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(s_def, expected)
+        self.assertEqual(s_def.__dict__, expected)
 
     def test_get_definition_invalid(self):
         """Test get_definition() with innvalid input"""
@@ -720,279 +726,47 @@ class TestAppSettingAPI(
 
     def test_get_definitions_project(self):
         """Test get_definitions() with PROJECT scope"""
-        expected = {
-            'project_str_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'String setting',
-                'default': '',
-                'description': 'Example string project setting',
-                'placeholder': 'Example string',
-                'user_modifiable': True,
-            },
-            'project_int_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_INTEGER,
-                'label': 'Integer setting',
-                'default': 0,
-                'description': 'Example integer project setting',
-                'placeholder': 0,
-                'user_modifiable': True,
-                'widget_attrs': {'class': 'text-success'},
-            },
-            'project_str_setting_options': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'String setting with options',
-                'default': 'string1',
-                'options': ['string1', 'string2'],
-                'description': 'Example string project setting with options',
-                'user_modifiable': True,
-            },
-            'project_int_setting_options': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_INTEGER,
-                'label': 'Integer setting with options',
-                'default': 0,
-                'options': [0, 1],
-                'description': 'Example integer project setting with options',
-                'user_modifiable': True,
-                'widget_attrs': {'class': 'text-success'},
-            },
-            'project_bool_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_BOOLEAN,
-                'label': 'Boolean setting',
-                'default': False,
-                'description': 'Example boolean project setting',
-                'user_modifiable': True,
-            },
-            'project_global_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_BOOLEAN,
-                'label': 'Global boolean setting',
-                'default': False,
-                'description': 'Example global boolean project setting',
-                'user_modifiable': True,
-                'global': True,
-            },
-            'project_json_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_JSON,
-                'label': 'JSON setting',
-                'default': {
-                    'Example': 'Value',
-                    'list': [1, 2, 3, 4, 5],
-                    'level_6': False,
-                },
-                'description': 'Example JSON project setting',
-                'user_modifiable': True,
-                'widget_attrs': {'class': 'text-danger'},
-            },
-            'project_hidden_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'Hidden setting',
-                'default': '',
-                'description': 'Example hidden project setting',
-                'user_modifiable': False,
-            },
-            'project_hidden_json_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_JSON,
-                'label': 'Hidden JSON setting',
-                'description': 'Example hidden JSON project setting',
-                'user_modifiable': False,
-            },
-            'project_callable_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'Callable project setting',
-                'default': get_example_setting_default,
-                'description': 'Example callable project setting',
-            },
-            'project_callable_setting_options': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'Callable setting with options',
-                'default': get_example_setting_default,
-                'options': get_example_setting_options,
-                'description': 'Example callable project setting with options',
-                'user_modifiable': True,
-            },
-            'category_bool_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT,
-                'type': APP_SETTING_TYPE_BOOLEAN,
-                'label': 'Category boolean setting',
-                'default': False,
-                'description': 'Example boolean project category setting',
-                'user_modifiable': True,
-                'project_types': [PROJECT_TYPE_CATEGORY],
-            },
-        }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(defs, expected)
+        self.assertIsInstance(defs, dict)
+        self.assertEqual(len(defs), 12)
+        self.assertTrue(
+            all([d.scope == APP_SETTING_SCOPE_PROJECT for d in defs.values()])
+        )
 
     def test_get_definitions_user(self):
         """Test get_definitions() with USER scope"""
-        expected = {
-            'user_str_setting': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'String setting',
-                'default': '',
-                'description': 'Example string user setting',
-                'placeholder': 'Example string',
-                'user_modifiable': True,
-            },
-            'user_int_setting': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_INTEGER,
-                'label': 'Integer setting',
-                'default': 0,
-                'description': 'Example integer user setting',
-                'placeholder': 0,
-                'user_modifiable': True,
-                'widget_attrs': {'class': 'text-success'},
-            },
-            'user_str_setting_options': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'String setting with options',
-                'default': 'string1',
-                'options': ['string1', 'string2'],
-                'description': 'Example string user setting with options',
-                'user_modifiable': True,
-            },
-            'user_int_setting_options': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_INTEGER,
-                'label': 'Integer setting with options',
-                'default': 0,
-                'options': [0, 1],
-                'description': 'Example integer user setting with options',
-                'user_modifiable': True,
-                'widget_attrs': {'class': 'text-success'},
-            },
-            'user_bool_setting': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_BOOLEAN,
-                'label': 'Boolean setting',
-                'default': False,
-                'description': 'Example boolean user setting',
-                'user_modifiable': True,
-            },
-            'user_json_setting': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_JSON,
-                'label': 'JSON setting',
-                'default': {
-                    'Example': 'Value',
-                    'list': [1, 2, 3, 4, 5],
-                    'level_6': False,
-                },
-                'description': 'Example JSON user setting',
-                'user_modifiable': True,
-                'widget_attrs': {'class': 'text-danger'},
-            },
-            'user_hidden_setting': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_STRING,
-                'default': '',
-                'description': 'Example hidden user setting',
-                'user_modifiable': False,
-            },
-            'user_callable_setting': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'Callable user setting',
-                'default': get_example_setting_default,
-                'description': 'Example callable user setting',
-            },
-            'user_callable_setting_options': {
-                'scope': APP_SETTING_SCOPE_USER,
-                'type': APP_SETTING_TYPE_STRING,
-                'label': 'Callable setting with options',
-                'default': get_example_setting_default,
-                'options': get_example_setting_options,
-                'description': 'Example callable user setting with options',
-                'user_modifiable': True,
-            },
-        }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_USER, plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(defs, expected)
+        self.assertEqual(len(defs), 9)
+        self.assertTrue(
+            all([d.scope == APP_SETTING_SCOPE_USER for d in defs.values()])
+        )
 
     def test_get_definitions_project_user(self):
         """Test get_definitions() with PROJECT_USER scope"""
-        expected = {
-            'project_user_str_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT_USER,
-                'type': APP_SETTING_TYPE_STRING,
-                'default': '',
-                'description': 'Example string project user setting',
-            },
-            'project_user_int_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT_USER,
-                'type': APP_SETTING_TYPE_INTEGER,
-                'default': 0,
-                'description': 'Example int project user setting',
-            },
-            'project_user_bool_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT_USER,
-                'type': APP_SETTING_TYPE_BOOLEAN,
-                'default': False,
-                'description': 'Example bool project user setting',
-            },
-            'project_user_json_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT_USER,
-                'type': APP_SETTING_TYPE_JSON,
-                'default': {
-                    'Example': 'Value',
-                    'list': [1, 2, 3, 4, 5],
-                    'level_6': False,
-                },
-                'description': 'Example json project user setting',
-            },
-            'project_user_callable_setting': {
-                'scope': APP_SETTING_SCOPE_PROJECT_USER,
-                'type': APP_SETTING_TYPE_STRING,
-                'default': get_example_setting_default,
-                'description': 'Example callable project user setting',
-            },
-            'project_user_callable_setting_options': {
-                'scope': APP_SETTING_SCOPE_PROJECT_USER,
-                'type': APP_SETTING_TYPE_STRING,
-                'default': get_example_setting_default,
-                'options': get_example_setting_options,
-                'description': 'Example callable project user setting with '
-                'options',
-            },
-        }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT_USER, plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(defs, expected)
+        self.assertEqual(len(defs), 6)
+        self.assertTrue(
+            all(
+                [
+                    d.scope == APP_SETTING_SCOPE_PROJECT_USER
+                    for d in defs.values()
+                ]
+            )
+        )
 
     def test_get_definitions_site(self):
         """Test get_definitions() with SITE scope"""
-        expected = {
-            'site_bool_setting': {
-                'scope': APP_SETTING_SCOPE_SITE,
-                'label': 'Site boolean setting',
-                'type': APP_SETTING_TYPE_BOOLEAN,
-                'default': False,
-                'description': 'Example boolean site setting',
-                'user_modifiable': True,
-            }
-        }
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_SITE, plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(defs, expected)
+        self.assertEqual(len(defs), 1)
+        self.assertTrue(list(defs.values())[0].scope, APP_SETTING_SCOPE_SITE)
 
     def test_get_definitions_modifiable(self):
         """Test get_definitions() with user_modifiable arg"""

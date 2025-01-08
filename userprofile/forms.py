@@ -37,33 +37,32 @@ APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 class UserSettingsForm(SODARForm):
     """Form for configuring user settings"""
 
-    def _set_app_setting_field(self, plugin_name, s_field, s_key, s_val):
+    def _set_app_setting_field(self, plugin_name, s_field, s_def):
         """
         Set user app setting field, widget and value.
 
         :param plugin_name: App plugin name
         :param s_field: Form field name
-        :param s_key: Setting key
-        :param s_val: Setting value
+        :param s_def: PluginAppSettingDef object
         """
-        s_widget_attrs = s_val.get('widget_attrs') or {}
-        if 'placeholder' in s_val:
-            s_widget_attrs['placeholder'] = s_val.get('placeholder')
+        s_widget_attrs = s_def.widget_attrs
+        if s_def.placeholder is not None:
+            s_widget_attrs['placeholder'] = s_def.placeholder
         setting_kwargs = {
             'required': False,
-            'label': s_val.get('label') or '{}.{}'.format(plugin_name, s_key),
-            'help_text': s_val.get('description'),
+            'label': s_def.label or '{}.{}'.format(plugin_name, s_def.name),
+            'help_text': s_def.description,
         }
         # Disable global user settings if on target site
         if (
-            app_settings.get_global_value(s_val)
+            s_def.global_edit
             and settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
         ):
             setting_kwargs['label'] += ' ' + SETTING_DISABLE_LABEL
             setting_kwargs['help_text'] += ' ' + SETTING_SOURCE_ONLY_MSG
             setting_kwargs['disabled'] = True
 
-        if s_val.get('options') and callable(s_val['options']):
+        if s_def.options and callable(s_def.options):
             self.fields[s_field] = forms.ChoiceField(
                 choices=[
                     (
@@ -71,35 +70,35 @@ class UserSettingsForm(SODARForm):
                         if isinstance(value, tuple)
                         else (str(value), str(value))
                     )
-                    for value in s_val['options'](user=self.user)
+                    for value in s_def.options(user=self.user)
                 ],
                 **setting_kwargs,
             )
-        elif s_val.get('options'):
+        elif s_def.options:
             self.fields[s_field] = forms.ChoiceField(
                 choices=[
                     (
                         (int(option), int(option))
-                        if s_val['type'] == APP_SETTING_TYPE_INTEGER
+                        if s_def.type == APP_SETTING_TYPE_INTEGER
                         else (option, option)
                     )
-                    for option in s_val['options']
+                    for option in s_def.options
                 ],
                 **setting_kwargs,
             )
-        elif s_val['type'] == APP_SETTING_TYPE_STRING:
+        elif s_def.type == APP_SETTING_TYPE_STRING:
             self.fields[s_field] = forms.CharField(
                 widget=forms.TextInput(attrs=s_widget_attrs),
                 **setting_kwargs,
             )
-        elif s_val['type'] == APP_SETTING_TYPE_INTEGER:
+        elif s_def.type == APP_SETTING_TYPE_INTEGER:
             self.fields[s_field] = forms.IntegerField(
                 widget=forms.NumberInput(attrs=s_widget_attrs),
                 **setting_kwargs,
             )
-        elif s_val['type'] == APP_SETTING_TYPE_BOOLEAN:
+        elif s_def.type == APP_SETTING_TYPE_BOOLEAN:
             self.fields[s_field] = forms.BooleanField(**setting_kwargs)
-        elif s_val['type'] == APP_SETTING_TYPE_JSON:
+        elif s_def.type == APP_SETTING_TYPE_JSON:
             # NOTE: Attrs MUST be supplied here (#404)
             if 'class' in s_widget_attrs:
                 s_widget_attrs['class'] += ' sodar-json-input'
@@ -113,9 +112,9 @@ class UserSettingsForm(SODARForm):
         # Modify initial value and attributes
         self.fields[s_field].widget.attrs.update(s_widget_attrs)
         value = app_settings.get(
-            plugin_name=plugin_name, setting_name=s_key, user=self.user
+            plugin_name=plugin_name, setting_name=s_def.name, user=self.user
         )
-        if s_val['type'] == APP_SETTING_TYPE_JSON:
+        if s_def.type == APP_SETTING_TYPE_JSON:
             value = json.dumps(value)
         self.initial[s_field] = value
 
@@ -129,20 +128,20 @@ class UserSettingsForm(SODARForm):
 
         for plugin in self.app_plugins + [None]:
             if plugin:
-                name = plugin.name
-                p_defs = app_settings.get_definitions(
+                plugin_name = plugin.name
+                s_defs = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
                 )
             else:
-                name = 'projectroles'
-                p_defs = app_settings.get_definitions(
+                plugin_name = 'projectroles'
+                s_defs = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER,
-                    plugin_name=name,
+                    plugin_name=plugin_name,
                     user_modifiable=True,
                 )
-            for s_key, s_val in p_defs.items():
-                s_field = 'settings.{}.{}'.format(name, s_key)
-                self._set_app_setting_field(name, s_field, s_key, s_val)
+            for s_def in s_defs.values():
+                s_field = 'settings.{}.{}'.format(plugin_name, s_def.name)
+                self._set_app_setting_field(plugin_name, s_field, s_def)
                 self.fields[s_field].label = self.get_app_setting_label(
                     plugin, self.fields[s_field].label
                 )
@@ -157,16 +156,16 @@ class UserSettingsForm(SODARForm):
             else:
                 p_name = 'projectroles'
                 p_kwargs['plugin_name'] = p_name
-            p_defs = app_settings.get_definitions(
+            s_defs = app_settings.get_definitions(
                 APP_SETTING_SCOPE_USER, **p_kwargs
             )
             p_settings = {}
 
-            for s_key, s_val in p_defs.items():
-                s_field = '.'.join(['settings', p_name, s_key])
-                p_settings[s_key] = self.cleaned_data.get(s_field)
+            for s_def in s_defs.values():
+                s_field = '.'.join(['settings', p_name, s_def.name])
+                p_settings[s_def.name] = self.cleaned_data.get(s_field)
 
-                if s_val['type'] == APP_SETTING_TYPE_JSON:
+                if s_def.type == APP_SETTING_TYPE_JSON:
                     if not self.cleaned_data.get(s_field):
                         self.cleaned_data[s_field] = '{}'
                     try:
@@ -175,14 +174,14 @@ class UserSettingsForm(SODARForm):
                         )
                     except json.JSONDecodeError as err:
                         self.add_error(s_field, 'Invalid JSON\n' + str(err))
-                elif s_val['type'] == APP_SETTING_TYPE_INTEGER:
+                elif s_def.type == APP_SETTING_TYPE_INTEGER:
                     # Convert integers from select fields
                     self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
 
                 if not app_settings.validate(
-                    setting_type=s_val['type'],
+                    setting_type=s_def.type,
                     setting_value=self.cleaned_data.get(s_field),
-                    setting_options=s_val.get('options'),
+                    setting_options=s_def.options,
                     user=self.user,
                 ):
                     self.add_error(s_field, 'Invalid value')

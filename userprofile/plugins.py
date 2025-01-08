@@ -1,6 +1,6 @@
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import SiteAppPluginPoint
+from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
 
 from userprofile.urls import urlpatterns
 
@@ -34,15 +34,16 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: Required permission for displaying the app
     app_permission = 'userprofile.view_detail'
 
-    app_settings = {
-        'enable_project_uuid_copy': {
-            'scope': APP_SETTING_SCOPE_USER,
-            'type': APP_SETTING_TYPE_BOOLEAN,
-            'label': 'Display project UUID copying link',
-            'default': False,
-            'user_modifiable': True,
-        }
-    }
+    #: App setting definitions
+    app_settings = [
+        PluginAppSettingDef(
+            name='enable_project_uuid_copy',
+            scope=APP_SETTING_SCOPE_USER,
+            type=APP_SETTING_TYPE_BOOLEAN,
+            label='Display project UUID copying link',
+            default=False,
+        )
+    ]
 
     def get_messages(self, user=None):
         """
