@@ -985,20 +985,6 @@ class TestAppSettingAPI(
                 user=self.user,
             )
 
-    def test_get_global_value(self):
-        """Test get_global_value() with set value"""
-        s_def = app_settings.get_definition(
-            'project_global_setting', plugin_name=EXAMPLE_APP_NAME
-        )
-        self.assertEqual(app_settings.get_global_value(s_def), True)
-
-    def test_get_global_value_unset(self):
-        """Test get_global_value() with unset value"""
-        s_def = app_settings.get_definition(
-            'project_str_setting', plugin_name=EXAMPLE_APP_NAME
-        )
-        self.assertEqual(app_settings.get_global_value(s_def), False)  # Default
-
     def test_validate_form_app_settings(self):
         """Test validate_form_app_settings() with valid project setting value"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)

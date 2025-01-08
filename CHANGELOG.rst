@@ -37,6 +37,7 @@ Removed
     - Support for deprecated app setting ``local`` parameter (#1394)
     - Deprecated API view base classes and mixins (#1401)
     - Core API view base classes and mixins (#1401)
+    - ``AppSettingAPI.get_global_value()`` helper (#1394, #1533)
 - **Timeline**
     - Support for deprecated ``get_object_link()`` return values as dict (#1398)
 

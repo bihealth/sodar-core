@@ -191,9 +191,12 @@ class RemoteProjectAPI:
             plugin_name = app_setting.app_plugin.name
         else:
             plugin_name = 'projectroles'
-        global_val = app_settings.get_global_value(
-            all_defs.get(plugin_name, {}).get(app_setting.name, {})
-        )
+        s_def = all_defs.get(plugin_name, {}).get(app_setting.name, {})
+        if not s_def:  # This should not be able to happen, but just in case
+            raise Exception(
+                'Definition not found for setting: {}'.format(app_setting.name)
+            )
+
         # NOTE: Provide user_name in case of local target users
         sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
             'name': app_setting.name,
@@ -214,7 +217,7 @@ class RemoteProjectAPI:
             'user_name': (
                 app_setting.user.username if app_setting.user else None
             ),
-            'global': global_val,
+            'global': s_def.global_edit,
         }
         return sync_data
 

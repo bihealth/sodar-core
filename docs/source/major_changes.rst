@@ -68,6 +68,10 @@ App Settings Local Attribute
     Support for the ``local`` attribute for app settings has been removed. Use
     ``global`` instead. This is only relevant to sites being deployed as
     ``SOURCE`` sites.
+``AppSettingAPI.get_global_value()`` Removed
+    The ``get_global_value()`` helper has been removed as the deprecated
+    ``local`` attribute is no longer supported. Instead, access the
+    ``global_edit`` member of a ``PluginAppSettingDef`` object directly.
 
 Squashed Migrations Removed
 ---------------------------

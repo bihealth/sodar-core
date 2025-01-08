@@ -771,18 +771,6 @@ class AppSettingAPI:
             ret[p.name] = cls._get_defs(p)
         return ret
 
-    # TODO: Remove (see #1533)
-    @classmethod
-    def get_global_value(cls, setting_def):
-        """
-        Get the "global" value of a settings definition. If the deprecated
-        "local" value is still used, return that and log a warning.
-
-        :param setting_def: Dict
-        :return: Boolean
-        """
-        return setting_def.global_edit
-
     @classmethod
     def compare_value(cls, obj, input_value):
         """
