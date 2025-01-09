@@ -73,7 +73,6 @@ class ProjectModifyPluginMixin:
         :param old_settings: Old app settings in case of update (dict or None)
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_project_modify(
@@ -95,7 +94,6 @@ class ProjectModifyPluginMixin:
         :param old_settings: Old app settings in case of update (dict or None)
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_role_modify(self, role_as, action, old_role=None, request=None):
@@ -108,7 +106,6 @@ class ProjectModifyPluginMixin:
         :param old_role: Role object for previous role in case of an update
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_role_modify(self, role_as, action, old_role=None, request=None):
@@ -121,7 +118,6 @@ class ProjectModifyPluginMixin:
         :param old_role: Role object for previous role in case of an update
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_role_delete(self, role_as, request=None):
@@ -131,7 +127,6 @@ class ProjectModifyPluginMixin:
         :param role_as: RoleAssignment object
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_role_delete(self, role_as, request=None):
@@ -142,7 +137,6 @@ class ProjectModifyPluginMixin:
         :param role_as: RoleAssignment object
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_owner_transfer(
@@ -157,7 +151,6 @@ class ProjectModifyPluginMixin:
         :param old_owner_role: Role object for new role of previous owner
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_owner_transfer(
@@ -172,7 +165,6 @@ class ProjectModifyPluginMixin:
         :param old_owner_role: Role object for new role of previous owner
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_project_sync(self, project):
@@ -184,7 +176,6 @@ class ProjectModifyPluginMixin:
 
         :param project: Current project object (Project)
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_project_setting_update(
@@ -208,7 +199,6 @@ class ProjectModifyPluginMixin:
         :param project: Project object or None
         :param user: User object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_project_setting_update(
@@ -232,7 +222,6 @@ class ProjectModifyPluginMixin:
         :param project: Project object or None
         :param user: User object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_project_archive(
@@ -245,7 +234,6 @@ class ProjectModifyPluginMixin:
 
         :param project: Project object (Project)
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_project_archive(
@@ -259,7 +247,6 @@ class ProjectModifyPluginMixin:
 
         :param project: Project object (Project)
         """
-        # TODO: Implement this in your app plugin
         pass
 
 
@@ -272,71 +259,60 @@ class ProjectAppPluginPoint(PluginPoint):
     #: UI URLs
     urls = []
 
-    #: App settings definition
+    #: App setting definitions
     #:
     #: Example ::
     #:
-    #:     app_settings = {
-    #:         'example_setting': {
-    #:             'scope': 'PROJECT',  # PROJECT/USER/SITE
-    #:             'type': APP_SETTING_TYPE_STRING,  # STRING/INTEGER/BOOLEAN
-    #:             'default': 'example',
-    #:             'label': 'Project setting',  # Optional, defaults to name/key
-    #:             'placeholder': 'Enter example setting here',  # Optional
-    #:             'description': 'Example project setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for
-    #:             settings of type STRING or INTEGER
-    #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in forms on target
-    #:             site, sync value from source to target site if false
-    #:             'project_types': [PROJECT_TYPE_PROJECT],  # Optional, may
-    #:             contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
-    #:         }
-    #:     }
-    # TODO: Define project specific settings in your app plugin, example above
-    app_settings = {}
+    #:     app_settings = [
+    #:         PluginAppSettingDef(
+    #:             name='example_setting',  # Must be unique within plugin
+    #:             scope=APP_SETTING_SCOPE_PROJECT,
+    #:             type=APP_SETTING_TYPE_STRING,
+    #:             default='example',  # Optional
+    #:             label='Example setting',  # Optional
+    #:             placeholder='Enter example setting here',  # Optional
+    #:             description='Example user setting',  # Optional
+    #:             options=['example', 'example2'],  # Optional, only for STRING
+    #:                                               # or INTEGER settings
+    #:             user_modifiable=True,  # Optional, show/hide in forms
+    #:             global_edit=False,  # Optional, enable/disable editing on
+    #:                                 # target sites
+    #:             widget_attrs={},  # Optional, widget attrs for forms
+    #:         )
+    #:    ]
+    app_settings = []
 
     # DEPRECATED, will be removed in the next SODAR Core release
     project_settings = {}
 
     #: Iconify icon
-    # TODO: Implement this in your app plugin
     icon = 'mdi:help-rhombus-outline'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
-    # TODO: Implement this in your app plugin
     entry_point_url_id = 'home'
 
     #: Description string
-    # TODO: Implement this in your app plugin
     description = 'TODO: Write a description for your plugin'
 
     #: Required permission for accessing the app
-    # TODO: Implement this in your app plugin (can be None)
     app_permission = None
 
     #: Enable or disable general search from project title bar
-    # TODO: Implement this in your app plugin
     search_enable = False
 
     #: List of search object types for the app
-    # TODO: Implement this in your app plugin
     search_types = []
 
     #: Search results template
-    # TODO: Implement this in your app plugin
     search_template = None
 
     #: App card template for the project details page
-    # TODO: Implement this in your app plugin
     details_template = None
 
     #: App card title for the project details page
-    # TODO: Implement this in your app plugin (can be None)
     details_title = None
 
     #: Position in plugin ordering
-    # TODO: Implement this in your app plugin (must be an integer)
     plugin_ordering = 50
 
     #: Optional custom project list column definition
@@ -353,15 +329,12 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'align': 'left'  # Alignment of content
     #:         }
     #:     }
-    # TODO: Define project list column data in your app plugin (optional)
     project_list_columns = {}
 
     #: Display application for categories in addition to projects
-    # TODO: Override this in your app plugin if needed
     category_enable = False
 
     #: Names of plugin specific Django settings to display in siteinfo
-    # TODO: Override this in your app plugin if needed
     info_settings = []
 
     def get_object(self, model, uuid):
@@ -390,12 +363,10 @@ class ProjectAppPluginPoint(PluginPoint):
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
             return None
-        # TODO: Implement this in your app plugin
         return None
 
     def get_extra_data_link(self, _extra_data, _name):
         """Return a link for timeline label starting with 'extra-'"""
-        # TODO: Implement this in your app plugin
         return None
 
     def search(self, search_terms, user, search_type=None, keywords=None):
@@ -410,8 +381,8 @@ class ProjectAppPluginPoint(PluginPoint):
         :param keywords: List (optional)
         :return: List of PluginSearchResult objects
         """
-        # TODO: Implement this in your app plugin
-        # TODO: Implement display of results in the app's search template
+        # TODO: If implemented, also implement display of results in the app's
+        #       search template
         return []
 
     def update_cache(self, name=None, project=None, user=None):
@@ -422,7 +393,6 @@ class ProjectAppPluginPoint(PluginPoint):
         :param project: Project object to limit update to (optional)
         :param user: User object to denote user triggering the update (optional)
         """
-        # TODO: Implement this in your app plugin
         return None
 
     def get_statistics(self):
@@ -432,7 +402,6 @@ class ProjectAppPluginPoint(PluginPoint):
 
         :return: Dict
         """
-        # TODO: Implement this in your app plugin
         return {}
 
     def get_project_list_value(self, column_id, project, user):
@@ -445,7 +414,6 @@ class ProjectAppPluginPoint(PluginPoint):
         :param user: User object (current user)
         :return: String (may contain HTML), integer or None
         """
-        # TODO: Implement this in your app plugin (optional)
         return None
 
     def validate_form_app_settings(self, app_settings, project=None, user=None):
@@ -457,7 +425,6 @@ class ProjectAppPluginPoint(PluginPoint):
         :param user: User object or None
         :return: dict in format of {setting_name: 'Error string'}
         """
-        # TODO: Implement this in your app plugin (optional)
         return None
 
 
@@ -465,28 +432,22 @@ class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""
 
     #: Iconify icon
-    # TODO: Implement this in your backend plugin
     icon = 'mdi:help-rhombus-outline'
 
     #: Description string
-    # TODO: Implement this in your backend plugin
     description = 'TODO: Write a description for your plugin'
 
     #: URL of optional javascript file to be included
-    # TODO: Implement this in your backend plugin if applicable
     javascript_url = None
 
     #: URL of optional css file to be included
-    # TODO: Implement this in your backend plugin if applicable
     css_url = None
 
     #: Names of plugin specific Django settings to display in siteinfo
-    # TODO: Override this in your app plugin if needed
     info_settings = []
 
     def get_api(self):
         """Return API entry point object."""
-        # TODO: Implement this in your backend plugin
         raise NotImplementedError
 
     def get_statistics(self):
@@ -496,7 +457,6 @@ class BackendPluginPoint(PluginPoint):
 
         :return: Dict
         """
-        # TODO: Implement this in your backend plugin
         return {}
 
     def get_object(self, model, uuid):
@@ -525,12 +485,10 @@ class BackendPluginPoint(PluginPoint):
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
             return None
-        # TODO: Implement this in your app plugin
         return None
 
     def get_extra_data_link(self, _extra_data, _name):
         """Return a link for timeline label starting with 'extra-'"""
-        # TODO: Implement this in your app plugin
         return None
 
 
@@ -538,44 +496,41 @@ class SiteAppPluginPoint(PluginPoint):
     """Projectroles plugin point for registering site-wide apps"""
 
     #: Iconify icon
-    # TODO: Implement this in your site app plugin
     icon = 'mdi:help-rhombus-outline'
 
     #: Description string
-    # TODO: Implement this in your site app plugin
     description = 'TODO: Write a description for your plugin'
 
     #: Entry point URL ID
-    # TODO: Implement this in your app plugin
     entry_point_url_id = 'home'
 
     #: Required permission for displaying the app
-    # TODO: Implement this in your site app plugin (can be None)
     app_permission = None
 
     #: User settings definition
     #:
     #: Example ::
     #:
-    #:     app_settings = {
-    #:         'example_setting': {
-    #:             'scope' : 'USER',  # always USER
-    #:             'type': APP_SETTING_TYPE_STRING,  # STRING/INTEGER/BOOLEAN
-    #:             'default': 'example',
-    #:             'placeholder': 'Enter example setting here',  # Optional
-    #:             'description': 'Example user setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for
-    #:             settings of type STRING or INTEGER
-    #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in forms on target
-    #:             site
-    #:         }
-    #:     }
-    # TODO: Define user specific settings in your app plugin, example above
-    app_settings = {}
+    #:     app_settings = [
+    #:         PluginAppSettingDef(
+    #:             name='example_setting',  # Must be unique within plugin
+    #:             scope=APP_SETTING_SCOPE_USER,  # Use USER or SITE
+    #:             type=APP_SETTING_TYPE_STRING,
+    #:             default='example',  # Optional
+    #:             label='Example setting',  # Optional
+    #:             placeholder='Enter example setting here',  # Optional
+    #:             description='Example user setting',  # Optional
+    #:             options=['example', 'example2'],  # Optional, only for STRING
+    #:                                               # or INTEGER settings
+    #:             user_modifiable=True,  # Optional, show/hide in forms
+    #:             global_edit=False,  # Optional, enable/disable editing on
+    #:                                 # target sites
+    #:             widget_attrs={},  # Optional, widget attrs for forms
+    #:         )
+    #:    ]
+    app_settings = []
 
     #: List of names for plugin specific Django settings to display in siteinfo
-    # TODO: Override this in your app plugin if needed
     info_settings = []
 
     def get_statistics(self):
@@ -585,7 +540,6 @@ class SiteAppPluginPoint(PluginPoint):
 
         :return: Dict
         """
-        # TODO: Implement this in your app plugin
         return {}
 
     def get_messages(self, user=None):
@@ -603,7 +557,6 @@ class SiteAppPluginPoint(PluginPoint):
             'dismissable': True     # False for non-dismissable
         }]
         '''
-        # TODO: Implement this in your site app plugin
         return []
 
     def get_object(self, model, uuid):
@@ -632,12 +585,10 @@ class SiteAppPluginPoint(PluginPoint):
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
             return None
-        # TODO: Implement this in your app plugin
         return None
 
     def get_extra_data_link(self, _extra_data, _name):
         """Return a link for timeline label starting with 'extra-'"""
-        # TODO: Implement this in your app plugin
         return None
 
     def validate_form_app_settings(self, app_settings, user=None):
@@ -648,7 +599,6 @@ class SiteAppPluginPoint(PluginPoint):
         :param user: User object or None
         :return: dict in format of {setting_name: 'Error string'}
         """
-        # TODO: Implement this in your app plugin (optional)
         return None
 
 
