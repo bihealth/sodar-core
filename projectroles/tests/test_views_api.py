@@ -2809,7 +2809,7 @@ class TestProjectSettingRetrievePIView(
             'name': setting_name,
             'type': APP_SETTING_TYPE_STRING,
             'value': default_value,
-            'user_modifiable': True,
+            'user_modifiable': False,
         }
         self.assertEqual(response_data, expected)
         self.assertIsInstance(AppSetting.objects.get(**q_kwargs), AppSetting)

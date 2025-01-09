@@ -1063,7 +1063,10 @@ class ProjectSettingSetAPIView(
             setting_name,
             [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER],
         )
-        if not s_def.user_modifiable:
+        if (
+            s_def.scope == APP_SETTING_SCOPE_PROJECT
+            and not s_def.user_modifiable
+        ):
             raise PermissionDenied(USER_MODIFIABLE_MSG)
         # Get value
         value = self.get_request_value(request)
