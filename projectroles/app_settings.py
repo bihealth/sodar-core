@@ -711,15 +711,16 @@ class AppSettingAPI:
     @classmethod
     def get_definitions(
         cls,
-        scope,
+        scope=None,
         plugin=None,
         plugin_name=None,
         user_modifiable=False,
     ):
         """
-        Return app setting definitions of a specific scope from a plugin.
+        Return app setting definitions from a plugin, optionally limited by
+        scope.
 
-        :param scope: PROJECT, USER or PROJECT_USER
+        :param scope: String or None
         :param plugin: Plugin object or None
         :param plugin_name: App plugin name (string, equals "name" in plugin)
         :param user_modifiable: Only return non-superuser modifiable settings if
@@ -728,12 +729,14 @@ class AppSettingAPI:
         :raise: ValueError if scope is invalid or if neither plugin_name nor
                 plugin are set
         """
-        PluginAppSettingDef.validate_scope(scope)
+        if scope:
+            PluginAppSettingDef.validate_scope(scope)
         defs = cls._get_defs(plugin, plugin_name)
         return {
             k: v
             for k, v in defs.items()
-            if v.scope == scope and (not user_modifiable or v.user_modifiable)
+            if (not scope or v.scope == scope)
+            and (not user_modifiable or v.user_modifiable)
         }
 
     @classmethod

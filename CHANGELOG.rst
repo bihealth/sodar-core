@@ -26,6 +26,7 @@ Changed
 - **Projectroles**
     - Deprecate ``get_user_display_name()``, use ``SODARUser.get_display_name()`` (#1487)
     - Deprecate declaring app setting definitions as dict (#1456)
+    - Allow ``scope=None`` in ``AppSettingAPI.get_definitions()`` (#1535)
 
 Removed
 -------

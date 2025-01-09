@@ -289,6 +289,8 @@ class TestAppSettingAPI(
         )
         # Init test data
         self.settings = self.init_app_settings()
+        example_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        self.example_defs = example_plugin.app_settings
 
     def test_get(self):
         """Test get()"""
@@ -730,7 +732,10 @@ class TestAppSettingAPI(
             APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
         )
         self.assertIsInstance(defs, dict)
-        self.assertEqual(len(defs), 12)
+        ex_defs = [
+            d for d in self.example_defs if d.scope == APP_SETTING_SCOPE_PROJECT
+        ]
+        self.assertEqual(len(defs), len(ex_defs))
         self.assertTrue(
             all([d.scope == APP_SETTING_SCOPE_PROJECT for d in defs.values()])
         )
@@ -740,7 +745,10 @@ class TestAppSettingAPI(
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_USER, plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 9)
+        ex_defs = [
+            d for d in self.example_defs if d.scope == APP_SETTING_SCOPE_USER
+        ]
+        self.assertEqual(len(defs), len(ex_defs))
         self.assertTrue(
             all([d.scope == APP_SETTING_SCOPE_USER for d in defs.values()])
         )
@@ -750,7 +758,12 @@ class TestAppSettingAPI(
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_PROJECT_USER, plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 6)
+        ex_defs = [
+            d
+            for d in self.example_defs
+            if d.scope == APP_SETTING_SCOPE_PROJECT_USER
+        ]
+        self.assertEqual(len(defs), len(ex_defs))
         self.assertTrue(
             all(
                 [
@@ -765,8 +778,18 @@ class TestAppSettingAPI(
         defs = app_settings.get_definitions(
             APP_SETTING_SCOPE_SITE, plugin_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 1)
+        ex_defs = [
+            d for d in self.example_defs if d.scope == APP_SETTING_SCOPE_SITE
+        ]
+        self.assertEqual(len(defs), len(ex_defs))
         self.assertTrue(list(defs.values())[0].scope, APP_SETTING_SCOPE_SITE)
+
+    def test_get_definitions_no_scope(self):
+        """Test get_definitions() with no scope"""
+        defs = app_settings.get_definitions(
+            scope=None, plugin_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(len(defs), len(self.example_defs))
 
     def test_get_definitions_modifiable(self):
         """Test get_definitions() with user_modifiable arg"""

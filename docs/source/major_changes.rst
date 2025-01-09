@@ -18,6 +18,7 @@ Release Highlights
 
 - Add app setting type constants
 - Add app setting definition as objects
+- Update app settings API
 - Remove support for features deprecated in v1.0
 - Remove squashed migrations
 
