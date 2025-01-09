@@ -16,6 +16,7 @@ Added
     - App setting type constants (#1458)
     - ``PluginAppSettingDef`` class for app setting definitions (#1456)
     - Django check for unique app setting names within each plugin (#1456)
+    - App setting ``user_modifiable`` validation (#1536)
 
 Changed
 -------

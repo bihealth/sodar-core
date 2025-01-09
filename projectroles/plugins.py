@@ -671,7 +671,7 @@ class PluginAppSettingDef:
         placeholder=None,
         description=None,
         options=None,
-        user_modifiable=True,
+        user_modifiable=None,  # Set None here to validate PROJECT_USER value
         global_edit=False,
         project_types=None,
         widget_attrs=None,
@@ -714,6 +714,12 @@ class PluginAppSettingDef:
             and not callable(options)
         ):
             self.validate_default_in_options(default, options)
+        # Validate and set user_modifiable
+        self.validate_user_modifiable(scope, user_modifiable)
+        if user_modifiable is None:
+            user_modifiable = (
+                False if scope == APP_SETTING_SCOPE_PROJECT_USER else True
+            )
         # Set members
         self.name = name
         self.scope = scope
@@ -829,6 +835,21 @@ class PluginAppSettingDef:
                 raise ValueError(
                     'Please enter valid JSON ({})'.format(setting_value)
                 )
+
+    @classmethod
+    def validate_user_modifiable(cls, scope, user_modifiable):
+        """
+        Validate user_modifiable against scope.
+
+        :param scope: String
+        :param user_modifiable: Bool or None
+        :raises: ValueError if user_modifiable can't be set for scope
+        """
+        if user_modifiable and scope == APP_SETTING_SCOPE_PROJECT_USER:
+            raise ValueError(
+                'Argument user_modifiable can not be set True for PROJECT_USER '
+                'scope settings'
+            )
 
 
 class PluginObjectLink:

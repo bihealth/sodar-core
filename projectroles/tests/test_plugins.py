@@ -249,3 +249,37 @@ class TestPluginAppSettingDef(TestCase):
                 default=0,
                 options=[1, 2],
             )
+
+    def test_init_project_user_modifiable_false(self):
+        """Test init with PROJECT_USER scope and user_modifiable=False"""
+        s_def = PluginAppSettingDef(
+            name=DEF_NAME,
+            scope=APP_SETTING_SCOPE_PROJECT_USER,
+            type=APP_SETTING_TYPE_BOOLEAN,
+            default=True,
+            user_modifiable=False,
+        )
+        self.assertIsNotNone(s_def)
+        self.assertEqual(s_def.user_modifiable, False)
+
+    def test_init_project_user_modifiable_unset(self):
+        """Test init with PROJECT_USER scope and user_modifiable unset"""
+        s_def = PluginAppSettingDef(
+            name=DEF_NAME,
+            scope=APP_SETTING_SCOPE_PROJECT_USER,
+            type=APP_SETTING_TYPE_BOOLEAN,
+            default=True,
+        )
+        self.assertIsNotNone(s_def)
+        self.assertEqual(s_def.user_modifiable, False)
+
+    def test_init_project_user_modifiable_true(self):
+        """Test init with PROJECT_USER scope and user_modifiable=True"""
+        with self.assertRaises(ValueError):
+            PluginAppSettingDef(
+                name=DEF_NAME,
+                scope=APP_SETTING_SCOPE_PROJECT_USER,
+                type=APP_SETTING_TYPE_BOOLEAN,
+                default=True,
+                user_modifiable=True,
+            )
