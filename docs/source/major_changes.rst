@@ -44,9 +44,10 @@ App Setting Definitions as Dict
     Instead, you should provide a list of ``PluginAppSettingDef`` objects. See
     the :ref:`app settings documentation <dev_resource_app_settings>` for
     details.
+``AppSettingAPI.get_all()``
+    Replaced by ``AppSettingAPI.get_all_by_scope()``.
 ``projectroles.utils.get_user_display_name()``
-    This utility method has been deprecated. Please use
-    ``SODARUser.get_display_name()`` instead.
+    Replaced by ``SODARUser.get_display_name()``.
 
 Previously Deprecated Features Removed
 --------------------------------------

@@ -59,6 +59,10 @@ DEF_DICT_DEPRECATE_MSG = (
     'Provide definitions as a list of PluginAppSettingDef '
     'objects (plugin={plugin_name})'
 )
+GET_ALL_DEPRECATE_MSG = (
+    'The get_all() method has been deprecated in v1.1 and will be removed in '
+    'v1.2. Use get_all_by_scope() instead'
+)
 
 
 # Define App Settings for projectroles app
@@ -384,41 +388,53 @@ class AppSettingAPI:
             return json.dumps(val)
         return val
 
-    # TODO: Remove, deprecate or refactor (see #1534)
     @classmethod
-    def get_all(cls, project=None, user=None, post_safe=False):
+    def get_all_by_scope(cls, scope, project=None, user=None, post_safe=False):
         """
-        Return all setting values. If the value is not found, return
-        the default.
+        Return all setting values by scope. If a value is not set, return the
+        default.
 
+        :param scope: String
         :param project: Project object (optional)
         :param user: User object (optional)
         :param post_safe: Whether POST safe values should be returned (bool)
         :return: Dict
+        :raise: ValueError if scope or project and user args are invalid
+        """
+        PluginAppSettingDef.validate_scope(scope)
+        cls._validate_project_and_user(scope, project, user)
+        ret = {}
+        all_defs = cls.get_all_defs()
+        for plugin_name, s_defs in all_defs.items():
+            for s_def in [d for d in s_defs.values() if d.scope == scope]:
+                ret[f'settings.{plugin_name}.{s_def.name}'] = cls.get(
+                    plugin_name, s_def.name, project, user, post_safe
+                )
+        return ret
+
+    # TODO: Remove in v1.2 (see #1538)
+    @classmethod
+    def get_all(cls, project=None, user=None, post_safe=False):
+        """
+        Return all setting values with the PROJECT scope. If a value is not
+        found, return the default.
+
+        This method is DEPRECATED and will be removed in v1.2. Please use
+        get_all_by_scope() instead.
+
+        :param project: Project object (optional)
+        :param user: User object (NOTE: Not actually used)
+        :param post_safe: Whether POST safe values should be returned (bool)
+        :return: Dict
         :raise: ValueError if neither project nor user are set
         """
-        if not project and not user:
-            raise ValueError('Project and user are both unset')
-
-        ret = {}
-        app_plugins = get_active_plugins()
-        for plugin in app_plugins:
-            p_defs = cls.get_definitions(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin
-            )
-            for s_key in p_defs:
-                ret['settings.{}.{}'.format(plugin.name, s_key)] = cls.get(
-                    plugin.name, s_key, project, user, post_safe
-                )
-
-        p_defs = cls.get_definitions(
-            APP_SETTING_SCOPE_PROJECT, plugin_name='projectroles'
+        logger.warning(GET_ALL_DEPRECATE_MSG)
+        return cls.get_all_by_scope(
+            scope=APP_SETTING_SCOPE_PROJECT,
+            project=project,
+            user=None,
+            post_safe=post_safe,
         )
-        for s_key in p_defs:
-            ret['settings.{}.{}'.format('projectroles', s_key)] = cls.get(
-                'projectroles', s_key, post_safe
-            )
-        return ret
 
     @classmethod
     def get_defaults(cls, scope, project=None, user=None, post_safe=False):

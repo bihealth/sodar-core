@@ -1078,7 +1078,9 @@ class TestProjectUpdateView(
         """Get postable app settings for project of type PROJECT"""
         if project.type != PROJECT_TYPE_PROJECT:
             raise ValueError('Can only be called for a project')
-        ps = app_settings.get_all(project=project, post_safe=True)
+        ps = app_settings.get_all_by_scope(
+            APP_SETTING_SCOPE_PROJECT, project=project, post_safe=True
+        )
         # Omit hidden settings for regular user
         if user and not user.is_superuser:
             ps = {k: ps[k] for k in ps if k not in HIDDEN_PROJECT_SETTINGS}
@@ -1475,7 +1477,11 @@ class TestProjectUpdateView(
         data['parent'] = self.category.sodar_uuid
         data['owner'] = self.user.sodar_uuid
         data['title'] = 'Project{}Title'.format(CAT_DELIMITER)
-        data.update(app_settings.get_all(project=self.project, post_safe=True))
+        data.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
+            )
+        )
         with self.login(self.user):
             response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, 200)
@@ -1487,7 +1493,11 @@ class TestProjectUpdateView(
         data = model_to_dict(self.project)
         data['parent'] = self.category.sodar_uuid
         data['owner'] = self.user.sodar_uuid
-        data.update(app_settings.get_all(project=self.project, post_safe=True))
+        data.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
+            )
+        )
         data['settings.example_project_app.project_str_setting'] = (
             INVALID_SETTING_VALUE
         )
@@ -1514,7 +1524,11 @@ class TestProjectUpdateView(
         data['public_guest_access'] = True
         data['parent'] = self.category.sodar_uuid  # NOTE: Must add parent
         data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        data.update(app_settings.get_all(project=self.project, post_safe=True))
+        data.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
+            )
+        )
         with self.login(self.user):
             response = self.client.post(self.url, data)
 
@@ -1533,7 +1547,11 @@ class TestProjectUpdateView(
         data['description'] = 'updated description'
         data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         data['parent'] = ''
-        data.update(app_settings.get_all(project=self.category, post_safe=True))
+        data.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.category, post_safe=True
+            )
+        )
         with self.login(self.user):
             response = self.client.post(self.url_cat, data)
         self.assertEqual(response.status_code, 302)
@@ -1596,7 +1614,11 @@ class TestProjectUpdateView(
         data['description'] = self.category.description
         data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         data['parent'] = category_new.sodar_uuid  # Updated category
-        data.update(app_settings.get_all(project=self.category, post_safe=True))
+        data.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.category, post_safe=True
+            )
+        )
         with self.login(self.user):
             response = self.client.post(self.url_cat, data)
 
@@ -1634,7 +1656,11 @@ class TestProjectUpdateView(
         data = model_to_dict(self.project)
         data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         data['parent'] = category_new.sodar_uuid  # Updated category
-        data.update(app_settings.get_all(project=self.project, post_safe=True))
+        data.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
+            )
+        )
         with self.login(self.user):
             response = self.client.post(self.url, data)
 
@@ -1666,7 +1692,11 @@ class TestProjectUpdateView(
         data = model_to_dict(self.project)
         data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         data['parent'] = category_new.sodar_uuid  # Updated category
-        data.update(app_settings.get_all(project=self.project, post_safe=True))
+        data.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
+            )
+        )
         with self.login(self.user):
             response = self.client.post(self.url, data)
 

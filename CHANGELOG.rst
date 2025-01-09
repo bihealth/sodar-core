@@ -17,6 +17,7 @@ Added
     - ``PluginAppSettingDef`` class for app setting definitions (#1456)
     - Django check for unique app setting names within each plugin (#1456)
     - App setting ``user_modifiable`` validation (#1536)
+    - ``AppSettingAPI.get_all_by_scope()`` helper (#1534)
 
 Changed
 -------
@@ -28,6 +29,7 @@ Changed
     - Deprecate ``get_user_display_name()``, use ``SODARUser.get_display_name()`` (#1487)
     - Deprecate declaring app setting definitions as dict (#1456)
     - Allow ``scope=None`` in ``AppSettingAPI.get_definitions()`` (#1535)
+    - Deprecate ``AppSettingAPI.get_all()`` (#1534)
 
 Removed
 -------

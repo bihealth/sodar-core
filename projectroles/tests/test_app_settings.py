@@ -45,6 +45,7 @@ EXISTING_SETTING = 'project_bool_setting'
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_SETTING_VALUE = 'INVALID VALUE'
 INVALID_SETTING_MSG = 'INVALID_SETTING_VALUE detected'
+S_PREFIX = 'settings.{}.'
 
 
 class AppSettingInitMixin:
@@ -306,7 +307,7 @@ class TestAppSettingAPI(
             val = app_settings.get(**data)
             self.assertEqual(val, setting['value'])
 
-    def test_get_with_default(self):
+    def test_get_default(self):
         """Test get() with default value for existing setting"""
         s_defs = app_settings.get_definitions(
             scope=APP_SETTING_SCOPE_PROJECT, plugin_name=EXAMPLE_APP_NAME
@@ -319,7 +320,7 @@ class TestAppSettingAPI(
         )
         self.assertEqual(val, default_val)
 
-    def test_get_with_nonexisting(self):
+    def test_get_nonexisting(self):
         """Test get() with non-existing setting"""
         with self.assertRaises(KeyError):
             app_settings.get(
@@ -328,7 +329,7 @@ class TestAppSettingAPI(
                 project=self.project,
             )
 
-    def test_get_with_post_safe(self):
+    def test_get_post_safe(self):
         """Test get() with JSON setting and post_safe=True"""
         val = app_settings.get(
             plugin_name=self.project_json_setting['plugin_name'],
@@ -337,6 +338,101 @@ class TestAppSettingAPI(
             post_safe=True,
         )
         self.assertEqual(type(val), str)
+
+    def test_get_all_by_scope_project(self):
+        """Test get_all_by_scope() with PROJECT scope"""
+        all_defs = app_settings.get_all_defs()
+        vals = app_settings.get_all_by_scope(
+            APP_SETTING_SCOPE_PROJECT, project=self.project
+        )
+        for k, v in all_defs.items():
+            p_vals = [v for v in vals if v.startswith(S_PREFIX.format(k))]
+            s_defs = [
+                d for d in v.values() if d.scope == APP_SETTING_SCOPE_PROJECT
+            ]
+            self.assertEqual(len(p_vals), len(s_defs))
+            for s_def in s_defs:
+                self.assertEqual(
+                    vals[f'settings.{k}.{s_def.name}'],
+                    app_settings.get(
+                        plugin_name=k,
+                        setting_name=s_def.name,
+                        project=self.project,
+                    ),
+                )
+
+    def test_get_all_by_scope_user(self):
+        """Test get_all_by_scope() with USER scope"""
+        all_defs = app_settings.get_all_defs()
+        vals = app_settings.get_all_by_scope(
+            APP_SETTING_SCOPE_USER, user=self.user
+        )
+        for k, v in all_defs.items():
+            p_vals = [v for v in vals if v.startswith(S_PREFIX.format(k))]
+            s_defs = [
+                d for d in v.values() if d.scope == APP_SETTING_SCOPE_USER
+            ]
+            self.assertEqual(len(p_vals), len(s_defs))
+            for s_def in s_defs:
+                self.assertEqual(
+                    vals[f'settings.{k}.{s_def.name}'],
+                    app_settings.get(
+                        plugin_name=k,
+                        setting_name=s_def.name,
+                        user=self.user,
+                    ),
+                )
+
+    def test_get_all_by_scope_project_user(self):
+        """Test get_all_by_scope() with PROJECT_USER scope"""
+        all_defs = app_settings.get_all_defs()
+        vals = app_settings.get_all_by_scope(
+            APP_SETTING_SCOPE_PROJECT_USER, project=self.project, user=self.user
+        )
+        for k, v in all_defs.items():
+            p_vals = [v for v in vals if v.startswith(S_PREFIX.format(k))]
+            s_defs = [
+                d
+                for d in v.values()
+                if d.scope == APP_SETTING_SCOPE_PROJECT_USER
+            ]
+            self.assertEqual(len(p_vals), len(s_defs))
+            for s_def in s_defs:
+                self.assertEqual(
+                    vals[f'settings.{k}.{s_def.name}'],
+                    app_settings.get(
+                        plugin_name=k,
+                        setting_name=s_def.name,
+                        project=self.project,
+                        user=self.user,
+                    ),
+                )
+
+    def test_get_all_by_scope_site(self):
+        """Test get_all_by_scope() with SITE scope"""
+        all_defs = app_settings.get_all_defs()
+        vals = app_settings.get_all_by_scope(APP_SETTING_SCOPE_SITE)
+        for k, v in all_defs.items():
+            p_vals = [v for v in vals if v.startswith(S_PREFIX.format(k))]
+            s_defs = [
+                d for d in v.values() if d.scope == APP_SETTING_SCOPE_SITE
+            ]
+            self.assertEqual(len(p_vals), len(s_defs))
+            for s_def in s_defs:
+                self.assertEqual(
+                    vals[f'settings.{k}.{s_def.name}'],
+                    app_settings.get(
+                        plugin_name=k,
+                        setting_name=s_def.name,
+                    ),
+                )
+
+    def test_get_all_by_scope_invalid_args(self):
+        """Test get_all_by_scope() with invalid args"""
+        with self.assertRaises(ValueError):
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT_USER, project=self.project  # No user
+            )
 
     def test_is_set_no_object(self):
         """Test is_set() with no setting object set"""
