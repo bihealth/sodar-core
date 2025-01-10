@@ -339,6 +339,19 @@ project permissions, or by a site admin using the ``batchupdateroles``
 management command. The latter supports multiple projects in one batch. It is
 also able to send invites to users who have not yet signed up on the site.
 
+Remove All Roles from User
+--------------------------
+
+To easily remove all roles from a user, use the ``removeroles`` management
+command. For owner roles, you can supply the user name of a user for whom to
+transfer those roles. If no owner is supplied, each ownership will be
+transferred to the parent category owner. Example:
+
+.. code-block:: console
+
+    $ ./manage.py removeroles --user alice --owner bob
+
+
 User Status Checking
 --------------------
 

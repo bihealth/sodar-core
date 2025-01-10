@@ -16,6 +16,7 @@ v1.1.0 (WIP)
 Release Highlights
 ==================
 
+- Add removeroles management command
 - Add app setting type constants
 - Add app setting definition as objects
 - Update app settings API
@@ -33,6 +34,14 @@ instead of dict, the return data of ``AppSettingAPI.get_definition()`` and
 ``AppSettingAPI.get_definitions()`` will contain definitions as objects of this
 class. The return data is the same even if definitions have been provided in the
 deprecated dictionary format.
+
+Old Owner Role in Project Modify API Ownership Transfer
+-------------------------------------------------------
+
+In ``ProjectModifyPluginMixin.perform_role_modify()``, the ``old_owner_role``
+argument may be ``None``. This is used in cases where project role for the
+previous owner is removed. Implementations of ``perform_role_modify()`` must be
+changed accordingly. The same also applies to ``revert_role_modify()``.
 
 Deprecated Features
 -------------------

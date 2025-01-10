@@ -140,7 +140,7 @@ class ProjectModifyPluginMixin:
         pass
 
     def perform_owner_transfer(
-        self, project, new_owner, old_owner, old_owner_role, request=None
+        self, project, new_owner, old_owner, old_owner_role=None, request=None
     ):
         """
         Perform additional actions to finalize project ownership transfer.
@@ -148,13 +148,13 @@ class ProjectModifyPluginMixin:
         :param project: Project object
         :param new_owner: SODARUser object for new owner
         :param old_owner: SODARUser object for previous owner
-        :param old_owner_role: Role object for new role of previous owner
+        :param old_owner_role: Role object for new role of old owner or None
         :param request: Request object or None
         """
         pass
 
     def revert_owner_transfer(
-        self, project, new_owner, old_owner, old_owner_role, request=None
+        self, project, new_owner, old_owner, old_owner_role=None, request=None
     ):
         """
         Revert project ownership transfer if errors have occurred in other apps.
@@ -162,7 +162,7 @@ class ProjectModifyPluginMixin:
         :param project: Project object
         :param new_owner: SODARUser object for new owner
         :param old_owner: SODARUser object for previous owner
-        :param old_owner_role: Role object for new role of previous owner
+        :param old_owner_role: Role object for new role of old owner or None
         :param request: Request object or None
         """
         pass

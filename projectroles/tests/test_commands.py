@@ -13,6 +13,9 @@ from djangoplugins.models import Plugin
 
 from test_plus.test import TestCase
 
+# Appalerts dependency
+from appalerts.models import AppAlert
+
 # Timeline dependency
 from timeline.models import TimelineEvent
 
@@ -54,6 +57,7 @@ from projectroles.tests.test_models import (
     ProjectInviteMixin,
     AppSettingMixin,
     RemoteSiteMixin,
+    RemoteProjectMixin,
 )
 from projectroles.utils import build_secret
 
@@ -71,6 +75,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
@@ -84,6 +89,7 @@ CLEAN_LOG_PREFIX = 'INFO:projectroles.management.commands.cleanappsettings:'
 CUSTOM_PASSWORD = 'custompass'
 REMOTE_SITE_NAME = 'Test Site'
 REMOTE_SITE_URL = 'https://example.com'
+REMOTE_SITE_URL2 = 'https://another.site.org'
 REMOTE_SITE_SECRET = build_secret(32)
 LDAP_DOMAIN = 'EXAMPLE'
 
@@ -211,14 +217,14 @@ class TestAddRemoteSite(
 
     def test_add_second_target(self):
         """Test adding second target site"""
-        self.make_site('Existing Site', 'https://another.site.org')
+        self.make_site('Existing Site', REMOTE_SITE_URL2)
         self.assertEqual(RemoteSite.objects.count(), 1)
         self.command.handle(**self.options)
         self.assertEqual(RemoteSite.objects.count(), 2)
 
     def test_add_second_target_existing_name(self):
         """Test adding second target site with existing name (should fail)"""
-        self.make_site(REMOTE_SITE_NAME, 'https://another.site.org')
+        self.make_site(REMOTE_SITE_NAME, REMOTE_SITE_URL2)
         self.assertEqual(RemoteSite.objects.count(), 1)
         with self.assertRaises(SystemExit) as cm:
             self.command.handle(**self.options)
@@ -247,9 +253,7 @@ class TestAddRemoteSite(
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_add_second_source(self):
         """Test adding second source site (should fail)"""
-        self.make_site(
-            'Existing Site', 'https://another.site.org', mode=SITE_MODE_SOURCE
-        )
+        self.make_site('Existing Site', REMOTE_SITE_URL2, mode=SITE_MODE_SOURCE)
         self.assertEqual(RemoteSite.objects.count(), 1)
         with self.assertRaises(SystemExit) as cm:
             self.command.handle(**self.options)
@@ -685,7 +689,6 @@ class TestCleanAppSettings(
     """Tests for cleanappsettings command and associated functions"""
 
     def setUp(self):
-        super().setUp()
         # Init roles
         self.init_roles()
         # Init users
@@ -695,13 +698,13 @@ class TestCleanAppSettings(
 
         # Init projects
         self.category = self.make_project(
-            'top_category', PROJECT_TYPE_CATEGORY, None
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.cat_owner_as = self.make_assignment(
             self.category, self.user_owner, self.role_owner
         )
         self.project = self.make_project(
-            'sub_project', PROJECT_TYPE_PROJECT, self.category
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
@@ -960,6 +963,220 @@ class TestCleanAppSettings(
             call_command(self.cmd_name, check=True)
             self.assertEqual(len(cm.output), 6)
         self.assertEqual(AppSetting.objects.count(), 8)
+
+
+class TestRemoveRoles(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestCase,
+):
+    """Tests for removeroles command"""
+
+    def setUp(self):
+        # Init roles
+        self.init_roles()
+        # Init users
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_owner = self.make_user('user_owner')
+        self.user = self.make_user('user')
+        # Init projects
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.cat_owner_as = self.make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        # Set other variables
+        self.cmd_name = 'removeroles'
+
+    def test_command(self):
+        """Test removing non-owner roles from user"""
+        # Set up non-owner roles for user in category and project
+        self.make_assignment(self.category, self.user, self.role_contributor)
+        self.make_assignment(self.project, self.user, self.role_guest)
+        # Set up another user to ensure we keep their roles
+        user_keep = self.make_user('user_keep')
+        self.make_assignment(self.category, user_keep, self.role_contributor)
+        self.make_assignment(self.project, user_keep, self.role_guest)
+
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        self.assertEqual(self.category.has_role(user_keep), True)
+        self.assertEqual(self.project.has_role(user_keep), True)
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 0
+        )
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_delete').count(), 0
+        )
+
+        call_command(self.cmd_name, user=self.user)
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        self.assertEqual(self.category.has_role(user_keep), True)
+        self.assertEqual(self.project.has_role(user_keep), True)
+        self.assertEqual(self.category.has_role(self.user), False)
+        self.assertEqual(self.project.has_role(self.user), False)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 2
+        )
+        # App alerts should not be created
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_delete').count(), 0
+        )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_command_remote(self):
+        """Test removing roles from remote project"""
+        self.make_assignment(self.category, self.user, self.role_contributor)
+        self.make_assignment(self.project, self.user, self.role_guest)
+        remote_site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+        )
+        self.make_remote_project(
+            project_uuid=self.category.sodar_uuid,
+            site=remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.category,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(self.category.is_remote(), True)
+        self.assertEqual(self.project.is_remote(), True)
+
+        call_command(self.cmd_name, user=self.user)
+        # Roles should not be removed
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+
+    def test_command_owner_unset(self):
+        """Test removing owner with unset new owner"""
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+        # Inherited owner role
+        self.assertEqual(self.project.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        self.assertEqual(
+            TimelineEvent.objects.filter(
+                event_name='role_owner_transfer'
+            ).count(),
+            0,
+        )
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_update').count(), 0
+        )
+
+        call_command(self.cmd_name, user=self.user_owner)
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner), False)
+        # Assert local owner roles
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        self.assertEqual(self.project.get_owner().user, self.user_owner_cat)
+        self.assertEqual(
+            TimelineEvent.objects.filter(
+                event_name='role_owner_transfer'
+            ).count(),
+            1,
+        )
+        # No alerts for inherited owner or old removed user
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_update').count(), 0
+        )
+
+    def test_command_owner_unset_top_level(self):
+        """Test removing owner with unset new owner at top level (should fail)"""
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+        call_command(self.cmd_name, user=self.user_owner_cat)
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+
+    def test_command_owner_unset_same_owner(self):
+        """Test removing owner with unset new owner and same owner on all levels (should fail)"""
+        self.owner_as.user = self.user_owner_cat
+        self.owner_as.save()
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        self.assertEqual(self.project.get_owner().user, self.user_owner_cat)
+        call_command(self.cmd_name, user=self.user_owner_cat)
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        self.assertEqual(self.project.get_owner().user, self.user_owner_cat)
+
+    def test_command_owner_set_no_role(self):
+        """Test removing owner role with set new owner without existing role"""
+        user_new = self.make_user('user_new')
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        self.assertEqual(self.project.has_role(user_new), False)
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_update').count(), 0
+        )
+        call_command(self.cmd_name, user=self.user_owner, owner=user_new)
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner), False)
+        self.assertEqual(self.project.get_owner().user, user_new)
+        # Alert for new owner
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_update').count(), 1
+        )
+
+    def test_command_owner_set_no_role_top_level(self):
+        """Test removing owner role with set new owner without existing role on top level"""
+        user_new = self.make_user('user_new')
+        self.assertEqual(self.category.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner_cat), True)
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        self.assertEqual(self.project.has_role(user_new), False)
+        call_command(self.cmd_name, user=self.user_owner_cat, owner=user_new)
+        self.assertEqual(self.category.has_role(self.user_owner_cat), False)
+        self.assertEqual(self.project.has_role(self.user_owner_cat), False)
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        self.assertEqual(self.category.get_owner().user, user_new)
+        self.assertEqual(self.project.has_role(user_new), True)
+
+    def test_command_owner_set_existing_role(self):
+        """Test removing owner role with set new owner and existing role"""
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.project, user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        self.assertEqual(self.project.has_role(user_new), True)
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=user_new).count(), 1
+        )
+        call_command(self.cmd_name, user=self.user_owner, owner=user_new)
+        self.assertEqual(self.project.get_owner().user, user_new)
+        self.assertEqual(self.project.has_role(self.user_owner), False)
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=user_new).count(), 1
+        )
+
+    def test_command_owner_invalid_new_owner_name(self):
+        """Test removing owner with invalid new owner name (should fail)"""
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        with self.assertRaises(SystemExit):
+            call_command(
+                self.cmd_name, user=self.user_owner, owner='INVALID-NAME'
+            )
+        self.assertEqual(self.project.has_role(self.user_owner), True)
 
 
 class TestSyncGroups(TestCase):

@@ -18,6 +18,7 @@ Added
     - Django check for unique app setting names within each plugin (#1456)
     - App setting ``user_modifiable`` validation (#1536)
     - ``AppSettingAPI.get_all_by_scope()`` helper (#1534)
+    - ``removeroles`` management command (#1391)
 
 Changed
 -------
@@ -30,6 +31,8 @@ Changed
     - Deprecate declaring app setting definitions as dict (#1456)
     - Allow ``scope=None`` in ``AppSettingAPI.get_definitions()`` (#1535)
     - Deprecate ``AppSettingAPI.get_all()`` (#1534)
+    - Allow no role for old owner in ``RoleAssignmentOwnerTransferMixin`` (#836, #1391)
+    - Allow no role for old owner in ``perform_owner_transfer()`` (#836, #1391)
 
 Removed
 -------

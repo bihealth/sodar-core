@@ -1894,20 +1894,28 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             project=project,
         )
 
-    def delete_assignment(self, request, instance):
+    def delete_assignment(self, role_as, request=None, notify=True):
+        """
+        Delete RoleAssignment. Calls the modify API for additional actions,
+        raises app alerts and sends email notifications about the deletion.
+
+        :param role_as: RoleAssingment object
+        :param request: HttpRequest object or None
+        :param notify: Add app alerts and send email if True
+        """
         app_alerts = get_backend_api('appalerts_backend')
         timeline = get_backend_api('timeline_backend')
         tl_event = None
-        project = instance.project
-        user = instance.user
-        role = instance.role
+        project = role_as.project
+        user = role_as.user
+        role = role_as.role
 
         # Init Timeline event
         if timeline:
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
-                user=request.user,
+                user=request.user if request else None,
                 event_name='role_delete',
                 description='delete role "{}" from {{{}}}'.format(
                     role.name, 'user'
@@ -1918,10 +1926,10 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         # Call the project plugin modify API for additional actions
         if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             self.call_project_modify_api(
-                'perform_role_delete', 'revert_role_delete', [instance, request]
+                'perform_role_delete', 'revert_role_delete', [role_as, request]
             )
         # Delete object itself
-        instance.delete()
+        role_as.delete()
 
         # Delete corresponding PROJECT_USER settings
         if (
@@ -1935,23 +1943,26 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
                 APP_SETTING_SCOPE_PROJECT_USER, project, user
             )
 
-        inh_as = project.get_role(user, inherited_only=True)
         if tl_event:
             tl_event.set_status(timeline.TL_STATUS_OK)
-        if app_alerts:
-            self._update_app_alerts(app_alerts, project, user, inh_as)
-        if SEND_EMAIL and app_settings.get(
-            APP_NAME, 'notify_email_role', user=user
-        ):
-            if inh_as:
-                email.send_role_change_mail(
-                    'update', project, user, inh_as.role, request
-                )
-            else:
-                email.send_role_change_mail(
-                    'delete', project, user, None, request
-                )
-        return instance
+        if notify:
+            inh_as = project.get_role(user, inherited_only=True)
+            if app_alerts:
+                self._update_app_alerts(app_alerts, project, user, inh_as)
+            if (
+                SEND_EMAIL
+                and request
+                and app_settings.get(APP_NAME, 'notify_email_role', user=user)
+            ):
+                if inh_as:
+                    email.send_role_change_mail(
+                        'update', project, user, inh_as.role, request
+                    )
+                else:
+                    email.send_role_change_mail(
+                        'delete', project, user, None, request
+                    )
+        return role_as
 
 
 class RoleAssignmentCreateView(
@@ -2104,7 +2115,7 @@ class RoleAssignmentDeleteView(
         else:
             try:
                 self.object = self.delete_assignment(
-                    request=self.request, instance=self.object
+                    role_as=self.object, request=self.request
                 )
                 messages.success(
                     self.request,
@@ -2132,38 +2143,44 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
     def _get_timeline_ok_status(self):
         timeline = get_backend_api('timeline_backend')
-        if not timeline:
-            return None
-        else:
-            return timeline.TL_STATUS_OK
+        return timeline.TL_STATUS_OK if timeline else None
 
     def _get_timeline_failed_status(self):
         timeline = get_backend_api('timeline_backend')
-        if not timeline:
-            return None
-        else:
-            return timeline.TL_STATUS_FAILED
+        return timeline.TL_STATUS_FAILED if timeline else None
 
     def _create_timeline_event(
-        self, old_owner, new_owner, old_owner_role, project
+        self, project, old_owner, new_owner, old_owner_role=None, issuer=None
     ):
+        """
+        Create timeline event for ownership transfer.
+
+        :param project: Project object
+        :param old_owner: User object for old owner
+        :param new_owner: User object for new_owner
+        :param old_owner_role: Role object for old owner's new role or None
+        :param issuer: User who initiated ownership transfer or None
+        """
         timeline = get_backend_api('timeline_backend')
-        # Init Timeline event
         if not timeline:
             return None
-        tl_desc = (
-            'transfer ownership from {{{}}} to {{{}}}, set old owner as "{}"'
-        ).format('prev_owner', 'new_owner', old_owner_role.name)
+        tl_desc = 'transfer ownership from {prev_owner} to {new_owner}, '
+        if old_owner_role:
+            tl_desc += 'set old owner as "{}"'.format(old_owner_role.name)
+        else:
+            tl_desc += 'remove old owner role'
         tl_event = timeline.add_event(
             project=project,
             app_name=APP_NAME,
-            user=self.request.user,
+            user=issuer,
             event_name='role_owner_transfer',
             description=tl_desc,
             extra_data={
                 'prev_owner': old_owner.username,
                 'new_owner': new_owner.username,
-                'old_owner_role': old_owner_role.name,
+                'old_owner_role': (
+                    old_owner_role.name if old_owner_role else None
+                ),
             },
         )
         tl_event.add_object(old_owner, 'prev_owner', old_owner.username)
@@ -2176,8 +2193,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         project,
         old_owner_as,
         new_owner,
-        old_owner_role,
         old_inh_owner,
+        old_owner_role=None,
+        request=None,
     ):
         """
         Handle ownership transfer with atomic rollback.
@@ -2185,11 +2203,12 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :param project: Project object
         :param old_owner_as: RoleAssignment object for old owner
         :param new_owner: User object for new user
-        :param old_owner_role: Role object to set for old owner
         :param old_inh_owner: Whether old owner is inherited owner (boolean)
+        :param old_owner_role: Role object to set for old owner or None
+        :param request: HttpRequest object or None
         """
-        # Inherited owner, delete local role
-        if old_inh_owner:
+        # Inherited owner or no new role for old owner: delete local role
+        if old_inh_owner or not old_owner_role:
             old_owner_as.delete()
         # Update old owner role
         else:
@@ -2213,14 +2232,22 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                 new_owner,
                 old_owner_as.user,
                 old_owner_role,
-                self.request,
+                request,
             ]
             self.call_project_modify_api(
                 'perform_owner_transfer', 'revert_owner_transfer', args
             )
         return True
 
-    def transfer_owner(self, project, new_owner, old_owner_as, old_owner_role):
+    def transfer_owner(
+        self,
+        project,
+        new_owner,
+        old_owner_as,
+        old_owner_role=None,
+        request=None,
+        notify_old=True,
+    ):
         """
         Transfer project ownership to a new user and assign a new role to the
         previous owner.
@@ -2228,8 +2255,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :param project: Project object
         :param new_owner: User object
         :param old_owner_as: RoleAssignment object
-        :param old_owner_role: Role object for the previous owner's new role
-        :return:
+        :param old_owner_role: Role object for old owner's new role or None
+        :param request: HttpRequest object or None
+        :param notify_old: Notify old owner (boolean, default=True)
         """
         app_alerts = get_backend_api('appalerts_backend')
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
@@ -2244,13 +2272,19 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         new_inh_owner = (
             True if new_inh_as and new_inh_as.role == self.role_owner else False
         )
+        issuer = request.user if request else None
         tl_event = self._create_timeline_event(
-            old_owner, new_owner, old_owner_role, project
+            project, old_owner, new_owner, old_owner_role, issuer
         )
 
         try:
             self._handle_transfer(
-                project, old_owner_as, new_owner, old_owner_role, old_inh_owner
+                project,
+                old_owner_as,
+                new_owner,
+                old_inh_owner,
+                old_owner_role,
+                request,
             )
         except Exception as ex:
             if tl_event:
@@ -2259,14 +2293,16 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
         if tl_event:
             tl_event.set_status(self._get_timeline_ok_status())
-        if not old_inh_owner and self.request.user != old_owner:
+        # Notify old owner
+        if notify_old and not old_inh_owner and issuer != old_owner:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
                     alert_name='role_update',
                     user=old_owner,
                     message=ROLE_UPDATE_MSG.format(
-                        project=project.title, role=old_owner_role.name
+                        project=project.title,
+                        role=old_owner_role.name if old_owner_role else 'None',
                     ),
                     url=reverse(
                         'projectroles:detail',
@@ -2274,13 +2310,19 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                     ),
                     project=project,
                 )
-            if SEND_EMAIL and app_settings.get(
-                APP_NAME, 'notify_email_role', user=old_owner
-            ):
-                email.send_role_change_mail(
-                    'update', project, old_owner, old_owner_role, self.request
+            if (
+                SEND_EMAIL
+                and request
+                and app_settings.get(
+                    APP_NAME, 'notify_email_role', user=old_owner
                 )
-        if not new_inh_owner and self.request.user != new_owner:
+            ):
+                # NOTE: Request is needed here
+                email.send_role_change_mail(
+                    'update', project, old_owner, old_owner_role, request
+                )
+        # Notify new owner
+        if not new_inh_owner and issuer != new_owner:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
@@ -2295,15 +2337,20 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                     ),
                     project=project,
                 )
-            if SEND_EMAIL and app_settings.get(
-                APP_NAME, 'notify_email_role', user=new_owner
+            if (
+                SEND_EMAIL
+                and request
+                and app_settings.get(
+                    APP_NAME, 'notify_email_role', user=new_owner
+                )
             ):
+                # NOTE: Request is needed here
                 email.send_role_change_mail(
                     'update',
                     project,
                     new_owner,
                     self.role_owner,
-                    self.request,
+                    request,
                 )
 
 
@@ -2350,7 +2397,11 @@ class RoleAssignmentOwnerTransferView(
         )
         try:
             self.transfer_owner(
-                project, new_owner, old_owner_as, old_owner_role
+                project,
+                new_owner,
+                old_owner_as,
+                old_owner_role,
+                request=self.request,
             )
         except Exception as ex:
             # TODO: Add logging

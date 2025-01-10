@@ -597,7 +597,7 @@ class RoleAssignmentDestroyAPIView(
             )
         ):
             raise PermissionDenied('User lacks permission to assign delegates')
-        self.delete_assignment(request=self.request, instance=instance)
+        self.delete_assignment(role_as=instance, request=self.request)
 
 
 class RoleAssignmentOwnerTransferAPIView(
@@ -681,10 +681,13 @@ class RoleAssignmentOwnerTransferAPIView(
                 )
             )
 
-        # All OK, transfer owner
-        try:
+        try:  # All OK, transfer owner
             self.transfer_owner(
-                project, new_owner, old_owner_as, old_owner_role
+                project,
+                new_owner,
+                old_owner_as,
+                old_owner_role,
+                request=request,
             )
         except Exception as ex:
             raise APIException('Unable to transfer owner: {}'.format(ex))
