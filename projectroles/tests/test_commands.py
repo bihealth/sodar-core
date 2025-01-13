@@ -1069,6 +1069,30 @@ class TestRemoveRoles(
         self.assertEqual(self.category.has_role(self.user), True)
         self.assertEqual(self.project.has_role(self.user), True)
 
+    def test_command_check(self):
+        """Test command with check mode and non-owner role"""
+        self.make_assignment(self.category, self.user, self.role_contributor)
+        self.make_assignment(self.project, self.user, self.role_guest)
+
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 0
+        )
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_delete').count(), 0
+        )
+
+        call_command(self.cmd_name, user=self.user, check=True)
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 0
+        )
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_delete').count(), 0
+        )
+
     def test_command_owner_unset(self):
         """Test removing owner with unset new owner"""
         self.assertEqual(self.category.has_role(self.user_owner_cat), True)
@@ -1177,6 +1201,33 @@ class TestRemoveRoles(
                 self.cmd_name, user=self.user_owner, owner='INVALID-NAME'
             )
         self.assertEqual(self.project.has_role(self.user_owner), True)
+
+    def test_command_owner_check(self):
+        """Test command with check mode and owner role"""
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        self.assertEqual(
+            TimelineEvent.objects.filter(
+                event_name='role_owner_transfer'
+            ).count(),
+            0,
+        )
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_update').count(), 0
+        )
+
+        call_command(self.cmd_name, user=self.user_owner, check=True)
+        self.assertEqual(self.project.has_role(self.user_owner), True)
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        self.assertEqual(
+            TimelineEvent.objects.filter(
+                event_name='role_owner_transfer'
+            ).count(),
+            0,
+        )
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_update').count(), 0
+        )
 
 
 class TestSyncGroups(TestCase):

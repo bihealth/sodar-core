@@ -18,7 +18,7 @@ Added
     - Django check for unique app setting names within each plugin (#1456)
     - App setting ``user_modifiable`` validation (#1536)
     - ``AppSettingAPI.get_all_by_scope()`` helper (#1534)
-    - ``removeroles`` management command (#1391)
+    - ``removeroles`` management command (#1391, #1541)
 
 Changed
 -------

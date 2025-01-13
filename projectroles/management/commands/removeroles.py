@@ -23,6 +23,7 @@ User = get_user_model()
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 
 # Local constants
+CHECK_MODE_MSG = 'Check mode enabled, database will not be altered'
 USER_NOT_FOUND_MSG = 'User not found with username: {}'
 
 
@@ -44,12 +45,12 @@ class Command(
             return parent_owner_as.user
         return cls._get_parent_owner(project.parent, prev_owner)
 
-    def _reassign_owner(self, project, user, owner, role_as, p_title):
+    def _reassign_owner(self, project, user, owner, role_as, p_title, check):
         """Reassign owner role"""
         # Fail top category if no new owner is specified
         if not owner and not project.parent:
             logger.warning(
-                'Failed to transfer ownership for top level {} {}: no '
+                'Unable to transfer ownership for top level {} {}: no '
                 'new owner provided'.format(project.type.lower(), p_title)
             )
             return False
@@ -59,10 +60,17 @@ class Command(
         # Fail if alternate parent owner is not found
         if not owner:
             logger.warning(
-                'Failed to transfer ownership in {}: no parent owner '
+                'Unable to transfer ownership in {}: no parent owner '
                 'found'.format(p_title)
             )
             return False
+        if check:
+            logger.info(
+                'Found role "{}" in {}: transfer to user {}'.format(
+                    PROJECT_ROLE_OWNER, p_title, owner.username
+                )
+            )
+            return True
         try:
             with transaction.atomic():
                 self.transfer_owner(
@@ -86,9 +94,14 @@ class Command(
             )
             return False
 
-    def _remove_role(self, role_as, p_title):
+    def _remove_role(self, role_as, p_title, check):
         """Remove non-owner role"""
         r_name = role_as.role.name
+        if check:
+            logger.info(
+                'Found role "{}" in {}: to be removed'.format(r_name, p_title)
+            )
+            return True
         try:
             with transaction.atomic():
                 self.delete_assignment(role_as, None, False)
@@ -117,8 +130,21 @@ class Command(
             help='Set owner role for user by given user name if set, otherwise '
             'set to parent owner',
         )
+        parser.add_argument(
+            '-c',
+            '--check',
+            dest='check',
+            required=False,
+            default=False,
+            action='store_true',
+            help='Log roles to be removed or transferred without altering the '
+            'database',
+        )
 
     def handle(self, *args, **options):
+        check = options.get('check', False)
+        if check:
+            logger.info(CHECK_MODE_MSG)
         if options['user'] == options.get('owner'):
             logger.error(
                 'Same username given for both user and new owner: {}'.format(
@@ -140,7 +166,13 @@ class Command(
                 logger.error(USER_NOT_FOUND_MSG.format(owner_name))
                 sys.exit(1)
 
-        logger.info('Removing roles from user "{}"..'.format(user.username))
+        logger.info(
+            '{} roles {} user "{}"..'.format(
+                'Checking' if check else 'Removing',
+                'for' if check else 'from',
+                user.username,
+            )
+        )
         if owner:
             logger.info(
                 'New owner for replacing owner roles: {}'.format(owner.username)
@@ -163,16 +195,19 @@ class Command(
             # Owner role reassignment
             if role_as.role.name == PROJECT_ROLE_OWNER:
                 update_ok = self._reassign_owner(
-                    project, user, owner, role_as, p_title
+                    project, user, owner, role_as, p_title, check
                 )
             else:  # Non-owner role removal
-                update_ok = self._remove_role(role_as, p_title)
-            if update_ok is True:
+                update_ok = self._remove_role(role_as, p_title, check)
+            if not check and update_ok is True:
                 role_count += 1
-            else:
+            elif not check:
                 fail_count += 1
-        logger.info(
-            'Removed roles from user "{}" ({} OK, {} failed)'.format(
-                user.username, role_count, fail_count
+        if check:
+            logger.info('Check done')
+        else:
+            logger.info(
+                'Removed roles from user "{}" ({} OK, {} failed)'.format(
+                    user.username, role_count, fail_count
+                )
             )
-        )
