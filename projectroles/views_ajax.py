@@ -424,7 +424,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
 class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
     """View to handle starring and unstarring a project"""
 
-    permission_required = 'projectroles.view_project'
+    permission_required = 'projectroles.star_project'
 
     def post(self, request, *args, **kwargs):
         # HACK: Manually refuse access to anonymous as this view is an exception
@@ -504,6 +504,30 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
         return JsonResponse({'links': sidebar_links})
 
 
+class SiteReadOnlySettingAjaxView(SODARBaseAjaxView):
+    """
+    Return the current status of the site read-only mode setting.
+
+    Return data:
+
+    - ``site_read_only``: Boolean
+    """
+
+    allow_anonymous = True
+
+    def get(self, request, *args, **kwargs):
+        ret = app_settings.get('projectroles', 'site_read_only')
+        return JsonResponse({'site_read_only': ret})
+
+
+class CurrentUserRetrieveAjaxView(
+    SODARBaseAjaxMixin, CurrentUserRetrieveAPIView
+):
+    """
+    Return information of the requesting user for Ajax requests.
+    """
+
+
 class UserDropdownContentAjaxView(SODARBaseAjaxView):
     """
     Return user dropdown links to be displayed in a client-side application.
@@ -533,14 +557,6 @@ class UserDropdownContentAjaxView(SODARBaseAjaxView):
             request.user, app_name=app_name
         )
         return JsonResponse({'links': user_dropdown_links})
-
-
-class CurrentUserRetrieveAjaxView(
-    SODARBaseAjaxMixin, CurrentUserRetrieveAPIView
-):
-    """
-    Return information of the requesting user for Ajax requests.
-    """
 
 
 class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):

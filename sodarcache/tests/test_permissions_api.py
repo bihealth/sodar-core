@@ -51,10 +51,7 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):
                 'item_name': ITEM_NAME,
             },
         )
-
-    def test_get(self):
-        """Test CacheItemRetrieveAPIView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -65,11 +62,14 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+
+    def test_get(self):
+        """Test CacheItemRetrieveAPIView GET"""
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -82,24 +82,19 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
 
 class TestCacheItemDateRetrieveAPIView(SodarcacheAPIPermissionTestBase):
@@ -123,10 +118,7 @@ class TestCacheItemDateRetrieveAPIView(SodarcacheAPIPermissionTestBase):
                 'item_name': ITEM_NAME,
             },
         )
-
-    def test_get(self):
-        """Test CacheItemDateRetrieveAPIView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -137,11 +129,14 @@ class TestCacheItemDateRetrieveAPIView(SodarcacheAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+
+    def test_get(self):
+        """Test CacheItemDateRetrieveAPIView GET"""
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -154,24 +149,19 @@ class TestCacheItemDateRetrieveAPIView(SodarcacheAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
 
 class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
@@ -188,10 +178,7 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
             },
         )
         self.post_data = {'data': {DATA_KEY: DATA_VAL}}
-
-    def test_post(self):
-        """Test CacheItemSetAPIView POST"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -200,24 +187,27 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
             self.user_delegate,
             self.user_contributor,
         ]
-        bad_users = [
+        self.bad_users = [
             self.user_guest_cat,
             self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
         ]
+
+    def test_post(self):
+        """Test CacheItemSetAPIView POST"""
         self.assert_response_api(
-            self.url, good_users, 200, method='POST', data=self.post_data
+            self.url, self.good_users, 200, method='POST', data=self.post_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='POST', data=self.post_data
+            self.url, self.bad_users, 403, method='POST', data=self.post_data
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='POST', data=self.post_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users,
             200,
             method='POST',
             data=self.post_data,
@@ -243,33 +233,18 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-        ]
-        bad_users = [
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
-            self.url, good_users, 200, method='POST', data=self.post_data
+            self.url, self.good_users, 200, method='POST', data=self.post_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='POST', data=self.post_data
+            self.url, self.bad_users, 403, method='POST', data=self.post_data
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='POST', data=self.post_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users,
             200,
             method='POST',
             data=self.post_data,
@@ -282,4 +257,17 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
             403,
             method='POST',
             data=self.post_data,
+        )
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url, self.good_users, 200, method='POST', data=self.post_data
+        )
+        self.assert_response_api(
+            self.url, self.bad_users, 403, method='POST', data=self.post_data
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='POST', data=self.post_data
         )

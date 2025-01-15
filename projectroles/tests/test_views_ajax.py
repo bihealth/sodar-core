@@ -678,6 +678,34 @@ class TestSidebarContentAjaxView(
         self.assertEqual(response.json(), expected)
 
 
+class TestSiteReadOnlySettingAjaxView(SerializedObjectMixin, TestCase):
+    """Tests for SiteReadOnlySettingAjaxView"""
+
+    def setUp(self):
+        self.user = self.make_user('user')
+        self.user.save()
+
+    def test_get_disabled(self):
+        """Test SiteReadOnlySettingAjaxView GET with read-only mode disabled"""
+        self.assertFalse(app_settings.get('projectroles', 'site_read_only'))
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:ajax_settings_site_read_only')
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'site_read_only': False})
+
+    def test_get_enabled(self):
+        """Test GET with read-only mode enabled"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:ajax_settings_site_read_only')
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'site_read_only': True})
+
+
 class TestUserDropdownContentAjaxView(ViewTestBase):
     """Tests for UserDropdownContentAjaxView"""
 
@@ -753,8 +781,8 @@ class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):
         self.user.save()
         self.reg_user = self.make_user('reg_user')
 
-    def test_regular_user(self):
-        """Test CurrentUserRetrieveAjaxView with regular user"""
+    def test_get_regular_user(self):
+        """Test CurrentUserRetrieveAjaxView GET with regular user"""
         with self.login(self.reg_user):
             response = self.client.get(
                 reverse('projectroles:ajax_user_current')
@@ -762,8 +790,8 @@ class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, self.get_serialized_user(self.reg_user))
 
-    def test_superuser(self):
-        """Test CurrentUserRetrieveAjaxView with superuser"""
+    def test_get_superuser(self):
+        """Test GET with superuser"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:ajax_user_current')

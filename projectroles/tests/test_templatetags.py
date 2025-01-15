@@ -684,7 +684,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
             else:
                 self.assertEqual(app['active'], False)
 
-    def test_get_links_home_user(self):
+    def test_get_user_links_home(self):
         """Test get_user_links() on the home view"""
         url = reverse('home')
         request = self.req_factory.get(url)
@@ -738,7 +738,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
             ],
         )
 
-    def test_get_links_home_superuser(self):
+    def test_get_user_links_home_superuser(self):
         """Test get_user_links() on the home view as superuser"""
         url = reverse('home')
         request = self.req_factory.get(url)

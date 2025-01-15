@@ -569,6 +569,5 @@ name and/or description.
 REST API
 ========
 
-Several SODAR Core functionalities are also available via a HTTP REST API
-starting in version 0.8. See :ref:`app_projectroles_api_rest` for instructions
-on REST API usage.
+Many SODAR Core features are also available via a REST API. See
+:ref:`app_projectroles_api_rest` for instructions on REST API usage.

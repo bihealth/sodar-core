@@ -28,4 +28,4 @@ class ProjectAppPlugin(SiteAppPluginPoint):
     description = 'API Token Management'
 
     #: Required permission for accessing the app
-    app_permission = 'tokens.access'
+    app_permission = 'tokens.view_list'

@@ -27,10 +27,7 @@ class TestProjectEventDetailAjaxView(
             'timeline:ajax_detail_project',
             kwargs={'timelineevent': self.event.sodar_uuid},
         )
-
-    def test_get(self):
-        """Test ProjectEventDetailAjaxView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -41,13 +38,16 @@ class TestProjectEventDetailAjaxView(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [
+        self.bad_users = [
             self.user_finder_cat,
             self.user_no_roles,
             self.anonymous,
         ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 403)
+
+    def test_get(self):
+        """Test ProjectEventDetailAjaxView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 403)
 
@@ -60,26 +60,16 @@ class TestProjectEventDetailAjaxView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [
-            self.user_finder_cat,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 403)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 403)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
 
     def test_get_classified(self):
         """Test GET with classified event"""
@@ -138,6 +128,13 @@ class TestSiteEventDetailAjaxView(
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, self.anonymous, 403)
 
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        good_users = [self.superuser, self.regular_user]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, self.anonymous, 403)
+
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
@@ -174,17 +171,14 @@ class TestProjectEventExtraAjaxView(
             'timeline:ajax_extra_project',
             kwargs={'timelineevent': self.event.sodar_uuid},
         )
-
-    def test_get(self):
-        """Test ProjectEventExtraAjaxView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
-        bad_users = [
+        self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
             self.user_finder_cat,
@@ -193,8 +187,11 @@ class TestProjectEventExtraAjaxView(
             self.user_no_roles,
             self.anonymous,
         ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 403)
+
+    def test_get(self):
+        """Test ProjectEventExtraAjaxView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 403)
 
@@ -207,49 +204,23 @@ class TestProjectEventExtraAjaxView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 403)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 403)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
 
     def test_get_classified(self):
         """Test GET with classified event"""
         self.event.classified = True
         self.event.save()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 403)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 403)
 
@@ -326,17 +297,14 @@ class TestEventStatusExtraAjaxViewProject(
             'timeline:ajax_extra_status',
             kwargs={'eventstatus': self.event_status.sodar_uuid},
         )
-
-    def test_get(self):
-        """Test EventStatusExtraAjaxView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
             self.user_owner,
             self.user_delegate,
         ]
-        bad_users = [
+        self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
             self.user_finder_cat,
@@ -345,8 +313,11 @@ class TestEventStatusExtraAjaxViewProject(
             self.user_no_roles,
             self.anonymous,
         ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 403)
+
+    def test_get(self):
+        """Test EventStatusExtraAjaxView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 403)
 
@@ -356,28 +327,18 @@ class TestEventStatusExtraAjaxViewProject(
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 403)
 
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
+
     def test_get_classified(self):
         """Test GET with classified event"""
         self.event.classified = True
         self.event.save()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 403)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 403)
 

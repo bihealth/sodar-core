@@ -106,6 +106,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
 APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
@@ -167,6 +168,14 @@ APP_SETTINGS_TEST = [
         type=APP_SETTING_TYPE_BOOLEAN,
         default=False,
         global_edit=True,
+    ),
+    PluginAppSettingDef(
+        name='site_read_only',
+        scope=APP_SETTING_SCOPE_SITE,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        user_modifiable=True,
+        global_edit=False,
     ),
 ]
 
@@ -2027,7 +2036,7 @@ class TestProjectArchiveView(
 
 
 class TestProjectForm(
-    AppSettingMixin, ViewTestBase, ProjectMixin, RoleAssignmentMixin
+    AppSettingMixin, ProjectMixin, RoleAssignmentMixin, ViewTestBase
 ):
     """Tests for ProjectForm"""
 
@@ -2205,9 +2214,9 @@ class TestProjectFormTarget(
     RemoteSiteMixin,
     RemoteProjectMixin,
     AppSettingMixin,
-    ViewTestBase,
     ProjectMixin,
     RoleAssignmentMixin,
+    ViewTestBase,
 ):
     """Tests for project create/update form on a target site"""
 
@@ -2390,9 +2399,9 @@ class TestProjectFormTargetLocal(
     RemoteSiteMixin,
     RemoteProjectMixin,
     AppSettingMixin,
-    ViewTestBase,
     ProjectMixin,
     RoleAssignmentMixin,
+    ViewTestBase,
 ):
     """
     Tests for project create/update form on target site with local settings

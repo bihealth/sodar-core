@@ -15,10 +15,7 @@ class TestProjectTimelineView(ProjectPermissionTestBase):
         self.url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
-
-    def test_get(self):
-        """Test ProjectTimelineView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -29,9 +26,16 @@ class TestProjectTimelineView(ProjectPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.bad_users = [
+            self.user_finder_cat,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+
+    def test_get(self):
+        """Test ProjectTimelineView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
@@ -45,23 +49,17 @@ class TestProjectTimelineView(ProjectPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
 
 
 class TestSiteTimelineView(ProjectPermissionTestBase):
@@ -73,25 +71,18 @@ class TestSiteTimelineView(ProjectPermissionTestBase):
 
     def test_get(self):
         """Test SiteTimelineView GET"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
-        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, self.auth_users, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonynomus access"""
+        self.assert_response(self.url, self.anonymous, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.auth_users, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
 
@@ -104,27 +95,19 @@ class TestAdminTimelineView(ProjectPermissionTestBase):
 
     def test_get(self):
         """Test AdminTimelineView GET"""
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
         self.assert_response(self.url, self.anonymous, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
 
 class TestProjectObjectTimelineView(ProjectPermissionTestBase):
@@ -140,10 +123,7 @@ class TestProjectObjectTimelineView(ProjectPermissionTestBase):
                 'object_uuid': self.user_owner.sodar_uuid,
             },
         )
-
-    def test_get(self):
-        """Test ProjectObjectTimelineView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -154,9 +134,16 @@ class TestProjectObjectTimelineView(ProjectPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.bad_users = [
+            self.user_finder_cat,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+
+    def test_get(self):
+        """Test ProjectObjectTimelineView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
@@ -170,23 +157,17 @@ class TestProjectObjectTimelineView(ProjectPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
 
 
 class TestSiteObjectTimelineView(ProjectPermissionTestBase):
@@ -204,20 +185,7 @@ class TestSiteObjectTimelineView(ProjectPermissionTestBase):
 
     def test_get(self):
         """Test SiteObjectTimelineView GET"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
-        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, self.auth_users, 200)
         self.assert_response(self.url, self.anonymous, 302)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
@@ -227,4 +195,10 @@ class TestSiteObjectTimelineView(ProjectPermissionTestBase):
     def test_get_anon(self):
         """Test GET with anonymous access"""
         self.project.set_public()
+        self.assert_response(self.url, self.anonymous, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.auth_users, 200)
         self.assert_response(self.url, self.anonymous, 302)

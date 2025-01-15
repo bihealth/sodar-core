@@ -109,7 +109,7 @@ class UserSettingsView(
     """User settings update view"""
 
     form_class = UserSettingsForm
-    permission_required = 'userprofile.view_detail'
+    permission_required = 'userprofile.update_settings'
     template_name = 'userprofile/settings_form.html'
     success_url = reverse_lazy('userprofile:detail')
 

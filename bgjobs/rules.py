@@ -41,24 +41,31 @@ rules.add_perm(
 # Allow creating background jobs
 rules.add_perm(
     'bgjobs.create_bgjob',
-    pr_rules.is_project_owner
-    | pr_rules.is_project_delegate
-    | pr_rules.is_project_contributor,
+    (
+        pr_rules.is_project_owner
+        | pr_rules.is_project_delegate
+        | pr_rules.is_project_contributor
+    )
+    & pr_rules.is_site_writable,
 )
 
 # Allow modifying or deleting the user's background jobs
 rules.add_perm(
     'bgjobs.update_bgjob_own',
-    pr_rules.is_project_owner
-    | pr_rules.is_project_delegate
-    | pr_rules.is_project_contributor
-    | pr_rules.is_project_guest,
+    (
+        pr_rules.is_project_owner
+        | pr_rules.is_project_delegate
+        | pr_rules.is_project_contributor
+        | pr_rules.is_project_guest
+    )
+    & pr_rules.is_site_writable,
 )
 
 # Allow modifying or deleting all background jobs
 rules.add_perm(
     'bgjobs.update_bgjob_all',
-    pr_rules.is_project_owner | pr_rules.is_project_delegate,
+    (pr_rules.is_project_owner | pr_rules.is_project_delegate)
+    & pr_rules.is_site_writable,
 )
 
 # Allow viewing site-global background jobs (not project-specific).

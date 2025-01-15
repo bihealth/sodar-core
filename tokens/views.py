@@ -21,7 +21,7 @@ TOKEN_DELETE_MSG = 'Token deleted.'
 
 class UserTokenListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
     model = AuthToken
-    permission_required = 'tokens.access'
+    permission_required = 'tokens.view_list'
     template_name = 'tokens/token_list.html'
 
     def get_queryset(self):
@@ -33,7 +33,7 @@ class UserTokenCreateView(
     LoginRequiredMixin, LoggedInPermissionMixin, FormView
 ):
     form_class = UserTokenCreateForm
-    permission_required = 'tokens.access'
+    permission_required = 'tokens.create'
     template_name = 'tokens/token_create.html'
 
     def form_valid(self, form):
@@ -48,7 +48,7 @@ class UserTokenDeleteView(
     LoginRequiredMixin, LoggedInPermissionMixin, DeleteView
 ):
     model = AuthToken
-    permission_required = 'tokens.access'
+    permission_required = 'tokens.delete'
     template_name = 'tokens/token_confirm_delete.html'
 
     def get_success_url(self):

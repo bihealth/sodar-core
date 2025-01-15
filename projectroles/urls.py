@@ -201,6 +201,11 @@ urls_ajax = [
         name='ajax_user_dropdown',
     ),
     path(
+        route='ajax/settings/site-read-only',
+        view=views_ajax.SiteReadOnlySettingAjaxView.as_view(),
+        name='ajax_settings_site_read_only',
+    ),
+    path(
         route='ajax/user/current',
         view=views_ajax.CurrentUserRetrieveAjaxView.as_view(),
         name='ajax_user_current',

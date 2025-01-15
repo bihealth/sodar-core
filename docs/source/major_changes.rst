@@ -16,6 +16,7 @@ v1.1.0 (WIP)
 Release Highlights
 ==================
 
+- Add site read-only mode
 - Add removeroles management command
 - Add app setting type constants
 - Add app setting definition as objects
@@ -25,6 +26,14 @@ Release Highlights
 
 Breaking Changes
 ================
+
+Site Read-Only Mode
+-------------------
+
+This release adds the site-wide read-only mode, which is intended to temporarily
+prohibit modifying all data on the site. Rules, logic and/or UI of your apps'
+views may have to be changed to support this functionality. For more
+information, see :ref:`dev_resources_read_only`.
 
 AppSettingAPI Definition Getter Return Data
 -------------------------------------------

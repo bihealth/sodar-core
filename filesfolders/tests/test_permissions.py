@@ -77,7 +77,7 @@ class FilesfoldersPermissionTestMixin(FolderMixin, FileMixin, HyperLinkMixin):
 # Test Cases -------------------------------------------------------------------
 
 
-class TestProjectFileViewPermissions(
+class TestProjectFileView(
     FilesfoldersPermissionTestMixin, ProjectPermissionTestBase
 ):
     """Tests for ProjectFileView permissions"""
@@ -87,10 +87,7 @@ class TestProjectFileViewPermissions(
         self.url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
         )
-
-    def test_get(self):
-        """Test ProjectFileView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -101,9 +98,16 @@ class TestProjectFileViewPermissions(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.bad_users = [
+            self.user_finder_cat,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+
+    def test_get(self):
+        """Test ProjectFileView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         # Test public project
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
@@ -118,23 +122,17 @@ class TestProjectFileViewPermissions(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
 
 
 class TestFolderCreateView(
@@ -181,24 +179,16 @@ class TestFolderCreateView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_category(self):
         """Test GET with folder under category (should fail)"""
@@ -206,21 +196,7 @@ class TestFolderCreateView(
             'filesfolders:folder_create',
             kwargs={'project': self.category.sodar_uuid},
         )
-        bad_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(url, self.all_users, 302)
 
 
 class TestFolderUpdateView(
@@ -268,24 +244,16 @@ class TestFolderUpdateView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
 
 class TestFolderDeleteView(
@@ -333,24 +301,16 @@ class TestFolderDeleteView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
 
 class TestFileCreateView(
@@ -394,27 +354,19 @@ class TestFileCreateView(
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 302)
 
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_category(self):
         """Test GET under category (should fail)"""
@@ -422,21 +374,7 @@ class TestFileCreateView(
             'filesfolders:file_create',
             kwargs={'project': self.category.sodar_uuid},
         )
-        bad_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(url, self.all_users, 302)
 
 
 class TestFileUpdateView(
@@ -483,24 +421,16 @@ class TestFileUpdateView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
 
 class TestFileDeleteView(
@@ -547,24 +477,16 @@ class TestFileDeleteView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
 
 class TestFilePublicLinkView(
@@ -579,10 +501,7 @@ class TestFilePublicLinkView(
             'filesfolders:file_public_link',
             kwargs={'file': file.sodar_uuid},
         )
-
-    def test_get(self):
-        """Test FilePublicLinkView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -591,17 +510,20 @@ class TestFilePublicLinkView(
             self.user_delegate,
             self.user_contributor,
         ]
-        bad_users = [
+        self.bad_users = [
             self.user_guest_cat,
             self.user_finder_cat,
             self.user_guest,
             self.user_no_roles,
             self.anonymous,
         ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+
+    def test_get(self):
+        """Test FilePublicLinkView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -610,28 +532,18 @@ class TestFilePublicLinkView(
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_archive(self):
-        """Test get with archived project"""
+        """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-        ]
-        bad_users = [
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.bad_users, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
 
 
 class TestFileServeView(
@@ -646,10 +558,7 @@ class TestFileServeView(
             'filesfolders:file_serve',
             kwargs={'file': file.sodar_uuid, 'file_name': file.name},
         )
-
-    def test_get(self):
-        """Test FileServeView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -660,9 +569,16 @@ class TestFileServeView(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.bad_users = [
+            self.user_finder_cat,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+
+    def test_get(self):
+        """Test FileServeView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
@@ -676,23 +592,17 @@ class TestFileServeView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
 
 
 class TestFileServePublicView(
@@ -710,21 +620,7 @@ class TestFileServePublicView(
 
     def test_get(self):
         """Test FileServePublicView GET"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, self.all_users, 200)
         self.project.set_public()
         self.assert_response(
             self.url, [self.user_no_roles, self.anonymous], 200
@@ -737,23 +633,9 @@ class TestFileServePublicView(
         self.assert_response(self.url, self.anonymous, 200)
 
     def test_get_archived(self):
-        """Test FileServePublicView GET with archived project"""
+        """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, self.all_users, 200)
         self.project.set_public()
         self.assert_response(
             self.url, [self.user_no_roles, self.anonymous], 200
@@ -764,21 +646,12 @@ class TestFileServePublicView(
         app_settings.set(
             APP_NAME, 'allow_public_links', False, project=self.project
         )
-        bad_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, bad_users, 400)
+        self.assert_response(self.url, self.all_users, 400)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.all_users, 200)
 
 
 class TestHyperLinkCreateView(
@@ -825,24 +698,16 @@ class TestHyperLinkCreateView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_category(self):
         """Test GET under category (should fail)"""
@@ -850,21 +715,7 @@ class TestHyperLinkCreateView(
             'filesfolders:hyperlink_create',
             kwargs={'project': self.category.sodar_uuid},
         )
-        bad_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(url, bad_users, 302)
+        self.assert_response(url, self.all_users, 302)
 
 
 class TestHyperLinkUpdateView(
@@ -912,24 +763,16 @@ class TestHyperLinkUpdateView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
 
 class TestHyperLinkDeleteView(
@@ -977,24 +820,16 @@ class TestHyperLinkDeleteView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-            self.anonymous,
-        ]
-        self.assert_response(self.url, good_users, 200)
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
-        self.assert_response(self.url, bad_users, 302)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
 
 class TestBatchEditView(
@@ -1053,26 +888,43 @@ class TestBatchEditView(
     def test_post_archive(self):
         """Test POST with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response(
-            self.url, good_users, 200, method='POST', data=self.post_data
+            self.url, self.superuser, 200, method='POST', data=self.post_data
         )
         self.assert_response(
-            self.url, bad_users, 302, method='POST', data=self.post_data
+            self.url,
+            self.non_superusers,
+            302,
+            method='POST',
+            data=self.post_data,
         )
         self.project.set_public()
         self.assert_response(
-            self.url, bad_users, 302, method='POST', data=self.post_data
+            self.url,
+            self.non_superusers,
+            302,
+            method='POST',
+            data=self.post_data,
+        )
+
+    def test_post_read_only(self):
+        """Test POST with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(
+            self.url, self.superuser, 200, method='POST', data=self.post_data
+        )
+        self.assert_response(
+            self.url,
+            self.non_superusers,
+            302,
+            method='POST',
+            data=self.post_data,
+        )
+        self.project.set_public()
+        self.assert_response(
+            self.url,
+            self.non_superusers,
+            302,
+            method='POST',
+            data=self.post_data,
         )

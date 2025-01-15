@@ -47,10 +47,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             'flag': 'IMPORTANT',
             'description': 'Description',
         }
-
-    def test_get(self):
-        """Test FolderListCreateAPIView GET"""
-        good_users = [
+        self.good_users_get = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -61,11 +58,14 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+
+    def test_get(self):
+        """Test FolderListCreateAPIView GET"""
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -78,24 +78,19 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_post(self):
         """Test FolderListCreateAPIView POST"""
@@ -151,31 +146,22 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
     def test_post_archive(self):
         """Test POST with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
-            self.url, good_users, 201, method='POST', data=self.post_data
+            self.url, self.superuser, 201, method='POST', data=self.post_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='POST', data=self.post_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='POST', data=self.post_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             201,
             method='POST',
             data=self.post_data,
@@ -188,6 +174,23 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             403,
             method='POST',
             data=self.post_data,
+        )
+
+    def test_post_read_only(self):
+        """Test POST with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url, self.superuser, 201, method='POST', data=self.post_data
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='POST', data=self.post_data
         )
 
 
@@ -213,10 +216,7 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             'description': 'UPDATED Description',
         }
         self.patch_data = {'name': 'UPDATED Folder'}
-
-    def test_get(self):
-        """Test FolderRetrieveUpdateDestroyAPIView GET"""
-        good_users = [
+        self.good_users_get = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -227,11 +227,32 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200, method='GET')
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.good_users_update = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
+        ]
+        self.bad_users_update = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+
+    def test_get(self):
+        """Test FolderRetrieveUpdateDestroyAPIView GET"""
+
+        self.assert_response_api(
+            self.url, self.good_users_get, 200, method='GET'
+        )
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -244,53 +265,45 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200, method='GET')
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(
+            self.url, self.good_users_get, 200, method='GET'
+        )
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url, self.good_users_get, 200, method='GET'
+        )
+        self.assert_response_api(self.url, self.bad_users_get, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
     def test_put(self):
         """Test FolderRetrieveUpdateDestroyAPIView PUT"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
-            self.url, good_users, 200, method='PUT', data=self.put_data
+            self.url,
+            self.good_users_update,
+            200,
+            method='PUT',
+            data=self.put_data,
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='PUT', data=self.put_data
+            self.url,
+            self.bad_users_update,
+            403,
+            method='PUT',
+            data=self.put_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             200,
             method='PUT',
             data=self.put_data,
@@ -303,33 +316,24 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_put_anon(self):
-        """Test permissions for folder updating with anonymous access"""
+        """Test PUT with anonymous access"""
         self.project.set_public()
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
 
     def test_put_archive(self):
-        """Test permissions for folder updating with PUT and archived project"""
+        """Test PUT with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
-            self.url, good_users, 200, method='PUT', data=self.put_data
+            self.url, self.superuser, 200, method='PUT', data=self.put_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='PUT', data=self.put_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PUT',
+            data=self.put_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
@@ -339,35 +343,45 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
         )
 
-    def test_patch(self):
-        """Test FolderRetrieveUpdateDestroyAPIView PATCH"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
+    def test_put_read_only(self):
+        """Test PUT with site read-only mode"""
+        self.set_site_read_only()
         self.assert_response_api(
-            self.url, good_users, 200, method='PATCH', data=self.patch_data
+            self.url, self.superuser, 200, method='PUT', data=self.put_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='PATCH', data=self.patch_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PUT',
+            data=self.put_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
+        )
+
+    def test_patch(self):
+        """Test FolderRetrieveUpdateDestroyAPIView PATCH"""
+        self.assert_response_api(
+            self.url,
+            self.good_users_update,
+            200,
+            method='PATCH',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.bad_users_update,
+            403,
+            method='PATCH',
+            data=self.patch_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PATCH', data=self.patch_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             200,
             method='PATCH',
             data=self.patch_data,
@@ -393,24 +407,15 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
     def test_patch_archive(self):
         """Test PATCH with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
-            self.url, good_users, 200, method='PATCH', data=self.patch_data
+            self.url, self.superuser, 200, method='PATCH', data=self.patch_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='PATCH', data=self.patch_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PATCH',
+            data=self.patch_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PATCH', data=self.patch_data
@@ -424,35 +429,39 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             data=self.patch_data,
         )
 
-    def test_delete(self):
-        """Test FolderRetrieveUpdateDestroyAPIView DELETE"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
+    def test_patch_read_only(self):
+        """Test PATCH with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url, self.superuser, 200, method='PATCH', data=self.patch_data
+        )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.auth_non_superusers,
+            403,
+            method='PATCH',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PATCH', data=self.patch_data
+        )
+
+    def test_delete(self):
+        """Test FolderRetrieveUpdateDestroyAPIView DELETE"""
+        self.assert_response_api(
+            self.url,
+            self.good_users_update,
             204,
             method='DELETE',
             cleanup_method=self._make_folder,
         )
-        self.assert_response_api(self.url, bad_users, 403, method='DELETE')
+        self.assert_response_api(
+            self.url, self.bad_users_update, 403, method='DELETE'
+        )
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             204,
             method='DELETE',
             cleanup_method=self._make_folder,
@@ -470,34 +479,38 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     def test_delete_archive(self):
-        """Test DELETEwith archived project"""
+        """Test DELETE with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             204,
             method='DELETE',
             cleanup_method=self._make_folder,
         )
-        self.assert_response_api(self.url, bad_users, 403, method='DELETE')
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='DELETE'
+        )
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+
+    def test_delete_read_only(self):
+        """Test DELETE with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            204,
+            method='DELETE',
+            cleanup_method=self._make_folder,
+        )
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='DELETE'
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
 
 class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
@@ -524,6 +537,18 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             'filesfolders:api_file_list_create',
             kwargs={'project': self.project.sodar_uuid},
         )
+        self.good_users_get = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
 
     def tearDown(self):
         if hasattr(self, 'post_data'):
@@ -532,50 +557,36 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
 
     def test_get(self):
         """Test FileListCreateAPIView GET"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
-        """Test permissions for file listing with anonymous access"""
+        """Test GET with anonymous access"""
         self.project.set_public()
         self.assert_response_api(self.url, self.anonymous, 200)
 
     def test_get_archive(self):
-        """Test permissions for file listing with archived project"""
+        """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
+        self.project.set_public()
+        self.assert_response_api(self.url, self.user_no_roles, 200)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -645,7 +656,6 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             data=self.post_data,
             cleanup_method=self._cleanup,
         )
-        # self.request_data['file'].close()
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -666,22 +676,9 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         """Test POST with archived project"""
         self._make_post_data()
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             201,
             method='POST',
             format='multipart',
@@ -690,7 +687,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         )
         self.assert_response_api(
             self.url,
-            bad_users,
+            self.auth_non_superusers,
             403,
             method='POST',
             format='multipart',
@@ -708,7 +705,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             201,
             method='POST',
             format='multipart',
@@ -721,6 +718,38 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            format='multipart',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
+
+    def test_post_read_only(self):
+        """Test POST with site read-only mode"""
+        self._make_post_data()
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            201,
+            method='POST',
+            format='multipart',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            format='multipart',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             format='multipart',
             data=self.post_data,
@@ -758,10 +787,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             'filesfolders:api_file_retrieve_update_destroy',
             kwargs={'file': file.sodar_uuid},
         )
-
-    def test_get(self):
-        """Test FileRetrieveUpdateDestroyAPIView GET"""
-        good_users = [
+        self.good_users_get = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -772,11 +798,29 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.good_users_update = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
+        ]
+        self.bad_users_update = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+
+    def test_get(self):
+        """Test FileRetrieveUpdateDestroyAPIView GET"""
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -789,46 +833,26 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_put(self):
         """Test FileRetrieveUpdateDestroyAPIView PUT"""
         self._make_put_data()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             200,
             method='PUT',
             format='multipart',
@@ -837,7 +861,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         )
         self.assert_response_api(
             self.url,
-            bad_users,
+            self.bad_users_update,
             403,
             method='PUT',
             format='multipart',
@@ -855,7 +879,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             200,
             method='PUT',
             format='multipart',
@@ -891,22 +915,9 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         """Test PUT with archived project"""
         self._make_put_data()
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             200,
             method='PUT',
             format='multipart',
@@ -915,7 +926,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         )
         self.assert_response_api(
             self.url,
-            bad_users,
+            self.auth_non_superusers,
             403,
             method='PUT',
             format='multipart',
@@ -941,26 +952,43 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             data=self.put_data,
         )
 
-    def test_patch(self):
-        """Test FileRetrieveUpdateDestroyAPIView PATCH"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
+    def test_put_read_only(self):
+        """Test PUT with site read-only mode"""
+        self._make_put_data()
+        self.set_site_read_only()
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
+            200,
+            method='PUT',
+            format='multipart',
+            data=self.put_data,
+            cleanup_method=self._cleanup_put,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PUT',
+            format='multipart',
+            data=self.put_data,
+            cleanup_method=self._cleanup_put,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='PUT',
+            format='multipart',
+            data=self.put_data,
+            cleanup_method=self._cleanup_put,
+        )
+
+    def test_patch(self):
+        """Test FileRetrieveUpdateDestroyAPIView PATCH"""
+        self.assert_response_api(
+            self.url,
+            self.good_users_update,
             200,
             method='PATCH',
             format='multipart',
@@ -968,7 +996,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         )
         self.assert_response_api(
             self.url,
-            bad_users,
+            self.bad_users_update,
             403,
             method='PATCH',
             format='multipart',
@@ -984,7 +1012,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             200,
             method='PATCH',
             format='multipart',
@@ -1017,22 +1045,9 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
     def test_patch_archive(self):
         """Test PATCH with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             200,
             method='PATCH',
             format='multipart',
@@ -1040,7 +1055,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         )
         self.assert_response_api(
             self.url,
-            bad_users,
+            self.auth_non_superusers,
             403,
             method='PATCH',
             format='multipart',
@@ -1065,35 +1080,50 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             data=self.patch_data,
         )
 
-    def test_delete(self):
-        """Test FileRetrieveUpdateDestroyAPIView DELETE"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
+    def test_patch_read_only(self):
+        """Test PATCH with site read-only mode"""
+        self.set_site_read_only()
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
+            200,
+            method='PATCH',
+            format='multipart',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PATCH',
+            format='multipart',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='PATCH',
+            format='multipart',
+            data=self.patch_data,
+        )
+
+    def test_delete(self):
+        """Test FileRetrieveUpdateDestroyAPIView DELETE"""
+        self.assert_response_api(
+            self.url,
+            self.good_users_update,
             204,
             method='DELETE',
             cleanup_method=self._make_file,
         )
-        self.assert_response_api(self.url, bad_users, 403, method='DELETE')
+        self.assert_response_api(
+            self.url, self.bad_users_update, 403, method='DELETE'
+        )
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             204,
             method='DELETE',
             cleanup_method=self._make_file,
@@ -1116,32 +1146,36 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
     def test_delete_archive(self):
         """Test DELETE with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             204,
             method='DELETE',
             cleanup_method=self._make_file,
         )
-        self.assert_response_api(self.url, bad_users, 403, method='DELETE')
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='DELETE'
+        )
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+
+    def test_delete_read_only(self):
+        """Test DELETE with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            204,
+            method='DELETE',
+            cleanup_method=self._make_file,
+        )
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='DELETE'
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
 
 class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
@@ -1153,10 +1187,7 @@ class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
         self.url = reverse(
             'filesfolders:api_file_serve', kwargs={'file': file.sodar_uuid}
         )
-
-    def test_get(self):
-        """Test FileServeAPIView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -1167,11 +1198,14 @@ class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200, method='GET')
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+
+    def test_get(self):
+        """Test FileServeAPIView GET"""
+        self.assert_response_api(self.url, self.good_users, 200, method='GET')
+        self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -1184,24 +1218,19 @@ class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200, method='GET')
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users, 200, method='GET')
+        self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users, 200, method='GET')
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
 
 class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
@@ -1223,10 +1252,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             'description': 'Description',
             'url': 'https://www.cubi.bihealth.org',
         }
-
-    def test_get(self):
-        """Test HyperLinkListCreateAPIView GET"""
-        good_users = [
+        self.good_users_get = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -1237,11 +1263,14 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+
+    def test_get(self):
+        """Test HyperLinkListCreateAPIView GET"""
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -1254,24 +1283,19 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users_get, 200)
+        self.assert_response_api(self.url, self.bad_users_get, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_post(self):
         """Test HyperLinkListCreateAPIView POST"""
@@ -1334,36 +1358,27 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
     def test_post_archive(self):
         """Test POST with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             201,
             method='POST',
             data=self.post_data,
             cleanup_method=self._cleanup,
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='POST', data=self.post_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='POST', data=self.post_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             201,
             method='POST',
             data=self.post_data,
@@ -1377,6 +1392,28 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             403,
             method='POST',
             data=self.post_data,
+        )
+
+    def test_post_read_only(self):
+        """Test POST with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            201,
+            method='POST',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='POST', data=self.post_data
         )
 
 
@@ -1408,10 +1445,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
             'url': 'https://www.bihealth.org',
         }
         self.patch_data = {'name': 'UPDATED Hyperlink'}
-
-    def test_get(self):
-        """Test HyperLinkRetrieveUpdateDestroyAPIView GET"""
-        good_users = [
+        self.good_users_get = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -1422,11 +1456,31 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200, method='GET')
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.good_users_update = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,  # Owner of link
+            self.user_delegate,
+        ]
+        self.bad_users_update = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+
+    def test_get(self):
+        """Test HyperLinkRetrieveUpdateDestroyAPIView GET"""
+        self.assert_response_api(
+            self.url, self.good_users_get, 200, method='GET'
+        )
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -1439,54 +1493,46 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200, method='GET')
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(
+            self.url, self.good_users_get, 200, method='GET'
+        )
+        self.assert_response_api(self.url, self.bad_users_get, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url, self.good_users_get, 200, method='GET'
+        )
+        self.assert_response_api(self.url, self.bad_users_get, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
     def test_put(self):
         """Test HyperLinkRetrieveUpdateDestroyAPIView PUT"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,  # Owner of link
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
-            self.url, good_users, 200, method='PUT', data=self.put_data
+            self.url,
+            self.good_users_update,
+            200,
+            method='PUT',
+            data=self.put_data,
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='PUT', data=self.put_data
+            self.url,
+            self.bad_users_update,
+            403,
+            method='PUT',
+            data=self.put_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             200,
             method='PUT',
             data=self.put_data,
@@ -1508,31 +1554,22 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
     def test_put_archive(self):
         """Test PUT with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
-            self.url, good_users, 200, method='PUT', data=self.put_data
+            self.url, self.superuser, 200, method='PUT', data=self.put_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='PUT', data=self.put_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PUT',
+            data=self.put_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             200,
             method='PUT',
             data=self.put_data,
@@ -1543,35 +1580,45 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
         )
 
-    def test_patch(self):
-        """Test HyperLinkRetrieveUpdateDestroyAPIView PATCH"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
+    def test_put_read_only(self):
+        """Test PUT with site read-only mode"""
+        self.set_site_read_only()
         self.assert_response_api(
-            self.url, good_users, 200, method='PATCH', data=self.patch_data
+            self.url, self.superuser, 200, method='PUT', data=self.put_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='PATCH', data=self.patch_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PUT',
+            data=self.put_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
+        )
+
+    def test_patch(self):
+        """Test HyperLinkRetrieveUpdateDestroyAPIView PATCH"""
+        self.assert_response_api(
+            self.url,
+            self.good_users_update,
+            200,
+            method='PATCH',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.bad_users_update,
+            403,
+            method='PATCH',
+            data=self.patch_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PATCH', data=self.patch_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             200,
             method='PATCH',
             data=self.patch_data,
@@ -1597,31 +1644,22 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
     def test_patch_archive(self):
         """Test PATCH with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
-            self.url, good_users, 200, method='PATCH', data=self.patch_data
+            self.url, self.superuser, 200, method='PATCH', data=self.patch_data
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='PATCH', data=self.patch_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PATCH',
+            data=self.patch_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PATCH', data=self.patch_data
         )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             200,
             method='PATCH',
             data=self.patch_data,
@@ -1636,36 +1674,39 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
             data=self.patch_data,
         )
 
-    def test_delete(self):
-        """Test HyperLinkRetrieveUpdateDestroyAPIView DELETE"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_owner,
-            self.user_delegate,
-        ]
-        bad_users = [
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
-
+    def test_patch_read_only(self):
+        """Test PATCH with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url, self.superuser, 200, method='PATCH', data=self.patch_data
+        )
         self.assert_response_api(
             self.url,
-            good_users,
+            self.auth_non_superusers,
+            403,
+            method='PATCH',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PATCH', data=self.patch_data
+        )
+
+    def test_delete(self):
+        """Test HyperLinkRetrieveUpdateDestroyAPIView DELETE"""
+        self.assert_response_api(
+            self.url,
+            self.good_users_update,
             204,
             method='DELETE',
             cleanup_method=self._cleanup_delete,
         )
-        self.assert_response_api(self.url, bad_users, 403, method='DELETE')
+        self.assert_response_api(
+            self.url, self.bad_users_update, 403, method='DELETE'
+        )
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
         self.assert_response_api(
             self.url,
-            good_users,
+            self.good_users_update,
             204,
             method='DELETE',
             cleanup_method=self._cleanup_delete,
@@ -1689,31 +1730,20 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
     def test_delete_archive(self):
         """Test DELETE with archived project"""
         self.project.set_archive()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             204,
             method='DELETE',
             cleanup_method=self._cleanup_delete,
         )
-        self.assert_response_api(self.url, bad_users, 403, method='DELETE')
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='DELETE'
+        )
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             204,
             method='DELETE',
             cleanup_method=self._cleanup_delete,
@@ -1723,3 +1753,18 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+
+    def test_delete_read_only(self):
+        """Test DELETE with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            204,
+            method='DELETE',
+            cleanup_method=self._cleanup_delete,
+        )
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='DELETE'
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')

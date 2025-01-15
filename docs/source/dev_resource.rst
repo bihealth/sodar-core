@@ -469,6 +469,85 @@ when creating multi-plugin apps:
   This, again, ensures apps are correctly detected and highlighted in the UI.
 
 
+.. _dev_resources_read_only:
+
+Site Read-Only Mode
+===================
+
+A superuser can temporarily set the site into read-only mode. When the mode is
+enabled, all data on the site is only accessible for reading. No project or user
+data should be modifiable, except for superusers who still have full access.
+
+SODAR Core apps enforce this mode by prohibiting access to views and/or UI
+elements which enable the user to modify data. Apps developed for a SODAR Core
+based site must implement this within their rule and UI logic.
+
+If your data modifying view is in a project app and uses the
+``can_modify_project_data()`` rule predicate, checks for view access are already
+performed for that view in the permission checks. Example of this in a
+``rules.py`` file:
+
+.. code-block:: python
+
+    import rules
+    from projectroles import rules as pr_rules
+
+    rules.add_perm(
+        'your_project_app.update_data',
+        pr_rules.can_modify_project_data
+        & (
+            pr_rules.is_project_owner
+            | pr_rules.is_project_delegate
+            | pr_rules.is_project_contributor
+        ),
+    )
+
+For site views, you can use the ``is_site_writable()`` predicate. Example:
+
+.. code-block:: python
+
+    import rules
+    from projectroles import rules as pr_rules
+
+    rules.add_perm(
+        'your_site_app.update_data',
+        rules.is_authenticated & pr_rules.is_site_writable,
+    )
+
+To check for the mode in your Python code, you should use the app settings API
+as follows:
+
+.. code-block:: python
+
+    from projectroles.app_settings import AppSettingAPI
+    app_settings = AppSettingAPI()
+
+    if app_settings.get('projectroles', 'site_read_only'):
+        pass  # Add logic for read-only mode here
+
+In templates, the same can be done using the ``get_app_setting()`` template tag.
+Example:
+
+.. code-block:: django
+
+    {% load projectroles_common_tags %}
+    {% get_app_setting 'projectroles' 'site_read_only' as site_read_only %}
+    {% if site_read_only %}
+      {# ... #}
+    {% endif %}
+
+If you need to check the site read-only status in client-side apps, you can
+query the ``SiteReadOnlySettingAjaxView`` Ajax view. See
+:ref:`app_projectroles_api_django_ajax_common` for more information.
+
+.. note::
+
+    It is assumed that in read-only mode, superusers are still able to access
+    data modifying views and operations. The rule settings also allow this.
+    Actions within management commands should thus also be allowed in read-only
+    mode.
+
+
 Management Command Logger
 =========================
 

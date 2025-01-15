@@ -81,6 +81,7 @@ CATEGORY_SETTING_ID = (
 PUBLIC_ACCESS_ID = 'id_public_guest_access'
 REMOTE_SITE_UUID = uuid.uuid4()
 REMOTE_SITE_ID = 'id_remote_site.{}'.format(REMOTE_SITE_UUID)
+CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
 
 
 class LiveUserMixin:
@@ -724,6 +725,51 @@ class TestHomeView(UITestBase):
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
 
+    def test_read_only_alert_disabled(self):
+        """Test site read-only mode alert with mode disabled"""
+        self.assertFalse(app_settings.get('projectroles', 'site_read_only'))
+        self.login_and_redirect(self.user_owner, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
+
+    def test_read_only_alert_enabled(self):
+        """Test site read-only mode alert with mode enabled"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        self.login_and_redirect(self.user_owner, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
+        self.assertIsNotNone(elem)
+        self.assertNotEqual(elem.text, CUSTOM_READ_ONLY_MSG)
+
+    @override_settings(PROJECTROLES_READ_ONLY_MSG=CUSTOM_READ_ONLY_MSG)
+    def test_read_only_alert_custom(self):
+        """Test site read-only mode alert with custom message"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        self.login_and_redirect(self.user_owner, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
+        self.assertIsNotNone(elem)
+        self.assertEqual(elem.text, CUSTOM_READ_ONLY_MSG)
+
+    def test_read_only_alert_disable(self):
+        """Test site read-only mode disabling enabled alert"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        self.login_and_redirect(self.user_owner, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
+        self.assertIsNotNone(elem)
+        self.assertIn('alert-danger', elem.get_attribute('class'))
+        self.assertNotIn('alert-success', elem.get_attribute('class'))
+        with self.assertRaises(NoSuchElementException):
+            elem.find_element(By.TAG_NAME, 'a')
+
+        app_settings.set('projectroles', 'site_read_only', False)
+        WebDriverWait(self.selenium, 15).until(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'sodar-alert-site-read-only-updated')
+            )
+        )
+        self.assertNotIn('alert-danger', elem.get_attribute('class'))
+        self.assertIn('alert-success', elem.get_attribute('class'))
+        self.assertIsNotNone(elem.find_element(By.TAG_NAME, 'a'))
+
 
 class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
     """Tests for the project sidebar"""
@@ -1312,6 +1358,22 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             (self.user_guest, self._get_pr_links('star')),
         ]
         self.assert_element_set(expected, PROJECT_LINK_IDS, self.url_cat)
+
+    def test_project_links_read_only(self):
+        """Test visibility of project links with site read-only mode"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        expected = [
+            (self.superuser, self._get_pr_links('roles', 'update')),
+            (self.user_owner_cat, self._get_pr_links('roles')),
+            (self.user_delegate_cat, self._get_pr_links('roles')),
+            (self.user_contributor_cat, self._get_pr_links('roles')),
+            (self.user_guest_cat, self._get_pr_links('roles')),
+            (self.user_owner, self._get_pr_links('roles')),
+            (self.user_delegate, self._get_pr_links('roles')),
+            (self.user_contributor, self._get_pr_links('roles')),
+            (self.user_guest, self._get_pr_links('roles')),
+        ]
+        self.assert_element_set(expected, PROJECT_LINK_IDS, self.url)
 
     def test_copy_uuid_visibility_default(self):
         """Test default UUID copy button visibility (should not be visible)"""
@@ -1982,6 +2044,23 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             non_superusers, self.url, 'sodar-pr-role-ops-dropdown', False
         )
 
+    def test_role_ops_read_only(self):
+        """Test rendering role operations dropdown with site read-only mode"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        self.assert_element_exists(
+            good_users, self.url, 'sodar-pr-role-ops-dropdown', True
+        )
+        self.assert_element_exists(
+            bad_users, self.url, 'sodar-pr-role-ops-dropdown', False
+        )
+
     def test_role_ops_invite(self):
         """Test visibility of role operations invite item"""
         expected_true = [
@@ -2130,6 +2209,25 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
         with self.assertRaises(NoSuchElementException):
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-delete')
+
+    def test_role_dropdown_read_only(self):
+        """Test role dropdown with site read-only mode"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        expected = [
+            (self.superuser, 6),
+            (self.user_owner_cat, 0),
+            (self.user_delegate_cat, 0),
+            (self.user_contributor_cat, 0),
+            (self.user_guest_cat, 0),
+            (self.user_finder_cat, 0),
+            (self.user_owner, 0),
+            (self.user_delegate, 0),
+            (self.user_contributor, 0),
+            (self.user_guest, 0),
+        ]
+        self.assert_element_count(
+            expected, self.url, 'sodar-pr-role-dropdown', attribute='class'
+        )
 
 
 class TestRoleAssignmentCreateView(UITestBase):

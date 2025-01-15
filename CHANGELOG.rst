@@ -19,6 +19,12 @@ Added
     - App setting ``user_modifiable`` validation (#1536)
     - ``AppSettingAPI.get_all_by_scope()`` helper (#1534)
     - ``removeroles`` management command (#1391, #1541)
+    - Site read only mode (#24)
+    - ``site_read_only`` site app setting (#24)
+    - ``is_site_writable()`` rule predicate (#24)
+    - ``PermissionTestMixin.set_site_read_only()`` helper (#24)
+    - ``PROJECTROLES_READ_ONLY_MSG`` setting (#24)
+    - ``SiteReadOnlySettingAjaxView`` Ajax view (#24)
 
 Changed
 -------
@@ -33,6 +39,10 @@ Changed
     - Deprecate ``AppSettingAPI.get_all()`` (#1534)
     - Allow no role for old owner in ``RoleAssignmentOwnerTransferMixin`` (#836, #1391)
     - Allow no role for old owner in ``perform_owner_transfer()`` (#836, #1391)
+- **Tokens**
+    - Update UI for site read-only mode (#24)
+- **Userprofile**
+    - Update UI for site read-only mode (#24)
 
 Removed
 -------

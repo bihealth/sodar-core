@@ -626,15 +626,17 @@ PROJECTROLES_TARGET_SYNC_INTERVAL = env.int(
 )
 
 # Optional projectroles settings
-# Sidebar icon size. Minimum=18, maximum=42.
+# Sidebar icon size (must be between 18-42)
 PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 # PROJECTROLES_SECRET_LENGTH = 32
 # PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
 # PROJECTROLES_SEARCH_PAGINATION = 5
-# Support for viewing the site in "kiosk mode" (under work, experimental)
+# Support for viewing the site in "kiosk mode" (experimental)
 # PROJECTROLES_KIOSK_MODE = env.bool('PROJECTROLES_KIOSK_MODE', False)
 # Scroll project navigation with page content if set False
 # PROJECTROLES_BREADCRUMB_STICKY = True
+# Custom message to be displayed if site read-only mode is enabled
+PROJECTROLES_READ_ONLY_MSG = env.str('PROJECTROLES_READ_ONLY_MSG', None)
 
 # Hide project apps from the UI (sidebar, dropdown menus and project details)
 PROJECTROLES_HIDE_PROJECT_APPS = env.list(

@@ -329,7 +329,42 @@ $(document).ready(function () {
         $(this).prepend(
             '<span class="spinner-border spinner-border-sm sodar-btn-spinner" ' +
             'role="status" aria-hidden="true"></span>');
-        $("body").css("cursor", "progress");
+        $('body').css('cursor', 'progress');
         $(this).closest('form').submit();
     });
+});
+
+
+/* Update site read-only mode alert ----------------------------------------- */
+
+function updateReadOnlyAlert(url, alert) {
+    $.ajax({
+        url: url,
+        method: 'GET',
+    }).done(function (data) {
+        var siteReadOnly = data['site_read_only'];
+        if (siteReadOnly === true) {
+            setTimeout(function() {
+                updateReadOnlyAlert(url, alert);
+            }, 5000);
+        } else {
+            alert.addClass('alert-success')
+                .removeClass('alert-danger')
+                .addClass('sodar-alert-site-read-only-updated');
+            alert.find('.sodar-alert-top-content').html(
+                '<i class="iconify" data-icon="mdi:refresh"></i> ' +
+                'Site read-only mode disabled. Please ' +
+                '<a href="javascript:window.location.reload(true)">reload ' +
+                'your browser tab</a>.'
+            )
+        }
+    });
+}
+
+$(document).ready(function () {
+    var readOnlyAlert = $(document).find('#sodar-alert-site-read-only');
+    if (readOnlyAlert) {
+        var url = readOnlyAlert.attr('data-url');
+        updateReadOnlyAlert(url, readOnlyAlert);
+    }
 });

@@ -165,8 +165,17 @@ app if needed.
 .. hint::
 
     For permissions dealing with modifying data, you are strongly recommend to
-    use the ``can_modify_project_data`` predicate. For more, see
+    use the ``can_modify_project_data`` predicate. For more information, see
     :ref:`dev_project_app_archiving`.
+
+.. hint::
+
+    To support the site read-only mode introduced in SODAR Core v1.1, the rules
+    for your app's views need to be implemented accordingly. A check for the
+    read-only mode is contained in the ``can_modify_project_data()`` predicate.
+    If your view already uses that predicate, no further steps are necessary.
+    For site views, ``is_site_writable`` should be used. For more information,
+    see :ref:`dev_resources_read_only`.
 
 
 ProjectAppPlugin

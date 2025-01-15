@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from test_plus import TestCase
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 from projectroles.tests.test_views import ViewTestBase
@@ -21,6 +22,7 @@ from projectroles.utils import (
 
 
 app_links = AppLinkContent()
+app_settings = AppSettingAPI()
 
 
 # SODAR constants
@@ -397,6 +399,35 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         link_names = [link['name'] for link in links]
         self.assertNotIn('project-create', link_names)
 
+    def test_get_project_links_read_only(self):
+        """Test get_project_links() with project and site read-only mode"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        links = app_links.get_project_links(self.user_owner, self.project)
+        self.assertEqual(len(links), 6)
+        link_names = [link['name'] for link in links]
+        self.assertNotIn('project-update', link_names)
+
+    def test_get_project_links_read_only_superuser(self):
+        """Test get_project_links() with project and site read-only mode as superuser"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        links = app_links.get_project_links(self.user, self.project)
+        self.assertEqual(len(links), 7)
+
+    def test_get_project_links_category_read_only(self):
+        """Test get_project_links() with category and site read-only mode"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        links = app_links.get_project_links(self.user_owner, self.category)
+        self.assertEqual(len(links), 3)
+        link_names = [link['name'] for link in links]
+        self.assertNotIn('project-update', link_names)
+        self.assertNotIn('project-create', link_names)
+
+    def test_get_project_links_category_read_only_superuser(self):
+        """Test get_project_links() with category and site read-only mode as superuser"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        links = app_links.get_project_links(self.user, self.category)
+        self.assertEqual(len(links), 5)
+
     def test_get_user_links(self):
         """Test get_user_links() as regular user"""
         expected = [
@@ -583,3 +614,14 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         """Test get_user_links() as anonymous user and kiosk mode"""
         links = app_links.get_user_links(AnonymousUser())
         self.assertEqual(len(links), 0)
+
+    def test_get_user_links_read_only(self):
+        """Test get_user_links() with site read-only mode as regular user"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        # All should be returned
+        self.assertEqual(len(app_links.get_user_links(self.user_owner)), 6)
+
+    def test_get_user_links_read_only_superuser(self):
+        """Test get_user_links() with site read-only mode as superuser"""
+        app_settings.set('projectroles', 'site_read_only', True)
+        self.assertEqual(len(app_links.get_user_links(self.user)), 12)

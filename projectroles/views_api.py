@@ -882,21 +882,21 @@ class AppSettingMixin:
         return request.data['value']
 
     @classmethod
-    def check_project_perms(
-        cls, setting_def, project, request_user, setting_user
-    ):
+    def check_project_perms(cls, setting_def, project, request, setting_user):
         """
         Check permissions for project settings.
 
         :param setting_def: PluginAppSettingDef object
         :param project: Project object
-        :param request_user: User object for requesting user
+        :param request: HttpRequest object
         :param setting_user: User object for the setting user or None
         """
         if setting_def.scope == APP_SETTING_SCOPE_PROJECT:
-            if not request_user.has_perm(
-                'projectroles.update_project_settings', project
-            ):
+            if request.method == 'GET':
+                perm = 'projectroles.view_project_settings'
+            else:
+                perm = 'projectroles.update_project_settings'
+            if not request.user.has_perm(perm, project):
                 raise PermissionDenied(
                     'User lacks permission to access PROJECT scope app '
                     'settings in this project'
@@ -906,9 +906,17 @@ class AppSettingMixin:
                 raise serializers.ValidationError(
                     'No user given for PROJECT_USER setting'
                 )
-            if request_user != setting_user and not request_user.is_superuser:
+            if request.user != setting_user and not request.user.is_superuser:
                 raise PermissionDenied(
                     'User is not allowed to update settings for other users'
+                )
+            if (
+                request.method == 'POST'
+                and not request.user.is_superuser
+                and app_settings.get('projectroles', 'site_read_only')
+            ):
+                raise PermissionDenied(
+                    'Site in read-only mode, operation not allowed'
                 )
 
     @classmethod
@@ -1017,9 +1025,7 @@ class ProjectSettingRetrieveAPIView(
             setting_user = User.objects.filter(
                 sodar_uuid=self.request.GET['user']
             ).first()
-        self.check_project_perms(
-            s_def, project, self.request.user, setting_user
-        )
+        self.check_project_perms(s_def, project, self.request, setting_user)
 
         # Return new object with default setting if not set
         return self.get_setting_for_api(
@@ -1081,7 +1087,7 @@ class ProjectSettingSetAPIView(
             setting_user = User.objects.filter(
                 sodar_uuid=request.data['user']
             ).first()
-        self.check_project_perms(s_def, project, request.user, setting_user)
+        self.check_project_perms(s_def, project, request, setting_user)
 
         # Set setting value with validation, return possible errors
         try:
