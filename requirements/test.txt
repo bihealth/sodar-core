@@ -12,7 +12,7 @@ pytest-django==4.8.0
 pytest-sugar==1.0.0
 
 # Selenium for UI testing
-selenium==4.18.1
+selenium==4.27.1
 
 # Tblib for tracebacks
 tblib==3.0.0

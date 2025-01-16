@@ -365,6 +365,8 @@ $(document).ready(function () {
     var readOnlyAlert = $(document).find('#sodar-alert-site-read-only');
     if (readOnlyAlert) {
         var url = readOnlyAlert.attr('data-url');
-        updateReadOnlyAlert(url, readOnlyAlert);
+        setTimeout(function() {
+            updateReadOnlyAlert(url, readOnlyAlert);
+        }, 5000)
     }
 });
