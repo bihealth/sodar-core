@@ -999,7 +999,7 @@ class RemoteSiteAppPlugin(SiteAppPluginPoint):
     entry_point_url_id = 'projectroles:remote_sites'
 
     #: Required permission for displaying the app
-    app_permission = 'userprofile.update_remote'
+    app_permission = 'projectroles.update_remote'
 
 
 class SiteAppSettingsAppPlugin(SiteAppPluginPoint):

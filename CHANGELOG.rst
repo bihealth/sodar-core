@@ -46,6 +46,12 @@ Changed
 - **Userprofile**
     - Update UI for site read-only mode (#24)
 
+Fixed
+-----
+
+- **Projectroles**
+    - Invalid ``app_permission`` in ``RemoteSiteAppPlugin`` (#1543)
+
 Removed
 -------
 
