@@ -12,7 +12,7 @@ urlpatterns = [
     ),
     path(
         route='settings/update',
-        view=views.UserSettingsView.as_view(),
+        view=views.UserAppSettingsView.as_view(),
         name='settings_update',
     ),
     path(

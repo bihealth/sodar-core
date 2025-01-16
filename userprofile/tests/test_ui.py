@@ -208,8 +208,8 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
         )
 
 
-class TestUserSettingsView(UITestBase):
-    """Tests for UserSettingsView"""
+class TestUserAppSettingsView(UITestBase):
+    """Tests for UserAppSettingsView"""
 
     def setUp(self):
         super().setUp()

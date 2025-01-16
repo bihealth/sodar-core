@@ -3078,7 +3078,7 @@ class UserUpdateView(
 # Site App Setting management --------------------------------------------------
 
 
-class SiteAppSettingsFormView(
+class SiteAppSettingsView(
     LoginRequiredMixin, LoggedInPermissionMixin, InvalidFormMixin, FormView
 ):
     """Site app settings form view"""

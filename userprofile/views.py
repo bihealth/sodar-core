@@ -25,7 +25,7 @@ from projectroles.views import (
     CurrentUserFormMixin,
 )
 
-from userprofile.forms import UserSettingsForm, UserEmailForm
+from userprofile.forms import UserAppSettingsForm, UserEmailForm
 
 
 User = auth.get_user_model()
@@ -99,16 +99,16 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         return result
 
 
-class UserSettingsView(
+class UserAppSettingsView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
     HTTPRefererMixin,
     InvalidFormMixin,
     FormView,
 ):
-    """User settings update view"""
+    """User app settings form view"""
 
-    form_class = UserSettingsForm
+    form_class = UserAppSettingsForm
     permission_required = 'userprofile.update_settings'
     template_name = 'userprofile/settings_form.html'
     success_url = reverse_lazy('userprofile:detail')

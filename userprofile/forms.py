@@ -34,7 +34,7 @@ APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 
-class UserSettingsForm(SODARForm):
+class UserAppSettingsForm(SODARForm):
     """Form for configuring user settings"""
 
     def _set_app_setting_field(self, plugin_name, s_field, s_def):

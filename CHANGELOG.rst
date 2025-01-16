@@ -45,6 +45,7 @@ Changed
     - Update UI for site read-only mode (#24)
 - **Userprofile**
     - Update UI for site read-only mode (#24)
+    - Rename ``UserAppSettingsForm`` and ``UserAppSettingsView`` (#1544)
 
 Fixed
 -----

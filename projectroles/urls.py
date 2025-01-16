@@ -127,7 +127,7 @@ urls_ui = [
     ),
     path(
         route='site-app-settings',
-        view=views.SiteAppSettingsFormView.as_view(),
+        view=views.SiteAppSettingsView.as_view(),
         name='site_app_settings',
     ),
     # Remote site and project views

@@ -88,8 +88,8 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.context['add_emails'].count(), 2)
 
 
-class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
-    """Tests for UserSettingsView"""
+class TestUserAppSettingsView(AppSettingMixin, UserViewTestBase):
+    """Tests for UserAppSettingsView"""
 
     def _get_setting(self, name):
         return app_settings.get(EXAMPLE_APP_NAME, name, user=self.user)
@@ -147,7 +147,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         )
 
     def test_get(self):
-        """Test UserSettingsView GET"""
+        """Test UserAppSettingsView GET"""
         with self.login(self.user):
             response = self.client.get(reverse('userprofile:settings_update'))
         self.assertEqual(response.status_code, 200)
@@ -184,7 +184,7 @@ class TestUserSettingsView(AppSettingMixin, UserViewTestBase):
         )
 
     def test_post(self):
-        """Test UserSettingsView POST"""
+        """Test POST"""
         self.assertEqual(self._get_setting('user_str_setting'), 'test')
         self.assertEqual(self._get_setting('user_int_setting'), 170)
         self.assertEqual(
