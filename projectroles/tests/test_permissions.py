@@ -1805,6 +1805,30 @@ class TestProjectInviteRevokeView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.non_superusers, 302)
 
 
+class TestSiteAppSettingsFormView(ProjectPermissionTestBase):
+    """Tests for SiteAppSettingsFormView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:site_app_settings')
+
+    def test_get(self):
+        """Test SiteAppSettingsFormView GET"""
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.assert_response(self.url, self.anonymous, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+
 class TestRemoteSiteViews(RemoteSiteMixin, SiteAppPermissionTestBase):
     """Tests for UI view permissions in remote site views"""
 

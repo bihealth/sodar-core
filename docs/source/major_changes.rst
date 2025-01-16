@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add site read-only mode
+- Add siteappsettings site app plugin
 - Add removeroles management command
 - Add app setting type constants
 - Add app setting definition as objects

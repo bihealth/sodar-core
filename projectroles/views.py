@@ -38,6 +38,7 @@ from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
     ProjectInviteForm,
+    SiteAppSettingsForm,
     RemoteSiteForm,
     RoleAssignmentOwnerTransferForm,
     LocalUserForm,
@@ -131,6 +132,7 @@ ROLE_FINDER_INFO = (
 TARGET_CREATE_DISABLED_MSG = (
     'PROJECTROLES_TARGET_CREATE=False, creation not allowed.'
 )
+SITE_SETTING_UPDATE_MSG = 'Site app settings updated.'
 
 
 # General UI view mixins -------------------------------------------------------
@@ -3071,6 +3073,29 @@ class UserUpdateView(
     def get_success_url(self):
         messages.success(self.request, USER_PROFILE_UPDATE_MSG)
         return reverse('home')
+
+
+# Site App Setting management --------------------------------------------------
+
+
+class SiteAppSettingsFormView(
+    LoginRequiredMixin, LoggedInPermissionMixin, InvalidFormMixin, FormView
+):
+    """Site app settings form view"""
+
+    form_class = SiteAppSettingsForm
+    permission_required = 'projectroles.update_site_settings'
+    success_url = reverse_lazy('projectroles:site_app_settings')
+    template_name = 'projectroles/siteappsettings_form.html'
+
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        for k, v in form.cleaned_data.items():
+            if k.startswith('settings.'):
+                _, plugin_name, setting_name = k.split('.', 3)
+                app_settings.set(plugin_name, setting_name, v)
+        messages.success(self.request, SITE_SETTING_UPDATE_MSG)
+        return result
 
 
 # Remote site and project views ------------------------------------------------

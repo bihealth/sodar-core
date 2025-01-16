@@ -50,8 +50,8 @@ Upon logging into a SODAR Core based Django site using default templates and CSS
 the general view of your site is split into the following elements:
 
 - **Top navigation bar**: Contains the site logo and title, search element, link
-  to advanced search, help link and the user dropdown menu.
-- **User dropdown menu**: Contains links to user management, admin site and
+  to advanced search, help link and the user dropdown.
+- **User dropdown**: Contains links to user management, admin site and
   site-wide apps the user has access to.
 - **Project sidebar**: Shortcuts to project apps and project management pages
 - **Project navigation**: Project structure breadcrumb (disabled for site apps)
@@ -362,6 +362,38 @@ out of the LDAP server. Use the ``-h`` flag to see additional options.
 .. code-block:: console
 
     $ ./manage.py checkusers
+
+
+Site App Settings
+=================
+
+Site-wide app settings, which are not tied to any project or user, can be
+altered by administrators by opening the :guilabel:`Site App Settings` view from
+their user dropdown. The form works similarly to the project app settings in the
+project creation and updating view.
+
+.. figure:: _static/app_projectroles/site_app_settings.png
+    :align: center
+    :scale: 60%
+
+    Site app settings view
+
+
+Site Read-Only Mode
+===================
+
+In :guilabel:`Site App Settings`, an administrator can temporarily set the site
+to read-only mode. When this mode is enabled, all data on the site is only
+accessible for reading. No project or user data should be modifiable. Once
+enabled, the mode must be explicitly disabled from the same form.
+
+While the mode is active, an alert will be displayed to all users that site data
+can currently not be modified.
+
+Once the mode has been disabled, the alert on existing browser views will be
+changed into one prompting the user to reload the current view. Reloading
+ensures all the UI elements are active in case not everything is updated on the
+client side.
 
 
 .. _app_projectroles_usage_remote:

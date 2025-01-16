@@ -125,6 +125,11 @@ urls_ui = [
         view=views.UserUpdateView.as_view(),
         name='user_update',
     ),
+    path(
+        route='site-app-settings',
+        view=views.SiteAppSettingsFormView.as_view(),
+        name='site_app_settings',
+    ),
     # Remote site and project views
     path(
         route='remote/sites',

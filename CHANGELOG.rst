@@ -25,6 +25,8 @@ Added
     - ``PermissionTestMixin.set_site_read_only()`` helper (#24)
     - ``PROJECTROLES_READ_ONLY_MSG`` setting (#24)
     - ``SiteReadOnlySettingAjaxView`` Ajax view (#24)
+    - ``siteappsettings`` site app plugin (#1304)
+    - ``SiteAppSettingsFormView`` view (#1304)
 
 Changed
 -------

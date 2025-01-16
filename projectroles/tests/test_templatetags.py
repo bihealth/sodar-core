@@ -783,6 +783,13 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'active': False,
                 },
                 {
+                    'name': 'siteappsettings',
+                    'url': '/project/site-app-settings',
+                    'label': 'Site App Settings',
+                    'icon': 'mdi:cog-outline',
+                    'active': False,
+                },
+                {
                     'name': 'siteinfo',
                     'url': '/siteinfo/info',
                     'label': 'Site Info',

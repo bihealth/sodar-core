@@ -123,11 +123,18 @@ class AppLinkContent:
             or url_name in [u.name for u in getattr(app_plugin, 'urls', [])]
         ):
             return True
-        # HACK for remote site views, see issue #1336
+        # Remote site views, see issue #1336
         if (
             app_name == 'projectroles'
             and app_plugin.name == 'remotesites'
             and url_name.startswith('remote_')
+        ):
+            return True
+        # Site app settings view
+        if (
+            app_name == 'projectroles'
+            and app_plugin.name == 'siteappsettings'
+            and url_name == 'site_app_settings'
         ):
             return True
         return False

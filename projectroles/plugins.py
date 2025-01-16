@@ -1000,3 +1000,28 @@ class RemoteSiteAppPlugin(SiteAppPluginPoint):
 
     #: Required permission for displaying the app
     app_permission = 'userprofile.update_remote'
+
+
+class SiteAppSettingsAppPlugin(SiteAppPluginPoint):
+    """Site plugin for site app settings"""
+
+    #: Name (used as plugin ID)
+    name = 'siteappsettings'
+
+    #: Title (used in templates)
+    title = 'Site App Settings'
+
+    #: UI URLs
+    urls = []
+
+    #: Iconify icon
+    icon = 'mdi:cog-outline'
+
+    #: Description string
+    description = 'Site-wide app setting management'
+
+    #: Entry point URL ID
+    entry_point_url_id = 'projectroles:site_app_settings'
+
+    #: Required permission for displaying the app
+    app_permission = 'projectroles.update_site_settings'

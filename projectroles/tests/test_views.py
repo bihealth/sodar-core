@@ -76,6 +76,7 @@ from projectroles.views import (
     INVITE_USER_EXISTS_MSG,
     LOGIN_MSG,
     TARGET_CREATE_DISABLED_MSG,
+    SITE_SETTING_UPDATE_MSG,
 )
 from projectroles.context_processors import (
     SIDEBAR_ICON_MIN_SIZE,
@@ -4972,6 +4973,61 @@ class TestProjectInviteRevokeView(
         with self.login(user_delegate):
             self.client.post(self.url)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+
+class TestSiteAppSettingsFormView(ViewTestBase):
+    """Tests for SiteAppSettingsFormView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:site_app_settings')
+
+    def test_get(self):
+        """Test SiteAppSettingsFormView GET"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        self.assertEqual(len(form.fields), 2)
+        self.assertIsNotNone(
+            form.fields.get('settings.example_project_app.site_bool_setting')
+        )
+        self.assertIsNotNone(
+            form.fields.get('settings.projectroles.site_read_only')
+        )
+        self.assertEqual(
+            form.initial['settings.example_project_app.site_bool_setting'],
+            False,
+        )
+        self.assertEqual(
+            form.initial['settings.projectroles.site_read_only'],
+            False,
+        )
+
+    def test_post(self):
+        """Test POST"""
+        self.assertFalse(
+            app_settings.get('example_project_app', 'site_bool_setting')
+        )
+        self.assertFalse(app_settings.get('projectroles', 'site_read_only'))
+
+        data = {
+            'settings.example_project_app.site_bool_setting': False,
+            'settings.projectroles.site_read_only': True,
+        }
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+            self.assertRedirects(response, self.url)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            SITE_SETTING_UPDATE_MSG,
+        )
+
+        self.assertFalse(
+            app_settings.get('example_project_app', 'site_bool_setting')
+        )
+        self.assertTrue(app_settings.get('projectroles', 'site_read_only'))
 
 
 # Remote view tests ------------------------------------------------------------

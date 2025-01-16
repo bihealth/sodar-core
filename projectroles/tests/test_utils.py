@@ -515,6 +515,13 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 'active': False,
             },
             {
+                'name': 'siteappsettings',
+                'url': '/project/site-app-settings',
+                'label': 'Site App Settings',
+                'icon': 'mdi:cog-outline',
+                'active': False,
+            },
+            {
                 'name': 'siteinfo',
                 'url': reverse('siteinfo:info'),
                 'label': 'Site Info',
@@ -595,10 +602,23 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         links = app_links.get_user_links(
             self.user, app_name='projectroles', url_name='remote_site_create'
         )
-        self.assertEqual(len(links), 12)
-        for i in range(0, 12):
+        self.assertEqual(len(links), 13)
+        for i in range(0, 13):
             if i == 4:
                 self.assertEqual(links[i]['name'], 'remotesites')
+                self.assertEqual(links[i]['active'], True)
+            else:
+                self.assertEqual(links[i]['active'], False)
+
+    def test_get_user_links_url_name_site_app_settings(self):
+        """Test get_user_links() with site app settings URL name"""
+        links = app_links.get_user_links(
+            self.user, app_name='projectroles', url_name='site_app_settings'
+        )
+        self.assertEqual(len(links), 13)
+        for i in range(0, 13):
+            if i == 5:
+                self.assertEqual(links[i]['name'], 'siteappsettings')
                 self.assertEqual(links[i]['active'], True)
             else:
                 self.assertEqual(links[i]['active'], False)
@@ -624,4 +644,4 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     def test_get_user_links_read_only_superuser(self):
         """Test get_user_links() with site read-only mode as superuser"""
         app_settings.set('projectroles', 'site_read_only', True)
-        self.assertEqual(len(app_links.get_user_links(self.user)), 12)
+        self.assertEqual(len(app_links.get_user_links(self.user)), 13)

@@ -11,8 +11,10 @@ Glossary
         including content and functionality from apps in SODAR Core views.
 
     App Settings
-        Project or user specific settings defined in SODAR Core app plugins.
-        Different from e.g. Django settings used to configure the web site.
+        Project, user or site specific settings defined in SODAR Core app
+        plugins. Different from e.g. Django settings used to configure the web
+        site in that they can be modified in runtime and from the SODAR Core UI
+        or REST API.
 
     Backend App
         SODAR Core application which is used to provide additional functionality

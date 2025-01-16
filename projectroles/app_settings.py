@@ -138,7 +138,7 @@ PROJECTROLES_APP_SETTINGS = [
         default=False,
         label='Site read-only mode',
         description='Set site in read-only mode. Data altering operations will '
-        'be prohibited. Mode must be explicitly unset to allow data'
+        'be prohibited. Mode must be explicitly unset to allow data '
         'modification.',
         user_modifiable=True,
         global_edit=False,

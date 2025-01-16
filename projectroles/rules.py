@@ -214,7 +214,7 @@ rules.add_perm(
 # Allow viewing PROJECT scope settings
 rules.add_perm('projectroles.view_project_settings', is_project_update_user)
 
-# Allow updating project settings
+# Allow updating project app settings
 rules.add_perm(
     'projectroles.update_project_settings',
     is_project_update_user & is_modifiable_project,
@@ -254,6 +254,12 @@ rules.add_perm(
     'projectroles.import_roles', is_project_owner & is_modifiable_project
 )
 
+# Allow starring/unstarring a project
+rules.add_perm(
+    'projectroles.star_project',
+    (can_view_project | has_category_child_role) & is_site_writable,
+)
+
 # Allow updating remote sites and remote project access
 rules.add_perm('projectroles.update_remote', rules.is_superuser)
 
@@ -262,8 +268,8 @@ rules.add_perm(
     'projectroles.view_hidden_projects', rules.is_superuser | is_project_owner
 )
 
-# Allow starring/unstarring a project
+# Allow updating site app settings
 rules.add_perm(
-    'projectroles.star_project',
-    (can_view_project | has_category_child_role) & is_site_writable,
+    'projectroles.update_site_settings',
+    rules.is_superuser,
 )
