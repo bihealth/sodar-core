@@ -27,6 +27,7 @@ Added
     - ``SiteReadOnlySettingAjaxView`` Ajax view (#24)
     - ``siteappsettings`` site app plugin (#1304)
     - ``SiteAppSettingsFormView`` view (#1304)
+    - ``SODARAppSettingFormMixin`` form helper mixin (#1545)
 
 Changed
 -------
@@ -41,11 +42,13 @@ Changed
     - Deprecate ``AppSettingAPI.get_all()`` (#1534)
     - Allow no role for old owner in ``RoleAssignmentOwnerTransferMixin`` (#836, #1391)
     - Allow no role for old owner in ``perform_owner_transfer()`` (#836, #1391)
+    - Move app setting form helpers in ``SODARAppSettingFormMixin`` (#1545)
 - **Tokens**
     - Update UI for site read-only mode (#24)
 - **Userprofile**
     - Update UI for site read-only mode (#24)
     - Rename ``UserAppSettingsForm`` and ``UserAppSettingsView`` (#1544)
+    - Refactor ``UserAppSettingsForm`` to use ``SODARAppSettingFormMixin`` (#1545)
 
 Fixed
 -----

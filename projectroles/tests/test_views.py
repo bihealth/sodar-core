@@ -4975,15 +4975,15 @@ class TestProjectInviteRevokeView(
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
 
 
-class TestSiteAppSettingsFormView(ViewTestBase):
-    """Tests for SiteAppSettingsFormView"""
+class TestSiteAppSettingsView(ViewTestBase):
+    """Tests for SiteAppSettingsView"""
 
     def setUp(self):
         super().setUp()
         self.url = reverse('projectroles:site_app_settings')
 
     def test_get(self):
-        """Test SiteAppSettingsFormView GET"""
+        """Test SiteAppSettingsView GET"""
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)

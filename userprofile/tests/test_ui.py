@@ -8,7 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.forms import SETTING_DISABLE_LABEL
+from projectroles.forms import APP_SETTING_DISABLE_LABEL
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import SODARUserAdditionalEmailMixin
 from projectroles.tests.test_ui import UITestBase
@@ -258,7 +258,7 @@ class TestUserAppSettingsView(UITestBase):
             By.CSS_SELECTOR,
             'div[id="div_id_settings.projectroles.notify_email_project"] label',
         )
-        self.assertNotIn(SETTING_DISABLE_LABEL, label.text)
+        self.assertNotIn(APP_SETTING_DISABLE_LABEL, label.text)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_global_setting_target(self):
@@ -279,4 +279,4 @@ class TestUserAppSettingsView(UITestBase):
             By.CSS_SELECTOR,
             'div[id="div_id_settings.projectroles.notify_email_project"] label',
         )
-        self.assertIn(SETTING_DISABLE_LABEL, label.text)
+        self.assertIn(APP_SETTING_DISABLE_LABEL, label.text)
