@@ -30,6 +30,16 @@ Release Highlights
 Breaking Changes
 ================
 
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v4.2.18.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project.
+
 Site Read-Only Mode
 -------------------
 

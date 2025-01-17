@@ -1,48 +1,50 @@
 # Wheel
-wheel>=0.42.0, <0.43
+wheel>=0.45.1, <0.46
 
 # Setuptools
-setuptools>=70.0.0, <70.1
+setuptools>=75.8.0 , <75.9
 
 # Packaging
-packaging>=23.2, <24.0
+packaging>=24.2, <25.0
 
 # Django
-django>=4.2.17, <5.0
+django>=4.2.18, <5.0
 
 # Configuration
-django-environ>=0.11.2, <0.12
+django-environ>=0.12.0, <0.13
 
 # Forms
-django-crispy-forms>=2.1, <2.2
-crispy-bootstrap4==2024.1
+django-crispy-forms>=2.3, <2.4
+crispy-bootstrap4==2024.10
 
 # Models
-django-model-utils>=4.4.0, <4.5
+django-model-utils>=5.0.0, <5.1
 
 # Password storage
 argon2-cffi>=21.3.0, <21.4
 
 # Python-PostgreSQL Database Adapter
-psycopg2-binary>=2.9.9, <2.10
+psycopg2-binary>=2.9.10, <2.10
 
 # Unicode slugification
+# TODO: Remove or replace? See #1547
 awesome-slugify>=1.6.5, <1.7
 
 # Time zones support
-pytz>=2024.1
+pytz>=2024.2
 
 # SVG icon support
 django-iconify==0.3  # NOTE: v0.4 requires Python>=3.10
 
 # OpenID Connect (OIDC) authentication support
-social-auth-app-django>=5.4.0, <5.5
+social-auth-app-django>=5.4.2, <5.5
 
 # Online documentation via django-docs
-docutils==0.20.1
-Sphinx==7.2.6
+docutils==0.21.2
+# NOTE: Sphinx 8.0 requires Python 3.10+, Sphinx 8.2 requires 3.11+
+Sphinx==7.4.7
 django-docs==0.3.3
-sphinx-rtd-theme==2.0.0
+sphinx-rtd-theme==3.0.2
 
 # Versioning
 versioneer==0.29
@@ -55,7 +57,7 @@ versioneer==0.29
 django-plugins-bihealth>=0.5.2, <0.6
 
 # Rules for permissions
-rules>=3.3, <3.4
+rules>=3.5, <3.6
 
 # REST framework
 djangorestframework>=3.15.2, <3.16
@@ -67,19 +69,19 @@ drf-keyed-list-bihealth>=0.2.1, <0.3
 django-rest-knox>=4.2.0, <4.3
 
 # Markdown field support
-markdown==3.5.2
+markdown==3.7
 django-markupfield>=2.0.1, <2.1
 django-pagedown>=2.2.1, <2.3
-mistune>=3.0.2, <3.1
+mistune>=3.1.0, <3.2
 
 # Database file storage for filesfolders
 django-db-file-storage==0.5.6.1
 
 # Celery dependency
-redis>=5.0.2
+redis>=5.2.1
 
 # Backround Jobs requirements
-celery>=5.3.6, <5.4
+celery>=5.4.0, <5.5
 
 # Django autocomplete light (DAL)
 django-autocomplete-light==3.11.0
