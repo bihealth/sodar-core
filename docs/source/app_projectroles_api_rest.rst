@@ -127,9 +127,9 @@ Projectroles REST API Versioning
 Media Type
     ``application/vnd.bihealth.sodar-core.projectroles+json``
 Current Version
-    ``1.0``
+    ``1.1``
 Accepted Versions
-    ``1.0``
+    ``1.0``, ``1.1``
 Header Example
     ``Accept: application/vnd.bihealth.sodar-core.projectroles+json; version=x.y``
 
@@ -174,3 +174,13 @@ Projectroles REST API Views
 .. autoclass:: UserListAPIView
 
 .. autoclass:: CurrentUserRetrieveAPIView
+
+
+Projectroles REST API Version Changes
+=====================================
+
+v1.1
+----
+
+- ``RoleAssignmentOwnerTransferAPIView``
+    * Allow empty value for ``old_owner_role``

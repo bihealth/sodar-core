@@ -73,6 +73,7 @@ APP_SETTING_CUSTOM_VALIDATE_MSG = (
     '{exception}'
 )
 APP_SETTING_SOURCE_ONLY_MSG = '[Only editable on source site]'
+REMOVE_ROLE_LABEL = '--- Remove role from {project_title} ---'
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -982,10 +983,19 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             q_kwargs['rank__gt'] = ROLE_RANKING[PROJECT_ROLE_OWNER]
         if inh_role_as:
             q_kwargs['rank__lte'] = inh_role_as.role.rank
-        return [
+        ret = [
             get_role_option(project, role)
             for role in Role.objects.filter(**q_kwargs).order_by('rank')
         ]
+        if (
+            not inh_role_as
+            or inh_role_as.role.rank != ROLE_RANKING[PROJECT_ROLE_OWNER]
+        ):
+            remove_label = REMOVE_ROLE_LABEL.format(
+                project_title=get_display_name(project.type)
+            )
+            ret.append((0, remove_label))
+        return ret
 
     def __init__(self, project, current_user, current_owner, *args, **kwargs):
         """Override for form initialization"""
@@ -1026,9 +1036,10 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         )
 
     def clean_old_owner_role(self):
-        role = Role.objects.filter(
-            pk=self.cleaned_data.get('old_owner_role')
-        ).first()
+        field_val = int(self.cleaned_data.get('old_owner_role'))
+        if not field_val:
+            return None  # Remove old owner role
+        role = Role.objects.filter(pk=field_val).first()
         if not role:
             raise forms.ValidationError('Selected role not found')
 

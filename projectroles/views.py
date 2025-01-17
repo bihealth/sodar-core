@@ -125,6 +125,7 @@ INVITE_USER_EXISTS_MSG = (
 )
 ROLE_CREATE_MSG = 'Membership granted with the role of "{role}".'
 ROLE_UPDATE_MSG = 'Member role changed to "{role}".'
+ROLE_DELETE_MSG = 'Your membership in this {project_type} has been removed.'
 ROLE_FINDER_INFO = (
     'User can see nested {categories} and {projects}, but can not access them '
     'without having a role explicitly assigned.'
@@ -1869,8 +1870,8 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
                 project=project.title, role=inh_as.role.name
             )
         else:
-            message = 'Your membership in this {} has been removed.'.format(
-                get_display_name(project.type)
+            message = ROLE_DELETE_MSG.format(
+                project_type=get_display_name(project.type)
             )
             # Dismiss existing alerts
             AppAlert = app_alerts.get_model()
@@ -2298,18 +2299,27 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         # Notify old owner
         if notify_old and not old_inh_owner and issuer != old_owner:
             if app_alerts:
-                app_alerts.add_alert(
-                    app_name=APP_NAME,
-                    alert_name='role_update',
-                    user=old_owner,
-                    message=ROLE_UPDATE_MSG.format(
-                        project=project.title,
-                        role=old_owner_role.name if old_owner_role else 'None',
-                    ),
-                    url=reverse(
+                if old_owner_role:
+                    alert_name = 'role_update'
+                    message = ROLE_UPDATE_MSG.format(
+                        project=project.title, role=old_owner_role.name
+                    )
+                    alert_url = reverse(
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
-                    ),
+                    )
+                else:
+                    alert_name = 'role_delete'
+                    message = ROLE_DELETE_MSG.format(
+                        project_type=get_display_name(project.type)
+                    )
+                    alert_url = None
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name=alert_name,
+                    user=old_owner,
+                    message=message,
+                    url=alert_url,
                     project=project,
                 )
             if (
@@ -2321,7 +2331,11 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
             ):
                 # NOTE: Request is needed here
                 email.send_role_change_mail(
-                    'update', project, old_owner, old_owner_role, request
+                    'update' if old_owner_role else 'delete',
+                    project,
+                    old_owner,
+                    old_owner_role,
+                    request,
                 )
         # Notify new owner
         if not new_inh_owner and issuer != new_owner:

@@ -28,6 +28,7 @@ Added
     - ``siteappsettings`` site app plugin (#1304)
     - ``SiteAppSettingsFormView`` view (#1304)
     - ``SODARAppSettingFormMixin`` form helper mixin (#1545)
+    - Old owner "remove role" option in ``RoleAssignmentOwnerTransferForm`` (#836)
 
 Changed
 -------
@@ -43,6 +44,8 @@ Changed
     - Allow no role for old owner in ``RoleAssignmentOwnerTransferMixin`` (#836, #1391)
     - Allow no role for old owner in ``perform_owner_transfer()`` (#836, #1391)
     - Move app setting form helpers in ``SODARAppSettingFormMixin`` (#1545)
+    - Upgrade projectroles REST API version to v1.1 (#836)
+    - Allow empty ``old_owner_role`` in ``RoleAssignmentOwnerTransferAPIView`` (#836)
 - **Tokens**
     - Update UI for site read-only mode (#24)
 - **Userprofile**

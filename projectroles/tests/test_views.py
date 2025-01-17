@@ -3892,7 +3892,7 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertIsNotNone(form.fields.get('old_owner_role'))
-        self.assertEqual(len(form.fields['old_owner_role'].choices), 3)
+        self.assertEqual(len(form.fields['old_owner_role'].choices), 4)
         # Assert finder role is not selectable
         self.assertNotIn(
             self.role_finder.pk,
@@ -3912,7 +3912,7 @@ class TestRoleAssignmentOwnerTransferView(
         # Only delegate and contributor roles allowed
         self.assertEqual(
             [c[0] for c in form.fields['old_owner_role'].choices],
-            [self.role_delegate.pk, self.role_contributor.pk],
+            [self.role_delegate.pk, self.role_contributor.pk] + [0],
         )
         self.assertEqual(form.fields['old_owner_role'].disabled, False)
 
@@ -3945,7 +3945,7 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertIsNotNone(form.fields.get('old_owner_role'))
-        self.assertEqual(len(form.fields['old_owner_role'].choices), 4)
+        self.assertEqual(len(form.fields['old_owner_role'].choices), 5)
         # Assert finder role is selectable
         self.assertIn(
             self.role_finder.pk,
@@ -4171,6 +4171,79 @@ class TestRoleAssignmentOwnerTransferView(
         self.owner_as.refresh_from_db()
         self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
         self.assertEqual(self.owner_as.role, self.role_contributor)
+        self.assertEqual(self.app_alert_model.objects.count(), 2)
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_post_no_old_role(self):
+        """Test POST with no old owner role"""
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'project': self.project.sodar_uuid,
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': 0,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_owner
+            ).first()
+        )
+        self.assertEqual(self.app_alert_model.objects.count(), 2)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete', user=self.user_owner
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_update', user=self.user_guest
+            ).count(),
+            1,
+        )
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn(
+            SUBJECT_ROLE_DELETE.format(
+                project_label='project', project=self.project.title
+            ),
+            mail.outbox[0].subject,
+        )
+        self.assertIn(
+            SUBJECT_ROLE_UPDATE.format(
+                project_label='project', project=self.project.title
+            ),
+            mail.outbox[1].subject,
+        )
+
+    def test_post_old_inherited_member_no_old_role(self):
+        """Test POST with old inherited member and no old owner role"""
+        inh_as = self.make_assignment(
+            self.category, self.user_owner, self.role_contributor
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'project': self.project.sodar_uuid,
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': 0,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_owner
+            ).first()
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), inh_as)
         self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
 

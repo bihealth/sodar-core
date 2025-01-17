@@ -2255,6 +2255,49 @@ class TestRoleAssignmentOwnerTransferAPIView(
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.user_owner)
 
+    def test_post_no_old_role(self):
+        """Test POST with no old user role"""
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': None,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_owner
+            ).first()
+        )
+
+    def test_post_no_old_role_v1_0(self):
+        """Test POST with no old user role and v1.0 (should fail)"""
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': None,
+        }
+        response = self.request_knox(
+            self.url, method='POST', data=post_data, version='1.0'
+        )
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+
+    def test_post_invalid_role(self):
+        """Test POST with invalid old owner role (should fail)"""
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': 'INVALID ROLE',
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+
 
 class TestProjectInviteListAPIView(
     ProjectInviteMixin, ProjectrolesAPIViewTestBase

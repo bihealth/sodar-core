@@ -21,7 +21,9 @@ Release Highlights
 - Add removeroles management command
 - Add app setting type constants
 - Add app setting definition as objects
+- Update owner transfer form to allow setting no role for old owner
 - Update app settings API
+- Upgrade projectroles REST API version to v1.1
 - Remove support for features deprecated in v1.0
 - Remove squashed migrations
 
@@ -52,6 +54,15 @@ In ``ProjectModifyPluginMixin.perform_role_modify()``, the ``old_owner_role``
 argument may be ``None``. This is used in cases where project role for the
 previous owner is removed. Implementations of ``perform_role_modify()`` must be
 changed accordingly. The same also applies to ``revert_role_modify()``.
+
+REST API View Changes
+---------------------
+
+- Projectroles API (``vnd.bihealth.sodar-core.projectroles``)
+    * Current version: ``1.1`` (non-breaking changes)
+    * Allowed versions: ``1.0``, ``1.1``
+    * ``RoleAssignmentOwnerTransferAPIView``: Allow empty value for
+      ``old_owner_role``
 
 Deprecated Features
 -------------------

@@ -89,8 +89,8 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
 PROJECTROLES_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles+json'
 )
-PROJECTROLES_API_DEFAULT_VERSION = '1.0'
-PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0']
+PROJECTROLES_API_DEFAULT_VERSION = '1.1'
+PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1']
 SYNC_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles.sync+json'
 )
@@ -612,6 +612,9 @@ class RoleAssignmentOwnerTransferAPIView(
 
     The new owner must already have a role assigned in the project.
 
+    NOTE: Barring any inherited role, if no value is given for
+    ``old_owner_role``, the old owner's access to the project will be removed.
+
     **URL:** ``/project/api/roles/owner-transfer/{Project.sodar_uuid}``
 
     **Methods:** ``POST``
@@ -619,37 +622,47 @@ class RoleAssignmentOwnerTransferAPIView(
     **Parameters:**
 
     - ``new_owner``: User name of new owner (string)
-    - ``old_owner_role``: Role for old owner (string. e.g. "project delegate")
+    - ``old_owner_role``: Role for old owner (string or None, e.g. "project delegate")
+
+    **Version Changes**:
+
+    - ``1.1``: Allow empty value for ``old_owner_role``
     """
 
     permission_required = 'projectroles.update_project_owner'
 
     def post(self, request, *args, **kwargs):
         """Handle ownership transfer in a POST request"""
+        d_new_owner = request.data.get('new_owner')
+        d_old_owner_role = request.data.get('old_owner_role')
+        # Validate input
+        if not d_new_owner:
+            raise serializers.ValidationError(
+                'Field "new_owner" must be present'
+            )
+        # Prevent old_owner_role=None if v1.0
+        if request.version == '1.0' and not d_old_owner_role:
+            raise serializers.ValidationError(
+                'Field "old_owner_role" must be present'
+            )
+
         project = self.get_project()
         # Validation for remote sites and projects
         if project.is_remote():
             raise serializers.ValidationError(REMOTE_MODIFY_MSG)
 
-        new_owner = User.objects.filter(
-            username=request.data.get('new_owner')
-        ).first()
-        old_owner_role = Role.objects.filter(
-            name=request.data.get('old_owner_role')
-        ).first()
+        new_owner = User.objects.filter(username=d_new_owner).first()
+        old_owner_role = None
+        if d_old_owner_role:
+            old_owner_role = Role.objects.filter(name=d_old_owner_role).first()
         old_owner_as = project.get_owner()
         old_owner = old_owner_as.user
 
-        # Validate input
-        if not new_owner or not old_owner_role:
+        if d_old_owner_role and not old_owner_role:
             raise serializers.ValidationError(
-                'Fields "new_owner" and "old_owner_role" must be present'
+                'Unknown role "{}"'.format(d_old_owner_role)
             )
-        if not old_owner_role:
-            raise serializers.ValidationError(
-                'Unknown role "{}"'.format(request.data.get('old_owner_role'))
-            )
-        if project.type not in old_owner_role.project_types:
+        if old_owner_role and project.type not in old_owner_role.project_types:
             raise serializers.ValidationError(
                 ROLE_PROJECT_TYPE_ERROR_MSG.format(
                     project_type=project.type, role_name=old_owner_role.name
@@ -659,7 +672,7 @@ class RoleAssignmentOwnerTransferAPIView(
             raise serializers.ValidationError('Existing owner role not found')
         if not new_owner:
             raise serializers.ValidationError(
-                'User "{}" not found'.format(request.data.get('new_owner'))
+                'User "{}" not found'.format(d_new_owner)
             )
         if new_owner == old_owner:
             raise serializers.ValidationError('Owner role already set for user')
