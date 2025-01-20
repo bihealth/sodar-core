@@ -39,6 +39,10 @@ General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your
     project.
+Slugify Dependency Updated
+    Dependency to the out-of-date ``awesome-slugify`` package has been replaced
+    with ``python-slugify>=8.0.4``. It is recommended to change the dependency
+    accordingly in your project.
 
 Site Read-Only Mode
 -------------------

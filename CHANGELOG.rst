@@ -36,6 +36,7 @@ Changed
 - **General**
     - Upgrade minimum Django version to v4.2.18 (#1531)
     - Upgrade general Python dependencies (#1531)
+    - Replace ``awesome-slugify`` dependency with ``python-slugify`` (#1531, #1547)
     - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)
     - Declare app setting definitions as ``PluginAppSettingDef`` objects (#1456)
 - **Projectroles**

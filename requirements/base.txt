@@ -27,8 +27,8 @@ argon2-cffi>=21.3.0, <21.4
 psycopg2-binary>=2.9.10, <2.10
 
 # Unicode slugification
-# TODO: Remove or replace? See #1547
-awesome-slugify>=1.6.5, <1.7
+# NOTE: Replaces awesome-slugify, see #1547
+python-slugify>=8.0.4, <8.1
 
 # Time zones support
 pytz>=2024.2
