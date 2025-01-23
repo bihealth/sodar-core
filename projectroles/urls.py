@@ -31,6 +31,11 @@ urls_ui = [
         view=views.ProjectArchiveView.as_view(),
         name='archive',
     ),
+    path(
+        route='delete/<uuid:project>',
+        view=views.ProjectDeleteView.as_view(),
+        name='delete',
+    ),
     # Search views
     path(
         route='search/results/',
@@ -250,6 +255,11 @@ urls_api = [
         route='api/update/<uuid:project>',
         view=views_api.ProjectUpdateAPIView.as_view(),
         name='api_project_update',
+    ),
+    path(
+        route='api/destroy/<uuid:project>',
+        view=views_api.ProjectDestroyAPIView.as_view(),
+        name='api_project_destroy',
     ),
     path(
         route='api/roles/create/<uuid:project>',

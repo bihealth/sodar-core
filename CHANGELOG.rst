@@ -26,9 +26,11 @@ Added
     - ``PROJECTROLES_READ_ONLY_MSG`` setting (#24)
     - ``SiteReadOnlySettingAjaxView`` Ajax view (#24)
     - ``siteappsettings`` site app plugin (#1304)
-    - ``SiteAppSettingsFormView`` view (#1304)
     - ``SODARAppSettingFormMixin`` form helper mixin (#1545)
     - Old owner "remove role" option in ``RoleAssignmentOwnerTransferForm`` (#836)
+    - Project deletion (#1090)
+    - ``ProjectModifyPluginMixin.perform_project_delete()`` method (#1090)
+    - ``ProjectDestroyAPIView`` REST API view (#1090)
 
 Changed
 -------

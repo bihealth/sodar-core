@@ -147,6 +147,8 @@ Projectroles REST API Views
 
 .. autoclass:: ProjectUpdateAPIView
 
+.. autoclass:: ProjectDestroyAPIView
+
 .. autoclass:: RoleAssignmentCreateAPIView
 
 .. autoclass:: RoleAssignmentUpdateAPIView
@@ -182,5 +184,7 @@ Projectroles REST API Version Changes
 v1.1
 ----
 
+- ``ProjectDestroyAPIView``
+    * Add view
 - ``RoleAssignmentOwnerTransferAPIView``
     * Allow empty value for ``old_owner_role``

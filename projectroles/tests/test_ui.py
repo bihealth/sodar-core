@@ -1773,6 +1773,12 @@ class TestProjectCreateView(RemoteSiteMixin, UITestBase):
             [self.superuser], self.url_top, 'sodar-pr-btn-archive', False
         )
 
+    def test_delete_button(self):
+        """Test rendering form without delete button"""
+        self.assert_element_exists(
+            [self.superuser], self.url_top, 'sodar-pr-btn-delete', False
+        )
+
     def test_fields_top(self):
         """Test rendering of dynamic fields for top level creation view"""
         self.login_and_redirect(self.superuser, self.url_top)
@@ -1897,6 +1903,79 @@ class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         element = self.selenium.find_element(By.ID, 'sodar-pr-btn-archive')
         self.assertEqual(element.text, 'Unarchive')
 
+    def test_delete_button(self):
+        """Test rendering delete button"""
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    def test_delete_button_category_with_children(self):
+        """Test rendering delete button with category and children"""
+        self.login_and_redirect(self.superuser, self.url_cat)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    def test_delete_button_category_no_children(self):
+        """Test rendering delete button with category and no children"""
+        self.project.delete()
+        self.login_and_redirect(self.superuser, self.url_cat)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    def test_delete_button_remote(self):
+        """Test rendering delete button with non-revoked remote project"""
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    def test_delete_button_remote_revoked(self):
+        """Test rendering delete button with revoked remote project"""
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_REVOKED,
+            project=self.project,
+        )
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_delete_button_remote_target(self):
+        """Test rendering delete button with non-revoked remote project as target site"""
+        self.remote_site.mode = SITE_MODE_SOURCE
+        self.remote_site.save()
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_delete_button_remote_revoked_target(self):
+        """Test rendering delete button with non-revoked remote project as target site"""
+        self.remote_site.mode = SITE_MODE_SOURCE
+        self.remote_site.save()
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_REVOKED,
+            project=self.project,
+        )
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
     def test_fields_project(self):
         """Test field visibility for project update"""
         self.login_and_redirect(self.superuser, self.url)
@@ -1981,6 +2060,23 @@ class TestProjectArchiveView(UITestBase):
         )
         self.assert_element_exists(
             [self.superuser], url, 'sodar-pr-btn-confirm-unarchive', True
+        )
+
+
+class TestProjectDeleteView(UITestBase):
+    """Tests for ProjectDeleteView UI"""
+
+    def test_render(self):
+        """Test rendering of project delete confirmation form"""
+        url = reverse(
+            'projectroles:delete', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(self.superuser, url)
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-btn-confirm-delete')
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.NAME, 'delete_host_confirm')
         )
 
 

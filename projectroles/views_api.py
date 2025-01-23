@@ -3,6 +3,7 @@
 import sys
 
 from ipaddress import ip_address, ip_network
+from packaging.version import parse as parse_version
 
 from django.conf import settings
 from django.contrib import auth
@@ -13,6 +14,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import (
     APIException,
+    NotAcceptable,
     NotFound,
     PermissionDenied,
 )
@@ -59,6 +61,8 @@ from projectroles.serializers import (
 )
 from projectroles.views import (
     ProjectAccessMixin,
+    ProjectDeleteMixin,
+    ProjectDeleteAccessMixin,
     RoleAssignmentDeleteMixin,
     RoleAssignmentOwnerTransferMixin,
     ProjectInviteMixin,
@@ -104,6 +108,9 @@ INVALID_PROJECT_TYPE_MSG = (
 USER_MODIFIABLE_MSG = 'Updating non-user modifiable settings is not allowed'
 ANON_ACCESS_MSG = 'Anonymous access not allowed'
 NO_VALUE_MSG = 'Value not set in request data'
+VIEW_NOT_ACCEPTABLE_VERSION = (
+    'This view is not available in the given API version'
+)
 
 
 # Permission / Versioning / Renderer Classes -----------------------------------
@@ -513,6 +520,45 @@ class ProjectUpdateAPIView(
         return context
 
 
+class ProjectDestroyAPIView(
+    ProjectQuerysetMixin,
+    ProjectrolesAPIVersioningMixin,
+    SODARAPIGenericProjectMixin,
+    ProjectDeleteMixin,
+    ProjectDeleteAccessMixin,
+    DestroyAPIView,
+):
+    """
+    Destroy a project and all associated data.
+
+    Deletion is prohibited if called on a category with children or a project
+    with non-revoked remote projects.
+
+    NOTE: This operation can not be undone!
+
+    **URL:** ``/project/api/destroy/{Project.sodar_uuid}``
+
+    **Methods:** ``DELETE``
+
+    **Version Changes**:
+
+    - ``1.1``: Add view
+    """
+
+    permission_required = 'projectroles.delete_project'
+    serializer_class = ProjectSerializer
+
+    def perform_destroy(self, instance):
+        """Override perform_destroy() to handle Project deletion"""
+        if parse_version(self.request.version) < parse_version('1.1'):
+            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION)
+        access, msg = self.check_delete_permission(instance)
+        if not access:
+            raise PermissionDenied(msg)
+        with transaction.atomic():
+            self.handle_delete(instance, self.request)
+
+
 class RoleAssignmentCreateAPIView(
     ProjectrolesAPIVersioningMixin, SODARAPIGenericProjectMixin, CreateAPIView
 ):
@@ -641,7 +687,10 @@ class RoleAssignmentOwnerTransferAPIView(
                 'Field "new_owner" must be present'
             )
         # Prevent old_owner_role=None if v1.0
-        if request.version == '1.0' and not d_old_owner_role:
+        if (
+            parse_version(request.version) < parse_version('1.1')
+            and not d_old_owner_role
+        ):
             raise serializers.ValidationError(
                 'Field "old_owner_role" must be present'
             )

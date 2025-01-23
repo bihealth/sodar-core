@@ -105,7 +105,7 @@ PROJECTROLES_APP_SETTINGS = [
         ),
         description=(
             'Receive email notifications for {} or {} creation, updating, '
-            'moving and archiving.'.format(
+            'moving, archiving and deletion.'.format(
                 get_display_name(PROJECT_TYPE_CATEGORY),
                 get_display_name(PROJECT_TYPE_PROJECT),
             )

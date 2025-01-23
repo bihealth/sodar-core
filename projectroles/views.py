@@ -130,6 +130,21 @@ ROLE_FINDER_INFO = (
     'User can see nested {categories} and {projects}, but can not access them '
     'without having a role explicitly assigned.'
 )
+PROJECT_DELETE_MSG = (
+    '{project_type} "{project_title}" deleted by user {user_name}.'
+)
+PROJECT_DELETE_CAT_ERR_MSG = (
+    'Deletion not allowed for {project_type} with children. Delete the '
+    'children before attempting deletion.'
+)
+PROJECT_DELETE_TARGET_ERR_MSG = (
+    'Deletion not allowed for remote {project_type} with non-revoked access '
+    'level. Revoke remote access on source site to enable deletion.'
+)
+PROJECT_DELETE_SOURCE_ERR_MSG = (
+    'Non-revoked remotes of {project_type} found on target sites. Revoke '
+    'access to the remotes to enable deletion.'
+)
 TARGET_CREATE_DISABLED_MSG = (
     'PROJECTROLES_TARGET_CREATE=False, creation not allowed.'
 )
@@ -855,7 +870,7 @@ class ProjectAdvancedSearchView(
         return ProjectSearchResultsView.as_view()(request)
 
 
-# Project Editing Views --------------------------------------------------------
+# Project Modifying Views ------------------------------------------------------
 
 
 class ProjectModifyPluginViewMixin:
@@ -1427,6 +1442,150 @@ class ProjectModifyFormMixin(ProjectModifyMixin):
         return redirect(redirect_url)
 
 
+class ProjectDeleteAccessMixin:
+    """
+    Mixin to check special access permissions for project deletion.
+
+    Also used for ProjectUpdateView to control access to view link, hence a
+    separate mixin.
+
+    We want to provide an informative message to the end user and also prevent
+    superuser access if needed, hence we're not implementing this in rules.
+    """
+
+    @classmethod
+    def check_delete_permission(cls, project):
+        """
+        Check delete permission. Also applies to superusers.
+
+        :param project: Project object
+        :return: Boolean, string (in case of error) or None
+        """
+        p_type = get_display_name(project.type)
+        if (
+            project.type == PROJECT_TYPE_CATEGORY
+            and project.get_children().count() > 0
+        ):
+            return False, PROJECT_DELETE_CAT_ERR_MSG.format(project_type=p_type)
+        # Disallow for remote projects which haven't been revoked
+        if project.is_remote():
+            rp = RemoteProject.objects.filter(
+                project_uuid=project.sodar_uuid,
+                site__mode=SITE_MODE_SOURCE,
+            ).first()
+            if rp.level != REMOTE_LEVEL_REVOKED:
+                return (
+                    False,
+                    PROJECT_DELETE_TARGET_ERR_MSG.format(project_type=p_type),
+                )
+        # Disallow for source projects with non-revoked remote projects
+        # NOTE: Categories can be deleted
+        elif project.type == PROJECT_TYPE_PROJECT:
+            rps = RemoteProject.objects.filter(
+                project_uuid=project.sodar_uuid, site__mode=SITE_MODE_TARGET
+            ).exclude(level__in=[REMOTE_LEVEL_NONE, REMOTE_LEVEL_REVOKED])
+            if rps.count() > 0:
+                return (
+                    False,
+                    PROJECT_DELETE_SOURCE_ERR_MSG.format(project_type=p_type),
+                )
+        return True, None
+
+
+class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
+    """Mixin for Project deletion in UI and API views"""
+
+    @classmethod
+    def _create_timeline_event(cls, project, request):
+        """
+        Create timeline summary event for project deletion. Created as a
+        classified site-wide event only viewable by superusers.
+
+        :param project: Project object
+        :param request: HttpRequest object
+        """
+        timeline = get_backend_api('timeline_backend')
+        if not timeline:
+            return
+        local_users = {
+            a.user.username: a.role.name
+            for a in project.local_roles.order_by(
+                'role__rank', 'user__username'
+            )
+        }
+        parent = str(project.parent.sodar_uuid) if project.parent else None
+        extra_data = {
+            'title': project.title,
+            'type': project.type,
+            'parent': parent,
+            'description': project.description,
+            'readme': project.readme.raw,
+            'public_guest_access': project.public_guest_access,
+            'archive': project.archive,
+            'full_title': project.full_title,
+            'sodar_uuid': str(project.sodar_uuid),
+            'local_roles': local_users,
+        }
+        timeline.add_event(
+            project=None,  # No project as it has been deleted
+            app_name=APP_NAME,
+            user=request.user,
+            event_name='project_delete',
+            description=f'delete {project.type.lower()} '
+            f'{project.get_log_title()}',
+            extra_data=extra_data,
+            classified=True,
+            status_type=timeline.TL_STATUS_OK,
+        )
+
+    @classmethod
+    def get_redirect_url(cls, project):
+        if project.parent:
+            return reverse(
+                'projectroles:detail',
+                kwargs={'project': project.parent.sodar_uuid},
+            )
+        else:
+            return reverse('home')
+
+    def handle_delete(self, project, request):
+        """
+        Handle project deletion. Deletes the object, creates a summary timeline
+        event and sends out alerts and emails to project members.
+
+        :param project: Project object of project to be deleted
+        :param request: HttpRequest object
+        """
+        app_alerts = get_backend_api('appalerts_backend')
+        # Call project modify API plugin
+        if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
+            self.call_project_modify_api(
+                'perform_project_delete', None, [project]
+            )
+        # Create timeline event
+        self._create_timeline_event(project, request)
+        # Create app alerts
+        if app_alerts:
+            users = [
+                a.user for a in project.get_roles() if a.user != request.user
+            ]
+            app_alerts.add_alerts(
+                app_name=APP_NAME,
+                alert_name='project_delete',
+                users=users,
+                message=PROJECT_DELETE_MSG.format(
+                    project_type=get_display_name(project.type, title=True),
+                    project_title=project.title,
+                    user_name=request.user.username,
+                ),
+            )
+        # Send email
+        if SEND_EMAIL:
+            email.send_project_delete_mail(project, request)
+        # Actually delete project object
+        project.delete()
+
+
 class ProjectCreateView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
@@ -1514,6 +1673,7 @@ class ProjectUpdateView(
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
     ProjectModifyFormMixin,
+    ProjectDeleteAccessMixin,
     CurrentUserFormMixin,
     InvalidFormMixin,
     UpdateView,
@@ -1526,6 +1686,13 @@ class ProjectUpdateView(
     slug_url_kwarg = 'project'
     slug_field = 'sodar_uuid'
     allow_remote_edit = True
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        access, msg = self.check_delete_permission(self.get_object())
+        context['project_delete_access'] = access
+        context['project_delete_msg'] = msg or ''
+        return context
 
 
 class ProjectArchiveView(
@@ -1656,6 +1823,68 @@ class ProjectArchiveView(
                 email.send_project_archive_mail(project, action, request)
         except Exception as ex:
             messages.error(request, 'Failed to alert users: {}'.format(ex))
+        return redirect(redirect_url)
+
+
+class ProjectDeleteView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectContextMixin,
+    ProjectDeleteMixin,
+    ProjectDeleteAccessMixin,
+    ProjectModifyPluginViewMixin,
+    DeleteView,
+):
+    """Project deletion view"""
+
+    model = Project
+    permission_required = 'projectroles.delete_project'
+    slug_field = 'sodar_uuid'
+    slug_url_kwarg = 'project'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        project = self.get_object()
+        # Prevent access in certain conditions, even for superusers
+        access, msg = self.check_delete_permission(project)
+        if not access:
+            messages.error(self.request, msg)
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        project = self.get_object()
+        redirect_url = reverse(
+            'projectroles:update', kwargs={'project': project.sodar_uuid}
+        )
+
+        # Don't allow deletion unless user has input the host name
+        host_confirm = self.request.POST.get('delete_host_confirm')
+        actual_host = self.request.get_host().split(':')[0]
+        if not host_confirm or host_confirm != actual_host:
+            msg = (
+                f'Incorrect host name for confirming sheet deletion: '
+                f'"{host_confirm}"'
+            )
+            logger.error(msg + ' (correct={})'.format(actual_host))
+            messages.error(
+                self.request, 'Host name input incorrect, deletion cancelled.'
+            )
+            return redirect(redirect_url)
+
+        # Proceed with deletion
+        try:
+            with transaction.atomic():
+                self.handle_delete(project, self.request)
+            p_type = get_display_name(project.type, title=True)
+            messages.success(self.request, f'{p_type} deleted.')
+            redirect_url = self.get_redirect_url(project)
+        except Exception as ex:
+            if settings.DEBUG:
+                raise ex
+            p_type = get_display_name(project.type, title=False)
+            messages.error(self.request, f'Failed to delete {p_type}: {ex}')
         return redirect(redirect_url)
 
 

@@ -207,7 +207,7 @@ You can access the archived {project_label} at the following link:
 
 
 SUBJECT_PROJECT_UNARCHIVE = (
-    '{project_label_title} "{project}" unarchived ' 'by {user}'
+    '{project_label_title} "{project}" unarchived by {user}'
 )
 
 MESSAGE_PROJECT_UNARCHIVE = r'''
@@ -217,6 +217,17 @@ access for users has been restored.
 
 You can access the {project_label} at the following link:
 {project_url}
+'''.lstrip()
+
+
+# Project Deletion Template ----------------------------------------------------
+
+SUBJECT_PROJECT_DELETE = '{project_label_title} "{project}" deleted by {user}'
+
+MESSAGE_PROJECT_DELETE = r'''
+{user} has deleted "{project}".
+The {project_label} has been removed from the site and can no
+longer be accessed.
 '''.lstrip()
 
 
@@ -722,6 +733,53 @@ def send_project_archive_mail(project, action, request):
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
             )
         ),
+    )
+
+    for recipient in project_users:
+        message = get_email_header(
+            MESSAGE_HEADER.format(
+                recipient=recipient.get_full_name(), site_title=SITE_TITLE
+            )
+        )
+        message += body_final
+        if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
+            message += NO_REPLY_NOTE
+        message += get_email_footer(request)
+        mail_count += send_mail(subject, message, get_user_addr(user), request)
+    return mail_count
+
+
+def send_project_delete_mail(project, request):
+    """
+    Send a notification email on project deletion.
+
+    :param project: Project object
+    :param request: HttpRequest object
+    :return: Amount of sent email (int)
+    """
+    user = request.user
+    project_users = [
+        a.user
+        for a in project.get_roles()
+        if a.user != user
+        and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
+    ]
+    project_users = list(set(project_users))
+    if not project_users:
+        return 0
+
+    mail_count = 0
+    subject = SUBJECT_PROJECT_DELETE
+    body = MESSAGE_PROJECT_DELETE
+    subject = SUBJECT_PREFIX + subject.format(
+        project_label_title=get_display_name(project.type, title=True),
+        project=project.title,
+        user=user.get_full_name(),
+    )
+    body_final = body.format(
+        project_label=get_display_name(project.type),
+        project=project.title,
+        user=user.get_full_name(),
     )
 
     for recipient in project_users:

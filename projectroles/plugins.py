@@ -224,10 +224,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_project_archive(
-        self,
-        project,
-    ):
+    def perform_project_archive(self, project):
         """
         Perform additional actions to finalize project archiving or unarchiving.
         The state being applied can be derived from the project.archive attr.
@@ -236,14 +233,21 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def revert_project_archive(
-        self,
-        project,
-    ):
+    def revert_project_archive(self, project):
         """
         Revert project archiving or unarchiving if errors have occurred in other
         apps. The state being originally set can be derived from the
         project.archive attr.
+
+        :param project: Project object (Project)
+        """
+        pass
+
+    def perform_project_delete(self, project):
+        """
+        Perform additional actions to finalize project deletion.
+
+        NOTE: This operation can not be undone so there is no revert method.
 
         :param project: Project object (Project)
         """

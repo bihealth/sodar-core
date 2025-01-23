@@ -29,6 +29,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
+from projectroles.plugins import get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_app_settings import AppSettingInitMixin
 from projectroles.tests.test_models import (
@@ -1329,6 +1330,61 @@ class TestProjectUpdateAPIView(
         }
         response = self.request_knox(self.url, method='PATCH', data=patch_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
+
+
+class TestProjectDestroyAPIView(
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
+):
+    """Tests for ProjectDestroyAPIView"""
+
+    @classmethod
+    def _get_delete_tl(cls):
+        return TimelineEvent.objects.filter(event_name='project_delete')
+
+    def _get_delete_alerts(self):
+        return self.app_alert_model.objects.filter(alert_name='project_delete')
+
+    def setUp(self):
+        super().setUp()
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.url = reverse(
+            'projectroles:api_project_destroy',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.url_cat = reverse(
+            'projectroles:api_project_destroy',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+
+    def test_delete(self):
+        """Test ProjectDestroyAPIView DELETE"""
+        self.assertEqual(Project.objects.count(), 2)
+        self.assertEqual(self._get_delete_tl().count(), 0)
+        self.assertEqual(self._get_delete_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        response = self.request_knox(self.url, method='DELETE')
+        self.assertEqual(response.status_code, 204, msg=response.content)
+        self.assertEqual(Project.objects.count(), 1)
+        self.assertIsNone(
+            Project.objects.filter(sodar_uuid=self.project.sodar_uuid).first(),
+            None,
+        )
+        self.assertEqual(self._get_delete_tl().count(), 1)
+        alerts = self._get_delete_alerts()
+        self.assertEqual(alerts.count(), 2)
+        self.assertEqual(
+            sorted([a.user.username for a in alerts]),
+            sorted(['user_owner', 'user_owner_cat']),
+        )
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_delete_v1_0(self):
+        """Test DELETE with API version 1.0 (should fail)"""
+        self.assertEqual(Project.objects.count(), 2)
+        response = self.request_knox(self.url, method='DELETE', version='1.0')
+        self.assertEqual(response.status_code, 406, msg=response.content)
+        self.assertEqual(Project.objects.count(), 2)
 
 
 class TestRoleAssignmentCreateAPIView(

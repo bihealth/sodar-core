@@ -60,7 +60,7 @@ the general view of your site is split into the following elements:
 
 .. figure:: _static/app_projectroles/sodar_home.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     Home view
 
@@ -102,7 +102,7 @@ app-specific controls is usually displayed.
 
 .. figure:: _static/app_projectroles/sodar_project_detail.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Project detail view
 
@@ -147,7 +147,7 @@ may be modified later.
 
 .. figure:: _static/app_projectroles/sodar_category_create.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Category/project creation form
 
@@ -176,7 +176,7 @@ target category or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_project_update.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Category/project updating form
 
@@ -254,22 +254,55 @@ management command:
 Project Archiving
 -----------------
 
-From the project update menu, it is possible to archive a project. This will set
+In the project update view it is possible to archive a project. Clicking the
+:guilabel:`Archive` button and confirming this action in the next view will set
 data modification from project access to read-only. User roles can still be
 granted, but contributors can no longer edit data in project apps.
 
-The project update menu will still be available for owners and delegates for
+The project update view will still be available for owners and delegates for
 updating basic project metadata. Superusers will be able to edit project data
 regardless of its archiving status.
 
 To undo archiving, the project can be unarchived from the same button on top of
-the project update form.
+the project update view, now labeled :guilabel:`Unarchive`.
 
 .. figure:: _static/app_projectroles/sodar_archive.png
     :align: center
     :scale: 65%
 
     Archived project and unarchive button in project update view
+
+Project Deletion
+----------------
+
+The option to permanently delete a project is also available for owners and
+delegates in the project update view. The :guilabel:`Delete` button is found
+next to the project archiving button.
+
+Deletion is disabled for categories which have nested child categories or child
+projects. In such cases, the children must be individually deleted first. This
+is done deliberately to decrease the chance of accidental deletion of multiple
+projects.
+
+If remote access for a project has been granted on target sites, access needs to
+be revoked before the project can be deleted. Similarly, a project on a target
+site can only be deleted if its access has been revoked on the source site. For
+more information, see :ref:`app_projectroles_usage_remote`.
+
+.. figure:: _static/app_projectroles/sodar_project_delete.png
+    :align: center
+    :scale: 65%
+
+    Project deletion confirmation form
+
+Clicking the :guilabel:`Delete` button will take you to a form for confirming
+the deletion. You will have to write the host name of the SODAR Core site to
+confirm the action.
+
+.. danger::
+
+    Deletion will permanently wipe out all data associated with a category or
+    project. This operation can not be undone!
 
 
 Member Management
@@ -281,7 +314,7 @@ category (owner or delegate) or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_role_list.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     Project member list view
 
@@ -424,7 +457,7 @@ based site.
 
 .. figure:: _static/app_projectroles/sodar_remote_sites.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Remote site list in source mode
 

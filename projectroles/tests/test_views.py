@@ -30,6 +30,7 @@ from projectroles.email import (
     SUBJECT_PROJECT_MOVE,
     SUBJECT_PROJECT_ARCHIVE,
     SUBJECT_PROJECT_UNARCHIVE,
+    SUBJECT_PROJECT_DELETE,
     SUBJECT_ROLE_CREATE,
     SUBJECT_ROLE_UPDATE,
     SUBJECT_ROLE_DELETE,
@@ -77,6 +78,9 @@ from projectroles.views import (
     LOGIN_MSG,
     TARGET_CREATE_DISABLED_MSG,
     SITE_SETTING_UPDATE_MSG,
+    PROJECT_DELETE_CAT_ERR_MSG,
+    PROJECT_DELETE_SOURCE_ERR_MSG,
+    PROJECT_DELETE_TARGET_ERR_MSG,
 )
 from projectroles.context_processors import (
     SIDEBAR_ICON_MIN_SIZE,
@@ -1167,6 +1171,8 @@ class TestProjectUpdateView(
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_delete_access'], True)
+        self.assertEqual(response.context['project_delete_msg'], '')
         form = response.context['form']
         self.assertIsNotNone(form)
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
@@ -1194,7 +1200,7 @@ class TestProjectUpdateView(
         form = response.context['form']
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
 
-    def test_get_remote_project(self):
+    def test_get_remote(self):
         """Test GET with remote target project and READ_ROLES perm"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
@@ -1205,10 +1211,15 @@ class TestProjectUpdateView(
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_delete_access'], False)
+        self.assertEqual(
+            response.context['project_delete_msg'],
+            PROJECT_DELETE_SOURCE_ERR_MSG.format(project_type='project'),
+        )
         form = response.context['form']
         self.assertEqual(form.fields[REMOTE_SITE_FIELD].initial, True)
 
-    def test_get_remote_projcet_revoked(self):
+    def test_get_remote_revoked(self):
         """Test GET with remote target project and REVOKED perm"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
@@ -1219,10 +1230,12 @@ class TestProjectUpdateView(
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_delete_access'], True)
+        self.assertEqual(response.context['project_delete_msg'], '')
         form = response.context['form']
         self.assertEqual(form.fields[REMOTE_SITE_FIELD].initial, False)
 
-    def test_get_remote_project_read_info(self):
+    def test_get_remote_read_info(self):
         """Test GET with remote target project and READ_INFO perm"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
@@ -1261,11 +1274,25 @@ class TestProjectUpdateView(
         with self.login(self.user):
             response = self.client.get(self.url_cat)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_delete_access'], False)
+        self.assertEqual(
+            response.context['project_delete_msg'],
+            PROJECT_DELETE_CAT_ERR_MSG.format(project_type='category'),
+        )
         form = response.context['form']
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
         self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
+
+    def test_get_category_no_children(self):
+        """Test GET with category and no children"""
+        self.project.delete()
+        with self.login(self.user):
+            response = self.client.get(self.url_cat)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_delete_access'], True)
+        self.assertEqual(response.context['project_delete_msg'], '')
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_get_remote_as_target(self):
@@ -1274,6 +1301,11 @@ class TestProjectUpdateView(
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_delete_access'], False)
+        self.assertEqual(
+            response.context['project_delete_msg'],
+            PROJECT_DELETE_TARGET_ERR_MSG.format(project_type='project'),
+        )
         form = response.context['form']
         self.assertIsInstance(form.fields['title'].widget, HiddenInput)
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
@@ -1317,6 +1349,19 @@ class TestProjectUpdateView(
         self.assertTrue(
             form.fields['settings.projectroles.ip_allowlist'].disabled
         )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_get_remote_as_target_revoked(self):
+        """Test GET with revoked remote project as target"""
+        self.set_up_as_target(projects=[self.category, self.project])
+        rp = RemoteProject.objects.get(project=self.project)
+        rp.level = REMOTE_LEVEL_REVOKED
+        rp.save()
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_delete_access'], True)
+        self.assertEqual(response.context['project_delete_msg'], '')
 
     def test_get_not_found(self):
         """Test GET with invalid project UUID"""
@@ -1836,204 +1881,6 @@ class TestProjectUpdateView(
             response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Project.objects.all().count(), 2)
-
-
-class TestProjectArchiveView(
-    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
-):
-    """Tests for ProjectArchiveView"""
-
-    @classmethod
-    def _get_tl(cls):
-        return TimelineEvent.objects.filter(event_name='project_archive')
-
-    @classmethod
-    def _get_tl_un(cls):
-        return TimelineEvent.objects.filter(event_name='project_unarchive')
-
-    def _get_alerts(self):
-        return self.app_alert_model.objects.filter(alert_name='project_archive')
-
-    def _get_alerts_un(self):
-        return self.app_alert_model.objects.filter(
-            alert_name='project_unarchive'
-        )
-
-    def setUp(self):
-        super().setUp()
-        self.category = self.make_project(
-            'TestCategory', PROJECT_TYPE_CATEGORY, None
-        )
-        self.owner_as_cat = self.make_assignment(
-            self.category, self.user, self.role_owner
-        )
-        self.project = self.make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, self.category
-        )
-        self.owner_as = self.make_assignment(
-            self.project, self.user, self.role_owner
-        )
-        self.user_contributor = self.make_user('user_contributor')
-        self.contributor_as = self.make_assignment(
-            self.project, self.user_contributor, self.role_contributor
-        )
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
-        self.url = reverse(
-            'projectroles:archive',
-            kwargs={'project': self.project.sodar_uuid},
-        )
-        self.url_cat = reverse(
-            'projectroles:archive',
-            kwargs={'project': self.category.sodar_uuid},
-        )
-
-    def test_get(self):
-        """Test ProjectArchiveView GET with project"""
-        with self.login(self.user):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-
-    def test_get_category(self):
-        """Test GET with category (should fail)"""
-        with self.login(self.user):
-            response = self.client.get(self.url_cat)
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.category.sodar_uuid},
-                ),
-            )
-
-    def test_post(self):
-        """Test ProjectArchiveView POST"""
-        self.assertEqual(self.project.archive, False)
-        self.assertEqual(self._get_tl().count(), 0)
-        self.assertEqual(self._get_tl_un().count(), 0)
-        self.assertEqual(self._get_alerts().count(), 0)
-        self.assertEqual(self._get_alerts_un().count(), 0)
-        self.assertEqual(len(mail.outbox), 0)
-
-        with self.login(self.user):
-            response = self.client.post(self.url, {'status': True})
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
-        self.project.refresh_from_db()
-        self.assertEqual(self.project.archive, True)
-        self.assertEqual(self._get_tl().count(), 1)
-        self.assertEqual(self._get_tl_un().count(), 0)
-        # Only the contributor should receive an alert
-        self.assertEqual(self._get_alerts().count(), 1)
-        self.assertEqual(self._get_alerts_un().count(), 0)
-        self.assertEqual(self._get_alerts().first().user, self.user_contributor)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn(
-            SUBJECT_PROJECT_ARCHIVE.format(
-                project_label_title='Project',
-                project=self.project.title,
-                user=self.user.username,
-            ),
-            mail.outbox[0].subject,
-        )
-
-    def test_post_unarchive(self):
-        """Test POST to unarchiving project"""
-        self.project.set_archive()
-        self.assertEqual(self._get_tl().count(), 0)
-        self.assertEqual(self._get_tl_un().count(), 0)
-        self.assertEqual(self._get_alerts().count(), 0)
-        self.assertEqual(self._get_alerts_un().count(), 0)
-        self.assertEqual(len(mail.outbox), 0)
-
-        with self.login(self.user):
-            self.client.post(self.url, {'status': False})
-
-        self.project.refresh_from_db()
-        self.assertEqual(self.project.archive, False)
-        self.assertEqual(self._get_tl().count(), 0)
-        self.assertEqual(self._get_tl_un().count(), 1)
-        self.assertEqual(self._get_alerts().count(), 0)
-        self.assertEqual(self._get_alerts_un().count(), 1)
-        self.assertEqual(
-            self._get_alerts_un().first().user, self.user_contributor
-        )
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn(
-            SUBJECT_PROJECT_UNARCHIVE.format(
-                project_label_title='Project',
-                project=self.project.title,
-                user=self.user.username,
-            ),
-            mail.outbox[0].subject,
-        )
-
-    def test_post_disable_email(self):
-        """Test POST with disabled email"""
-        app_settings.set(
-            APP_NAME, 'notify_email_project', False, user=self.user_contributor
-        )
-        self.assertEqual(self.project.archive, False)
-        self.assertEqual(self._get_tl().count(), 0)
-        self.assertEqual(self._get_alerts().count(), 0)
-        self.assertEqual(len(mail.outbox), 0)
-
-        with self.login(self.user):
-            response = self.client.post(self.url, {'status': True})
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
-        self.project.refresh_from_db()
-        self.assertEqual(self.project.archive, True)
-        self.assertEqual(self._get_tl().count(), 1)
-        # Alert but no email for contributor
-        self.assertEqual(self._get_alerts().count(), 1)
-        self.assertEqual(self._get_alerts().first().user, self.user_contributor)
-        self.assertEqual(len(mail.outbox), 0)
-
-    def test_post_project_archived(self):
-        """Test POST with already archived project"""
-        self.project.set_archive()
-        self.assertEqual(self._get_tl().count(), 0)
-        self.assertEqual(self._get_tl_un().count(), 0)
-        self.assertEqual(len(mail.outbox), 0)
-        with self.login(self.user):
-            self.client.post(self.url, {'status': True})
-        self.project.refresh_from_db()
-        self.assertEqual(self.project.archive, True)
-        self.assertEqual(self._get_tl().count(), 0)
-        self.assertEqual(self._get_alerts().count(), 0)
-        self.assertEqual(len(mail.outbox), 0)
-
-    def test_post_category(self):
-        """Test POST with category (should fail)"""
-        self.assertEqual(self.category.archive, False)
-        self.assertEqual(self._get_tl().count(), 0)
-        self.assertEqual(len(mail.outbox), 0)
-        with self.login(self.user):
-            response = self.client.post(self.url_cat, {'status': True})
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.category.sodar_uuid},
-                ),
-            )
-        self.category.refresh_from_db()
-        self.assertEqual(self.category.archive, False)
-        self.assertEqual(self._get_tl().count(), 0)
-        self.assertEqual(self._get_alerts().count(), 0)
-        self.assertEqual(len(mail.outbox), 0)
 
 
 class TestProjectForm(
@@ -2598,6 +2445,382 @@ class TestProjectFormTargetLocal(
             ),
             False,
         )
+
+
+class TestProjectArchiveView(
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
+):
+    """Tests for ProjectArchiveView"""
+
+    @classmethod
+    def _get_tl(cls):
+        return TimelineEvent.objects.filter(event_name='project_archive')
+
+    @classmethod
+    def _get_tl_un(cls):
+        return TimelineEvent.objects.filter(event_name='project_unarchive')
+
+    def _get_alerts(self):
+        return self.app_alert_model.objects.filter(alert_name='project_archive')
+
+    def _get_alerts_un(self):
+        return self.app_alert_model.objects.filter(
+            alert_name='project_unarchive'
+        )
+
+    def setUp(self):
+        super().setUp()
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+        self.user_contributor = self.make_user('user_contributor')
+        self.contributor_as = self.make_assignment(
+            self.project, self.user_contributor, self.role_contributor
+        )
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.url = reverse(
+            'projectroles:archive',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.url_cat = reverse(
+            'projectroles:archive',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test ProjectArchiveView GET with project"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_category(self):
+        """Test GET with category (should fail)"""
+        with self.login(self.user):
+            response = self.client.get(self.url_cat)
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+            )
+
+    def test_post(self):
+        """Test ProjectArchiveView POST"""
+        self.assertEqual(self.project.archive, False)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_tl_un().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(self._get_alerts_un().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        with self.login(self.user):
+            response = self.client.post(self.url, {'status': True})
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, True)
+        self.assertEqual(self._get_tl().count(), 1)
+        self.assertEqual(self._get_tl_un().count(), 0)
+        # Only the contributor should receive an alert
+        self.assertEqual(self._get_alerts().count(), 1)
+        self.assertEqual(self._get_alerts_un().count(), 0)
+        self.assertEqual(self._get_alerts().first().user, self.user_contributor)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(
+            SUBJECT_PROJECT_ARCHIVE.format(
+                project_label_title='Project',
+                project=self.project.title,
+                user=self.user.username,
+            ),
+            mail.outbox[0].subject,
+        )
+
+    def test_post_unarchive(self):
+        """Test POST to unarchiving project"""
+        self.project.set_archive()
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_tl_un().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(self._get_alerts_un().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        with self.login(self.user):
+            self.client.post(self.url, {'status': False})
+
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, False)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_tl_un().count(), 1)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(self._get_alerts_un().count(), 1)
+        self.assertEqual(
+            self._get_alerts_un().first().user, self.user_contributor
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(
+            SUBJECT_PROJECT_UNARCHIVE.format(
+                project_label_title='Project',
+                project=self.project.title,
+                user=self.user.username,
+            ),
+            mail.outbox[0].subject,
+        )
+
+    def test_post_disable_email(self):
+        """Test POST with disabled email"""
+        app_settings.set(
+            APP_NAME, 'notify_email_project', False, user=self.user_contributor
+        )
+        self.assertEqual(self.project.archive, False)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        with self.login(self.user):
+            response = self.client.post(self.url, {'status': True})
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, True)
+        self.assertEqual(self._get_tl().count(), 1)
+        # Alert but no email for contributor
+        self.assertEqual(self._get_alerts().count(), 1)
+        self.assertEqual(self._get_alerts().first().user, self.user_contributor)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_project_archived(self):
+        """Test POST with already archived project"""
+        self.project.set_archive()
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_tl_un().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            self.client.post(self.url, {'status': True})
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, True)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_category(self):
+        """Test POST with category (should fail)"""
+        self.assertEqual(self.category.archive, False)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            response = self.client.post(self.url_cat, {'status': True})
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+            )
+        self.category.refresh_from_db()
+        self.assertEqual(self.category.archive, False)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+
+class TestProjectDeleteView(
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
+):
+    """Tests for ProjectDeleteView"""
+
+    @classmethod
+    def _get_delete_tl(cls):
+        return TimelineEvent.objects.filter(event_name='project_delete')
+
+    def _get_delete_alerts(self):
+        return self.app_alert_model.objects.filter(alert_name='project_delete')
+
+    def setUp(self):
+        super().setUp()
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_owner = self.make_user('user_owner')
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        self.user_contributor = self.make_user('user_contributor')
+        self.contributor_as = self.make_assignment(
+            self.project, self.user_contributor, self.role_contributor
+        )
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.url = reverse(
+            'projectroles:delete',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.url_cat = reverse(
+            'projectroles:delete',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        self.post_data = {'delete_host_confirm': 'testserver'}
+
+    def test_get(self):
+        """Test ProjectDeleteView GET with project"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_category_with_children(self):
+        """Test GET with category and children (should fail)"""
+        with self.login(self.user):
+            response = self.client.get(self.url_cat)
+            self.assertRedirects(response, reverse('home'))
+
+    def test_get_category_without_children(self):
+        """Test GET with category and no children"""
+        self.project.delete()
+        with self.login(self.user):
+            response = self.client.get(self.url_cat)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        """Test ProjectDeleteView POST"""
+        self.assertEqual(Project.objects.count(), 2)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 2
+        )
+        self.assertEqual(self._get_delete_tl().count(), 0)
+        self.assertEqual(self._get_delete_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        with self.login(self.user):
+            response = self.client.post(self.url, data=self.post_data)
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+            )
+
+        self.assertEqual(Project.objects.count(), 1)
+        self.assertIsNone(
+            Project.objects.filter(sodar_uuid=self.project.sodar_uuid).first(),
+            None,
+        )
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 0
+        )
+        self.assertEqual(self._get_delete_tl().count(), 1)
+        alerts = self._get_delete_alerts()
+        self.assertEqual(alerts.count(), 3)
+        self.assertEqual(
+            sorted([a.user.username for a in alerts]),
+            sorted(['user_contributor', 'user_owner', 'user_owner_cat']),
+        )
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertIn(
+            SUBJECT_PROJECT_DELETE.format(
+                project_label_title='Project',
+                project=self.project.title,
+                user=self.user.username,
+            ),
+            mail.outbox[0].subject,
+        )
+
+    def test_post_as_owner(self):
+        """Test POST as owner (should not receive alert or mail)"""
+        self.assertEqual(Project.objects.count(), 2)
+        self.assertEqual(self._get_delete_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        with self.login(self.user_owner):  # POST as owner
+            response = self.client.post(self.url, data=self.post_data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 1)
+        alerts = self._get_delete_alerts()
+        self.assertEqual(alerts.count(), 2)
+        self.assertEqual(
+            sorted([a.user.username for a in alerts]),
+            sorted(['user_contributor', 'user_owner_cat']),
+        )
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_post_disable_email(self):
+        """Test POST with disabled email notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_email_project', False, user=self.user_owner
+        )
+        self.assertEqual(Project.objects.count(), 2)
+        self.assertEqual(self._get_delete_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        with self.login(self.user):  # POST as self.user again
+            response = self.client.post(self.url, data=self.post_data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 1)
+        alerts = self._get_delete_alerts()
+        self.assertEqual(alerts.count(), 3)  # All should receive alert
+        self.assertEqual(len(mail.outbox), 2)  # Only 2 emails
+
+    def test_post_category_with_children(self):
+        """Test POST with category and children (should fail)"""
+        self.assertEqual(Project.objects.count(), 2)
+        with self.login(self.user):
+            response = self.client.post(self.url_cat, data=self.post_data)
+            self.assertRedirects(response, reverse('home'))
+        self.assertEqual(Project.objects.count(), 2)
+
+    def test_post_category_without_children(self):
+        """Test POST with category and no children"""
+        self.project.delete()
+        self.assertEqual(Project.objects.count(), 1)
+        with self.login(self.user):
+            response = self.client.post(self.url_cat, data=self.post_data)
+            self.assertRedirects(response, reverse('home'))
+        self.assertEqual(Project.objects.count(), 0)
+
+    def test_post_invalid_host_name(self):
+        """Test POST with invalid host name (should fail)"""
+        self.assertEqual(Project.objects.count(), 2)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url, data={'delete_host_confirm': 'INVALID-HOST'}
+            )
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+        self.assertEqual(Project.objects.count(), 2)
 
 
 class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):

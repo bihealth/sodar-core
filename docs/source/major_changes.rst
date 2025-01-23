@@ -16,6 +16,7 @@ v1.1.0 (WIP)
 Release Highlights
 ==================
 
+- Add project deletion
 - Add site read-only mode
 - Add siteappsettings site app plugin
 - Add removeroles management command
@@ -52,6 +53,14 @@ prohibit modifying all data on the site. Rules, logic and/or UI of your apps'
 views may have to be changed to support this functionality. For more
 information, see :ref:`dev_resources_read_only`.
 
+Project Deletion
+----------------
+
+This release enables the deletion of categories and projects. See the
+:ref:`project app development documentation <dev_project_app_delete>` for more
+information on how to support this feature in your apps.
+
+
 AppSettingAPI Definition Getter Return Data
 -------------------------------------------
 
@@ -75,6 +84,7 @@ REST API View Changes
 - Projectroles API (``vnd.bihealth.sodar-core.projectroles``)
     * Current version: ``1.1`` (non-breaking changes)
     * Allowed versions: ``1.0``, ``1.1``
+    * ``ProjectDestroyAPIView``: Add view
     * ``RoleAssignmentOwnerTransferAPIView``: Allow empty value for
       ``old_owner_role``
 

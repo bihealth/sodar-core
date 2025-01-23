@@ -11,8 +11,10 @@ from projectroles.models import (
     ProjectInvite,
     SODAR_CONSTANTS,
 )
+from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
 from projectroles.tests.test_permissions import ProjectPermissionTestBase
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
+from projectroles.utils import build_secret
 from projectroles.views_api import (
     PROJECTROLES_API_MEDIA_TYPE,
     PROJECTROLES_API_DEFAULT_VERSION,
@@ -21,7 +23,19 @@ from projectroles.views_api import (
 from rest_framework.test import APITestCase
 
 
+# SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+
+# Local constants
 NEW_PROJECT_TITLE = 'New Project'
+REMOTE_SITE_NAME = 'Test site'
+REMOTE_SITE_URL = 'https://sodar.bihealth.org'
+REMOTE_SITE_SECRET = build_secret()
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -512,6 +526,271 @@ class TestProjectUpdateAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
+
+
+class TestProjectDestroyAPIView(
+    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIPermissionTestBase
+):
+    """Tests for ProjectDestroyAPIView permissions"""
+
+    def _cleanup(self, make_project=True):
+        if not Project.objects.filter(sodar_uuid=self.cat_uuid).first():
+            self.category = self.make_project(
+                title='TestCategory',
+                type=PROJECT_TYPE_CATEGORY,
+                parent=None,
+                sodar_uuid=self.cat_uuid,
+            )
+            self.make_assignment(
+                self.category, self.user_owner_cat, self.role_owner
+            )
+            self.make_assignment(
+                self.category, self.user_delegate_cat, self.role_delegate
+            )
+            self.make_assignment(
+                self.category, self.user_contributor_cat, self.role_contributor
+            )
+            self.make_assignment(
+                self.category, self.user_guest_cat, self.role_guest
+            )
+            self.make_assignment(
+                self.category, self.user_finder_cat, self.role_finder
+            )
+        if (
+            make_project
+            and not Project.objects.filter(sodar_uuid=self.project_uuid).first()
+        ):
+            self.project = self.make_project(
+                title='TestProject',
+                type=PROJECT_TYPE_PROJECT,
+                parent=self.category,
+                sodar_uuid=self.project_uuid,
+            )
+            self.make_assignment(self.project, self.user_owner, self.role_owner)
+            self.make_assignment(
+                self.project, self.user_delegate, self.role_delegate
+            )
+            self.make_assignment(
+                self.project, self.user_contributor, self.role_contributor
+            )
+            self.make_assignment(self.project, self.user_guest, self.role_guest)
+
+    def setUp(self):
+        super().setUp()
+        self.project_uuid = self.project.sodar_uuid
+        self.cat_uuid = self.category.sodar_uuid
+        self.url = reverse(
+            'projectroles:api_project_destroy',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.url_cat = reverse(
+            'projectroles:api_project_destroy',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        self.good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
+        ]
+        self.bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+        self.good_users_cat = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+        ]
+        self.bad_users_cat = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+
+    def test_delete(self):
+        """Test RoleAssignmentDestroyAPIView DELETE"""
+        self.assert_response_api(
+            self.url,
+            self.good_users,
+            204,
+            method='DELETE',
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(self.url, self.bad_users, 403, method='DELETE')
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
+        self.assert_response_api(
+            self.url,
+            self.good_users,
+            204,
+            method='DELETE',
+            cleanup_method=self._cleanup,
+            knox=True,
+        )
+        self.assert_response_api(
+            self.url, self.bad_users, 403, method='DELETE', knox=True
+        )
+        self.project.set_public()
+        self.assert_response_api(
+            self.url, self.user_no_roles, 403, method='DELETE'
+        )
+
+    def test_delete_category_with_children(self):
+        """Test DELETE for category with children (should fail)"""
+        self.assert_response_api(
+            self.url_cat,
+            self.auth_users,
+            403,
+            method='DELETE',
+        )
+        self.assert_response_api(
+            self.url_cat, self.anonymous, 401, method='DELETE'
+        )
+        self.project.set_public()
+        self.assert_response_api(
+            self.url_cat, self.user_no_roles, 403, method='DELETE'
+        )
+
+    def test_delete_category_without_children(self):
+        """Test DELETE for category without children"""
+        self.project.delete()
+        self.assert_response_api(
+            self.url_cat,
+            self.good_users_cat,
+            204,
+            method='DELETE',
+            cleanup_method=self._cleanup,
+            cleanup_kwargs={'make_project': False},
+        )
+        self.assert_response_api(
+            self.url_cat,
+            self.bad_users_cat,
+            403,
+            method='DELETE',
+        )
+        self.assert_response_api(
+            self.url_cat, self.anonymous, 401, method='DELETE'
+        )
+
+    def test_delete_remote(self):
+        """Test DELETE with non-revoked remote project (should fail)"""
+        site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        self.assert_response_api(
+            self.url_cat,
+            self.auth_users,
+            403,
+            method='DELETE',
+        )
+        self.assert_response_api(
+            self.url_cat, self.anonymous, 401, method='DELETE'
+        )
+        self.project.set_public()
+        self.assert_response_api(
+            self.url_cat, self.user_no_roles, 403, method='DELETE'
+        )
+
+    def test_delete_remote_revoked(self):
+        """Test DELETE with revoked remote project"""
+        site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=site,
+            level=REMOTE_LEVEL_REVOKED,
+        )
+        self.assert_response_api(
+            self.url,
+            self.good_users,
+            204,
+            method='DELETE',
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(self.url, self.bad_users, 403, method='DELETE')
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_delete_remote_target(self):
+        """Test DELETE with non-revoked remote project as target site (should fail)"""
+        site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        self.assert_response_api(
+            self.url_cat,
+            self.auth_users,
+            403,
+            method='DELETE',
+        )
+        self.assert_response_api(
+            self.url_cat, self.anonymous, 401, method='DELETE'
+        )
+        self.project.set_public()
+        self.assert_response_api(
+            self.url_cat, self.user_no_roles, 403, method='DELETE'
+        )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_delete_remote_revoked_target(self):
+        """Test DELETE with revoked remote project as target site"""
+        site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=site,
+            level=REMOTE_LEVEL_REVOKED,
+        )
+        self.assert_response_api(
+            self.url,
+            self.good_users,
+            204,
+            method='DELETE',
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(self.url, self.bad_users, 403, method='DELETE')
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
 
 class TestRoleAssignmentCreateAPIView(ProjectrolesAPIPermissionTestBase):

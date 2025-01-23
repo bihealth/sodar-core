@@ -206,6 +206,12 @@ rules.add_perm(
     is_project_update_user & is_site_writable,
 )
 
+# Allow project deletion
+rules.add_perm(
+    'projectroles.delete_project',
+    is_project_update_user & is_site_writable,
+)
+
 # Allow creation of projects
 rules.add_perm(
     'projectroles.create_project', is_project_create_user & can_create_projects

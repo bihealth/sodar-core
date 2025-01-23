@@ -878,6 +878,31 @@ additional actions to be taken.
     the project archive status, your app logic should handle it instead.
 
 
+.. _dev_project_app_delete:
+
+Project Deletion
+================
+
+If your apps only save data in Django models containing a ``Project`` foreign
+key with cascading deletion, no extra steps are needed to support project
+deletion.
+
+If your app contains project-specific data which is e.g. stored in an external
+system or in ways which will not be cascade-deleted along with the Django
+``Project`` model object, you need to implement project deletion in the project
+modify API. To do this, inherit ``ProjectModifyPluginMixin`` in your app's
+plugin and implement the ``perform_project_delete()`` method to clean up data.
+
+Project deletion can not be undone, so there is no revert method available for
+this action.
+
+.. note::
+
+    While categories are not expected to store data, the project deletion API
+    method is called for the deletion of both categories or projects, in case
+    speficic logic is needed for both project types.
+
+
 Removing a Project App
 ======================
 

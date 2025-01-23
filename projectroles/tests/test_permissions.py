@@ -908,6 +908,267 @@ class TestProjectArchiveView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.user_no_roles, 302)
 
 
+class TestProjectDeleteView(
+    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
+):
+    """Tests for ProjectDeleteView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'projectroles:delete', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.url_cat = reverse(
+            'projectroles:delete', kwargs={'project': self.category.sodar_uuid}
+        )
+        self.good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
+        ]
+        self.bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+
+    def test_get(self):
+        """Test ProjectDeleteView GET"""
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 302)
+
+    def test_get_archive(self):
+        """Test GET with archived project"""
+        self.project.set_archive()
+        self.assert_response(self.url, self.good_users, 200)
+        self.assert_response(self.url, self.bad_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_category_with_children(self):
+        """Test GET with category and children"""
+        bad_users = [
+            self.superuser,  # We don't even allow this for superusers
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(self.url_cat, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url_cat, self.user_no_roles, 302)
+
+    def test_get_category_no_children(self):
+        """Test GET with category and no children"""
+        self.project.delete()
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+        ]
+        bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(self.url_cat, good_users, 200)
+        self.assert_response(self.url_cat, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url_cat, self.user_no_roles, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_category_anon(self):
+        """Test GET with category and anonymous access"""
+        self.project.delete()
+        self.project.set_public()
+        self.assert_response(self.url_cat, self.user_no_roles, 302)
+
+    def test_get_remote_not_revoked(self):
+        """Test GET with non-revoked remote project"""
+        site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+        bad_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(self.url, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 302)
+
+    def test_get_remote_revoked(self):
+        """Test GET with revoked remote project"""
+        site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED'],
+        )
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
+        ]
+        bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 302)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_get_remote_not_revoked_target(self):
+        """Test GET with non-revoked remote project as target site"""
+        site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+        self.make_remote_project(
+            project_uuid=self.category.sodar_uuid,
+            project=self.category,
+            site=site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+        bad_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(self.url, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 302)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_get_remote_revoked_target(self):
+        """Test GET with revoked remote project as target site"""
+        site = self.make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+        self.make_remote_project(
+            project_uuid=self.category.sodar_uuid,
+            project=self.category,
+            site=site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED'],
+        )
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
+        ]
+        bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 302)
+
+
 class TestProjectRoleView(ProjectPermissionTestBase):
     """Tests for ProjectRoleView permissions"""
 
