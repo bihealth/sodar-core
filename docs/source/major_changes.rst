@@ -85,6 +85,7 @@ REST API View Changes
     * Current version: ``1.1`` (non-breaking changes)
     * Allowed versions: ``1.0``, ``1.1``
     * ``ProjectDestroyAPIView``: Add view
+    * ``ProjectRetrieveAPIView``: Add ``children`` field
     * ``RoleAssignmentOwnerTransferAPIView``: Allow empty value for
       ``old_owner_role``
 

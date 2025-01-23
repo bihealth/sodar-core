@@ -439,6 +439,7 @@ class ProjectRetrieveAPIView(
     **Returns:**
 
     - ``archive``: Project archival status (boolean)
+    - ``children``: Category children (list of UUIDs, only returned for categories)
     - ``description``: Project description (string)
     - ``full_title``: Full project title with parent categories (string)
     - ``parent``: Parent category UUID (string or null)
@@ -448,6 +449,10 @@ class ProjectRetrieveAPIView(
     - ``sodar_uuid``: Project UUID (string)
     - ``title``: Project title (string)
     - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
+
+    **Version Changes**:
+
+    - ``1.1``: Add ``children`` field
     """
 
     permission_required = 'projectroles.view_project'

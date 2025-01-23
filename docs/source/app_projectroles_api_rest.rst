@@ -186,5 +186,7 @@ v1.1
 
 - ``ProjectDestroyAPIView``
     * Add view
+- ``ProjectRetrieveAPIView``
+    * Add ``children`` field
 - ``RoleAssignmentOwnerTransferAPIView``
     * Allow empty value for ``old_owner_role``

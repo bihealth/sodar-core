@@ -322,6 +322,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
                         'sodar_uuid': str(self.owner_as_cat.sodar_uuid),
                     }
                 },
+                'children': [str(self.project.sodar_uuid)],
                 'sodar_uuid': str(self.category.sodar_uuid),
             },
             {
@@ -476,6 +477,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
                             'sodar_uuid': str(self.owner_as_cat.sodar_uuid),
                         }
                     },
+                    'children': [str(self.project.sodar_uuid)],
                     'sodar_uuid': str(self.category.sodar_uuid),
                 }
             ],
@@ -513,6 +515,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
                     'sodar_uuid': str(self.owner_as_cat.sodar_uuid),
                 }
             },
+            'children': [str(self.project.sodar_uuid)],
             'sodar_uuid': str(self.category.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
@@ -575,6 +578,17 @@ class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['roles']), 3)
+
+    def test_get_category_v1_0(self):
+        """Test GET with category and API version v1.0"""
+        url = reverse(
+            'projectroles:api_project_retrieve',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        response = self.request_knox(url, version='1.0')
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertNotIn('children', response_data)
 
 
 class TestProjectCreateAPIView(
@@ -999,6 +1013,7 @@ class TestProjectUpdateAPIView(
                     'sodar_uuid': str(self.category.get_owner().sodar_uuid),
                 }
             },
+            'children': [str(self.project.sodar_uuid)],
             'sodar_uuid': str(self.category.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)
@@ -1128,6 +1143,7 @@ class TestProjectUpdateAPIView(
                     'sodar_uuid': str(self.category.get_owner().sodar_uuid),
                 }
             },
+            'children': [str(self.project.sodar_uuid)],
             'sodar_uuid': str(self.category.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)

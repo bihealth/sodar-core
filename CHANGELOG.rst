@@ -31,6 +31,7 @@ Added
     - Project deletion (#1090)
     - ``ProjectModifyPluginMixin.perform_project_delete()`` method (#1090)
     - ``ProjectDestroyAPIView`` REST API view (#1090)
+    - ``ProjectSerializer`` ``children`` field (#1552)
 
 Changed
 -------
