@@ -438,7 +438,9 @@ class ProjectRetrieveAPIView(
 
     **Returns:**
 
+    - ``archive``: Project archival status (boolean)
     - ``description``: Project description (string)
+    - ``full_title``: Full project title with parent categories (string)
     - ``parent``: Parent category UUID (string or null)
     - ``readme``: Project readme (string, supports markdown)
     - ``public_guest_access``: Guest access for all users (boolean)

@@ -339,6 +339,7 @@ Fixed
     - ``ProjectCreateView`` allows ``POST`` with disabled target project creation (#1448)
     - Plugin existence not explicitly checked in ``AppSettingAPI.set()`` update query (#1452)
     - ``search_advanced.html`` header layout (#1453)
+    - Missing fields in ``ProjectRetrieveAPIView`` docstring (#1551)
 - **Sodarcache**
     - REST API set view ``app_name`` incorrectly set (#1405)
 - **Timeline**
