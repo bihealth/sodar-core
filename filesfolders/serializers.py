@@ -7,10 +7,7 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 # Projectroles dependency
-from projectroles.serializers import (
-    SODARProjectModelSerializer,
-    SODARUserSerializer,
-)
+from projectroles.serializers import SODARProjectModelSerializer
 from projectroles.utils import build_secret
 
 from filesfolders.models import File, Folder, HyperLink
@@ -63,7 +60,9 @@ class FolderSerializer(
     """
 
     folder = serializers.SerializerMethodField()
-    owner = SODARUserSerializer(read_only=True)
+    owner = serializers.SlugRelatedField(
+        slug_field='sodar_uuid', read_only=True
+    )
 
     class Meta:
         model = Folder
@@ -98,7 +97,9 @@ class FileSerializer(FilesfoldersSerializerMixin, SODARProjectModelSerializer):
     """
 
     folder = serializers.SerializerMethodField()
-    owner = SODARUserSerializer(read_only=True)
+    owner = serializers.SlugRelatedField(
+        slug_field='sodar_uuid', read_only=True
+    )
     file = serializers.FileField(write_only=True)
 
     class Meta:
@@ -150,7 +151,9 @@ class HyperLinkSerializer(
     """
 
     folder = serializers.SerializerMethodField()
-    owner = SODARUserSerializer(read_only=True)
+    owner = serializers.SlugRelatedField(
+        slug_field='sodar_uuid', read_only=True
+    )
 
     class Meta:
         model = HyperLink

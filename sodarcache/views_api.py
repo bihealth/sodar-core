@@ -84,7 +84,11 @@ class CacheItemRetrieveAPIView(
     - ``name``: Item name (string)
     - ``data``: Item data (JSON)
     - ``date_modified``: Item modification datetime (YYYY-MM-DDThh:mm:ssZ)
-    - ``user``: User who created the item (SODARUserSerializer dict or None)
+    - ``user``: UUID of user who created the item (string)
+
+    **Version Changes**:
+
+    - ``2.0``: Return ``user`` as UUID instead of ``SODARUserSerializer`` dict
     """
 
     permission_required = 'sodarcache.get_cache_value'

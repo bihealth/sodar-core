@@ -24,8 +24,14 @@ Release Highlights
 - Add app setting definition as objects
 - Update owner transfer form to allow setting no role for old owner
 - Update app settings API
+- Upgrade filesfolders REST API version to v2.0
 - Upgrade projectroles REST API version to v1.1
-- Remove support for features deprecated in v1.0
+- Upgrade sodarcache REST API version to v2.0
+- Upgrade timeline REST API version to v2.0
+- Remove support for filesfolders REST API <v2.0
+- Remove support for sodarcache REST API <v2.0
+- Remove support for timeline REST API <v2.0
+- Remove support for SODAR Core features deprecated in v1.0
 - Remove squashed migrations
 
 Breaking Changes
@@ -81,13 +87,29 @@ changed accordingly. The same also applies to ``revert_role_modify()``.
 REST API View Changes
 ---------------------
 
-- Projectroles API (``vnd.bihealth.sodar-core.projectroles``)
+- Filesfolders API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``2.0`` (support for previous versions dropped)
+    * All views: Return ``owner`` as UUID instead of ``SODARUserSerializer``
+      dict
+- Projectroles API
     * Current version: ``1.1`` (non-breaking changes)
     * Allowed versions: ``1.0``, ``1.1``
     * ``ProjectDestroyAPIView``: Add view
     * ``ProjectRetrieveAPIView``: Add ``children`` field
     * ``RoleAssignmentOwnerTransferAPIView``: Allow empty value for
       ``old_owner_role``
+- Sodarcache API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``2.0`` (support for previous versions dropped)
+    * ``CacheItemRetrieveAPIView``: Return ``user`` as UUID instead of
+      ``SODARUserSerializer`` dict
+- Timeline API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``2.0`` (support for previous versions dropped)
+    * ``TimelineEventRetrieveAPIView``: Return ``user`` as UUID instead of
+      ``SODARUserSerializer`` dict
+
 
 Deprecated Features
 -------------------

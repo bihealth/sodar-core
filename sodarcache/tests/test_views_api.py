@@ -106,7 +106,7 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIViewTestBase):
             'project': str(self.project.sodar_uuid),
             'app_name': TEST_APP_NAME,
             'name': ITEM_NAME,
-            'user': self.get_serialized_user(self.user_owner),
+            'user': str(self.user_owner.sodar_uuid),
             'data': {DATA_KEY: DATA_VAL},
             'date_modified': self.get_drf_datetime(self.item.date_modified),
         }

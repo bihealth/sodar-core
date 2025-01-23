@@ -31,3 +31,13 @@ Timeline REST API Views
 .. autoclass:: SiteTimelineEventListAPIView
 
 .. autoclass:: TimelineEventRetrieveAPIView
+
+
+Timeline REST API Version Changes
+=================================
+
+v2.0
+----
+
+- ``TimelineEventRetrieveAPIView``
+    * Return ``user`` as UUID instead of ``SODARUserSerializer`` dict

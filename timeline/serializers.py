@@ -6,7 +6,6 @@ from rest_framework import serializers
 from projectroles.serializers import (
     SODARModelSerializer,
     SODARProjectModelSerializer,
-    SODARUserSerializer,
 )
 
 from timeline.models import (
@@ -92,7 +91,9 @@ class TimelineEventSerializer(
     Serializer for the TimelineEvent model. All fields are set to read-only.
     """
 
-    user = SODARUserSerializer(read_only=True)
+    user = serializers.SlugRelatedField(
+        allow_null=True, slug_field='sodar_uuid', read_only=True
+    )
     status_changes = TimelineEventStatusSerializer(many=True, read_only=True)
     event_objects = TimelineEventObjectRefSerializer(many=True, read_only=True)
 

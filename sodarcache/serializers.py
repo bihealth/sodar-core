@@ -1,10 +1,9 @@
 """Serializers for the sodarcache app REST API"""
 
+from rest_framework import serializers
+
 # Projectroles dependency
-from projectroles.serializers import (
-    SODARProjectModelSerializer,
-    SODARUserSerializer,
-)
+from projectroles.serializers import SODARProjectModelSerializer
 
 from sodarcache.models import JSONCacheItem
 
@@ -12,7 +11,7 @@ from sodarcache.models import JSONCacheItem
 class JSONCacheItemSerializer(SODARProjectModelSerializer):
     """Serializer for the JSONCacheItem model"""
 
-    user = SODARUserSerializer(read_only=True)
+    user = serializers.SlugRelatedField(slug_field='sodar_uuid', read_only=True)
 
     class Meta:
         model = JSONCacheItem

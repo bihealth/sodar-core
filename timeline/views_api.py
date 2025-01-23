@@ -19,8 +19,8 @@ from timeline.serializers import TimelineEventSerializer
 
 # Local constants
 TIMELINE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core.timeline+json'
-TIMELINE_API_DEFAULT_VERSION = '1.0'
-TIMELINE_API_ALLOWED_VERSIONS = ['1.0']
+TIMELINE_API_DEFAULT_VERSION = '2.0'
+TIMELINE_API_ALLOWED_VERSIONS = ['2.0']
 
 
 class TimelineAPIVersioningMixin:
@@ -123,7 +123,7 @@ class TimelineEventRetrieveAPIView(TimelineAPIVersioningMixin, RetrieveAPIView):
 
     - ``project``: Project UUID (string or None)
     - ``app``: App name (string)
-    - ``user``: Serialized user (JSON, see ``CurrentUserRetrieveAPIView``)
+    - ``user``: UUID of user who created the event (string or None)
     - ``event_name``: Event name (string)
     - ``description``: Event description (string)
     - ``extra_data``: Event extra data (JSON or None)
@@ -143,6 +143,10 @@ class TimelineEventRetrieveAPIView(TimelineAPIVersioningMixin, RetrieveAPIView):
         - ``extra_data``: Object reference extra data (JSON or None)
         - ``sodar_uuid``: Object reference UUID (string)
     - ``sodar_uuid``: TimelineEvent UUID (string)
+
+    **Version Changes**:
+
+    - ``2.0``: Return ``user`` as UUID instead of ``SODARUserSerializer`` dict
     """
 
     permission_classes = [IsAuthenticated]  # Perms checked in get_object()

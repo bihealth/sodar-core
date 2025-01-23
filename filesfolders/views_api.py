@@ -38,8 +38,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 FILESFOLDERS_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.filesfolders+json'
 )
-FILESFOLDERS_API_DEFAULT_VERSION = '1.0'
-FILESFOLDERS_API_ALLOWED_VERSIONS = ['1.0']
+FILESFOLDERS_API_DEFAULT_VERSION = '2.0'
+FILESFOLDERS_API_ALLOWED_VERSIONS = ['2.0']
 
 
 # Base Classes and Mixins ------------------------------------------------------

@@ -14,9 +14,9 @@ Sodarcache REST API Versioning
 Media Type
     ``application/vnd.bihealth.sodar-core.sodarcache+json``
 Current Version
-    ``1.0``
+    ``2.0``
 Accepted Versions
-    ``1.0``
+    ``2.0``
 Header Example
     ``Accept: application/vnd.bihealth.sodar-core.sodarcache+json; version=x.y``
 
@@ -32,3 +32,12 @@ Sodarcache REST API Views
 
 .. autoclass:: CacheItemSetAPIView
 
+
+Sodarcache REST API Version Changes
+===================================
+
+v2.0
+----
+
+- ``CacheItemRetrieveAPIView``
+    * Return ``user`` as UUID instead of ``SODARUserSerializer`` dict

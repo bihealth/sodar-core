@@ -42,6 +42,10 @@ Changed
     - Replace ``awesome-slugify`` dependency with ``python-slugify`` (#1531, #1547)
     - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)
     - Declare app setting definitions as ``PluginAppSettingDef`` objects (#1456)
+- **Filesfolders**
+    - Upgrade filesfolders REST API version to 2.0 (#1553)
+    - Remove compability with filesfolders REST API <2.0 (#1553)
+    - Replace REST API ``SODARUserSerializer`` fields with UUID ``SlugRelatedField`` (#1553)
 - **Projectroles**
     - Deprecate ``get_user_display_name()``, use ``SODARUser.get_display_name()`` (#1487)
     - Deprecate declaring app setting definitions as dict (#1456)
@@ -52,6 +56,14 @@ Changed
     - Move app setting form helpers in ``SODARAppSettingFormMixin`` (#1545)
     - Upgrade projectroles REST API version to v1.1 (#836)
     - Allow empty ``old_owner_role`` in ``RoleAssignmentOwnerTransferAPIView`` (#836)
+- **Sodarcache**
+    - Upgrade sodarcache REST API version to 2.0 (#1553)
+    - Remove compability with sodarcache REST API <2.0 (#1553)
+    - Replace REST API ``SODARUserSerializer`` fields with UUID ``SlugRelatedField`` (#1553)
+- **Timeline**
+    - Upgrade timeline REST API version to 2.0 (#1553)
+    - Remove compability with timeline REST API <2.0 (#1553)
+    - Replace REST API ``SODARUserSerializer`` fields with UUID ``SlugRelatedField`` (#1553)
 - **Tokens**
     - Update UI for site read-only mode (#24)
 - **Userprofile**
