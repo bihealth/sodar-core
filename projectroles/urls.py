@@ -327,6 +327,11 @@ urls_api = [
         name='api_user_list',
     ),
     path(
+        route='api/users/<uuid:user>',
+        view=views_api.UserRetrieveAPIView.as_view(),
+        name='api_user_retrieve',
+    ),
+    path(
         route='api/users/current',
         view=views_api.CurrentUserRetrieveAPIView.as_view(),
         name='api_user_current',

@@ -33,6 +33,7 @@ Added
     - ``ProjectDestroyAPIView`` REST API view (#1090)
     - ``ProjectSerializer`` ``children`` field (#1552)
     - ``SODARUserSerializer`` ``auth_type`` field (#1501)
+    - ``UserRetrieveAPIView`` REST API view (#1555)
 
 Changed
 -------

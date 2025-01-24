@@ -1349,19 +1349,15 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
         return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
 
 
-class CurrentUserRetrieveAPIView(
-    ProjectrolesAPIVersioningMixin, RetrieveAPIView
-):
+class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):
     """
-    Return information on the user making the request.
+    Return user details for user with the given UUID.
 
-    **URL:** ``/project/api/users/current``
+    **URL:** ``/project/api/users/{SODARUser.sodar_uuid}``
 
     **Methods:** ``GET``
 
     **Returns**:
-
-    For current user:
 
     - ``additional_emails``: Additional verified email addresses for user (list of strings)
     - ``auth_type``: User authentication type (string)
@@ -1370,6 +1366,40 @@ class CurrentUserRetrieveAPIView(
     - ``name``: Full name of the user (string)
     - ``sodar_uuid``: User UUID (string)
     - ``username``: Username of the user (string)
+
+    **Version Changes**:
+
+    - ``1.1``: Add view
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = SODARUserSerializer
+
+    def get_object(self):
+        try:
+            return User.objects.get(sodar_uuid=self.kwargs.get('user'))
+        except User.DoesNotExist:
+            raise NotFound()
+
+    def get(self, request, *args, **kwargs):
+        if parse_version(request.version) < parse_version('1.1'):
+            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION)
+        return super().get(request, *args, **kwargs)
+
+
+class CurrentUserRetrieveAPIView(
+    ProjectrolesAPIVersioningMixin, RetrieveAPIView
+):
+    """
+    Return user details for user performing the request.
+
+    **URL:** ``/project/api/users/current``
+
+    **Methods:** ``GET``
+
+    **Returns**:
+
+    User details, see ``UserRetrieveAPIView``.
 
     **Version Changes**:
 

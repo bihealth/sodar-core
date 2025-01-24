@@ -175,6 +175,8 @@ Projectroles REST API Views
 
 .. autoclass:: UserListAPIView
 
+.. autoclass:: UserRetrieveAPIView
+
 .. autoclass:: CurrentUserRetrieveAPIView
 
 
@@ -190,5 +192,7 @@ v1.1
     * Add ``children`` field
 - ``RoleAssignmentOwnerTransferAPIView``
     * Allow empty value for ``old_owner_role``
+- ``UserRetrieveAPIView``
+    * Add view
 - ``CurrentUserRetrieveAPIView``
     * Add ``auth_type`` field

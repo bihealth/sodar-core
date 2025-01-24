@@ -2273,6 +2273,34 @@ class TestUserListAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.anonymous, 401)
 
 
+class TestUserRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
+    """Tests for UserRetrieveAPIView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'projectroles:api_user_retrieve',
+            kwargs={'user': self.superuser.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test UserRetrieveAPIView GET"""
+        self.assert_response_api(self.url, self.auth_users, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
+        self.assert_response_api(self.url, self.auth_users, 200, knox=True)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.assert_response_api(self.url, [self.anonymous], 401)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.auth_users, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+
 class TestCurrentUserRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for CurrentUserRetrieveAPIView permissions"""
 

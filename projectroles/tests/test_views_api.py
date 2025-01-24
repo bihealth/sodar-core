@@ -3383,6 +3383,69 @@ class TestUserListAPIView(ProjectrolesAPIViewTestBase):
         self.assertEqual(response_data, expected)
 
 
+class TestUserRetrieveAPIView(
+    SODARUserAdditionalEmailMixin, ProjectrolesAPIViewTestBase
+):
+    """Tests for UserRetrieveAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        # Create additional user
+        self.user_ldap = self.make_user('user_ldap@' + LDAP_DOMAIN)
+        group, _ = Group.objects.get_or_create(name=LDAP_DOMAIN.lower())
+        group.user_set.add(self.user_ldap)
+        self.url = reverse(
+            'projectroles:api_user_retrieve',
+            kwargs={'user': self.user_ldap.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test UserRetrieveAPIView GET"""
+        response = self.request_knox(self.url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'username': self.user_ldap.username,
+            'name': self.user_ldap.name,
+            'email': self.user_ldap.email,
+            'additional_emails': [],
+            'is_superuser': False,
+            'auth_type': AUTH_TYPE_LDAP,
+            'sodar_uuid': str(self.user_ldap.sodar_uuid),
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_get_additional_email(self):
+        """Test GET with additional email"""
+        self.make_email(self.user_ldap, ADD_EMAIL)
+        response = self.request_knox(self.url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'username': self.user_ldap.username,
+            'name': self.user_ldap.name,
+            'email': self.user_ldap.email,
+            'additional_emails': [ADD_EMAIL],
+            'is_superuser': False,
+            'auth_type': AUTH_TYPE_LDAP,
+            'sodar_uuid': str(self.user_ldap.sodar_uuid),
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_get_invalid_uuid(self):
+        """Test GET with invalid UUID"""
+        url = reverse(
+            'projectroles:api_user_retrieve', kwargs={'user': INVALID_UUID}
+        )
+        response = self.request_knox(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_v1_0(self):
+        """Test GET with version 1.0"""
+        response = self.request_knox(self.url, version='1.0')
+        self.assertEqual(response.status_code, 406)
+
+
 class TestCurrentUserRetrieveAPIView(
     SODARUserAdditionalEmailMixin, ProjectrolesAPIViewTestBase
 ):
@@ -3390,7 +3453,6 @@ class TestCurrentUserRetrieveAPIView(
 
     def setUp(self):
         super().setUp()
-        # Create additional users
         self.user_ldap = self.make_user('user_ldap@' + LDAP_DOMAIN)
         group, _ = Group.objects.get_or_create(name=LDAP_DOMAIN.lower())
         group.user_set.add(self.user_ldap)
@@ -3413,7 +3475,6 @@ class TestCurrentUserRetrieveAPIView(
             'sodar_uuid': str(self.user_ldap.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
-        self.assertIn('auth_type', response_data)
 
     def test_get_superuser(self):
         """Test GET as superuser"""
@@ -3428,25 +3489,6 @@ class TestCurrentUserRetrieveAPIView(
             'is_superuser': True,
             'auth_type': AUTH_TYPE_LOCAL,
             'sodar_uuid': str(self.user.sodar_uuid),
-        }
-        self.assertEqual(response_data, expected)
-
-    def test_get_additional_email(self):
-        """Test GET with additional email"""
-        self.make_email(self.user_ldap, ADD_EMAIL)
-        response = self.request_knox(
-            self.url, token=self.get_token(self.user_ldap)
-        )
-        self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.content)
-        expected = {
-            'username': self.user_ldap.username,
-            'name': self.user_ldap.name,
-            'email': self.user_ldap.email,
-            'additional_emails': [ADD_EMAIL],
-            'is_superuser': False,
-            'auth_type': AUTH_TYPE_LDAP,
-            'sodar_uuid': str(self.user_ldap.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
 

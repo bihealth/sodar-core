@@ -22,6 +22,7 @@ Release Highlights
 - Add removeroles management command
 - Add app setting type constants
 - Add app setting definition as objects
+- Add API view to retrieve user details by user UUID
 - Update owner transfer form to allow setting no role for old owner
 - Update app settings API
 - Upgrade filesfolders REST API version to v2.0
@@ -99,6 +100,7 @@ REST API View Changes
     * ``ProjectRetrieveAPIView``: Add ``children`` field
     * ``RoleAssignmentOwnerTransferAPIView``: Allow empty value for
       ``old_owner_role``
+    * ``UserRetrieveAPIView``: Add view
     * ``CurrentUserRetrieveAPIView``: Add ``auth_type`` field
 - Sodarcache API
     * Current version: ``2.0`` (breaking changes)
