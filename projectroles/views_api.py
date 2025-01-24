@@ -1364,11 +1364,16 @@ class CurrentUserRetrieveAPIView(
     For current user:
 
     - ``additional_emails``: Additional verified email addresses for user (list of strings)
+    - ``auth_type``: User authentication type (string)
     - ``email``: Email address of the user (string)
     - ``is_superuser``: Superuser status (boolean)
     - ``name``: Full name of the user (string)
     - ``sodar_uuid``: User UUID (string)
     - ``username``: Username of the user (string)
+
+    **Version Changes**:
+
+    - ``1.1``: Add ``auth_type`` field
     """
 
     permission_classes = [IsAuthenticated]

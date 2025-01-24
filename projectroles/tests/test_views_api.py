@@ -7,6 +7,7 @@ import pytz
 from knox.models import AuthToken
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.forms.models import model_to_dict
 from django.test import override_settings
@@ -27,6 +28,8 @@ from projectroles.models import (
     AppSetting,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
+    AUTH_TYPE_LDAP,
+    AUTH_TYPE_LOCAL,
     CAT_DELIMITER,
 )
 from projectroles.plugins import get_backend_api
@@ -117,6 +120,7 @@ class SerializedObjectMixin:
         ).order_by('email')
         return {
             'additional_emails': [e.email for e in add_emails],
+            'auth_type': user.get_auth_type(),
             'email': user.email,
             'is_superuser': user.is_superuser,
             'name': user.name,
@@ -3388,6 +3392,8 @@ class TestCurrentUserRetrieveAPIView(
         super().setUp()
         # Create additional users
         self.user_ldap = self.make_user('user_ldap@' + LDAP_DOMAIN)
+        group, _ = Group.objects.get_or_create(name=LDAP_DOMAIN.lower())
+        group.user_set.add(self.user_ldap)
         self.url = reverse('projectroles:api_user_current')
 
     def test_get(self):
@@ -3403,9 +3409,11 @@ class TestCurrentUserRetrieveAPIView(
             'email': self.user_ldap.email,
             'additional_emails': [],
             'is_superuser': False,
+            'auth_type': AUTH_TYPE_LDAP,
             'sodar_uuid': str(self.user_ldap.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
+        self.assertIn('auth_type', response_data)
 
     def test_get_superuser(self):
         """Test GET as superuser"""
@@ -3418,12 +3426,13 @@ class TestCurrentUserRetrieveAPIView(
             'email': self.user.email,
             'additional_emails': [],
             'is_superuser': True,
+            'auth_type': AUTH_TYPE_LOCAL,
             'sodar_uuid': str(self.user.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
 
     def test_get_additional_email(self):
-        """Test CurrentUserRetrieveAPIView GET with additional email"""
+        """Test GET with additional email"""
         self.make_email(self.user_ldap, ADD_EMAIL)
         response = self.request_knox(
             self.url, token=self.get_token(self.user_ldap)
@@ -3436,9 +3445,19 @@ class TestCurrentUserRetrieveAPIView(
             'email': self.user_ldap.email,
             'additional_emails': [ADD_EMAIL],
             'is_superuser': False,
+            'auth_type': AUTH_TYPE_LDAP,
             'sodar_uuid': str(self.user_ldap.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
+
+    def test_get_v1_0(self):
+        """Test GET with version 1.0"""
+        response = self.request_knox(
+            self.url, token=self.get_token(self.user_ldap), version='1.0'
+        )
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertNotIn('auth_type', response_data)
 
 
 class TestAPIVersioning(ProjectrolesAPIViewTestBase):

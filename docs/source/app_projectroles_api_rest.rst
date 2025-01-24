@@ -190,3 +190,5 @@ v1.1
     * Add ``children`` field
 - ``RoleAssignmentOwnerTransferAPIView``
     * Allow empty value for ``old_owner_role``
+- ``CurrentUserRetrieveAPIView``
+    * Add ``auth_type`` field

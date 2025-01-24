@@ -99,6 +99,7 @@ REST API View Changes
     * ``ProjectRetrieveAPIView``: Add ``children`` field
     * ``RoleAssignmentOwnerTransferAPIView``: Allow empty value for
       ``old_owner_role``
+    * ``CurrentUserRetrieveAPIView``: Add ``auth_type`` field
 - Sodarcache API
     * Current version: ``2.0`` (breaking changes)
     * Allowed versions: ``2.0`` (support for previous versions dropped)

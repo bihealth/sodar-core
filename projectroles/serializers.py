@@ -150,6 +150,7 @@ class SODARUserSerializer(SODARModelSerializer):
     """Serializer for the user model used in SODAR Core based sites"""
 
     additional_emails = serializers.SerializerMethodField()
+    auth_type = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -159,6 +160,7 @@ class SODARUserSerializer(SODARModelSerializer):
             'email',
             'additional_emails',
             'is_superuser',
+            'auth_type',
             'sodar_uuid',
         ]
 
@@ -169,6 +171,19 @@ class SODARUserSerializer(SODARModelSerializer):
                 user=obj, verified=True
             ).order_by('email')
         ]
+
+    def get_auth_type(self, obj):
+        return obj.get_auth_type()
+
+    def to_representation(self, instance):
+        """Override to_representation() to handle version differences"""
+        ret = super().to_representation(instance)
+        # Omit auth_type from <1.1
+        if 'request' in self.context and parse_version(
+            self.context['request'].version
+        ) < parse_version('1.1'):
+            ret.pop('auth_type', None)
+        return ret
 
 
 # Projectroles Serializers -----------------------------------------------------
