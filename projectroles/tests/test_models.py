@@ -144,6 +144,7 @@ class ProjectInviteMixin:
         message='',
         date_expire=None,
         secret=None,
+        active=True,
     ):
         """Create a ProjectInvite object"""
         values = {
@@ -154,7 +155,7 @@ class ProjectInviteMixin:
             'message': message,
             'date_expire': date_expire,
             'secret': secret or SECRET,
-            'active': True,
+            'active': active,
         }
         invite = ProjectInvite(**values)
         invite.save()

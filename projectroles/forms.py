@@ -74,6 +74,9 @@ APP_SETTING_CUSTOM_VALIDATE_MSG = (
 )
 APP_SETTING_SOURCE_ONLY_MSG = '[Only editable on source site]'
 REMOVE_ROLE_LABEL = '--- Remove role from {project_title} ---'
+INVITE_EXISTS_MSG = (
+    'Active invite already exists for {user_email} in {project_title}'
+)
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -1139,22 +1142,37 @@ class ProjectInviteForm(SODARModelForm):
                 'Please use "Add Role" instead.'.format(existing_user.username),
             )
 
-        # Check if user already has an invite in the project
-        try:
-            ProjectInvite.objects.get(
-                project=self.project,
+        # Existing active invite for user in same project
+        existing_inv = ProjectInvite.objects.filter(
+            project=self.project,
+            email=user_email,
+            active=True,
+            date_expire__gt=timezone.now(),
+        ).first()
+        if existing_inv:
+            self.add_error(
+                'email',
+                INVITE_EXISTS_MSG.format(
+                    user_email=user_email, project_title=self.project.title
+                ),
+            )
+
+        # Existing active invite for user in parent category
+        if self.project.parent:
+            parent_inv = ProjectInvite.objects.filter(
                 email=user_email,
                 active=True,
                 date_expire__gt=timezone.now(),
-            )
-            self.add_error(
-                'email',
-                'There is already an active invite for email {} in {}'.format(
-                    user_email, self.project.title
-                ),
-            )
-        except ProjectInvite.DoesNotExist:
-            pass
+                project__in=self.project.get_parents(),
+            ).first()
+            if parent_inv:
+                self.add_error(
+                    'email',
+                    INVITE_EXISTS_MSG.format(
+                        user_email=user_email,
+                        project_title=parent_inv.project.title,
+                    ),
+                )
 
         # Local users check
         if user_email:

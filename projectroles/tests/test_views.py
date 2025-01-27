@@ -4478,8 +4478,14 @@ class TestProjectInviteCreateView(
 
     def setUp(self):
         super().setUp()
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user, self.role_owner
+        )
         self.project = self.make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
@@ -4489,6 +4495,10 @@ class TestProjectInviteCreateView(
             'projectroles:invite_create',
             kwargs={'project': self.project.sodar_uuid},
         )
+        self.post_data = {
+            'email': INVITE_EMAIL,
+            'role': self.role_contributor.pk,
+        }
 
     def test_get(self):
         """Test ProjectInviteCreateView GET"""
@@ -4559,13 +4569,8 @@ class TestProjectInviteCreateView(
     def test_post(self):
         """Test ProjectInviteCreateView POST"""
         self.assertEqual(ProjectInvite.objects.all().count(), 0)
-        data = {
-            'email': INVITE_EMAIL,
-            'project': self.project.pk,
-            'role': self.role_contributor.pk,
-        }
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
 
         self.assertEqual(ProjectInvite.objects.all().count(), 1)
         invite = ProjectInvite.objects.get(
@@ -4598,25 +4603,15 @@ class TestProjectInviteCreateView(
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
     def test_post_local_users_not_allowed(self):
         """Test POST for local/OIDC user with local users not allowed"""
-        data = {
-            'email': INVITE_EMAIL,
-            'project': self.project.pk,
-            'role': self.role_contributor.pk,
-        }
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ProjectInvite.objects.all().count(), 0)
 
     def test_post_local_users_allowed(self):
         """Test POST for local/OIDC user with local users allowed"""
-        data = {
-            'email': INVITE_EMAIL,
-            'project': self.project.pk,
-            'role': self.role_contributor.pk,
-        }
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 302)
         invite = ProjectInvite.objects.get(
             project=self.project, email=INVITE_EMAIL, active=True
@@ -4627,13 +4622,8 @@ class TestProjectInviteCreateView(
     @override_settings(ENABLE_OIDC=True)
     def test_post_oidc_users_allowed(self):
         """Test POST with for local/OIDC user with OIDC users allowed"""
-        data = {
-            'email': INVITE_EMAIL,
-            'project': self.project.pk,
-            'role': self.role_contributor.pk,
-        }
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 302)
         invite = ProjectInvite.objects.get(
             project=self.project, email=INVITE_EMAIL, active=True
@@ -4647,13 +4637,8 @@ class TestProjectInviteCreateView(
     )
     def test_post_local_users_email_domain(self):
         """Test POST for local user with email domain in AUTH_LDAP_USERNAME_DOMAIN"""
-        data = {
-            'email': INVITE_EMAIL,
-            'project': self.project.pk,
-            'role': self.role_contributor.pk,
-        }
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 302)
         invite = ProjectInvite.objects.get(
             project=self.project, email=INVITE_EMAIL, active=True
@@ -4667,18 +4652,57 @@ class TestProjectInviteCreateView(
     )
     def test_post_local_users_email_domain_ldap(self):
         """Test POST for local user with email domain in LDAP_ALT_DOMAINS"""
-        data = {
-            'email': INVITE_EMAIL,
-            'project': self.project.pk,
-            'role': self.role_contributor.pk,
-        }
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 302)
         invite = ProjectInvite.objects.get(
             project=self.project, email=INVITE_EMAIL, active=True
         )
         self.assertIsNotNone(invite)
+
+    def test_post_parent_invite(self):
+        """Test POST with active parent invite for same user (should fail)"""
+        self.make_invite(
+            email=INVITE_EMAIL,
+            project=self.category,
+            role=self.role_contributor,
+            issuer=self.user,
+        )
+        self.assertEqual(ProjectInvite.objects.all().count(), 1)
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ProjectInvite.objects.all().count(), 1)
+
+    def test_post_parent_invite_inactive(self):
+        """Test POST with inactive parent invite for same user"""
+        self.make_invite(
+            email=INVITE_EMAIL,
+            project=self.category,
+            role=self.role_contributor,
+            issuer=self.user,
+            active=False,
+        )
+        self.assertEqual(ProjectInvite.objects.all().count(), 1)
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ProjectInvite.objects.all().count(), 2)
+
+    def test_post_parent_invite_expired(self):
+        """Test POST with expired parent invite for same user"""
+        self.make_invite(
+            email=INVITE_EMAIL,
+            project=self.category,
+            role=self.role_contributor,
+            issuer=self.user,
+            date_expire=timezone.now() + timezone.timedelta(days=-1),
+        )
+        self.assertEqual(ProjectInvite.objects.all().count(), 1)
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ProjectInvite.objects.all().count(), 2)
 
 
 class TestProjectInviteAcceptView(

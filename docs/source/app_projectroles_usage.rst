@@ -364,6 +364,11 @@ and the user email domain is not associated with configured LDAP domains.
 Invites expire after a certain time and can be reissued or revoked on the
 :guilabel:`Project Invites` page.
 
+.. note::
+
+    Inviting a user is prohibited if they already have an active invite in a
+    parent category of the current category or project.
+
 Batch Member Modifications
 --------------------------
 

@@ -25,6 +25,7 @@ Release Highlights
 - Add API view to retrieve user details by user UUID
 - Update owner transfer form to allow setting no role for old owner
 - Update app settings API
+- Update invite creation to fail if active invite exists for user in parent category
 - Upgrade filesfolders REST API version to v2.0
 - Upgrade projectroles REST API version to v1.1
 - Upgrade sodarcache REST API version to v2.0

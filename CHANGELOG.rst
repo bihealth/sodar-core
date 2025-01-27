@@ -34,6 +34,7 @@ Added
     - ``ProjectSerializer`` ``children`` field (#1552)
     - ``SODARUserSerializer`` ``auth_type`` field (#1501)
     - ``UserRetrieveAPIView`` REST API view (#1555)
+    - ``active`` arg in ``ProjectInviteMixin.make_invite()`` (#1403)
 
 Changed
 -------
@@ -58,6 +59,7 @@ Changed
     - Move app setting form helpers in ``SODARAppSettingFormMixin`` (#1545)
     - Upgrade projectroles REST API version to v1.1 (#836)
     - Allow empty ``old_owner_role`` in ``RoleAssignmentOwnerTransferAPIView`` (#836)
+    - Prevent project invite creation with active invite in parent category (#1403)
 - **Sodarcache**
     - Upgrade sodarcache REST API version to 2.0 (#1553)
     - Remove compability with sodarcache REST API <2.0 (#1553)

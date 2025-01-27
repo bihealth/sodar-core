@@ -38,6 +38,7 @@ from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
 from projectroles.app_settings import AppSettingAPI
+from projectroles.forms import INVITE_EXISTS_MSG
 from projectroles.models import (
     Project,
     Role,
@@ -67,7 +68,6 @@ from projectroles.views import (
     RoleAssignmentOwnerTransferMixin,
     ProjectInviteMixin,
     ProjectModifyPluginViewMixin,
-    SITE_MODE_TARGET,
 )
 
 
@@ -83,6 +83,7 @@ PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
@@ -843,6 +844,37 @@ class ProjectInviteCreateAPIView(
 
     permission_required = 'projectroles.invite_users'
     serializer_class = ProjectInviteSerializer
+
+    def perform_create(self, serializer):
+        project = self.get_project()
+        user_email = self.request.data.get('email')
+        existing_inv = ProjectInvite.objects.filter(
+            project=project,
+            email=user_email,
+            active=True,
+            date_expire__gt=timezone.now(),
+        ).first()
+        if existing_inv:
+            raise serializers.ValidationError(
+                INVITE_EXISTS_MSG.format(
+                    user_email=user_email, project_title=project.get_log_title()
+                )
+            )
+        if project.parent:
+            parent_inv = ProjectInvite.objects.filter(
+                email=user_email,
+                active=True,
+                date_expire__gt=timezone.now(),
+                project__in=project.get_parents(),
+            ).first()
+            if parent_inv:
+                raise serializers.ValidationError(
+                    INVITE_EXISTS_MSG.format(
+                        user_email=user_email,
+                        project_title=parent_inv.project.get_log_title(),
+                    )
+                )
+        return super().perform_create(serializer)
 
 
 class ProjectInviteRevokeAPIView(

@@ -2492,7 +2492,10 @@ class TestProjectInviteListAPIView(
 
 
 class TestProjectInviteCreateAPIView(
-    RemoteSiteMixin, RemoteProjectMixin, ProjectrolesAPIViewTestBase
+    ProjectInviteMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    ProjectrolesAPIViewTestBase,
 ):
     """Tests for ProjectInviteCreateAPIView"""
 
@@ -2502,18 +2505,20 @@ class TestProjectInviteCreateAPIView(
             'projectroles:api_invite_create',
             kwargs={'project': self.project.sodar_uuid},
         )
+        self.post_data = {
+            'email': INVITE_USER_EMAIL,
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'message': INVITE_MESSAGE,
+        }
 
     def test_post(self):
         """Test ProjectInviteCreateAPIView POST"""
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
-        post_data = {
-            'email': INVITE_USER_EMAIL,
-            'role': PROJECT_ROLE_CONTRIBUTOR,
-            'message': INVITE_MESSAGE,
-        }
-        response = self.request_knox(self.url, method='POST', data=post_data)
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
 
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
@@ -2543,12 +2548,10 @@ class TestProjectInviteCreateAPIView(
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
-        post_data = {
-            'email': INVITE_USER_EMAIL,
-            'role': PROJECT_ROLE_OWNER,
-            'message': INVITE_MESSAGE,
-        }
-        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.post_data['role'] = PROJECT_ROLE_OWNER
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2560,12 +2563,10 @@ class TestProjectInviteCreateAPIView(
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
-        post_data = {
-            'email': INVITE_USER_EMAIL,
-            'role': PROJECT_ROLE_DELEGATE,
-            'message': INVITE_MESSAGE,
-        }
-        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.post_data['role'] = PROJECT_ROLE_DELEGATE
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 1
@@ -2582,15 +2583,11 @@ class TestProjectInviteCreateAPIView(
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
-        post_data = {
-            'email': INVITE_USER_EMAIL,
-            'role': PROJECT_ROLE_DELEGATE,
-            'message': INVITE_MESSAGE,
-        }
+        self.post_data['role'] = PROJECT_ROLE_DELEGATE
         response = self.request_knox(
             self.url,
             method='POST',
-            data=post_data,
+            data=self.post_data,
             token=self.get_token(del_user),
         )
         self.assertEqual(response.status_code, 403, msg=response.content)
@@ -2606,12 +2603,10 @@ class TestProjectInviteCreateAPIView(
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
-        post_data = {
-            'email': INVITE_USER_EMAIL,
-            'role': PROJECT_ROLE_DELEGATE,
-            'message': INVITE_MESSAGE,
-        }
-        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.post_data['role'] = PROJECT_ROLE_DELEGATE
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2623,12 +2618,10 @@ class TestProjectInviteCreateAPIView(
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
-        post_data = {
-            'email': 'NOT_AN_EMAIL!',
-            'role': PROJECT_ROLE_CONTRIBUTOR,
-            'message': INVITE_MESSAGE,
-        }
-        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.post_data['email'] = 'NOT_AN_EMAIL!'
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2643,17 +2636,61 @@ class TestProjectInviteCreateAPIView(
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
-        post_data = {
-            'email': INVITE_USER_EMAIL,
-            'role': PROJECT_ROLE_CONTRIBUTOR,
-            'message': INVITE_MESSAGE,
-        }
-        response = self.request_knox(self.url, method='POST', data=post_data)
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_parent_invite(self):
+        """Test POST with active parent invite (should fail)"""
+        self.make_invite(
+            email=INVITE_USER_EMAIL,
+            project=self.category,
+            role=self.role_contributor,
+            issuer=self.user,
+        )
+        self.assertEqual(ProjectInvite.objects.count(), 1)
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(ProjectInvite.objects.count(), 1)
+
+    def test_post_parent_invite_inactive(self):
+        """Test POST with inactive parent invite"""
+        self.make_invite(
+            email=INVITE_USER_EMAIL,
+            project=self.category,
+            role=self.role_contributor,
+            issuer=self.user,
+            active=False,
+        )
+        self.assertEqual(ProjectInvite.objects.count(), 1)
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(ProjectInvite.objects.count(), 2)
+
+    def test_post_parent_invite_expired(self):
+        """Test POST with expired parent invite"""
+        self.make_invite(
+            email=INVITE_USER_EMAIL,
+            project=self.category,
+            role=self.role_contributor,
+            issuer=self.user,
+            date_expire=timezone.now() + timezone.timedelta(days=-1),
+        )
+        self.assertEqual(ProjectInvite.objects.count(), 1)
+        response = self.request_knox(
+            self.url, method='POST', data=self.post_data
+        )
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(ProjectInvite.objects.count(), 2)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_post_remote(self):
