@@ -4032,6 +4032,41 @@ class TestRoleAssignmentDeleteView(
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
 
+    def test_post_children_nested(self):
+        """Test POST with nested child roles"""
+        child_cat = self.make_project(
+            'ChildCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(child_cat, self.user, self.role_owner)
+        child_project = self.make_project(
+            'ChildProject', PROJECT_TYPE_PROJECT, child_cat
+        )
+        self.make_assignment(child_project, self.user, self.role_owner)
+        # Make assignments for user but not in child project
+        new_as = self.make_assignment(
+            self.category, self.user_new, self.role_guest
+        )
+        self.make_assignment(child_cat, self.user_new, self.role_guest)
+        self.assertEqual(RoleAssignment.objects.all().count(), 7)
+        alert = self.app_alerts.add_alert(
+            'projectroles',
+            'test_alert',
+            self.user_new,
+            'test',
+            project=child_project,
+        )
+        self.assertEqual(alert.active, True)
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': new_as.sodar_uuid},
+                )
+            )
+        self.assertEqual(RoleAssignment.objects.all().count(), 6)
+        alert.refresh_from_db()
+        self.assertEqual(alert.active, True)  # Alert should remain active
+
     def test_post_app_settings_contributor(self):
         """Test post with PROJECT_USER app settings after contributor deletion"""
         self.assertEqual(RoleAssignment.objects.all().count(), 3)

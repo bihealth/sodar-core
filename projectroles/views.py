@@ -2181,11 +2181,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         dis_projects = [project]
         if project.type == PROJECT_TYPE_CATEGORY:
             for c in project.get_children(flat=True):
-                c_role_as = RoleAssignment.objects.filter(
-                    project=c, user=user
-                ).first()
-                # TODO: Fix handling of children (see #1556)
-                if not c.public_guest_access and not c_role_as:
+                if not c.has_role(user):
                     dis_projects.append(c)
         for a in AppAlert.objects.filter(
             user=user, project__in=dis_projects, active=True

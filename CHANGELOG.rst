@@ -82,6 +82,7 @@ Fixed
 - **Projectroles**
     - Invalid ``app_permission`` in ``RemoteSiteAppPlugin`` (#1543)
     - Missing fields in ``ProjectRetrieveAPIView`` docstring (#1551)
+    - Role delete alert dismissal fails with nested inherited roles (#1556)
 
 Removed
 -------
