@@ -2107,6 +2107,32 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
 
+    def test_leave_button_owner(self):
+        """Test rendering leave project button as owner"""
+        self.login_and_redirect(self.user_owner, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    def test_leave_button_contributor(self):
+        """Test rendering leave project button as contributor"""
+        self.login_and_redirect(self.user_contributor, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    def test_leave_button_inherit(self):
+        """Test rendering leave project button as inherited contributor"""
+        self.login_and_redirect(self.user_contributor_cat, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_leave_button_target(self):
+        """Test rendering leave project button as target"""
+        self.set_up_as_target(projects=[self.category, self.project])
+        self.login_and_redirect(self.user_contributor, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
     def test_role_ops(self):
         """Test rendering role operations dropdown"""
         good_users = [self.superuser, self.user_owner, self.user_delegate]
@@ -2228,7 +2254,6 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         self.assertIsNotNone(
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-transfer')
         )
-        # TODO: Assert link enabling/disabling after updating owner transfer
 
     def test_role_dropdown_owner_inherited(self):
         """Test role dropdown items for inherited owner"""

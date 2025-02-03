@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add project deletion
+- Add ability for user to leave project
 - Add site read-only mode
 - Add siteappsettings site app plugin
 - Add removeroles management command
@@ -68,7 +69,6 @@ This release enables the deletion of categories and projects. See the
 :ref:`project app development documentation <dev_project_app_delete>` for more
 information on how to support this feature in your apps.
 
-
 AppSettingAPI Definition Getter Return Data
 -------------------------------------------
 
@@ -113,7 +113,6 @@ REST API View Changes
     * Allowed versions: ``2.0`` (support for previous versions dropped)
     * ``TimelineEventRetrieveAPIView``: Return ``user`` as UUID instead of
       ``SODARUserSerializer`` dict
-
 
 Deprecated Features
 -------------------

@@ -35,6 +35,7 @@ Added
     - ``SODARUserSerializer`` ``auth_type`` field (#1501)
     - ``UserRetrieveAPIView`` REST API view (#1555)
     - ``active`` arg in ``ProjectInviteMixin.make_invite()`` (#1403)
+    - Ability for users to leave project (#918)
 
 Changed
 -------

@@ -34,6 +34,7 @@ from projectroles.email import (
     SUBJECT_ROLE_CREATE,
     SUBJECT_ROLE_UPDATE,
     SUBJECT_ROLE_DELETE,
+    SUBJECT_ROLE_LEAVE,
     SUBJECT_ACCEPT,
     SUBJECT_EXPIRY,
 )
@@ -69,6 +70,9 @@ from projectroles.views import (
     FORM_INVALID_MSG,
     PROJECT_WELCOME_MSG,
     USER_PROFILE_LDAP_MSG,
+    ROLE_LEAVE_INHERIT_MSG,
+    ROLE_LEAVE_OWNER_MSG,
+    ROLE_LEAVE_REMOTE_MSG,
     ROLE_FINDER_INFO,
     INVITE_LDAP_LOCAL_VIEW_MSG,
     INVITE_LOCAL_NOT_ALLOWED_MSG,
@@ -2823,48 +2827,62 @@ class TestProjectDeleteView(
         self.assertEqual(Project.objects.count(), 2)
 
 
-class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
+class TestProjectRoleView(
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
+):
     """Tests for ProjectRoleView"""
 
     def setUp(self):
         super().setUp()
-        self.project = self.make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
-        )
-        # Set superuser as owner
-        self.owner_as = self.make_assignment(
-            self.project, self.user, self.role_owner
-        )
-        # Set new user as delegate
+        # Set up users
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_owner = self.make_user('user_owner')
         self.user_delegate = self.make_user('user_delegate')
+        self.user_guest = self.make_user('user_guest')
+        # Set up projects and roles
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
         self.delegate_as = self.make_assignment(
             self.project, self.user_delegate, self.role_delegate
         )
-        # Set another new user as guest (= one of the member roles)
-        self.user_guest = self.make_user('user_guest')
         self.guest_as = self.make_assignment(
             self.project, self.user_guest, self.role_guest
+        )
+        self.url = reverse(
+            'projectroles:roles',
+            kwargs={'project': self.project.sodar_uuid},
         )
 
     def test_get(self):
         """Test ProjectRoleView GET"""
-        with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'projectroles:roles',
-                    kwargs={'project': self.project.sodar_uuid},
-                )
-            )
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['project'].pk, self.project.pk)
-
         expected = [
             {
                 'id': self.owner_as.pk,
                 'project': self.project.pk,
                 'role': self.role_owner.pk,
-                'user': self.user.pk,
+                'user': self.user_owner.pk,
                 'sodar_uuid': self.owner_as.sodar_uuid,
+            },
+            {
+                'id': self.owner_as_cat.pk,
+                'project': self.category.pk,
+                'role': self.role_owner.pk,
+                'user': self.user_owner_cat.pk,
+                'sodar_uuid': self.owner_as_cat.sodar_uuid,
             },
             {
                 'id': self.delegate_as.pk,
@@ -2891,10 +2909,51 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 categories='categories', projects='projects'
             ),
         )
+        self.assertEqual(response.context['own_local_as'], self.owner_as)
+        self.assertEqual(response.context['project_leave_access'], False)
+        self.assertEqual(
+            response.context['project_leave_msg'], ROLE_LEAVE_OWNER_MSG
+        )
+
+    def test_get_inherited(self):
+        """Test GET as user with inherited role"""
+        with self.login(self.user_owner_cat):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['own_local_as'], None)
+        self.assertEqual(response.context['project_leave_access'], False)
+        self.assertEqual(
+            response.context['project_leave_msg'],
+            ROLE_LEAVE_INHERIT_MSG.format(category_type='category'),
+        )
+
+    def test_get_guest(self):
+        """Test GET as guest"""
+        with self.login(self.user_guest):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['own_local_as'], self.guest_as)
+        self.assertEqual(response.context['project_leave_access'], True)
+        self.assertEqual(response.context['project_leave_msg'], '')
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_get_guest_target(self):
+        """Test GET as guest on target site"""
+        self.set_up_as_target([self.project])
+        self.assertEqual(self.project.is_remote(), True)
+        with self.login(self.user_guest):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['own_local_as'], self.guest_as)
+        self.assertEqual(response.context['project_leave_access'], False)
+        self.assertEqual(
+            response.context['project_leave_msg'],
+            ROLE_LEAVE_REMOTE_MSG.format(project_type='Project'),
+        )
 
     def test_get_not_found(self):
         """Test GET view with invalid project UUID"""
-        with self.login(self.user):
+        with self.login(self.user_owner):
             response = self.client.get(
                 reverse(
                     'projectroles:roles',
@@ -3816,6 +3875,9 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(alert.active, True)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 0
+        )
+        self.assertEqual(
             self.app_alert_model.objects.filter(
                 alert_name='role_delete'
             ).count(),
@@ -3832,6 +3894,9 @@ class TestRoleAssignmentDeleteView(
                 ),
             )
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 1
+        )
         self.assertEqual(
             self.app_alert_model.objects.filter(
                 alert_name='role_delete'
@@ -4068,6 +4133,154 @@ class TestRoleAssignmentDeleteView(
             ),
             False,
         )
+
+
+class TestRoleAssignmentOwnDeleteView(
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+):
+    """Tests for RoleAssignmentOwnDeleteView"""
+
+    def setUp(self):
+        super().setUp()
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+        # Create guest user and role
+        self.user_contrib = self.make_user('user_contrib')
+        self.contrib_as = self.make_assignment(
+            self.project, self.user_contrib, self.role_contributor
+        )
+        self.user_new = self.make_user('user_new')
+        # Set up helpers
+        self.app_alerts = get_backend_api('appalerts_backend')
+        self.app_alert_model = self.app_alerts.get_model()
+
+    def test_get(self):
+        """Test RoleAssignmentOwnDeleteView GET"""
+        url = reverse(
+            'projectroles:role_delete_own',
+            kwargs={'roleassignment': self.contrib_as.sodar_uuid},
+        )
+        with self.login(self.user_contrib):
+            response = self.client.get(url)
+        self.assertEqual(response.context['inh_child_projects'], [])
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_category_inherited(self):
+        """Test GET with category and inherited role"""
+        new_as = self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        url = reverse(
+            'projectroles:role_delete_own',
+            kwargs={'roleassignment': new_as.sodar_uuid},
+        )
+        with self.login(self.user_new):
+            response = self.client.get(url)
+        self.assertEqual(response.context['inh_child_projects'], [self.project])
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_category_child_local(self):
+        """Test GET with category and local child role"""
+        new_as = self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        url = reverse(
+            'projectroles:role_delete_own',
+            kwargs={'roleassignment': new_as.sodar_uuid},
+        )
+        with self.login(self.user_new):
+            response = self.client.get(url)
+        self.assertEqual(response.context['inh_child_projects'], [])
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_owner(self):
+        """Test GET with owner role (should fail)"""
+        url = reverse(
+            'projectroles:role_delete_own',
+            kwargs={'roleassignment': self.owner_as.sodar_uuid},
+        )
+        with self.login(self.user):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_post(self):
+        """Test POST"""
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+        self.assertIsNotNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_contrib
+            ).first()
+        )
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 0
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete_own'
+            ).count(),
+            0,
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+        url = reverse(
+            'projectroles:role_delete_own',
+            kwargs={'roleassignment': self.contrib_as.sodar_uuid},
+        )
+        with self.login(self.user_contrib):
+            response = self.client.post(url)
+            self.assertRedirects(response, reverse('home'))
+
+        self.assertEqual(RoleAssignment.objects.count(), 2)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_contrib
+            ).first()
+        )
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 1
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete_own'
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.get(alert_name='role_delete_own').user,
+            self.user,
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(
+            SUBJECT_ROLE_LEAVE.format(
+                user_name=self.user_contrib.username,
+                project_label='project',
+                project=self.project.title,
+            ),
+            mail.outbox[0].subject,
+        )
+
+    def test_post_owner(self):
+        """Test POST with owner role (should fail)"""
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+        url = reverse(
+            'projectroles:role_delete_own',
+            kwargs={'roleassignment': self.owner_as.sodar_uuid},
+        )
+        with self.login(self.user):
+            response = self.client.post(url)
+            self.assertRedirects(response, reverse('home'))
+        self.assertEqual(RoleAssignment.objects.count(), 3)
 
 
 class TestRoleAssignmentOwnerTransferView(

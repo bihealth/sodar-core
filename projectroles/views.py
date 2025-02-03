@@ -126,6 +126,12 @@ INVITE_USER_EXISTS_MSG = (
 ROLE_CREATE_MSG = 'Membership granted with the role of "{role}".'
 ROLE_UPDATE_MSG = 'Member role changed to "{role}".'
 ROLE_DELETE_MSG = 'Your membership in this {project_type} has been removed.'
+ROLE_LEAVE_MSG = 'Member {user_name} left the {project_type}.'
+ROLE_LEAVE_INHERIT_MSG = 'Role inherited from parent {category_type}'
+ROLE_LEAVE_OWNER_MSG = 'Owner role must be transferred to another user'
+ROLE_LEAVE_REMOTE_MSG = (
+    '{project_type} is remote, role must be changed on source site'
+)
 ROLE_FINDER_INFO = (
     'User can see nested {categories} and {projects}, but can not access them '
     'without having a role explicitly assigned.'
@@ -1906,6 +1912,7 @@ class ProjectRoleView(
 
     def get_context_data(self, *args, **kwargs):
         project = self.get_project()
+        project_remote = project.is_remote()
         context = super().get_context_data(*args, **kwargs)
         context['roles'] = sorted(
             project.get_roles(), key=lambda x: [x.role.rank, x.user.username]
@@ -1924,6 +1931,28 @@ class ProjectRoleView(
             categories=get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
             projects=get_display_name(PROJECT_TYPE_PROJECT, plural=True),
         )
+        if self.request.user.is_authenticated:
+            own_local_as = RoleAssignment.objects.filter(
+                project=project, user=self.request.user
+            ).first()
+            context['own_local_as'] = own_local_as
+            context['project_leave_access'] = (
+                own_local_as is not None
+                and own_local_as.role.rank > ROLE_RANKING[PROJECT_ROLE_OWNER]
+                and not project_remote
+            )
+            leave_msg = ''
+            if not own_local_as:
+                leave_msg = ROLE_LEAVE_INHERIT_MSG.format(
+                    category_type=get_display_name(PROJECT_TYPE_CATEGORY)
+                )
+            elif own_local_as.role.rank == ROLE_RANKING[PROJECT_ROLE_OWNER]:
+                leave_msg = ROLE_LEAVE_OWNER_MSG
+            elif project_remote:
+                leave_msg = ROLE_LEAVE_REMOTE_MSG.format(
+                    project_type=get_display_name(project.type, title=True)
+                )
+            context['project_leave_msg'] = leave_msg
         return context
 
 
@@ -2082,10 +2111,10 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
-    @transaction.atomic
-    def _update_app_alerts(self, app_alerts, project, user, inh_as):
+    @classmethod
+    def _add_user_alert(cls, app_alerts, project, user, inh_as=None):
         """
-        Update app alerts for user on role assignment deletion. Creates a new
+        Create app alert for user on role assignment deletion. Creates a new
         alert as appropriate and dismisses alerts in projects the user can no
         longer access.
 
@@ -2102,22 +2131,6 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             message = ROLE_DELETE_MSG.format(
                 project_type=get_display_name(project.type)
             )
-            # Dismiss existing alerts
-            AppAlert = app_alerts.get_model()
-            dis_projects = [project]
-            if project.type == PROJECT_TYPE_CATEGORY:
-                for c in project.get_children(flat=True):
-                    c_role_as = RoleAssignment.objects.filter(
-                        project=c, user=user
-                    ).first()
-                    if not c.public_guest_access and not c_role_as:
-                        dis_projects.append(c)
-            for a in AppAlert.objects.filter(
-                user=user, project__in=dis_projects, active=True
-            ):
-                a.active = False
-                a.save()
-
         app_alerts.add_alert(
             app_name=APP_NAME,
             alert_name='role_{}'.format('update' if inh_as else 'delete'),
@@ -2125,6 +2138,60 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             message=message,
             project=project,
         )
+
+    @classmethod
+    def _add_leave_alerts(cls, app_alerts, project, user):
+        """
+        Send alerts to project owners and delegates about user leaving.
+
+        :param app_alerts: AppAlertAPI object
+        :param project: Project object
+        :param user: SODARUser object
+        """
+        recipients = [
+            a.user
+            for a in project.get_roles(
+                max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+            )
+            if a.user != user
+        ]
+        for r in recipients:
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='role_delete_own',
+                user=r,
+                message=ROLE_LEAVE_MSG.format(
+                    user_name=user.username,
+                    project_type=get_display_name(project.type),
+                ),
+                project=project,
+            )
+
+    @classmethod
+    @transaction.atomic
+    def _dismiss_user_alerts(cls, app_alerts, project, user):
+        """
+        Dismiss user alerts in project and children without local role.
+
+        :param app_alerts: AppAlertAPI object
+        :param project: Project object
+        :param user: SODARUser object
+        """
+        AppAlert = app_alerts.get_model()
+        dis_projects = [project]
+        if project.type == PROJECT_TYPE_CATEGORY:
+            for c in project.get_children(flat=True):
+                c_role_as = RoleAssignment.objects.filter(
+                    project=c, user=user
+                ).first()
+                # TODO: Fix handling of children (see #1556)
+                if not c.public_guest_access and not c_role_as:
+                    dis_projects.append(c)
+        for a in AppAlert.objects.filter(
+            user=user, project__in=dis_projects, active=True
+        ):
+            a.active = False
+            a.save()
 
     def delete_assignment(self, role_as, request=None, notify=True):
         """
@@ -2177,15 +2244,21 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
 
         if tl_event:
             tl_event.set_status(timeline.TL_STATUS_OK)
-        if notify:
-            inh_as = project.get_role(user, inherited_only=True)
-            if app_alerts:
-                self._update_app_alerts(app_alerts, project, user, inh_as)
-            if (
-                SEND_EMAIL
-                and request
-                and app_settings.get(APP_NAME, 'notify_email_role', user=user)
-            ):
+        if not notify:
+            return role_as
+
+        inh_as = project.get_role(user, inherited_only=True)
+        if app_alerts:
+            if request and request.user == user:
+                self._add_leave_alerts(app_alerts, project, user)
+            else:
+                self._add_user_alert(app_alerts, project, user, inh_as)
+            if not inh_as:
+                self._dismiss_user_alerts(app_alerts, project, user)
+        if SEND_EMAIL and request:
+            if request and request.user == user:
+                email.send_project_leave_mail(project, user, request)
+            elif app_settings.get(APP_NAME, 'notify_email_role', user=user):
                 if inh_as:
                     email.send_role_change_mail(
                         'update', project, user, inh_as.role, request
@@ -2365,6 +2438,76 @@ class RoleAssignmentDeleteView(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
             )
         )
+
+
+class RoleAssignmentOwnDeleteView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectContextMixin,
+    RoleAssignmentDeleteMixin,
+    DeleteView,
+):
+    """RoleAssignment deletion view for leaving project"""
+
+    model = RoleAssignment
+    # Perm overridden in has_permission()
+    permission_required = 'projectroles.view_project'
+    slug_url_kwarg = 'roleassignment'
+    slug_field = 'sodar_uuid'
+    template_name = 'projectroles/roleassignment_confirm_delete_own.html'
+
+    def has_permission(self):
+        """
+        Override has_permission() for one time check for view perms.
+
+        NOTE: Single use case so we're not writing a common rules perm
+        """
+        role_as = self.get_object()
+        user = self.request.user
+        if (
+            app_settings.get('projectroles', 'site_read_only')
+            or role_as.user != user
+            or role_as.role.rank < ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+        ):
+            return False
+        return True
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        role_as = self.get_object()
+        user = role_as.user
+        children = role_as.project.get_children(flat=True)
+        local_child_projects = [
+            a.project
+            for a in RoleAssignment.objects.filter(
+                user=user, project__in=children
+            )
+        ]
+        context['inh_child_projects'] = [
+            p for p in children if p not in local_child_projects
+        ]
+        return context
+
+    def post(self, *args, **kwargs):
+        role_as = self.get_object()
+        project = role_as.project
+        try:
+            self.object = self.delete_assignment(
+                role_as=role_as, request=self.request
+            )
+            messages.success(
+                self.request, 'Successfully left {}.'.format(project.title)
+            )
+            return redirect(reverse('home'))
+        except Exception as ex:
+            messages.error(
+                self.request, 'Failed to leave {}: {}'.format(project.title, ex)
+            )
+            return redirect(
+                reverse(
+                    'projectroles:roles', kwargs={'project': project.sodar_uuid}
+                )
+            )
 
 
 class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):

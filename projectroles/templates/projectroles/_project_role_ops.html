@@ -1,44 +1,42 @@
-<div class="ml-auto">
-  <button class="btn btn-primary dropdown-toggle sodar-pr-role-ops-btn"
-          id="sodar-pr-role-ops-btn"
-          type="button" data-toggle="dropdown"
-          aria-haspopup="true" aria-expanded="false"
-          {% if project.is_remote %}disabled="disabled"{% endif %}>
-    Member Operations
-  </button>
-  <div class="dropdown-menu dropdown-menu-right"
-       id="sodar-pr-role-ops-dropdown">
-    {% if role_perms.can_update_members %}
-      <a class="dropdown-item"
-         href="{% url 'projectroles:role_create' project=project.sodar_uuid %}"
-         title="Add Member"
-         id="sodar-pr-role-ops-create">
-        <i class="iconify" data-icon="mdi:account-plus"></i> Add Member
-      </a>
-    {% endif %}
-    {% if role_perms.can_invite %}
-      <a class="dropdown-item"
-         href="{% url 'projectroles:invite_create' project=project.sodar_uuid %}"
-         title="Send Invite"
-         id="sodar-pr-role-ops-invite">
-        <i class="iconify" data-icon="mdi:send"></i> Send Invite
-      </a>
-    {% endif %}
-    {% if role_perms.can_update_members and request.resolver_match.url_name != 'project_roles' %}
-      <a class="dropdown-item"
-         href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
-         title="View Members"
-         id="sodar-pr-role-ops-roles">
-        <i class="iconify" data-icon="mdi:account-multiple"></i> View Members
-      </a>
-    {% endif %}
-    {% if role_perms.can_invite and request.resolver_match.url_name != 'role_invites' %}
-      <a class="dropdown-item"
-         href="{% url 'projectroles:invites' project=project.sodar_uuid %}"
-         title="View Invites"
-         id="sodar-pr-role-ops-invites">
-       <i class="iconify" data-icon="mdi:email"></i> View Invites
-      </a>
-    {% endif %}
-  </div>
+<button class="btn btn-primary dropdown-toggle sodar-pr-role-ops-btn"
+        id="sodar-pr-role-ops-btn"
+        type="button" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false"
+        {% if project.is_remote %}disabled="disabled"{% endif %}>
+  Member Operations
+</button>
+<div class="dropdown-menu dropdown-menu-right"
+     id="sodar-pr-role-ops-dropdown">
+  {% if role_perms.can_update_members %}
+    <a class="dropdown-item"
+       href="{% url 'projectroles:role_create' project=project.sodar_uuid %}"
+       title="Add Member"
+       id="sodar-pr-role-ops-create">
+      <i class="iconify" data-icon="mdi:account-plus"></i> Add Member
+    </a>
+  {% endif %}
+  {% if role_perms.can_invite %}
+    <a class="dropdown-item"
+       href="{% url 'projectroles:invite_create' project=project.sodar_uuid %}"
+       title="Send Invite"
+       id="sodar-pr-role-ops-invite">
+      <i class="iconify" data-icon="mdi:send"></i> Send Invite
+    </a>
+  {% endif %}
+  {% if role_perms.can_update_members and request.resolver_match.url_name != 'project_roles' %}
+    <a class="dropdown-item"
+       href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
+       title="View Members"
+       id="sodar-pr-role-ops-roles">
+      <i class="iconify" data-icon="mdi:account-multiple"></i> View Members
+    </a>
+  {% endif %}
+  {% if role_perms.can_invite and request.resolver_match.url_name != 'role_invites' %}
+    <a class="dropdown-item"
+       href="{% url 'projectroles:invites' project=project.sodar_uuid %}"
+       title="View Invites"
+       id="sodar-pr-role-ops-invites">
+     <i class="iconify" data-icon="mdi:email"></i> View Invites
+    </a>
+  {% endif %}
 </div>

@@ -79,6 +79,11 @@ urls_ui = [
         name='role_delete',
     ),
     path(
+        route='members/delete/own/<uuid:roleassignment>',
+        view=views.RoleAssignmentOwnDeleteView.as_view(),
+        name='role_delete_own',
+    ),
+    path(
         route='members/owner/transfer/<uuid:project>',
         view=views.RoleAssignmentOwnerTransferView.as_view(),
         name='role_owner_transfer',

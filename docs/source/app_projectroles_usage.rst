@@ -319,9 +319,9 @@ category (owner or delegate) or superuser status.
     Project member list view
 
 All members of categories automatically inherit identical access rights to
-subcategories and projects under those categories, starting in SODAR Core
-v0.13. Inherited member roles can be promoted to a higher local role, but
-demoting to a lesser role for child categories or projects is not allowed.
+subcategories and projects under those categories. Inherited member roles can be
+promoted to a higher local role, but demoting to a lesser role for child
+categories or projects is not allowed.
 
 For inherited members, the member list displays a link to the category where
 the inheritance is derived from. Inherited members can not be removed or edited
@@ -368,6 +368,22 @@ Invites expire after a certain time and can be reissued or revoked on the
 
     Inviting a user is prohibited if they already have an active invite in a
     parent category of the current category or project.
+
+Leaving a Project
+-----------------
+
+A user may leave a category or project by clicking the
+:guilabel:`Leave Category` or :guilabel:`Leave Project` button in the role list
+view. Leaving a category will also remove the user's access to child categories
+and projects, except for cases where another role has specifically been assigned
+for them in children.
+
+This operation can not be undone. To regain access, an owner or a delegate must
+re-add the user to the category or project.
+
+Owners are not able to directly leave a project. Instead, the owner role must be
+transferred to another user. To do this, the user must select
+:guilabel:`Transfer Ownership` in their role dropdown.
 
 Batch Member Modifications
 --------------------------
