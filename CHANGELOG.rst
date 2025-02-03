@@ -46,6 +46,7 @@ Changed
     - Replace ``awesome-slugify`` dependency with ``python-slugify`` (#1531, #1547)
     - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)
     - Declare app setting definitions as ``PluginAppSettingDef`` objects (#1456)
+    - Unify header layout in delete templates (#1548)
 - **Filesfolders**
     - Upgrade filesfolders REST API version to 2.0 (#1553)
     - Remove compability with filesfolders REST API <2.0 (#1553)
