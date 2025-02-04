@@ -75,6 +75,7 @@ Changed
     - Replace REST API ``SODARUserSerializer`` fields with UUID ``SlugRelatedField`` (#1553)
 - **Tokens**
     - Update UI for site read-only mode (#24)
+    - Rename ``ProjectAppPlugin`` to ``SiteAppPlugin`` (#1337)
 - **Userprofile**
     - Update UI for site read-only mode (#24)
     - Rename ``UserAppSettingsForm`` and ``UserAppSettingsView`` (#1544)

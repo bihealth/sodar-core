@@ -6,7 +6,7 @@ from projectroles.plugins import SiteAppPluginPoint
 from tokens.urls import urlpatterns
 
 
-class ProjectAppPlugin(SiteAppPluginPoint):
+class SiteAppPlugin(SiteAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
     #: Name (used as plugin ID)
