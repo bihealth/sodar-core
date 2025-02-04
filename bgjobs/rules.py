@@ -68,5 +68,5 @@ rules.add_perm(
     & pr_rules.is_site_writable,
 )
 
-# Allow viewing site-global background jobs (not project-specific).
+# Allow viewing site-wide background jobs (not project-specific)
 rules.add_perm('bgjobs.site_view_data', rules.is_superuser)
