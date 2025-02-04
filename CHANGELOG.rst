@@ -80,6 +80,7 @@ Changed
     - Update UI for site read-only mode (#24)
     - Rename ``UserAppSettingsForm`` and ``UserAppSettingsView`` (#1544)
     - Refactor ``UserAppSettingsForm`` to use ``SODARAppSettingFormMixin`` (#1545)
+    - Add ``enable_project_uuid_copy`` setting description (#1419)
 
 Fixed
 -----

@@ -41,6 +41,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
             scope=APP_SETTING_SCOPE_USER,
             type=APP_SETTING_TYPE_BOOLEAN,
             label='Display project UUID copying link',
+            description='Display link in project header to copy project UUID '
+            'into the clipboard.',
             default=False,
         )
     ]
