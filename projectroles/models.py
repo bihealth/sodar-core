@@ -1549,7 +1549,7 @@ class SODARUserAdditionalEmail(models.Model):
         max_length=255,
         unique=True,
         blank=False,
-        null=False,
+        null=True,
         help_text='Secret token for email verification',
     )
 

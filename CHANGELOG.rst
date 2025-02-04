@@ -65,6 +65,7 @@ Changed
     - Upgrade projectroles REST API version to v1.1 (#836)
     - Allow empty ``old_owner_role`` in ``RoleAssignmentOwnerTransferAPIView`` (#836)
     - Prevent project invite creation with active invite in parent category (#1403)
+    - Allow ``null`` value for ``SODARUserAdditionalEmail.secret`` (#1477)
 - **Sodarcache**
     - Upgrade sodarcache REST API version to 2.0 (#1553)
     - Remove compability with sodarcache REST API <2.0 (#1553)
