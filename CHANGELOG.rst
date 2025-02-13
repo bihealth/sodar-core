@@ -48,6 +48,7 @@ Changed
     - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)
     - Declare app setting definitions as ``PluginAppSettingDef`` objects (#1456)
     - Unify header layout in delete templates (#1548)
+    - Upgrade to ``coverallsapp/github-action@v2`` in CI (#1566)
 - **Bgjobs**
     - Rename ``GlobalBackgroundJobView`` to ``SiteBackgroundJobView`` (#1333)
     - Unify naming in site view template to follow conventions (#1333)
