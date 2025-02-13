@@ -738,17 +738,18 @@ class PluginAppSettingDef:
         :param setting_options: Setting options
         :raise: ValueError if default is not found in options
         """
+        opts = [o[0] if isinstance(o, tuple) else o for o in setting_options]
         if (
             setting_options is not None
             and not callable(setting_options)
             and setting_default is not None
             and not callable(setting_default)
-            and setting_default not in setting_options
+            and setting_default not in opts
         ):
             raise ValueError(
                 'Default value "{}" not found in options ({})'.format(
                     setting_default,
-                    ', '.join([str(o) for o in setting_options]),
+                    ', '.join([str(o) for o in opts]),
                 )
             )
 

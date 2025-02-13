@@ -92,6 +92,17 @@ class TestPluginAppSettingDef(TestCase):
         }
         self.assertEqual(s_def.__dict__, expected)
 
+    def test_init_option_default_tuple(self):
+        """Test init with option label tuples and default value"""
+        s_def = PluginAppSettingDef(
+            name=DEF_NAME,
+            scope=APP_SETTING_SCOPE_PROJECT,
+            type=APP_SETTING_TYPE_STRING,
+            default='string2',
+            options=['string', ('string2', 'string2 label')],
+        )
+        self.assertIsNotNone(s_def)
+
     def test_init_invalid_scope(self):
         """Test init with invalid scope"""
         with self.assertRaises(ValueError):

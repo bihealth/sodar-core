@@ -47,8 +47,7 @@ APP_SETTING_SCOPE_ARGS = {
     APP_SETTING_SCOPE_PROJECT_USER: {'project': True, 'user': True},
     APP_SETTING_SCOPE_SITE: {'project': False, 'user': False},
 }
-# TODO: Add label for -1 once validation is fixed (see #1564, #1565)
-PROJECT_LIST_PAGE_OPTIONS = [10, 25, 50, 100, -1]
+PROJECT_LIST_PAGE_OPTIONS = [10, 25, 50, 100, (-1, 'No pagination')]
 DELETE_SCOPE_ERR_MSG = 'Argument "{arg}" must be set for {scope} scope setting'
 GLOBAL_PROJECT_ERR_MSG = (
     'Overriding global settings for remote projects not allowed'
@@ -202,7 +201,7 @@ class AppSettingAPI:
         Ensure setting_value is present in setting_options.
 
         :param setting_value: String
-        :param setting_options: List of options (String or Integers)
+        :param setting_options: List of options
         :param project: Project object
         :param user: User object
         :raise: ValueError if type is not recognized
@@ -219,16 +218,16 @@ class AppSettingAPI:
                         ', '.join(map(str, valid_options)),
                     )
                 )
-        elif (
-            setting_options
-            and not callable(setting_options)
-            and setting_value not in setting_options
-        ):
-            raise ValueError(
-                'Choice "{}" not found in options ({})'.format(
-                    setting_value, ', '.join(map(str, setting_options))
+        elif setting_options:
+            opts = [
+                o[0] if isinstance(o, tuple) else o for o in setting_options
+            ]
+            if setting_value not in opts:
+                raise ValueError(
+                    'Choice "{}" not found in options ({})'.format(
+                        setting_value, ', '.join(map(str, setting_options))
+                    )
                 )
-            )
 
     @classmethod
     def _get_app_plugin(cls, plugin_name):

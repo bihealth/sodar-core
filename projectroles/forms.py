@@ -153,16 +153,19 @@ class SODARAppSettingFormMixin:
                 **setting_kwargs,
             )
         elif s_def.options:
+            choices = []
+            for o in s_def.options:
+                if isinstance(o, tuple):
+                    val = o[0]
+                    legend = o[1]
+                else:
+                    val = o
+                    legend = o
+                if s_def.type == APP_SETTING_TYPE_INTEGER:
+                    val = int(val)
+                choices.append((val, legend))
             self.fields[s_field] = forms.ChoiceField(
-                choices=[
-                    (
-                        (int(option), int(option))
-                        if s_def.type == APP_SETTING_TYPE_INTEGER
-                        else (option, option)
-                    )
-                    for option in s_def.options
-                ],
-                **setting_kwargs,
+                choices=choices, **setting_kwargs
             )
         # Other types
         elif s_def.type == APP_SETTING_TYPE_STRING:

@@ -95,6 +95,7 @@ Fixed
     - Missing fields in ``ProjectRetrieveAPIView`` docstring (#1551)
     - Role delete alert dismissal fails with nested inherited roles (#1556)
     - Incorrect initial "N/A" access status for categories in project list (#1005)
+    - App settings option validation as tuples (#1564)
 
 Removed
 -------
