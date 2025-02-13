@@ -186,6 +186,14 @@ APP_SETTINGS_TEST = [
         user_modifiable=True,
         global_edit=False,
     ),
+    PluginAppSettingDef(
+        name='project_list_pagination',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_INTEGER,
+        default=10,
+        user_modifiable=True,
+        global_edit=True,
+    ),
 ]
 
 EX_PROJECT_UI_SETTINGS = [
@@ -221,26 +229,40 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
     def setUp(self):
         super().setUp()
+        self.user_owner = self.make_user('user_owner')
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner, self.role_owner
         )
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self.make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
         self.url = reverse('home')
 
-    def test_get(self):
-        """Test HomeView GET"""
-        with self.login(self.user):
+    def test_get_owner(self):
+        """Test HomeView GET as owner"""
+        with self.login(self.user_owner):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         custom_cols = response.context['project_custom_cols']
         self.assertEqual(len(custom_cols), 2)
         self.assertEqual(custom_cols[0]['column_id'], 'links')
         self.assertEqual(response.context['project_col_count'], 4)
+
+    def test_get_superuser(self):
+        """Test GET as superuser"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        custom_cols = response.context['project_custom_cols']
+        self.assertEqual(len(custom_cols), 2)
+        # No role column for superuser
+        self.assertEqual(response.context['project_col_count'], 3)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):

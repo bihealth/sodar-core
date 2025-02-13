@@ -47,6 +47,8 @@ APP_SETTING_SCOPE_ARGS = {
     APP_SETTING_SCOPE_PROJECT_USER: {'project': True, 'user': True},
     APP_SETTING_SCOPE_SITE: {'project': False, 'user': False},
 }
+# TODO: Add label for -1 once validation is fixed (see #1564, #1565)
+PROJECT_LIST_PAGE_OPTIONS = [10, 25, 50, 100, -1]
 DELETE_SCOPE_ERR_MSG = 'Argument "{arg}" must be set for {scope} scope setting'
 GLOBAL_PROJECT_ERR_MSG = (
     'Overriding global settings for remote projects not allowed'
@@ -142,6 +144,28 @@ PROJECTROLES_APP_SETTINGS = [
         'modification.',
         user_modifiable=True,
         global_edit=False,
+    ),
+    PluginAppSettingDef(
+        name='project_list_highlight',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Project list title highlight',
+        description='Highlight project title in paths displayed in the project '
+        'list.',
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
+        name='project_list_pagination',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_INTEGER,
+        default=10,
+        label='Project list page size',
+        description='Amount of projects per page in the project list.',
+        options=PROJECT_LIST_PAGE_OPTIONS,
+        user_modifiable=True,
+        global_edit=True,
     ),
 ]
 

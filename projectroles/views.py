@@ -94,7 +94,6 @@ PROJECT_ACTION_UPDATE = SODAR_CONSTANTS['PROJECT_ACTION_UPDATE']
 # Local constants
 APP_NAME = 'projectroles'
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
-PROJECT_COLUMN_COUNT = 2  # Default columns
 LOGIN_MSG = 'Please log in.'
 NO_AUTH_MSG = 'User not authorized for requested action.'
 NO_AUTH_LOGIN_MSG = 'Authentication required, please log in.'
@@ -570,8 +569,12 @@ class ProjectListContextMixin:
         context['project_custom_cols'] = self._get_custom_cols(
             self.request.user
         )
-        context['project_col_count'] = PROJECT_COLUMN_COUNT + len(
+        base_col_count = 1 if self.request.user.is_superuser else 2
+        context['project_col_count'] = base_col_count + len(
             context['project_custom_cols']
+        )
+        context['page_options_default'] = app_settings.get(
+            APP_NAME, 'project_list_pagination', user=self.request.user
         )
         return context
 

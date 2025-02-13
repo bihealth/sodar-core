@@ -24,9 +24,11 @@ Release Highlights
 - Add app setting type constants
 - Add app setting definition as objects
 - Add API view to retrieve user details by user UUID
+- Update project list for flat list display
 - Update owner transfer form to allow setting no role for old owner
 - Update app settings API
 - Update invite creation to fail if active invite exists for user in parent category
+- Optimize project list queries
 - Upgrade filesfolders REST API version to v2.0
 - Upgrade projectroles REST API version to v1.1
 - Upgrade sodarcache REST API version to v2.0

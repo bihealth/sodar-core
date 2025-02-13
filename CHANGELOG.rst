@@ -36,6 +36,7 @@ Added
     - ``UserRetrieveAPIView`` REST API view (#1555)
     - ``active`` arg in ``ProjectInviteMixin.make_invite()`` (#1403)
     - Ability for users to leave project (#918)
+    - ``project_list_highlight`` and ``project_list_pagination`` app settings (#1005)
 
 Changed
 -------
@@ -66,6 +67,8 @@ Changed
     - Allow empty ``old_owner_role`` in ``RoleAssignmentOwnerTransferAPIView`` (#836)
     - Prevent project invite creation with active invite in parent category (#1403)
     - Allow ``null`` value for ``SODARUserAdditionalEmail.secret`` (#1477)
+    - Display project list as flat list (#1005)
+    - Optimize project list queries (#1005)
 - **Sodarcache**
     - Upgrade sodarcache REST API version to 2.0 (#1553)
     - Remove compability with sodarcache REST API <2.0 (#1553)
@@ -90,6 +93,7 @@ Fixed
     - Invalid ``app_permission`` in ``RemoteSiteAppPlugin`` (#1543)
     - Missing fields in ``ProjectRetrieveAPIView`` docstring (#1551)
     - Role delete alert dismissal fails with nested inherited roles (#1556)
+    - Incorrect initial "N/A" access status for categories in project list (#1005)
 
 Removed
 -------

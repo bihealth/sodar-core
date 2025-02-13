@@ -34,6 +34,7 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
+APP_NAME = 'projectroles'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
@@ -64,14 +65,13 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.url = reverse('projectroles:ajax_project_list')
 
     def test_get(self):
-        """Test project list retrieval"""
+        """Test TestProjectListAjaxView GET"""
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         expected = {
             'projects': [
                 {
-                    'title': self.category.title,
                     'type': self.category.type,
                     'full_title': self.category.full_title,
                     'public_guest_access': self.category.public_guest_access,
@@ -79,13 +79,11 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                     'remote': False,
                     'revoked': False,
                     'starred': False,
-                    'depth': 0,
                     'access': True,
                     'finder_url': None,
                     'uuid': str(self.category.sodar_uuid),
                 },
                 {
-                    'title': self.project.title,
                     'type': self.project.type,
                     'full_title': self.project.full_title,
                     'public_guest_access': self.project.public_guest_access,
@@ -93,7 +91,6 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                     'remote': False,
                     'revoked': False,
                     'starred': False,
-                    'depth': 1,
                     'access': True,
                     'finder_url': None,
                     'uuid': str(self.project.sodar_uuid),
@@ -101,12 +98,12 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             ],
             'parent_depth': 0,
             'messages': {},
-            'user': {'superuser': True},
+            'user': {'highlight': False, 'superuser': True},
         }
         self.assertEqual(response.data, expected)
 
     def test_get_parent(self):
-        """Test project list with parent project"""
+        """Test GET with parent project"""
         with self.login(self.user):
             response = self.client.get(
                 self.url + '?parent=' + str(self.category.sodar_uuid),
@@ -115,7 +112,6 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         expected = {
             'projects': [
                 {
-                    'title': self.project.title,
                     'type': self.project.type,
                     'full_title': self.project.title,  # Not full_title
                     'public_guest_access': self.project.public_guest_access,
@@ -123,7 +119,6 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                     'remote': False,
                     'revoked': False,
                     'starred': False,
-                    'depth': 1,
                     'access': True,
                     'finder_url': None,
                     'uuid': str(self.project.sodar_uuid),
@@ -131,9 +126,19 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             ],
             'parent_depth': 1,
             'messages': {},
-            'user': {'superuser': True},
+            'user': {'highlight': False, 'superuser': True},
         }
         self.assertEqual(response.data, expected)
+
+    def test_get_highlight(self):
+        """Test GET with highlight app setting enabled"""
+        app_settings.set(
+            'projectroles', 'project_list_highlight', True, user=self.user
+        )
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['user']['highlight'], True)
 
     def test_get_inherited_owner(self):
         """Test project list for inherited owner"""
@@ -174,10 +179,10 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.assertEqual(response.status_code, 200)
         res_data = response.data['projects']
         self.assertEqual(len(res_data), 2)
-        self.assertEqual(res_data[0]['title'], self.category.title)
+        self.assertEqual(res_data[0]['full_title'], self.category.full_title)
         self.assertEqual(res_data[0]['access'], True)
         self.assertEqual(res_data[0]['finder_url'], None)
-        self.assertEqual(res_data[1]['title'], self.project.title)
+        self.assertEqual(res_data[1]['full_title'], self.project.full_title)
         self.assertEqual(res_data[1]['access'], False)
         self.assertEqual(
             res_data[1]['finder_url'],
@@ -198,7 +203,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.assertEqual(response.status_code, 200)
         res_data = response.data['projects']
         self.assertEqual(len(res_data), 1)
-        self.assertEqual(res_data[0]['title'], self.project.title)
+        self.assertEqual(res_data[0]['full_title'], self.project.title)
         self.assertEqual(res_data[0]['access'], False)
 
     def test_get_finder_nested(self):
@@ -218,11 +223,11 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.assertEqual(response.status_code, 200)
         res_data = response.data['projects']
         self.assertEqual(len(res_data), 3)
-        self.assertEqual(res_data[0]['title'], self.category.title)
+        self.assertEqual(res_data[0]['full_title'], self.category.full_title)
         self.assertEqual(res_data[0]['access'], True)
-        self.assertEqual(res_data[1]['title'], sub_cat.title)
+        self.assertEqual(res_data[1]['full_title'], sub_cat.full_title)
         self.assertEqual(res_data[1]['access'], True)
-        self.assertEqual(res_data[2]['title'], sub_project.title)
+        self.assertEqual(res_data[2]['full_title'], sub_project.full_title)
         self.assertEqual(res_data[2]['access'], False)
 
     def test_get_finder_other_branch(self):
@@ -244,14 +249,43 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.assertEqual(response.status_code, 200)
         res_data = response.data['projects']
         self.assertEqual(len(res_data), 4)
-        self.assertEqual(res_data[0]['title'], self.category.title)
+        self.assertEqual(res_data[0]['full_title'], self.category.full_title)
         self.assertEqual(res_data[0]['access'], True)
-        self.assertEqual(res_data[1]['title'], self.project.title)
+        self.assertEqual(res_data[1]['full_title'], self.project.full_title)
         self.assertEqual(res_data[1]['access'], True)
-        self.assertEqual(res_data[2]['title'], branch_cat.title)
+        self.assertEqual(res_data[2]['full_title'], branch_cat.full_title)
         self.assertEqual(res_data[2]['access'], True)
-        self.assertEqual(res_data[3]['title'], branch_project.title)
+        self.assertEqual(res_data[3]['full_title'], branch_project.full_title)
         self.assertEqual(res_data[3]['access'], False)
+
+    def test_get_starred(self):
+        """Test GET with starred project"""
+        app_settings.set(
+            APP_NAME, 'project_star', True, project=self.project, user=self.user
+        )
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['projects'][1]['starred'], True)
+
+    def test_get_archive(self):
+        """Test GET with archived project"""
+        self.project.set_archive(True)
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['projects'][1]['archive'], True)
+
+    def test_get_public_guest_access(self):
+        """Test GET with public guest access"""
+        self.project.public_guest_access = True
+        self.project.save()
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data['projects'][1]['public_guest_access'], True
+        )
 
 
 class TestProjectListColumnAjaxView(

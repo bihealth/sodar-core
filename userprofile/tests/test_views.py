@@ -208,6 +208,8 @@ class TestUserAppSettingsView(AppSettingMixin, UserViewTestBase):
             'settings.example_project_app.user_callable_setting_options': str(
                 self.user.sodar_uuid
             ),
+            'settings.projectroles.project_list_highlight': False,
+            'settings.projectroles.project_list_pagination': 10,
         }
         with self.login(self.user):
             response = self.client.post(
@@ -252,6 +254,8 @@ class TestUserAppSettingsView(AppSettingMixin, UserViewTestBase):
             'settings.example_project_app.user_callable_setting_options': str(
                 self.user.sodar_uuid
             ),
+            'settings.projectroles.project_list_highlight': False,
+            'settings.projectroles.project_list_pagination': 10,
         }
         with self.login(self.user):
             response = self.client.post(

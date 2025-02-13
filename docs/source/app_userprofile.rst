@@ -92,6 +92,10 @@ Receive Email for Project Updates
 Receive Email for Project Membership Updates
     Receive email notifications for project or category membership updates and
     invitation activity.
+Project list title highlight
+    Highlight project title in paths displayed in the project list.
+Project list page size
+    Amount of projects per page in the project list.
 
 In the development setup, the SODAR Core example site apps also provide
 additional settings for demonstrating settings features.

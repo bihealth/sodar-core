@@ -19,6 +19,10 @@ function updateCustomColumns (uuids) {
             data: JSON.stringify({'projects': uuids.slice(start, end)})
         })
     };
+
+    // Get datatables table and API
+    var dt = $('#sodar-pr-project-list-table').DataTable();
+    var dtApi = new $.fn.dataTable.Api('#sodar-pr-project-list-table');
     var start = 0;
     var interval = 25;
     var values = [];
@@ -33,12 +37,20 @@ function updateCustomColumns (uuids) {
             var value = values.shift();
             return getAjaxRequest(value[0], value[1]).done(function (data) {
                 $.each(data, function (uuid, projectData) {
-                    var item = $('.sodar-pr-project-list-item[data-uuid="' + uuid + '"]');
-                    var i = 0;
-                    item.find('.sodar-pr-project-list-custom').each(function () {
-                        $(this).html(projectData[colIds[i].app][colIds[i].id].html);
-                        i += 1;
-                    });
+                    var dtRow = dt.row('#sodar-pr-project-list-item-' + uuid);
+                    var rowIdx = dtRow.index();
+                    var cIdx = 0;
+                    // NOTE: We start at 1 to skip project title cell
+                    for (var i = 1; i < dtRow.data().length; i++) {
+                        var node = $(dtApi.cell(rowIdx, i).node());
+                        var nodeClass = node.attr('class');
+                        if (nodeClass &&
+                                nodeClass.includes('sodar-pr-project-list-custom')) {
+                            dtApi.cell(rowIdx, i).data(
+                                projectData[colIds[cIdx].app][colIds[cIdx].id].html);
+                            cIdx += 1
+                        }
+                    }
                 });
             });
         });
@@ -58,6 +70,8 @@ function updateRoleColumn (uuids) {
         })
     };
 
+    var dt = $('#sodar-pr-project-list-table').DataTable();
+    var dtApi = new $.fn.dataTable.Api('#sodar-pr-project-list-table');
     var start = 0;
     var interval = 25;
     var values = [];
@@ -71,26 +85,23 @@ function updateRoleColumn (uuids) {
             var value = values.shift();
             return getAjaxRequest(value[0], value[1]).done(function (data) {
                 $.each(data, function (uuid, colData) {
-                    var item = $('.sodar-pr-project-list-item[data-uuid="' + uuid + '"]');
-                    var roleCol = item.find('.sodar-pr-project-list-role');
-                    roleCol.attr('class', colData['class'])
-                        .text(colData['name']);
+                    var dtRow = dt.row('#sodar-pr-project-list-item-' + uuid);
+                    var rowIdx = dtRow.index();
+                    var colIdx = dtRow.data().length - 1;
+                    var node = $(dtApi.cell(rowIdx, colIdx).node());
+                    var nodeClass = node.attr('class');
+                    if (nodeClass &&
+                            nodeClass.includes('sodar-pr-project-list-role')) {
+                        dtApi.cell(rowIdx, colIdx).data(colData.name)
+                        if (colData.class) {
+                            node.attr('class', nodeClass + ' ' + colData.class);
+                        }
+                    }
                 });
             });
         });
         start += interval;
     }
-}
-
-// Function for displaying message row
-function showMessageRow(message) {
-    $('#sodar-pr-project-list-message td').text(message);
-    $('#sodar-pr-project-list-message').show();
-}
-
-// Function for hiding message row
-function hideMessageRow() {
-    $('#sodar-pr-project-list-message').hide();
 }
 
 // Project list data retrieval and updating
@@ -105,40 +116,42 @@ $(document).ready(function () {
     var allUuids = [];
     var projectUuids = [];
     var tableBody = $('#sodar-pr-project-list-table tbody');
-    tableBody.append($('<tr>')
-        .hide()
-        .attr('id', 'sodar-pr-project-list-message')
-        .append($('<td>')
-            .attr('colspan', colCount)
-            .attr('class', 'text-center text-muted font-italic')
-        )
-    );
 
     $.ajax({
         url: listUrl,
         method: 'GET',
     }).done(function (data) {
         $('#sodar-pr-project-list-loading').remove();
-
         // If there are no results, display message row
         if (data.projects.length === 0) {
-            showMessageRow(data['messages']['no_projects'])
+            // var tableBody = $('#sodar-pr-project-list-table tbody');
+            tableBody.append($('<tr>')
+                .attr('id', 'sodar-pr-project-list-message')
+                .append($('<td>')
+                    .attr('colspan', colCount)
+                    .attr('class', 'text-center text-muted font-italic')
+                    .text(data['messages']['no_projects'])
+                )
+            );
             return;
         }
 
         // Display rows
-        $('#sodar-pr-project-list-table').addClass('sodar-card-table-borderless');
         var projectCount = data['projects'].length;
         var starredCount = 0;
+        const catDelim = ' / ';
 
         for (var i = 0; i < projectCount; i++) {
             var p = data['projects'][i];
             var icon;
-            var titleClass = '';
+            var projectType;
             if (p['type'] === 'CATEGORY') {
                 icon = 'rhombus-split';
-                titleClass = 'text-underline';
-            } else icon = 'cube';
+                projectType = 'Category';
+            } else {
+                icon = 'cube';
+                projectType = 'Project';
+            }
 
             // Row
             tableBody.append($('<tr>')
@@ -147,7 +160,6 @@ $(document).ready(function () {
                     p['type'].toLowerCase())
                 .attr('id', 'sodar-pr-project-list-item-' + p['uuid'])
                 .attr('data-uuid', p['uuid'])
-                .attr('data-title', p['title'])
                 .attr('data-full-title', p['full_title'])
                 .attr('data-starred', + p['starred'])
             );
@@ -163,23 +175,32 @@ $(document).ready(function () {
                 p_href = '';
                 p_class = 'text-muted sodar-pr-project-link-disabled';
             }
+            // Highlight project title in category structure
+            var titleHtml = '';
+            if (data['user']['highlight'] &&
+                    projectType.toUpperCase() === 'PROJECT' &&
+                    p['full_title'].includes(catDelim)) {
+                var titleSplit = p['full_title'].split(catDelim);
+                var splitLen = titleSplit.length;
+                titleHtml = titleSplit.slice(0, splitLen - 1).join(catDelim);
+                titleHtml += catDelim + '<strong>' + titleSplit[splitLen - 1] +
+                    '</strong>';
+            } else titleHtml = p['full_title'];
             row.append($('<td>')
+                .attr('class', 'sodar-pr-project-list-title-td')
                 .append($('<div>')
-                .attr('class', 'sodar-overflow-container')
-                    .append($('<span>')
-                        .attr('class', 'sodar-pr-project-indent')
-                        .attr('style', 'padding-left: ' +
-                            (p['depth'] - data['parent_depth']) * 25 + 'px;')
-                    )
+                .attr('class', 'sodar-pr-project-title-container')
                     .append($('<i>')
                         .attr('class', 'iconify mr-1')
-                        .attr('data-icon', 'mdi:' + icon))
+                        .attr('data-icon', 'mdi:' + icon)
+                        .attr('title', projectType)
+                    )
                     .append($('<span>')
-                        .attr('class', 'sodar-pr-project-title ' + titleClass)
+                        .attr('class', 'sodar-pr-project-title')
                         .append($(p_elem)
                             .attr('class', p_class)
                             .attr('href', p_href)
-                            .text(p['title'])
+                            .html(titleHtml)
                         )
                     )
                 )
@@ -246,22 +267,24 @@ $(document).ready(function () {
                             'sodar-pr-project-list-custom text-' +
                             customColAlign[j - 1])
                         .append($('<i>')
-                            .attr('class', 'iconify spin text-muted')
+                            .attr('class', 'iconify spin text-muted ' +
+                                'sodar-pr-project-list-load-icon')
                             .attr('data-icon', 'mdi:loading')
                         )
                     );
                 } else row.append($('<td>'));
             }
             // Add user role column
-            if (p['type'] === 'PROJECT' && p['access']) {
+            if (!data['user']['superuser'] && p['access']) {
                 row.append($('<td>')
                     .attr('class', 'sodar-pr-project-list-role')
                     .append($('<i>')
-                        .attr('class', 'iconify spin text-muted')
+                        .attr('class', 'iconify spin text-muted ' +
+                            'sodar-pr-project-list-load-icon')
                         .attr('data-icon', 'mdi:loading')
                     )
                 );
-            } else {
+            } else if (!data['user']['superuser']) {
                 row.append($('<td>')
                     .attr('class', 'sodar-pr-project-list-role text-muted')
                     .html('N/A')
@@ -285,6 +308,63 @@ $(document).ready(function () {
             $('#sodar-pr-project-list-filter').prop('disabled', false);
         }
 
+        // Enable datatables
+        $.fn.dataTable.ext.classes.sPageButton =
+            'btn sodar-list-btn ml-1 sodar-paginate-button btn-outline-light ' +
+            'text-primary';
+        var dt = $('#sodar-pr-project-list-table').DataTable({
+            ordering: false,
+            scrollX: false,
+            paging: true,
+            pageLength: window.projectListPagination,
+            lengthChange: true,
+            scrollCollapse: true,
+            info: false,
+            language: {
+                paginate: {
+                    previous: '<i class="iconify text-primary" ' +
+                        'data-icon="mdi:arrow-left-circle"></i> Prev',
+                    next: '<i class="iconify text-primary" ' +
+                        'data-icon="mdi:arrow-right-circle"></i> Next'
+                }
+            },
+            dom: 'tp'
+        });
+        // Hide pagination if only one page
+        if (dt.page.info().pages === 1) {
+            // TODO: Disable pagination control once implemented
+            $('.dataTables_paginate').hide();
+        }
+        // Add star filter
+        $.fn.dataTable.ext.search.push(
+                function(settings, data, dataIndex, rowObj, counter) {
+            var api = new $.fn.dataTable.Api('#sodar-pr-project-list-table');
+            var filterEnabled = $('#sodar-pr-project-list-link-star')
+                .attr('data-star-enabled');
+            if (filterEnabled === '1') {
+                return $(api.row(dataIndex).node()).data('starred');
+            } else return true;
+        });
+        // Handle page length change
+        $('#sodar-pr-project-list-page-length').change(function () {
+            var dt = $(this).closest(
+                '#sodar-pr-project-list').find('table').DataTable();
+            var value = parseInt($(this).val());
+            dt.page.len(value).draw();
+            // Update user setting
+            $.ajax({
+                url: 'project/api/settings/set/user',
+                method: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    'plugin_name': 'projectroles',
+                    'setting_name': 'project_list_pagination',
+                    'value': value
+                })
+            })
+        });
+
         if (projectUuids.length > 0) {
             // Update custom columns
             updateCustomColumns(projectUuids);
@@ -293,14 +373,8 @@ $(document).ready(function () {
             // Update role column
             if (!data['user']['superuser']) {
                 updateRoleColumn(allUuids);
-            } else {
-                $('.sodar-pr-project-list-role').each(function () {
-                    $(this).attr('class', 'text-danger').text('Superuser');
-                });
             }
         }
-        // Update overflow status
-        modifyCellOverflow();
     });
 });
 
@@ -308,99 +382,29 @@ $(document).ready(function () {
 $(document).ready(function () {
     // Filter input
     $('#sodar-pr-project-list-filter').keyup(function () {
-        var v = $(this).val().toLowerCase().trim();
-        var valFound = false;
         var starBtn = $('#sodar-pr-project-list-link-star');
-        if (starBtn.attr('data-star-enabled') === '1') {
-            starBtn.attr('data-star-enabled', '0');
-            starBtn.html(
-                '<i class="iconify" data-icon="mdi:star-outline"></i> Starred');
+        if (starBtn.attr('data-star-enabled') !== '0') {
+            starBtn.attr('data-star-enabled', '0')
+                .html('<i class="iconify" data-icon="mdi:star-outline"></i> Starred');
         }
-
-        if (v.length > 2) {
-            $('#sodar-pr-project-list-filter')
-                .removeClass('text-danger').addClass('text-success');
-            $('.sodar-pr-project-list-item').each(function () {
-                var fullTitle = $(this).attr('data-full-title');
-                var titleLink = $(this).find(
-                    'td:first-child div span.sodar-pr-project-title a');
-
-                if (titleLink && fullTitle.toLowerCase().indexOf(v) !== -1) {
-                    $(this).find('.sodar-pr-project-indent').hide();
-                    // Reset content for updating the highlight
-                    titleLink.html(fullTitle);
-                    // Highlight
-                    var pattern = new RegExp("(" + v + ")", "gi");
-                    var titlePos = fullTitle.toLowerCase().indexOf(v);
-                    if (titlePos !== -1) {
-                        var titleVal = fullTitle.substring(
-                            titlePos, titlePos + v.length);
-                        titleLink.html(fullTitle.replace(
-                            pattern,
-                            '<span class="sodar-search-highlight">' +
-                                titleVal + '</span>'));
-                    }
-                    $(this).show();
-                    valFound = true;
-                    hideMessageRow();
-                } else {
-                    $(this).hide();
-                }
-            });
-            if (valFound === false) {
-                showMessageRow('Nothing found matching the current filter.');
-            } else hideMessageRow();
-        } else {
-            hideMessageRow();
-            $('.sodar-pr-project-list-item').each(function () {
-                var anchor = $(this).find('a.sodar-pr-project-link');
-                var title = $(this).attr('data-title');
-                if (anchor) anchor.text(title);
-                else $(this).find('span.sodar-pr-project-title').text(title);
-                $(this).show();
-                $(this).find('.sodar-pr-project-indent').show();
-            });
-            $('#sodar-pr-project-list-filter').addClass(
-                'text-danger').removeClass('text-success');
-            starBtn.attr('data-star-enabled', '0');
-        }
-
-        // Update overflow status
-        modifyCellOverflow();
+        var dt = $(this).closest('#sodar-pr-project-list').find('table').dataTable();
+        var v = $(this).val();
+        dt.fnFilter(v, 0); // Limit filter to title column
     });
 
     // Filter by starred
     $('#sodar-pr-project-list-link-star').click(function () {
-        hideMessageRow();
+        var dt = $('#sodar-pr-project-list-table').DataTable();
         $('#sodar-pr-project-list-filter').val('');
-
         if ($(this).attr('data-star-enabled') === '0') {
-            var starCount = 0;
-            $('.sodar-pr-project-list-item').each(function () {
-                if ($(this).attr('data-starred') === '1') {
-                  $(this).find('.sodar-pr-project-indent').hide();
-                  $(this).find('a.sodar-pr-project-link').text(
-                      $(this).attr('data-full-title'));
-                  $(this).show();
-                  starCount += 1;
-                } else $(this).hide();
-            });
+            $(this).attr('data-star-enabled', '1');
             $('#sodar-pr-project-list-link-star').html(
                 '<i class="iconify" data-icon="mdi:star"></i> Starred');
-            $(this).attr('data-star-enabled', '1');
-        } else if ($(this).attr('data-star-enabled') === '1') {
-            $('.sodar-pr-project-list-item').each(function () {
-                $(this).find('.sodar-pr-project-indent').show();
-                $(this).find('a.sodar-pr-project-link').text(
-                    $(this).attr('data-title'));
-                $(this).show();
-            });
+        } else {
+            $(this).attr('data-star-enabled', '0');
             $('#sodar-pr-project-list-link-star').html(
                 '<i class="iconify" data-icon="mdi:star-outline"></i> Starred');
-            $(this).attr('data-star-enabled', '0');
         }
-
-        // Update overflow status
-        modifyCellOverflow();
+        dt.search('').draw();
     });
 });

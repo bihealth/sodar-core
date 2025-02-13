@@ -254,7 +254,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     user=request.user,
                 )
             ]
-        full_title_idx = len(parent.full_title) + 3 if parent else 0
+        full_title_idx = (
+            len(parent.full_title) + len(CAT_DELIMITER) if parent else 0
+        )
 
         ret_projects = []
         for p in projects:
@@ -266,9 +268,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     'projectroles:roles',
                     kwargs={'project': p.parent.sodar_uuid},
                 )
-
             rp = {
-                'title': p.title,
                 'type': p.type,
                 'full_title': p.full_title[full_title_idx:],
                 'public_guest_access': p.public_guest_access,
@@ -276,7 +276,6 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 'remote': p.is_remote(),
                 'revoked': p.is_revoked(),
                 'starred': p in starred_projects,
-                'depth': p_depth,
                 'access': p_access,
                 'finder_url': p_finder_url,
                 'uuid': str(p.sodar_uuid),
@@ -286,7 +285,12 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             'projects': ret_projects,
             'parent_depth': parent.get_depth() + 1 if parent else 0,
             'messages': {},
-            'user': {'superuser': request.user.is_superuser},
+            'user': {
+                'superuser': request.user.is_superuser,
+                'highlight': app_settings.get(
+                    'projectroles', 'project_list_highlight', user=request.user
+                ),
+            },
         }
 
         if len(ret['projects']) == 0:

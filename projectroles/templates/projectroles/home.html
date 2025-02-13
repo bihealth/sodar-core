@@ -37,6 +37,12 @@
 
 {% block javascript %}
   {{ block.super }}
+  <!-- Variables -->
+  <script type="text/javascript">
+    window.projectListPagination = {{ page_options_default }};
+  </script>
+  <!-- DataTables -->
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
   <!-- Project list -->
   <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
 

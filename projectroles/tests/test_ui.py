@@ -29,7 +29,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait, Select
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS, CAT_DELIMITER
 from projectroles.plugins import get_active_plugins
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -61,6 +61,7 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
 # Local constants
+APP_NAME = 'projectroles'
 PROJECT_LINK_IDS = [
     'sodar-pr-link-project-roles',
     'sodar-pr-link-project-update',
@@ -534,10 +535,24 @@ class TestHomeView(UITestBase):
     def _get_list_item(self, project):
         return self.selenium.find_element(
             By.XPATH,
-            '//tr[@class="sodar-pr-project-list-item '
-            'sodar-pr-project-list-item-{}" and @data-uuid="{}"]'.format(
+            '//tr[contains(@class, "sodar-pr-project-list-item '
+            'sodar-pr-project-list-item-{}") and @data-uuid="{}"]'.format(
                 project.type.lower(), project.sodar_uuid
             ),
+        )
+
+    def _get_project_row(self, project):
+        """Return table row for specificed project"""
+        return self.selenium.find_element(
+            By.ID, f'sodar-pr-project-list-item-{project.sodar_uuid}'
+        )
+
+    def _wait_for_async_requests(self):
+        """Wait for async requests to finish"""
+        WebDriverWait(self.selenium, self.wait_time).until_not(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-list-load-icon')
+            )
         )
 
     def test_project_list_items(self):
@@ -562,7 +577,7 @@ class TestHomeView(UITestBase):
             [(self.user_no_roles, 0)],
             self.url,
             elem_id,
-            **self.wait_kwargs_empty
+            **self.wait_kwargs_empty,
         )
 
     def test_project_list_items_public(self):
@@ -592,7 +607,7 @@ class TestHomeView(UITestBase):
         self.selenium.get(self.build_selenium_url(self.url))
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
-                (getattr(By, 'CLASS_NAME'), 'sodar-pr-project-list-item')
+                (By.CLASS_NAME, 'sodar-pr-project-list-item')
             )
         )
         self.assertEqual(self._get_item_vis_count(), 2)
@@ -672,12 +687,8 @@ class TestHomeView(UITestBase):
         )
         button.click()
         self.assertEqual(self._get_item_vis_count(), 1)
-        self.assertEqual(
-            self.selenium.find_element(
-                By.ID, 'sodar-pr-project-list-message'
-            ).get_attribute('style'),
-            'display: none;',
-        )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-project-list-message')
 
     def test_project_list_star_no_project(self):
         """Test project list star filter with no starred project"""
@@ -688,6 +699,275 @@ class TestHomeView(UITestBase):
         )
         self.assertFalse(button.is_enabled())
         button.click()
+
+    def test_project_list_title(self):
+        """Test project list title rendering"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        icon = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title-container'
+        ).find_element(By.TAG_NAME, 'svg')
+        self.assertEqual(icon.get_attribute('data-icon'), 'mdi:cube')
+        link_html = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title'
+        ).find_element(By.TAG_NAME, 'a')
+        self.assertEqual(
+            link_html.get_attribute('innerHTML'), self.project.full_title
+        )
+        # Assert no extra icons are present
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-starred')
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-archive')
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-public')
+
+    def test_project_list_title_highlight(self):
+        """Test project list title rendering with highlight enabled"""
+        app_settings.set(
+            'projectroles', 'project_list_highlight', True, user=self.user_owner
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        link_html = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title'
+        ).find_element(By.TAG_NAME, 'a')
+        expected = (
+            self.category.title
+            + CAT_DELIMITER
+            + f'<strong>{self.project.title}</strong>'
+        )
+        self.assertEqual(link_html.get_attribute('innerHTML'), expected)
+
+    def test_project_list_title_category(self):
+        """Test project list title rendering with category"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.category)
+        icon = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title-container'
+        ).find_element(By.TAG_NAME, 'svg')
+        self.assertEqual(icon.get_attribute('data-icon'), 'mdi:rhombus-split')
+        link_html = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title'
+        ).find_element(By.TAG_NAME, 'a')
+        self.assertEqual(
+            link_html.get_attribute('innerHTML'), self.category.full_title
+        )
+
+    def test_project_list_title_category_highlight(self):
+        """Test project list title rendering with category and highlight"""
+        sub_cat = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(sub_cat, self.user_owner, self.role_owner)
+        app_settings.set(
+            'projectroles', 'project_list_highlight', True, user=self.user_owner
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(sub_cat)
+        link_html = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title'
+        ).find_element(By.TAG_NAME, 'a')
+        # No highlight should be applied
+        self.assertEqual(
+            link_html.get_attribute('innerHTML'), sub_cat.full_title
+        )
+
+    def test_project_list_title_star(self):
+        """Test project list title rendering with starred project"""
+        app_settings.set(
+            'projectroles',
+            'project_star',
+            True,
+            project=self.project,
+            user=self.user_owner,
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-starred')
+        )
+
+    def test_project_list_title_archive(self):
+        """Test project list title rendering with archived project"""
+        self.project.archive = True
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-archive')
+        )
+
+    def test_project_list_title_public(self):
+        """Test project list title rendering with public guest access"""
+        self.project.public_guest_access = True
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-public')
+        )
+
+    def test_project_list_custom_cols(self):
+        """Test rendering custom columns"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self._wait_for_async_requests()
+        row = self._get_project_row(self.project)
+        cols = row.find_elements(By.CLASS_NAME, 'sodar-pr-project-list-custom')
+        self.assertEqual(len(cols), 2)
+        for c in cols:
+            self.assertEqual(c.get_attribute('innerHTML'), '0')
+
+    def test_project_list_custom_cols_category(self):
+        """Test rendering custom columns with category"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.category)
+        cols = row.find_elements(By.CLASS_NAME, 'sodar-pr-project-list-custom')
+        self.assertEqual(len(cols), 0)
+
+    def test_project_list_role_col_owner(self):
+        """Test rendering role column as owner"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self._wait_for_async_requests()
+        row = self._get_project_row(self.project)
+        col = row.find_element(By.CLASS_NAME, 'sodar-pr-project-list-role')
+        self.assertEqual(
+            col.get_attribute('class'), 'sodar-pr-project-list-role'
+        )
+        self.assertEqual(col.get_attribute('innerHTML'), 'Owner')
+
+    def test_project_list_role_col_superuser(self):
+        """Test rendering role column as superuser"""
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kwargs)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.CLASS_NAME, 'sodar-pr-project-list-role'
+            )
+
+    def test_project_list_role_col_category_inherit(self):
+        """Test rendering role column with inherited role"""
+        # Owner user has no role in parent category
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self._wait_for_async_requests()
+        row = self._get_project_row(self.category)
+        col = row.find_element(By.CLASS_NAME, 'sodar-pr-project-list-role')
+        self.assertEqual(
+            col.get_attribute('class'), 'sodar-pr-project-list-role text-muted'
+        )
+        self.assertEqual(col.get_attribute('innerHTML'), 'N/A')
+
+    def test_project_list_paginate_disabled(self):
+        """Test project list pagination with pagination disabled"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        self.assertEqual(elem.is_displayed(), False)
+
+    def test_project_list_paginate_enabled(self):
+        """Test project list pagination with pagination enabled"""
+        # Create additional categories to fill first page
+        for i in range(1, 10):
+            c = self.make_project(
+                f'Additional Category {i}', PROJECT_TYPE_CATEGORY, None
+            )
+            self.make_assignment(c, self.user_owner, self.role_owner)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        self.assertEqual(elem.is_displayed(), True)
+
+    def test_project_list_paginate_update(self):
+        """Test project list pagination updating on second page"""
+        for i in range(1, 10):
+            c = self.make_project(
+                f'Additional Category {i}', PROJECT_TYPE_CATEGORY, None
+            )
+            self.make_assignment(c, self.user_owner, self.role_owner)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self._wait_for_async_requests()
+        # Only category should be visible
+        self.assertIsNotNone(self._get_project_row(self.category))
+        with self.assertRaises(NoSuchElementException):
+            self._get_project_row(self.project)
+
+        # Navigate to page 2
+        btn = self.selenium.find_element(By.XPATH, '//a[@data-dt-idx="2"]')
+        btn.click()
+        WebDriverWait(self.selenium, 15).until(
+            ec.presence_of_element_located(
+                (By.ID, f'sodar-pr-project-list-item-{self.project.sodar_uuid}')
+            )
+        )
+        # Only project should be visible
+        with self.assertRaises(NoSuchElementException):
+            self._get_project_row(self.category)
+        row = self._get_project_row(self.project)
+
+        # Ensure extra columns were updated on previously hidden elements
+        cols = row.find_elements(By.CLASS_NAME, 'sodar-pr-project-list-custom')
+        self.assertEqual(len(cols), 2)
+        for c in cols:
+            self.assertEqual(c.get_attribute('innerHTML'), '0')
+        col = row.find_element(By.CLASS_NAME, 'sodar-pr-project-list-role')
+        self.assertEqual(
+            col.get_attribute('class'), 'sodar-pr-project-list-role'
+        )
+        self.assertEqual(col.get_attribute('innerHTML'), 'Owner')
+
+    def test_project_list_paginate_control(self):
+        """Test project list pagination control"""
+        for i in range(1, 10):
+            c = self.make_project(
+                f'Additional Category {i}', PROJECT_TYPE_CATEGORY, None
+            )
+            self.make_assignment(c, self.user_owner, self.role_owner)
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_pagination', user=self.user_owner
+            ),
+            10,
+        )
+
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        project_elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(project_elems), 10)
+        with self.assertRaises(NoSuchElementException):
+            self._get_project_row(self.project)
+
+        elem = Select(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-page-length'
+            )
+        )
+        elem.select_by_value('25')
+        WebDriverWait(self.selenium, 15).until(
+            ec.presence_of_element_located(
+                (By.ID, f'sodar-pr-project-list-item-{self.project.sodar_uuid}')
+            )
+        )
+        project_elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(project_elems), 11)
+        time.sleep(1)  # Wait just in case
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_pagination', user=self.user_owner
+            ),
+            25,
+        )
 
     def test_link_create_toplevel(self):
         """Test project creation link visibility"""
