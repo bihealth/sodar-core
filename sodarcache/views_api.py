@@ -1,11 +1,14 @@
 """REST API views for the sodarcache app"""
 
+from rest_framework import serializers
 from rest_framework.exceptions import APIException, NotFound, ParseError
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -113,6 +116,14 @@ class CacheItemRetrieveAPIView(
         return item
 
 
+@extend_schema(
+    responses={
+        '200': inline_serializer(
+            'UpdateTimeResponse',
+            fields={'update_time': serializers.IntegerField()},
+        )
+    }
+)
 class CacheItemDateRetrieveAPIView(
     SodarcacheAPIViewMixin, SODARAPIGenericProjectMixin, APIView
 ):
@@ -165,9 +176,10 @@ class CacheItemSetAPIView(
     - ``data``: Full item data to be set (JSON)
     """
 
+    http_method_names = ['post']
     permission_required = 'sodarcache.set_cache_value'
     project_type = PROJECT_TYPE_PROJECT
-    http_method_names = ['post']
+    serializer_class = JSONCacheItemSerializer
 
     def post(self, request, *args, **kwargs):
         cache_backend = self.get_backend()

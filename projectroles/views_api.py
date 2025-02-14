@@ -33,9 +33,10 @@ from rest_framework.permissions import (
 )
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import INVITE_EXISTS_MSG
@@ -684,6 +685,7 @@ class RoleAssignmentOwnerTransferAPIView(
     """
 
     permission_required = 'projectroles.update_project_owner'
+    serializer_class = RoleAssignmentSerializer
 
     def post(self, request, *args, **kwargs):
         """Handle ownership transfer in a POST request"""
@@ -893,6 +895,7 @@ class ProjectInviteRevokeAPIView(
     """
 
     permission_required = 'projectroles.invite_users'
+    serializer_class = ProjectInviteSerializer
 
     def post(self, request, *args, **kwargs):
         """Handle invite revoking in a POST request"""
@@ -928,6 +931,7 @@ class ProjectInviteResendAPIView(
     """
 
     permission_required = 'projectroles.invite_users'
+    serializer_class = ProjectInviteSerializer
 
     def post(self, request, *args, **kwargs):
         """Handle invite resending in a POST request"""
@@ -1105,7 +1109,6 @@ class ProjectSettingRetrieveAPIView(
 
     # NOTE: Update project settings perm is checked manually
     permission_required = 'projectroles.view_project'
-    schema = AutoSchema(operation_id_base='AppSettingProject')
     serializer_class = AppSettingSerializer
 
     def get_object(self):
@@ -1160,6 +1163,7 @@ class ProjectSettingSetAPIView(
     http_method_names = ['post']
     # NOTE: Update project settings perm is checked manually
     permission_required = 'projectroles.view_project'
+    serializer_class = AppSettingSerializer
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
@@ -1276,7 +1280,6 @@ class UserSettingRetrieveAPIView(
     - ``setting_name``: Setting name (string)
     """
 
-    schema = AutoSchema(operation_id_base='AppSettingUser')
     serializer_class = AppSettingSerializer
 
     def get_object(self):
@@ -1313,6 +1316,7 @@ class UserSettingSetAPIView(
     """
 
     http_method_names = ['post']
+    serializer_class = AppSettingSerializer
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -1446,6 +1450,19 @@ class CurrentUserRetrieveAPIView(
 
 
 # TODO: Update this for new API base classes
+@extend_schema(
+    responses={
+        '200': inline_serializer(
+            'RemoteProjectGetResponse',
+            fields={
+                'users': serializers.JSONField(),
+                'projects': serializers.JSONField(),
+                'peer_sites': serializers.JSONField(),
+                'app_settings': serializers.JSONField(),
+            },
+        )
+    }
+)
 class RemoteProjectGetAPIView(RemoteSyncAPIVersioningMixin, APIView):
     """API view for retrieving remote projects from a source site"""
 

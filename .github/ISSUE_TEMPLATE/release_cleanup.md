@@ -27,7 +27,7 @@ TBA
 - [ ] Update version number and date in `CHANGELOG`
 - [ ] Update version number and date in `Major Changes` doc
 - [ ] Ensure docs can be built without errors
-- [ ] Ensure `generateschema` runs without errors or warnings (until in CI)
+- [ ] Ensure `make spectacular` runs without errors or warnings (until in CI)
 
 ## Notes
 

@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - ``drf-spectacular`` support (#1508)
 - **Projectroles**
     - ``SODARUser.get_display_name()`` helper (#1487)
     - App setting type constants (#1458)
@@ -104,6 +106,7 @@ Removed
 
 - **General**
     - Migrations squashed in v1.0 (#1455)
+    - DRF ``generateschema`` support (#1508)
 - **Projectroles**
     - Support for deprecated search results as dict (#1400)
     - Support for deprecated app setting ``local`` parameter (#1394)

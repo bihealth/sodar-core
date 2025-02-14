@@ -6,7 +6,6 @@ from rest_framework.generics import (
     GenericAPIView,
 )
 from rest_framework.renderers import JSONRenderer
-from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
@@ -198,7 +197,6 @@ class FolderListCreateAPIView(
 
     pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='ListCreateFolder')
     serializer_class = FolderSerializer
 
 
@@ -228,7 +226,6 @@ class FolderRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'folder'
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='UpdateDestroyFolder')
     serializer_class = FolderSerializer
 
 
@@ -268,7 +265,6 @@ class FileListCreateAPIView(
 
     pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='ListCreateFile')
     serializer_class = FileSerializer
 
 
@@ -300,7 +296,6 @@ class FileRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'file'
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='UpdateDestroyFile')
     serializer_class = FileSerializer
 
 
@@ -358,7 +353,6 @@ class HyperLinkListCreateAPIView(
 
     pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='ListCreateHyperLink')
     serializer_class = HyperLinkSerializer
 
 
@@ -389,5 +383,4 @@ class HyperLinkRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'hyperlink'
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='UpdateDestroyHyperLink')
     serializer_class = HyperLinkSerializer

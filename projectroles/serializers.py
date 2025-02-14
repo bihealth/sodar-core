@@ -164,7 +164,7 @@ class SODARUserSerializer(SODARModelSerializer):
             'sodar_uuid',
         ]
 
-    def get_additional_emails(self, obj):
+    def get_additional_emails(self, obj: User) -> list:
         return [
             e.email
             for e in SODARUserAdditionalEmail.objects.filter(
@@ -172,7 +172,7 @@ class SODARUserSerializer(SODARModelSerializer):
             ).order_by('email')
         ]
 
-    def get_auth_type(self, obj):
+    def get_auth_type(self, obj: User) -> str:
         return obj.get_auth_type()
 
     def to_representation(self, instance):

@@ -68,6 +68,7 @@ THIRD_PARTY_APPS = [
     'dal',  # For user search combo box
     'dal_select2',
     'dj_iconify.apps.DjIconifyConfig',  # Iconify for SVG icons
+    'drf_spectacular',  # OpenAPI schema generation
 ]
 
 # Project apps
@@ -332,7 +333,6 @@ SODAR_API_PAGE_SIZE = env.int('SODAR_API_PAGE_SIZE', 100)
 # Django REST framework
 # ------------------------------------------------------------------------------
 
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
@@ -343,7 +343,13 @@ REST_FRAMEWORK = {
         'rest_framework.pagination.PageNumberPagination'
     ),
     'PAGE_SIZE': SODAR_API_PAGE_SIZE,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+SPECTACULAR_SETTINGS = {
+    'PREPROCESSING_HOOKS': ['config.drf_spectacular.exclude_knox_hook']
+}
+
 
 # Additional authentication settings
 # ------------------------------------------------------------------------------

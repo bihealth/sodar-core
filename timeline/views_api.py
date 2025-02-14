@@ -4,7 +4,6 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
-from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
@@ -64,7 +63,6 @@ class ProjectTimelineEventListAPIView(
 
     pagination_class = SODARPageNumberPagination
     permission_required = 'timeline.view_timeline'
-    schema = AutoSchema(operation_id_base='ListTimelineEvent')
     serializer_class = TimelineEventSerializer
 
     def get_queryset(self):

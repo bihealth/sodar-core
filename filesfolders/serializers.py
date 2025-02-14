@@ -3,6 +3,10 @@
 # NB: Creating abstract serializers is not easily possible as explained in the
 # following StackOverflow post: https://stackoverflow.com/a/33137535
 
+import uuid
+
+from typing import Optional
+
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
@@ -16,7 +20,7 @@ from filesfolders.models import File, Folder, HyperLink
 class FilesfoldersSerializerMixin:
     """Shared code that does not need metaprogramming."""
 
-    def get_folder(self, obj):
+    def get_folder(self, obj: File) -> Optional[uuid.UUID]:
         if obj.folder:
             return obj.folder.sodar_uuid
         else:

@@ -24,6 +24,7 @@ Release Highlights
 - Add app setting type constants
 - Add app setting definition as objects
 - Add API view to retrieve user details by user UUID
+- Add drf-spectacular support for API documentation
 - Update project list for flat list display
 - Update owner transfer form to allow setting no role for old owner
 - Update app settings API
@@ -37,6 +38,7 @@ Release Highlights
 - Remove support for sodarcache REST API <v2.0
 - Remove support for timeline REST API <v2.0
 - Remove support for SODAR Core features deprecated in v1.0
+- Remove support for generateschema
 - Remove squashed migrations
 
 Breaking Changes
@@ -156,6 +158,13 @@ App Settings Local Attribute
     The ``get_global_value()`` helper has been removed as the deprecated
     ``local`` attribute is no longer supported. Instead, access the
     ``global_edit`` member of a ``PluginAppSettingDef`` object directly.
+
+DRF-Spectacular Used for OpenAPI Schemas
+----------------------------------------
+
+This release adds support for ``drf-spectacular`` to generate OpenAPI schemas.
+Use ``make spectacular`` to generate your schemas. Support for the DRF default
+``generateschema`` command has been removed.
 
 Squashed Migrations Removed
 ---------------------------

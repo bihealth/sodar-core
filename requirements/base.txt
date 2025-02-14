@@ -85,3 +85,6 @@ celery>=5.4.0, <5.5
 
 # Django autocomplete light (DAL)
 django-autocomplete-light==3.11.0
+
+# DRF-spectacular for OpenAPI schema generation
+drf-spectacular>=0.28.0, <0.29

@@ -249,6 +249,7 @@ class TestCacheItemSetAPIView(SodarcacheAPIViewTestBase):
         response = self.request_knox(url, method='POST', data=post_data)
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {'detail': 'ok'})
         self.assertEqual(JSONCacheItem.objects.all().count(), 2)
         item = JSONCacheItem.objects.get(name='new_test_item')
         expected = {
@@ -277,6 +278,7 @@ class TestCacheItemSetAPIView(SodarcacheAPIViewTestBase):
         response = self.request_knox(url, method='POST', data=post_data)
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {'detail': 'ok'})
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
         item = JSONCacheItem.objects.get(name=ITEM_NAME)
         expected = {

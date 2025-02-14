@@ -11,6 +11,7 @@ define USAGE=
 @echo -e "\tmake collectstatic                       -- run collectstatic"
 @echo -e "\tmake test [arg=<test_object>]            -- run all tests or specify module/class/function"
 @echo -e "\tmake manage_target arg=<target_command>  -- run management command on target site, arg is mandatory"
+@echo -e "\tmake spectacular                         -- generate OpenAPI schemas with drf-spectacular"
 @echo -e
 endef
 
@@ -65,6 +66,11 @@ ifeq ($(arg),)
 else
 	$(MANAGE) $(arg) --settings=config.settings.local_target
 endif
+
+
+.PHONY: spectacular
+spectacular:
+	$(MANAGE) spectacular --color $(arg)
 
 
 .PHONY: usage
