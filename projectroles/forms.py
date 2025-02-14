@@ -222,10 +222,6 @@ class SODARAppSettingFormMixin:
                     ' ' + APP_SETTING_SOURCE_ONLY_MSG
                 )
                 self.fields[s_field].disabled = True
-            else:
-                self.fields[
-                    s_field
-                ].help_text += ' [Not editable on target sites]'
         self.fields[s_field].label = self.get_app_setting_label(
             plugin, self.fields[s_field].label
         )

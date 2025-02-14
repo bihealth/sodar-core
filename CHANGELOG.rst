@@ -70,6 +70,7 @@ Changed
     - Allow ``null`` value for ``SODARUserAdditionalEmail.secret`` (#1477)
     - Display project list as flat list (#1005)
     - Optimize project list queries (#1005)
+    - Hide "not editable on target sites" app settings label in forms (#1561)
 - **Sodarcache**
     - Upgrade sodarcache REST API version to 2.0 (#1553)
     - Remove compability with sodarcache REST API <2.0 (#1553)
