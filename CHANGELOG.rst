@@ -71,6 +71,7 @@ Changed
     - Display project list as flat list (#1005)
     - Optimize project list queries (#1005)
     - Hide "not editable on target sites" app settings label in forms (#1561)
+    - Update search pagination layout to match new project list (#1560)
 - **Sodarcache**
     - Upgrade sodarcache REST API version to 2.0 (#1553)
     - Remove compability with sodarcache REST API <2.0 (#1553)

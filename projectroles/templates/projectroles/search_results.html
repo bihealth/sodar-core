@@ -22,11 +22,11 @@
 
   <style type="text/css">
     div.sodar-search-card {
-        display: none;  /* Will be enabled after DataTables init */
+      display: none;  /* Will be enabled after DataTables init */
     }
     div.sodar-search-card-body {
-        padding: 0;
-        overflow-x: hidden; /* Fix possible overflow when resizing window */
+      padding: 0;
+      overflow-x: hidden; /* Fix possible overflow when resizing window */
     }
     table.sodar-search-table {
       display: inline-table;
@@ -46,25 +46,15 @@
       max-width: 250px !important;
     }
     .sodar-header-input-group-search {
-        max-width: 250px;
+      max-width: 380px;
     }
     select.sodar-search-page-length {
-        height: 32px;
-        padding-top: 5px;
+      max-width: 110px;
+      height: 32px;
+      padding-top: 5px;
     }
 
     /* DataTables modifications */
-    .dataTables_paginate {
-      width: 100%;
-      padding: 12px !important;
-      margin-bottom: 12px !important;
-      text-align: right;
-      border-top: 1px solid #dfdfdf !important;
-    }
-    .dataTables_paginate .pagination .active .page-link {
-        background-color: #007bff;
-        color: #ffffff;
-    }
     th.sorting {
       padding-left: 10px !important;
       border-bottom: 0 !important;
@@ -78,10 +68,10 @@
 
     /* Responsive modifications */
     @media screen and (max-width: 1000px) {
-    .sodar-header-input-group-search {
-      display: none;
+      .sodar-header-input-group-search {
+        display: none;
+      }
     }
-  }
   </style>
 {% endblock css %}
 
