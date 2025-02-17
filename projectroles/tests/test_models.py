@@ -1702,6 +1702,22 @@ class TestSODARUser(TestCase):
         self.user.update_full_name()
         self.assertEqual(self.user.name, 'Full Name')
 
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='TEST')
+    def test_update_full_name_ldap(self):
+        """Test update_full_name() with LDAP user"""
+        # Clear user groups
+        self.user.groups.clear()
+        self.assertEqual(self.user.groups.count(), 0)
+        self.user.username = 'user@test'  # Note small domain
+        self.assertEqual(self.user.name, '')
+        self.user.first_name = 'Full'
+        self.user.last_name = 'Name'
+        self.user.update_full_name()
+        self.assertEqual(self.user.name, 'Full Name')
+        self.assertEqual(self.user.groups.count(), 1)
+        # We should not have a system user group here
+        self.assertEqual(self.user.groups.first().name, 'test')
+
     def test_update_ldap_username(self):
         """Test update_ldap_username()"""
         self.user.username = 'user@example'

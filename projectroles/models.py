@@ -1449,7 +1449,7 @@ class SODARUser(AbstractUser):
         # LDAP domain user groups
         elif (
             self.username.find('@') != -1
-            and self.username.split('@')[1] in ldap_domains
+            and self.username.split('@')[1].upper() in ldap_domains
         ):
             group_name = self.username.split('@')[1].lower()
         # System user group for local users

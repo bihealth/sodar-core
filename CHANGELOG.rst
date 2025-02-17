@@ -5,6 +5,22 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.0.5 (2025-02-17)
+===================
+
+Changed
+-------
+
+- **Projectroles**
+    - Optimize project list queries (#1005, #1571)
+
+Fixed
+-----
+
+- **Projectroles**
+    - System user group set for LDAP user on initial login (#1570)
+
+
 v1.0.4 (2025-01-03)
 ===================
 
