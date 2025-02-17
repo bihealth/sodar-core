@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Changed
+-------
+
+- **Projectroles**
+    - Optimize project list queries (#1005, #1571)
+
 Fixed
 -----
 

@@ -16,6 +16,7 @@ v1.0.5 (WIP)
 Release Highlights
 ==================
 
+- Add project list query optimizations from v1.1 dev
 - Fix user group assignment on initial LDAP user login
 
 

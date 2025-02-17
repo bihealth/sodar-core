@@ -23,6 +23,7 @@ from projectroles.models import (
     Project,
     RoleAssignment,
     RemoteProject,
+    AppSetting,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
     ROLE_RANKING,
@@ -121,7 +122,17 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         :param user: User for which the projects are visible
         :param parent: Project object of type CATEGORY or None
         """
-        project_list = Project.objects.all()
+        project_list = (
+            Project.objects.all()
+            .select_related('parent')
+            .order_by('full_title')
+        )
+        # Filter out parents
+        parent_prefix = parent.full_title + CAT_DELIMITER if parent else None
+        if parent_prefix:
+            project_list = project_list.filter(
+                full_title__startswith=parent_prefix
+            )
         if user.is_anonymous:
             project_list = project_list.filter(
                 Q(public_guest_access=True) | Q(has_public_children=True)
@@ -145,24 +156,22 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 or any(p.full_title.startswith(c) for c in role_cats)
                 or p.local_roles.filter(user=user).count() > 0
             ]
+        if user.is_superuser:
+            return project_list  # No further querying needed for superuser
 
-        # Populate final list
+        # Populate final list with parent categories for non-superusers
         ret = []
-        parent_prefix = parent.full_title + CAT_DELIMITER if parent else None
+        prev_parent = None
         for p in project_list:
-            if (
-                p not in ret
-                and p != parent
-                and (not parent or p.full_title.startswith(parent_prefix))
-            ):
-                ret.append(p)
-                if p.parent and p.parent in ret:
-                    continue  # Skip already collected parents
-                p_parent = p.parent
-                while p_parent and p_parent != parent:
-                    if p_parent not in ret:
-                        ret.append(p_parent)
-                    p_parent = p_parent.parent
+            ret.append(p)
+            p_parent = p.parent
+            if p_parent == prev_parent or not p_parent or p_parent in ret:
+                continue  # Skip already collected parents
+            while p_parent and p_parent != parent:
+                if p_parent not in ret:
+                    ret.append(p_parent)
+                p_parent = p_parent.parent
+            prev_parent = p.parent
         # Sort by full title
         return sorted(ret, key=lambda x: x.full_title.lower())
 
@@ -224,11 +233,15 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         projects = self._get_projects(request.user, parent)
         starred_projects = []
         if request.user.is_authenticated:
+            # NOTE: Generally, manipulating AppSetting objects directly is not
+            #       advised, but in this case it's pertinent for optimization :)
             starred_projects = [
-                project
-                for project in Project.objects.all()
-                if app_settings.get(
-                    'projectroles', 'project_star', project, request.user
+                s.project
+                for s in AppSetting.objects.filter(
+                    app_plugin=None,
+                    name='project_star',
+                    user=request.user,
+                    value='1',
                 )
             ]
         finder_cats = []
