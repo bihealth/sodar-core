@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.5 (WIP)
+************
+
+Release Highlights
+==================
+
+- Fix user group assignment on initial LDAP user login
+
+
 v1.0.4 (2025-01-03)
 *******************
 

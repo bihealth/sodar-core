@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - System user group set for LDAP user on initial login (#1570)
+
+
 v1.0.4 (2025-01-03)
 ===================
 

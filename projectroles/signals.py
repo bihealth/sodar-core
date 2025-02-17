@@ -23,8 +23,8 @@ def handle_ldap_login(sender, user, **kwargs):
     try:
         if hasattr(user, 'ldap_username'):
             logger.debug('Updating LDAP user..')
-            user.update_full_name()
             user.update_ldap_username()
+            user.update_full_name()
     except Exception as ex:
         logger.error('Exception in handle_ldap_login(): {}'.format(ex))
         if settings.DEBUG:
