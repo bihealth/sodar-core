@@ -174,6 +174,16 @@ SODAR Core using site to v1.1, you must first upgrade to v1.0 and run
 ``manage.py migrate`` on v1.0 for any development and production instances.
 
 
+v1.0.5 (2025-02-17)
+*******************
+
+Release Highlights
+==================
+
+- Add project list query optimizations from v1.1 dev
+- Fix user group assignment on initial LDAP user login
+
+
 v1.0.4 (2025-01-03)
 *******************
 
