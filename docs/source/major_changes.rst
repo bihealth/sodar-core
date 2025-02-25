@@ -25,6 +25,7 @@ Release Highlights
 - Add app setting definition as objects
 - Add API view to retrieve user details by user UUID
 - Add optional user list API view restriction to contributors and above
+- Add system user retrieval in user list API view
 - Add drf-spectacular support for API documentation
 - Update project list for flat list display
 - Update owner transfer form to allow setting no role for old owner
@@ -106,6 +107,7 @@ REST API View Changes
     * ``ProjectRetrieveAPIView``: Add ``children`` field
     * ``RoleAssignmentOwnerTransferAPIView``: Allow empty value for
       ``old_owner_role``
+    * ``UserListAPIView``: Add ``include_system_users`` parameter
     * ``UserRetrieveAPIView``: Add view
     * ``CurrentUserRetrieveAPIView``: Add ``auth_type`` field
 - Sodarcache API

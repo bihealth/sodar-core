@@ -41,6 +41,7 @@ Added
     - ``project_list_highlight`` and ``project_list_pagination`` app settings (#1005)
     - ``PROJECTROLES_API_USER_LIST_RESTRICT`` Django setting (#1574)
     - ``UserListAPIView`` access restriction to contributors and above (#1574)
+    - ``UserListAPIView`` ``include_system_users`` parameter (#1507)
 
 Changed
 -------

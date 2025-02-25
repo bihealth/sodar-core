@@ -111,12 +111,15 @@ INVALID_PROJECT_TYPE_MSG = (
 USER_MODIFIABLE_MSG = 'Updating non-user modifiable settings is not allowed'
 ANON_ACCESS_MSG = 'Anonymous access not allowed'
 NO_VALUE_MSG = 'Value not set in request data'
-VIEW_NOT_ACCEPTABLE_VERSION = (
+VIEW_NOT_ACCEPTABLE_VERSION_MSG = (
     'This view is not available in the given API version'
 )
 USER_LIST_RESTRICT_MSG = (
     'User list access restricted, user does not have contributor access or '
     'above to any project'
+)
+USER_LIST_INCLUDE_VERSION_MSG = (
+    'The include_system_users parameter is not available in API version <1.1'
 )
 
 
@@ -565,7 +568,7 @@ class ProjectDestroyAPIView(
     def perform_destroy(self, instance):
         """Override perform_destroy() to handle Project deletion"""
         if parse_version(self.request.version) < parse_version('1.1'):
-            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION)
+            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION_MSG)
         access, msg = self.check_delete_permission(instance)
         if not access:
             raise PermissionDenied(msg)
@@ -1373,9 +1376,14 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
 
     **Parameters:**
 
+    - ``include_system_users``: Include system users if True (bool, optional)
     - ``page``: Page number for paginated results (int, optional)
 
     **Returns**: List or paginated dict of serializers users (see ``CurrentUserRetrieveAPIView``)
+
+    **Version Changes**:
+
+    - ``1.1``: Add ``include_system_users`` parameter
     """
 
     lookup_field = 'project__sodar_uuid'
@@ -1388,8 +1396,12 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
         Override get_queryset() to return users according to requesting user
         access.
         """
+        inc_system = self.request.GET.get('include_system_users')
+        version = parse_version(self.request.version)
+        if inc_system and version < parse_version('1.1'):
+            raise NotAcceptable(USER_LIST_INCLUDE_VERSION_MSG)
         qs = User.objects.all().order_by('pk')
-        if self.request.user.is_superuser:
+        if self.request.user.is_superuser or inc_system:
             return qs
         return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
 
@@ -1442,7 +1454,7 @@ class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         if parse_version(request.version) < parse_version('1.1'):
-            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION)
+            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION_MSG)
         return super().get(request, *args, **kwargs)
 
 

@@ -3419,6 +3419,32 @@ class TestUserListAPIView(ProjectrolesAPIViewTestBase):
         }
         self.assertEqual(response_data, expected)
 
+    def test_get_include_system_users(self):
+        """Test GET with include_system_users=True"""
+        response = self.request_knox(
+            self.url + '?include_system_users=1',
+            token=self.get_token(self.user_ldap),
+        )
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 4)
+        expected = [
+            self.get_serialized_user(self.user),
+            self.get_serialized_user(self.user_owner_cat),
+            self.get_serialized_user(self.user_owner),
+            self.get_serialized_user(self.user_ldap),
+        ]
+        self.assertEqual(response_data, expected)
+
+    def test_get_include_system_users_v1_0(self):
+        """Test GET with include_system_users=True and version 1.0"""
+        response = self.request_knox(
+            self.url + '?include_system_users=1',
+            token=self.get_token(self.user_ldap),
+            version='1.0',
+        )
+        self.assertEqual(response.status_code, 406)
+
 
 class TestUserRetrieveAPIView(
     SODARUserAdditionalEmailMixin, ProjectrolesAPIViewTestBase
