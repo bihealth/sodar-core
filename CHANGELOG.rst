@@ -39,6 +39,8 @@ Added
     - ``active`` arg in ``ProjectInviteMixin.make_invite()`` (#1403)
     - Ability for users to leave project (#918)
     - ``project_list_highlight`` and ``project_list_pagination`` app settings (#1005)
+    - ``PROJECTROLES_API_USER_LIST_RESTRICT`` Django setting (#1574)
+    - ``UserListAPIView`` access restriction to contributors and above (#1574)
 
 Changed
 -------

@@ -643,6 +643,10 @@ PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 # PROJECTROLES_BREADCRUMB_STICKY = True
 # Custom message to be displayed if site read-only mode is enabled
 PROJECTROLES_READ_ONLY_MSG = env.str('PROJECTROLES_READ_ONLY_MSG', None)
+# Restrict REST API user list access to users with contributor roles or above
+PROJECTROLES_API_USER_LIST_RESTRICT = env.bool(
+    'PROJECTROLES_API_USER_LIST_RESTRICT', False
+)
 
 # Hide project apps from the UI (sidebar, dropdown menus and project details)
 PROJECTROLES_HIDE_PROJECT_APPS = env.list(

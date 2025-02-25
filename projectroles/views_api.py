@@ -49,6 +49,7 @@ from projectroles.models import (
     AppSetting,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
+    ROLE_RANKING,
     ROLE_PROJECT_TYPE_ERROR_MSG,
 )
 from projectroles.plugins import get_backend_api
@@ -112,6 +113,10 @@ ANON_ACCESS_MSG = 'Anonymous access not allowed'
 NO_VALUE_MSG = 'Value not set in request data'
 VIEW_NOT_ACCEPTABLE_VERSION = (
     'This view is not available in the given API version'
+)
+USER_LIST_RESTRICT_MSG = (
+    'User list access restricted, user does not have contributor access or '
+    'above to any project'
 )
 
 
@@ -1358,6 +1363,10 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     will return results in the Django Rest Framework ``PageNumberPagination``
     format.
 
+    If PROJECTROLES_API_USER_LIST_RESTRICT is set True, this view is only
+    accessible by users who have a contributor role or above in at least one
+    category or project.
+
     **URL:** ``/project/api/users/list``
 
     **Methods:** ``GET``
@@ -1383,6 +1392,20 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
         if self.request.user.is_superuser:
             return qs
         return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
+
+    def get(self, request, *args, **kwargs):
+        """Override get() to restrict access if set on server"""
+        role_kw = {
+            'user': request.user,
+            'role__rank__lte': ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR],
+        }
+        if (
+            getattr(settings, 'PROJECTROLES_API_USER_LIST_RESTRICT', False)
+            and not request.user.is_superuser
+            and RoleAssignment.objects.filter(**role_kw).count() == 0
+        ):
+            raise PermissionDenied(USER_LIST_RESTRICT_MSG)
+        return super().get(request, *args, **kwargs)
 
 
 class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):

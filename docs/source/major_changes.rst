@@ -24,6 +24,7 @@ Release Highlights
 - Add app setting type constants
 - Add app setting definition as objects
 - Add API view to retrieve user details by user UUID
+- Add optional user list API view restriction to contributors and above
 - Add drf-spectacular support for API documentation
 - Update project list for flat list display
 - Update owner transfer form to allow setting no role for old owner

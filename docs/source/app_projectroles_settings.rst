@@ -278,6 +278,10 @@ The following projectroles settings are **optional**:
 ``PROJECTROLES_TARGET_SYNC_INTERVAL``
     Interval in minutes for remote project synchronization as a target site.
     Ignored for source sites (int)
+``PROJECTROLES_API_USER_LIST_RESTRICT``
+    If true, restrict projectroles API user list view results to users who have
+    contributor access or above in at least one category or project. Recommended
+    for sites with OIDC authentication for multiple organizations enabled (bool)
 
 Example:
 
@@ -296,6 +300,7 @@ Example:
     PROJECTROLES_BROWSER_WARNING = True
     PROJECTROLES_ALLOW_LOCAL_USERS = True
     PROJECTROLES_KIOSK_MODE = False
+    PROJECTROLES_API_USER_LIST_RESTRICT=True
 
 .. warning::
 
