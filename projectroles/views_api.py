@@ -115,8 +115,8 @@ VIEW_NOT_ACCEPTABLE_VERSION_MSG = (
     'This view is not available in the given API version'
 )
 USER_LIST_RESTRICT_MSG = (
-    'User list access restricted, user does not have contributor access or '
-    'above to any project'
+    'User details access restricted, user does not have contributor access or '
+    'above to any project (PROJECTROLES_API_USER_DETAIL_RESTRICT=True)'
 )
 USER_LIST_INCLUDE_VERSION_MSG = (
     'The include_system_users parameter is not available in API version <1.1'
@@ -1366,7 +1366,7 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     will return results in the Django Rest Framework ``PageNumberPagination``
     format.
 
-    If PROJECTROLES_API_USER_LIST_RESTRICT is set True, this view is only
+    If PROJECTROLES_API_USER_DETAIL_RESTRICT is set True, this view is only
     accessible by users who have a contributor role or above in at least one
     category or project.
 
@@ -1412,7 +1412,7 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
             'role__rank__lte': ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR],
         }
         if (
-            getattr(settings, 'PROJECTROLES_API_USER_LIST_RESTRICT', False)
+            getattr(settings, 'PROJECTROLES_API_USER_DETAIL_RESTRICT', False)
             and not request.user.is_superuser
             and RoleAssignment.objects.filter(**role_kw).count() == 0
         ):
@@ -1423,6 +1423,10 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
 class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):
     """
     Return user details for user with the given UUID.
+
+    If PROJECTROLES_API_USER_DETAIL_RESTRICT is set True, this view is only
+    accessible by users who have a finder role or above in at least one
+    category or project.
 
     **URL:** ``/project/api/users/{SODARUser.sodar_uuid}``
 
@@ -1455,6 +1459,12 @@ class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         if parse_version(request.version) < parse_version('1.1'):
             raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION_MSG)
+        if (
+            getattr(settings, 'PROJECTROLES_API_USER_DETAIL_RESTRICT', False)
+            and not request.user.is_superuser
+            and RoleAssignment.objects.filter(user=request.user).count() == 0
+        ):
+            raise PermissionDenied(USER_LIST_RESTRICT_MSG)
         return super().get(request, *args, **kwargs)
 
 

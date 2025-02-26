@@ -35,12 +35,11 @@ Added
     - ``ProjectDestroyAPIView`` REST API view (#1090)
     - ``ProjectSerializer`` ``children`` field (#1552)
     - ``SODARUserSerializer`` ``auth_type`` field (#1501)
-    - ``UserRetrieveAPIView`` REST API view (#1555)
+    - ``UserRetrieveAPIView`` REST API view (#1555, #1575)
     - ``active`` arg in ``ProjectInviteMixin.make_invite()`` (#1403)
     - Ability for users to leave project (#918)
     - ``project_list_highlight`` and ``project_list_pagination`` app settings (#1005)
-    - ``PROJECTROLES_API_USER_LIST_RESTRICT`` Django setting (#1574)
-    - ``UserListAPIView`` access restriction to contributors and above (#1574)
+    - ``PROJECTROLES_API_USER_DETAIL_RESTRICT`` Django setting (#1574, #1575)
     - ``UserListAPIView`` ``include_system_users`` parameter (#1507)
 
 Changed
@@ -77,6 +76,7 @@ Changed
     - Optimize project list queries (#1005)
     - Hide "not editable on target sites" app settings label in forms (#1561)
     - Update search pagination layout to match new project list (#1560)
+    - Enable ``UserListAPIView`` access restriction to contributors and above (#1574)
 - **Sodarcache**
     - Upgrade sodarcache REST API version to 2.0 (#1553)
     - Remove compability with sodarcache REST API <2.0 (#1553)

@@ -278,10 +278,11 @@ The following projectroles settings are **optional**:
 ``PROJECTROLES_TARGET_SYNC_INTERVAL``
     Interval in minutes for remote project synchronization as a target site.
     Ignored for source sites (int)
-``PROJECTROLES_API_USER_LIST_RESTRICT``
-    If true, restrict projectroles API user list view results to users who have
-    contributor access or above in at least one category or project. Recommended
-    for sites with OIDC authentication for multiple organizations enabled (bool)
+``PROJECTROLES_API_USER_DETAIL_RESTRICT``
+    If true, restrict projectroles API user list and detail view results to
+    users who have roles in at least one category or project. For
+    ``UserListAPIView`` this will be restricted to contributor access or above.
+    ``UserRetrieveAPIView`` is accessible to users with any role (bool)
 
 Example:
 

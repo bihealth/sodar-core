@@ -24,7 +24,7 @@ Release Highlights
 - Add app setting type constants
 - Add app setting definition as objects
 - Add API view to retrieve user details by user UUID
-- Add optional user list API view restriction to contributors and above
+- Add optional user list/detail API view restriction to users with project roles
 - Add system user retrieval in user list API view
 - Add drf-spectacular support for API documentation
 - Update project list for flat list display

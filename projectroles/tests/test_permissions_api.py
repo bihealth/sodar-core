@@ -2272,9 +2272,9 @@ class TestUserListAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.auth_users, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
 
-    @override_settings(PROJECTROLES_API_USER_LIST_RESTRICT=True)
+    @override_settings(PROJECTROLES_API_USER_DETAIL_RESTRICT=True)
     def test_get_restrict(self):
-        """Test GET with user list access restriction"""
+        """Test GET with user detail access restriction"""
         good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -2320,6 +2320,26 @@ class TestUserRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
         self.assert_response_api(self.url, self.auth_users, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    @override_settings(PROJECTROLES_API_USER_DETAIL_RESTRICT=True)
+    def test_get_restrict(self):
+        """Test GET with user detail access restriction"""
+        good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_guest,
+        ]
+        bad_users = [self.user_no_roles]
+        self.assert_response_api(self.url, good_users, 200)
+        self.assert_response_api(self.url, bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
 
 
