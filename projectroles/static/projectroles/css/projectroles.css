@@ -342,8 +342,9 @@ table.sodar-pr-project-list-table tbody tr td.sodar-pr-project-list-role {
   min-width: 110px;
 }
 
-tr.sodar-pr-project-list-loading-home {
-  height: 85px !important;
+td.sodar-pr-project-list-load-td {
+  vertical-align: middle !important;
+  height: 106px !important;
 }
 
 div.sodar-pr-project-title-container {

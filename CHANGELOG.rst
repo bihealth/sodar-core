@@ -82,6 +82,7 @@ Changed
     - Hide "not editable on target sites" app settings label in forms (#1561)
     - Update search pagination layout to match new project list (#1560)
     - Enable ``UserListAPIView`` access restriction to contributors and above (#1574)
+    - Unify project list loading element layouts (#1579)
 - **Sodarcache**
     - Upgrade sodarcache REST API version to 2.0 (#1553)
     - Remove compability with sodarcache REST API <2.0 (#1553)
