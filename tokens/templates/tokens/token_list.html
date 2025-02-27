@@ -29,10 +29,15 @@
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h2><i class="iconify" data-icon="mdi:key-chain-variant"></i> API Tokens</h2>
   {% if request.user.is_superuser or not site_read_only %}
-    <a role="button" class="btn btn-primary ml-auto" id="sodar-tk-create-btn"
-       href="{% url 'tokens:create' %}">
-      <i class="iconify" data-icon="mdi:plus-thick"></i> Create Token
-    </a>
+    <span class="d-inline-block ml-auto" tabindex="0" data-toggle="tooltip"
+          id="sodar-tk-btn-create-tooltip"
+          title="{{ token_create_msg }}">
+      <a role="button" class="btn btn-primary" id="sodar-tk-create-btn"
+         {% if not token_create_enable %}disabled="disabled"{% endif %}
+         href="{% url 'tokens:create' %}">
+        <i class="iconify" data-icon="mdi:plus-thick"></i> Create Token
+      </a>
+    </span>
   {% endif %}
 </div>
 

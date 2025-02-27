@@ -29,3 +29,6 @@ class SiteAppPlugin(SiteAppPluginPoint):
 
     #: Required permission for accessing the app
     app_permission = 'tokens.view_list'
+
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = ['TOKENS_CREATE_PROJECT_USER_RESTRICT']

@@ -715,5 +715,12 @@ ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
 APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
 
 
+# Tokens app settings
+# Restrict access to token creation for users with project roles
+TOKENS_CREATE_PROJECT_USER_RESTRICT = env.bool(
+    'TOKENS_CREATE_PROJECT_USER_RESTRICT', False
+)
+
+
 # SODAR constants
 # SODAR_CONSTANTS = get_sodar_constants(default=True)

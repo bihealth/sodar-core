@@ -42,6 +42,8 @@ Added
     - ``PROJECTROLES_API_USER_DETAIL_RESTRICT`` Django setting (#1574, #1575)
     - ``UserListAPIView`` ``include_system_users`` parameter (#1507)
     - CSS class ``sodar-alert-full-text-link`` for alert links (#1578)
+- **Tokens**
+    - ``TOKENS_CREATE_PROJECT_USER_RESTRICT`` Django setting (#1577)
 
 Changed
 -------
@@ -91,6 +93,7 @@ Changed
 - **Tokens**
     - Update UI for site read-only mode (#24)
     - Rename ``ProjectAppPlugin`` to ``SiteAppPlugin`` (#1337)
+    - Enable restricting token creation to users with project roles (#1577)
 - **Userprofile**
     - Update UI for site read-only mode (#24)
     - Rename ``UserAppSettingsForm`` and ``UserAppSettingsView`` (#1544)

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -11,14 +12,19 @@ from selenium.webdriver.common.by import By
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_ui import UITestBase
 
 
 app_settings = AppSettingAPI()
 
 
-class TestTokenList(UITestBase):
-    """Tests for token list"""
+# SODAR constants
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+
+
+class TestUserTokenListView(UITestBase):
+    """Tests for UserTokenListView"""
 
     def setUp(self):
         super().setUp()
@@ -42,10 +48,10 @@ class TestTokenList(UITestBase):
         """Test visibility of create button"""
         self.assertFalse(app_settings.get('projectroles', 'site_read_only'))
         self.assert_element_exists(
-            [self.superuser], self.url, 'sodar-tk-create-btn', True
-        )
-        self.assert_element_exists(
-            [self.regular_user], self.url, 'sodar-tk-create-btn', True
+            [self.superuser, self.regular_user],
+            self.url,
+            'sodar-tk-create-btn',
+            True,
         )
 
     def test_create_button_read_only(self):
@@ -57,6 +63,31 @@ class TestTokenList(UITestBase):
         self.assert_element_exists(
             [self.regular_user], self.url, 'sodar-tk-create-btn', False
         )
+
+    @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
+    def test_create_button_restrict(self):
+        """Test create button with restriction"""
+        self.login_and_redirect(self.regular_user, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-tk-create-btn')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
+    def test_create_button_restrict_role(self):
+        """Test create button with restriction as user with role"""
+        category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category, self.regular_user, self.role_guest)
+        self.login_and_redirect(self.regular_user, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-tk-create-btn')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
+    def test_create_button_restrict_superuser(self):
+        """Test create button with restriction as superuser"""
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-tk-create-btn')
+        self.assertIsNone(elem.get_attribute('disabled'))
 
     def test_list_items(self):
         """Test visibility of items in token list"""

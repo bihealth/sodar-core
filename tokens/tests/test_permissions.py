@@ -6,7 +6,12 @@ from django.urls import reverse
 from knox.models import AuthToken
 
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_permissions import SiteAppPermissionTestBase
+
+
+# SODAR constants
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 
 class TestTokenPermissions(SiteAppPermissionTestBase):
@@ -37,6 +42,19 @@ class TestTokenPermissions(SiteAppPermissionTestBase):
         url = reverse('tokens:create')
         self.assert_response(url, [self.superuser, self.regular_user], 200)
         self.assert_response(url, self.anonymous, 302)
+
+    @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
+    def test_get_create_restrict(self):
+        """Test UserTokenCreateView GET with restricted creation"""
+        self.init_roles()
+        category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category, self.regular_user, self.role_guest)
+        user_no_roles = self.make_user('user_no_roles')
+        url = reverse('tokens:create')
+        self.assert_response(url, [self.superuser, self.regular_user], 200)
+        self.assert_response(url, [user_no_roles, self.anonymous], 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_create_anon(self):
