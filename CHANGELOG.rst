@@ -41,6 +41,7 @@ Added
     - ``project_list_highlight`` and ``project_list_pagination`` app settings (#1005)
     - ``PROJECTROLES_API_USER_DETAIL_RESTRICT`` Django setting (#1574, #1575)
     - ``UserListAPIView`` ``include_system_users`` parameter (#1507)
+    - CSS class ``sodar-alert-full-text-link`` for alert links (#1578)
 
 Changed
 -------
@@ -53,6 +54,8 @@ Changed
     - Declare app setting definitions as ``PluginAppSettingDef`` objects (#1456)
     - Unify header layout in delete templates (#1548)
     - Upgrade to ``coverallsapp/github-action@v2`` in CI (#1566)
+- **Adminalerts**
+    - Display alert text as link if details are included (#1578)
 - **Bgjobs**
     - Rename ``GlobalBackgroundJobView`` to ``SiteBackgroundJobView`` (#1333)
     - Unify naming in site view template to follow conventions (#1333)

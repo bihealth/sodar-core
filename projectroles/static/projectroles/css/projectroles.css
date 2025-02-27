@@ -715,6 +715,16 @@ img.sodar-navbar-logo {
   min-height: 50px;
 }
 
+/* Link to be used if entire text of an alert is a link */
+a.sodar-alert-full-text-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.sodar-alert-full-text-link:hover {
+  text-decoration: underline;
+}
+
 .sodar-alert-top-content {
   width: 100%;
   display: inline-block;

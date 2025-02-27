@@ -72,6 +72,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     def get_messages(self, user=None):
         """
         Return a list of messages to be shown to users.
+
         :param user: User object (optional)
         :return: List of dicts or empty list if no messages
         """
@@ -81,20 +82,24 @@ class SiteAppPlugin(SiteAppPluginPoint):
         ).order_by('-pk')
 
         for a in alerts:
-            content = (
-                '<i class="iconify" data-icon="mdi:alert"></i> ' + a.message
-            )
+            content = '<i class="iconify" data-icon="mdi:alert"></i> '
             if a.description.raw and user and user.is_authenticated:
-                content += (
-                    '<span class="pull-right"><a href="{}" class="text-info">'
-                    '<i class="iconify" data-icon="mdi:arrow-right-circle">'
-                    '</i> Details</a>'.format(
-                        reverse(
-                            'adminalerts:detail',
-                            kwargs={'adminalert': a.sodar_uuid},
-                        )
-                    )
+                url = reverse(
+                    'adminalerts:detail',
+                    kwargs={'adminalert': a.sodar_uuid},
                 )
+                content += (
+                    f'<a href="{url}" '
+                    f'class="sodar-alert-full-text-link">{a.message}</a> '
+                )
+                content += (
+                    f'<span class="pull-right"><a href="{url}" '
+                    f'class="text-info sodar-alert-detail-link">'
+                    f'<i class="iconify" data-icon="mdi:arrow-right-circle">'
+                    f'</i> Details</a>'
+                )
+            else:
+                content += a.message
             messages.append(
                 {
                     'content': content,
