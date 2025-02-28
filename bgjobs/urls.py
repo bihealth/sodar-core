@@ -35,7 +35,7 @@ urls_ui_site = [
     # List site background jobs
     path(
         route='list',
-        view=views.GlobalBackgroundJobView.as_view(),
+        view=views.SiteBackgroundJobView.as_view(),
         name='site_list',
     ),
 ]

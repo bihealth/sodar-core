@@ -38,6 +38,13 @@ class TestUserProfilePermissions(
         self.assert_response(url, [self.superuser, self.regular_user], 200)
         self.assert_response(url, self.anonymous, 302)
 
+    def test_get_profile_read_only(self):
+        """Test UserDetailView GET with site read-only mode"""
+        self.set_site_read_only()
+        url = reverse('userprofile:detail')
+        self.assert_response(url, [self.superuser, self.regular_user], 200)
+        self.assert_response(url, self.anonymous, 302)
+
     def test_get_settings_update(self):
         """Test UserSettingUpdateView GET"""
         url = reverse('userprofile:settings_update')
@@ -51,6 +58,13 @@ class TestUserProfilePermissions(
         self.assert_response(url, [self.superuser, self.regular_user], 200)
         self.assert_response(url, self.anonymous, 302)
 
+    def test_get_settings_update_read_only(self):
+        """Test UserSettingUpdateView GET with site read-only mode"""
+        self.set_site_read_only()
+        url = reverse('userprofile:settings_update')
+        self.assert_response(url, self.superuser, 200)
+        self.assert_response(url, [self.regular_user, self.anonymous], 302)
+
     def test_get_email_create(self):
         """Test UserEmailCreateView GET"""
         url = reverse('userprofile:email_create')
@@ -63,6 +77,13 @@ class TestUserProfilePermissions(
         url = reverse('userprofile:email_create')
         self.assert_response(url, [self.superuser, self.regular_user], 200)
         self.assert_response(url, self.anonymous, 302)
+
+    def test_get_email_create_read_only(self):
+        """Test UserEmailCreateView GET with site read-only mode"""
+        self.set_site_read_only()
+        url = reverse('userprofile:email_create')
+        self.assert_response(url, self.superuser, 200)
+        self.assert_response(url, [self.regular_user, self.anonymous], 302)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_get_email_create_target(self):
@@ -91,6 +112,18 @@ class TestUserProfilePermissions(
         )
         self.assert_response(url, [self.superuser, self.regular_user], 200)
         self.assert_response(url, [self.regular_user2, self.anonymous], 302)
+
+    def test_get_email_delete_read_only(self):
+        """Test UserEmailDeleteView GET with site read-only mode"""
+        self.set_site_read_only()
+        email = self.make_email(self.regular_user, ADD_EMAIL)
+        url = reverse(
+            'userprofile:email_delete',
+            kwargs={'sodaruseradditionalemail': email.sodar_uuid},
+        )
+        bad_users = [self.regular_user, self.regular_user2, self.anonymous]
+        self.assert_response(url, self.superuser, 200)
+        self.assert_response(url, bad_users, 302)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_get_email_delete_target(self):

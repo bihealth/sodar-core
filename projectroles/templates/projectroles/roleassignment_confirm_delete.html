@@ -10,9 +10,10 @@
 
 {% block projectroles_extend %}
 
+<div class="row sodar-subtitle-container">
+  <h3>Confirm Removal of Member: {{ object.user.username }}</h3>
+</div>
 <div class="container-fluid sodar-page-container">
-  <h3>Confirm Removal of Member {{ object.user.username }}</h3>
-
   <div class="alert alert-warning" role="alert">
     Do you really want to remove the role of "{{ object.role.name }}"
     from user {{ object.user.username }} in {{ object.project.title }}?

@@ -57,7 +57,8 @@ Variant Analysis
 
 On a very high level here is how SODAR Core was used to built VarFish (cf.
 :ref:`for_the_impatient_see_it_in_action`).
-You can find the source code in the `Github project <https://github.com/bihealth/varfish-server>`__.
+You can find the source code in the
+`Github project <https://github.com/varfish-org/varfish-server>`__.
 
 The aim is to provide an data analysis web application.
 

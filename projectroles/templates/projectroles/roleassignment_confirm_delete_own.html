@@ -1,0 +1,56 @@
+{% extends 'projectroles/project_base.html' %}
+
+{% load rules %}
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+
+{% block title %}
+  Confirm Leaving {{ object.project.title }}
+{% endblock title %}
+
+{% block projectroles_extend %}
+
+{% get_display_name object.project.type as project_type %}
+
+<div class="row sodar-subtitle-container">
+  <h3>Confirm Leaving {% get_display_name object.project.type title=True %}</h3>
+</div>
+<div class="container-fluid sodar-page-container">
+  <div class="alert alert-danger" role="alert">
+    Are you sure you really want to leave the {{ project_type }}
+    "{{ object.project.title }}"? This action can not be undone. To regain
+    access, an owner or a delegate will have to re-enable your membership.
+  </div>
+  {% if inh_child_projects %}
+    <div class="alert alert-danger" role="alert"
+         id="sodar-pr-role-leave-alert-child">
+      Leaving this {{ project_type }} will also remove your access from the
+      following inherited {% get_display_name 'CATEGORY' plural=True %} or
+      {% get_display_name 'PROJECT' plural=True %}:
+      <ul class="mt-2 mb-0">
+        {% for child in inh_child_projects %}
+          <li class="sodar-pr-role-leave-child-item">
+            <a href="{% url 'projectroles:roles' project=child.sodar_uuid %}">
+              {{ child.full_title }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="btn-group pull-right">
+      <a role="button" class="btn btn-secondary"
+          href="{{ request.session.real_referer }}">
+        <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
+      </a>
+      <button type="submit" class="btn btn-danger">
+        <i class="iconify" data-icon="mdi:account-remove"></i> Leave
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock projectroles_extend %}

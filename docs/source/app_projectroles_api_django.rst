@@ -106,6 +106,8 @@ General utility functions are stored in ``utils.py``.
     :members:
 
 
+.. _app_projectroles_api_django_ajax_common:
+
 Common Use Ajax Views
 =====================
 
@@ -113,9 +115,14 @@ Ajax views intended to be used in a SODAR Core based site are described here.
 
 .. currentmodule:: projectroles.views_ajax
 
+.. autoclass:: CurrentUserRetrieveAjaxView
+
+.. autoclass:: SiteReadOnlySettingAjaxView
+
 .. autoclass:: SidebarContentAjaxView
 
 .. autoclass:: UserDropdownContentAjaxView
+
 
 
 .. _app_projectroles_api_django_rest:
@@ -128,26 +135,15 @@ Base view classes and mixins for building REST APIs can be found in
 
 .. currentmodule:: projectroles.views_api
 
-Permissions / Versioning / Rendering
-------------------------------------
+Permissions
+-----------
 
 .. autoclass:: SODARAPIProjectPermission
     :members:
     :show-inheritance:
 
-.. autoclass:: SODARAPIVersioning
-    :members:
-    :show-inheritance:
-
-.. autoclass:: SODARAPIRenderer
-    :members:
-    :show-inheritance:
-
 Base API View Mixins
 --------------------
-
-.. autoclass:: SODARAPIBaseMixin
-    :members:
 
 .. autoclass:: SODARAPIBaseProjectMixin
     :members:

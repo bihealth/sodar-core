@@ -1,6 +1,7 @@
 """UI view tests for the tokens app"""
 
 from django.contrib.messages import get_messages
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -8,33 +9,90 @@ from knox.models import AuthToken
 
 from test_plus.test import TestCase
 
-from tokens.views import TOKEN_CREATE_MSG, TOKEN_DELETE_MSG
+# Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
+from projectroles.tests.test_models import (
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+)
+
+from tokens.views import (
+    TOKEN_CREATE_MSG,
+    TOKEN_DELETE_MSG,
+    TOKEN_CREATE_RESTRICT_MSG,
+)
 
 
-class TestUserTokenListView(TestCase):
+# SODAR constants
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+
+
+class TestUserTokenListView(
+    ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase
+):
     """Tests for UserTokenListView"""
 
     def _make_token(self):
-        self.tokens = [AuthToken.objects.create(self.user, None)]
+        self.tokens = [AuthToken.objects.create(self.regular_user, None)]
 
     def setUp(self):
-        self.user = self.make_user()
+        self.regular_user = self.make_user('regular_user')
         self.url = reverse('tokens:list')
 
     def test_get(self):
-        """Test UserTokenListView GET with a token"""
+        """Test UserTokenListView GET with token"""
         self._make_token()
-        with self.login(self.user):
+        with self.login(self.regular_user):
             response = self.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['object_list']), 1)
+        self.assertEqual(response.context['token_create_enable'], True)
+        self.assertEqual(response.context['token_create_msg'], '')
 
     def test_get_no_tokens(self):
         """Test GET with no tokens"""
-        with self.login(self.user):
+        with self.login(self.regular_user):
             response = self.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['object_list']), 0)
+
+    @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
+    def test_get_restrict(self):
+        """Test GET with restriction"""
+        with self.login(self.regular_user):
+            response = self.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['token_create_enable'], False)
+        self.assertEqual(
+            response.context['token_create_msg'], TOKEN_CREATE_RESTRICT_MSG
+        )
+
+    @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
+    def test_get_restrict_role(self):
+        """Test GET with restriction and user with role"""
+        self.init_roles()
+        category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category, self.regular_user, self.role_guest)
+        with self.login(self.regular_user):
+            response = self.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['token_create_enable'], True)
+        self.assertEqual(response.context['token_create_msg'], '')
+
+    @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
+    def test_get_restrict_superuser(self):
+        """Test GET with restriction as superuser"""
+        superuser = self.make_user('superuser')
+        superuser.is_superuser = True
+        superuser.save()
+        with self.login(superuser):
+            response = self.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['token_create_enable'], True)
+        self.assertEqual(response.context['token_create_msg'], '')
 
 
 class TestUserTokenCreateView(TestCase):

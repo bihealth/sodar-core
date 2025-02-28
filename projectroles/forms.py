@@ -14,7 +14,6 @@ from django.utils.html import format_html
 from dal import autocomplete, forward as dal_forward
 from pagedown.widgets import PagedownWidget
 
-
 from projectroles.models import (
     Project,
     Role,
@@ -29,14 +28,11 @@ from projectroles.models import (
 )
 
 from projectroles.plugins import get_active_plugins
-from projectroles.utils import (
-    get_display_name,
-    get_user_display_name,
-    build_secret,
-)
+from projectroles.utils import get_display_name, build_secret
 from projectroles.app_settings import AppSettingAPI
 
 
+app_settings = AppSettingAPI()
 User = auth.get_user_model()
 
 
@@ -50,6 +46,12 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
@@ -63,12 +65,18 @@ PROJECT_TYPE_CHOICES = [
     ),
     (PROJECT_TYPE_PROJECT, get_display_name(PROJECT_TYPE_PROJECT, title=True)),
 ]
-SETTING_DISABLE_LABEL = '[DISABLED]'
-SETTING_CUSTOM_VALIDATE_MSG = (
+APP_SETTING_HIDDEN_LABEL = '[HIDDEN]'
+APP_SETTING_HIDDEN_HELP_TEXT = '[HIDDEN FROM USERS]'
+APP_SETTING_DISABLE_LABEL = '[DISABLED]'
+APP_SETTING_CUSTOM_VALIDATE_MSG = (
     'Exception in custom app setting validation for plugin "{plugin}": '
     '{exception}'
 )
-SETTING_SOURCE_ONLY_MSG = '[Only editable on source site]'
+APP_SETTING_SOURCE_ONLY_MSG = '[Only editable on source site]'
+REMOVE_ROLE_LABEL = '--- Remove role from {project_title} ---'
+INVITE_EXISTS_MSG = (
+    'Active invite already exists for {user_email} in {project_title}'
+)
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -98,6 +106,126 @@ class SODARFormMixin:
         self.logger.error(log_msg)
         super().add_error(field, error)  # Call the error method in Django forms
 
+
+class SODARAppSettingFormMixin:
+    """Helpers for app settings handling in forms"""
+
+    def set_app_setting_field(self, plugin_name, s_field, s_def):
+        """
+        Helper for setting app setting field, widget and value.
+
+        :param plugin_name: App plugin name
+        :param s_field: Form field name
+        :param s_def: PluginAppSettingDef object
+        """
+        scope = s_def.scope
+        scope_kw = {}
+        if scope == APP_SETTING_SCOPE_PROJECT:
+            scope_kw = {'project': self.instance if self.instance.pk else None}
+        elif scope == APP_SETTING_SCOPE_USER:
+            scope_kw = {'user': self.user}  # NOTE: Requires self.user
+        s_widget_attrs = s_def.widget_attrs
+        if scope == APP_SETTING_SCOPE_PROJECT:
+            s_project_types = s_def.project_types or [PROJECT_TYPE_PROJECT]
+            s_widget_attrs['data-project-types'] = ','.join(
+                s_project_types
+            ).lower()
+        if s_def.placeholder is not None:
+            s_widget_attrs['placeholder'] = s_def.placeholder
+        setting_kwargs = {
+            'required': False,
+            'label': s_def.label or '{}.{}'.format(plugin_name, s_def.name),
+            'help_text': s_def.description,
+        }
+
+        # Option
+        if s_def.options and callable(s_def.options):
+            values = s_def.options(**scope_kw)
+            self.fields[s_field] = forms.ChoiceField(
+                choices=[
+                    (
+                        (str(value[0]), str(value[1]))
+                        if isinstance(value, tuple)
+                        else (str(value), str(value))
+                    )
+                    for value in values
+                ],
+                **setting_kwargs,
+            )
+        elif s_def.options:
+            choices = []
+            for o in s_def.options:
+                if isinstance(o, tuple):
+                    val = o[0]
+                    legend = o[1]
+                else:
+                    val = o
+                    legend = o
+                if s_def.type == APP_SETTING_TYPE_INTEGER:
+                    val = int(val)
+                choices.append((val, legend))
+            self.fields[s_field] = forms.ChoiceField(
+                choices=choices, **setting_kwargs
+            )
+        # Other types
+        elif s_def.type == APP_SETTING_TYPE_STRING:
+            self.fields[s_field] = forms.CharField(
+                widget=forms.TextInput(attrs=s_widget_attrs), **setting_kwargs
+            )
+        elif s_def.type == APP_SETTING_TYPE_INTEGER:
+            self.fields[s_field] = forms.IntegerField(
+                widget=forms.NumberInput(attrs=s_widget_attrs), **setting_kwargs
+            )
+        elif s_def.type == APP_SETTING_TYPE_BOOLEAN:
+            self.fields[s_field] = forms.BooleanField(**setting_kwargs)
+        # JSON
+        elif s_def.type == APP_SETTING_TYPE_JSON:
+            # NOTE: Attrs MUST be supplied here (#404)
+            if 'class' in s_widget_attrs:
+                s_widget_attrs['class'] += ' sodar-json-input'
+            else:
+                s_widget_attrs['class'] = 'sodar-json-input'
+            self.fields[s_field] = forms.CharField(
+                widget=forms.Textarea(attrs=s_widget_attrs), **setting_kwargs
+            )
+
+        # Add optional attributes from plugin (#404)
+        self.fields[s_field].widget.attrs.update(s_widget_attrs)
+        # Set initial value
+        value = app_settings.get(
+            plugin_name=plugin_name,
+            setting_name=s_def.name,
+            **scope_kw,
+        )
+        if s_def.type == APP_SETTING_TYPE_JSON:
+            value = json.dumps(value)
+        self.initial[s_field] = value
+
+    def set_app_setting_notes(self, plugin, s_field, s_def):
+        """
+        Helper for setting app setting label notes.
+
+        :param plugin: Plugin object
+        :param s_field: Form field name
+        :param s_def: PluginAppSettingDef object
+        """
+        if s_def.user_modifiable is False:
+            self.fields[s_field].label += ' ' + APP_SETTING_HIDDEN_LABEL
+            self.fields[s_field].help_text += ' ' + APP_SETTING_HIDDEN_HELP_TEXT
+        if s_def.global_edit:
+            if settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and (
+                s_def.scope != APP_SETTING_SCOPE_PROJECT
+                or self.instance.is_remote()
+            ):
+                self.fields[s_field].label += ' ' + APP_SETTING_DISABLE_LABEL
+                self.fields[s_field].help_text += (
+                    ' ' + APP_SETTING_SOURCE_ONLY_MSG
+                )
+                self.fields[s_field].disabled = True
+        self.fields[s_field].label = self.get_app_setting_label(
+            plugin, self.fields[s_field].label
+        )
+
     def get_app_setting_label(self, plugin, label):
         """Return label for app setting key"""
         if plugin:
@@ -113,6 +241,109 @@ class SODARFormMixin:
             'data-icon="mdi-cube"></i>',
             label,
         )
+
+    def init_app_settings(self, app_plugins, scope, user_mod):
+        """
+        Initialize app settings in form. Also sets up self.app_plugins.
+
+        :param app_plugins: List of app plugin objects
+        :param scope: App setting scope (string)
+        :param user_mod: Only include user modifiable settings if True (boolean)
+        """
+        for plugin in app_plugins + [None]:  # No plugin for projectroles
+            if plugin:
+                plugin_name = plugin.name
+                s_defs = app_settings.get_definitions(
+                    scope,
+                    plugin=plugin,
+                    user_modifiable=user_mod,
+                )
+            else:
+                plugin_name = APP_NAME
+                s_defs = app_settings.get_definitions(
+                    scope,
+                    plugin_name=plugin_name,
+                    user_modifiable=user_mod,
+                )
+            for s_def in s_defs.values():
+                s_field = 'settings.{}.{}'.format(plugin_name, s_def.name)
+                # Set field, widget and value
+                self.set_app_setting_field(plugin_name, s_field, s_def)
+                # Set label notes
+                self.set_app_setting_notes(plugin, s_field, s_def)
+
+    @classmethod
+    def clean_app_settings(
+        cls,
+        cleaned_data,
+        app_plugins,
+        scope,
+        user_modifiable,
+        project=None,
+        user=None,
+    ):
+        """Validate and clean app settings form fields"""
+        scope_kw = {}
+        if scope == APP_SETTING_SCOPE_PROJECT:
+            scope_kw['project'] = project
+        elif scope == APP_SETTING_SCOPE_USER:
+            scope_kw['user'] = user
+        errors = []
+        for plugin in app_plugins + [None]:
+            if plugin:
+                p_name = plugin.name
+                def_kwarg = {'plugin': plugin}
+            else:
+                p_name = APP_NAME
+                def_kwarg = {'plugin_name': p_name}
+            s_defs = app_settings.get_definitions(
+                scope=scope, user_modifiable=user_modifiable, **def_kwarg
+            )
+            p_settings = {}
+
+            for s_def in s_defs.values():
+                s_field = '.'.join(['settings', p_name, s_def.name])
+                p_settings[s_def.name] = cleaned_data.get(s_field)
+
+                if s_def.type == APP_SETTING_TYPE_JSON:
+                    if not p_settings[s_def.name]:
+                        cleaned_data[s_field] = '{}'
+                    try:
+                        cleaned_data[s_field] = json.loads(
+                            cleaned_data.get(s_field)
+                        )
+                    except json.JSONDecodeError as err:
+                        errors.append((s_field, 'Invalid JSON\n' + str(err)))
+                elif s_def.type == APP_SETTING_TYPE_INTEGER:
+                    # Convert integers from select fields
+                    cleaned_data[s_field] = int(cleaned_data[s_field])
+
+                try:
+                    app_settings.validate(
+                        setting_type=s_def.type,
+                        setting_value=cleaned_data.get(s_field),
+                        setting_options=s_def.options,
+                        **scope_kw,
+                    )
+                except Exception as ex:
+                    errors.append((s_field, 'Invalid value: {}'.format(ex)))
+
+            # Custom plugin validation for app settings
+            if plugin and hasattr(plugin, 'validate_form_app_settings'):
+                try:
+                    p_errors = plugin.validate_form_app_settings(
+                        p_settings, **scope_kw
+                    )
+                    if p_errors:
+                        for field, error in p_errors.items():
+                            f_name = '.'.join(['settings', p_name, field])
+                            errors.append((f_name, error))
+                except Exception as ex:
+                    err_msg = APP_SETTING_CUSTOM_VALIDATE_MSG.format(
+                        plugin=p_name, exception=ex
+                    )
+                    errors.append((None, err_msg))
+        return cleaned_data, errors
 
 
 class SODARForm(SODARFormMixin, forms.Form):
@@ -259,14 +490,14 @@ class SODARUserChoiceField(forms.ModelChoiceField):
             limit_choices_to=None,
             widget=widget,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
 # Project form -----------------------------------------------------------------
 
 
-class ProjectForm(SODARModelForm):
+class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
     """Form for Project creation/updating"""
 
     # Set up owner field
@@ -387,228 +618,6 @@ class ProjectForm(SODARModelForm):
                 required=False,
             )
 
-    def _set_app_setting_field(self, plugin_name, s_field, s_key, s_val):
-        """
-        Internal helper for setting app setting field, widget and value.
-
-        :param plugin_name: App plugin name
-        :param s_field: Form field name
-        :param s_key: Setting key
-        :param s_val: Setting value
-        """
-        s_widget_attrs = s_val.get('widget_attrs') or {}
-        s_project_types = s_val.get('project_types') or [PROJECT_TYPE_PROJECT]
-        s_widget_attrs['data-project-types'] = ','.join(s_project_types).lower()
-        if 'placeholder' in s_val:
-            s_widget_attrs['placeholder'] = s_val.get('placeholder')
-        setting_kwargs = {
-            'required': False,
-            'label': s_val.get('label') or '{}.{}'.format(plugin_name, s_key),
-            'help_text': s_val['description'],
-        }
-
-        # Option
-        if (
-            s_val.get('options')
-            and callable(s_val['options'])
-            and self.instance.pk
-        ):
-            values = s_val['options'](project=self.instance)
-            self.fields[s_field] = forms.ChoiceField(
-                choices=[
-                    (
-                        (str(value[0]), str(value[1]))
-                        if isinstance(value, tuple)
-                        else (str(value), str(value))
-                    )
-                    for value in values
-                ],
-                **setting_kwargs
-            )
-        elif (
-            s_val.get('options')
-            and callable(s_val['options'])
-            and not self.instance.pk
-        ):
-            values = s_val['options'](project=None)
-            self.fields[s_field] = forms.ChoiceField(
-                choices=[
-                    (
-                        (str(value[0]), str(value[1]))
-                        if isinstance(value, tuple)
-                        else (str(value), str(value))
-                    )
-                    for value in values
-                ],
-                **setting_kwargs
-            )
-        elif s_val.get('options'):
-            self.fields[s_field] = forms.ChoiceField(
-                choices=[
-                    (
-                        (int(option), int(option))
-                        if s_val['type'] == 'INTEGER'
-                        else (option, option)
-                    )
-                    for option in s_val['options']
-                ],
-                **setting_kwargs
-            )
-        # Other types
-        elif s_val['type'] == 'STRING':
-            self.fields[s_field] = forms.CharField(
-                widget=forms.TextInput(attrs=s_widget_attrs), **setting_kwargs
-            )
-        elif s_val['type'] == 'INTEGER':
-            self.fields[s_field] = forms.IntegerField(
-                widget=forms.NumberInput(attrs=s_widget_attrs), **setting_kwargs
-            )
-        elif s_val['type'] == 'BOOLEAN':
-            self.fields[s_field] = forms.BooleanField(**setting_kwargs)
-        # JSON
-        elif s_val['type'] == 'JSON':
-            # NOTE: Attrs MUST be supplied here (#404)
-            if 'class' in s_widget_attrs:
-                s_widget_attrs['class'] += ' sodar-json-input'
-            else:
-                s_widget_attrs['class'] = 'sodar-json-input'
-            self.fields[s_field] = forms.CharField(
-                widget=forms.Textarea(attrs=s_widget_attrs), **setting_kwargs
-            )
-
-        # Add optional attributes from plugin (#404)
-        # NOTE: Experimental! Use at your own risk!
-        self.fields[s_field].widget.attrs.update(s_widget_attrs)
-        # Set initial value
-        value = self.app_settings.get(
-            plugin_name=plugin_name,
-            setting_name=s_key,
-            project=self.instance if self.instance.pk else None,
-        )
-        if s_val['type'] == 'JSON':
-            value = json.dumps(value)
-        self.initial[s_field] = value
-
-    def _set_app_setting_notes(self, s_field, s_val, plugin):
-        """
-        Internal helper for setting app setting label notes.
-
-        :param s_field: Form field name
-        :param s_val: Setting value
-        :param plugin: Plugin object
-        """
-        if s_val.get('user_modifiable') is False:
-            self.fields[s_field].label += ' [HIDDEN]'
-            self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
-        if self.app_settings.get_global_value(s_val):
-            if self.instance.is_remote():
-                self.fields[s_field].label += ' ' + SETTING_DISABLE_LABEL
-                self.fields[s_field].help_text += ' ' + SETTING_SOURCE_ONLY_MSG
-                self.fields[s_field].disabled = True
-            else:
-                self.fields[
-                    s_field
-                ].help_text += ' [Not editable on target sites]'
-        self.fields[s_field].label = self.get_app_setting_label(
-            plugin, self.fields[s_field].label
-        )
-
-    def _init_app_settings(self):
-        """
-        Initialize app settings fields in the form.
-        """
-        # Set up setting query kwargs
-        self.p_kwargs = {}
-        # Show unmodifiable settings to superusers
-        if not self.current_user.is_superuser:
-            self.p_kwargs['user_modifiable'] = True
-        self.app_settings = AppSettingAPI()
-        self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
-        for plugin in self.app_plugins + [None]:  # Projectroles has no plugin
-            if plugin:
-                plugin_name = plugin.name
-                p_settings = self.app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
-                )
-            else:
-                plugin_name = APP_NAME
-                p_settings = self.app_settings.get_definitions(
-                    APP_SETTING_SCOPE_PROJECT,
-                    plugin_name=plugin_name,
-                    **self.p_kwargs
-                )
-            for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(plugin_name, s_key)
-                # Set field, widget and value
-                self._set_app_setting_field(plugin_name, s_field, s_key, s_val)
-                # Set label notes
-                self._set_app_setting_notes(s_field, s_val, plugin)
-
-    @classmethod
-    def _validate_app_settings(
-        self,
-        cleaned_data,
-        app_plugins,
-        app_settings,
-        p_kwargs,
-        instance,
-    ):
-        """Validate and clean app_settings form fields"""
-        errors = []
-        for plugin in app_plugins + [None]:
-            if plugin:
-                p_name = plugin.name
-                def_kwarg = {'plugin': plugin}
-            else:
-                p_name = 'projectroles'
-                def_kwarg = {'plugin_name': p_name}
-            p_defs = app_settings.get_definitions(
-                APP_SETTING_SCOPE_PROJECT, **{**p_kwargs, **def_kwarg}
-            )
-            p_settings = {}
-
-            for s_key, s_val in p_defs.items():
-                s_field = '.'.join(['settings', p_name, s_key])
-                p_settings[s_key] = cleaned_data.get(s_field)
-
-                if s_val['type'] == 'JSON':
-                    if not p_settings[s_key]:
-                        cleaned_data[s_field] = '{}'
-                    try:
-                        cleaned_data[s_field] = json.loads(
-                            cleaned_data.get(s_field)
-                        )
-                    except json.JSONDecodeError as err:
-                        errors.append((s_field, 'Invalid JSON\n' + str(err)))
-                elif s_val['type'] == 'INTEGER':
-                    # Convert integers from select fields
-                    cleaned_data[s_field] = int(cleaned_data[s_field])
-
-                if not app_settings.validate(
-                    setting_type=s_val['type'],
-                    setting_value=cleaned_data.get(s_field),
-                    setting_options=s_val.get('options'),
-                    project=instance,
-                ):
-                    errors.append((s_field, 'Invalid value'))
-
-            # Custom plugin validation for app settings
-            if plugin and hasattr(plugin, 'validate_form_app_settings'):
-                try:
-                    p_errors = plugin.validate_form_app_settings(
-                        p_settings, project=instance
-                    )
-                    if p_errors:
-                        for field, error in p_errors.items():
-                            f_name = '.'.join(['settings', p_name, field])
-                            errors.append((f_name, error))
-                except Exception as ex:
-                    err_msg = SETTING_CUSTOM_VALIDATE_MSG.format(
-                        plugin=p_name, exception=ex
-                    )
-                    errors.append((None, err_msg))
-        return cleaned_data, errors
-
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
@@ -628,8 +637,12 @@ class ProjectForm(SODARModelForm):
             or (self.instance.pk and self.instance.type == PROJECT_TYPE_PROJECT)
         ):
             self._init_remote_sites()
-        # Add settings fields
-        self._init_app_settings()
+        # Init app settings fields
+        self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
+        user_mod = False if self.current_user.is_superuser else True
+        self.init_app_settings(
+            self.app_plugins, APP_SETTING_SCOPE_PROJECT, user_mod
+        )
 
         # Update help texts to match DISPLAY_NAMES
         self.fields['title'].help_text = 'Title'
@@ -800,13 +813,13 @@ class ProjectForm(SODARModelForm):
                 'Public guest access is not allowed for categories',
             )
 
-        # Verify remote site fields
-        cleaned_data, errors = self._validate_app_settings(
+        # Clean and validate app settings
+        cleaned_data, errors = self.clean_app_settings(
             self.cleaned_data,
             self.app_plugins,
-            self.app_settings,
-            self.p_kwargs,
-            self.instance,
+            APP_SETTING_SCOPE_PROJECT,
+            False if self.current_user.is_superuser else True,
+            project=self.instance,
         )
         for key, value in cleaned_data.items():
             self.cleaned_data[key] = value
@@ -920,7 +933,7 @@ class RoleAssignmentForm(SODARModelForm):
                     'user',
                     'User {} already assigned as {}'.format(
                         existing_as.role.name,
-                        get_user_display_name(self.cleaned_data.get('user')),
+                        self.cleaned_data.get('user').get_display_name(),
                     ),
                 )
         # Updating a RoleAssignment
@@ -972,10 +985,19 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             q_kwargs['rank__gt'] = ROLE_RANKING[PROJECT_ROLE_OWNER]
         if inh_role_as:
             q_kwargs['rank__lte'] = inh_role_as.role.rank
-        return [
+        ret = [
             get_role_option(project, role)
             for role in Role.objects.filter(**q_kwargs).order_by('rank')
         ]
+        if (
+            not inh_role_as
+            or inh_role_as.role.rank != ROLE_RANKING[PROJECT_ROLE_OWNER]
+        ):
+            remove_label = REMOVE_ROLE_LABEL.format(
+                project_title=get_display_name(project.type)
+            )
+            ret.append((0, remove_label))
+        return ret
 
     def __init__(self, project, current_user, current_owner, *args, **kwargs):
         """Override for form initialization"""
@@ -1016,9 +1038,10 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         )
 
     def clean_old_owner_role(self):
-        role = Role.objects.filter(
-            pk=self.cleaned_data.get('old_owner_role')
-        ).first()
+        field_val = int(self.cleaned_data.get('old_owner_role'))
+        if not field_val:
+            return None  # Remove old owner role
+        role = Role.objects.filter(pk=field_val).first()
         if not role:
             raise forms.ValidationError('Selected role not found')
 
@@ -1118,22 +1141,37 @@ class ProjectInviteForm(SODARModelForm):
                 'Please use "Add Role" instead.'.format(existing_user.username),
             )
 
-        # Check if user already has an invite in the project
-        try:
-            ProjectInvite.objects.get(
-                project=self.project,
+        # Existing active invite for user in same project
+        existing_inv = ProjectInvite.objects.filter(
+            project=self.project,
+            email=user_email,
+            active=True,
+            date_expire__gt=timezone.now(),
+        ).first()
+        if existing_inv:
+            self.add_error(
+                'email',
+                INVITE_EXISTS_MSG.format(
+                    user_email=user_email, project_title=self.project.title
+                ),
+            )
+
+        # Existing active invite for user in parent category
+        if self.project.parent:
+            parent_inv = ProjectInvite.objects.filter(
                 email=user_email,
                 active=True,
                 date_expire__gt=timezone.now(),
-            )
-            self.add_error(
-                'email',
-                'There is already an active invite for email {} in {}'.format(
-                    user_email, self.project.title
-                ),
-            )
-        except ProjectInvite.DoesNotExist:
-            pass
+                project__in=self.project.get_parents(),
+            ).first()
+            if parent_inv:
+                self.add_error(
+                    'email',
+                    INVITE_EXISTS_MSG.format(
+                        user_email=user_email,
+                        project_title=parent_inv.project.title,
+                    ),
+                )
 
         # Local users check
         if user_email:
@@ -1195,6 +1233,33 @@ class ProjectInviteForm(SODARModelForm):
         obj.secret = build_secret()
         obj.save()
         return obj
+
+
+# Site app settings form -------------------------------------------------------
+
+
+class SiteAppSettingsForm(SODARAppSettingFormMixin, SODARForm):
+    """Form for managing site app settings"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Init app settings fields
+        project_plugins = get_active_plugins(plugin_type='project_app')
+        site_plugins = get_active_plugins(plugin_type='site_app')
+        self.app_plugins = project_plugins + site_plugins
+        self.init_app_settings(self.app_plugins, APP_SETTING_SCOPE_SITE, True)
+
+    def clean(self):
+        cleaned_data, errors = self.clean_app_settings(
+            self.cleaned_data,
+            self.app_plugins,
+            APP_SETTING_SCOPE_SITE,
+            False,
+        )
+        self.cleaned_data = cleaned_data
+        for field, error in errors:
+            self.add_error(field, error)
+        return self.cleaned_data
 
 
 # RemoteSite form --------------------------------------------------------------

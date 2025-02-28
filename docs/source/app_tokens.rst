@@ -38,6 +38,18 @@ The siteinfo app is available for your Django site after installing
         'tokens.apps.TokensConfig',
     ]
 
+Optional Settings
+-----------------
+
+To alter default tokens app settings, insert the following **optional**
+variables with values of your choosing:
+
+.. code-block:: python
+
+    # Tokens app settings
+    # Restrict access to token creation for users with project roles
+    TOKENS_CREATE_PROJECT_USER_RESTRICT = True
+
 URL Configuration
 -----------------
 

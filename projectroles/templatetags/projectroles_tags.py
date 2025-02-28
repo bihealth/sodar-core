@@ -25,6 +25,7 @@ REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
 # Local constants
+APP_NAME = 'projectroles'
 # Behaviour for certain levels has not been specified/implemented yet
 ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
@@ -111,7 +112,7 @@ def get_app_link_state(app_plugin, app_name, url_name):
         return 'active'
     # HACK for remote site views, see issue #1336
     if (
-        app_name == 'projectroles'
+        app_name == APP_NAME
         and app_plugin.name == 'remotesites'
         and url_name.startswith('remote_')
     ):
@@ -126,7 +127,7 @@ def get_pr_link_state(app_urls, request, link_names=None):
     If link_names is set, only return "active" if url_name is found in
     link_names.
     """
-    if request.resolver_match.app_name != 'projectroles':
+    if request.resolver_match.app_name != APP_NAME:
         return ''
     url_name = request.resolver_match.url_name
     if url_name in [u.name for u in app_urls]:

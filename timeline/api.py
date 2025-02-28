@@ -10,7 +10,7 @@ from django.utils.text import Truncator
 
 # Projectroles dependency
 from projectroles.models import Project, RemoteSite
-from projectroles.plugins import get_app_plugin, PluginObjectLink
+from projectroles.plugins import get_app_plugin
 from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
 
@@ -37,10 +37,6 @@ APP_NAMES = get_app_names()
 LABEL_MAX_WIDTH = 32
 UNKNOWN_LABEL = '(unknown)'
 PLUGIN_NOT_FOUND_MSG = 'Plugin not found: {plugin_name}'
-DEPRECATE_LINK_DICT_MSG = (
-    'Returning dicts from get_object_link() has been deprecated and will no '
-    'longer be supported in v1.1. Return a PluginObjectLink object instead.'
-)
 
 
 class TimelineAPI:
@@ -195,14 +191,6 @@ class TimelineAPI:
                     raise ex
                 link = None
             if link:
-                # TODO: Remove in v1.1 (see #1398)
-                if isinstance(link, dict):
-                    logger.warning(DEPRECATE_LINK_DICT_MSG)
-                    link = PluginObjectLink(
-                        url=link['url'],
-                        name=link['label'],
-                        blank=link.get('blank', False),
-                    )
                 if not link.name:
                     logger.warning(
                         'Empty name returned by plugin "{}" for object '

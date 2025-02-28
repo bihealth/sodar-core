@@ -5,7 +5,7 @@ from django.utils import timezone
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import SiteAppPluginPoint
+from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
 
 from adminalerts.models import AdminAlert
 from adminalerts.urls import urlpatterns
@@ -13,6 +13,22 @@ from adminalerts.urls import urlpatterns
 
 # SODAR constants
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+
+# Local constants
+ADMINALERTS_APP_SETTINGS = [
+    PluginAppSettingDef(
+        name='notify_email_alert',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
+        label='Receive email for admin alerts',
+        description=(
+            'Receive email for important administrator alerts regarding e.g. '
+            'site downtime.'
+        ),
+    )
+]
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -27,21 +43,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: UI URLs
     urls = urlpatterns
 
-    #: App settings definition
-    app_settings = {
-        'notify_email_alert': {
-            'scope': APP_SETTING_SCOPE_USER,
-            'type': 'BOOLEAN',
-            'default': True,
-            'label': 'Receive email for admin alerts',
-            'description': (
-                'Receive email for important administrator alerts regarding '
-                'e.g. site downtime.'
-            ),
-            'user_modifiable': True,
-            'global': False,
-        }
-    }
+    #: App setting definitions
+    app_settings = ADMINALERTS_APP_SETTINGS
 
     #: Iconify icon
     icon = 'mdi:alert'
@@ -69,6 +72,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     def get_messages(self, user=None):
         """
         Return a list of messages to be shown to users.
+
         :param user: User object (optional)
         :return: List of dicts or empty list if no messages
         """
@@ -78,20 +82,24 @@ class SiteAppPlugin(SiteAppPluginPoint):
         ).order_by('-pk')
 
         for a in alerts:
-            content = (
-                '<i class="iconify" data-icon="mdi:alert"></i> ' + a.message
-            )
+            content = '<i class="iconify" data-icon="mdi:alert"></i> '
             if a.description.raw and user and user.is_authenticated:
-                content += (
-                    '<span class="pull-right"><a href="{}" class="text-info">'
-                    '<i class="iconify" data-icon="mdi:arrow-right-circle">'
-                    '</i> Details</a>'.format(
-                        reverse(
-                            'adminalerts:detail',
-                            kwargs={'adminalert': a.sodar_uuid},
-                        )
-                    )
+                url = reverse(
+                    'adminalerts:detail',
+                    kwargs={'adminalert': a.sodar_uuid},
                 )
+                content += (
+                    f'<a href="{url}" '
+                    f'class="sodar-alert-full-text-link">{a.message}</a> '
+                )
+                content += (
+                    f'<span class="pull-right"><a href="{url}" '
+                    f'class="text-info sodar-alert-detail-link">'
+                    f'<i class="iconify" data-icon="mdi:arrow-right-circle">'
+                    f'</i> Details</a>'
+                )
+            else:
+                content += a.message
             messages.append(
                 {
                     'content': content,

@@ -29,7 +29,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait, Select
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS, CAT_DELIMITER
 from projectroles.plugins import get_active_plugins
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -61,6 +61,7 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
 # Local constants
+APP_NAME = 'projectroles'
 PROJECT_LINK_IDS = [
     'sodar-pr-link-project-roles',
     'sodar-pr-link-project-update',
@@ -81,6 +82,7 @@ CATEGORY_SETTING_ID = (
 PUBLIC_ACCESS_ID = 'id_public_guest_access'
 REMOTE_SITE_UUID = uuid.uuid4()
 REMOTE_SITE_ID = 'id_remote_site.{}'.format(REMOTE_SITE_UUID)
+CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
 
 
 class LiveUserMixin:
@@ -533,10 +535,24 @@ class TestHomeView(UITestBase):
     def _get_list_item(self, project):
         return self.selenium.find_element(
             By.XPATH,
-            '//tr[@class="sodar-pr-project-list-item '
-            'sodar-pr-project-list-item-{}" and @data-uuid="{}"]'.format(
+            '//tr[contains(@class, "sodar-pr-project-list-item '
+            'sodar-pr-project-list-item-{}") and @data-uuid="{}"]'.format(
                 project.type.lower(), project.sodar_uuid
             ),
+        )
+
+    def _get_project_row(self, project):
+        """Return table row for specificed project"""
+        return self.selenium.find_element(
+            By.ID, f'sodar-pr-project-list-item-{project.sodar_uuid}'
+        )
+
+    def _wait_for_async_requests(self):
+        """Wait for async requests to finish"""
+        WebDriverWait(self.selenium, self.wait_time).until_not(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-list-load-icon')
+            )
         )
 
     def test_project_list_items(self):
@@ -561,7 +577,7 @@ class TestHomeView(UITestBase):
             [(self.user_no_roles, 0)],
             self.url,
             elem_id,
-            **self.wait_kwargs_empty
+            **self.wait_kwargs_empty,
         )
 
     def test_project_list_items_public(self):
@@ -591,7 +607,7 @@ class TestHomeView(UITestBase):
         self.selenium.get(self.build_selenium_url(self.url))
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
-                (getattr(By, 'CLASS_NAME'), 'sodar-pr-project-list-item')
+                (By.CLASS_NAME, 'sodar-pr-project-list-item')
             )
         )
         self.assertEqual(self._get_item_vis_count(), 2)
@@ -657,7 +673,7 @@ class TestHomeView(UITestBase):
     def test_project_list_star(self):
         """Test project list star filter"""
         app_settings.set(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             setting_name='project_star',
             value=True,
             project=self.project,
@@ -671,12 +687,8 @@ class TestHomeView(UITestBase):
         )
         button.click()
         self.assertEqual(self._get_item_vis_count(), 1)
-        self.assertEqual(
-            self.selenium.find_element(
-                By.ID, 'sodar-pr-project-list-message'
-            ).get_attribute('style'),
-            'display: none;',
-        )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-project-list-message')
 
     def test_project_list_star_no_project(self):
         """Test project list star filter with no starred project"""
@@ -687,6 +699,275 @@ class TestHomeView(UITestBase):
         )
         self.assertFalse(button.is_enabled())
         button.click()
+
+    def test_project_list_title(self):
+        """Test project list title rendering"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        icon = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title-container'
+        ).find_element(By.TAG_NAME, 'svg')
+        self.assertEqual(icon.get_attribute('data-icon'), 'mdi:cube')
+        link_html = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title'
+        ).find_element(By.TAG_NAME, 'a')
+        self.assertEqual(
+            link_html.get_attribute('innerHTML'), self.project.full_title
+        )
+        # Assert no extra icons are present
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-starred')
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-archive')
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-public')
+
+    def test_project_list_title_highlight(self):
+        """Test project list title rendering with highlight enabled"""
+        app_settings.set(
+            APP_NAME, 'project_list_highlight', True, user=self.user_owner
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        link_html = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title'
+        ).find_element(By.TAG_NAME, 'a')
+        expected = (
+            self.category.title
+            + CAT_DELIMITER
+            + f'<strong>{self.project.title}</strong>'
+        )
+        self.assertEqual(link_html.get_attribute('innerHTML'), expected)
+
+    def test_project_list_title_category(self):
+        """Test project list title rendering with category"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.category)
+        icon = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title-container'
+        ).find_element(By.TAG_NAME, 'svg')
+        self.assertEqual(icon.get_attribute('data-icon'), 'mdi:rhombus-split')
+        link_html = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title'
+        ).find_element(By.TAG_NAME, 'a')
+        self.assertEqual(
+            link_html.get_attribute('innerHTML'), self.category.full_title
+        )
+
+    def test_project_list_title_category_highlight(self):
+        """Test project list title rendering with category and highlight"""
+        sub_cat = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(sub_cat, self.user_owner, self.role_owner)
+        app_settings.set(
+            APP_NAME, 'project_list_highlight', True, user=self.user_owner
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(sub_cat)
+        link_html = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-title'
+        ).find_element(By.TAG_NAME, 'a')
+        # No highlight should be applied
+        self.assertEqual(
+            link_html.get_attribute('innerHTML'), sub_cat.full_title
+        )
+
+    def test_project_list_title_star(self):
+        """Test project list title rendering with starred project"""
+        app_settings.set(
+            APP_NAME,
+            'project_star',
+            True,
+            project=self.project,
+            user=self.user_owner,
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-starred')
+        )
+
+    def test_project_list_title_archive(self):
+        """Test project list title rendering with archived project"""
+        self.project.archive = True
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-archive')
+        )
+
+    def test_project_list_title_public(self):
+        """Test project list title rendering with public guest access"""
+        self.project.public_guest_access = True
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-public')
+        )
+
+    def test_project_list_custom_cols(self):
+        """Test rendering custom columns"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self._wait_for_async_requests()
+        row = self._get_project_row(self.project)
+        cols = row.find_elements(By.CLASS_NAME, 'sodar-pr-project-list-custom')
+        self.assertEqual(len(cols), 2)
+        for c in cols:
+            self.assertEqual(c.get_attribute('innerHTML'), '0')
+
+    def test_project_list_custom_cols_category(self):
+        """Test rendering custom columns with category"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.category)
+        cols = row.find_elements(By.CLASS_NAME, 'sodar-pr-project-list-custom')
+        self.assertEqual(len(cols), 0)
+
+    def test_project_list_role_col_owner(self):
+        """Test rendering role column as owner"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self._wait_for_async_requests()
+        row = self._get_project_row(self.project)
+        col = row.find_element(By.CLASS_NAME, 'sodar-pr-project-list-role')
+        self.assertEqual(
+            col.get_attribute('class'), 'sodar-pr-project-list-role'
+        )
+        self.assertEqual(col.get_attribute('innerHTML'), 'Owner')
+
+    def test_project_list_role_col_superuser(self):
+        """Test rendering role column as superuser"""
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kwargs)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.CLASS_NAME, 'sodar-pr-project-list-role'
+            )
+
+    def test_project_list_role_col_category_inherit(self):
+        """Test rendering role column with inherited role"""
+        # Owner user has no role in parent category
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self._wait_for_async_requests()
+        row = self._get_project_row(self.category)
+        col = row.find_element(By.CLASS_NAME, 'sodar-pr-project-list-role')
+        self.assertEqual(
+            col.get_attribute('class'), 'sodar-pr-project-list-role text-muted'
+        )
+        self.assertEqual(col.get_attribute('innerHTML'), 'N/A')
+
+    def test_project_list_paginate_disabled(self):
+        """Test project list pagination with pagination disabled"""
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        self.assertEqual(elem.is_displayed(), False)
+
+    def test_project_list_paginate_enabled(self):
+        """Test project list pagination with pagination enabled"""
+        # Create additional categories to fill first page
+        for i in range(1, 10):
+            c = self.make_project(
+                f'Additional Category {i}', PROJECT_TYPE_CATEGORY, None
+            )
+            self.make_assignment(c, self.user_owner, self.role_owner)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        self.assertEqual(elem.is_displayed(), True)
+
+    def test_project_list_paginate_update(self):
+        """Test project list pagination updating on second page"""
+        for i in range(1, 10):
+            c = self.make_project(
+                f'Additional Category {i}', PROJECT_TYPE_CATEGORY, None
+            )
+            self.make_assignment(c, self.user_owner, self.role_owner)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self._wait_for_async_requests()
+        # Only category should be visible
+        self.assertIsNotNone(self._get_project_row(self.category))
+        with self.assertRaises(NoSuchElementException):
+            self._get_project_row(self.project)
+
+        # Navigate to page 2
+        btn = self.selenium.find_element(By.XPATH, '//a[@data-dt-idx="2"]')
+        btn.click()
+        WebDriverWait(self.selenium, 15).until(
+            ec.presence_of_element_located(
+                (By.ID, f'sodar-pr-project-list-item-{self.project.sodar_uuid}')
+            )
+        )
+        # Only project should be visible
+        with self.assertRaises(NoSuchElementException):
+            self._get_project_row(self.category)
+        row = self._get_project_row(self.project)
+
+        # Ensure extra columns were updated on previously hidden elements
+        cols = row.find_elements(By.CLASS_NAME, 'sodar-pr-project-list-custom')
+        self.assertEqual(len(cols), 2)
+        for c in cols:
+            self.assertEqual(c.get_attribute('innerHTML'), '0')
+        col = row.find_element(By.CLASS_NAME, 'sodar-pr-project-list-role')
+        self.assertEqual(
+            col.get_attribute('class'), 'sodar-pr-project-list-role'
+        )
+        self.assertEqual(col.get_attribute('innerHTML'), 'Owner')
+
+    def test_project_list_paginate_control(self):
+        """Test project list pagination control"""
+        for i in range(1, 10):
+            c = self.make_project(
+                f'Additional Category {i}', PROJECT_TYPE_CATEGORY, None
+            )
+            self.make_assignment(c, self.user_owner, self.role_owner)
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_pagination', user=self.user_owner
+            ),
+            10,
+        )
+
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        project_elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(project_elems), 10)
+        with self.assertRaises(NoSuchElementException):
+            self._get_project_row(self.project)
+
+        elem = Select(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-page-length'
+            )
+        )
+        elem.select_by_value('25')
+        WebDriverWait(self.selenium, 15).until(
+            ec.presence_of_element_located(
+                (By.ID, f'sodar-pr-project-list-item-{self.project.sodar_uuid}')
+            )
+        )
+        project_elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(project_elems), 11)
+        time.sleep(1)  # Wait just in case
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_pagination', user=self.user_owner
+            ),
+            25,
+        )
 
     def test_link_create_toplevel(self):
         """Test project creation link visibility"""
@@ -723,6 +1004,51 @@ class TestHomeView(UITestBase):
         self.login_and_redirect(self.user_owner, self.url)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
+
+    def test_read_only_alert_disabled(self):
+        """Test site read-only mode alert with mode disabled"""
+        self.assertFalse(app_settings.get(APP_NAME, 'site_read_only'))
+        self.login_and_redirect(self.user_owner, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
+
+    def test_read_only_alert_enabled(self):
+        """Test site read-only mode alert with mode enabled"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        self.login_and_redirect(self.user_owner, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
+        self.assertIsNotNone(elem)
+        self.assertNotEqual(elem.text, CUSTOM_READ_ONLY_MSG)
+
+    @override_settings(PROJECTROLES_READ_ONLY_MSG=CUSTOM_READ_ONLY_MSG)
+    def test_read_only_alert_custom(self):
+        """Test site read-only mode alert with custom message"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        self.login_and_redirect(self.user_owner, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
+        self.assertIsNotNone(elem)
+        self.assertEqual(elem.text, CUSTOM_READ_ONLY_MSG)
+
+    def test_read_only_alert_disable(self):
+        """Test site read-only mode disabling enabled alert"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        self.login_and_redirect(self.user_owner, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
+        self.assertIsNotNone(elem)
+        self.assertIn('alert-danger', elem.get_attribute('class'))
+        self.assertNotIn('alert-success', elem.get_attribute('class'))
+        with self.assertRaises(NoSuchElementException):
+            elem.find_element(By.TAG_NAME, 'a')
+
+        app_settings.set(APP_NAME, 'site_read_only', False)
+        WebDriverWait(self.selenium, 15).until(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'sodar-alert-site-read-only-updated')
+            )
+        )
+        self.assertNotIn('alert-danger', elem.get_attribute('class'))
+        self.assertIn('alert-success', elem.get_attribute('class'))
+        self.assertIsNotNone(elem.find_element(By.TAG_NAME, 'a'))
 
 
 class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
@@ -1313,6 +1639,22 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         ]
         self.assert_element_set(expected, PROJECT_LINK_IDS, self.url_cat)
 
+    def test_project_links_read_only(self):
+        """Test visibility of project links with site read-only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        expected = [
+            (self.superuser, self._get_pr_links('roles', 'update')),
+            (self.user_owner_cat, self._get_pr_links('roles')),
+            (self.user_delegate_cat, self._get_pr_links('roles')),
+            (self.user_contributor_cat, self._get_pr_links('roles')),
+            (self.user_guest_cat, self._get_pr_links('roles')),
+            (self.user_owner, self._get_pr_links('roles')),
+            (self.user_delegate, self._get_pr_links('roles')),
+            (self.user_contributor, self._get_pr_links('roles')),
+            (self.user_guest, self._get_pr_links('roles')),
+        ]
+        self.assert_element_set(expected, PROJECT_LINK_IDS, self.url)
+
     def test_copy_uuid_visibility_default(self):
         """Test default UUID copy button visibility (should not be visible)"""
         users = [
@@ -1711,6 +2053,12 @@ class TestProjectCreateView(RemoteSiteMixin, UITestBase):
             [self.superuser], self.url_top, 'sodar-pr-btn-archive', False
         )
 
+    def test_delete_button(self):
+        """Test rendering form without delete button"""
+        self.assert_element_exists(
+            [self.superuser], self.url_top, 'sodar-pr-btn-delete', False
+        )
+
     def test_fields_top(self):
         """Test rendering of dynamic fields for top level creation view"""
         self.login_and_redirect(self.superuser, self.url_top)
@@ -1835,6 +2183,79 @@ class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         element = self.selenium.find_element(By.ID, 'sodar-pr-btn-archive')
         self.assertEqual(element.text, 'Unarchive')
 
+    def test_delete_button(self):
+        """Test rendering delete button"""
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    def test_delete_button_category_with_children(self):
+        """Test rendering delete button with category and children"""
+        self.login_and_redirect(self.superuser, self.url_cat)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    def test_delete_button_category_no_children(self):
+        """Test rendering delete button with category and no children"""
+        self.project.delete()
+        self.login_and_redirect(self.superuser, self.url_cat)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    def test_delete_button_remote(self):
+        """Test rendering delete button with non-revoked remote project"""
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    def test_delete_button_remote_revoked(self):
+        """Test rendering delete button with revoked remote project"""
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_REVOKED,
+            project=self.project,
+        )
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_delete_button_remote_target(self):
+        """Test rendering delete button with non-revoked remote project as target site"""
+        self.remote_site.mode = SITE_MODE_SOURCE
+        self.remote_site.save()
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+            project=self.project,
+        )
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_delete_button_remote_revoked_target(self):
+        """Test rendering delete button with non-revoked remote project as target site"""
+        self.remote_site.mode = SITE_MODE_SOURCE
+        self.remote_site.save()
+        self.remote_project = self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=REMOTE_LEVEL_REVOKED,
+            project=self.project,
+        )
+        self.login_and_redirect(self.superuser, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
     def test_fields_project(self):
         """Test field visibility for project update"""
         self.login_and_redirect(self.superuser, self.url)
@@ -1922,6 +2343,23 @@ class TestProjectArchiveView(UITestBase):
         )
 
 
+class TestProjectDeleteView(UITestBase):
+    """Tests for ProjectDeleteView UI"""
+
+    def test_render(self):
+        """Test rendering of project delete confirmation form"""
+        url = reverse(
+            'projectroles:delete', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(self.superuser, url)
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-btn-confirm-delete')
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.NAME, 'delete_host_confirm')
+        )
+
+
 class TestProjectRoleView(RemoteTargetMixin, UITestBase):
     """Tests for ProjectRoleView UI"""
 
@@ -1948,6 +2386,32 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         self.url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
+
+    def test_leave_button_owner(self):
+        """Test rendering leave project button as owner"""
+        self.login_and_redirect(self.user_owner, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    def test_leave_button_contributor(self):
+        """Test rendering leave project button as contributor"""
+        self.login_and_redirect(self.user_contributor, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+        self.assertIsNone(elem.get_attribute('disabled'))
+
+    def test_leave_button_inherit(self):
+        """Test rendering leave project button as inherited contributor"""
+        self.login_and_redirect(self.user_contributor_cat, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_leave_button_target(self):
+        """Test rendering leave project button as target"""
+        self.set_up_as_target(projects=[self.category, self.project])
+        self.login_and_redirect(self.user_contributor, self.url)
+        elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+        self.assertEqual(elem.get_attribute('disabled'), 'true')
 
     def test_role_ops(self):
         """Test rendering role operations dropdown"""
@@ -1980,6 +2444,23 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         self.assertEqual(btn.is_enabled(), False)
         self.assert_element_exists(
             non_superusers, self.url, 'sodar-pr-role-ops-dropdown', False
+        )
+
+    def test_role_ops_read_only(self):
+        """Test rendering role operations dropdown with site read-only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        self.assert_element_exists(
+            good_users, self.url, 'sodar-pr-role-ops-dropdown', True
+        )
+        self.assert_element_exists(
+            bad_users, self.url, 'sodar-pr-role-ops-dropdown', False
         )
 
     def test_role_ops_invite(self):
@@ -2053,7 +2534,6 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         self.assertIsNotNone(
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-transfer')
         )
-        # TODO: Assert link enabling/disabling after updating owner transfer
 
     def test_role_dropdown_owner_inherited(self):
         """Test role dropdown items for inherited owner"""
@@ -2130,6 +2610,25 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
         with self.assertRaises(NoSuchElementException):
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-delete')
+
+    def test_role_dropdown_read_only(self):
+        """Test role dropdown with site read-only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        expected = [
+            (self.superuser, 6),
+            (self.user_owner_cat, 0),
+            (self.user_delegate_cat, 0),
+            (self.user_contributor_cat, 0),
+            (self.user_guest_cat, 0),
+            (self.user_finder_cat, 0),
+            (self.user_owner, 0),
+            (self.user_delegate, 0),
+            (self.user_contributor, 0),
+            (self.user_guest, 0),
+        ]
+        self.assert_element_count(
+            expected, self.url, 'sodar-pr-role-dropdown', attribute='class'
+        )
 
 
 class TestRoleAssignmentCreateView(UITestBase):

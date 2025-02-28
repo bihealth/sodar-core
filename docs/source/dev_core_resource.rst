@@ -17,25 +17,6 @@ For the most part, developing apps within the SODAR Core package follow the
 same guidelines as detailed in :ref:`dev_site`. However, there are certain
 exceptions.
 
-REST API Views
---------------
-
-For internal SODAR Core apps, you need to use core counterparts to the mixins
-than provided for SODAR Core using sites. The counterparts use different media
-type and versioning from views to be implemented on external sites. This is to
-prevent version number clashes requiring changes in external APIs. The classes
-can be found in ``projectroles.views_api`` and are as follows:
-
-- ``CoreAPIVersioning``
-- ``CoreAPIRenderer``
-- ``CoreAPIBaseMixin``
-- ``CoreAPIBaseProjectMixin``
-- ``CoreAPIGenericProjectMixin``
-
-For detailed API descriptions, see docstrings in the ``view_api`` module. The
-media type and versioning for these views are **hardcoded** and should not be
-changed, except version information upon a new release of SODAR Core.
-
 
 Projectroles App Development
 ============================
@@ -62,17 +43,19 @@ To alter projectroles app settings when developing the app, update the
 
 .. code-block:: python
 
-     'example_setting': {
-         'scope': 'PROJECT',  # PROJECT/USER
-         'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-         'default': 'example',
-         'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
-         'label': 'Project setting',  # Optional, defaults to name/key
-         'placeholder': 'Enter example setting here',  # Optional
-         'description': 'Example project setting',  # Optional
-         'user_modifiable': True,  # Optional, show/hide in forms
-         'local': False,  # Allow editing in target site forms if True
-     }
+    PluginAppSettingDef(
+        name='example_setting',
+        scope=APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER/PROJECT_USER/SITE
+        type=APP_SETTING_TYPE_STRING,  # STRING/INTEGER/BOOLEAN/JSON
+        default='example',
+        label='Project setting',  # Optional, defaults to name
+        placeholder='Enter example setting here',  # Optional
+        description='Example project setting',  # Optional
+        options=['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
+        user_modifiable=True,  # Optional, show/hide in forms
+        global_edit=False,  # Allow editing in target site forms if True
+        widget_attrs={},  # Optional, widget attrs for forms
+    )
 
 
 Testing

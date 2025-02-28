@@ -1,6 +1,7 @@
 """REST API view model serializers for the projectroles app"""
 
 from email.utils import parseaddr
+from packaging.version import parse as parse_version
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -149,6 +150,7 @@ class SODARUserSerializer(SODARModelSerializer):
     """Serializer for the user model used in SODAR Core based sites"""
 
     additional_emails = serializers.SerializerMethodField()
+    auth_type = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -158,16 +160,30 @@ class SODARUserSerializer(SODARModelSerializer):
             'email',
             'additional_emails',
             'is_superuser',
+            'auth_type',
             'sodar_uuid',
         ]
 
-    def get_additional_emails(self, obj):
+    def get_additional_emails(self, obj: User) -> list:
         return [
             e.email
             for e in SODARUserAdditionalEmail.objects.filter(
                 user=obj, verified=True
             ).order_by('email')
         ]
+
+    def get_auth_type(self, obj: User) -> str:
+        return obj.get_auth_type()
+
+    def to_representation(self, instance):
+        """Override to_representation() to handle version differences"""
+        ret = super().to_representation(instance)
+        # Omit auth_type from <1.1
+        if 'request' in self.context and parse_version(
+            self.context['request'].version
+        ) < parse_version('1.1'):
+            ret.pop('auth_type', None)
+        return ret
 
 
 # Projectroles Serializers -----------------------------------------------------
@@ -374,6 +390,12 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     roles = RoleAssignmentNestedListSerializer(
         read_only=True, many=True, source='get_roles'
     )
+    children = serializers.SlugRelatedField(
+        slug_field='sodar_uuid',
+        many=True,
+        allow_null=True,
+        read_only=True,
+    )
 
     class Meta:
         model = Project
@@ -388,6 +410,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'full_title',
             'owner',
             'roles',
+            'children',
             'sodar_uuid',
         ]
         read_only_fields = ['full_title']
@@ -566,8 +589,9 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             title=ret['title'],
             **{'parent__sodar_uuid': parent} if parent else {},
         )
-        # Return only title, full title and UUID for projects with finder role
         user = self.context['request'].user
+
+        # Return only title, full title and UUID for projects with finder role
         if (
             project.type == PROJECT_TYPE_PROJECT
             and project.parent
@@ -583,6 +607,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                     'full_title': project.full_title,
                     'sodar_uuid': str(project.sodar_uuid),
                 }
+
         # Else return full serialization
         # Proper rendering of readme
         ret['readme'] = project.readme.raw or ''
@@ -598,6 +623,11 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 )
         # Set full_title manually
         ret['full_title'] = project.full_title
+        # Remove children field for projects and API version <1.1
+        if project.type == PROJECT_TYPE_PROJECT or parse_version(
+            self.context['request'].version
+        ) < parse_version('1.1'):
+            ret.pop('children', None)
         return ret
 
 

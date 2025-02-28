@@ -45,6 +45,8 @@ SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
+APP_NAME_EX = 'example_project_app'
+APP_NAME_FF = 'filesfolders'
 NON_EXISTING_UUID = uuid.uuid4()
 STATIC_FILE_PATH = 'images/logo_navbar.png'
 TEMPLATE_PATH = 'projectroles/home.html'
@@ -82,14 +84,14 @@ class TemplateTagTestBase(
         )
         # Init app_settings
         app_settings.set(
-            'filesfolders', 'allow_public_links', True, project=self.project
+            APP_NAME_FF, 'allow_public_links', True, project=self.project
         )
         app_settings.set(
             'projectroles', 'ip_restrict', True, project=self.project
         )
         self.setting_filesfolders = AppSetting.objects.get(
             project=self.project,
-            app_plugin__name='filesfolders',
+            app_plugin__name=APP_NAME_FF,
             name='allow_public_links',
         )
         # Init request factory
@@ -157,15 +159,13 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         """Test get_app_setting()"""
         self.assertEqual(
             c_tags.get_app_setting(
-                'example_project_app',
-                'project_bool_setting',
-                project=self.project,
+                APP_NAME_EX, 'project_bool_setting', project=self.project
             ),
             False,
         )
         self.assertEqual(
             c_tags.get_app_setting(
-                'example_project_app', 'user_bool_setting', user=self.user
+                APP_NAME_EX, 'user_bool_setting', user=self.user
             ),
             False,
         )
@@ -331,7 +331,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             c_tags.get_backend_include('NON_EXISTING_PLUGIN', 'js'), ''
         )
         # Testing a plugin which is not backend
-        self.assertEqual(c_tags.get_backend_include('filesfolders', 'js'), '')
+        self.assertEqual(c_tags.get_backend_include(APP_NAME_FF, 'js'), '')
 
     def test_include_none_value(self):
         """Test get_backend_include none attribute check"""
@@ -509,14 +509,14 @@ class TestProjectrolesTags(TemplateTagTestBase):
 
     def test_is_app_visible(self):
         """Test is_app_visible()"""
-        app_plugin = get_app_plugin('filesfolders')
+        app_plugin = get_app_plugin(APP_NAME_FF)
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.project, self.user), True
         )
 
     def test_is_app_visible_category(self):
         """Test is_app_visible() with a category"""
-        app_plugin = get_app_plugin('filesfolders')
+        app_plugin = get_app_plugin(APP_NAME_FF)
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.category, self.user),
             False,
@@ -529,10 +529,10 @@ class TestProjectrolesTags(TemplateTagTestBase):
             tags.is_app_visible(app_plugin, self.category, self.user), True
         )
 
-    @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=['filesfolders'])
+    @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=[APP_NAME_FF])
     def test_is_app_visible_hide(self):
         """Test is_app_visible() with a hidden app and normal/superuser"""
-        app_plugin = get_app_plugin('filesfolders')
+        app_plugin = get_app_plugin(APP_NAME_FF)
         superuser = self.make_user('superuser')
         superuser.is_superuser = True
         superuser.save()
@@ -545,15 +545,15 @@ class TestProjectrolesTags(TemplateTagTestBase):
 
     def test_get_app_link_state(self):
         """Test get_app_link_state()"""
-        app_plugin = get_app_plugin('filesfolders')
+        app_plugin = get_app_plugin(APP_NAME_FF)
         # TODO: Why does this also require app_name?
         self.assertEqual(
-            tags.get_app_link_state(app_plugin, 'filesfolders', 'list'),
+            tags.get_app_link_state(app_plugin, APP_NAME_FF, 'list'),
             'active',
         )
         self.assertEqual(
             tags.get_app_link_state(
-                app_plugin, 'filesfolders', 'NON_EXISTING_URL_NAME'
+                app_plugin, APP_NAME_FF, 'NON_EXISTING_URL_NAME'
             ),
             '',
         )
@@ -684,7 +684,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
             else:
                 self.assertEqual(app['active'], False)
 
-    def test_get_links_home_user(self):
+    def test_get_user_links_home(self):
         """Test get_user_links() on the home view"""
         url = reverse('home')
         request = self.req_factory.get(url)
@@ -738,7 +738,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
             ],
         )
 
-    def test_get_links_home_superuser(self):
+    def test_get_user_links_home_superuser(self):
         """Test get_user_links() on the home view as superuser"""
         url = reverse('home')
         request = self.req_factory.get(url)
@@ -780,6 +780,13 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'url': '/project/remote/sites',
                     'label': 'Remote Site Access',
                     'icon': 'mdi:cloud-sync',
+                    'active': False,
+                },
+                {
+                    'name': 'siteappsettings',
+                    'url': '/project/site-app-settings',
+                    'label': 'Site App Settings',
+                    'icon': 'mdi:cog-outline',
                     'active': False,
                 },
                 {

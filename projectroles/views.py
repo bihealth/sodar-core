@@ -38,6 +38,7 @@ from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
     ProjectInviteForm,
+    SiteAppSettingsForm,
     RemoteSiteForm,
     RoleAssignmentOwnerTransferForm,
     LocalUserForm,
@@ -86,13 +87,13 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 PROJECT_ACTION_CREATE = SODAR_CONSTANTS['PROJECT_ACTION_CREATE']
 PROJECT_ACTION_UPDATE = SODAR_CONSTANTS['PROJECT_ACTION_UPDATE']
 
 # Local constants
 APP_NAME = 'projectroles'
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
-PROJECT_COLUMN_COUNT = 2  # Default columns
 LOGIN_MSG = 'Please log in.'
 NO_AUTH_MSG = 'User not authorized for requested action.'
 NO_AUTH_LOGIN_MSG = 'Authentication required, please log in.'
@@ -123,18 +124,36 @@ INVITE_USER_EXISTS_MSG = (
 )
 ROLE_CREATE_MSG = 'Membership granted with the role of "{role}".'
 ROLE_UPDATE_MSG = 'Member role changed to "{role}".'
+ROLE_DELETE_MSG = 'Your membership in this {project_type} has been removed.'
+ROLE_LEAVE_MSG = 'Member {user_name} left the {project_type}.'
+ROLE_LEAVE_INHERIT_MSG = 'Role inherited from parent {category_type}'
+ROLE_LEAVE_OWNER_MSG = 'Owner role must be transferred to another user'
+ROLE_LEAVE_REMOTE_MSG = (
+    '{project_type} is remote, role must be changed on source site'
+)
 ROLE_FINDER_INFO = (
     'User can see nested {categories} and {projects}, but can not access them '
     'without having a role explicitly assigned.'
 )
-SEARCH_DICT_DEPRECATE_MSG = (
-    'Results from search() as a dict have been deprecated and support will be '
-    'removed in v1.1. Provide results as a list of PluginSearchResult objects '
-    'instead.'
+PROJECT_DELETE_MSG = (
+    '{project_type} "{project_title}" deleted by user {user_name}.'
+)
+PROJECT_DELETE_CAT_ERR_MSG = (
+    'Deletion not allowed for {project_type} with children. Delete the '
+    'children before attempting deletion.'
+)
+PROJECT_DELETE_TARGET_ERR_MSG = (
+    'Deletion not allowed for remote {project_type} with non-revoked access '
+    'level. Revoke remote access on source site to enable deletion.'
+)
+PROJECT_DELETE_SOURCE_ERR_MSG = (
+    'Non-revoked remotes of {project_type} found on target sites. Revoke '
+    'access to the remotes to enable deletion.'
 )
 TARGET_CREATE_DISABLED_MSG = (
     'PROJECTROLES_TARGET_CREATE=False, creation not allowed.'
 )
+SITE_SETTING_UPDATE_MSG = 'Site app settings updated.'
 
 
 # General UI view mixins -------------------------------------------------------
@@ -299,7 +318,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             or project.is_owner_or_delegate(self.request.user)
         )
         if not perm_override and app_settings.get(
-            'projectroles', 'ip_restrict', project
+            APP_NAME, 'ip_restrict', project
         ):
             for k in (
                 'HTTP_X_FORWARDED_FOR',
@@ -314,9 +333,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             else:  # Can't fetch client ip address
                 return False
 
-            for record in app_settings.get(
-                'projectroles', 'ip_allowlist', project
-            ):
+            for record in app_settings.get(APP_NAME, 'ip_allowlist', project):
                 if '/' in record:
                     if client_address in ip_network(record):
                         break
@@ -408,7 +425,7 @@ class ProjectContextMixin(
             settings, 'PROJECTROLES_KIOSK_MODE', False
         ):
             context['project_starred'] = app_settings.get(
-                'projectroles',
+                APP_NAME,
                 'project_star',
                 context['project'],
                 self.request.user,
@@ -550,8 +567,12 @@ class ProjectListContextMixin:
         context['project_custom_cols'] = self._get_custom_cols(
             self.request.user
         )
-        context['project_col_count'] = PROJECT_COLUMN_COUNT + len(
+        base_col_count = 1 if self.request.user.is_superuser else 2
+        context['project_col_count'] = base_col_count + len(
             context['project_custom_cols']
+        )
+        context['page_options_default'] = app_settings.get(
+            APP_NAME, 'project_list_pagination', user=self.request.user
         )
         return context
 
@@ -691,32 +712,17 @@ class ProjectSearchMixin:
             }
             try:
                 search_res['results'] = plugin.search(**search_kwargs)
-                if isinstance(search_res['results'], dict):
-                    # TODO: Remove in v1.1 (see #1400)
-                    logger.warning(SEARCH_DICT_DEPRECATE_MSG)
-                    for v in search_res['results'].values():
-                        items = v.get('items')
-                        if items and (
-                            (isinstance(items, QuerySet) and items.count() > 0)
-                            or (isinstance(items, list) and len(items) > 0)
-                        ):
-                            search_res['has_results'] = True
-                            break
-                else:
-                    for r in search_res['results']:
-                        if r.items and (
-                            (
-                                isinstance(r.items, QuerySet)
-                                and r.items.count() > 0
-                            )
-                            or (isinstance(r.items, list) and len(r.items) > 0)
-                        ):
-                            search_res['has_results'] = True
-                            break
-                    # Build results into dict for easier use in templates
-                    search_res['results'] = {
-                        r.category: r for r in search_res['results']
-                    }
+                for r in search_res['results']:
+                    if r.items and (
+                        (isinstance(r.items, QuerySet) and r.items.count() > 0)
+                        or (isinstance(r.items, list) and len(r.items) > 0)
+                    ):
+                        search_res['has_results'] = True
+                        break
+                # Build results into dict for easier use in templates
+                search_res['results'] = {
+                    r.category: r for r in search_res['results']
+                }
             except Exception as ex:
                 if settings.DEBUG:
                     raise ex
@@ -754,23 +760,11 @@ class ProjectSearchMixin:
             if not results:
                 continue
             for k, r in results.items():
-                if isinstance(r, dict):
-                    # TODO: Remove in v1.1 (see #1400)
-                    type_match = True if search_type else False
-                    if (
-                        not type_match
-                        and 'search_types' in r
-                        and search_type in r['search_types']
-                    ):
-                        type_match = True
-                    if (type_match or not search_type) and (not r['items']):
-                        ret.append(r['title'])
-                else:
-                    type_match = True if search_type else False
-                    if not type_match and search_type in r.search_types:
-                        type_match = True
-                    if (type_match or not search_type) and (not r.items):
-                        ret.append(r.title)
+                type_match = True if search_type else False
+                if not type_match and search_type in r.search_types:
+                    type_match = True
+                if (type_match or not search_type) and (not r.items):
+                    ret.append(r.title)
         return ret
 
     def dispatch(self, request, *args, **kwargs):
@@ -883,7 +877,7 @@ class ProjectAdvancedSearchView(
         return ProjectSearchResultsView.as_view()(request)
 
 
-# Project Editing Views --------------------------------------------------------
+# Project Modifying Views ------------------------------------------------------
 
 
 class ProjectModifyPluginViewMixin:
@@ -1002,25 +996,20 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **p_kwargs
                 )
             else:
-                name = 'projectroles'
+                name = APP_NAME
                 p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, plugin_name=name, **p_kwargs
                 )
 
-            for s_key, s_val in p_settings.items():
-                s_name = 'settings.{}.{}'.format(name, s_key)
+            for s_def in p_settings.values():
+                s_name = 'settings.{}.{}'.format(name, s_def.name)
                 s_data = data.get(s_name)
 
-                if (
-                    not s_val.get('project_types', None)
-                    and not instance.type == PROJECT_TYPE_PROJECT
-                    or s_val.get('project_types', None)
-                    and instance.type not in s_val['project_types']
-                ):
+                if instance.type not in s_def.project_types:
                     continue
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default(name, s_key)
-                if s_val['type'] == 'JSON':
+                    s_data = app_settings.get_default(name, s_def.name)
+                if s_def.type == APP_SETTING_TYPE_JSON:
                     if s_data is None:
                         s_data = {}
                     project_settings[s_name] = json.dumps(s_data)
@@ -1070,7 +1059,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             s_name = k.split('.')[2]
             s_def = app_settings.get_definition(s_name, plugin_name=p_name)
             old_v = app_settings.get(p_name, s_name, project)
-            if s_def['type'] == 'JSON':
+            if s_def.type == APP_SETTING_TYPE_JSON:
                 v = json.loads(v)
             if old_v != v:
                 extra_data[k] = v
@@ -1135,7 +1124,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 s_def = app_settings.get_definition(
                     setting_name, plugin_name=plugin_name
                 )
-                if app_settings.get_global_value(s_def):
+                if s_def.global_edit:
                     continue
             app_settings.set(
                 plugin_name=k.split('.')[1],
@@ -1174,7 +1163,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 p_name = k.split('.')[1]
                 s_name = k.split('.')[2]
                 s_def = app_settings.get_definition(s_name, plugin_name=p_name)
-                if s_def['type'] == 'JSON':
+                if s_def.type == APP_SETTING_TYPE_JSON:
                     v = json.loads(v)
                 extra_data[k] = v
 
@@ -1460,6 +1449,150 @@ class ProjectModifyFormMixin(ProjectModifyMixin):
         return redirect(redirect_url)
 
 
+class ProjectDeleteAccessMixin:
+    """
+    Mixin to check special access permissions for project deletion.
+
+    Also used for ProjectUpdateView to control access to view link, hence a
+    separate mixin.
+
+    We want to provide an informative message to the end user and also prevent
+    superuser access if needed, hence we're not implementing this in rules.
+    """
+
+    @classmethod
+    def check_delete_permission(cls, project):
+        """
+        Check delete permission. Also applies to superusers.
+
+        :param project: Project object
+        :return: Boolean, string (in case of error) or None
+        """
+        p_type = get_display_name(project.type)
+        if (
+            project.type == PROJECT_TYPE_CATEGORY
+            and project.get_children().count() > 0
+        ):
+            return False, PROJECT_DELETE_CAT_ERR_MSG.format(project_type=p_type)
+        # Disallow for remote projects which haven't been revoked
+        if project.is_remote():
+            rp = RemoteProject.objects.filter(
+                project_uuid=project.sodar_uuid,
+                site__mode=SITE_MODE_SOURCE,
+            ).first()
+            if rp.level != REMOTE_LEVEL_REVOKED:
+                return (
+                    False,
+                    PROJECT_DELETE_TARGET_ERR_MSG.format(project_type=p_type),
+                )
+        # Disallow for source projects with non-revoked remote projects
+        # NOTE: Categories can be deleted
+        elif project.type == PROJECT_TYPE_PROJECT:
+            rps = RemoteProject.objects.filter(
+                project_uuid=project.sodar_uuid, site__mode=SITE_MODE_TARGET
+            ).exclude(level__in=[REMOTE_LEVEL_NONE, REMOTE_LEVEL_REVOKED])
+            if rps.count() > 0:
+                return (
+                    False,
+                    PROJECT_DELETE_SOURCE_ERR_MSG.format(project_type=p_type),
+                )
+        return True, None
+
+
+class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
+    """Mixin for Project deletion in UI and API views"""
+
+    @classmethod
+    def _create_timeline_event(cls, project, request):
+        """
+        Create timeline summary event for project deletion. Created as a
+        classified site-wide event only viewable by superusers.
+
+        :param project: Project object
+        :param request: HttpRequest object
+        """
+        timeline = get_backend_api('timeline_backend')
+        if not timeline:
+            return
+        local_users = {
+            a.user.username: a.role.name
+            for a in project.local_roles.order_by(
+                'role__rank', 'user__username'
+            )
+        }
+        parent = str(project.parent.sodar_uuid) if project.parent else None
+        extra_data = {
+            'title': project.title,
+            'type': project.type,
+            'parent': parent,
+            'description': project.description,
+            'readme': project.readme.raw,
+            'public_guest_access': project.public_guest_access,
+            'archive': project.archive,
+            'full_title': project.full_title,
+            'sodar_uuid': str(project.sodar_uuid),
+            'local_roles': local_users,
+        }
+        timeline.add_event(
+            project=None,  # No project as it has been deleted
+            app_name=APP_NAME,
+            user=request.user,
+            event_name='project_delete',
+            description=f'delete {project.type.lower()} '
+            f'{project.get_log_title()}',
+            extra_data=extra_data,
+            classified=True,
+            status_type=timeline.TL_STATUS_OK,
+        )
+
+    @classmethod
+    def get_redirect_url(cls, project):
+        if project.parent:
+            return reverse(
+                'projectroles:detail',
+                kwargs={'project': project.parent.sodar_uuid},
+            )
+        else:
+            return reverse('home')
+
+    def handle_delete(self, project, request):
+        """
+        Handle project deletion. Deletes the object, creates a summary timeline
+        event and sends out alerts and emails to project members.
+
+        :param project: Project object of project to be deleted
+        :param request: HttpRequest object
+        """
+        app_alerts = get_backend_api('appalerts_backend')
+        # Call project modify API plugin
+        if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
+            self.call_project_modify_api(
+                'perform_project_delete', None, [project]
+            )
+        # Create timeline event
+        self._create_timeline_event(project, request)
+        # Create app alerts
+        if app_alerts:
+            users = [
+                a.user for a in project.get_roles() if a.user != request.user
+            ]
+            app_alerts.add_alerts(
+                app_name=APP_NAME,
+                alert_name='project_delete',
+                users=users,
+                message=PROJECT_DELETE_MSG.format(
+                    project_type=get_display_name(project.type, title=True),
+                    project_title=project.title,
+                    user_name=request.user.username,
+                ),
+            )
+        # Send email
+        if SEND_EMAIL:
+            email.send_project_delete_mail(project, request)
+        # Actually delete project object
+        project.delete()
+
+
 class ProjectCreateView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
@@ -1547,6 +1680,7 @@ class ProjectUpdateView(
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
     ProjectModifyFormMixin,
+    ProjectDeleteAccessMixin,
     CurrentUserFormMixin,
     InvalidFormMixin,
     UpdateView,
@@ -1559,6 +1693,13 @@ class ProjectUpdateView(
     slug_url_kwarg = 'project'
     slug_field = 'sodar_uuid'
     allow_remote_edit = True
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        access, msg = self.check_delete_permission(self.get_object())
+        context['project_delete_access'] = access
+        context['project_delete_msg'] = msg or ''
+        return context
 
 
 class ProjectArchiveView(
@@ -1692,6 +1833,68 @@ class ProjectArchiveView(
         return redirect(redirect_url)
 
 
+class ProjectDeleteView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectContextMixin,
+    ProjectDeleteMixin,
+    ProjectDeleteAccessMixin,
+    ProjectModifyPluginViewMixin,
+    DeleteView,
+):
+    """Project deletion view"""
+
+    model = Project
+    permission_required = 'projectroles.delete_project'
+    slug_field = 'sodar_uuid'
+    slug_url_kwarg = 'project'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        project = self.get_object()
+        # Prevent access in certain conditions, even for superusers
+        access, msg = self.check_delete_permission(project)
+        if not access:
+            messages.error(self.request, msg)
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        project = self.get_object()
+        redirect_url = reverse(
+            'projectroles:update', kwargs={'project': project.sodar_uuid}
+        )
+
+        # Don't allow deletion unless user has input the host name
+        host_confirm = self.request.POST.get('delete_host_confirm')
+        actual_host = self.request.get_host().split(':')[0]
+        if not host_confirm or host_confirm != actual_host:
+            msg = (
+                f'Incorrect host name for confirming sheet deletion: '
+                f'"{host_confirm}"'
+            )
+            logger.error(msg + ' (correct={})'.format(actual_host))
+            messages.error(
+                self.request, 'Host name input incorrect, deletion cancelled.'
+            )
+            return redirect(redirect_url)
+
+        # Proceed with deletion
+        try:
+            with transaction.atomic():
+                self.handle_delete(project, self.request)
+            p_type = get_display_name(project.type, title=True)
+            messages.success(self.request, f'{p_type} deleted.')
+            redirect_url = self.get_redirect_url(project)
+        except Exception as ex:
+            if settings.DEBUG:
+                raise ex
+            p_type = get_display_name(project.type, title=False)
+            messages.error(self.request, f'Failed to delete {p_type}: {ex}')
+        return redirect(redirect_url)
+
+
 # RoleAssignment Views ---------------------------------------------------------
 
 
@@ -1710,6 +1913,7 @@ class ProjectRoleView(
 
     def get_context_data(self, *args, **kwargs):
         project = self.get_project()
+        project_remote = project.is_remote()
         context = super().get_context_data(*args, **kwargs)
         context['roles'] = sorted(
             project.get_roles(), key=lambda x: [x.role.rank, x.user.username]
@@ -1728,6 +1932,28 @@ class ProjectRoleView(
             categories=get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
             projects=get_display_name(PROJECT_TYPE_PROJECT, plural=True),
         )
+        if self.request.user.is_authenticated:
+            own_local_as = RoleAssignment.objects.filter(
+                project=project, user=self.request.user
+            ).first()
+            context['own_local_as'] = own_local_as
+            context['project_leave_access'] = (
+                own_local_as is not None
+                and own_local_as.role.rank > ROLE_RANKING[PROJECT_ROLE_OWNER]
+                and not project_remote
+            )
+            leave_msg = ''
+            if not own_local_as:
+                leave_msg = ROLE_LEAVE_INHERIT_MSG.format(
+                    category_type=get_display_name(PROJECT_TYPE_CATEGORY)
+                )
+            elif own_local_as.role.rank == ROLE_RANKING[PROJECT_ROLE_OWNER]:
+                leave_msg = ROLE_LEAVE_OWNER_MSG
+            elif project_remote:
+                leave_msg = ROLE_LEAVE_REMOTE_MSG.format(
+                    project_type=get_display_name(project.type, title=True)
+                )
+            context['project_leave_msg'] = leave_msg
         return context
 
 
@@ -1886,10 +2112,10 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
-    @transaction.atomic
-    def _update_app_alerts(self, app_alerts, project, user, inh_as):
+    @classmethod
+    def _add_user_alert(cls, app_alerts, project, user, inh_as=None):
         """
-        Update app alerts for user on role assignment deletion. Creates a new
+        Create app alert for user on role assignment deletion. Creates a new
         alert as appropriate and dismisses alerts in projects the user can no
         longer access.
 
@@ -1903,25 +2129,9 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
                 project=project.title, role=inh_as.role.name
             )
         else:
-            message = 'Your membership in this {} has been removed.'.format(
-                get_display_name(project.type)
+            message = ROLE_DELETE_MSG.format(
+                project_type=get_display_name(project.type)
             )
-            # Dismiss existing alerts
-            AppAlert = app_alerts.get_model()
-            dis_projects = [project]
-            if project.type == PROJECT_TYPE_CATEGORY:
-                for c in project.get_children(flat=True):
-                    c_role_as = RoleAssignment.objects.filter(
-                        project=c, user=user
-                    ).first()
-                    if not c.public_guest_access and not c_role_as:
-                        dis_projects.append(c)
-            for a in AppAlert.objects.filter(
-                user=user, project__in=dis_projects, active=True
-            ):
-                a.active = False
-                a.save()
-
         app_alerts.add_alert(
             app_name=APP_NAME,
             alert_name='role_{}'.format('update' if inh_as else 'delete'),
@@ -1930,20 +2140,78 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             project=project,
         )
 
-    def delete_assignment(self, request, instance):
+    @classmethod
+    def _add_leave_alerts(cls, app_alerts, project, user):
+        """
+        Send alerts to project owners and delegates about user leaving.
+
+        :param app_alerts: AppAlertAPI object
+        :param project: Project object
+        :param user: SODARUser object
+        """
+        recipients = [
+            a.user
+            for a in project.get_roles(
+                max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+            )
+            if a.user != user
+        ]
+        for r in recipients:
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='role_delete_own',
+                user=r,
+                message=ROLE_LEAVE_MSG.format(
+                    user_name=user.username,
+                    project_type=get_display_name(project.type),
+                ),
+                project=project,
+            )
+
+    @classmethod
+    @transaction.atomic
+    def _dismiss_user_alerts(cls, app_alerts, project, user):
+        """
+        Dismiss user alerts in project and children without local role.
+
+        :param app_alerts: AppAlertAPI object
+        :param project: Project object
+        :param user: SODARUser object
+        """
+        AppAlert = app_alerts.get_model()
+        dis_projects = [project]
+        if project.type == PROJECT_TYPE_CATEGORY:
+            for c in project.get_children(flat=True):
+                if not c.has_role(user):
+                    dis_projects.append(c)
+        for a in AppAlert.objects.filter(
+            user=user, project__in=dis_projects, active=True
+        ):
+            a.active = False
+            a.save()
+
+    def delete_assignment(self, role_as, request=None, notify=True):
+        """
+        Delete RoleAssignment. Calls the modify API for additional actions,
+        raises app alerts and sends email notifications about the deletion.
+
+        :param role_as: RoleAssingment object
+        :param request: HttpRequest object or None
+        :param notify: Add app alerts and send email if True
+        """
         app_alerts = get_backend_api('appalerts_backend')
         timeline = get_backend_api('timeline_backend')
         tl_event = None
-        project = instance.project
-        user = instance.user
-        role = instance.role
+        project = role_as.project
+        user = role_as.user
+        role = role_as.role
 
         # Init Timeline event
         if timeline:
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
-                user=request.user,
+                user=request.user if request else None,
                 event_name='role_delete',
                 description='delete role "{}" from {{{}}}'.format(
                     role.name, 'user'
@@ -1954,10 +2222,10 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         # Call the project plugin modify API for additional actions
         if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             self.call_project_modify_api(
-                'perform_role_delete', 'revert_role_delete', [instance, request]
+                'perform_role_delete', 'revert_role_delete', [role_as, request]
             )
         # Delete object itself
-        instance.delete()
+        role_as.delete()
 
         # Delete corresponding PROJECT_USER settings
         if (
@@ -1971,23 +2239,32 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
                 APP_SETTING_SCOPE_PROJECT_USER, project, user
             )
 
-        inh_as = project.get_role(user, inherited_only=True)
         if tl_event:
             tl_event.set_status(timeline.TL_STATUS_OK)
+        if not notify:
+            return role_as
+
+        inh_as = project.get_role(user, inherited_only=True)
         if app_alerts:
-            self._update_app_alerts(app_alerts, project, user, inh_as)
-        if SEND_EMAIL and app_settings.get(
-            APP_NAME, 'notify_email_role', user=user
-        ):
-            if inh_as:
-                email.send_role_change_mail(
-                    'update', project, user, inh_as.role, request
-                )
+            if request and request.user == user:
+                self._add_leave_alerts(app_alerts, project, user)
             else:
-                email.send_role_change_mail(
-                    'delete', project, user, None, request
-                )
-        return instance
+                self._add_user_alert(app_alerts, project, user, inh_as)
+            if not inh_as:
+                self._dismiss_user_alerts(app_alerts, project, user)
+        if SEND_EMAIL and request:
+            if request and request.user == user:
+                email.send_project_leave_mail(project, user, request)
+            elif app_settings.get(APP_NAME, 'notify_email_role', user=user):
+                if inh_as:
+                    email.send_role_change_mail(
+                        'update', project, user, inh_as.role, request
+                    )
+                else:
+                    email.send_role_change_mail(
+                        'delete', project, user, None, request
+                    )
+        return role_as
 
 
 class RoleAssignmentCreateView(
@@ -2140,7 +2417,7 @@ class RoleAssignmentDeleteView(
         else:
             try:
                 self.object = self.delete_assignment(
-                    request=self.request, instance=self.object
+                    role_as=self.object, request=self.request
                 )
                 messages.success(
                     self.request,
@@ -2160,6 +2437,76 @@ class RoleAssignmentDeleteView(
         )
 
 
+class RoleAssignmentOwnDeleteView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectContextMixin,
+    RoleAssignmentDeleteMixin,
+    DeleteView,
+):
+    """RoleAssignment deletion view for leaving project"""
+
+    model = RoleAssignment
+    # Perm overridden in has_permission()
+    permission_required = 'projectroles.view_project'
+    slug_url_kwarg = 'roleassignment'
+    slug_field = 'sodar_uuid'
+    template_name = 'projectroles/roleassignment_confirm_delete_own.html'
+
+    def has_permission(self):
+        """
+        Override has_permission() for one time check for view perms.
+
+        NOTE: Single use case so we're not writing a common rules perm
+        """
+        role_as = self.get_object()
+        user = self.request.user
+        if (
+            app_settings.get(APP_NAME, 'site_read_only')
+            or role_as.user != user
+            or role_as.role.rank < ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+        ):
+            return False
+        return True
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        role_as = self.get_object()
+        user = role_as.user
+        children = role_as.project.get_children(flat=True)
+        local_child_projects = [
+            a.project
+            for a in RoleAssignment.objects.filter(
+                user=user, project__in=children
+            )
+        ]
+        context['inh_child_projects'] = [
+            p for p in children if p not in local_child_projects
+        ]
+        return context
+
+    def post(self, *args, **kwargs):
+        role_as = self.get_object()
+        project = role_as.project
+        try:
+            self.object = self.delete_assignment(
+                role_as=role_as, request=self.request
+            )
+            messages.success(
+                self.request, 'Successfully left {}.'.format(project.title)
+            )
+            return redirect(reverse('home'))
+        except Exception as ex:
+            messages.error(
+                self.request, 'Failed to leave {}: {}'.format(project.title, ex)
+            )
+            return redirect(
+                reverse(
+                    'projectroles:roles', kwargs={'project': project.sodar_uuid}
+                )
+            )
+
+
 class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     """Mixin for owner RoleAssignment transfer in UI and API views"""
 
@@ -2168,38 +2515,44 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
     def _get_timeline_ok_status(self):
         timeline = get_backend_api('timeline_backend')
-        if not timeline:
-            return None
-        else:
-            return timeline.TL_STATUS_OK
+        return timeline.TL_STATUS_OK if timeline else None
 
     def _get_timeline_failed_status(self):
         timeline = get_backend_api('timeline_backend')
-        if not timeline:
-            return None
-        else:
-            return timeline.TL_STATUS_FAILED
+        return timeline.TL_STATUS_FAILED if timeline else None
 
     def _create_timeline_event(
-        self, old_owner, new_owner, old_owner_role, project
+        self, project, old_owner, new_owner, old_owner_role=None, issuer=None
     ):
+        """
+        Create timeline event for ownership transfer.
+
+        :param project: Project object
+        :param old_owner: User object for old owner
+        :param new_owner: User object for new_owner
+        :param old_owner_role: Role object for old owner's new role or None
+        :param issuer: User who initiated ownership transfer or None
+        """
         timeline = get_backend_api('timeline_backend')
-        # Init Timeline event
         if not timeline:
             return None
-        tl_desc = (
-            'transfer ownership from {{{}}} to {{{}}}, set old owner as "{}"'
-        ).format('prev_owner', 'new_owner', old_owner_role.name)
+        tl_desc = 'transfer ownership from {prev_owner} to {new_owner}, '
+        if old_owner_role:
+            tl_desc += 'set old owner as "{}"'.format(old_owner_role.name)
+        else:
+            tl_desc += 'remove old owner role'
         tl_event = timeline.add_event(
             project=project,
             app_name=APP_NAME,
-            user=self.request.user,
+            user=issuer,
             event_name='role_owner_transfer',
             description=tl_desc,
             extra_data={
                 'prev_owner': old_owner.username,
                 'new_owner': new_owner.username,
-                'old_owner_role': old_owner_role.name,
+                'old_owner_role': (
+                    old_owner_role.name if old_owner_role else None
+                ),
             },
         )
         tl_event.add_object(old_owner, 'prev_owner', old_owner.username)
@@ -2212,8 +2565,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         project,
         old_owner_as,
         new_owner,
-        old_owner_role,
         old_inh_owner,
+        old_owner_role=None,
+        request=None,
     ):
         """
         Handle ownership transfer with atomic rollback.
@@ -2221,11 +2575,12 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :param project: Project object
         :param old_owner_as: RoleAssignment object for old owner
         :param new_owner: User object for new user
-        :param old_owner_role: Role object to set for old owner
         :param old_inh_owner: Whether old owner is inherited owner (boolean)
+        :param old_owner_role: Role object to set for old owner or None
+        :param request: HttpRequest object or None
         """
-        # Inherited owner, delete local role
-        if old_inh_owner:
+        # Inherited owner or no new role for old owner: delete local role
+        if old_inh_owner or not old_owner_role:
             old_owner_as.delete()
         # Update old owner role
         else:
@@ -2249,14 +2604,22 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                 new_owner,
                 old_owner_as.user,
                 old_owner_role,
-                self.request,
+                request,
             ]
             self.call_project_modify_api(
                 'perform_owner_transfer', 'revert_owner_transfer', args
             )
         return True
 
-    def transfer_owner(self, project, new_owner, old_owner_as, old_owner_role):
+    def transfer_owner(
+        self,
+        project,
+        new_owner,
+        old_owner_as,
+        old_owner_role=None,
+        request=None,
+        notify_old=True,
+    ):
         """
         Transfer project ownership to a new user and assign a new role to the
         previous owner.
@@ -2264,8 +2627,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :param project: Project object
         :param new_owner: User object
         :param old_owner_as: RoleAssignment object
-        :param old_owner_role: Role object for the previous owner's new role
-        :return:
+        :param old_owner_role: Role object for old owner's new role or None
+        :param request: HttpRequest object or None
+        :param notify_old: Notify old owner (boolean, default=True)
         """
         app_alerts = get_backend_api('appalerts_backend')
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
@@ -2280,13 +2644,19 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         new_inh_owner = (
             True if new_inh_as and new_inh_as.role == self.role_owner else False
         )
+        issuer = request.user if request else None
         tl_event = self._create_timeline_event(
-            old_owner, new_owner, old_owner_role, project
+            project, old_owner, new_owner, old_owner_role, issuer
         )
 
         try:
             self._handle_transfer(
-                project, old_owner_as, new_owner, old_owner_role, old_inh_owner
+                project,
+                old_owner_as,
+                new_owner,
+                old_inh_owner,
+                old_owner_role,
+                request,
             )
         except Exception as ex:
             if tl_event:
@@ -2295,28 +2665,49 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
         if tl_event:
             tl_event.set_status(self._get_timeline_ok_status())
-        if not old_inh_owner and self.request.user != old_owner:
+        # Notify old owner
+        if notify_old and not old_inh_owner and issuer != old_owner:
             if app_alerts:
-                app_alerts.add_alert(
-                    app_name=APP_NAME,
-                    alert_name='role_update',
-                    user=old_owner,
-                    message=ROLE_UPDATE_MSG.format(
+                if old_owner_role:
+                    alert_name = 'role_update'
+                    message = ROLE_UPDATE_MSG.format(
                         project=project.title, role=old_owner_role.name
-                    ),
-                    url=reverse(
+                    )
+                    alert_url = reverse(
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
-                    ),
+                    )
+                else:
+                    alert_name = 'role_delete'
+                    message = ROLE_DELETE_MSG.format(
+                        project_type=get_display_name(project.type)
+                    )
+                    alert_url = None
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name=alert_name,
+                    user=old_owner,
+                    message=message,
+                    url=alert_url,
                     project=project,
                 )
-            if SEND_EMAIL and app_settings.get(
-                APP_NAME, 'notify_email_role', user=old_owner
-            ):
-                email.send_role_change_mail(
-                    'update', project, old_owner, old_owner_role, self.request
+            if (
+                SEND_EMAIL
+                and request
+                and app_settings.get(
+                    APP_NAME, 'notify_email_role', user=old_owner
                 )
-        if not new_inh_owner and self.request.user != new_owner:
+            ):
+                # NOTE: Request is needed here
+                email.send_role_change_mail(
+                    'update' if old_owner_role else 'delete',
+                    project,
+                    old_owner,
+                    old_owner_role,
+                    request,
+                )
+        # Notify new owner
+        if not new_inh_owner and issuer != new_owner:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
@@ -2331,15 +2722,20 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                     ),
                     project=project,
                 )
-            if SEND_EMAIL and app_settings.get(
-                APP_NAME, 'notify_email_role', user=new_owner
+            if (
+                SEND_EMAIL
+                and request
+                and app_settings.get(
+                    APP_NAME, 'notify_email_role', user=new_owner
+                )
             ):
+                # NOTE: Request is needed here
                 email.send_role_change_mail(
                     'update',
                     project,
                     new_owner,
                     self.role_owner,
-                    self.request,
+                    request,
                 )
 
 
@@ -2386,7 +2782,11 @@ class RoleAssignmentOwnerTransferView(
         )
         try:
             self.transfer_owner(
-                project, new_owner, old_owner_as, old_owner_role
+                project,
+                new_owner,
+                old_owner_as,
+                old_owner_role,
+                request=self.request,
             )
         except Exception as ex:
             # TODO: Add logging
@@ -3056,6 +3456,29 @@ class UserUpdateView(
     def get_success_url(self):
         messages.success(self.request, USER_PROFILE_UPDATE_MSG)
         return reverse('home')
+
+
+# Site App Setting management --------------------------------------------------
+
+
+class SiteAppSettingsView(
+    LoginRequiredMixin, LoggedInPermissionMixin, InvalidFormMixin, FormView
+):
+    """Site app settings form view"""
+
+    form_class = SiteAppSettingsForm
+    permission_required = 'projectroles.update_site_settings'
+    success_url = reverse_lazy('projectroles:site_app_settings')
+    template_name = 'projectroles/siteappsettings_form.html'
+
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        for k, v in form.cleaned_data.items():
+            if k.startswith('settings.'):
+                _, plugin_name, setting_name = k.split('.', 3)
+                app_settings.set(plugin_name, setting_name, v)
+        messages.success(self.request, SITE_SETTING_UPDATE_MSG)
+        return result
 
 
 # Remote site and project views ------------------------------------------------

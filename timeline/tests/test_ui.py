@@ -30,6 +30,9 @@ PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
+# Local constants
+APP_NAME_PR = 'projectroles'
+
 
 class TestProjectListView(
     TimelineEventMixin, TimelineEventStatusMixin, UITestBase
@@ -43,7 +46,7 @@ class TestProjectListView(
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='test_event',
             description='description',
@@ -54,7 +57,7 @@ class TestProjectListView(
         # Init classified event
         self.classified_event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='classified_event',
             description='description',
@@ -160,7 +163,7 @@ class TestSiteListView(
         # Init default event
         self.event = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='test_event',
             description='description',
@@ -171,7 +174,7 @@ class TestSiteListView(
         # Init classified event
         self.classified_event = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='classified_event',
             description='description',
@@ -258,7 +261,7 @@ class TestAdminListView(
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='test_event',
             description='description',
@@ -268,7 +271,7 @@ class TestAdminListView(
         # Init default site event
         self.site_event = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='test_site_event',
             description='description',
@@ -278,7 +281,7 @@ class TestAdminListView(
         # Init classified event
         self.classified_event = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='classified_event',
             description='description',
@@ -309,7 +312,7 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='test_event',
             description='description',
@@ -450,7 +453,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='test_event',
             description='description',
@@ -468,7 +471,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         # Init default site event
         self.site_event = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='test_site_event',
             description='description',
@@ -486,7 +489,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         # Init classified event
         self.classified_event = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='classified_event',
             description='description',
@@ -503,7 +506,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
 
         self.classified_site_event = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.superuser,
             event_name='classified_site_event',
             description='description',

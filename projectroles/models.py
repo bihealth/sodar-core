@@ -34,11 +34,16 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
 AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
 AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
 
 # Local constants
+APP_NAME = 'projectroles'
 ROLE_RANKING = {
     PROJECT_ROLE_OWNER: 10,
     PROJECT_ROLE_DELEGATE: 20,
@@ -47,12 +52,11 @@ ROLE_RANKING = {
     PROJECT_ROLE_FINDER: 50,
 }
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
-APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING', 'JSON']
-APP_SETTING_TYPE_CHOICES = [
-    ('BOOLEAN', 'Boolean'),
-    ('INTEGER', 'Integer'),
-    ('STRING', 'String'),
-    ('JSON', 'Json'),
+APP_SETTING_TYPES = [
+    APP_SETTING_TYPE_BOOLEAN,
+    APP_SETTING_TYPE_INTEGER,
+    APP_SETTING_TYPE_STRING,
+    APP_SETTING_TYPE_JSON,
 ]
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
@@ -613,7 +617,7 @@ class Project(models.Model):
             == SODAR_CONSTANTS['SITE_MODE_SOURCE']
         ):
             return None
-        RemoteProject = apps.get_model('projectroles', 'RemoteProject')
+        RemoteProject = apps.get_model(APP_NAME, 'RemoteProject')
         try:
             return RemoteProject.objects.get(
                 project_uuid=self.sodar_uuid,
@@ -880,7 +884,7 @@ class AppSettingManager(models.Manager):
             'project': project,
             'user': user,
         }
-        if not plugin_name == 'projectroles':
+        if not plugin_name == APP_NAME:
             query_parameters['app_plugin__name'] = plugin_name
         setting = super().get_queryset().get(**query_parameters)
         return setting.get_value()
@@ -967,9 +971,7 @@ class AppSetting(models.Model):
         unique_together = ['project', 'user', 'app_plugin', 'name']
 
     def __str__(self):
-        plugin_name = (
-            self.app_plugin.name if self.app_plugin else 'projectroles'
-        )
+        plugin_name = self.app_plugin.name if self.app_plugin else APP_NAME
         if self.project:
             label = self.project.title
         elif self.user:
@@ -982,16 +984,16 @@ class AppSetting(models.Model):
         values = (
             self.project.title if self.project else None,
             self.user.username if self.user else None,
-            self.app_plugin.name if self.app_plugin else 'projectroles',
+            self.app_plugin.name if self.app_plugin else APP_NAME,
             self.name,
         )
         return 'AppSetting({})'.format(', '.join(repr(v) for v in values))
 
     def save(self, *args, **kwargs):
         """Version of save() to convert 'value' data according to 'type'"""
-        if self.type == 'BOOLEAN':
+        if self.type == APP_SETTING_TYPE_BOOLEAN:
             self.value = str(int(self.value))
-        elif self.type == 'INTEGER':
+        elif self.type == APP_SETTING_TYPE_INTEGER:
             self.value = str(self.value)
         super().save(*args, **kwargs)
 
@@ -999,11 +1001,11 @@ class AppSetting(models.Model):
 
     def get_value(self):
         """Return value of the setting in the format specified in 'type'"""
-        if self.type == 'INTEGER':
+        if self.type == APP_SETTING_TYPE_INTEGER:
             return int(self.value)
-        elif self.type == 'BOOLEAN':
+        elif self.type == APP_SETTING_TYPE_BOOLEAN:
             return bool(int(self.value))
-        elif self.type == 'JSON':
+        elif self.type == APP_SETTING_TYPE_JSON:
             return self.value_json
         return self.value
 
@@ -1395,6 +1397,18 @@ class SODARUser(AbstractUser):
             return '{} {}'.format(self.first_name, self.last_name)
         return self.username
 
+    def get_display_name(self, inc_user=False):
+        """
+        Return user name for displaying in UI.
+
+        :param inc_user: Include username if true (boolean, default=False)
+        :return: String
+        """
+        ret = self.get_full_name()
+        if ret != self.username and inc_user:
+            ret += f' ({self.username})'
+        return ret
+
     def get_form_label(self, email=False):
         """
         Return user label with full name, username and optional email.
@@ -1534,7 +1548,7 @@ class SODARUserAdditionalEmail(models.Model):
         max_length=255,
         unique=True,
         blank=False,
-        null=False,
+        null=True,
         help_text='Secret token for email verification',
     )
 

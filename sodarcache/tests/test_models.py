@@ -23,7 +23,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
-TEST_APP_NAME = 'sodarcache'
+APP_NAME = 'sodarcache'
 
 
 class JSONCacheItemMixin:
@@ -65,7 +65,7 @@ class TestJSONCacheItem(JSONCacheItemMixin, JSONCacheItemTestBase):
         super().setUp()
         self.item = self.make_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
@@ -75,7 +75,7 @@ class TestJSONCacheItem(JSONCacheItemMixin, JSONCacheItemTestBase):
         expected = {
             'id': self.item.pk,
             'project': self.project.pk,
-            'app_name': TEST_APP_NAME,
+            'app_name': APP_NAME,
             'name': 'test_item',
             'user': self.user_owner.pk,
             'sodar_uuid': self.item.sodar_uuid,
@@ -95,7 +95,7 @@ class TestJSONCacheItem(JSONCacheItemMixin, JSONCacheItemTestBase):
         """Test __repr__() with no project"""
         new_item = self.make_item(
             project=None,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item2',
             data={'test_key': 'test_val'},

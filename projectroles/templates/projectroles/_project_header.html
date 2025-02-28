@@ -5,6 +5,7 @@
 {% load projectroles_common_tags %}
 
 {% get_app_setting 'userprofile' 'enable_project_uuid_copy' user=request.user as enable_uuid_copy %}
+{% get_app_setting 'projectroles' 'site_read_only' as site_read_only %}
 {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 
 <div class="row sodar-pr-content-title">
@@ -16,7 +17,7 @@
   <h2 class="sodar-pr-content-title mr-2">{{ project.title }}</h2>
 
   {# Project starring/unstarring #}
-  {% if request.user.is_authenticated %}
+  {% if request.user.is_authenticated and not site_read_only %}
     <a role="link"
        class="btn btn-link ml-0 mr-2 sodar-pr-btn-title sodar-pr-btn-star"
        id="sodar-pr-link-project-star"

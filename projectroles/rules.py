@@ -2,7 +2,12 @@ import rules
 
 from django.conf import settings
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import RoleAssignment, SODAR_CONSTANTS
+
+
+app_settings = AppSettingAPI()
+
 
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -13,6 +18,9 @@ PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+
+# Local constants
+APP_NAME = 'projectroles'
 
 
 # Predicates -------------------------------------------------------------------
@@ -108,7 +116,9 @@ def has_roles(user):
 @rules.predicate
 def is_modifiable_project(user, obj):
     """Whether or not project metadata is modifiable"""
-    return False if obj.is_remote() else True
+    if obj.is_remote() or app_settings.get(APP_NAME, 'site_read_only'):
+        return False
+    return True
 
 
 @rules.predicate
@@ -117,15 +127,17 @@ def can_modify_project_data(user, obj):
     Whether or not project app data can be modified, due to e.g. project
     archiving status.
     """
-    return not obj.archive
+    return not obj.archive and not app_settings.get(APP_NAME, 'site_read_only')
 
 
 @rules.predicate
 def can_create_projects(user, obj):
-    """Whether or not new projects can be generated on the site"""
+    """Whether or not new projects can be created on the site"""
     if settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and (
         not settings.PROJECTROLES_TARGET_CREATE or (obj and obj.is_remote())
     ):
+        return False
+    if app_settings.get(APP_NAME, 'site_read_only'):
         return False
     return True
 
@@ -152,6 +164,12 @@ def is_source_site():
 def is_target_site():
     """Return True if PROJECTROLES_SITE_MODE is set to SITE_MODE_TARGET"""
     return settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+
+
+@rules.predicate
+def is_site_writable():
+    """Return True if site has not been set in read-only mode"""
+    return not app_settings.get(APP_NAME, 'site_read_only')
 
 
 # Combined predicates ----------------------------------------------------------
@@ -186,7 +204,13 @@ rules.add_perm(
 # Allow project updating
 rules.add_perm(
     'projectroles.update_project',
-    is_project_update_user,
+    is_project_update_user & is_site_writable,
+)
+
+# Allow project deletion
+rules.add_perm(
+    'projectroles.delete_project',
+    is_project_update_user & is_site_writable,
 )
 
 # Allow creation of projects
@@ -194,10 +218,13 @@ rules.add_perm(
     'projectroles.create_project', is_project_create_user & can_create_projects
 )
 
-# Allow updating project settings
+# Allow viewing PROJECT scope settings
+rules.add_perm('projectroles.view_project_settings', is_project_update_user)
+
+# Allow updating project app settings
 rules.add_perm(
     'projectroles.update_project_settings',
-    is_role_update_user & is_modifiable_project,
+    is_project_update_user & is_modifiable_project,
 )
 
 # Allow viewing project roles
@@ -234,10 +261,22 @@ rules.add_perm(
     'projectroles.import_roles', is_project_owner & is_modifiable_project
 )
 
+# Allow starring/unstarring a project
+rules.add_perm(
+    'projectroles.star_project',
+    (can_view_project | has_category_child_role) & is_site_writable,
+)
+
 # Allow updating remote sites and remote project access
 rules.add_perm('projectroles.update_remote', rules.is_superuser)
 
 # Allow viewing hidden target sites
 rules.add_perm(
     'projectroles.view_hidden_projects', rules.is_superuser | is_project_owner
+)
+
+# Allow updating site app settings
+rules.add_perm(
+    'projectroles.update_site_settings',
+    rules.is_superuser,
 )

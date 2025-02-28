@@ -68,7 +68,7 @@ class BackgroundJob(models.Model):
     sodar_uuid = models.UUIDField(
         default=uuid_object.uuid4, unique=True, help_text='BG Job SODAR UUID'
     )
-    #: The project this job belongs to. Set to None for global background jobs.
+    #: The project this job belongs to. Set to None for site-wide jobs
     project = models.ForeignKey(
         Project,
         null=True,

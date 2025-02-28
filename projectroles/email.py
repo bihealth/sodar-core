@@ -10,7 +10,11 @@ from django.urls import reverse
 from django.utils.timezone import localtime
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODARUserAdditionalEmail
+from projectroles.models import (
+    SODARUserAdditionalEmail,
+    SODAR_CONSTANTS,
+    ROLE_RANKING,
+)
 from projectroles.plugins import get_app_plugin
 from projectroles.utils import get_display_name
 
@@ -25,6 +29,9 @@ SUBJECT_PREFIX = settings.EMAIL_SUBJECT_PREFIX.strip() + ' '
 EMAIL_SENDER = settings.EMAIL_SENDER
 DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
+
+# SODAR constants
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -67,6 +74,7 @@ You can manage receiving of automated emails in your user settings:
 SUBJECT_ROLE_CREATE = 'Membership granted for {project_label} "{project}"'
 SUBJECT_ROLE_UPDATE = 'Membership changed in {project_label} "{project}"'
 SUBJECT_ROLE_DELETE = 'Membership removed from {project_label} "{project}"'
+SUBJECT_ROLE_LEAVE = 'Member {user_name} left {project_label} "{project}"'
 
 MESSAGE_ROLE_CREATE = r'''
 {issuer} has granted you the membership
@@ -88,6 +96,12 @@ the following link:
 
 MESSAGE_ROLE_DELETE = r'''
 {issuer} has removed your membership from {project_label} "{project}".
+'''.lstrip()
+
+MESSAGE_ROLE_LEAVE = r'''
+Member {user_name} has left the {project_label} "{project}".
+For them to regain access, it has to be granted again by {project_label}
+owner or delegate.
 '''.lstrip()
 
 
@@ -207,7 +221,7 @@ You can access the archived {project_label} at the following link:
 
 
 SUBJECT_PROJECT_UNARCHIVE = (
-    '{project_label_title} "{project}" unarchived ' 'by {user}'
+    '{project_label_title} "{project}" unarchived by {user}'
 )
 
 MESSAGE_PROJECT_UNARCHIVE = r'''
@@ -217,6 +231,17 @@ access for users has been restored.
 
 You can access the {project_label} at the following link:
 {project_url}
+'''.lstrip()
+
+
+# Project Deletion Template ----------------------------------------------------
+
+SUBJECT_PROJECT_DELETE = '{project_label_title} "{project}" deleted by {user}'
+
+MESSAGE_PROJECT_DELETE = r'''
+{user} has deleted "{project}".
+The {project_label} has been removed from the site and can no
+longer be accessed.
 '''.lstrip()
 
 
@@ -494,6 +519,34 @@ def send_role_change_mail(change_type, project, user, role, request):
     )
 
 
+def send_project_leave_mail(project, user, request=None):
+    """
+    Send email to project owners and delegates when a user leaves a project.
+
+    :param project: Project object
+    :param user: User object
+    :param request: HttpRequest object or None
+    :return: Amount of sent email (int)
+    """
+    p_label = get_display_name(project.type)
+    subject = SUBJECT_ROLE_LEAVE.format(
+        user_name=user.username, project_label=p_label, project=project.title
+    )
+    message = MESSAGE_ROLE_LEAVE.format(
+        user_name=user.username, project_label=p_label, project=project.title
+    )
+    mail_count = 0
+    recipients = [
+        a.user
+        for a in project.get_roles(max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE])
+        if a.user != user
+        and app_settings.get(APP_NAME, 'notify_email_role', user=a.user)
+    ]
+    for r in recipients:
+        mail_count += send_mail(subject, message, get_user_addr(r), request)
+    return mail_count
+
+
 def send_invite_mail(invite, request):
     """
     Send an email invitation to user not yet registered in the system.
@@ -722,6 +775,53 @@ def send_project_archive_mail(project, action, request):
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
             )
         ),
+    )
+
+    for recipient in project_users:
+        message = get_email_header(
+            MESSAGE_HEADER.format(
+                recipient=recipient.get_full_name(), site_title=SITE_TITLE
+            )
+        )
+        message += body_final
+        if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
+            message += NO_REPLY_NOTE
+        message += get_email_footer(request)
+        mail_count += send_mail(subject, message, get_user_addr(user), request)
+    return mail_count
+
+
+def send_project_delete_mail(project, request):
+    """
+    Send a notification email on project deletion.
+
+    :param project: Project object
+    :param request: HttpRequest object
+    :return: Amount of sent email (int)
+    """
+    user = request.user
+    project_users = [
+        a.user
+        for a in project.get_roles()
+        if a.user != user
+        and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
+    ]
+    project_users = list(set(project_users))
+    if not project_users:
+        return 0
+
+    mail_count = 0
+    subject = SUBJECT_PROJECT_DELETE
+    body = MESSAGE_PROJECT_DELETE
+    subject = SUBJECT_PREFIX + subject.format(
+        project_label_title=get_display_name(project.type, title=True),
+        project=project.title,
+        user=user.get_full_name(),
+    )
+    body_final = body.format(
+        project_label=get_display_name(project.type),
+        project=project.title,
+        user=user.get_full_name(),
     )
 
     for recipient in project_users:

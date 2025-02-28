@@ -1,3 +1,6 @@
+"""General utility methods for projectroles and SODAR Core"""
+
+import logging
 import random
 import string
 
@@ -8,11 +11,15 @@ from projectroles.plugins import get_active_plugins
 from projectroles.models import SODAR_CONSTANTS
 
 
+logger = logging.getLogger(__name__)
+
+
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 # Local constants
+APP_NAME = 'projectroles'
 SIDEBAR_ICON_MIN_SIZE = 18
 SIDEBAR_ICON_MAX_SIZE = 42
 ROLE_URLS = [
@@ -25,6 +32,7 @@ ROLE_URLS = [
     'invite_resend',
     'invite_revoke',
 ]
+USER_DISPLAY_DEPRECATE_MSG = 'The get_user_display_name() utility method has been deprecated and will be removed in v1.2. Use User.get_display_name() instead.'
 
 
 def get_display_name(key, title=False, count=1, plural=False):
@@ -45,7 +53,7 @@ def get_display_name(key, title=False, count=1, plural=False):
     return ret.lower() if not title else ret.title()
 
 
-# TODO: Deprecate (see #1487)
+# TODO: Deprecated, remove in v1.2 (see #1488)
 def get_user_display_name(user, inc_user=False):
     """
     Return full name of user for displaying.
@@ -54,10 +62,8 @@ def get_user_display_name(user, inc_user=False):
     :param inc_user: Include user name if true (boolean)
     :return: String
     """
-    if user.name != '':
-        return user.name + (' (' + user.username + ')' if inc_user else '')
-    # If full name can't be found, return username
-    return user.username
+    logger.warning(USER_DISPLAY_DEPRECATE_MSG)
+    return user.get_display_name(inc_user)
 
 
 def build_secret(length=None):
@@ -102,7 +108,7 @@ class AppLinkContent:
         # HACK: Avoid circular import
         from projectroles.urls import urlpatterns
 
-        if app_name != 'projectroles':
+        if app_name != APP_NAME:
             return False
         return url_name in [u.name for u in urlpatterns] and (
             not link_names or url_name in link_names
@@ -118,11 +124,18 @@ class AppLinkContent:
             or url_name in [u.name for u in getattr(app_plugin, 'urls', [])]
         ):
             return True
-        # HACK for remote site views, see issue #1336
+        # Remote site views, see issue #1336
         if (
-            app_name == 'projectroles'
+            app_name == APP_NAME
             and app_plugin.name == 'remotesites'
             and url_name.startswith('remote_')
+        ):
+            return True
+        # Site app settings view
+        if (
+            app_name == APP_NAME
+            and app_plugin.name == 'siteappsettings'
+            and url_name == 'site_app_settings'
         ):
             return True
         return False
@@ -266,7 +279,7 @@ class AppLinkContent:
             link['label'] = f'Create {pr_display} or {cat_display}'
             ret.append(link)
         elif (
-            (url_name == 'home' or app_name == 'projectroles' and not project)
+            (url_name == 'home' or app_name == APP_NAME and not project)
             and user.has_perm('projectroles.create_project')
             and allow_create
         ):

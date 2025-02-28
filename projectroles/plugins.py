@@ -1,15 +1,39 @@
 """Plugin point definitions and plugin API for apps based on projectroles"""
 
+import json
+
 from django.conf import settings
 from djangoplugins.point import PluginPoint
 
+from projectroles.models import APP_SETTING_TYPES, SODAR_CONSTANTS
 
-# Local costants
+
+# SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
+APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
+APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
+APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
+
+# Local constants
 PLUGIN_TYPES = {
     'project_app': 'ProjectAppPluginPoint',
     'backend': 'BackendPluginPoint',
     'site_app': 'SiteAppPluginPoint',
 }
+APP_SETTING_SCOPES = [
+    APP_SETTING_SCOPE_PROJECT,
+    APP_SETTING_SCOPE_USER,
+    APP_SETTING_SCOPE_PROJECT_USER,
+    APP_SETTING_SCOPE_SITE,
+]
+APP_SETTING_OPTION_TYPES = [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
 
 # From djangoplugins
 ENABLED = 0
@@ -49,7 +73,6 @@ class ProjectModifyPluginMixin:
         :param old_settings: Old app settings in case of update (dict or None)
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_project_modify(
@@ -71,7 +94,6 @@ class ProjectModifyPluginMixin:
         :param old_settings: Old app settings in case of update (dict or None)
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_role_modify(self, role_as, action, old_role=None, request=None):
@@ -84,7 +106,6 @@ class ProjectModifyPluginMixin:
         :param old_role: Role object for previous role in case of an update
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_role_modify(self, role_as, action, old_role=None, request=None):
@@ -97,7 +118,6 @@ class ProjectModifyPluginMixin:
         :param old_role: Role object for previous role in case of an update
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_role_delete(self, role_as, request=None):
@@ -107,7 +127,6 @@ class ProjectModifyPluginMixin:
         :param role_as: RoleAssignment object
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_role_delete(self, role_as, request=None):
@@ -118,11 +137,10 @@ class ProjectModifyPluginMixin:
         :param role_as: RoleAssignment object
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_owner_transfer(
-        self, project, new_owner, old_owner, old_owner_role, request=None
+        self, project, new_owner, old_owner, old_owner_role=None, request=None
     ):
         """
         Perform additional actions to finalize project ownership transfer.
@@ -130,14 +148,13 @@ class ProjectModifyPluginMixin:
         :param project: Project object
         :param new_owner: SODARUser object for new owner
         :param old_owner: SODARUser object for previous owner
-        :param old_owner_role: Role object for new role of previous owner
+        :param old_owner_role: Role object for new role of old owner or None
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_owner_transfer(
-        self, project, new_owner, old_owner, old_owner_role, request=None
+        self, project, new_owner, old_owner, old_owner_role=None, request=None
     ):
         """
         Revert project ownership transfer if errors have occurred in other apps.
@@ -145,10 +162,9 @@ class ProjectModifyPluginMixin:
         :param project: Project object
         :param new_owner: SODARUser object for new owner
         :param old_owner: SODARUser object for previous owner
-        :param old_owner_role: Role object for new role of previous owner
+        :param old_owner_role: Role object for new role of old owner or None
         :param request: Request object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_project_sync(self, project):
@@ -160,7 +176,6 @@ class ProjectModifyPluginMixin:
 
         :param project: Current project object (Project)
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def perform_project_setting_update(
@@ -184,7 +199,6 @@ class ProjectModifyPluginMixin:
         :param project: Project object or None
         :param user: User object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
     def revert_project_setting_update(
@@ -208,26 +222,18 @@ class ProjectModifyPluginMixin:
         :param project: Project object or None
         :param user: User object or None
         """
-        # TODO: Implement this in your app plugin
         pass
 
-    def perform_project_archive(
-        self,
-        project,
-    ):
+    def perform_project_archive(self, project):
         """
         Perform additional actions to finalize project archiving or unarchiving.
         The state being applied can be derived from the project.archive attr.
 
         :param project: Project object (Project)
         """
-        # TODO: Implement this in your app plugin
         pass
 
-    def revert_project_archive(
-        self,
-        project,
-    ):
+    def revert_project_archive(self, project):
         """
         Revert project archiving or unarchiving if errors have occurred in other
         apps. The state being originally set can be derived from the
@@ -235,7 +241,16 @@ class ProjectModifyPluginMixin:
 
         :param project: Project object (Project)
         """
-        # TODO: Implement this in your app plugin
+        pass
+
+    def perform_project_delete(self, project):
+        """
+        Perform additional actions to finalize project deletion.
+
+        NOTE: This operation can not be undone so there is no revert method.
+
+        :param project: Project object (Project)
+        """
         pass
 
 
@@ -248,71 +263,60 @@ class ProjectAppPluginPoint(PluginPoint):
     #: UI URLs
     urls = []
 
-    #: App settings definition
+    #: App setting definitions
     #:
     #: Example ::
     #:
-    #:     app_settings = {
-    #:         'example_setting': {
-    #:             'scope': 'PROJECT',  # PROJECT/USER/SITE
-    #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-    #:             'default': 'example',
-    #:             'label': 'Project setting',  # Optional, defaults to name/key
-    #:             'placeholder': 'Enter example setting here',  # Optional
-    #:             'description': 'Example project setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for
-    #:             settings of type STRING or INTEGER
-    #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in forms on target
-    #:             site, sync value from source to target site if false
-    #:             'project_types': [PROJECT_TYPE_PROJECT],  # Optional, may
-    #:             contain PROJECT_TYPE_CATEGORY and/or PROJECT_TYPE_PROJECT
-    #:         }
-    #:     }
-    # TODO: Define project specific settings in your app plugin, example above
-    app_settings = {}
+    #:     app_settings = [
+    #:         PluginAppSettingDef(
+    #:             name='example_setting',  # Must be unique within plugin
+    #:             scope=APP_SETTING_SCOPE_PROJECT,
+    #:             type=APP_SETTING_TYPE_STRING,
+    #:             default='example',  # Optional
+    #:             label='Example setting',  # Optional
+    #:             placeholder='Enter example setting here',  # Optional
+    #:             description='Example user setting',  # Optional
+    #:             options=['example', 'example2'],  # Optional, only for STRING
+    #:                                               # or INTEGER settings
+    #:             user_modifiable=True,  # Optional, show/hide in forms
+    #:             global_edit=False,  # Optional, enable/disable editing on
+    #:                                 # target sites
+    #:             widget_attrs={},  # Optional, widget attrs for forms
+    #:         )
+    #:    ]
+    app_settings = []
 
     # DEPRECATED, will be removed in the next SODAR Core release
     project_settings = {}
 
     #: Iconify icon
-    # TODO: Implement this in your app plugin
     icon = 'mdi:help-rhombus-outline'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
-    # TODO: Implement this in your app plugin
     entry_point_url_id = 'home'
 
     #: Description string
-    # TODO: Implement this in your app plugin
     description = 'TODO: Write a description for your plugin'
 
     #: Required permission for accessing the app
-    # TODO: Implement this in your app plugin (can be None)
     app_permission = None
 
     #: Enable or disable general search from project title bar
-    # TODO: Implement this in your app plugin
     search_enable = False
 
     #: List of search object types for the app
-    # TODO: Implement this in your app plugin
     search_types = []
 
     #: Search results template
-    # TODO: Implement this in your app plugin
     search_template = None
 
     #: App card template for the project details page
-    # TODO: Implement this in your app plugin
     details_template = None
 
     #: App card title for the project details page
-    # TODO: Implement this in your app plugin (can be None)
     details_title = None
 
     #: Position in plugin ordering
-    # TODO: Implement this in your app plugin (must be an integer)
     plugin_ordering = 50
 
     #: Optional custom project list column definition
@@ -329,15 +333,12 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'align': 'left'  # Alignment of content
     #:         }
     #:     }
-    # TODO: Define project list column data in your app plugin (optional)
     project_list_columns = {}
 
     #: Display application for categories in addition to projects
-    # TODO: Override this in your app plugin if needed
     category_enable = False
 
     #: Names of plugin specific Django settings to display in siteinfo
-    # TODO: Override this in your app plugin if needed
     info_settings = []
 
     def get_object(self, model, uuid):
@@ -366,12 +367,10 @@ class ProjectAppPluginPoint(PluginPoint):
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
             return None
-        # TODO: Implement this in your app plugin
         return None
 
     def get_extra_data_link(self, _extra_data, _name):
         """Return a link for timeline label starting with 'extra-'"""
-        # TODO: Implement this in your app plugin
         return None
 
     def search(self, search_terms, user, search_type=None, keywords=None):
@@ -386,8 +385,8 @@ class ProjectAppPluginPoint(PluginPoint):
         :param keywords: List (optional)
         :return: List of PluginSearchResult objects
         """
-        # TODO: Implement this in your app plugin
-        # TODO: Implement display of results in the app's search template
+        # TODO: If implemented, also implement display of results in the app's
+        #       search template
         return []
 
     def update_cache(self, name=None, project=None, user=None):
@@ -398,7 +397,6 @@ class ProjectAppPluginPoint(PluginPoint):
         :param project: Project object to limit update to (optional)
         :param user: User object to denote user triggering the update (optional)
         """
-        # TODO: Implement this in your app plugin
         return None
 
     def get_statistics(self):
@@ -408,7 +406,6 @@ class ProjectAppPluginPoint(PluginPoint):
 
         :return: Dict
         """
-        # TODO: Implement this in your app plugin
         return {}
 
     def get_project_list_value(self, column_id, project, user):
@@ -421,7 +418,6 @@ class ProjectAppPluginPoint(PluginPoint):
         :param user: User object (current user)
         :return: String (may contain HTML), integer or None
         """
-        # TODO: Implement this in your app plugin (optional)
         return None
 
     def validate_form_app_settings(self, app_settings, project=None, user=None):
@@ -433,7 +429,6 @@ class ProjectAppPluginPoint(PluginPoint):
         :param user: User object or None
         :return: dict in format of {setting_name: 'Error string'}
         """
-        # TODO: Implement this in your app plugin (optional)
         return None
 
 
@@ -441,28 +436,22 @@ class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""
 
     #: Iconify icon
-    # TODO: Implement this in your backend plugin
     icon = 'mdi:help-rhombus-outline'
 
     #: Description string
-    # TODO: Implement this in your backend plugin
     description = 'TODO: Write a description for your plugin'
 
     #: URL of optional javascript file to be included
-    # TODO: Implement this in your backend plugin if applicable
     javascript_url = None
 
     #: URL of optional css file to be included
-    # TODO: Implement this in your backend plugin if applicable
     css_url = None
 
     #: Names of plugin specific Django settings to display in siteinfo
-    # TODO: Override this in your app plugin if needed
     info_settings = []
 
     def get_api(self):
         """Return API entry point object."""
-        # TODO: Implement this in your backend plugin
         raise NotImplementedError
 
     def get_statistics(self):
@@ -472,7 +461,6 @@ class BackendPluginPoint(PluginPoint):
 
         :return: Dict
         """
-        # TODO: Implement this in your backend plugin
         return {}
 
     def get_object(self, model, uuid):
@@ -501,12 +489,10 @@ class BackendPluginPoint(PluginPoint):
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
             return None
-        # TODO: Implement this in your app plugin
         return None
 
     def get_extra_data_link(self, _extra_data, _name):
         """Return a link for timeline label starting with 'extra-'"""
-        # TODO: Implement this in your app plugin
         return None
 
 
@@ -514,44 +500,41 @@ class SiteAppPluginPoint(PluginPoint):
     """Projectroles plugin point for registering site-wide apps"""
 
     #: Iconify icon
-    # TODO: Implement this in your site app plugin
     icon = 'mdi:help-rhombus-outline'
 
     #: Description string
-    # TODO: Implement this in your site app plugin
     description = 'TODO: Write a description for your plugin'
 
     #: Entry point URL ID
-    # TODO: Implement this in your app plugin
     entry_point_url_id = 'home'
 
     #: Required permission for displaying the app
-    # TODO: Implement this in your site app plugin (can be None)
     app_permission = None
 
     #: User settings definition
     #:
     #: Example ::
     #:
-    #:     app_settings = {
-    #:         'example_setting': {
-    #:             'scope' : 'USER',  # always USER
-    #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-    #:             'default': 'example',
-    #:             'placeholder': 'Enter example setting here',  # Optional
-    #:             'description': 'Example user setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for
-    #:             settings of type STRING or INTEGER
-    #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in forms on target
-    #:             site
-    #:         }
-    #:     }
-    # TODO: Define user specific settings in your app plugin, example above
-    app_settings = {}
+    #:     app_settings = [
+    #:         PluginAppSettingDef(
+    #:             name='example_setting',  # Must be unique within plugin
+    #:             scope=APP_SETTING_SCOPE_USER,  # Use USER or SITE
+    #:             type=APP_SETTING_TYPE_STRING,
+    #:             default='example',  # Optional
+    #:             label='Example setting',  # Optional
+    #:             placeholder='Enter example setting here',  # Optional
+    #:             description='Example user setting',  # Optional
+    #:             options=['example', 'example2'],  # Optional, only for STRING
+    #:                                               # or INTEGER settings
+    #:             user_modifiable=True,  # Optional, show/hide in forms
+    #:             global_edit=False,  # Optional, enable/disable editing on
+    #:                                 # target sites
+    #:             widget_attrs={},  # Optional, widget attrs for forms
+    #:         )
+    #:    ]
+    app_settings = []
 
     #: List of names for plugin specific Django settings to display in siteinfo
-    # TODO: Override this in your app plugin if needed
     info_settings = []
 
     def get_statistics(self):
@@ -561,7 +544,6 @@ class SiteAppPluginPoint(PluginPoint):
 
         :return: Dict
         """
-        # TODO: Implement this in your app plugin
         return {}
 
     def get_messages(self, user=None):
@@ -579,7 +561,6 @@ class SiteAppPluginPoint(PluginPoint):
             'dismissable': True     # False for non-dismissable
         }]
         '''
-        # TODO: Implement this in your site app plugin
         return []
 
     def get_object(self, model, uuid):
@@ -608,12 +589,10 @@ class SiteAppPluginPoint(PluginPoint):
         obj = self.get_object(eval(model_str), uuid)
         if not obj:
             return None
-        # TODO: Implement this in your app plugin
         return None
 
     def get_extra_data_link(self, _extra_data, _name):
         """Return a link for timeline label starting with 'extra-'"""
-        # TODO: Implement this in your app plugin
         return None
 
     def validate_form_app_settings(self, app_settings, user=None):
@@ -624,11 +603,208 @@ class SiteAppPluginPoint(PluginPoint):
         :param user: User object or None
         :return: dict in format of {setting_name: 'Error string'}
         """
-        # TODO: Implement this in your app plugin (optional)
         return None
 
 
 # Data Classes -----------------------------------------------------------------
+
+
+class PluginAppSettingDef:
+    """
+    Class representing an AppSetting definition. Expected to be used to define
+    app settings in the plugin app_settings variable.
+    """
+
+    def __init__(
+        self,
+        name,
+        scope,
+        type,
+        default=None,
+        label=None,
+        placeholder=None,
+        description=None,
+        options=None,
+        user_modifiable=None,  # Set None here to validate PROJECT_USER value
+        global_edit=False,
+        project_types=None,
+        widget_attrs=None,
+    ):
+        """
+        Initialize PluginAppSettingDef.
+
+        :param name: Setting name to be used internally (string)
+        :param scope: Setting scope, must correspond to one of
+                      APP_SETTING_SCOPE_* (string)
+        :param type: Setting type, must correspond to one of APP_SETTING_TYPE_*
+                     (string)
+        :param default: Default value, type depends on setting type. Can be a
+                        callable.
+        :param label: Display label (string, optional, name is used as default)
+        :param placeholder: Placeholder value to be displayed in forms (string,
+                            optional)
+        :param description: Detailed setting description (string, optional)
+        :param options: Limit value to given options. Can be callable (optional,
+                        only for STRING or INTEGER types)
+        :param user_modifiable: Display in forms for user if True (optional,
+                                default=True, only for PROJECT and USER scopes)
+        :param global_edit: Only allow editing on source site if True (optional,
+                            default=False)
+        :param project_types: Allowed project types (optional,
+                              default=[PROJECT_TYPE_PROJECT])
+        :parm widget_attrs: Form widget attributes (optional, dict)
+        :raise: ValueError if an argument is not valid
+        """
+        # Validate provided values
+        self.validate_scope(scope)
+        self.validate_type(type)
+        self.validate_type_options(type, options)
+        if not callable(default):
+            self.validate_value(type, default)
+        if (
+            default is not None
+            and options is not None
+            and not callable(default)
+            and not callable(options)
+        ):
+            self.validate_default_in_options(default, options)
+        # Validate and set user_modifiable
+        self.validate_user_modifiable(scope, user_modifiable)
+        if user_modifiable is None:
+            user_modifiable = (
+                False if scope == APP_SETTING_SCOPE_PROJECT_USER else True
+            )
+        # Set members
+        self.name = name
+        self.scope = scope
+        self.type = type
+        self.default = default
+        self.label = label
+        self.placeholder = placeholder
+        self.description = description
+        self.options = options or []
+        self.user_modifiable = user_modifiable
+        self.global_edit = global_edit
+        self.project_types = project_types or [PROJECT_TYPE_PROJECT]
+        self.widget_attrs = widget_attrs or {}
+
+    @classmethod
+    def validate_scope(cls, scope):
+        """
+        Validate the app setting scope.
+
+        :param scope: String
+        :raise: ValueError if scope is not recognized
+        """
+        if scope not in APP_SETTING_SCOPES:
+            raise ValueError('Invalid scope "{}"'.format(scope))
+
+    @classmethod
+    def validate_type(cls, setting_type):
+        """
+        Validate the app setting type.
+
+        :param setting_type: String
+        :raise: ValueError if type is not recognized
+        """
+        if setting_type not in APP_SETTING_TYPES:
+            raise ValueError('Invalid setting type "{}"'.format(setting_type))
+
+    @classmethod
+    def validate_type_options(cls, setting_type, setting_options):
+        """
+        Validate existence of options against setting type.
+
+        :param setting_type: String
+        :param setting_options: List of options (Strings or Integers)
+        :raise: ValueError if type is not recognized
+        """
+        if (
+            setting_type
+            not in [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
+            and setting_options
+        ):
+            raise ValueError(
+                'Options are only allowed for settings of type INTEGER and '
+                'STRING'
+            )
+
+    @classmethod
+    def validate_default_in_options(cls, setting_default, setting_options):
+        """
+        Validate existence of default value in uncallable options.
+
+        :param setting_default: Default value
+        :param setting_options: Setting options
+        :raise: ValueError if default is not found in options
+        """
+        opts = [o[0] if isinstance(o, tuple) else o for o in setting_options]
+        if (
+            setting_options is not None
+            and not callable(setting_options)
+            and setting_default is not None
+            and not callable(setting_default)
+            and setting_default not in opts
+        ):
+            raise ValueError(
+                'Default value "{}" not found in options ({})'.format(
+                    setting_default,
+                    ', '.join([str(o) for o in opts]),
+                )
+            )
+
+    @classmethod
+    def validate_value(cls, setting_type, setting_value):
+        """
+        Validate non-callable value.
+
+        :param setting_type: Setting type (string)
+        :param setting_value: Setting value
+        :raise: ValueError if value is invalid
+        """
+        if setting_type == APP_SETTING_TYPE_BOOLEAN:
+            if not isinstance(setting_value, bool):
+                raise ValueError(
+                    'Please enter value as bool ({})'.format(setting_value)
+                )
+        elif setting_type == APP_SETTING_TYPE_INTEGER:
+            if (
+                not isinstance(setting_value, int)
+                and not str(setting_value).isdigit()
+            ):
+                raise ValueError(
+                    'Please enter a valid integer value ({})'.format(
+                        setting_value
+                    )
+                )
+        elif setting_type == APP_SETTING_TYPE_JSON:
+            if setting_value and not isinstance(setting_value, (dict, list)):
+                raise ValueError(
+                    'Please input JSON value as dict or list ({})'.format(
+                        setting_value
+                    )
+                )
+            try:
+                json.dumps(setting_value)
+            except TypeError:
+                raise ValueError(
+                    'Please enter valid JSON ({})'.format(setting_value)
+                )
+
+    @classmethod
+    def validate_user_modifiable(cls, scope, user_modifiable):
+        """
+        Validate user_modifiable against scope.
+
+        :param scope: String
+        :param user_modifiable: Bool or None
+        :raises: ValueError if user_modifiable can't be set for scope
+        """
+        if user_modifiable and scope == APP_SETTING_SCOPE_PROJECT_USER:
+            raise ValueError(
+                'Argument user_modifiable can not be set True for PROJECT_USER '
+                'scope settings'
+            )
 
 
 class PluginObjectLink:
@@ -828,4 +1004,29 @@ class RemoteSiteAppPlugin(SiteAppPluginPoint):
     entry_point_url_id = 'projectroles:remote_sites'
 
     #: Required permission for displaying the app
-    app_permission = 'userprofile.update_remote'
+    app_permission = 'projectroles.update_remote'
+
+
+class SiteAppSettingsAppPlugin(SiteAppPluginPoint):
+    """Site plugin for site app settings"""
+
+    #: Name (used as plugin ID)
+    name = 'siteappsettings'
+
+    #: Title (used in templates)
+    title = 'Site App Settings'
+
+    #: UI URLs
+    urls = []
+
+    #: Iconify icon
+    icon = 'mdi:cog-outline'
+
+    #: Description string
+    description = 'Site-wide app setting management'
+
+    #: Entry point URL ID
+    entry_point_url_id = 'projectroles:site_app_settings'
+
+    #: Required permission for displaying the app
+    app_permission = 'projectroles.update_site_settings'

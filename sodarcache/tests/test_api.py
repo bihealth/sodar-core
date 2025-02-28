@@ -23,7 +23,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
-TEST_APP_NAME = 'sodarcache'
+APP_NAME = 'sodarcache'
 INVALID_APP_NAME = 'timeline'  # Valid app name but but no data is created
 
 
@@ -39,7 +39,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
         item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
@@ -48,7 +48,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         expected = {
             'id': item.pk,
             'project': self.project.pk,
-            'app_name': 'sodarcache',
+            'app_name': APP_NAME,
             'user': self.user_owner.pk,
             'name': 'test_item',
             'data': {'test_key': 'test_val'},
@@ -88,7 +88,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
         item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
@@ -96,7 +96,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
         update_item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'new_test_val'},
@@ -104,7 +104,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         expected = {
             'id': item.pk,
             'project': self.project.pk,
-            'app_name': 'sodarcache',
+            'app_name': APP_NAME,
             'user': self.user_owner.pk,
             'name': 'test_item',
             'data': {'test_key': 'new_test_val'},
@@ -117,21 +117,21 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
         item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             name='test_item',
             data={'test_key': 'test_val'},
         )
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
         update_item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             name='test_item',
             data={'test_key': 'new_test_val'},
         )
         expected = {
             'id': item.pk,
             'project': self.project.pk,
-            'app_name': 'sodarcache',
+            'app_name': APP_NAME,
             'user': None,
             'name': 'test_item',
             'data': {'test_key': 'new_test_val'},
@@ -145,19 +145,19 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
 
         item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
         )
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
         get_item = self.cache_backend.get_cache_item(
-            app_name=TEST_APP_NAME, name='test_item', project=self.project
+            app_name=APP_NAME, name='test_item', project=self.project
         )
         expected = {
             'id': item.pk,
             'project': self.project.pk,
-            'app_name': 'sodarcache',
+            'app_name': APP_NAME,
             'user': self.user_owner.pk,
             'name': 'test_item',
             'data': {'test_key': 'test_val'},
@@ -169,39 +169,39 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         """Test for deleting a cache item"""
         self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
         )
         item = self.cache_backend.get_cache_item(
-            app_name=TEST_APP_NAME, name='test_item', project=self.project
+            app_name=APP_NAME, name='test_item', project=self.project
         )
         self.assertIsNotNone(item)
         self.cache_backend.delete_cache_item(
-            app_name=TEST_APP_NAME, name='test_item', project=self.project
+            app_name=APP_NAME, name='test_item', project=self.project
         )
         item = self.cache_backend.get_cache_item(
-            app_name=TEST_APP_NAME, name='test_item', project=self.project
+            app_name=APP_NAME, name='test_item', project=self.project
         )
         self.assertIsNone(item)
         # Test for deleting a non-existing item
         self.cache_backend.delete_cache_item(
-            app_name=TEST_APP_NAME, name='test_item', project=self.project
+            app_name=APP_NAME, name='test_item', project=self.project
         )
 
     def test_get_project_cache(self):
         """Test getting all cache item of a project"""
         first_item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item1',
             data={'test_key1': 'test_val1'},
         )
         second_item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item2',
             data={'test_key2': 'test_val2'},
@@ -217,13 +217,13 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         """Test getting the time of the latest update of a cache item"""
         item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
         )
         update_time = self.cache_backend.get_update_time(
-            app_name=TEST_APP_NAME, name='test_item', project=self.project
+            app_name=APP_NAME, name='test_item', project=self.project
         )
         self.assertEqual(update_time, item.date_modified.timestamp())
 
@@ -231,7 +231,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         """Test delete_cache() with no arguments"""
         self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
@@ -245,13 +245,13 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         """Test delete_cache() with app name argument"""
         self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
         )
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
-        delete_status = self.cache_backend.delete_cache(app_name=TEST_APP_NAME)
+        delete_status = self.cache_backend.delete_cache(app_name=APP_NAME)
         self.assertEqual(delete_status, 1)
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
@@ -259,7 +259,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         """Test delete_cache() on an app name without created items"""
         self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
@@ -275,7 +275,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         """Test delete_cache() with project argument"""
         self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
@@ -292,7 +292,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         )
         self.cache_backend.set_cache_item(
             project=self.project,
-            app_name=TEST_APP_NAME,
+            app_name=APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},

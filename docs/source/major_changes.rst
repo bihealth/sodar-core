@@ -10,6 +10,174 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.0 (2025-02-28)
+*******************
+
+Release Highlights
+==================
+
+- Add project deletion
+- Add ability for user to leave project
+- Add site read-only mode
+- Add siteappsettings site app plugin
+- Add removeroles management command
+- Add app setting type constants
+- Add app setting definition as objects
+- Add API view to retrieve user details by user UUID
+- Add optional user list/detail API view restriction to users with project roles
+- Add optional API token creation restriction to users with project roles
+- Add system user retrieval in user list API view
+- Add drf-spectacular support for API documentation
+- Update project list for flat list display
+- Update owner transfer form to allow setting no role for old owner
+- Update app settings API
+- Update invite creation to fail if active invite exists for user in parent category
+- Optimize project list queries
+- Upgrade filesfolders REST API version to v2.0
+- Upgrade projectroles REST API version to v1.1
+- Upgrade sodarcache REST API version to v2.0
+- Upgrade timeline REST API version to v2.0
+- Remove support for filesfolders REST API <v2.0
+- Remove support for sodarcache REST API <v2.0
+- Remove support for timeline REST API <v2.0
+- Remove support for SODAR Core features deprecated in v1.0
+- Remove support for generateschema
+- Remove squashed migrations
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v4.2.19.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project.
+Slugify Dependency Updated
+    Dependency to the out-of-date ``awesome-slugify`` package has been replaced
+    with ``python-slugify>=8.0.4``. It is recommended to change the dependency
+    accordingly in your project.
+
+Site Read-Only Mode
+-------------------
+
+This release adds the site-wide read-only mode, which is intended to temporarily
+prohibit modifying all data on the site. Rules, logic and/or UI of your apps'
+views may have to be changed to support this functionality. For more
+information, see :ref:`dev_resources_read_only`.
+
+Project Deletion
+----------------
+
+This release enables the deletion of categories and projects. See the
+:ref:`project app development documentation <dev_project_app_delete>` for more
+information on how to support this feature in your apps.
+
+AppSettingAPI Definition Getter Return Data
+-------------------------------------------
+
+With the upgrade of app setting definitions to ``PluginAppSettingDef`` objects
+instead of dict, the return data of ``AppSettingAPI.get_definition()`` and
+``AppSettingAPI.get_definitions()`` will contain definitions as objects of this
+class. The return data is the same even if definitions have been provided in the
+deprecated dictionary format.
+
+Old Owner Role in Project Modify API Ownership Transfer
+-------------------------------------------------------
+
+In ``ProjectModifyPluginMixin.perform_role_modify()``, the ``old_owner_role``
+argument may be ``None``. This is used in cases where project role for the
+previous owner is removed. Implementations of ``perform_role_modify()`` must be
+changed accordingly. The same also applies to ``revert_role_modify()``.
+
+REST API View Changes
+---------------------
+
+- Filesfolders API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``2.0`` (support for previous versions dropped)
+    * All views: Return ``owner`` as UUID instead of ``SODARUserSerializer``
+      dict
+- Projectroles API
+    * Current version: ``1.1`` (non-breaking changes)
+    * Allowed versions: ``1.0``, ``1.1``
+    * ``ProjectDestroyAPIView``: Add view
+    * ``ProjectRetrieveAPIView``: Add ``children`` field
+    * ``RoleAssignmentOwnerTransferAPIView``: Allow empty value for
+      ``old_owner_role``
+    * ``UserListAPIView``: Add ``include_system_users`` parameter
+    * ``UserRetrieveAPIView``: Add view
+    * ``CurrentUserRetrieveAPIView``: Add ``auth_type`` field
+- Sodarcache API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``2.0`` (support for previous versions dropped)
+    * ``CacheItemRetrieveAPIView``: Return ``user`` as UUID instead of
+      ``SODARUserSerializer`` dict
+- Timeline API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``2.0`` (support for previous versions dropped)
+    * ``TimelineEventRetrieveAPIView``: Return ``user`` as UUID instead of
+      ``SODARUserSerializer`` dict
+
+Deprecated Features
+-------------------
+
+These features have been deprecated in v1.1 and will be removed in v1.2.
+
+App Setting Definitions as Dict
+    Declaring definitions for app settings as a dict has been deprecated.
+    Instead, you should provide a list of ``PluginAppSettingDef`` objects. See
+    the :ref:`app settings documentation <dev_resource_app_settings>` for
+    details.
+``AppSettingAPI.get_all()``
+    Replaced by ``AppSettingAPI.get_all_by_scope()``.
+``projectroles.utils.get_user_display_name()``
+    Replaced by ``SODARUser.get_display_name()``.
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.0 and have been removed in v1.1.
+
+Legacy API Versioning and Rendering
+    The following API base classes and mixins are removed:
+    ``SODARAPIVersioning``, ``SODARAPIRenderer`` and ``SODARAPIBaseMixin``. The
+    legacy ``SODAR_API_*`` settings have also been removed. You need to provide
+    your own versioning and renderers to your site's API(s).
+Plugin Search Return Data
+    Plugins implementing ``search()`` must return results as as a list of
+    ``PluginSearchResult`` objects. Returning a ``dict`` was deprecated in v1.0.
+Plugin Object Link Return Data
+    Plugins implementing ``get_object_link()`` must return a
+    ``PluginObjectLink`` object or ``None``. Returning a ``dict`` was deprecated
+    in v1.0.
+App Settings Local Attribute
+    Support for the ``local`` attribute for app settings has been removed. Use
+    ``global`` instead. This is only relevant to sites being deployed as
+    ``SOURCE`` sites.
+``AppSettingAPI.get_global_value()`` Removed
+    The ``get_global_value()`` helper has been removed as the deprecated
+    ``local`` attribute is no longer supported. Instead, access the
+    ``global_edit`` member of a ``PluginAppSettingDef`` object directly.
+
+DRF-Spectacular Used for OpenAPI Schemas
+----------------------------------------
+
+This release adds support for ``drf-spectacular`` to generate OpenAPI schemas.
+Use ``make spectacular`` to generate your schemas. Support for the DRF default
+``generateschema`` command has been removed.
+
+Squashed Migrations Removed
+---------------------------
+
+Migrations squashed in v1.0 have been removed in v1.1. In order to upgrade your
+SODAR Core using site to v1.1, you must first upgrade to v1.0 and run
+``manage.py migrate`` on v1.0 for any development and production instances.
+
+
 v1.0.5 (2025-02-17)
 *******************
 

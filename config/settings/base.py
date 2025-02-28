@@ -68,6 +68,7 @@ THIRD_PARTY_APPS = [
     'dal',  # For user search combo box
     'dal_select2',
     'dj_iconify.apps.DjIconifyConfig',  # Iconify for SVG icons
+    'drf_spectacular',  # OpenAPI schema generation
 ]
 
 # Project apps
@@ -318,6 +319,17 @@ CELERYD_TASK_SOFT_TIME_LIMIT = 60
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 
 
+# API Settings
+# ------------------------------------------------------------------------------
+
+# SODAR API host URL
+SODAR_API_DEFAULT_HOST = env.url(
+    'SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000'
+)
+# SODAR API pagination page size
+SODAR_API_PAGE_SIZE = env.int('SODAR_API_PAGE_SIZE', 100)
+
+
 # Django REST framework
 # ------------------------------------------------------------------------------
 
@@ -330,8 +342,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': (
         'rest_framework.pagination.PageNumberPagination'
     ),
-    'PAGE_SIZE': env.int('SODAR_API_PAGE_SIZE', 100),
+    'PAGE_SIZE': SODAR_API_PAGE_SIZE,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+SPECTACULAR_SETTINGS = {
+    'PREPROCESSING_HOOKS': ['config.drf_spectacular.exclude_knox_hook']
+}
+
 
 # Additional authentication settings
 # ------------------------------------------------------------------------------
@@ -537,7 +555,7 @@ LOGGING = set_logging(LOGGING_LEVEL)
 # ------------------------------------------------------------------------------
 
 SITE_TITLE = 'SODAR Core Example Site'
-SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
+SITE_SUBTITLE = env.str('SITE_SUBTITLE', None)
 SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'SODAR Core Example')
 
 
@@ -555,16 +573,6 @@ ENABLED_BACKEND_PLUGINS = env.list(
         'timeline_backend',
         'example_backend_app',
     ],
-)
-
-# SODAR API settings
-# DEPRECATED: To be removed in SODAR Core v1.1 (see #1401)
-# SODAR_API_DEFAULT_VERSION = '0.1'
-# SODAR_API_ALLOWED_VERSIONS = [SODAR_API_DEFAULT_VERSION]
-# SODAR_API_MEDIA_TYPE = 'application/your.application+json'
-# SODAR API host URL
-SODAR_API_DEFAULT_HOST = env.url(
-    'SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000'
 )
 
 
@@ -624,15 +632,21 @@ PROJECTROLES_TARGET_SYNC_INTERVAL = env.int(
 )
 
 # Optional projectroles settings
-# Sidebar icon size. Minimum=18, maximum=42.
+# Sidebar icon size (must be between 18-42)
 PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 # PROJECTROLES_SECRET_LENGTH = 32
 # PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
 # PROJECTROLES_SEARCH_PAGINATION = 5
-# Support for viewing the site in "kiosk mode" (under work, experimental)
+# Support for viewing the site in "kiosk mode" (experimental)
 # PROJECTROLES_KIOSK_MODE = env.bool('PROJECTROLES_KIOSK_MODE', False)
 # Scroll project navigation with page content if set False
 # PROJECTROLES_BREADCRUMB_STICKY = True
+# Custom message to be displayed if site read-only mode is enabled
+PROJECTROLES_READ_ONLY_MSG = env.str('PROJECTROLES_READ_ONLY_MSG', None)
+# Restrict REST API user list/details access to users with project roles
+PROJECTROLES_API_USER_DETAIL_RESTRICT = env.bool(
+    'PROJECTROLES_API_USER_DETAIL_RESTRICT', False
+)
 
 # Hide project apps from the UI (sidebar, dropdown menus and project details)
 PROJECTROLES_HIDE_PROJECT_APPS = env.list(
@@ -699,6 +713,13 @@ ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
 
 # Appalerts app settings
 APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
+
+
+# Tokens app settings
+# Restrict access to token creation for users with project roles
+TOKENS_CREATE_PROJECT_USER_RESTRICT = env.bool(
+    'TOKENS_CREATE_PROJECT_USER_RESTRICT', False
+)
 
 
 # SODAR constants

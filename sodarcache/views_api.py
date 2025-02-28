@@ -1,5 +1,6 @@
 """REST API views for the sodarcache app"""
 
+from rest_framework import serializers
 from rest_framework.exceptions import APIException, NotFound, ParseError
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.renderers import JSONRenderer
@@ -7,10 +8,12 @@ from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
+from drf_spectacular.utils import extend_schema, inline_serializer
+
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.views_api import CoreAPIGenericProjectMixin
+from projectroles.views_api import SODARAPIGenericProjectMixin
 
 from sodarcache.serializers import JSONCacheItemSerializer
 
@@ -67,7 +70,7 @@ class SodarcacheAPIViewMixin:
 
 
 class CacheItemRetrieveAPIView(
-    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, RetrieveAPIView
+    SodarcacheAPIViewMixin, SODARAPIGenericProjectMixin, RetrieveAPIView
 ):
     """
     Retrieve a cache item along with its data. Returns 404 if cache item is not
@@ -84,7 +87,11 @@ class CacheItemRetrieveAPIView(
     - ``name``: Item name (string)
     - ``data``: Item data (JSON)
     - ``date_modified``: Item modification datetime (YYYY-MM-DDThh:mm:ssZ)
-    - ``user``: User who created the item (SODARUserSerializer dict or None)
+    - ``user``: UUID of user who created the item (string)
+
+    **Version Changes**:
+
+    - ``2.0``: Return ``user`` as UUID instead of ``SODARUserSerializer`` dict
     """
 
     permission_required = 'sodarcache.get_cache_value'
@@ -109,8 +116,16 @@ class CacheItemRetrieveAPIView(
         return item
 
 
+@extend_schema(
+    responses={
+        '200': inline_serializer(
+            'UpdateTimeResponse',
+            fields={'update_time': serializers.IntegerField()},
+        )
+    }
+)
 class CacheItemDateRetrieveAPIView(
-    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, APIView
+    SodarcacheAPIViewMixin, SODARAPIGenericProjectMixin, APIView
 ):
     """
     Retrieve timestamp of the last update to a cache item. Returns 404 if cache
@@ -145,7 +160,7 @@ class CacheItemDateRetrieveAPIView(
 
 
 class CacheItemSetAPIView(
-    SodarcacheAPIViewMixin, CoreAPIGenericProjectMixin, APIView
+    SodarcacheAPIViewMixin, SODARAPIGenericProjectMixin, APIView
 ):
     """
     Create or update a cache item. Replaces an existing item with the same
@@ -161,9 +176,10 @@ class CacheItemSetAPIView(
     - ``data``: Full item data to be set (JSON)
     """
 
+    http_method_names = ['post']
     permission_required = 'sodarcache.set_cache_value'
     project_type = PROJECT_TYPE_PROJECT
-    http_method_names = ['post']
+    serializer_class = JSONCacheItemSerializer
 
     def post(self, request, *args, **kwargs):
         cache_backend = self.get_backend()

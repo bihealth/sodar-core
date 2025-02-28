@@ -18,6 +18,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 # Local constants
+APP_NAME = 'projectroles'
 START_MSG = 'Querying database for undefined app settings..'
 CHECK_MODE_MSG = 'Check mode enabled, database will not be altered'
 END_MSG = 'OK'
@@ -46,7 +47,7 @@ class Command(BaseCommand):
         s_name = '.'.join(
             [
                 'settings',
-                'projectroles' if s.app_plugin is None else s.app_plugin.name,
+                APP_NAME if s.app_plugin is None else s.app_plugin.name,
                 s.name,
             ]
         )
@@ -79,12 +80,12 @@ class Command(BaseCommand):
             if s.app_plugin:
                 def_kwargs['plugin'] = s.app_plugin.get_plugin()
             else:
-                def_kwargs['plugin_name'] = 'projectroles'
+                def_kwargs['plugin_name'] = APP_NAME
             try:
                 s_def = app_settings.get_definition(**def_kwargs)
                 # Get allowed project types (if unset, default is PROJECT only)
-                if s_def['scope'] != APP_SETTING_SCOPE_USER:
-                    p_types = s_def.get('project_types', [PROJECT_TYPE_PROJECT])
+                if s_def.scope != APP_SETTING_SCOPE_USER:
+                    p_types = s_def.project_types
             except ValueError:
                 logger.info(self._get_log_msg(s, DEF_NOT_FOUND_MSG, check))
                 if not check:

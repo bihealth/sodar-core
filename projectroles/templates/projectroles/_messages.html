@@ -5,39 +5,56 @@
 {% load projectroles_common_tags %}
 
 {% get_site_app_messages request.user as site_app_messages %}
+{% get_app_setting 'projectroles' 'site_read_only' as site_read_only %}
 
-{% if messages or site_app_messages %}
+{% if site_read_only or messages or site_app_messages %}
   <div class="container-fluid sodar-alert-container">
-
-  {# Site app messages #}
-  {% for message in site_app_messages %}
-    {% if request.user.is_authenticated or not message.require_auth %}
-      <div class="alert alert-{{ message.color }} {% if message.dismissable %}alert-dismissable fade show{% endif %} sodar-alert-top sodar-alert-site-app">
+    {# Site read-only mode message #}
+    {% if site_read_only %}
+      {% get_django_setting 'PROJECTROLES_READ_ONLY_MSG' as read_only_msg %}
+      <div id="sodar-alert-site-read-only"
+           class="alert alert-danger sodar-alert-top"
+           data-url="{% url 'projectroles:ajax_settings_site_read_only' %}">
         <div class="sodar-alert-top-content">
-          {% comment %}
-          {% if message.dismissable %}
-            <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link">
-              <i class="iconify text-muted" data-icon="mdi:close-thick"></i>
-            </a>
+          <i class="iconify" data-icon="mdi:cancel"></i>
+          {% if read_only_msg %}
+            {{ read_only_msg }}
+          {% else %}
+            This site is currently in read-only mode. Modifying data is not
+            permitted.
           {% endif %}
-          {% endcomment %}
-          {{ message.content | safe }}
         </div>
       </div>
     {% endif %}
-  {% endfor %}
 
-  {# Regular Django messages #}
-  {% for message in messages %}
-    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissable fade show sodar-alert-top">
-      <div class="sodar-alert-top-content">
-        {{ message }}
-        <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link">
-          <i class="iconify text-muted" data-icon="mdi:close-thick"></i>
-        </a>
+    {# Site app messages #}
+    {% for message in site_app_messages %}
+      {% if request.user.is_authenticated or not message.require_auth %}
+        <div class="alert alert-{{ message.color }} {% if message.dismissable %}alert-dismissable fade show{% endif %} sodar-alert-top sodar-alert-site-app">
+          <div class="sodar-alert-top-content">
+            {% comment %}
+            {% if message.dismissable %}
+              <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link">
+                <i class="iconify text-muted" data-icon="mdi:close-thick"></i>
+              </a>
+            {% endif %}
+            {% endcomment %}
+            {{ message.content | safe }}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    {# Regular Django messages #}
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissable fade show sodar-alert-top">
+        <div class="sodar-alert-top-content">
+          {{ message }}
+          <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link">
+            <i class="iconify text-muted" data-icon="mdi:close-thick"></i>
+          </a>
+        </div>
       </div>
-    </div>
-  {% endfor %}
-
+    {% endfor %}
   </div>
 {% endif %}

@@ -37,6 +37,12 @@
 
 {% block javascript %}
   {{ block.super }}
+  <!-- Variables -->
+  <script type="text/javascript">
+    window.projectListPagination = {{ page_options_default }};
+  </script>
+  <!-- DataTables -->
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
   <!-- Project list -->
   <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
 
@@ -62,26 +68,23 @@
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
+    tour.addStep('home_pagination', {
+        title: 'List Pagination',
+        text: 'Set the list of entries shown on each page. This value will ' +
+              'be saved in your user settings.',
+        attachTo: '#sodar-pr-project-list-page-length left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+    });
     tour.addStep('home_star', {
         title: 'View Starred ' +
                '{% get_display_name 'PROJECT' title=True plural=True %}',
         text: 'Click here to enable/disable viewing only ' +
               '{% get_display_name 'PROJECT' plural=True %} you have ' +
-              '"starred" for your favourites in the project page. ',
+              '"starred" for your favourites in the project view header. ',
         attachTo: '#sodar-pr-project-list-link-star bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
-    if ($('#sodar-pr-home-link-create').length) {
-        tour.addStep('home_create', {
-            title: 'Create {% get_display_name 'PROJECT' title=True %}',
-            text: 'Click here to create a new ' +
-                  '{% get_display_name 'PROJECT' %} or ' +
-                  '{% get_display_name 'CATEGORY' %}.',
-            attachTo: '#sodar-pr-home-link-create left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-    }
   </script>
 {% endblock javascript %}

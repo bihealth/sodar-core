@@ -21,13 +21,13 @@ TBA
 - [ ] Review and update doc entries if needed
 - [ ] Ensure all relevant updates are in `CHANGELOG` and major changes doc
 - [ ] Ensure REST API versions are up to date and documented
-- [ ] Upgrade version number of pypi package references in `README`
+- [ ] Upgrade version number of pypi package reference in `README`
 - [ ] Upgrade docs config version number (usually at `x.y.z-WIP` when developing)
 - [ ] Update latest version info in `codemeta.json`
 - [ ] Update version number and date in `CHANGELOG`
 - [ ] Update version number and date in `Major Changes` doc
 - [ ] Ensure docs can be built without errors
-- [ ] Ensure `generateschema` runs without errors or warnings (until in CI)
+- [ ] Ensure `make spectacular` runs without errors or warnings (until in CI)
 
 ## Notes
 

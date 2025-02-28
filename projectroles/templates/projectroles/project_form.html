@@ -41,8 +41,10 @@
       <h3 id="sodar-pr-project-form-title" data-project-type={{ object.type }}>
         Update {% get_display_name object.type title=True %}
       </h3>
-      {% if object.type == 'PROJECT' %}
-        <div class="ml-auto">
+
+      {# TODO: Convert to btn-group, how to enable tooltip for disabled button? #}
+      <div class="ml-auto">
+        {% if object.type == 'PROJECT' %}
           <a role="button" class="btn btn-warning"
              href="{% url 'projectroles:archive' project=object.sodar_uuid %}"
              id="sodar-pr-btn-archive">
@@ -52,8 +54,18 @@
               <i class="iconify" data-icon="mdi:archive-arrow-down"></i> Unarchive
             {% endif %}
           </a>
-        </div>
-      {% endif %}
+         {% endif %}
+         <span class="d-inline-block" tabindex="0" data-toggle="tooltip"
+               id="sodar-pr-btn-delete-tooltip"
+               title="{{ project_delete_msg }}">
+           <a role="button" class="btn btn-danger"
+              href="{% url 'projectroles:delete' project=object.sodar_uuid %}"
+              {% if not project_delete_access %}disabled="disabled"{% endif %}
+              id="sodar-pr-btn-delete">
+            <i class="iconify" data-icon="mdi:close-thick"></i> Delete
+          </a>
+        </span>
+      </div>
     {% elif parent.pk %}
       <h2>Create {{ project_display }} or {{ category_display }} Under {{ parent.title }}</h2>
     {% elif disable_categories %}
@@ -77,11 +89,7 @@
           </a>
           <button type="submit" class="btn btn-primary sodar-btn-submit-once">
             <i class="iconify" data-icon="mdi:check-bold"></i>
-            {% if object.pk %}
-              Update
-            {% else %}
-              Create
-            {% endif %}
+            {% if object.pk %}Update{% else %}Create{% endif %}
           </button>
         </div>
       </div>

@@ -179,7 +179,7 @@ organizations, etc.
 Projectroles Settings
 =====================
 
-**Mandatory** projectroles app settings are explained below:
+**Mandatory** projectroles Django settings are explained below:
 
 ``PROJECTROLES_SITE_MODE``
     Site mode for remote project metadata synchronization, either ``SOURCE``
@@ -204,12 +204,14 @@ Projectroles Settings
 ``PROJECTROLES_TEMPLATE_INCLUDE_PATH``
     Full system path for custom template includes. The default path is
     ``{APPS_DIR}/templates/include`` (string)
+``PROJECTROLES_READ_ONLY_MSG``
+    Custom message to be displayed if site read-only mode is enabled (string)
 
 Example:
 
 .. code-block:: python
 
-    # Projectroles app settings
+    # Projectroles Django settings
     PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'TARGET')
     PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
@@ -217,6 +219,7 @@ Example:
     PROJECTROLES_EMAIL_SENDER_REPLY = env.bool('PROJECTROLES_EMAIL_SENDER_REPLY', False)
     PROJECTROLES_ENABLE_SEARCH = True
     PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
+    PROJECTROLES_READ_ONLY_MSG = env.str('PROJECTROLES_READ_ONLY_MSG', None)
 
 
 Optional Projectroles Settings
@@ -275,12 +278,17 @@ The following projectroles settings are **optional**:
 ``PROJECTROLES_TARGET_SYNC_INTERVAL``
     Interval in minutes for remote project synchronization as a target site.
     Ignored for source sites (int)
+``PROJECTROLES_API_USER_DETAIL_RESTRICT``
+    If true, restrict projectroles API user list and detail view results to
+    users who have roles in at least one category or project. For
+    ``UserListAPIView`` this will be restricted to contributor access or above.
+    ``UserRetrieveAPIView`` is accessible to users with any role (bool)
 
 Example:
 
 .. code-block:: python
 
-    # Projectroles app settings
+    # Projectroles Django settings
     # ...
     PROJECTROLES_EMAIL_HEADER = 'This email has been sent by X from Y'
     PROJECTROLES_EMAIL_FOOTER = 'For assistance contact admin@example.com'
@@ -293,6 +301,7 @@ Example:
     PROJECTROLES_BROWSER_WARNING = True
     PROJECTROLES_ALLOW_LOCAL_USERS = True
     PROJECTROLES_KIOSK_MODE = False
+    PROJECTROLES_API_USER_LIST_RESTRICT=True
 
 .. warning::
 

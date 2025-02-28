@@ -28,6 +28,9 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 
+# Local constants
+APP_NAME = 'projectroles'
+
 
 class TestSyncRemoteSiteTask(
     ProjectMixin, RoleMixin, RemoteTargetMixin, RoleAssignmentMixin, TestCase
@@ -94,10 +97,7 @@ class TestSyncRemoteSiteTask(
         """
         sync_remote_site_task()
         app_settings.set(
-            plugin_name='projectroles',
-            setting_name='ip_restrict',
-            project=self.project_source,
-            value=True,
+            APP_NAME, 'ip_restrict', True, project=self.project_source
         )
         sync_remote_site_task()
 
@@ -106,9 +106,7 @@ class TestSyncRemoteSiteTask(
         self.assertEqual(RemoteProject.objects.all().count(), 2)
         self.assertEqual(
             app_settings.get(
-                plugin_name='projectroles',
-                setting_name='ip_restrict',
-                project=self.project_source,
+                APP_NAME, 'ip_restrict', project=self.project_source
             ),
             True,
         )

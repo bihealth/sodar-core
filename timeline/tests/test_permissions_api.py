@@ -34,10 +34,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
             'timeline:api_list_project',
             kwargs={'project': self.project.sodar_uuid},
         )
-
-    def test_get(self):
-        """Test ProjectTimelineEventListAPIView GET"""
-        good_users = [
+        self.good_users = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -48,11 +45,15 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+
+    def test_get(self):
+        """Test ProjectTimelineEventListAPIView GET"""
+
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
@@ -65,24 +66,19 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-        ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
 
 class TestSiteTimelineEventListAPIView(TimelineAPIPermissionTestBase):
@@ -94,26 +90,19 @@ class TestSiteTimelineEventListAPIView(TimelineAPIPermissionTestBase):
 
     def test_get(self):
         """Test SiteTimelineEventListAPIView GET"""
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_finder_cat,
-            self.user_no_roles,
-        ]
-        self.assert_response_api(self.url, good_users, 200)
+        self.assert_response_api(self.url, self.auth_users, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.auth_users, 200, knox=True)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.auth_users, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
 
 
@@ -137,10 +126,7 @@ class TestTimelineEventRetrieveAPIView(
             'timeline:api_retrieve',
             kwargs={'timelineevent': self.event.sodar_uuid},
         )
-
-    def test_get_project_event(self):
-        """Test TimelineEventRetrieveAPIView GET with project event"""
-        good_users = [
+        self.good_users_project = [
             self.superuser,
             self.user_owner_cat,
             self.user_delegate_cat,
@@ -151,15 +137,27 @@ class TestTimelineEventRetrieveAPIView(
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.bad_users_project = [self.user_finder_cat, self.user_no_roles]
+
+    def test_get_project_event(self):
+        """Test TimelineEventRetrieveAPIView GET with project event"""
+        self.assert_response_api(self.url, self.good_users_project, 200)
+        self.assert_response_api(self.url, self.bad_users_project, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(
+            self.url, self.good_users_project, 200, knox=True
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_project_event_anon(self):
         """Test GET with project event and anonymous access"""
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_project_event_read_only(self):
+        """Test GET with project event and site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.good_users_project, 200)
+        self.assert_response_api(self.url, self.bad_users_project, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_project_event_classified(self):
@@ -190,22 +188,9 @@ class TestTimelineEventRetrieveAPIView(
         """Test GET with site-wide event"""
         self.event.project = None
         self.event.save()
-        good_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_finder_cat,
-            self.user_no_roles,
-        ]
-        self.assert_response_api(self.url, good_users, 200)
+        self.assert_response_api(self.url, self.auth_users, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.auth_users, 200, knox=True)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_site_event_anon(self):
@@ -214,25 +199,20 @@ class TestTimelineEventRetrieveAPIView(
         self.event.save()
         self.assert_response_api(self.url, self.anonymous, 401)
 
+    def test_get_site_event_read_only(self):
+        """Test GET with site-wide event and site read-only mode"""
+        self.set_site_read_only()
+        self.event.project = None
+        self.event.save()
+        self.assert_response_api(self.url, self.auth_users, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
     def test_get_site_event_classified(self):
         """Test GET with classified site event"""
         self.event.project = None
         self.event.classified = True
         self.event.save()
-        good_users = [self.superuser]
-        bad_users = [
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_no_roles,
-        ]
-        self.assert_response_api(self.url, good_users, 200)
-        self.assert_response_api(self.url, bad_users, 403)
+        self.assert_response_api(self.url, self.superuser, 200)
+        self.assert_response_api(self.url, self.auth_non_superusers, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.superuser, 200, knox=True)

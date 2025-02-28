@@ -31,6 +31,11 @@ urls_ui = [
         view=views.ProjectArchiveView.as_view(),
         name='archive',
     ),
+    path(
+        route='delete/<uuid:project>',
+        view=views.ProjectDeleteView.as_view(),
+        name='delete',
+    ),
     # Search views
     path(
         route='search/results/',
@@ -72,6 +77,11 @@ urls_ui = [
         route='members/delete/<uuid:roleassignment>',
         view=views.RoleAssignmentDeleteView.as_view(),
         name='role_delete',
+    ),
+    path(
+        route='members/delete/own/<uuid:roleassignment>',
+        view=views.RoleAssignmentOwnDeleteView.as_view(),
+        name='role_delete_own',
     ),
     path(
         route='members/owner/transfer/<uuid:project>',
@@ -124,6 +134,11 @@ urls_ui = [
         route='user/update',
         view=views.UserUpdateView.as_view(),
         name='user_update',
+    ),
+    path(
+        route='site-app-settings',
+        view=views.SiteAppSettingsView.as_view(),
+        name='site_app_settings',
     ),
     # Remote site and project views
     path(
@@ -201,6 +216,11 @@ urls_ajax = [
         name='ajax_user_dropdown',
     ),
     path(
+        route='ajax/settings/site-read-only',
+        view=views_ajax.SiteReadOnlySettingAjaxView.as_view(),
+        name='ajax_settings_site_read_only',
+    ),
+    path(
         route='ajax/user/current',
         view=views_ajax.CurrentUserRetrieveAjaxView.as_view(),
         name='ajax_user_current',
@@ -240,6 +260,11 @@ urls_api = [
         route='api/update/<uuid:project>',
         view=views_api.ProjectUpdateAPIView.as_view(),
         name='api_project_update',
+    ),
+    path(
+        route='api/destroy/<uuid:project>',
+        view=views_api.ProjectDestroyAPIView.as_view(),
+        name='api_project_destroy',
     ),
     path(
         route='api/roles/create/<uuid:project>',
@@ -305,6 +330,11 @@ urls_api = [
         route='api/users/list',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',
+    ),
+    path(
+        route='api/users/<uuid:user>',
+        view=views_api.UserRetrieveAPIView.as_view(),
+        name='api_user_retrieve',
     ),
     path(
         route='api/users/current',

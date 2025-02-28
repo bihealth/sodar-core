@@ -8,7 +8,7 @@
 
 {% block projectroles_extend %}
 
-<div class="container-fluid sodar-subtitle-container">
+<div class="row sodar-subtitle-container">
   <h3>Confirm Invite Revocation</h3>
 </div>
 
@@ -20,7 +20,6 @@
   <form method="post"
         action="{% url 'projectroles:invite_revoke' projectinvite=invite.sodar_uuid %}">
     {% csrf_token %}
-
     <div class="row">
       <div class="btn-group ml-auto">
         <a role="button" class="btn btn-secondary"

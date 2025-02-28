@@ -49,7 +49,7 @@ been made available as open source:
   It showcases how to build a complex data warehousing and data analysis web
   appliction using SODAR Core.
   More details are described in the `NAR Web Server Issue publication (doi:10.1093/nar/gkaa241) <https://doi.org/10.1093/nar/gkaa241>`__.
-  The source code can be found on `github.com/bihealth/varfish-server <https://github.com/bihealth/varfish-server>`__.
+  The source code can be found on `github.com/varfish-org/varfish-server <https://github.com/varfish-org/varfish-server>`__.
   A demo is available at `varfish-demo.bihealth.org <https://varfish-demo.bihealth.org/login/>`__.
 - **Digestiflow** is a web-based data system for the management and
   demultiplexing of Illumina Flow Cells. It further implements various tools for
@@ -117,7 +117,7 @@ and breaking changes are possible.
 
 .. code-block:: console
 
-    pip install django-sodar-core==1.0.5
+    pip install django-sodar-core==1.1.0
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.

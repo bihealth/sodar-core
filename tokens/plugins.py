@@ -6,7 +6,7 @@ from projectroles.plugins import SiteAppPluginPoint
 from tokens.urls import urlpatterns
 
 
-class ProjectAppPlugin(SiteAppPluginPoint):
+class SiteAppPlugin(SiteAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
     #: Name (used as plugin ID)
@@ -28,4 +28,7 @@ class ProjectAppPlugin(SiteAppPluginPoint):
     description = 'API Token Management'
 
     #: Required permission for accessing the app
-    app_permission = 'tokens.access'
+    app_permission = 'tokens.view_list'
+
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = ['TOKENS_CREATE_PROJECT_USER_RESTRICT']

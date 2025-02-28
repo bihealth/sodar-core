@@ -43,3 +43,13 @@ Filesfolders REST API Views
 .. autoclass:: HyperLinkListCreateAPIView
 
 .. autoclass:: HyperLinkRetrieveUpdateDestroyAPIView
+
+
+Filesfolders REST API Version Changes
+=====================================
+
+v2.0
+----
+
+- All views
+    * Return ``owner`` as UUID instead of ``SODARUserSerializer`` dict

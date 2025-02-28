@@ -12,9 +12,9 @@
 <div class="row sodar-subtitle-container">
   <h2><i class="iconify" data-icon="mdi:alert"></i> Admin Alert</h2>
   <a role="button" class="btn btn-secondary ml-auto pull-right"
-       href="{{ request.session.real_referer }}">
-      <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back
-    </a>
+     href="{{ request.session.real_referer }}">
+    <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back
+  </a>
 </div>
 
 <div class="container-fluid sodar-page-container">
@@ -34,7 +34,7 @@
           {% endautoescape %}
         </dd>
         {% if object.description.raw %}
-          <dd class="col-md-12 px-0 mx-0">
+          <dd class="col-md-12 px-0 mx-0 mb-0">
             <hr />
           </dd>
           <dd class="col-md-12 my-0 sodar-markdown-content">

@@ -49,6 +49,9 @@ PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
+# Local constants
+APP_NAME = 'projectroles'
+
 
 # Base Classes and Mixins ------------------------------------------------------
 
@@ -254,7 +257,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     user=request.user,
                 )
             ]
-        full_title_idx = len(parent.full_title) + 3 if parent else 0
+        full_title_idx = (
+            len(parent.full_title) + len(CAT_DELIMITER) if parent else 0
+        )
 
         ret_projects = []
         for p in projects:
@@ -266,9 +271,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     'projectroles:roles',
                     kwargs={'project': p.parent.sodar_uuid},
                 )
-
             rp = {
-                'title': p.title,
                 'type': p.type,
                 'full_title': p.full_title[full_title_idx:],
                 'public_guest_access': p.public_guest_access,
@@ -276,7 +279,6 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 'remote': p.is_remote(),
                 'revoked': p.is_revoked(),
                 'starred': p in starred_projects,
-                'depth': p_depth,
                 'access': p_access,
                 'finder_url': p_finder_url,
                 'uuid': str(p.sodar_uuid),
@@ -286,7 +288,12 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             'projects': ret_projects,
             'parent_depth': parent.get_depth() + 1 if parent else 0,
             'messages': {},
-            'user': {'superuser': request.user.is_superuser},
+            'user': {
+                'superuser': request.user.is_superuser,
+                'highlight': app_settings.get(
+                    APP_NAME, 'project_list_highlight', user=request.user
+                ),
+            },
         }
 
         if len(ret['projects']) == 0:
@@ -424,7 +431,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
 class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
     """View to handle starring and unstarring a project"""
 
-    permission_required = 'projectroles.view_project'
+    permission_required = 'projectroles.star_project'
 
     def post(self, request, *args, **kwargs):
         # HACK: Manually refuse access to anonymous as this view is an exception
@@ -432,12 +439,10 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
             return Response({'detail': 'Anonymous access denied'}, status=401)
         project = self.get_project()
         user = request.user
-        project_star = app_settings.get(
-            'projectroles', 'project_star', project, user
-        )
+        project_star = app_settings.get(APP_NAME, 'project_star', project, user)
         value = False if project_star else True
         app_settings.set(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             setting_name='project_star',
             value=value,
             project=project,
@@ -504,6 +509,30 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
         return JsonResponse({'links': sidebar_links})
 
 
+class SiteReadOnlySettingAjaxView(SODARBaseAjaxView):
+    """
+    Return the current status of the site read-only mode setting.
+
+    Return data:
+
+    - ``site_read_only``: Boolean
+    """
+
+    allow_anonymous = True
+
+    def get(self, request, *args, **kwargs):
+        ret = app_settings.get(APP_NAME, 'site_read_only')
+        return JsonResponse({'site_read_only': ret})
+
+
+class CurrentUserRetrieveAjaxView(
+    SODARBaseAjaxMixin, CurrentUserRetrieveAPIView
+):
+    """
+    Return information of the requesting user for Ajax requests.
+    """
+
+
 class UserDropdownContentAjaxView(SODARBaseAjaxView):
     """
     Return user dropdown links to be displayed in a client-side application.
@@ -533,14 +562,6 @@ class UserDropdownContentAjaxView(SODARBaseAjaxView):
             request.user, app_name=app_name
         )
         return JsonResponse({'links': user_dropdown_links})
-
-
-class CurrentUserRetrieveAjaxView(
-    SODARBaseAjaxMixin, CurrentUserRetrieveAPIView
-):
-    """
-    Return information of the requesting user for Ajax requests.
-    """
 
 
 class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):

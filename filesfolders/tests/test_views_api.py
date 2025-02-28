@@ -65,7 +65,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             'name': self.folder.name,
             'folder': None,
-            'owner': self.get_serialized_user(self.folder.owner),
+            'owner': str(self.folder.owner.sodar_uuid),
             'project': str(self.folder.project.sodar_uuid),
             'flag': self.folder.flag,
             'description': self.folder.description,
@@ -87,7 +87,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIViewTestBase):
                 {
                     'name': self.folder.name,
                     'folder': None,
-                    'owner': self.get_serialized_user(self.folder.owner),
+                    'owner': str(self.folder.owner.sodar_uuid),
                     'project': str(self.folder.project.sodar_uuid),
                     'flag': self.folder.flag,
                     'description': self.folder.description,
@@ -113,7 +113,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             **self.folder_data,
             'folder': None,
-            'owner': self.get_serialized_user(self.user),
+            'owner': str(self.user.sodar_uuid),
             'project': str(self.project.sodar_uuid),
             'date_modified': self.get_drf_datetime(new_folder.date_modified),
             'sodar_uuid': str(new_folder.sodar_uuid),
@@ -134,7 +134,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIViewTestBase):
         self.assertIsNotNone(new_folder)
         expected = {
             **folder_data,
-            'owner': self.get_serialized_user(self.user),
+            'owner': str(self.user.sodar_uuid),
             'project': str(self.project.sodar_uuid),
             'date_modified': self.get_drf_datetime(new_folder.date_modified),
             'sodar_uuid': str(new_folder.sodar_uuid),
@@ -179,7 +179,7 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             'name': self.folder.name,
             'folder': None,
-            'owner': self.get_serialized_user(self.folder.owner),
+            'owner': str(self.folder.owner.sodar_uuid),
             'project': str(self.folder.project.sodar_uuid),
             'flag': self.folder.flag,
             'description': self.folder.description,
@@ -211,7 +211,7 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             **folder_data,
             'folder': None,
-            'owner': self.get_serialized_user(self.folder.owner),
+            'owner': str(self.folder.owner.sodar_uuid),
             'project': str(self.folder.project.sodar_uuid),
             'date_modified': self.get_drf_datetime(self.folder.date_modified),
             'sodar_uuid': str(self.folder.sodar_uuid),
@@ -258,7 +258,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             'name': self.file.name,
             'folder': None,
-            'owner': self.get_serialized_user(self.file.owner),
+            'owner': str(self.file.owner.sodar_uuid),
             'project': str(self.file.project.sodar_uuid),
             'flag': self.file.flag,
             'description': self.file.description,
@@ -282,7 +282,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
                 {
                     'name': self.file.name,
                     'folder': None,
-                    'owner': self.get_serialized_user(self.file.owner),
+                    'owner': str(self.file.owner.sodar_uuid),
                     'project': str(self.file.project.sodar_uuid),
                     'flag': self.file.flag,
                     'description': self.file.description,
@@ -311,7 +311,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             **self.file_data,
             'folder': None,
-            'owner': self.get_serialized_user(self.user),
+            'owner': str(self.user.sodar_uuid),
             'project': str(self.project.sodar_uuid),
             'secret': new_file.secret,
             'public_url': new_file.public_url,
@@ -335,7 +335,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
         self.assertNotEqual(new_file.file.file.size, 0)
         expected = {
             **file_data,
-            'owner': self.get_serialized_user(self.user),
+            'owner': str(self.user.sodar_uuid),
             'project': str(self.project.sodar_uuid),
             'public_url': self.file_data['public_url'],
             'secret': new_file.secret,
@@ -396,7 +396,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             'name': self.file.name,
             'folder': None,
-            'owner': self.get_serialized_user(self.file.owner),
+            'owner': str(self.file.owner.sodar_uuid),
             'project': str(self.file.project.sodar_uuid),
             'flag': self.file.flag,
             'description': self.file.description,
@@ -436,7 +436,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             **self.file_data,
             'folder': None,
-            'owner': self.get_serialized_user(self.file.owner),
+            'owner': str(self.file.owner.sodar_uuid),
             'project': str(self.file.project.sodar_uuid),
             'public_url': self.file_data['public_url'],
             'secret': self.file.secret,
@@ -506,7 +506,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             'name': self.hyperlink.name,
             'folder': None,
-            'owner': self.get_serialized_user(self.hyperlink.owner),
+            'owner': str(self.hyperlink.owner.sodar_uuid),
             'project': str(self.hyperlink.project.sodar_uuid),
             'flag': self.hyperlink.flag,
             'description': self.hyperlink.description,
@@ -531,7 +531,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIViewTestBase):
                 {
                     'name': self.hyperlink.name,
                     'folder': None,
-                    'owner': self.get_serialized_user(self.hyperlink.owner),
+                    'owner': str(self.hyperlink.owner.sodar_uuid),
                     'project': str(self.hyperlink.project.sodar_uuid),
                     'flag': self.hyperlink.flag,
                     'description': self.hyperlink.description,
@@ -558,7 +558,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             **self.hyperlink_data,
             'folder': None,
-            'owner': self.get_serialized_user(self.user),
+            'owner': str(self.user.sodar_uuid),
             'project': str(self.project.sodar_uuid),
             'date_modified': self.get_drf_datetime(new_link.date_modified),
             'sodar_uuid': str(new_link.sodar_uuid),
@@ -581,7 +581,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIViewTestBase):
         self.assertIsNotNone(new_link)
         expected = {
             **hyperlink_data,
-            'owner': self.get_serialized_user(self.user),
+            'owner': str(self.user.sodar_uuid),
             'project': str(self.project.sodar_uuid),
             'date_modified': self.get_drf_datetime(new_link.date_modified),
             'sodar_uuid': str(new_link.sodar_uuid),
@@ -626,7 +626,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             'name': self.hyperlink.name,
             'folder': None,
-            'owner': self.get_serialized_user(self.hyperlink.owner),
+            'owner': str(self.hyperlink.owner.sodar_uuid),
             'project': str(self.hyperlink.project.sodar_uuid),
             'flag': self.hyperlink.flag,
             'description': self.hyperlink.description,
@@ -669,7 +669,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
         expected = {
             **hyperlink_data,
             'folder': None,
-            'owner': self.get_serialized_user(self.hyperlink.owner),
+            'owner': str(self.hyperlink.owner.sodar_uuid),
             'project': str(self.hyperlink.project.sodar_uuid),
             'date_modified': self.get_drf_datetime(
                 self.hyperlink.date_modified

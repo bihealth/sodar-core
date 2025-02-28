@@ -106,7 +106,7 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIViewTestBase):
             'project': str(self.project.sodar_uuid),
             'app_name': TEST_APP_NAME,
             'name': ITEM_NAME,
-            'user': self.get_serialized_user(self.user_owner),
+            'user': str(self.user_owner.sodar_uuid),
             'data': {DATA_KEY: DATA_VAL},
             'date_modified': self.get_drf_datetime(self.item.date_modified),
         }
@@ -249,6 +249,7 @@ class TestCacheItemSetAPIView(SodarcacheAPIViewTestBase):
         response = self.request_knox(url, method='POST', data=post_data)
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {'detail': 'ok'})
         self.assertEqual(JSONCacheItem.objects.all().count(), 2)
         item = JSONCacheItem.objects.get(name='new_test_item')
         expected = {
@@ -277,6 +278,7 @@ class TestCacheItemSetAPIView(SodarcacheAPIViewTestBase):
         response = self.request_knox(url, method='POST', data=post_data)
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {'detail': 'ok'})
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
         item = JSONCacheItem.objects.get(name=ITEM_NAME)
         expected = {

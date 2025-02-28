@@ -168,7 +168,7 @@ Other Features
 
 Other features in the projectroles app:
 
-- **App settings**: Setting values for project or user specific variables,
+- **App settings**: Setting values for project, user or site specific variables,
   which can be defined in project and site app plugins
 - **Project starring**: Ability for users to star projects as their favourites
 - **Project search**: Functionality for searching data within projects using
@@ -178,7 +178,7 @@ Other features in the projectroles app:
 - **Custom user model**: Additions to the standard Django user model
 - **Multi-domain LDAP/AD support**: Support for LDAP/AD users from multiple
   domains
-- **SODAR Timeline integration**: Included but disabled unless the backend app
+- **Timeline integration**: Included but disabled unless the backend app
   for Timeline is enabled in your Django site
 
 

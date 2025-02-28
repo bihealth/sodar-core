@@ -22,6 +22,9 @@ PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
+# Local constants
+APP_NAME_PR = 'projectroles'
+
 
 class ViewTestBase(
     TimelineEventMixin, TimelineEventStatusMixin, TimelineEventTestBase
@@ -54,7 +57,7 @@ class ViewTestBase(
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user,
             event_name='test_event',
             description='description',
@@ -123,7 +126,7 @@ class TestSiteTimelineView(ViewTestBase):
         super().setUp()
         self.event_site = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user,
             event_name='test_event',
             description='description',
@@ -148,7 +151,7 @@ class TestSiteObjectTimelineView(ViewTestBase):
         super().setUp()
         self.event_site = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user,
             event_name='test_event',
             description='description',
@@ -184,7 +187,7 @@ class TestAdminTimelineView(ViewTestBase):
         super().setUp()
         self.event_site = self.timeline.add_event(
             project=None,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user,
             event_name='test_event',
             description='description',

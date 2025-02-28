@@ -1,3 +1,5 @@
+"""UI views for the backgroundjobs app"""
+
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -20,10 +22,12 @@ from projectroles.plugins import get_backend_api
 DEFAULT_PAGINATION = 15
 
 
-class GlobalBackgroundJobView(
+class SiteBackgroundJobView(
     LoggedInPermissionMixin,
     ListView,
 ):
+    """Site-wide background jobs view"""
+
     permission_required = 'bgjobs.view_site_bgjobs'
     template_name = 'bgjobs/site_backgroundjobs.html'
     model = BackgroundJob
@@ -40,7 +44,7 @@ class ProjectBackgroundJobView(
     ProjectContextMixin,
     ListView,
 ):
-    """Display all BackgroundJob records for the project."""
+    """Project background jobs view"""
 
     template_name = 'bgjobs/project_backgroundjobs.html'
     permission_required = 'bgjobs.view_jobs_own'
@@ -63,7 +67,7 @@ class BackgroundJobClearViewBase(
     ProjectContextMixin,
     TemplateView,
 ):
-    """Base class for view clearing jobs."""
+    """Base class for view clearing jobs"""
 
     #: The template is the same for both sub classes
     template_name = 'bgjobs/backgroundjob_confirm_clear.html'
@@ -109,21 +113,20 @@ class BackgroundJobClearViewBase(
             messages.error(
                 self.request, 'Unable to remove background jobs: {}'.format(ex)
             )
-
         return redirect(
             reverse('bgjobs:list', kwargs={'project': project.sodar_uuid})
         )
 
 
 class BackgroundJobClearOwnView(BackgroundJobClearViewBase):
-    """View for clearing a user's own background job."""
+    """View for clearing a user's own background job"""
 
     which_jobs = 'own'
     permission_required = 'bgjobs.update_bgjob_own'
 
 
 class BackgroundJobClearAllView(BackgroundJobClearViewBase):
-    """View for clearing a background jobs in a project."""
+    """View for clearing a background jobs in a project"""
 
     which_jobs = 'all'
     permission_required = 'bgjobs.update_bgjob_all'

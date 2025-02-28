@@ -18,7 +18,8 @@
         <i class="iconify" data-icon="mdi:rhombus-split"></i>
         {% get_display_name 'PROJECT' title=True plural=True %}
       {% endif %}
-      <div class="input-group sodar-header-input-group pull-right">
+      <div class="input-group sodar-header-input-group
+                  sodar-pr-project-list-input-group pull-right">
         {% if request.user.is_authenticated %}
           <div class="input-group-prepend">
             <button class="btn btn-secondary"
@@ -30,6 +31,14 @@
             </button>
           </div>
         {% endif %}
+        <select class="form-control" id="sodar-pr-project-list-page-length">
+          <option selected value="{{ page_options_default }}">Page</option>
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="-1">All</option>
+        </select>
         <input class="form-control"
                type="text"
                placeholder="Filter"
@@ -40,7 +49,7 @@
     </h4>
   </div>
   <div class="card-body p-0">
-    <table class="table sodar-card-table sodar-pr-project-list-table"
+    <table class="table table-striped sodar-card-table sodar-pr-project-list-table"
            id="sodar-pr-project-list-table"
            data-list-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
            data-custom-col-url="{% url 'projectroles:ajax_project_list_columns' %}"
@@ -49,10 +58,10 @@
       <thead id="sodar-pr-project-list-header">
         <tr class="sodar-pr-project-list-header">
           <th id="sodar-pr-project-list-header-project">
-            {% get_display_name 'PROJECT' title=True %}
             {% if not disable_categories %}
-            / {% get_display_name 'CATEGORY' title=True %}
+              {% get_display_name 'CATEGORY' title=True %} /
             {% endif %}
+            {% get_display_name 'PROJECT' title=True %}
           </th>
           {% for col in project_custom_cols %}
             <th id="sodar-pr-project-list-header-{{ col.app_plugin.name }}-{{ col.column_id }}"
@@ -68,16 +77,17 @@
               {% endif %}
             </th>
           {% endfor %}
-          <th id="sodar-pr-project-list-header-role">Your&nbsp;Role</th>
+          {% if not request.user.is_superuser %}
+            <th id="sodar-pr-project-list-header-role">Your&nbsp;Role</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
         <tr id="sodar-pr-project-list-loading">
-          <td class="text-center text-muted {% if not parent %}sodar-pr-project-list-loading-home{% endif %}"
+          <td class="text-center text-muted sodar-pr-project-list-load-td"
               colspan="{{ project_col_count }}">
-            <i class="iconify spin {% if not parent %}mt-2{% endif %}"
-               data-icon="mdi:loading"
-               {% if not parent %}data-height="48"{% endif %}>
+            <i class="iconify spin sodar-pr-project-list-load-icon mt-2"
+               data-icon="mdi:loading" data-height="48">
             </i>
           </td>
         </tr>

@@ -5,6 +5,129 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.1.0 (2025-02-28)
+===================
+
+Added
+-----
+
+- **General**
+    - ``drf-spectacular`` support (#1508)
+    - REST API documentation section in documentation index (#1576)
+- **Projectroles**
+    - ``SODARUser.get_display_name()`` helper (#1487)
+    - App setting type constants (#1458)
+    - ``PluginAppSettingDef`` class for app setting definitions (#1456)
+    - Django check for unique app setting names within each plugin (#1456)
+    - App setting ``user_modifiable`` validation (#1536)
+    - ``AppSettingAPI.get_all_by_scope()`` helper (#1534)
+    - ``removeroles`` management command (#1391, #1541)
+    - Site read only mode (#24)
+    - ``site_read_only`` site app setting (#24)
+    - ``is_site_writable()`` rule predicate (#24)
+    - ``PermissionTestMixin.set_site_read_only()`` helper (#24)
+    - ``PROJECTROLES_READ_ONLY_MSG`` setting (#24)
+    - ``SiteReadOnlySettingAjaxView`` Ajax view (#24)
+    - ``siteappsettings`` site app plugin (#1304)
+    - ``SODARAppSettingFormMixin`` form helper mixin (#1545)
+    - Old owner "remove role" option in ``RoleAssignmentOwnerTransferForm`` (#836)
+    - Project deletion (#1090)
+    - ``ProjectModifyPluginMixin.perform_project_delete()`` method (#1090)
+    - ``ProjectDestroyAPIView`` REST API view (#1090)
+    - ``ProjectSerializer`` ``children`` field (#1552)
+    - ``SODARUserSerializer`` ``auth_type`` field (#1501)
+    - ``UserRetrieveAPIView`` REST API view (#1555, #1575)
+    - ``active`` arg in ``ProjectInviteMixin.make_invite()`` (#1403)
+    - Ability for users to leave project (#918)
+    - ``project_list_highlight`` and ``project_list_pagination`` app settings (#1005)
+    - ``PROJECTROLES_API_USER_DETAIL_RESTRICT`` Django setting (#1574, #1575)
+    - ``UserListAPIView`` ``include_system_users`` parameter (#1507)
+    - CSS class ``sodar-alert-full-text-link`` for alert links (#1578)
+- **Tokens**
+    - ``TOKENS_CREATE_PROJECT_USER_RESTRICT`` Django setting (#1577)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v4.2.19 (#1531)
+    - Upgrade general Python dependencies (#1531)
+    - Replace ``awesome-slugify`` dependency with ``python-slugify`` (#1531, #1547)
+    - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)
+    - Declare app setting definitions as ``PluginAppSettingDef`` objects (#1456)
+    - Unify header layout in delete templates (#1548)
+    - Upgrade to ``coverallsapp/github-action@v2`` in CI (#1566)
+- **Adminalerts**
+    - Display alert text as link if details are included (#1578)
+- **Bgjobs**
+    - Rename ``GlobalBackgroundJobView`` to ``SiteBackgroundJobView`` (#1333)
+    - Unify naming in site view template to follow conventions (#1333)
+- **Filesfolders**
+    - Upgrade filesfolders REST API version to 2.0 (#1553)
+    - Remove compability with filesfolders REST API <2.0 (#1553)
+    - Replace REST API ``SODARUserSerializer`` fields with UUID ``SlugRelatedField`` (#1553)
+- **Projectroles**
+    - Deprecate ``get_user_display_name()``, use ``SODARUser.get_display_name()`` (#1487)
+    - Deprecate declaring app setting definitions as dict (#1456)
+    - Allow ``scope=None`` in ``AppSettingAPI.get_definitions()`` (#1535)
+    - Deprecate ``AppSettingAPI.get_all()`` (#1534)
+    - Allow no role for old owner in ``RoleAssignmentOwnerTransferMixin`` (#836, #1391)
+    - Allow no role for old owner in ``perform_owner_transfer()`` (#836, #1391)
+    - Move app setting form helpers in ``SODARAppSettingFormMixin`` (#1545)
+    - Upgrade projectroles REST API version to v1.1 (#836)
+    - Allow empty ``old_owner_role`` in ``RoleAssignmentOwnerTransferAPIView`` (#836)
+    - Prevent project invite creation with active invite in parent category (#1403)
+    - Allow ``null`` value for ``SODARUserAdditionalEmail.secret`` (#1477)
+    - Display project list as flat list (#1005)
+    - Optimize project list queries (#1005)
+    - Hide "not editable on target sites" app settings label in forms (#1561)
+    - Update search pagination layout to match new project list (#1560)
+    - Enable ``UserListAPIView`` access restriction to contributors and above (#1574)
+    - Unify project list loading element layouts (#1579)
+- **Sodarcache**
+    - Upgrade sodarcache REST API version to 2.0 (#1553)
+    - Remove compability with sodarcache REST API <2.0 (#1553)
+    - Replace REST API ``SODARUserSerializer`` fields with UUID ``SlugRelatedField`` (#1553)
+- **Timeline**
+    - Upgrade timeline REST API version to 2.0 (#1553)
+    - Remove compability with timeline REST API <2.0 (#1553)
+    - Replace REST API ``SODARUserSerializer`` fields with UUID ``SlugRelatedField`` (#1553)
+- **Tokens**
+    - Update UI for site read-only mode (#24)
+    - Rename ``ProjectAppPlugin`` to ``SiteAppPlugin`` (#1337)
+    - Enable restricting token creation to users with project roles (#1577)
+- **Userprofile**
+    - Update UI for site read-only mode (#24)
+    - Rename ``UserAppSettingsForm`` and ``UserAppSettingsView`` (#1544)
+    - Refactor ``UserAppSettingsForm`` to use ``SODARAppSettingFormMixin`` (#1545)
+    - Add ``enable_project_uuid_copy`` setting description (#1419)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Invalid ``app_permission`` in ``RemoteSiteAppPlugin`` (#1543)
+    - Missing fields in ``ProjectRetrieveAPIView`` docstring (#1551)
+    - Role delete alert dismissal fails with nested inherited roles (#1556)
+    - Incorrect initial "N/A" access status for categories in project list (#1005)
+    - App settings option validation as tuples (#1564)
+
+Removed
+-------
+
+- **General**
+    - Migrations squashed in v1.0 (#1455)
+    - DRF ``generateschema`` support (#1508)
+- **Projectroles**
+    - Support for deprecated search results as dict (#1400)
+    - Support for deprecated app setting ``local`` parameter (#1394)
+    - Deprecated API view base classes and mixins (#1401)
+    - Core API view base classes and mixins (#1401)
+    - ``AppSettingAPI.get_global_value()`` helper (#1394, #1533)
+- **Timeline**
+    - Support for deprecated ``get_object_link()`` return values as dict (#1398)
+
+
 v1.0.5 (2025-02-17)
 ===================
 

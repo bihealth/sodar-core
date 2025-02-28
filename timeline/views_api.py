@@ -4,12 +4,11 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
-from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
 from projectroles.views_api import (
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     SODARPageNumberPagination,
 )
 
@@ -19,8 +18,8 @@ from timeline.serializers import TimelineEventSerializer
 
 # Local constants
 TIMELINE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core.timeline+json'
-TIMELINE_API_DEFAULT_VERSION = '1.0'
-TIMELINE_API_ALLOWED_VERSIONS = ['1.0']
+TIMELINE_API_DEFAULT_VERSION = '2.0'
+TIMELINE_API_ALLOWED_VERSIONS = ['2.0']
 
 
 class TimelineAPIVersioningMixin:
@@ -41,7 +40,7 @@ class TimelineAPIVersioningMixin:
 
 
 class ProjectTimelineEventListAPIView(
-    TimelineAPIVersioningMixin, CoreAPIGenericProjectMixin, ListAPIView
+    TimelineAPIVersioningMixin, SODARAPIGenericProjectMixin, ListAPIView
 ):
     """
     List ``TimelineEvent`` objects belonging in a category or project. Events
@@ -64,7 +63,6 @@ class ProjectTimelineEventListAPIView(
 
     pagination_class = SODARPageNumberPagination
     permission_required = 'timeline.view_timeline'
-    schema = AutoSchema(operation_id_base='ListTimelineEvent')
     serializer_class = TimelineEventSerializer
 
     def get_queryset(self):
@@ -123,7 +121,7 @@ class TimelineEventRetrieveAPIView(TimelineAPIVersioningMixin, RetrieveAPIView):
 
     - ``project``: Project UUID (string or None)
     - ``app``: App name (string)
-    - ``user``: Serialized user (JSON, see ``CurrentUserRetrieveAPIView``)
+    - ``user``: UUID of user who created the event (string or None)
     - ``event_name``: Event name (string)
     - ``description``: Event description (string)
     - ``extra_data``: Event extra data (JSON or None)
@@ -143,6 +141,10 @@ class TimelineEventRetrieveAPIView(TimelineAPIVersioningMixin, RetrieveAPIView):
         - ``extra_data``: Object reference extra data (JSON or None)
         - ``sodar_uuid``: Object reference UUID (string)
     - ``sodar_uuid``: TimelineEvent UUID (string)
+
+    **Version Changes**:
+
+    - ``2.0``: Return ``user`` as UUID instead of ``SODARUserSerializer`` dict
     """
 
     permission_classes = [IsAuthenticated]  # Perms checked in get_object()

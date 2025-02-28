@@ -44,7 +44,7 @@ jobs:
         run: git fetch --prune --unshallow
       - name: Install project Python dependencies
         run: |
-          pip install "wheel>=0.42.0, <0.43"
+          pip install "wheel>=0.45.1, <0.46"
           pip install -r requirements/local.txt
           pip install -r requirements/test.txt
       - name: Download icons
@@ -63,8 +63,9 @@ jobs:
         run: make black arg=--check
         if: ${{ matrix.python-version == '3.11' }}
       - name: Report coverage with Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: './coverage.lcov'
+          fail-on-error: false
         if: ${{ matrix.python-version == '3.11' }}

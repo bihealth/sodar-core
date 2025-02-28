@@ -50,8 +50,8 @@ Upon logging into a SODAR Core based Django site using default templates and CSS
 the general view of your site is split into the following elements:
 
 - **Top navigation bar**: Contains the site logo and title, search element, link
-  to advanced search, help link and the user dropdown menu.
-- **User dropdown menu**: Contains links to user management, admin site and
+  to advanced search, help link and the user dropdown.
+- **User dropdown**: Contains links to user management, admin site and
   site-wide apps the user has access to.
 - **Project sidebar**: Shortcuts to project apps and project management pages
 - **Project navigation**: Project structure breadcrumb (disabled for site apps)
@@ -60,7 +60,7 @@ the general view of your site is split into the following elements:
 
 .. figure:: _static/app_projectroles/sodar_home.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     Home view
 
@@ -102,7 +102,7 @@ app-specific controls is usually displayed.
 
 .. figure:: _static/app_projectroles/sodar_project_detail.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Project detail view
 
@@ -147,7 +147,7 @@ may be modified later.
 
 .. figure:: _static/app_projectroles/sodar_category_create.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Category/project creation form
 
@@ -176,7 +176,7 @@ target category or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_project_update.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Category/project updating form
 
@@ -254,22 +254,55 @@ management command:
 Project Archiving
 -----------------
 
-From the project update menu, it is possible to archive a project. This will set
+In the project update view it is possible to archive a project. Clicking the
+:guilabel:`Archive` button and confirming this action in the next view will set
 data modification from project access to read-only. User roles can still be
 granted, but contributors can no longer edit data in project apps.
 
-The project update menu will still be available for owners and delegates for
+The project update view will still be available for owners and delegates for
 updating basic project metadata. Superusers will be able to edit project data
 regardless of its archiving status.
 
 To undo archiving, the project can be unarchived from the same button on top of
-the project update form.
+the project update view, now labeled :guilabel:`Unarchive`.
 
 .. figure:: _static/app_projectroles/sodar_archive.png
     :align: center
     :scale: 65%
 
     Archived project and unarchive button in project update view
+
+Project Deletion
+----------------
+
+The option to permanently delete a project is also available for owners and
+delegates in the project update view. The :guilabel:`Delete` button is found
+next to the project archiving button.
+
+Deletion is disabled for categories which have nested child categories or child
+projects. In such cases, the children must be individually deleted first. This
+is done deliberately to decrease the chance of accidental deletion of multiple
+projects.
+
+If remote access for a project has been granted on target sites, access needs to
+be revoked before the project can be deleted. Similarly, a project on a target
+site can only be deleted if its access has been revoked on the source site. For
+more information, see :ref:`app_projectroles_usage_remote`.
+
+.. figure:: _static/app_projectroles/sodar_project_delete.png
+    :align: center
+    :scale: 65%
+
+    Project deletion confirmation form
+
+Clicking the :guilabel:`Delete` button will take you to a form for confirming
+the deletion. You will have to write the host name of the SODAR Core site to
+confirm the action.
+
+.. danger::
+
+    Deletion will permanently wipe out all data associated with a category or
+    project. This operation can not be undone!
 
 
 Member Management
@@ -281,14 +314,14 @@ category (owner or delegate) or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_role_list.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     Project member list view
 
 All members of categories automatically inherit identical access rights to
-subcategories and projects under those categories, starting in SODAR Core
-v0.13. Inherited member roles can be promoted to a higher local role, but
-demoting to a lesser role for child categories or projects is not allowed.
+subcategories and projects under those categories. Inherited member roles can be
+promoted to a higher local role, but demoting to a lesser role for child
+categories or projects is not allowed.
 
 For inherited members, the member list displays a link to the category where
 the inheritance is derived from. Inherited members can not be removed or edited
@@ -331,6 +364,27 @@ and the user email domain is not associated with configured LDAP domains.
 Invites expire after a certain time and can be reissued or revoked on the
 :guilabel:`Project Invites` page.
 
+.. note::
+
+    Inviting a user is prohibited if they already have an active invite in a
+    parent category of the current category or project.
+
+Leaving a Project
+-----------------
+
+A user may leave a category or project by clicking the
+:guilabel:`Leave Category` or :guilabel:`Leave Project` button in the role list
+view. Leaving a category will also remove the user's access to child categories
+and projects, except for cases where another role has specifically been assigned
+for them in children.
+
+This operation can not be undone. To regain access, an owner or a delegate must
+re-add the user to the category or project.
+
+Owners are not able to directly leave a project. Instead, the owner role must be
+transferred to another user. To do this, the user must select
+:guilabel:`Transfer Ownership` in their role dropdown.
+
 Batch Member Modifications
 --------------------------
 
@@ -338,6 +392,19 @@ Batch member updates can be done either by using REST API views with appropriate
 project permissions, or by a site admin using the ``batchupdateroles``
 management command. The latter supports multiple projects in one batch. It is
 also able to send invites to users who have not yet signed up on the site.
+
+Remove All Roles from User
+--------------------------
+
+To easily remove all roles from a user, use the ``removeroles`` management
+command. For owner roles, you can supply the user name of a user for whom to
+transfer those roles. If no owner is supplied, each ownership will be
+transferred to the parent category owner. Example:
+
+.. code-block:: console
+
+    $ ./manage.py removeroles --user alice --owner bob
+
 
 User Status Checking
 --------------------
@@ -349,6 +416,38 @@ out of the LDAP server. Use the ``-h`` flag to see additional options.
 .. code-block:: console
 
     $ ./manage.py checkusers
+
+
+Site App Settings
+=================
+
+Site-wide app settings, which are not tied to any project or user, can be
+altered by administrators by opening the :guilabel:`Site App Settings` view from
+their user dropdown. The form works similarly to the project app settings in the
+project creation and updating view.
+
+.. figure:: _static/app_projectroles/site_app_settings.png
+    :align: center
+    :scale: 60%
+
+    Site app settings view
+
+
+Site Read-Only Mode
+===================
+
+In :guilabel:`Site App Settings`, an administrator can temporarily set the site
+to read-only mode. When this mode is enabled, all data on the site is only
+accessible for reading. No project or user data should be modifiable. Once
+enabled, the mode must be explicitly disabled from the same form.
+
+While the mode is active, an alert will be displayed to all users that site data
+can currently not be modified.
+
+Once the mode has been disabled, the alert on existing browser views will be
+changed into one prompting the user to reload the current view. Reloading
+ensures all the UI elements are active in case not everything is updated on the
+client side.
 
 
 .. _app_projectroles_usage_remote:
@@ -379,7 +478,7 @@ based site.
 
 .. figure:: _static/app_projectroles/sodar_remote_sites.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Remote site list in source mode
 
@@ -556,6 +655,5 @@ name and/or description.
 REST API
 ========
 
-Several SODAR Core functionalities are also available via a HTTP REST API
-starting in version 0.8. See :ref:`app_projectroles_api_rest` for instructions
-on REST API usage.
+Many SODAR Core features are also available via a REST API. See
+:ref:`app_projectroles_api_rest` for instructions on REST API usage.

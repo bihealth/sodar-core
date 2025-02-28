@@ -32,6 +32,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 # Local constants
+APP_NAME_PR = 'projectroles'
 EXTRA_DATA = {'test_key': 'test_val'}
 
 
@@ -128,7 +129,7 @@ class TestTimelineEvent(
         super().setUp()
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -150,7 +151,7 @@ class TestTimelineEvent(
         expected = {
             'id': self.event.pk,
             'project': self.project.pk,
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': self.user_owner.pk,
             'event_name': 'test_event',
@@ -165,7 +166,7 @@ class TestTimelineEvent(
         """Test TimelineEvent initialization with no project"""
         self.event = self.make_event(
             project=None,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -175,7 +176,7 @@ class TestTimelineEvent(
         expected = {
             'id': self.event.pk,
             'project': None,
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': self.user_owner.pk,
             'event_name': 'test_event',
@@ -190,7 +191,7 @@ class TestTimelineEvent(
         """Test TimelineEvent initialization with no user"""
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=None,
             event_name='test_event',
             description='description',
@@ -200,7 +201,7 @@ class TestTimelineEvent(
         expected = {
             'id': self.event.pk,
             'project': self.project.pk,
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': None,
             'event_name': 'test_event',
@@ -215,7 +216,7 @@ class TestTimelineEvent(
         """Test TimelineEvent initialization with specific plugin name"""
         self.event = self.make_event(
             project=None,
-            app='projectroles',
+            app=APP_NAME_PR,
             plugin='plugin_name',
             user=self.user_owner,
             event_name='test_event',
@@ -226,7 +227,7 @@ class TestTimelineEvent(
         expected = {
             'id': self.event.pk,
             'project': None,
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': 'plugin_name',
             'user': self.user_owner.pk,
             'event_name': 'test_event',
@@ -353,7 +354,7 @@ class TestTimelineEventObjectRef(
         super().setUp()
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -414,7 +415,7 @@ class TestTimelineEventStatus(
         super().setUp()
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -458,7 +459,7 @@ class TestTimelineEventStatus(
         }
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=None,
             event_name='test_event',
             description='description',

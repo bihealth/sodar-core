@@ -82,7 +82,7 @@ permission class, which includes ``SODARAPIBaseProjectMixin`` and
 
     from rest_framework.generics import RetrieveAPIView
     from projectroles.models import SODAR_CONSTANTS
-    from projectroles.views_api import CoreAPIGenericProjectMixin
+    from projectroles.views_api import SODARAPIGenericProjectMixin
 
     class YourAPIView(SODARAPIGenericProjectMixin, RetrieveAPIView):
         # ...
@@ -127,9 +127,9 @@ Projectroles REST API Versioning
 Media Type
     ``application/vnd.bihealth.sodar-core.projectroles+json``
 Current Version
-    ``1.0``
+    ``1.1``
 Accepted Versions
-    ``1.0``
+    ``1.0``, ``1.1``
 Header Example
     ``Accept: application/vnd.bihealth.sodar-core.projectroles+json; version=x.y``
 
@@ -146,6 +146,8 @@ Projectroles REST API Views
 .. autoclass:: ProjectCreateAPIView
 
 .. autoclass:: ProjectUpdateAPIView
+
+.. autoclass:: ProjectDestroyAPIView
 
 .. autoclass:: RoleAssignmentCreateAPIView
 
@@ -173,4 +175,26 @@ Projectroles REST API Views
 
 .. autoclass:: UserListAPIView
 
+.. autoclass:: UserRetrieveAPIView
+
 .. autoclass:: CurrentUserRetrieveAPIView
+
+
+Projectroles REST API Version Changes
+=====================================
+
+v1.1
+----
+
+- ``ProjectDestroyAPIView``
+    * Add view
+- ``ProjectRetrieveAPIView``
+    * Add ``children`` field
+- ``RoleAssignmentOwnerTransferAPIView``
+    * Allow empty value for ``old_owner_role``
+- ``UserListAPIView``
+    * Add ``include_system_users`` parameter
+- ``UserRetrieveAPIView``
+    * Add view
+- ``CurrentUserRetrieveAPIView``
+    * Add ``auth_type`` field

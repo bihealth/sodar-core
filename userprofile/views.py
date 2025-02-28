@@ -25,7 +25,7 @@ from projectroles.views import (
     CurrentUserFormMixin,
 )
 
-from userprofile.forms import UserSettingsForm, UserEmailForm
+from userprofile.forms import UserAppSettingsForm, UserEmailForm
 
 
 User = auth.get_user_model()
@@ -71,21 +71,23 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         for plugin in plugins + [None]:
             if plugin:
                 name = plugin.name
-                p_settings = app_settings.get_definitions(
+                s_defs = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
                 )
             else:
                 name = 'projectroles'
-                p_settings = app_settings.get_definitions(
+                s_defs = app_settings.get_definitions(
                     APP_SETTING_SCOPE_USER,
                     plugin_name=name,
                     user_modifiable=True,
                 )
-            for k, v in p_settings.items():
+            for s_def in s_defs.values():
                 yield {
-                    'label': v.get('label') or '{}.{}'.format(name, k),
-                    'value': app_settings.get(name, k, user=self.request.user),
-                    'description': v.get('description'),
+                    'label': s_def.label or '{}.{}'.format(name, s_def.name),
+                    'value': app_settings.get(
+                        name, s_def.name, user=self.request.user
+                    ),
+                    'description': s_def.description,
                 }
 
     def get_context_data(self, **kwargs):
@@ -97,17 +99,17 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         return result
 
 
-class UserSettingsView(
+class UserAppSettingsView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
     HTTPRefererMixin,
     InvalidFormMixin,
     FormView,
 ):
-    """User settings update view"""
+    """User app settings form view"""
 
-    form_class = UserSettingsForm
-    permission_required = 'userprofile.view_detail'
+    form_class = UserAppSettingsForm
+    permission_required = 'userprofile.update_settings'
     template_name = 'userprofile/settings_form.html'
     success_url = reverse_lazy('userprofile:detail')
 

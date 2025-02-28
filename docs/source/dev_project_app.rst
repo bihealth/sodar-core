@@ -165,8 +165,17 @@ app if needed.
 .. hint::
 
     For permissions dealing with modifying data, you are strongly recommend to
-    use the ``can_modify_project_data`` predicate. For more, see
-    :ref:`dev_project_app_archiving`.
+    use the ``can_modify_project_data`` predicate. For more information, see
+    :ref:`dev_project_app_archive`.
+
+.. hint::
+
+    To support the site read-only mode introduced in SODAR Core v1.1, the rules
+    for your app's views need to be implemented accordingly. A check for the
+    read-only mode is contained in the ``can_modify_project_data()`` predicate.
+    If your view already uses that predicate, no further steps are necessary.
+    For site views, ``is_site_writable`` should be used. For more information,
+    see :ref:`dev_resources_read_only`.
 
 
 ProjectAppPlugin
@@ -769,11 +778,6 @@ An example "hello world" REST API view for SODAR apps is available in
     from views to be implemented on your site. From SODAR Core v1.0 onwards,
     each app is expected to provide their own versioning.
 
-    For implementing your own API views, make sure to use the ``SODARAPI*``
-    base classes, **not** the ``CoreAPI`` classes. Similarly, in testing make
-    sure to use the base class helpers of the general API instead of the core
-    API.
-
 Ajax API Views
 --------------
 
@@ -820,7 +824,7 @@ See the :ref:`serializer API documentation <app_projectroles_api_django_serial>`
 for details on using base serializer classes.
 
 
-.. _dev_project_app_archiving:
+.. _dev_project_app_archive:
 
 Project Archiving
 =================
@@ -872,6 +876,31 @@ additional actions to be taken.
 
     The usage of backend apps like sodarcache and timeline are not limited by
     the project archive status, your app logic should handle it instead.
+
+
+.. _dev_project_app_delete:
+
+Project Deletion
+================
+
+If your apps only save data in Django models containing a ``Project`` foreign
+key with cascading deletion, no extra steps are needed to support project
+deletion.
+
+If your app contains project-specific data which is e.g. stored in an external
+system or in ways which will not be cascade-deleted along with the Django
+``Project`` model object, you need to implement project deletion in the project
+modify API. To do this, inherit ``ProjectModifyPluginMixin`` in your app's
+plugin and implement the ``perform_project_delete()`` method to clean up data.
+
+Project deletion can not be undone, so there is no revert method available for
+this action.
+
+.. note::
+
+    While categories are not expected to store data, the project deletion API
+    method is called for the deletion of both categories or projects, in case
+    speficic logic is needed for both project types.
 
 
 Removing a Project App

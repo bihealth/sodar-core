@@ -6,14 +6,13 @@ from rest_framework.generics import (
     GenericAPIView,
 )
 from rest_framework.renderers import JSONRenderer
-from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.views_api import (
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     SODARPageNumberPagination,
 )
 
@@ -38,8 +37,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 FILESFOLDERS_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.filesfolders+json'
 )
-FILESFOLDERS_API_DEFAULT_VERSION = '1.0'
-FILESFOLDERS_API_ALLOWED_VERSIONS = ['1.0']
+FILESFOLDERS_API_DEFAULT_VERSION = '2.0'
+FILESFOLDERS_API_ALLOWED_VERSIONS = ['2.0']
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -169,7 +168,7 @@ class FolderListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
     """
@@ -198,7 +197,6 @@ class FolderListCreateAPIView(
 
     pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='ListCreateFolder')
     serializer_class = FolderSerializer
 
 
@@ -206,7 +204,7 @@ class FolderRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
     """
@@ -228,7 +226,6 @@ class FolderRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'folder'
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='UpdateDestroyFolder')
     serializer_class = FolderSerializer
 
 
@@ -236,7 +233,7 @@ class FileListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
     """
@@ -268,7 +265,6 @@ class FileListCreateAPIView(
 
     pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='ListCreateFile')
     serializer_class = FileSerializer
 
 
@@ -276,7 +272,7 @@ class FileRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
     """
@@ -300,13 +296,12 @@ class FileRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'file'
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='UpdateDestroyFile')
     serializer_class = FileSerializer
 
 
 class FileServeAPIView(
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     FileServeMixin,
     GenericAPIView,
 ):
@@ -328,7 +323,7 @@ class HyperLinkListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
     """
@@ -358,7 +353,6 @@ class HyperLinkListCreateAPIView(
 
     pagination_class = SODARPageNumberPagination
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='ListCreateHyperLink')
     serializer_class = HyperLinkSerializer
 
 
@@ -366,7 +360,7 @@ class HyperLinkRetrieveUpdateDestroyAPIView(
     RetrieveUpdateDestroyAPITimelineMixin,
     RetrieveUpdateDestroyPermissionMixin,
     FilesfoldersAPIVersioningMixin,
-    CoreAPIGenericProjectMixin,
+    SODARAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
     """
@@ -389,5 +383,4 @@ class HyperLinkRetrieveUpdateDestroyAPIView(
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'hyperlink'
     project_type = PROJECT_TYPE_PROJECT
-    schema = AutoSchema(operation_id_base='UpdateDestroyHyperLink')
     serializer_class = HyperLinkSerializer
