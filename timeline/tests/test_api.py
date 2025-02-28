@@ -32,13 +32,17 @@ from timeline.tests.test_models import (
 )
 
 
-# Global constants from settings
+# SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+
+# Local constants
+APP_NAME_PR = 'projectroles'
+APP_NAME_FF = 'filesfolders'
 
 
 class TimelineAPIMixin:
@@ -76,7 +80,7 @@ class TestTimelineAPI(
 
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -89,7 +93,7 @@ class TestTimelineAPI(
         expected = {
             'id': event.pk,
             'project': self.project.pk,
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': self.user_owner.pk,
             'event_name': 'test_event',
@@ -118,7 +122,7 @@ class TestTimelineAPI(
 
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -135,7 +139,7 @@ class TestTimelineAPI(
         expected_event = {
             'id': event.pk,
             'project': self.project.pk,
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': self.user_owner.pk,
             'event_name': 'test_event',
@@ -164,7 +168,7 @@ class TestTimelineAPI(
 
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -194,7 +198,7 @@ class TestTimelineAPI(
 
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=None,
             event_name='test_event',
             description='description',
@@ -207,7 +211,7 @@ class TestTimelineAPI(
         expected = {
             'id': event.pk,
             'project': self.project.pk,
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': None,
             'event_name': 'test_event',
@@ -225,7 +229,7 @@ class TestTimelineAPI(
 
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=AnonymousUser(),
             event_name='test_event',
             description='description',
@@ -262,7 +266,7 @@ class TestTimelineAPI(
         with self.assertRaises(ValueError):
             self.timeline.add_event(
                 project=self.project,
-                app_name='projectroles',
+                app_name=APP_NAME_PR,
                 user=self.user_owner,
                 event_name='test_event',
                 description='description',
@@ -279,7 +283,7 @@ class TestTimelineAPI(
 
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
@@ -310,7 +314,7 @@ class TestTimelineAPI(
         """Test get_project_events()"""
         event_normal = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -318,7 +322,7 @@ class TestTimelineAPI(
         )
         event_classified = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -391,7 +395,7 @@ class TestTimelineAPI(
         """Test getting event description"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='description',
@@ -405,7 +409,7 @@ class TestTimelineAPI(
         """Test getting event description with User object"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
@@ -423,7 +427,7 @@ class TestTimelineAPI(
         """Test getting event description with Project object"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
@@ -443,7 +447,7 @@ class TestTimelineAPI(
         """Test getting event description with RemoteSite object"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
@@ -464,7 +468,7 @@ class TestTimelineAPI(
         """Test getting event description with app plugin"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='filesfolders',
+            app_name=APP_NAME_FF,
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
@@ -491,7 +495,7 @@ class TestTimelineAPI(
         """Test getting event description with app plugin and lookup dict"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='filesfolders',
+            app_name=APP_NAME_FF,
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
@@ -520,7 +524,7 @@ class TestTimelineAPI(
         """Test getting event description with non-existing app plugin"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='projectroles',
+            app_name=APP_NAME_PR,
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
@@ -542,8 +546,8 @@ class TestTimelineAPI(
         """Test getting event description with specified app plugin"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='filesfolders',
-            plugin_name='filesfolders',
+            app_name=APP_NAME_FF,
+            plugin_name=APP_NAME_FF,
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
@@ -570,7 +574,7 @@ class TestTimelineAPI(
         """Test description with an invalid specified app plugin"""
         event = self.timeline.add_event(
             project=self.project,
-            app_name='filesfolders',
+            app_name=APP_NAME_FF,
             plugin_name='NOT_A_REAL_PLUGIN',
             user=self.user_owner,
             event_name='test_event',

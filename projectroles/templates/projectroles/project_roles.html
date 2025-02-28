@@ -194,5 +194,17 @@
             showCancelLink: true
         });
     }
+    if ($('#sodar-pr-btn-leave-project').length) {
+        tour.addStep('role_ops', {
+            title: 'Leave Project',
+            text: 'Click this button to leave this ' +
+                  '{% get_display_name 'PROJECT' %} or ' +
+                  '{% get_display_name 'CATEGORY' %}. In case of the latter, ' +
+                  'leaving will also remove your inherited roles its children.',
+            attachTo: '#sodar-pr-btn-leave-project left',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
   </script>
 {% endblock javascript %}

@@ -75,6 +75,7 @@ APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
+APP_NAME = 'projectroles'
 CORE_API_MEDIA_TYPE_LEGACY = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION_LEGACY = '0.13.4'
 CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
@@ -3751,7 +3752,7 @@ class TestIPAllowing(AppSettingMixin, ProjectrolesAPIViewTestBase):
             )
         # Init IP restrict setting
         self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='ip_restrict',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
@@ -3759,7 +3760,7 @@ class TestIPAllowing(AppSettingMixin, ProjectrolesAPIViewTestBase):
         )
         # Init IP allowlist setting
         self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='ip_allowlist',
             setting_type=APP_SETTING_TYPE_JSON,
             value=None,

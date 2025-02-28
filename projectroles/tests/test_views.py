@@ -123,6 +123,7 @@ APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_NAME = 'projectroles'
+APP_NAME_EX = 'example_project_app'
 INVITE_EMAIL = 'test@example.com'
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
 TASKFLOW_SECRET_INVALID = 'Not a valid secret'
@@ -138,7 +139,6 @@ REMOTE_SITE_NEW_DESC = 'New description'
 REMOTE_SITE_NEW_SECRET = build_secret()
 REMOTE_SITE_UUID = uuid.uuid4()
 REMOTE_SITE_FIELD = 'remote_site.{}'.format(REMOTE_SITE_UUID)
-EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 INVALID_SETTING_VALUE = 'INVALID VALUE'
 LDAP_DOMAIN = 'EXAMPLE'
@@ -518,7 +518,7 @@ class TestProjectSearchResultsView(
         """Test GET with omitted app"""
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME,
             user=self.user,
             event_name='test_event',
             description='description',
@@ -1443,15 +1443,11 @@ class TestProjectUpdateView(
         self._assert_app_settings(ps)
         # Assert hidden settings
         hidden_val = app_settings.get(
-            'example_project_app',
-            'project_hidden_setting',
-            project=self.project,
+            APP_NAME_EX, 'project_hidden_setting', project=self.project
         )
         self.assertEqual(hidden_val, '')
         hidden_json = app_settings.get(
-            'example_project_app',
-            'project_hidden_json_setting',
-            project=self.project,
+            APP_NAME_EX, 'project_hidden_json_setting', project=self.project
         )
         self.assertEqual(hidden_json, {})
 
@@ -1488,13 +1484,13 @@ class TestProjectUpdateView(
         self.owner_as.save()
         # Set hidden setting values
         app_settings.set(
-            'example_project_app',
+            APP_NAME_EX,
             'project_hidden_setting',
             UPDATED_HIDDEN_SETTING,
             project=self.project,
         )
         app_settings.set(
-            'example_project_app',
+            APP_NAME_EX,
             'project_hidden_json_setting',
             UPDATED_HIDDEN_JSON_SETTING,
             project=self.project,
@@ -1538,15 +1534,11 @@ class TestProjectUpdateView(
         self._assert_app_settings(ps)
         # Hidden settings should remain as they were not changed
         hidden_val = app_settings.get(
-            'example_project_app',
-            'project_hidden_setting',
-            project=self.project,
+            APP_NAME_EX, 'project_hidden_setting', project=self.project
         )
         self.assertEqual(hidden_val, UPDATED_HIDDEN_SETTING)
         hidden_json = app_settings.get(
-            'example_project_app',
-            'project_hidden_json_setting',
-            project=self.project,
+            APP_NAME_EX, 'project_hidden_json_setting', project=self.project
         )
         self.assertEqual(hidden_json, UPDATED_HIDDEN_JSON_SETTING)
         self.assertEqual(self.app_alert_model.objects.count(), 0)
@@ -1591,7 +1583,7 @@ class TestProjectUpdateView(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+                APP_NAME_EX, 'project_str_setting', project=self.project
             ),
             '',
         )
@@ -1948,19 +1940,19 @@ class TestProjectForm(
         """Test POST to modify settings values"""
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+                APP_NAME_EX, 'project_str_setting', project=self.project
             ),
             '',
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+                APP_NAME_EX, 'project_int_setting', project=self.project
             ),
             0,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_str_setting_options',
                 project=self.project,
             ),
@@ -1968,7 +1960,7 @@ class TestProjectForm(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_int_setting_options',
                 project=self.project,
             ),
@@ -1976,26 +1968,22 @@ class TestProjectForm(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+                APP_NAME_EX, 'project_bool_setting', project=self.project
             ),
             False,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+                APP_NAME_EX, 'project_json_setting', project=self.project
             ),
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
         self.assertEqual(
-            app_settings.get(
-                'projectroles', 'ip_restrict', project=self.project
-            ),
+            app_settings.get(APP_NAME, 'ip_restrict', project=self.project),
             False,
         )
         self.assertEqual(
-            app_settings.get(
-                'projectroles', 'ip_allowlist', project=self.project
-            ),
+            app_settings.get(APP_NAME, 'ip_allowlist', project=self.project),
             [],
         )
 
@@ -2031,19 +2019,19 @@ class TestProjectForm(
         # Assert settings state after update
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+                APP_NAME_EX, 'project_str_setting', project=self.project
             ),
             'updated',
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+                APP_NAME_EX, 'project_int_setting', project=self.project
             ),
             170,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_str_setting_options',
                 project=self.project,
             ),
@@ -2051,7 +2039,7 @@ class TestProjectForm(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_int_setting_options',
                 project=self.project,
             ),
@@ -2059,26 +2047,22 @@ class TestProjectForm(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+                APP_NAME_EX, 'project_bool_setting', project=self.project
             ),
             True,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+                APP_NAME_EX, 'project_json_setting', project=self.project
             ),
             {'Test': 'Updated'},
         )
         self.assertEqual(
-            app_settings.get(
-                'projectroles', 'ip_restrict', project=self.project
-            ),
+            app_settings.get(APP_NAME, 'ip_restrict', project=self.project),
             True,
         )
         self.assertEqual(
-            app_settings.get(
-                'projectroles', 'ip_allowlist', project=self.project
-            ),
+            app_settings.get(APP_NAME, 'ip_allowlist', project=self.project),
             ['192.168.1.1'],
         )
 
@@ -2138,19 +2122,19 @@ class TestProjectFormTarget(
         """Test POST to modify settings values as target"""
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+                APP_NAME_EX, 'project_str_setting', project=self.project
             ),
             '',
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+                APP_NAME_EX, 'project_int_setting', project=self.project
             ),
             0,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_str_setting_options',
                 project=self.project,
             ),
@@ -2158,7 +2142,7 @@ class TestProjectFormTarget(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_int_setting_options',
                 project=self.project,
             ),
@@ -2166,13 +2150,13 @@ class TestProjectFormTarget(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+                APP_NAME_EX, 'project_bool_setting', project=self.project
             ),
             False,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+                APP_NAME_EX, 'project_json_setting', project=self.project
             ),
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
@@ -2209,19 +2193,19 @@ class TestProjectFormTarget(
         # Assert settings state after update
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+                APP_NAME_EX, 'project_str_setting', project=self.project
             ),
             'updated',
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+                APP_NAME_EX, 'project_int_setting', project=self.project
             ),
             170,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_str_setting_options',
                 project=self.project,
             ),
@@ -2229,7 +2213,7 @@ class TestProjectFormTarget(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_int_setting_options',
                 project=self.project,
             ),
@@ -2237,19 +2221,19 @@ class TestProjectFormTarget(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+                APP_NAME_EX, 'project_bool_setting', project=self.project
             ),
             True,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+                APP_NAME_EX, 'project_json_setting', project=self.project
             ),
             {'Test': 'Updated'},
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_callable_setting',
                 project=self.project,
             ),
@@ -2257,7 +2241,7 @@ class TestProjectFormTarget(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_callable_setting_options',
                 project=self.project,
             ),
@@ -2327,19 +2311,19 @@ class TestProjectFormTargetLocal(
         """Test POST to modify settings values as target"""
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+                APP_NAME_EX, 'project_str_setting', project=self.project
             ),
             '',
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+                APP_NAME_EX, 'project_int_setting', project=self.project
             ),
             0,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_str_setting_options',
                 project=self.project,
             ),
@@ -2347,7 +2331,7 @@ class TestProjectFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_int_setting_options',
                 project=self.project,
             ),
@@ -2355,20 +2339,18 @@ class TestProjectFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+                APP_NAME_EX, 'project_bool_setting', project=self.project
             ),
             False,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+                APP_NAME_EX, 'project_json_setting', project=self.project
             ),
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
         self.assertEqual(
-            app_settings.get(
-                'projectroles', 'test_setting', project=self.project
-            ),
+            app_settings.get(APP_NAME, 'test_setting', project=self.project),
             False,
         )
 
@@ -2405,19 +2387,19 @@ class TestProjectFormTargetLocal(
         # Assert settings state after update
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+                APP_NAME_EX, 'project_str_setting', project=self.project
             ),
             'updated',
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+                APP_NAME_EX, 'project_int_setting', project=self.project
             ),
             170,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_str_setting_options',
                 project=self.project,
             ),
@@ -2425,7 +2407,7 @@ class TestProjectFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_int_setting_options',
                 project=self.project,
             ),
@@ -2433,19 +2415,19 @@ class TestProjectFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+                APP_NAME_EX, 'project_bool_setting', project=self.project
             ),
             True,
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+                APP_NAME_EX, 'project_json_setting', project=self.project
             ),
             {'Test': 'Updated'},
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_callable_setting',
                 project=self.project,
             ),
@@ -2453,7 +2435,7 @@ class TestProjectFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_callable_setting_options',
                 project=self.project,
             ),
@@ -2461,14 +2443,12 @@ class TestProjectFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get(
-                'projectroles', 'test_setting_local', project=self.project
+                APP_NAME, 'test_setting_local', project=self.project
             ),
             True,
         )
         self.assertEqual(
-            app_settings.get(
-                'projectroles', 'test_setting', project=self.project
-            ),
+            app_settings.get(APP_NAME, 'test_setting', project=self.project),
             False,
         )
 
@@ -3888,7 +3868,7 @@ class TestRoleAssignmentDeleteView(
     def test_post(self):
         """Test RoleAssignmentDeleteView POST"""
         alert = self.app_alerts.add_alert(
-            'projectroles',
+            APP_NAME,
             'test_alert',
             self.user_contrib,
             'test',
@@ -3941,7 +3921,7 @@ class TestRoleAssignmentDeleteView(
             APP_NAME, 'notify_email_role', False, user=self.user_contrib
         )
         alert = self.app_alerts.add_alert(
-            'projectroles',
+            APP_NAME,
             'test_alert',
             self.user_contrib,
             'test',
@@ -3992,7 +3972,7 @@ class TestRoleAssignmentDeleteView(
         self.make_assignment(self.category, self.user_contrib, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         alert = self.app_alerts.add_alert(
-            'projectroles',
+            APP_NAME,
             'test_alert',
             self.user_contrib,
             'test',
@@ -4024,7 +4004,7 @@ class TestRoleAssignmentDeleteView(
         )
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         alert = self.app_alerts.add_alert(
-            'projectroles',
+            APP_NAME,
             'test_alert',
             self.user_new,
             'test',
@@ -4071,7 +4051,7 @@ class TestRoleAssignmentDeleteView(
         self.make_assignment(child_cat, self.user_new, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 7)
         alert = self.app_alerts.add_alert(
-            'projectroles',
+            APP_NAME,
             'test_alert',
             self.user_new,
             'test',
@@ -4093,7 +4073,7 @@ class TestRoleAssignmentDeleteView(
         """Test post with PROJECT_USER app settings after contributor deletion"""
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         app_settings.set(
-            plugin_name=EXAMPLE_APP_NAME,
+            plugin_name=APP_NAME_EX,
             setting_name='project_user_bool_setting',
             project=self.project,
             user=self.user,
@@ -4101,7 +4081,7 @@ class TestRoleAssignmentDeleteView(
         )
         self.assertIsNotNone(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_user_bool_setting',
                 self.project,
                 self.user_contrib,
@@ -4112,7 +4092,7 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_user_bool_setting',
                 self.project,
                 self.user_contrib,
@@ -4125,7 +4105,7 @@ class TestRoleAssignmentDeleteView(
         self.make_assignment(self.category, self.user_contrib, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         app_settings.set(
-            plugin_name=EXAMPLE_APP_NAME,
+            plugin_name=APP_NAME_EX,
             setting_name='project_user_bool_setting',
             project=self.project,
             user=self.user,
@@ -4133,7 +4113,7 @@ class TestRoleAssignmentDeleteView(
         )
         self.assertIsNotNone(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_user_bool_setting',
                 self.project,
                 self.user_contrib,
@@ -4144,7 +4124,7 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_user_bool_setting',
                 self.project,
                 self.user_contrib,
@@ -4159,7 +4139,7 @@ class TestRoleAssignmentDeleteView(
         )
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
         app_settings.set(
-            plugin_name=EXAMPLE_APP_NAME,
+            plugin_name=APP_NAME_EX,
             setting_name='project_user_bool_setting',
             project=self.project,
             user=self.user,
@@ -4167,7 +4147,7 @@ class TestRoleAssignmentDeleteView(
         )
         self.assertIsNotNone(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_user_bool_setting',
                 self.project,
                 self.user_new,
@@ -4183,7 +4163,7 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(
             app_settings.get(
-                EXAMPLE_APP_NAME,
+                APP_NAME_EX,
                 'project_user_bool_setting',
                 self.project,
                 self.user_new,
@@ -5597,11 +5577,8 @@ class TestSiteAppSettingsView(ViewTestBase):
 
     def test_post(self):
         """Test POST"""
-        self.assertFalse(
-            app_settings.get('example_project_app', 'site_bool_setting')
-        )
-        self.assertFalse(app_settings.get('projectroles', 'site_read_only'))
-
+        self.assertFalse(app_settings.get(APP_NAME_EX, 'site_bool_setting'))
+        self.assertFalse(app_settings.get(APP_NAME, 'site_read_only'))
         data = {
             'settings.example_project_app.site_bool_setting': False,
             'settings.projectroles.site_read_only': True,
@@ -5613,11 +5590,8 @@ class TestSiteAppSettingsView(ViewTestBase):
             list(get_messages(response.wsgi_request))[0].message,
             SITE_SETTING_UPDATE_MSG,
         )
-
-        self.assertFalse(
-            app_settings.get('example_project_app', 'site_bool_setting')
-        )
-        self.assertTrue(app_settings.get('projectroles', 'site_read_only'))
+        self.assertFalse(app_settings.get(APP_NAME_EX, 'site_bool_setting'))
+        self.assertTrue(app_settings.get(APP_NAME, 'site_read_only'))
 
 
 # Remote view tests ------------------------------------------------------------

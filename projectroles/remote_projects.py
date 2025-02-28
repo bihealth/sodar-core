@@ -189,7 +189,7 @@ class RemoteProjectAPI:
         if app_setting.app_plugin:
             plugin_name = app_setting.app_plugin.name
         else:
-            plugin_name = 'projectroles'
+            plugin_name = APP_NAME
         s_def = all_defs.get(plugin_name, {}).get(app_setting.name, {})
         if not s_def:  # This should not be able to happen, but just in case
             raise Exception(
@@ -232,11 +232,7 @@ class RemoteProjectAPI:
         return (
             'Failed to add app setting "{}.settings.{}" (UUID={}): {} '
         ).format(
-            (
-                app_setting.app_plugin.name
-                if app_setting.app_plugin
-                else 'projectroles'
-            ),
+            app_setting.app_plugin.name if app_setting.app_plugin else APP_NAME,
             app_setting.name,
             app_setting.sodar_uuid,
             exception,
@@ -1331,7 +1327,7 @@ class RemoteProjectAPI:
                         (
                             a_data['app_plugin']
                             if a_data['app_plugin']
-                            else 'projectroles'
+                            else APP_NAME
                         ),
                         a_data['name'],
                         a_uuid,

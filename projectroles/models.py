@@ -43,6 +43,7 @@ AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
 AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
 
 # Local constants
+APP_NAME = 'projectroles'
 ROLE_RANKING = {
     PROJECT_ROLE_OWNER: 10,
     PROJECT_ROLE_DELEGATE: 20,
@@ -616,7 +617,7 @@ class Project(models.Model):
             == SODAR_CONSTANTS['SITE_MODE_SOURCE']
         ):
             return None
-        RemoteProject = apps.get_model('projectroles', 'RemoteProject')
+        RemoteProject = apps.get_model(APP_NAME, 'RemoteProject')
         try:
             return RemoteProject.objects.get(
                 project_uuid=self.sodar_uuid,
@@ -883,7 +884,7 @@ class AppSettingManager(models.Manager):
             'project': project,
             'user': user,
         }
-        if not plugin_name == 'projectroles':
+        if not plugin_name == APP_NAME:
             query_parameters['app_plugin__name'] = plugin_name
         setting = super().get_queryset().get(**query_parameters)
         return setting.get_value()
@@ -970,9 +971,7 @@ class AppSetting(models.Model):
         unique_together = ['project', 'user', 'app_plugin', 'name']
 
     def __str__(self):
-        plugin_name = (
-            self.app_plugin.name if self.app_plugin else 'projectroles'
-        )
+        plugin_name = self.app_plugin.name if self.app_plugin else APP_NAME
         if self.project:
             label = self.project.title
         elif self.user:
@@ -985,7 +984,7 @@ class AppSetting(models.Model):
         values = (
             self.project.title if self.project else None,
             self.user.username if self.user else None,
-            self.app_plugin.name if self.app_plugin else 'projectroles',
+            self.app_plugin.name if self.app_plugin else APP_NAME,
             self.name,
         )
         return 'AppSetting({})'.format(', '.join(repr(v) for v in values))

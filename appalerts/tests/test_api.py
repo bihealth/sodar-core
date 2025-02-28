@@ -23,6 +23,9 @@ from appalerts.tests.test_models import (
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
+# Local constants
+APP_NAME_FF = 'filesfolders'
+
 
 class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
     """Base class for appalerts backend API testing"""
@@ -51,7 +54,7 @@ class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
         """Test alert addition with a plugin"""
         self.assertEqual(AppAlert.objects.count(), 0)
         alert = self.app_alerts.add_alert(
-            app_name='filesfolders',
+            app_name=APP_NAME_FF,
             alert_name=ALERT_NAME,
             user=self.user,
             message=ALERT_MSG,
@@ -62,7 +65,7 @@ class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
         self.assertEqual(AppAlert.objects.count(), 1)
         expected = {
             'id': alert.pk,
-            'app_plugin': Plugin.objects.get(name='filesfolders').pk,
+            'app_plugin': Plugin.objects.get(name=APP_NAME_FF).pk,
             'alert_name': ALERT_NAME,
             'user': self.user.pk,
             'message': ALERT_MSG,
@@ -121,7 +124,7 @@ class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
         """Test alert addition with an invalid level"""
         with self.assertRaises(ValueError):
             self.app_alerts.add_alert(
-                app_name='filesfolders',
+                app_name=APP_NAME_FF,
                 alert_name=ALERT_NAME,
                 user=self.user,
                 message=ALERT_MSG,

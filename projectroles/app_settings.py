@@ -34,6 +34,7 @@ APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
+APP_NAME = 'projectroles'
 APP_SETTING_GLOBAL_DEFAULT = False
 APP_SETTING_DEFAULT_VALUES = {
     APP_SETTING_TYPE_BOOLEAN: False,
@@ -257,7 +258,7 @@ class AppSettingAPI:
         """
         if not plugin and not plugin_name:
             raise ValueError('Plugin object and name both unset')
-        if plugin_name == 'projectroles':
+        if plugin_name == APP_NAME:
             return cls.get_projectroles_defs()
         if not plugin:
             plugin = cls._get_app_plugin(plugin_name)
@@ -353,7 +354,7 @@ class AppSettingAPI:
         :raise: ValueError if app plugin is not found
         :raise: KeyError if nothing is found with setting_name
         """
-        if plugin_name == 'projectroles':
+        if plugin_name == APP_NAME:
             s_defs = cls.get_projectroles_defs()
         else:
             s_defs = cls._get_defs(plugin_name=plugin_name)
@@ -499,16 +500,14 @@ class AppSettingAPI:
                     )
                 )
 
-        p_defs = cls.get_definitions(scope, plugin_name='projectroles')
+        p_defs = cls.get_definitions(scope, plugin_name=APP_NAME)
         for s_key in p_defs:
-            ret['settings.{}.{}'.format('projectroles', s_key)] = (
-                cls.get_default(
-                    'projectroles',
-                    s_key,
-                    project=project,
-                    user=user,
-                    post_safe=post_safe,
-                )
+            ret['settings.{}.{}'.format(APP_NAME, s_key)] = cls.get_default(
+                APP_NAME,
+                s_key,
+                project=project,
+                user=user,
+                post_safe=post_safe,
             )
         return ret
 
@@ -560,7 +559,7 @@ class AppSettingAPI:
 
         try:  # Update existing setting
             q_kwargs = {'name': setting_name, 'project': project, 'user': user}
-            if not plugin_name == 'projectroles':
+            if not plugin_name == APP_NAME:
                 q_kwargs['app_plugin__name'] = plugin_name
             else:
                 q_kwargs['app_plugin'] = None
@@ -587,7 +586,7 @@ class AppSettingAPI:
 
         except AppSetting.DoesNotExist:  # Create new
             s_type = s_def.type
-            if plugin_name == 'projectroles':
+            if plugin_name == APP_NAME:
                 app_plugin_model = None
             else:
                 app_plugin = cls._get_app_plugin(plugin_name)
@@ -641,7 +640,7 @@ class AppSettingAPI:
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
         cls._validate_project_and_user(s_def.scope, project, user)
         q_kwargs = {'name': setting_name, 'project': project, 'user': user}
-        if not plugin_name == 'projectroles':
+        if not plugin_name == APP_NAME:
             q_kwargs['app_plugin__name'] = plugin_name
         else:
             q_kwargs['app_plugin'] = None
@@ -815,7 +814,7 @@ class AppSettingAPI:
 
         :return: Dict
         """
-        ret = {'projectroles': cls.get_projectroles_defs()}
+        ret = {APP_NAME: cls.get_projectroles_defs()}
         plugins = (
             []
             + get_active_plugins('project_app')

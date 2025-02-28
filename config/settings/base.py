@@ -555,7 +555,7 @@ LOGGING = set_logging(LOGGING_LEVEL)
 # ------------------------------------------------------------------------------
 
 SITE_TITLE = 'SODAR Core Example Site'
-SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
+SITE_SUBTITLE = env.str('SITE_SUBTITLE', None)
 SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'SODAR Core Example')
 
 

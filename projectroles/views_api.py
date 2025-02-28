@@ -105,6 +105,7 @@ SYNC_API_DEFAULT_VERSION = '1.0'
 SYNC_API_ALLOWED_VERSIONS = ['1.0']
 
 # Local constants
+APP_NAME = 'projectroles'
 INVALID_PROJECT_TYPE_MSG = (
     'Project type "{project_type}" not allowed for this API view'
 )
@@ -115,8 +116,9 @@ VIEW_NOT_ACCEPTABLE_VERSION_MSG = (
     'This view is not available in the given API version'
 )
 USER_LIST_RESTRICT_MSG = (
-    'User details access restricted, user does not have contributor access or '
-    'above to any project (PROJECTROLES_API_USER_DETAIL_RESTRICT=True)'
+    'User details access restricted: user does not have contributor access or '
+    'above in any category or project '
+    '(PROJECTROLES_API_USER_DETAIL_RESTRICT=True)'
 )
 USER_LIST_INCLUDE_VERSION_MSG = (
     'The include_system_users parameter is not available in API version <1.1'
@@ -171,7 +173,7 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         owner_or_delegate = project.is_owner_or_delegate(request.user)
         if not (
             request.user.is_superuser or owner_or_delegate
-        ) and app_settings.get('projectroles', 'ip_restrict', project):
+        ) and app_settings.get(APP_NAME, 'ip_restrict', project):
             for k in (
                 'HTTP_X_FORWARDED_FOR',
                 'X_FORWARDED_FOR',
@@ -185,9 +187,7 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
             else:  # Can't fetch client ip address
                 return False
 
-            for record in app_settings.get(
-                'projectroles', 'ip_allowlist', project
-            ):
+            for record in app_settings.get(APP_NAME, 'ip_allowlist', project):
                 if '/' in record:
                     if client_address in ip_network(record):
                         break
@@ -915,8 +915,7 @@ class ProjectInviteRevokeAPIView(
         return Response(
             {
                 'detail': 'Invite revoked from email {} in project "{}"'.format(
-                    invite.email,
-                    invite.project.title,
+                    invite.email, invite.project.title
                 )
             },
             status=200,
@@ -951,8 +950,7 @@ class ProjectInviteResendAPIView(
         return Response(
             {
                 'detail': 'Invite resent from email {} in project "{}"'.format(
-                    invite.email,
-                    invite.project.title,
+                    invite.email, invite.project.title
                 )
             },
             status=200,
@@ -1026,7 +1024,7 @@ class AppSettingMixin:
             if (
                 request.method == 'POST'
                 and not request.user.is_superuser
-                and app_settings.get('projectroles', 'site_read_only')
+                and app_settings.get(APP_NAME, 'site_read_only')
             ):
                 raise PermissionDenied(
                     'Site in read-only mode, operation not allowed'
@@ -1052,7 +1050,7 @@ class AppSettingMixin:
             'project': project,
             'user': user,
         }
-        if plugin_name == 'projectroles':
+        if plugin_name == APP_NAME:
             q_kwargs['app_plugin'] = None
         else:
             q_kwargs['app_plugin__name'] = plugin_name
@@ -1248,7 +1246,7 @@ class ProjectSettingSetAPIView(
             tl_extra_data = {'value': setting_obj.get_value()}
             tl_event = timeline.add_event(
                 project=project,
-                app_name='projectroles',
+                app_name=APP_NAME,
                 user=request.user,
                 event_name='app_setting_set_api',
                 description=tl_desc,
@@ -1366,9 +1364,9 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     will return results in the Django Rest Framework ``PageNumberPagination``
     format.
 
-    If PROJECTROLES_API_USER_DETAIL_RESTRICT is set True, this view is only
-    accessible by users who have a contributor role or above in at least one
-    category or project.
+    If ``PROJECTROLES_API_USER_DETAIL_RESTRICT`` is set True on the server, this
+    view is only accessible by users who have a contributor role or above in at
+    least one category or project.
 
     **URL:** ``/project/api/users/list``
 
@@ -1424,9 +1422,9 @@ class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):
     """
     Return user details for user with the given UUID.
 
-    If PROJECTROLES_API_USER_DETAIL_RESTRICT is set True, this view is only
-    accessible by users who have a finder role or above in at least one
-    category or project.
+    If ``PROJECTROLES_API_USER_DETAIL_RESTRICT`` is set True on the server, this
+    view is only accessible by users who have a finder role or above in at least
+    one category or project.
 
     **URL:** ``/project/api/users/{SODARUser.sodar_uuid}``
 

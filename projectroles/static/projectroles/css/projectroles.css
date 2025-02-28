@@ -313,6 +313,7 @@ table.sodar-card-table-bordered tbody tr:last-child td {
 
 /* Project list ------------------------------------------------------------- */
 
+
 .sodar-pr-project-list-input-group {
   max-width: 450px !important;
 }
@@ -409,7 +410,9 @@ li.sodar-paginate-button a {
   text-align: center;
 }
 
+
 /* Lists -------------------------------------------------------------------- */
+
 
 dl {
   margin: 0;

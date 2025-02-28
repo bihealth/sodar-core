@@ -18,6 +18,7 @@ from appalerts.models import AppAlert
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
+APP_NAME_FF = 'filesfolders'
 ALERT_NAME = 'test_alert'
 ALERT_MSG = 'Test alert message'
 ALERT_LEVEL = 'INFO'
@@ -87,7 +88,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
 
     def test_initialization_plugin(self):
         """Test AppAlert initialization with app plugin"""
-        app_plugin = Plugin.objects.get(name='filesfolders')
+        app_plugin = Plugin.objects.get(name=APP_NAME_FF)
         alert = self.make_app_alert(
             app_plugin=app_plugin,
             user=self.user,
@@ -123,7 +124,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
 
     def test_str_plugin(self):
         """Test AppAlert __str__() with app plugin"""
-        app_plugin = Plugin.objects.get(name='filesfolders')
+        app_plugin = Plugin.objects.get(name=APP_NAME_FF)
         alert = self.make_app_alert(
             app_plugin=app_plugin,
             user=self.user,
@@ -149,7 +150,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
 
     def test_repr_plugin(self):
         """Test AppAlert __repr__() with app plugin"""
-        app_plugin = Plugin.objects.get(name='filesfolders')
+        app_plugin = Plugin.objects.get(name=APP_NAME_FF)
         alert = self.make_app_alert(
             app_plugin=app_plugin,
             user=self.user,

@@ -673,7 +673,7 @@ class TestHomeView(UITestBase):
     def test_project_list_star(self):
         """Test project list star filter"""
         app_settings.set(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             setting_name='project_star',
             value=True,
             project=self.project,
@@ -728,7 +728,7 @@ class TestHomeView(UITestBase):
     def test_project_list_title_highlight(self):
         """Test project list title rendering with highlight enabled"""
         app_settings.set(
-            'projectroles', 'project_list_highlight', True, user=self.user_owner
+            APP_NAME, 'project_list_highlight', True, user=self.user_owner
         )
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         row = self._get_project_row(self.project)
@@ -764,7 +764,7 @@ class TestHomeView(UITestBase):
         )
         self.make_assignment(sub_cat, self.user_owner, self.role_owner)
         app_settings.set(
-            'projectroles', 'project_list_highlight', True, user=self.user_owner
+            APP_NAME, 'project_list_highlight', True, user=self.user_owner
         )
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         row = self._get_project_row(sub_cat)
@@ -779,7 +779,7 @@ class TestHomeView(UITestBase):
     def test_project_list_title_star(self):
         """Test project list title rendering with starred project"""
         app_settings.set(
-            'projectroles',
+            APP_NAME,
             'project_star',
             True,
             project=self.project,
@@ -1007,14 +1007,14 @@ class TestHomeView(UITestBase):
 
     def test_read_only_alert_disabled(self):
         """Test site read-only mode alert with mode disabled"""
-        self.assertFalse(app_settings.get('projectroles', 'site_read_only'))
+        self.assertFalse(app_settings.get(APP_NAME, 'site_read_only'))
         self.login_and_redirect(self.user_owner, self.url)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
 
     def test_read_only_alert_enabled(self):
         """Test site read-only mode alert with mode enabled"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         self.login_and_redirect(self.user_owner, self.url)
         elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
         self.assertIsNotNone(elem)
@@ -1023,7 +1023,7 @@ class TestHomeView(UITestBase):
     @override_settings(PROJECTROLES_READ_ONLY_MSG=CUSTOM_READ_ONLY_MSG)
     def test_read_only_alert_custom(self):
         """Test site read-only mode alert with custom message"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         self.login_and_redirect(self.user_owner, self.url)
         elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
         self.assertIsNotNone(elem)
@@ -1031,7 +1031,7 @@ class TestHomeView(UITestBase):
 
     def test_read_only_alert_disable(self):
         """Test site read-only mode disabling enabled alert"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         self.login_and_redirect(self.user_owner, self.url)
         elem = self.selenium.find_element(By.ID, 'sodar-alert-site-read-only')
         self.assertIsNotNone(elem)
@@ -1040,7 +1040,7 @@ class TestHomeView(UITestBase):
         with self.assertRaises(NoSuchElementException):
             elem.find_element(By.TAG_NAME, 'a')
 
-        app_settings.set('projectroles', 'site_read_only', False)
+        app_settings.set(APP_NAME, 'site_read_only', False)
         WebDriverWait(self.selenium, 15).until(
             ec.presence_of_element_located(
                 (By.CLASS_NAME, 'sodar-alert-site-read-only-updated')
@@ -1641,7 +1641,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
 
     def test_project_links_read_only(self):
         """Test visibility of project links with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         expected = [
             (self.superuser, self._get_pr_links('roles', 'update')),
             (self.user_owner_cat, self._get_pr_links('roles')),
@@ -2448,7 +2448,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
 
     def test_role_ops_read_only(self):
         """Test rendering role operations dropdown with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         good_users = [self.superuser]
         bad_users = [
             self.user_owner,
@@ -2613,7 +2613,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
 
     def test_role_dropdown_read_only(self):
         """Test role dropdown with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         expected = [
             (self.superuser, 6),
             (self.user_owner_cat, 0),

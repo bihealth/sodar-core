@@ -41,6 +41,7 @@ APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
+APP_NAME = 'projectroles'
 EXISTING_SETTING = 'project_bool_setting'
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_SETTING_VALUE = 'INVALID VALUE'
@@ -442,25 +443,19 @@ class TestAppSettingAPI(
             AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
         )
         self.assertFalse(
-            app_settings.is_set(
-                plugin_name='projectroles', setting_name=n, **kw
-            )
+            app_settings.is_set(plugin_name=APP_NAME, setting_name=n, **kw)
         )
 
     def test_is_set_object_exists(self):
         """Test is_set() with existing setting object"""
         n = 'project_star'
         kw = {'project': self.project, 'user': self.user}
-        app_settings.set(
-            plugin_name='projectroles', setting_name=n, value=True, **kw
-        )
+        app_settings.set(plugin_name=APP_NAME, setting_name=n, value=True, **kw)
         self.assertTrue(
             AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
         )
         self.assertTrue(
-            app_settings.is_set(
-                plugin_name='projectroles', setting_name=n, **kw
-            )
+            app_settings.is_set(plugin_name=APP_NAME, setting_name=n, **kw)
         )
 
     def test_is_set_default_value(self):
@@ -468,15 +463,13 @@ class TestAppSettingAPI(
         n = 'project_star'
         kw = {'project': self.project, 'user': self.user}
         app_settings.set(
-            plugin_name='projectroles', setting_name=n, value=False, **kw
+            plugin_name=APP_NAME, setting_name=n, value=False, **kw
         )
         self.assertTrue(
             AppSetting.objects.filter(app_plugin=None, name=n, **kw).exists()
         )
         self.assertTrue(
-            app_settings.is_set(
-                plugin_name='projectroles', setting_name=n, **kw
-            )
+            app_settings.is_set(plugin_name=APP_NAME, setting_name=n, **kw)
         )
 
     def test_is_set_plugin(self):
@@ -499,7 +492,7 @@ class TestAppSettingAPI(
         """Test is_set() with invalid user arg"""
         with self.assertRaises(ValueError):
             app_settings.is_set(
-                plugin_name='projectroles',
+                plugin_name=APP_NAME,
                 setting_name='project_star',
                 project=self.project,
                 user=None,
@@ -691,7 +684,7 @@ class TestAppSettingAPI(
         n = 'notify_email_project'
         v = '0'
         self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
-        app_settings.set('projectroles', n, False, user=self.user)
+        app_settings.set(APP_NAME, n, False, user=self.user)
         self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 1)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -701,7 +694,7 @@ class TestAppSettingAPI(
         v = '0'
         self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
         with self.assertRaises(ValueError):
-            app_settings.set('projectroles', n, False, user=self.user)
+            app_settings.set(APP_NAME, n, False, user=self.user)
         self.assertEqual(AppSetting.objects.filter(name=n, value=v).count(), 0)
 
     def test_validate_boolean(self):

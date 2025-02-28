@@ -32,6 +32,7 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
 # Local constants
+APP_NAME_EX = 'example_project_app'
 NEW_PROJECT_TITLE = 'New Project'
 REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
@@ -1757,7 +1758,7 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         )
         # GET data for PROJECT setting, others defined within tests
         self.get_data = {
-            'plugin_name': 'example_project_app',
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'project_str_setting',
         }
         self.good_users = [
@@ -1855,7 +1856,7 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
     def test_get_project_user_setting(self):
         """Test GET with PROJECT_USER scope"""
         get_data = {
-            'plugin_name': 'example_project_app',
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'project_user_str_setting',
             'user': str(self.user_owner.sodar_uuid),
         }
@@ -1896,7 +1897,7 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         """Test GET with PROJECT_USER scope and site read-only mode"""
         self.set_site_read_only()
         get_data = {
-            'plugin_name': 'example_project_app',
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'project_user_str_setting',
             'user': str(self.user_owner.sodar_uuid),
         }
@@ -1931,7 +1932,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
         )
         # POST data for PROJECT setting, others defined within tests
         self.post_data = {
-            'plugin_name': 'example_project_app',
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'project_str_setting',
             'value': 'value',
         }
@@ -2068,7 +2069,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
     def test_post_project_user_setting(self):
         """Test POST with PROJECT_USER scope"""
         post_data = {
-            'plugin_name': 'example_project_app',
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'project_user_str_setting',
             'value': 'value',
             'user': str(self.user_owner.sodar_uuid),
@@ -2118,7 +2119,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
         """Test POST with PROJECT_USER scope and site read-only mode"""
         self.set_site_read_only()
         post_data = {
-            'plugin_name': 'example_project_app',
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'project_user_str_setting',
             'value': 'value',
             'user': str(self.user_owner.sodar_uuid),
@@ -2149,7 +2150,7 @@ class TestUserSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         super().setUp()
         self.url = reverse('projectroles:api_user_setting_retrieve')
         self.get_data = {
-            'plugin_name': 'example_project_app',
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'user_str_setting',
         }
 
@@ -2195,7 +2196,7 @@ class TestUserSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
         super().setUp()
         self.url = reverse('projectroles:api_user_setting_set')
         self.post_data = {
-            'plugin_name': 'example_project_app',
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'user_str_setting',
             'value': 'value',
         }

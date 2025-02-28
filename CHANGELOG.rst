@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.1.0 (2025-02-28)
+===================
 
 Added
 -----
@@ -50,7 +50,7 @@ Changed
 -------
 
 - **General**
-    - Upgrade minimum Django version to v4.2.18 (#1531)
+    - Upgrade minimum Django version to v4.2.19 (#1531)
     - Upgrade general Python dependencies (#1531)
     - Replace ``awesome-slugify`` dependency with ``python-slugify`` (#1531, #1547)
     - Use ``SODARAPI*`` API view base classes instead of ``CoreAPI*`` (#1401)

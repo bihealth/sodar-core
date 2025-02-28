@@ -49,6 +49,9 @@ PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
+# Local constants
+APP_NAME = 'projectroles'
+
 
 # Base Classes and Mixins ------------------------------------------------------
 
@@ -288,7 +291,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             'user': {
                 'superuser': request.user.is_superuser,
                 'highlight': app_settings.get(
-                    'projectroles', 'project_list_highlight', user=request.user
+                    APP_NAME, 'project_list_highlight', user=request.user
                 ),
             },
         }
@@ -436,12 +439,10 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
             return Response({'detail': 'Anonymous access denied'}, status=401)
         project = self.get_project()
         user = request.user
-        project_star = app_settings.get(
-            'projectroles', 'project_star', project, user
-        )
+        project_star = app_settings.get(APP_NAME, 'project_star', project, user)
         value = False if project_star else True
         app_settings.set(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             setting_name='project_star',
             value=value,
             project=project,
@@ -520,7 +521,7 @@ class SiteReadOnlySettingAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     def get(self, request, *args, **kwargs):
-        ret = app_settings.get('projectroles', 'site_read_only')
+        ret = app_settings.get(APP_NAME, 'site_read_only')
         return JsonResponse({'site_read_only': ret})
 
 

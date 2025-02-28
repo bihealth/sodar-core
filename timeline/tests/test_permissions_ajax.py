@@ -12,6 +12,10 @@ from timeline.tests.test_models import (
 )
 
 
+# Local constants
+APP_NAME_PR = 'projectroles'
+
+
 class TestProjectEventDetailAjaxView(
     TimelineEventMixin, TimelineEventStatusMixin, ProjectPermissionTestBase
 ):
@@ -20,7 +24,7 @@ class TestProjectEventDetailAjaxView(
     def setUp(self):
         super().setUp()
         self.event = self.make_event(
-            self.project, 'projectroles', self.user_owner, 'project_create'
+            self.project, APP_NAME_PR, self.user_owner, 'project_create'
         )
         self.make_event_status(self.event, 'OK')
         self.url = reverse(
@@ -113,7 +117,7 @@ class TestSiteEventDetailAjaxView(
     def setUp(self):
         super().setUp()
         self.event = self.make_event(
-            None, 'projectroles', self.user_owner, 'test_event'
+            None, APP_NAME_PR, self.user_owner, 'test_event'
         )
         self.make_event_status(self.event, 'OK')
         self.regular_user = self.make_user('regular_user')
@@ -164,7 +168,7 @@ class TestProjectEventExtraAjaxView(
     def setUp(self):
         super().setUp()
         self.event = self.make_event(
-            self.project, 'projectroles', self.user_owner, 'project_create'
+            self.project, APP_NAME_PR, self.user_owner, 'project_create'
         )
         self.make_event_status(self.event, 'OK')
         self.url = reverse(
@@ -242,7 +246,7 @@ class TestSiteEventExtraAjaxView(
         super().setUp()
         self.event = self.make_event(
             None,
-            'projectroles',
+            APP_NAME_PR,
             self.user_owner,
             'test_event',
             extra_data={'example_data': 'example_extra_data'},
@@ -288,7 +292,7 @@ class TestEventStatusExtraAjaxViewProject(
     def setUp(self):
         super().setUp()
         self.event = self.make_event(
-            self.project, 'projectroles', self.user_owner, 'project_create'
+            self.project, APP_NAME_PR, self.user_owner, 'project_create'
         )
         self.event_status = self.make_event_status(
             self.event, 'OK', extra_data={'example_data': 'example_extra_data'}
@@ -359,7 +363,7 @@ class TestEventStatusExtraAjaxViewSite(
     def setUp(self):
         super().setUp()
         self.event = self.make_event(
-            None, 'projectroles', self.user_owner, 'test_event'
+            None, APP_NAME_PR, self.user_owner, 'test_event'
         )
         self.event_status = self.make_event_status(
             self.event,

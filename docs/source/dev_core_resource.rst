@@ -43,17 +43,19 @@ To alter projectroles app settings when developing the app, update the
 
 .. code-block:: python
 
-     'example_setting': {
-         'scope': 'PROJECT',  # PROJECT/USER
-         'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-         'default': 'example',
-         'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
-         'label': 'Project setting',  # Optional, defaults to name/key
-         'placeholder': 'Enter example setting here',  # Optional
-         'description': 'Example project setting',  # Optional
-         'user_modifiable': True,  # Optional, show/hide in forms
-         'local': False,  # Allow editing in target site forms if True
-     }
+    PluginAppSettingDef(
+        name='example_setting',
+        scope=APP_SETTING_SCOPE_PROJECT,  # PROJECT/USER/PROJECT_USER/SITE
+        type=APP_SETTING_TYPE_STRING,  # STRING/INTEGER/BOOLEAN/JSON
+        default='example',
+        label='Project setting',  # Optional, defaults to name
+        placeholder='Enter example setting here',  # Optional
+        description='Example project setting',  # Optional
+        options=['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
+        user_modifiable=True,  # Optional, show/hide in forms
+        global_edit=False,  # Allow editing in target site forms if True
+        widget_attrs={},  # Optional, widget attrs for forms
+    )
 
 
 Testing

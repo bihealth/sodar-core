@@ -31,6 +31,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 # Local constants
+APP_NAME = 'projectroles'
+APP_NAME_FF = 'filesfolders'
 CONSTANTS_OVERRIDE = {
     'DISPLAY_NAMES': {
         'CATEGORY': {'default': 'bar', 'plural': 'bars'},
@@ -222,7 +224,7 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         ]
         self.assertEqual(
             app_links.get_project_links(
-                self.user_owner, self.project, app_name='filesfolders'
+                self.user_owner, self.project, app_name=APP_NAME_FF
             ),
             expected,
         )
@@ -299,7 +301,7 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         links = app_links.get_project_links(
             self.user_owner,
             self.project,
-            app_name='projectroles',
+            app_name=APP_NAME,
             url_name='roles',
         )
         self.assertEqual(len(links), 7)
@@ -315,7 +317,7 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         links = app_links.get_project_links(
             self.user_owner,
             self.project,
-            app_name='filesfolders',
+            app_name=APP_NAME_FF,
             url_name='file_create',
         )
         self.assertEqual(len(links), 7)
@@ -363,7 +365,7 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.assertNotIn('project-update', link_names)
         self.assertNotIn('project-create', link_names)
 
-    @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=['filesfolders'])
+    @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=[APP_NAME_FF])
     def test_get_project_links_hidden_app(self):
         """Test get_project_links() with hidden app"""
         links = app_links.get_project_links(self.user, self.project)
@@ -401,7 +403,7 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
     def test_get_project_links_read_only(self):
         """Test get_project_links() with project and site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         links = app_links.get_project_links(self.user_owner, self.project)
         self.assertEqual(len(links), 6)
         link_names = [link['name'] for link in links]
@@ -409,13 +411,13 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
     def test_get_project_links_read_only_superuser(self):
         """Test get_project_links() with project and site read-only mode as superuser"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         links = app_links.get_project_links(self.user, self.project)
         self.assertEqual(len(links), 7)
 
     def test_get_project_links_category_read_only(self):
         """Test get_project_links() with category and site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         links = app_links.get_project_links(self.user_owner, self.category)
         self.assertEqual(len(links), 3)
         link_names = [link['name'] for link in links]
@@ -424,7 +426,7 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
     def test_get_project_links_category_read_only_superuser(self):
         """Test get_project_links() with category and site read-only mode as superuser"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         links = app_links.get_project_links(self.user, self.category)
         self.assertEqual(len(links), 5)
 
@@ -600,7 +602,7 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     def test_get_user_links_url_name_remote(self):
         """Test get_user_links() with remote sites URL name"""
         links = app_links.get_user_links(
-            self.user, app_name='projectroles', url_name='remote_site_create'
+            self.user, app_name=APP_NAME, url_name='remote_site_create'
         )
         self.assertEqual(len(links), 13)
         for i in range(0, 13):
@@ -613,7 +615,7 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     def test_get_user_links_url_name_site_app_settings(self):
         """Test get_user_links() with site app settings URL name"""
         links = app_links.get_user_links(
-            self.user, app_name='projectroles', url_name='site_app_settings'
+            self.user, app_name=APP_NAME, url_name='site_app_settings'
         )
         self.assertEqual(len(links), 13)
         for i in range(0, 13):
@@ -637,11 +639,11 @@ class TestAppLinkContent(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
     def test_get_user_links_read_only(self):
         """Test get_user_links() with site read-only mode as regular user"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         # All should be returned
         self.assertEqual(len(app_links.get_user_links(self.user_owner)), 6)
 
     def test_get_user_links_read_only_superuser(self):
         """Test get_user_links() with site read-only mode as superuser"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         self.assertEqual(len(app_links.get_user_links(self.user)), 13)

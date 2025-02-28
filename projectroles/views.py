@@ -318,7 +318,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             or project.is_owner_or_delegate(self.request.user)
         )
         if not perm_override and app_settings.get(
-            'projectroles', 'ip_restrict', project
+            APP_NAME, 'ip_restrict', project
         ):
             for k in (
                 'HTTP_X_FORWARDED_FOR',
@@ -333,9 +333,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             else:  # Can't fetch client ip address
                 return False
 
-            for record in app_settings.get(
-                'projectroles', 'ip_allowlist', project
-            ):
+            for record in app_settings.get(APP_NAME, 'ip_allowlist', project):
                 if '/' in record:
                     if client_address in ip_network(record):
                         break
@@ -427,7 +425,7 @@ class ProjectContextMixin(
             settings, 'PROJECTROLES_KIOSK_MODE', False
         ):
             context['project_starred'] = app_settings.get(
-                'projectroles',
+                APP_NAME,
                 'project_star',
                 context['project'],
                 self.request.user,
@@ -998,7 +996,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **p_kwargs
                 )
             else:
-                name = 'projectroles'
+                name = APP_NAME
                 p_settings = app_settings.get_definitions(
                     APP_SETTING_SCOPE_PROJECT, plugin_name=name, **p_kwargs
                 )
@@ -2464,7 +2462,7 @@ class RoleAssignmentOwnDeleteView(
         role_as = self.get_object()
         user = self.request.user
         if (
-            app_settings.get('projectroles', 'site_read_only')
+            app_settings.get(APP_NAME, 'site_read_only')
             or role_as.user != user
             or role_as.role.rank < ROLE_RANKING[PROJECT_ROLE_DELEGATE]
         ):

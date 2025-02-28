@@ -60,6 +60,7 @@ APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
+APP_NAME = 'projectroles'
 SOURCE_SITE_NAME = 'Test source site'
 SOURCE_SITE_URL = 'https://sodar.bihealth.org'
 SOURCE_SITE_DESC = 'Source description'
@@ -462,14 +463,14 @@ class TestGetSourceData(
         self.make_assignment(local_project, self.user_source, self.role_owner)
         # Init settings for synced project
         set_ip_restrict = self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='ip_restrict',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
             project=self.project,
         )
         set_ip_allowlist = self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='ip_allowlist',
             setting_type=APP_SETTING_TYPE_JSON,
             value=None,
@@ -477,7 +478,7 @@ class TestGetSourceData(
             project=self.project,
         )
         set_star = self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='project_star',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
@@ -486,7 +487,7 @@ class TestGetSourceData(
         )
         # Init setting for local project (should not be synced)
         set_local = self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='project_star',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
@@ -540,7 +541,7 @@ class TestGetSourceData(
     def test_get_settings_user(self):
         """Test getting user app settings"""
         user_global_setting = self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='notify_email_project',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=False,
@@ -1665,7 +1666,7 @@ class TestSyncRemoteDataUpdate(
 
         # Init app settings
         self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='ip_restrict',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=False,
@@ -1673,7 +1674,7 @@ class TestSyncRemoteDataUpdate(
             sodar_uuid=SET_IP_RESTRICT_UUID,
         )
         self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='ip_allowlist',
             setting_type=APP_SETTING_TYPE_JSON,
             value=None,
@@ -1682,7 +1683,7 @@ class TestSyncRemoteDataUpdate(
             sodar_uuid=SET_IP_ALLOWLIST_UUID,
         )
         self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='project_star',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=False,
@@ -2108,7 +2109,7 @@ class TestSyncRemoteDataUpdate(
         """Test update with USER scope settings"""
         # Create target settings
         target_global_setting = self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='notify_email_project',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,

@@ -19,6 +19,9 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
+# Local constants
+APP_NAME = 'projectroles'
+
 
 # Predicates -------------------------------------------------------------------
 
@@ -113,7 +116,7 @@ def has_roles(user):
 @rules.predicate
 def is_modifiable_project(user, obj):
     """Whether or not project metadata is modifiable"""
-    if obj.is_remote() or app_settings.get('projectroles', 'site_read_only'):
+    if obj.is_remote() or app_settings.get(APP_NAME, 'site_read_only'):
         return False
     return True
 
@@ -124,9 +127,7 @@ def can_modify_project_data(user, obj):
     Whether or not project app data can be modified, due to e.g. project
     archiving status.
     """
-    return not obj.archive and not app_settings.get(
-        'projectroles', 'site_read_only'
-    )
+    return not obj.archive and not app_settings.get(APP_NAME, 'site_read_only')
 
 
 @rules.predicate
@@ -136,7 +137,7 @@ def can_create_projects(user, obj):
         not settings.PROJECTROLES_TARGET_CREATE or (obj and obj.is_remote())
     ):
         return False
-    if app_settings.get('projectroles', 'site_read_only'):
+    if app_settings.get(APP_NAME, 'site_read_only'):
         return False
     return True
 
@@ -168,7 +169,7 @@ def is_target_site():
 @rules.predicate
 def is_site_writable():
     """Return True if site has not been set in read-only mode"""
-    return not app_settings.get('projectroles', 'site_read_only')
+    return not app_settings.get(APP_NAME, 'site_read_only')
 
 
 # Combined predicates ----------------------------------------------------------

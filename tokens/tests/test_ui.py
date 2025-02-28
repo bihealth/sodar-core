@@ -22,6 +22,9 @@ app_settings = AppSettingAPI()
 # SODAR constants
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
+# Local constants
+APP_NAME_PR = 'projectroles'
+
 
 class TestUserTokenListView(UITestBase):
     """Tests for UserTokenListView"""
@@ -46,7 +49,7 @@ class TestUserTokenListView(UITestBase):
 
     def test_create_button(self):
         """Test visibility of create button"""
-        self.assertFalse(app_settings.get('projectroles', 'site_read_only'))
+        self.assertFalse(app_settings.get(APP_NAME_PR, 'site_read_only'))
         self.assert_element_exists(
             [self.superuser, self.regular_user],
             self.url,
@@ -56,7 +59,7 @@ class TestUserTokenListView(UITestBase):
 
     def test_create_button_read_only(self):
         """Test visibility of create button with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
         self.assert_element_exists(
             [self.superuser], self.url, 'sodar-tk-create-btn', True
         )
@@ -101,7 +104,7 @@ class TestUserTokenListView(UITestBase):
 
     def test_list_items_read_only(self):
         """Test visibility of items in token list with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
         expected = [(self.superuser, 0), (self.regular_user, 2)]
         self.assert_element_count(
             expected, self.url, 'sodar-tk-list-item', 'class'

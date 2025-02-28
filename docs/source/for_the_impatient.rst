@@ -24,12 +24,12 @@ in complex web applications.
     projects. SODAR Core was created by separating re-usable research project
     management components from the SODAR project.
 
-  `VarFish <https://github.com/bihealth/varfish-server>`_
+  `VarFish <https://github.com/varfish-org/varfish-server>`_
     A web-based tool for the analysis of variants.
     It showcases how to build a complex data warehousing and data analysis web
     application using SODAR Core.
     More details are described in the `NAR Web Server Issue publication (doi:10.1093/nar/gkaa241) <https://doi.org/10.1093/nar/gkaa241>`__.
-    The source code can be found on `github.com/bihealth/varfish-server <https://github.com/bihealth/varfish-server>`__.
+    The source code can be found on `github.com/varfish-org/varfish-server <https://github.com/varfish-org/varfish-server>`__.
     A demo is available at `varfish-demo.bihealth.org <https://varfish-demo.bihealth.org/login/>`__.
 
   `DigestiFlow <https://github.com/bihealth/digestiflow-server>`_

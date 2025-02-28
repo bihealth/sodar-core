@@ -19,6 +19,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 # Local constants
+APP_NAME = 'projectroles'
 SIDEBAR_ICON_MIN_SIZE = 18
 SIDEBAR_ICON_MAX_SIZE = 42
 ROLE_URLS = [
@@ -107,7 +108,7 @@ class AppLinkContent:
         # HACK: Avoid circular import
         from projectroles.urls import urlpatterns
 
-        if app_name != 'projectroles':
+        if app_name != APP_NAME:
             return False
         return url_name in [u.name for u in urlpatterns] and (
             not link_names or url_name in link_names
@@ -125,14 +126,14 @@ class AppLinkContent:
             return True
         # Remote site views, see issue #1336
         if (
-            app_name == 'projectroles'
+            app_name == APP_NAME
             and app_plugin.name == 'remotesites'
             and url_name.startswith('remote_')
         ):
             return True
         # Site app settings view
         if (
-            app_name == 'projectroles'
+            app_name == APP_NAME
             and app_plugin.name == 'siteappsettings'
             and url_name == 'site_app_settings'
         ):
@@ -278,7 +279,7 @@ class AppLinkContent:
             link['label'] = f'Create {pr_display} or {cat_display}'
             ret.append(link)
         elif (
-            (url_name == 'home' or app_name == 'projectroles' and not project)
+            (url_name == 'home' or app_name == APP_NAME and not project)
             and user.has_perm('projectroles.create_project')
             and allow_create
         ):

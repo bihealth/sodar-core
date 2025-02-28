@@ -35,6 +35,8 @@ from timeline.views_api import (
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
+# Local constants
+APP_NAME_PR = 'projectroles'
 EVENT_NAME = 'test_event'
 EVENT_NAME_CLASSIFIED = 'test_event_classified'
 EVENT_DESC = 'description'
@@ -100,7 +102,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
         super().setUp()
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=EVENT_NAME,
             description=EVENT_DESC,
@@ -109,7 +111,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
         )
         self.event_classified = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=EVENT_NAME_CLASSIFIED,
             description=EVENT_DESC,
@@ -131,7 +133,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
         self.assertEqual(len(response_data), 2)
         expected = {
             'project': str(self.project.sodar_uuid),
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': str(self.user_owner.sodar_uuid),
             'event_name': EVENT_NAME,
@@ -145,7 +147,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
         self.assertEqual(response_data[1], expected)
         expected = {
             'project': str(self.project.sodar_uuid),
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': str(self.user_owner.sodar_uuid),
             'event_name': EVENT_NAME_CLASSIFIED,
@@ -170,7 +172,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
             'results': [
                 {
                     'project': str(self.project.sodar_uuid),
-                    'app': 'projectroles',
+                    'app': APP_NAME_PR,
                     'plugin': None,
                     'user': str(self.user_owner.sodar_uuid),
                     'event_name': EVENT_NAME_CLASSIFIED,
@@ -366,7 +368,7 @@ class TestSiteTimelineEventListAPIView(TimelineAPIViewTestBase):
         super().setUp()
         self.project_event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=EVENT_NAME,
             description=EVENT_DESC,
@@ -375,7 +377,7 @@ class TestSiteTimelineEventListAPIView(TimelineAPIViewTestBase):
         )
         self.site_event = self.make_event(
             project=None,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=EVENT_NAME,
             description=EVENT_DESC,
@@ -384,7 +386,7 @@ class TestSiteTimelineEventListAPIView(TimelineAPIViewTestBase):
         )
         self.site_event_classified = self.make_event(
             project=None,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=EVENT_NAME_CLASSIFIED,
             description=EVENT_DESC,
@@ -429,7 +431,7 @@ class TestTimelineEventRetrieveAPIView(TimelineAPIViewTestBase):
         super().setUp()
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=EVENT_NAME,
             description=EVENT_DESC,
@@ -447,7 +449,7 @@ class TestTimelineEventRetrieveAPIView(TimelineAPIViewTestBase):
         self.assertEqual(response.status_code, 200)
         expected = {
             'project': str(self.project.sodar_uuid),
-            'app': 'projectroles',
+            'app': APP_NAME_PR,
             'plugin': None,
             'user': str(self.user_owner.sodar_uuid),
             'event_name': EVENT_NAME,

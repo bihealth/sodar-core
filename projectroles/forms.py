@@ -294,7 +294,7 @@ class SODARAppSettingFormMixin:
                 p_name = plugin.name
                 def_kwarg = {'plugin': plugin}
             else:
-                p_name = 'projectroles'
+                p_name = APP_NAME
                 def_kwarg = {'plugin_name': p_name}
             s_defs = app_settings.get_definitions(
                 scope=scope, user_modifiable=user_modifiable, **def_kwarg

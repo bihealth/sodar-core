@@ -26,20 +26,15 @@ app_settings = AppSettingAPI()
 
 
 # SODAR constants
-PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
-APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
 APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
-APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
+APP_NAME = 'projectroles'
 REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_SECRET = build_secret()
@@ -52,9 +47,9 @@ class PermissionTestMixin:
         """
         Helper to set site read only mode to the desired value.
 
-        :param value: Boolean
+        :param value: BooAPP_NAMElean
         """
-        app_settings.set('projectroles', 'site_read_only', value)
+        app_settings.set(APP_NAME, 'site_read_only', value)
 
     def send_request(self, url, method, req_kwargs):
         req_method = getattr(self.client, method.lower(), None)
@@ -133,7 +128,7 @@ class IPAllowMixin(AppSettingMixin):
     def setup_ip_allowing(self, ip_list):
         # Init IP restrict setting
         self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='ip_restrict',
             setting_type=APP_SETTING_TYPE_BOOLEAN,
             value=True,
@@ -141,7 +136,7 @@ class IPAllowMixin(AppSettingMixin):
         )
         # Init IP allowlist setting
         self.make_setting(
-            plugin_name='projectroles',
+            plugin_name=APP_NAME,
             name='ip_allowlist',
             setting_type=APP_SETTING_TYPE_JSON,
             value=None,

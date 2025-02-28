@@ -20,6 +20,9 @@ app_settings = AppSettingAPI()
 # SODAR constants
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
+# Local constants
+APP_NAME_PR = 'projectroles'
+
 
 @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
 class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
@@ -39,7 +42,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
 
     def test_update_button_read_only(self):
         """Test existence of user update button with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
         expected = [(self.local_user, 0), (self.ldap_user, 0)]
         self.assert_element_count(expected, self.url, 'sodar-user-btn-update')
 
@@ -54,7 +57,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
 
     def test_settings_button_read_only(self):
         """Test existence of settings update button with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
         expected = [
             (self.superuser, 1),
             (self.local_user, 0),
@@ -75,7 +78,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
 
     def test_add_email_button_read_only(self):
         """Test existence of add email button with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
         expected = [
             (self.superuser, 1),
             (self.local_user, 0),
@@ -133,7 +136,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
 
     def test_additional_email_set_read_only(self):
         """Test additional email with site read-only mode"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
         self.make_email(self.local_user, 'add1@example.com')
         self.make_email(self.local_user, 'add2@example.com', verified=False)
         self.assert_element_count(
@@ -151,7 +154,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
 
     def test_additional_email_set_read_only_superuser(self):
         """Test additional email with site read-only mode as superuser"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
         self.make_email(self.superuser, 'add1@example.com')
         self.make_email(self.superuser, 'add2@example.com', verified=False)
         self.assert_element_count(

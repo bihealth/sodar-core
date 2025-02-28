@@ -17,6 +17,10 @@ from timeline.templatetags.timeline_tags import get_status_style
 from timeline.tests.test_models import TimelineEventMixin
 
 
+# Local constants
+APP_NAME_PR = 'projectroles'
+
+
 class TimelineAjaxViewTestBase(
     ProjectMixin, RoleAssignmentMixin, TimelineEventMixin, ViewTestBase
 ):
@@ -49,7 +53,7 @@ class TestProjectEventDetailAjaxView(TimelineAjaxViewTestBase):
     def setUp(self):
         super().setUp()
         self.event = self.make_event(
-            self.project, 'projectroles', self.user, 'project_create'
+            self.project, APP_NAME_PR, self.user, 'project_create'
         )
         self.event_status_init = self.event.set_status(
             'INIT', DEFAULT_MESSAGES['INIT']
@@ -117,7 +121,7 @@ class TestProjectEventExtraAjaxView(TimelineAjaxViewTestBase):
         super().setUp()
         self.event = self.make_event(
             self.project,
-            'projectroles',
+            APP_NAME_PR,
             self.user,
             'project_create',
             extra_data={'example_data': 'example_extra_data'},
@@ -162,9 +166,7 @@ class TestSiteEventDetailAjaxView(TimelineAjaxViewTestBase):
 
     def setUp(self):
         super().setUp()
-        self.event = self.make_event(
-            None, 'projectroles', self.user, 'test_event'
-        )
+        self.event = self.make_event(None, APP_NAME_PR, self.user, 'test_event')
         self.event_status_init = self.event.set_status(
             'INIT', DEFAULT_MESSAGES['INIT']
         )
@@ -223,7 +225,7 @@ class TestSiteEventExtraAjaxView(TimelineAjaxViewTestBase):
         super().setUp()
         self.event = self.make_event(
             None,
-            'projectroles',
+            APP_NAME_PR,
             self.user,
             'test_event',
             extra_data={'example_data': 'example_extra_data'},
@@ -264,7 +266,7 @@ class TestEventStatusExtraAjaxView(
     def setUp(self):
         super().setUp()
         self.event = self.make_event(
-            self.project, 'projectroles', self.user, 'test_event'
+            self.project, APP_NAME_PR, self.user, 'test_event'
         )
         self.event_status_init = self.event.set_status(
             'INIT',
@@ -272,7 +274,7 @@ class TestEventStatusExtraAjaxView(
             extra_data={'test': 'test'},
         )
         self.event_site = self.make_event(
-            None, 'projectroles', self.user, 'test_event_site'
+            None, APP_NAME_PR, self.user, 'test_event_site'
         )
         self.event_site_status_init = self.event_site.set_status(
             'INIT',

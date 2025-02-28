@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.1.0 (WIP)
-************
+v1.1.0 (2025-02-28)
+*******************
 
 Release Highlights
 ==================
@@ -51,7 +51,7 @@ System Prerequisites
 --------------------
 
 Django Version
-    The minimum Django version has been bumped to v4.2.18.
+    The minimum Django version has been bumped to v4.2.19.
 General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your

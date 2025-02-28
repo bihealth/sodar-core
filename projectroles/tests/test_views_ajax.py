@@ -35,6 +35,7 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
 APP_NAME = 'projectroles'
+APP_NAME_FF = 'filesfolders'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
@@ -133,7 +134,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     def test_get_highlight(self):
         """Test GET with highlight app setting enabled"""
         app_settings.set(
-            'projectroles', 'project_list_highlight', True, user=self.user
+            APP_NAME, 'project_list_highlight', True, user=self.user
         )
         with self.login(self.user):
             response = self.client.get(self.url)
@@ -319,7 +320,7 @@ class TestProjectListColumnAjaxView(
         self.assertEqual(response.status_code, 200)
         expected = {
             str(self.project.sodar_uuid): {
-                'filesfolders': {'files': {'html': '0'}, 'links': {'html': '0'}}
+                APP_NAME_FF: {'files': {'html': '0'}, 'links': {'html': '0'}}
             }
         }
         self.assertEqual(response.data, expected)
@@ -361,7 +362,7 @@ class TestProjectListColumnAjaxView(
         self.assertEqual(response.status_code, 200)
         expected = {
             str(new_project.sodar_uuid): {
-                'filesfolders': {'files': {'html': '0'}, 'links': {'html': '0'}}
+                APP_NAME_FF: {'files': {'html': '0'}, 'links': {'html': '0'}}
             }
         }
         self.assertEqual(response.data, expected)
@@ -489,7 +490,7 @@ class TestProjectStarringAjaxView(
         self.assertEqual(response.status_code, 200)
         self._assert_setting_count(1)
         star = app_settings.get(
-            'projectroles', 'project_star', self.project, self.user
+            APP_NAME, 'project_star', self.project, self.user
         )
         self.assertEqual(star, True)
 
@@ -502,7 +503,7 @@ class TestProjectStarringAjaxView(
             )
         self.assertEqual(response.status_code, 200)
         star = app_settings.get(
-            'projectroles', 'project_star', self.project, self.user
+            APP_NAME, 'project_star', self.project, self.user
         )
         self._assert_setting_count(1)
         self.assertEqual(star, False)
@@ -685,7 +686,7 @@ class TestSidebarContentAjaxView(
         self.assertEqual(response.status_code, 200)
         expected = {
             'links': app_links.get_project_links(
-                self.user, self.project, app_name='filesfolders'
+                self.user, self.project, app_name=APP_NAME_FF
             )
         }
         self.assertEqual(response.json(), expected)
@@ -705,7 +706,7 @@ class TestSidebarContentAjaxView(
             'links': app_links.get_project_links(
                 self.user,
                 self.project,
-                app_name='filesfolders',
+                app_name=APP_NAME_FF,
                 url_name='file_create',
             )
         }
@@ -721,7 +722,7 @@ class TestSiteReadOnlySettingAjaxView(SerializedObjectMixin, TestCase):
 
     def test_get_disabled(self):
         """Test SiteReadOnlySettingAjaxView GET with read-only mode disabled"""
-        self.assertFalse(app_settings.get('projectroles', 'site_read_only'))
+        self.assertFalse(app_settings.get(APP_NAME, 'site_read_only'))
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:ajax_settings_site_read_only')
@@ -731,7 +732,7 @@ class TestSiteReadOnlySettingAjaxView(SerializedObjectMixin, TestCase):
 
     def test_get_enabled(self):
         """Test GET with read-only mode enabled"""
-        app_settings.set('projectroles', 'site_read_only', True)
+        app_settings.set(APP_NAME, 'site_read_only', True)
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:ajax_settings_site_read_only')

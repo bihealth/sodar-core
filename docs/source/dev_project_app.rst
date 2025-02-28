@@ -166,7 +166,7 @@ app if needed.
 
     For permissions dealing with modifying data, you are strongly recommend to
     use the ``can_modify_project_data`` predicate. For more information, see
-    :ref:`dev_project_app_archiving`.
+    :ref:`dev_project_app_archive`.
 
 .. hint::
 
@@ -824,7 +824,7 @@ See the :ref:`serializer API documentation <app_projectroles_api_django_serial>`
 for details on using base serializer classes.
 
 
-.. _dev_project_app_archiving:
+.. _dev_project_app_archive:
 
 Project Archiving
 =================

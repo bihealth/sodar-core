@@ -34,7 +34,6 @@ $(document).ready(function () {
 
     // Handle alert dismissal
     $('#sodar-app-alert-badge-btn-dismiss').click(function () {
-        console.log('Clicked!')
         $.post({
             url: $(this).attr('data-dismiss-url'),
             method: 'POST',

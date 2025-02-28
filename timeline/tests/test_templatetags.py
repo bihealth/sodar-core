@@ -19,6 +19,9 @@ from timeline.tests.test_models import (
 )
 
 
+# Local constants
+APP_NAME_PR = 'projectroles'
+APP_NAME_FF = 'filesfolders'
 INVALID_APP_NAME = 'asdfghjk1235'
 TEST_EVENT_NAME = 'test_event'
 TEST_EVENT_DESC = 'test event'
@@ -39,7 +42,7 @@ class TestTemplateTags(
         # Initialize project event
         self.event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name='project_create',
             description='create project with {owner} as owner',
@@ -97,7 +100,7 @@ class TestTemplateTags(
         for _ in range(5):
             event = self.make_event(
                 project=self.project,
-                app='projectroles',
+                app=APP_NAME_PR,
                 user=self.user_owner,
                 event_name=TEST_EVENT_NAME,
                 description=TEST_EVENT_DESC,
@@ -115,7 +118,7 @@ class TestTemplateTags(
         self.assertEqual(len(tags.get_details_events(self.project)), 1)
         event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
@@ -134,7 +137,7 @@ class TestTemplateTags(
         self.assertEqual(len(tags.get_details_events(self.project)), 1)
         event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
@@ -171,7 +174,7 @@ class TestTemplateTags(
         """Test get_app_icon_html() on event without project"""
         event = self.make_event(
             project=None,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
@@ -183,14 +186,14 @@ class TestTemplateTags(
 
     def test_get_app_icon_html_plugin(self):
         """Test get_app_icon_html() on event from an app plugin"""
-        plugin = get_app_plugin('filesfolders')
+        plugin = get_app_plugin(APP_NAME_FF)
         url = reverse(
             plugin.entry_point_url_id,
             kwargs={'project': self.project.sodar_uuid},
         )
         event = self.make_event(
             project=self.project,
-            app='filesfolders',
+            app=APP_NAME_FF,
             user=self.user_owner,
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
@@ -204,7 +207,7 @@ class TestTemplateTags(
         """Test get_app_icon_html() on event without project"""
         event = self.make_event(
             project=self.project,
-            app='projectroles',
+            app=APP_NAME_PR,
             user=self.user_owner,
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
