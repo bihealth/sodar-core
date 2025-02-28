@@ -13,6 +13,7 @@ Added
 
 - **General**
     - ``drf-spectacular`` support (#1508)
+    - REST API documentation section in documentation index (#1576)
 - **Projectroles**
     - ``SODARUser.get_display_name()`` helper (#1487)
     - App setting type constants (#1458)
