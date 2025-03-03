@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - App setting dict ``user_modifiable`` default with ``PROJECT_USER`` scope (#1587)
+
+
 v1.1.0 (2025-02-28)
 ===================
 

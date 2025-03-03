@@ -278,7 +278,14 @@ class AppSettingAPI:
                     placeholder=v.get('placeholder'),
                     description=v.get('description'),
                     options=v.get('options'),
-                    user_modifiable=v.get('user_modifiable', True),
+                    user_modifiable=v.get(
+                        'user_modifiable',
+                        (
+                            False
+                            if v.get('scope') == APP_SETTING_SCOPE_PROJECT_USER
+                            else True
+                        ),
+                    ),
                     global_edit=v.get('global', APP_SETTING_GLOBAL_DEFAULT),
                     project_types=v.get(
                         'project_types', [PROJECT_TYPE_PROJECT]
