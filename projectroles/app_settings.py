@@ -564,6 +564,7 @@ class AppSettingAPI:
             ):
                 raise ValueError(GLOBAL_USER_ERR_MSG)
 
+        # TODO: Refactor and remove repetition
         try:  # Update existing setting
             q_kwargs = {'name': setting_name, 'project': project, 'user': user}
             if not plugin_name == APP_NAME:
@@ -573,18 +574,23 @@ class AppSettingAPI:
             setting = AppSetting.objects.get(**q_kwargs)
             if cls.compare_value(setting, value):
                 return False
+            v = (
+                cls._get_json_value(value)
+                if setting.type == APP_SETTING_TYPE_JSON
+                else value
+            )
             if validate:
                 cls.validate(
                     setting.type,
-                    value,
+                    v,
                     s_def.options,
                     project=project,
                     user=user,
                 )
             if setting.type == APP_SETTING_TYPE_JSON:
-                setting.value_json = cls._get_json_value(value)
+                setting.value_json = v
             else:
-                setting.value = value
+                setting.value = v
             setting.save()
             cls._log_set_debug(
                 'Set', plugin_name, setting_name, value, project, user

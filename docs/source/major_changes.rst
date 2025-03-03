@@ -16,7 +16,7 @@ v1.1.1 (WIP)
 Release Highlights
 ==================
 
-- TODO
+- Fix app setting validation issues
 
 
 v1.1.0 (2025-02-28)

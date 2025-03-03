@@ -19,6 +19,7 @@ Fixed
 
 - **Projectroles**
     - App setting dict ``user_modifiable`` default with ``PROJECT_USER`` scope (#1587)
+    - JSON app setting validation on newly created setting (#1589)
 
 
 v1.1.0 (2025-02-28)
