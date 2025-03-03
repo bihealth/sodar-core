@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Changed
+-------
+
+- **Projectroles**
+    - Improve ``PluginAppSettingDef.validate_value()`` type exceptions (#1588)
+
 Fixed
 -----
 

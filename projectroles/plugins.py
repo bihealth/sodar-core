@@ -765,7 +765,9 @@ class PluginAppSettingDef:
         if setting_type == APP_SETTING_TYPE_BOOLEAN:
             if not isinstance(setting_value, bool):
                 raise ValueError(
-                    'Please enter value as bool ({})'.format(setting_value)
+                    'Please enter value as bool (value={}; type={})'.format(
+                        setting_value, type(setting_value)
+                    )
                 )
         elif setting_type == APP_SETTING_TYPE_INTEGER:
             if (
@@ -780,8 +782,9 @@ class PluginAppSettingDef:
         elif setting_type == APP_SETTING_TYPE_JSON:
             if setting_value and not isinstance(setting_value, (dict, list)):
                 raise ValueError(
-                    'Please input JSON value as dict or list ({})'.format(
-                        setting_value
+                    'Please enter JSON value as dict or list '
+                    '(value={}; type={})'.format(
+                        setting_value, type(setting_value)
                     )
                 )
             try:
