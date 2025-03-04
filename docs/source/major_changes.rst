@@ -16,6 +16,7 @@ v1.1.1 (WIP)
 Release Highlights
 ==================
 
+- Update admin alert email recipients to include admin creator
 - Fix app setting validation issues
 
 

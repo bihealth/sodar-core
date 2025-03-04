@@ -137,10 +137,16 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
         )
         self.assertEqual(
             mail.outbox[0].recipients(),
-            [settings.EMAIL_SENDER, self.user_regular.email],
+            [
+                settings.EMAIL_SENDER,
+                self.superuser.email,
+                self.user_regular.email,
+            ],
         )
         self.assertEqual(mail.outbox[0].to, [settings.EMAIL_SENDER])
-        self.assertEqual(mail.outbox[0].bcc, [self.user_regular.email])
+        self.assertEqual(
+            mail.outbox[0].bcc, [self.superuser.email, self.user_regular.email]
+        )
         self.assertIn(ALERT_MSG, mail.outbox[0].body)
         self.assertIn(EMAIL_DESC_LEGEND, mail.outbox[0].body)
         self.assertIn(ALERT_DESC, mail.outbox[0].body)
@@ -198,7 +204,12 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].recipients(),
-            [settings.EMAIL_SENDER, user_new.email, self.user_regular.email],
+            [
+                settings.EMAIL_SENDER,
+                self.superuser.email,
+                user_new.email,
+                self.user_regular.email,
+            ],
         )
         self.assertIn(ALERT_MSG, mail.outbox[0].body)
         self.assertIn(EMAIL_DESC_LEGEND, mail.outbox[0].body)
@@ -218,6 +229,7 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
             mail.outbox[0].recipients(),
             [
                 settings.EMAIL_SENDER,
+                self.superuser.email,
                 self.user_regular.email,
                 ADD_EMAIL,
                 ADD_EMAIL2,
@@ -238,6 +250,7 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
             mail.outbox[0].recipients(),
             [
                 settings.EMAIL_SENDER,
+                self.superuser.email,
                 self.user_regular.email,
                 ADD_EMAIL,
             ],
@@ -256,11 +269,20 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
         # Superuser additional emails should not be included
         self.assertEqual(
             mail.outbox[0].recipients(),
-            [settings.EMAIL_SENDER, self.user_regular.email],
+            [
+                settings.EMAIL_SENDER,
+                self.superuser.email,
+                'add1@example.com',
+                'add2@example.com',
+                self.user_regular.email,
+            ],
         )
 
     def test_post_email_disable(self):
         """Test POST with email notifications disabled"""
+        app_settings.set(
+            APP_NAME, 'notify_email_alert', False, user=self.superuser
+        )
         app_settings.set(
             APP_NAME, 'notify_email_alert', False, user=self.user_regular
         )
@@ -343,7 +365,11 @@ class TestAdminAlertUpdateView(AdminalertsViewTestBase):
         )
         self.assertEqual(
             mail.outbox[0].recipients(),
-            [settings.EMAIL_SENDER, self.user_regular.email],
+            [
+                settings.EMAIL_SENDER,
+                self.superuser.email,
+                self.user_regular.email,
+            ],
         )
 
     def test_post_email_inactive(self):
@@ -357,6 +383,9 @@ class TestAdminAlertUpdateView(AdminalertsViewTestBase):
 
     def test_post_email_disable(self):
         """Test POST with disabled email notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_email_alert', False, user=self.superuser
+        )
         app_settings.set(
             APP_NAME, 'notify_email_alert', False, user=self.user_regular
         )
