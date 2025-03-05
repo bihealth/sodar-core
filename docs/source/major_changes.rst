@@ -20,6 +20,7 @@ Release Highlights
 - Fix app setting validation issues
 - Fix missing user data in remote sync with user scope app settings (port from
   v1.0.6)
+- Fix invalid legacy values set for project starring app setting
 
 
 v1.1.0 (2025-02-28)
