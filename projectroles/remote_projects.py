@@ -325,6 +325,8 @@ class RemoteProjectAPI:
         # Sync USER scope settings
         for a in AppSetting.objects.filter(project=None).exclude(user=None):
             try:
+                # Add user if they lack roles in remote projects (see #1593)
+                self._add_user(sync_data, a.user)
                 sync_data = self._add_app_setting(sync_data, a, all_defs)
             except Exception as ex:
                 logger.error(self._get_app_setting_error(a, ex))

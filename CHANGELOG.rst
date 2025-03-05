@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+   - User data not added by ``USER`` scope app setting remote sync (#1593)
+
+
 v1.0.5 (2025-02-17)
 ===================
 

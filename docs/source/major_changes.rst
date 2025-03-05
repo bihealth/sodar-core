@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.0.6 (2025-03-05)
+*******************
+
+Release Highlights
+==================
+
+- Fix missing user data in remote sync with user scope app settings
+
+
 v1.0.5 (2025-02-17)
 *******************
 
