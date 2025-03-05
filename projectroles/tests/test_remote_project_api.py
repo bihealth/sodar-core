@@ -560,6 +560,7 @@ class TestGetSourceData(
         )
         sync_data = self.remote_api.get_source_data(self.target_site)
 
+        self.assertEqual(len(sync_data['users']), 1)
         # NOTE: Local setting should also be included
         self.assertEqual(len(sync_data['app_settings']), 2)
         expected = {
@@ -592,6 +593,57 @@ class TestGetSourceData(
             sync_data['app_settings'][str(user_local_setting.sodar_uuid)],
             expected,
         )
+
+    def test_get_settings_user_no_roles(self):
+        """Test getting user app settings with user without roles"""
+        user_no_roles = self.make_sodar_user(
+            username='user_no_roles',
+            name='No Roles',
+            first_name='No',
+            last_name='Roles',
+            email='noroles@example.com',
+        )
+        self.make_setting(
+            plugin_name='projectroles',
+            name='notify_email_project',
+            setting_type='BOOLEAN',
+            value=False,
+            user=self.user_source,
+        )
+        sync_data = self.remote_api.get_source_data(self.target_site)
+        self.assertEqual(len(sync_data['users']), 1)
+        self.assertIn(str(self.user_source.sodar_uuid), sync_data['users'])
+        self.assertNotIn(str(user_no_roles.sodar_uuid), sync_data['users'])
+        self.assertEqual(len(sync_data['app_settings']), 1)
+
+    def test_get_settings_user_no_roles_set(self):
+        """Test getting user app settings with user without roles and setting set"""
+        user_no_roles = self.make_sodar_user(
+            username='user_no_roles',
+            name='No Roles',
+            first_name='No',
+            last_name='Roles',
+            email='noroles@example.com',
+        )
+        self.make_setting(
+            plugin_name='projectroles',
+            name='notify_email_project',
+            setting_type='BOOLEAN',
+            value=False,
+            user=self.user_source,
+        )
+        self.make_setting(
+            plugin_name='projectroles',
+            name='notify_email_project',
+            setting_type='BOOLEAN',
+            value=False,
+            user=user_no_roles,
+        )
+        sync_data = self.remote_api.get_source_data(self.target_site)
+        self.assertEqual(len(sync_data['users']), 2)
+        self.assertIn(str(self.user_source.sodar_uuid), sync_data['users'])
+        self.assertIn(str(user_no_roles.sodar_uuid), sync_data['users'])
+        self.assertEqual(len(sync_data['app_settings']), 2)
 
     def test_get_revoked(self):
         """Test getting data with REVOKED level"""

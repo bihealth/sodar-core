@@ -25,6 +25,7 @@ Fixed
 - **Projectroles**
     - App setting dict ``user_modifiable`` default with ``PROJECT_USER`` scope (#1587)
     - JSON app setting validation on newly created setting (#1589)
+    - User data not added by ``USER`` scope app setting remote sync (port from v1.0.6) (#1593, #1595)
 
 
 v1.1.0 (2025-02-28)
@@ -148,6 +149,16 @@ Removed
     - ``AppSettingAPI.get_global_value()`` helper (#1394, #1533)
 - **Timeline**
     - Support for deprecated ``get_object_link()`` return values as dict (#1398)
+
+
+v1.0.6 (2025-03-05)
+===================
+
+Fixed
+-----
+
+- **Projectroles**
+   - User data not added by ``USER`` scope app setting remote sync (#1593)
 
 
 v1.0.5 (2025-02-17)

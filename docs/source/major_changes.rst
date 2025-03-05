@@ -18,6 +18,8 @@ Release Highlights
 
 - Update admin alert email recipients to include admin creator
 - Fix app setting validation issues
+- Fix missing user data in remote sync with user scope app settings (port from
+  v1.0.6)
 
 
 v1.1.0 (2025-02-28)
@@ -186,6 +188,15 @@ Squashed Migrations Removed
 Migrations squashed in v1.0 have been removed in v1.1. In order to upgrade your
 SODAR Core using site to v1.1, you must first upgrade to v1.0 and run
 ``manage.py migrate`` on v1.0 for any development and production instances.
+
+
+v1.0.6 (2025-03-05)
+*******************
+
+Release Highlights
+==================
+
+- Fix missing user data in remote sync with user scope app settings
 
 
 v1.0.5 (2025-02-17)
