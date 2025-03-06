@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``ProjectPermissionTestBase.no_role_users`` helper (#1599)
+
 Changed
 -------
 

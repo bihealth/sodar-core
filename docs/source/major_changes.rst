@@ -16,6 +16,7 @@ v1.1.1 (WIP)
 Release Highlights
 ==================
 
+- Add no_role_users permission test helper
 - Update admin alert email recipients to include admin creator
 - Fix app setting validation issues
 - Fix missing user data in remote sync with user scope app settings (port from

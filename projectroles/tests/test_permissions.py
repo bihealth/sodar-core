@@ -250,6 +250,8 @@ class ProjectPermissionTestBase(
         self.non_superusers = self.all_users[1:]
         # All authenticated non-superusers
         self.auth_non_superusers = self.non_superusers[:-1]
+        # No roles user and anonymous user
+        self.no_role_users = [self.user_no_roles, self.anonymous]
 
 
 class SiteAppPermissionTestBase(
