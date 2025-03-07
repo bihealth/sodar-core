@@ -2870,7 +2870,8 @@ class TestProjectRoleView(
         with self.login(self.user_owner):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['project'].pk, self.project.pk)
+        context = response.context
+        self.assertEqual(context['project'].pk, self.project.pk)
         expected = [
             {
                 'id': self.owner_as.pk,
@@ -2901,21 +2902,18 @@ class TestProjectRoleView(
                 'sodar_uuid': self.guest_as.sodar_uuid,
             },
         ]
+        self.assertEqual([model_to_dict(m) for m in context['roles']], expected)
+        self.assertNotIn('remote_role_url', context)
+        self.assertEqual(context['site_read_only'], False)
         self.assertEqual(
-            [model_to_dict(m) for m in response.context['roles']], expected
-        )
-        self.assertNotIn('remote_role_url', response.context)
-        self.assertEqual(
-            response.context['finder_info'],
+            context['finder_info'],
             ROLE_FINDER_INFO.format(
                 categories='categories', projects='projects'
             ),
         )
-        self.assertEqual(response.context['own_local_as'], self.owner_as)
-        self.assertEqual(response.context['project_leave_access'], False)
-        self.assertEqual(
-            response.context['project_leave_msg'], ROLE_LEAVE_OWNER_MSG
-        )
+        self.assertEqual(context['own_local_as'], self.owner_as)
+        self.assertEqual(context['project_leave_access'], False)
+        self.assertEqual(context['project_leave_msg'], ROLE_LEAVE_OWNER_MSG)
 
     def test_get_inherited(self):
         """Test GET as user with inherited role"""
@@ -2953,8 +2951,18 @@ class TestProjectRoleView(
             ROLE_LEAVE_REMOTE_MSG.format(project_type='Project'),
         )
 
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['site_read_only'], True)
+        self.assertNotIn('project_leave_access', response.context)
+        self.assertNotIn('project_leave_msg', response.context)
+
     def test_get_not_found(self):
-        """Test GET view with invalid project UUID"""
+        """Test GET with invalid project UUID"""
         with self.login(self.user_owner):
             response = self.client.get(
                 reverse(

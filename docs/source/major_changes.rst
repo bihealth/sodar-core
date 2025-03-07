@@ -22,6 +22,8 @@ Release Highlights
 - Fix missing user data in remote sync with user scope app settings (port from
   v1.0.6)
 - Fix invalid legacy values set for project starring app setting
+- Fix project leave button active in site read-only-mode
+- General bug fixes and minor updates
 
 
 v1.1.0 (2025-02-28)

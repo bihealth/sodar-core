@@ -33,6 +33,7 @@ Fixed
     - JSON app setting validation on newly created setting (#1589)
     - User data not added by ``USER`` scope app setting remote sync (port from v1.0.6) (#1593, #1595)
     - Invalid legacy values saved for ``project_star`` app setting (#1596)
+    - Leave project button visible and active in site read-only-mode (#1601)
 
 
 v1.1.0 (2025-02-28)
