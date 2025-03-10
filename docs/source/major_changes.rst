@@ -25,6 +25,14 @@ Release Highlights
 - Fix project leave button active in site read-only-mode
 - General bug fixes and minor updates
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v4.2.20.
+
 
 v1.1.0 (2025-02-28)
 *******************

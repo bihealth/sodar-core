@@ -19,6 +19,8 @@ Changed
 
 - **General**
     - Upgrade GitHub Actions CI runner to Ubuntu v22.04 (#1563)
+    - Upgrade minimum Django version to v4.2.20 (#1586)
+    - Upgrade critical Python dependencies (#1586)
 - **Adminalerts**
     - Improve Django message on email sending (#1585)
     - Update alert email recipients to include admin creator (#1591)
