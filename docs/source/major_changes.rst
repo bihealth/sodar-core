@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.2 (WIP)
+************
+
+Release Highlights
+==================
+
+- Fix adminalerts email sending for users with no primary address
+
+
 v1.1.1 (2025-03-11)
 *******************
 

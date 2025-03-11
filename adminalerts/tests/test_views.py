@@ -229,10 +229,27 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
             mail.outbox[0].recipients(),
             [
                 settings.EMAIL_SENDER,
-                self.superuser.email,
-                self.user_regular.email,
                 ADD_EMAIL,
                 ADD_EMAIL2,
+                self.superuser.email,
+                self.user_regular.email,
+            ],
+        )
+
+    def test_post_no_primary_email(self):
+        """Test POST with no primary additional email on user"""
+        self.user_regular.email = ''
+        self.user_regular.save()
+        self.make_email(self.user_regular, ADD_EMAIL)
+        with self.login(self.superuser):
+            response = self.client.post(self.url, self._get_post_data())
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            mail.outbox[0].recipients(),
+            [
+                settings.EMAIL_SENDER,
+                ADD_EMAIL,  # This should still be added
+                self.superuser.email,
             ],
         )
 
@@ -250,9 +267,9 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
             mail.outbox[0].recipients(),
             [
                 settings.EMAIL_SENDER,
+                ADD_EMAIL,
                 self.superuser.email,
                 self.user_regular.email,
-                ADD_EMAIL,
             ],
         )
 
@@ -271,9 +288,9 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
             mail.outbox[0].recipients(),
             [
                 settings.EMAIL_SENDER,
-                self.superuser.email,
                 'add1@example.com',
                 'add2@example.com',
+                self.superuser.email,
                 self.user_regular.email,
             ],
         )

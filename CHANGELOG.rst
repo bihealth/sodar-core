@@ -5,6 +5,22 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **Adminalerts**
+    - Sort alert emails alphabetically (#1608)
+
+Fixed
+-----
+
+- **Adminalerts**
+    - Alert email not sent for users without primary address (#1607)
+
+
 v1.1.1 (2025-03-11)
 ===================
 
