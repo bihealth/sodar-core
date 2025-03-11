@@ -24,6 +24,8 @@ Changed
 - **Adminalerts**
     - Improve Django message on email sending (#1585)
     - Update alert email recipients to include admin creator (#1591)
+- **Appalerts**
+    - Hide dismiss controls for non-superusers in site read-only mode (#1602)
 - **Projectroles**
     - Improve ``PluginAppSettingDef.validate_value()`` type exceptions (#1588)
 

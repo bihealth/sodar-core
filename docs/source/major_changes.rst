@@ -17,7 +17,8 @@ Release Highlights
 ==================
 
 - Add no_role_users permission test helper
-- Update admin alert email recipients to include admin creator
+- Update adminalerts email recipients to include admin creator
+- Update appalerts UI to disable dismiss links in site read-only mode
 - Fix app setting validation issues
 - Fix missing user data in remote sync with user scope app settings (port from
   v1.0.6)

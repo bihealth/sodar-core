@@ -33,7 +33,7 @@ $(document).ready(function () {
     }
 
     // Handle alert dismissal
-    $('#sodar-app-alert-badge-btn-dismiss').click(function () {
+    $('#sodar-app-alert-badge-dismiss').click(function () {
         $.post({
             url: $(this).attr('data-dismiss-url'),
             method: 'POST',
