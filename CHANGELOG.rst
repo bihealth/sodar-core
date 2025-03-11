@@ -29,6 +29,7 @@ Changed
 - **Projectroles**
     - Improve ``PluginAppSettingDef.validate_value()`` type exceptions (#1588)
     - Update ``sodar-navbar-logo`` element (#1605)
+    - Update remote sync periodic task to support site read-only mode (#1603)
 
 Fixed
 -----

@@ -6,16 +6,22 @@ from django.conf import settings
 
 from config.celery import app
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
 
 
+app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
 
 
 # SODAR constants
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+
+# Local constants
+APP_NAME = 'projectroles'
+READ_ONLY_SKIP_MSG = 'Site read-only mode enabled, skipping'
 
 
 @app.task(bind=True)
@@ -24,6 +30,9 @@ def sync_remote_site_task(_self):
     remote_api = RemoteProjectAPI()
     source_site = RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).first()
     if source_site:
+        if app_settings.get(APP_NAME, 'site_read_only'):
+            logger.info(READ_ONLY_SKIP_MSG)
+            return
         try:
             remote_data = remote_api.get_remote_data(source_site)
             logger.debug(remote_data)
