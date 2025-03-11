@@ -91,15 +91,9 @@ class AdminAlertModifyMixin(ModelFormMixin):
 
     @classmethod
     def _get_email_recipients(cls, alert):
-        """
-        Return list of email addresses for alert email recipients, excluding the
-        alert issuer.
-        """
+        """Return list of email addresses for alert email recipients"""
         ret = []
-        users = User.objects.exclude(sodar_uuid=alert.user.sodar_uuid).order_by(
-            'email'
-        )
-        for u in users:
+        for u in User.objects.order_by('email'):
             if not app_settings.get(APP_NAME, 'notify_email_alert', user=u):
                 continue
             if not u.email:
@@ -155,9 +149,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
         ):
             email_count = self._send_email(form.instance, form_action)
         if email_count > 0:
-            email_msg_suffix = ', {} email{} sent'.format(
-                email_count, 's' if email_count != 1 else ''
-            )
+            email_msg_suffix = ', email sent to site users'
         messages.success(
             self.request, 'Alert {}d{}.'.format(form_action, email_msg_suffix)
         )

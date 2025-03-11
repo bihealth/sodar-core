@@ -43,9 +43,10 @@
           View Dismissed
         </a>
         <a class="dropdown-item sodar-ap-btn-dismiss
-           {% if object_list.count == 0 %}disabled{% endif %}"
+           {% if object_list.count == 0 or read_only_disable %}disabled{% endif %}"
            id="sodar-ap-ops-dismiss-all"
            role="button"
+           {% if read_only_disable %}disabled="disabled"{% endif %}
            data-uuid=""
            data-dismiss-url="{% url 'appalerts:ajax_dismiss_all' %}">
           <i class="iconify" data-icon="mdi:close-thick"></i> Dismiss All
@@ -91,7 +92,7 @@
         </div>
         <div>
           <span class="sodar-app-alert-buttons pull-right">
-            {% if not dismissed %}
+            {% if not dismissed and not read_only_disable %}
               {% if a.url and not a.project or can_view_project %}
                 <a href="{% url 'appalerts:redirect' appalert=a.sodar_uuid %}"
                    class="btn btn-{{ a.level | lower }} sodar-list-btn sodar-ap-btn-link"

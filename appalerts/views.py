@@ -7,12 +7,20 @@ from django.views.generic import ListView, View
 from django.conf import settings
 
 # Projectroles dependency
+from projectroles.app_settings import AppSettingAPI
 from projectroles.views import (
     LoginRequiredMixin,
     LoggedInPermissionMixin,
 )
 
 from appalerts.models import AppAlert
+
+
+app_settings = AppSettingAPI()
+
+
+# Local constants
+APP_NAME_PR = 'projectroles'
 
 
 class AppAlertListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
@@ -42,6 +50,11 @@ class AppAlertListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
         context['dismissed'] = (
             True if self.kwargs.get('status') == 'dismissed' else False
         )
+        context['read_only_disable'] = False
+        if not self.request.user.is_superuser and app_settings.get(
+            APP_NAME_PR, 'site_read_only'
+        ):
+            context['read_only_disable'] = True
         return context
 
 

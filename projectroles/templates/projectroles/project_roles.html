@@ -41,21 +41,23 @@
     {{ project_type_title }} Members
   </h3>
   <div class="ml-auto">
-  <span class="d-inline-block" tabindex="0" data-toggle="tooltip"
-        id="sodar-pr-btn-leave-tooltip"
-        title="{{ project_leave_msg }}">
-    <a role="button" class="btn btn-danger ml-auto"
-       {% if own_local_as %}
-         href="{% url 'projectroles:role_delete_own' roleassignment=own_local_as.sodar_uuid %}"
-       {% else %}
-         href="#"
-       {% endif %}
-       {% if not project_leave_access %}disabled="disabled"{% endif %}
-       id="sodar-pr-btn-leave-project">
-      <i class="iconify" data-icon="mdi:account-remove"></i>
-      Leave {{ project_type_title }}
-    </a>
-  </span>
+    {% if not site_read_only %}
+      <span class="d-inline-block" tabindex="0" data-toggle="tooltip"
+            id="sodar-pr-btn-leave-tooltip"
+            title="{{ project_leave_msg }}">
+        <a role="button" class="btn btn-danger ml-auto"
+           {% if own_local_as %}
+             href="{% url 'projectroles:role_delete_own' roleassignment=own_local_as.sodar_uuid %}"
+           {% else %}
+             href="#"
+           {% endif %}
+           {% if not project_leave_access %}disabled="disabled"{% endif %}
+           id="sodar-pr-btn-leave-project">
+          <i class="iconify" data-icon="mdi:account-remove"></i>
+          Leave {{ project_type_title }}
+        </a>
+    </span>
+  {% endif %}
   {% if role_perms.can_update_members or role_perms.can_invite %}
     {% include 'projectroles/_project_role_ops.html' %}
   {% endif %}

@@ -10,7 +10,7 @@ from projectroles.models import (
     RemoteSite,
     RemoteProject,
 )
-from projectroles.tasks import sync_remote_site_task
+from projectroles.tasks import sync_remote_site_task, READ_ONLY_SKIP_MSG
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -66,21 +66,21 @@ class TestSyncRemoteSiteTask(
             projects=[self.category, self.project_source]
         )
 
-    def test_sync_task(self):
+    def test_sync(self):
         """Test sync_remote_site_task()"""
-        sync_remote_site_task()
-
+        with self.assertLogs('projectroles.tasks', 'INFO') as cm:
+            sync_remote_site_task()
+            self.assertNotIn(READ_ONLY_SKIP_MSG, cm.output[0])  # No skip
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         self.assertEqual(RemoteSite.objects.first().name, self.source_site.name)
         self.assertEqual(RemoteProject.objects.all().count(), 2)
 
-    def test_sync_change_name_task(self):
+    def test_sync_change_name(self):
         """Test sync_remote_site_task() after title change in source site"""
         sync_remote_site_task()
         self.project_source.title = 'new title'
         self.project_source.save()
         sync_remote_site_task()
-
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         self.assertEqual(RemoteSite.objects.first().name, self.source_site.name)
         self.assertEqual(RemoteProject.objects.all().count(), 2)
@@ -91,7 +91,7 @@ class TestSyncRemoteSiteTask(
             'new title',
         )
 
-    def test_sync_change_settings_task(self):
+    def test_sync_change_settings(self):
         """
         Test sync_remote_site_task() after app_settings changes in source site.
         """
@@ -100,7 +100,6 @@ class TestSyncRemoteSiteTask(
             APP_NAME, 'ip_restrict', True, project=self.project_source
         )
         sync_remote_site_task()
-
         self.assertEqual(RemoteSite.objects.all().count(), 1)
         self.assertEqual(RemoteSite.objects.first().name, self.source_site.name)
         self.assertEqual(RemoteProject.objects.all().count(), 2)
@@ -110,3 +109,10 @@ class TestSyncRemoteSiteTask(
             ),
             True,
         )
+
+    def test_sync_read_only(self):
+        """Test sync_remote_site_task() with site read-only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        with self.assertLogs('projectroles.tasks', 'INFO') as cm:
+            sync_remote_site_task()
+            self.assertIn(READ_ONLY_SKIP_MSG, cm.output[0])

@@ -27,6 +27,7 @@ class TestProjectListAjaxViews(ProjectPermissionTestBase):
         self.assert_response(url, self.auth_users, 200)
         self.assert_response(url, self.anonymous, 403)
         self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 200)
         self.assert_response(url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -35,7 +36,7 @@ class TestProjectListAjaxViews(ProjectPermissionTestBase):
         url = reverse('projectroles:ajax_project_list')
         self.assert_response(url, self.anonymous, 200)
         self.project.set_public()
-        self.assert_response(url, self.anonymous, 200)
+        self.assert_response(url, self.no_role_users, 200)
 
     def test_get_project_list_read_only(self):
         """Test ProjectListAjaxView GET with site read-only mode"""
@@ -44,6 +45,7 @@ class TestProjectListAjaxViews(ProjectPermissionTestBase):
         self.assert_response(url, self.auth_users, 200)
         self.assert_response(url, self.anonymous, 403)
         self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 200)
         self.assert_response(url, self.anonymous, 403)
 
     def test_get_project_list_column(self):
@@ -70,6 +72,14 @@ class TestProjectListAjaxViews(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(
             url,
+            self.user_no_roles,
+            200,
+            method='POST',
+            data=data,
+            req_kwargs=req_kwargs,
+        )
+        self.assert_response(
+            url,
             self.anonymous,
             403,
             method='POST',
@@ -86,7 +96,7 @@ class TestProjectListAjaxViews(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(
             url,
-            self.anonymous,
+            self.no_role_users,
             200,
             method='POST',
             data=data,
@@ -140,6 +150,14 @@ class TestProjectListAjaxViews(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(
             url,
+            self.user_no_roles,
+            200,
+            method='POST',
+            data=data,
+            req_kwargs=req_kwargs,
+        )
+        self.assert_response(
+            url,
             self.anonymous,
             403,
             method='POST',
@@ -156,7 +174,7 @@ class TestProjectListAjaxViews(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(
             url,
-            self.anonymous,
+            self.no_role_users,
             200,
             method='POST',
             data=data,
@@ -186,6 +204,14 @@ class TestProjectListAjaxViews(ProjectPermissionTestBase):
             req_kwargs=req_kwargs,
         )
         self.project.set_public()
+        self.assert_response(
+            url,
+            self.user_no_roles,
+            200,
+            method='POST',
+            data=data,
+            req_kwargs=req_kwargs,
+        )
         self.assert_response(
             url,
             self.anonymous,
@@ -228,11 +254,13 @@ class TestProjectStarringAjaxView(ProjectPermissionTestBase):
         self.assert_response(self.url, bad_users, 403, method='POST')
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200, method='POST')
+        self.assert_response(self.url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
         """Test POST with anonymous access"""
         self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 200, method='POST')
         self.assert_response(self.url, self.anonymous, 401, method='POST')
 
     def test_post_read_only(self):
@@ -267,6 +295,7 @@ class TestProjectStarringAjaxView(ProjectPermissionTestBase):
     def test_post_category_anon(self):
         """Test POST with category and anonymous access"""
         self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 200, method='POST')
         self.assert_response(self.url_cat, self.anonymous, 401, method='POST')
 
     def test_post_category_read_only(self):
@@ -323,12 +352,13 @@ class TestRemoteProjectAccessAjaxView(
         self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
+        self.assert_response(self.url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
         self.project.set_public()
-        self.assert_response(self.url, self.anonymous, 200)
+        self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
         """Test GET with archived project"""
@@ -392,12 +422,13 @@ class TestSidebarContentAjaxView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.bad_users, 403)
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
+        self.assert_response(self.url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
         self.project.set_public()
-        self.assert_response(self.url, self.anonymous, 200)
+        self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
         """Test GET with archived project"""
@@ -422,7 +453,7 @@ class TestSidebarContentAjaxView(ProjectPermissionTestBase):
     def test_get_category_anon(self):
         """Test GET with category and anonymous access"""
         self.project.set_public()
-        self.assert_response(self.url_cat, self.anonymous, 200)
+        self.assert_response(self.url_cat, self.no_role_users, 200)
 
     def test_get_category_read_only(self):
         """Test GET with category and site read-only mode"""
@@ -446,7 +477,7 @@ class TestSiteReadOnlySettingAjaxView(ProjectPermissionTestBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.assert_response(self.url, self.anonymous, 200)
+        self.assert_response(self.url, self.no_role_users, 200)
 
 
 class TestUserDropdownContentAjaxView(ProjectPermissionTestBase):

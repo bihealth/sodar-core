@@ -188,12 +188,13 @@ class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
         self.project.set_public()
-        self.assert_response_api(self.url, self.anonymous, 200)
+        self.assert_response_api(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
         """Test GET with archived project"""
@@ -205,6 +206,7 @@ class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -242,7 +244,7 @@ class TestProjectCreateAPIView(ProjectrolesAPIPermissionTestBase):
 
     def test_post_top(self):
         """Test ProjectCreateAPIView POST on top level"""
-        good_users = [self.superuser]
+        good_users = self.superuser
         bad_users = self.auth_non_superusers
         self.assert_response_api(
             self.url,
@@ -280,6 +282,13 @@ class TestProjectCreateAPIView(ProjectrolesAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             data=self.post_data,
         )
@@ -371,6 +380,13 @@ class TestProjectCreateAPIView(ProjectrolesAPIPermissionTestBase):
             403,
             method='POST',
             data=self.post_data_parent,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            data=self.post_data,
         )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -474,6 +490,9 @@ class TestProjectUpdateAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
         )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_put_anon(self):
@@ -513,6 +532,9 @@ class TestProjectUpdateAPIView(ProjectrolesAPIPermissionTestBase):
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
 
     def test_put_read_only(self):
@@ -645,6 +667,7 @@ class TestProjectDestroyAPIView(
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     def test_delete_category_with_children(self):
         """Test DELETE for category with children (should fail)"""
@@ -661,6 +684,7 @@ class TestProjectDestroyAPIView(
         self.assert_response_api(
             self.url_cat, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     def test_delete_category_without_children(self):
         """Test DELETE for category without children"""
@@ -711,6 +735,7 @@ class TestProjectDestroyAPIView(
         self.assert_response_api(
             self.url_cat, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     def test_delete_remote_revoked(self):
         """Test DELETE with revoked remote project"""
@@ -766,6 +791,7 @@ class TestProjectDestroyAPIView(
         self.assert_response_api(
             self.url_cat, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_delete_remote_revoked_target(self):
@@ -872,6 +898,13 @@ class TestRoleAssignmentCreateAPIView(ProjectrolesAPIPermissionTestBase):
             method='POST',
             data=self.post_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            data=self.post_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -920,6 +953,13 @@ class TestRoleAssignmentCreateAPIView(ProjectrolesAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             data=self.post_data,
         )
@@ -1011,6 +1051,9 @@ class TestRoleAssignmentUpdateAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
         )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_put_anon(self):
@@ -1051,6 +1094,9 @@ class TestRoleAssignmentUpdateAPIView(ProjectrolesAPIPermissionTestBase):
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
 
     def test_put_read_only(self):
@@ -1132,6 +1178,7 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_delete_anon(self):
@@ -1166,6 +1213,7 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     def test_delete_read_only(self):
         """Test DELETE with site read-only mode"""
@@ -1265,6 +1313,13 @@ class TestRoleAssignmentOwnerTransferAPIView(ProjectrolesAPIPermissionTestBase):
             method='POST',
             data=self.post_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            data=self.post_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -1313,6 +1368,13 @@ class TestRoleAssignmentOwnerTransferAPIView(ProjectrolesAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             data=self.post_data,
         )
@@ -1373,6 +1435,7 @@ class TestProjectInviteListAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -1389,6 +1452,7 @@ class TestProjectInviteListAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with archived project and site read-only mode"""
@@ -1472,6 +1536,13 @@ class TestProjectInviteCreateAPIView(ProjectrolesAPIPermissionTestBase):
             method='POST',
             data=self.post_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            data=self.post_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -1520,6 +1591,13 @@ class TestProjectInviteCreateAPIView(ProjectrolesAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             data=self.post_data,
         )
@@ -1608,6 +1686,7 @@ class TestProjectInviteRevokeAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='POST'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='POST')
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -1642,6 +1721,7 @@ class TestProjectInviteRevokeAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='POST'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='POST')
 
     def test_post_read_only(self):
         """Test POST with site read-only mode"""
@@ -1709,6 +1789,7 @@ class TestProjectInviteResendAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='POST'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='POST')
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -1736,6 +1817,7 @@ class TestProjectInviteResendAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='POST'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='POST')
 
     def test_post_read_only(self):
         """Test POST with site read-only mode"""
@@ -1802,6 +1884,9 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, data=self.get_data
         )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, data=self.get_data
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_project_setting_anon(self):
@@ -1838,6 +1923,9 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, data=self.get_data
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, data=self.get_data
         )
 
     def test_get_project_setting_read_only(self):
@@ -1891,6 +1979,9 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, data=get_data
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, data=self.get_data
         )
 
     def test_get_project_user_setting_read_only(self):
@@ -1991,6 +2082,13 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
             method='POST',
             data=self.post_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            data=self.post_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_project_setting_anon(self):
@@ -2041,6 +2139,13 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             data=self.post_data,
         )
@@ -2113,6 +2218,13 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='POST', data=post_data
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            data=post_data,
         )
 
     def test_post_project_user_setting_read_only(self):

@@ -2393,11 +2393,25 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
         self.assertEqual(elem.get_attribute('disabled'), 'true')
 
+    def test_leave_button_owner_read_only(self):
+        """Test rendering leave project button as owner with site read-only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        self.login_and_redirect(self.user_owner, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+
     def test_leave_button_contributor(self):
         """Test rendering leave project button as contributor"""
         self.login_and_redirect(self.user_contributor, self.url)
         elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
         self.assertIsNone(elem.get_attribute('disabled'))
+
+    def test_leave_button_contributor_read_only(self):
+        """Test rendering leave project button as contributor with site read-only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        self.login_and_redirect(self.user_contributor, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
 
     def test_leave_button_inherit(self):
         """Test rendering leave project button as inherited contributor"""

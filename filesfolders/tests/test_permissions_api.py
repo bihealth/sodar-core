@@ -68,6 +68,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -84,6 +85,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -134,6 +136,13 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             method='POST',
             data=self.post_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            data=self.post_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -172,6 +181,13 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             data=self.post_data,
         )
@@ -255,6 +271,7 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -272,6 +289,7 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.anonymous, 401)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -313,6 +331,9 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
         )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_put_anon(self):
@@ -341,6 +362,9 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
 
     def test_put_read_only(self):
@@ -395,6 +419,13 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             method='PATCH',
             data=self.patch_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='PATCH',
+            data=self.patch_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_patch_anon(self):
@@ -425,6 +456,13 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='PATCH',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='PATCH',
             data=self.patch_data,
         )
@@ -471,6 +509,13 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='PATCH',
+            data=self.patch_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_delete_anon(self):
@@ -495,6 +540,13 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='PATCH',
+            data=self.patch_data,
         )
 
     def test_delete_read_only(self):
@@ -563,6 +615,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -579,6 +632,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -589,6 +643,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_post(self):
         """Test FileListCreateAPIView POST"""
@@ -656,6 +711,15 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             data=self.post_data,
             cleanup_method=self._cleanup,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            format='multipart',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -718,6 +782,15 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            format='multipart',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             format='multipart',
             data=self.post_data,
@@ -823,6 +896,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -839,6 +913,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -896,6 +971,14 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             format='multipart',
             data=self.put_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='PUT',
+            format='multipart',
+            data=self.put_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_put_anon(self):
@@ -947,6 +1030,14 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='PUT',
+            format='multipart',
+            data=self.put_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='PUT',
             format='multipart',
             data=self.put_data,
@@ -1028,6 +1119,14 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             format='multipart',
             data=self.patch_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='PATCH',
+            format='multipart',
+            data=self.patch_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_patch_anon(self):
@@ -1075,6 +1174,14 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='PATCH',
+            format='multipart',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='PATCH',
             format='multipart',
             data=self.patch_data,
@@ -1136,6 +1243,12 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             403,
             method='DELETE',
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='DELETE',
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_delete_anon(self):
@@ -1161,6 +1274,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     def test_delete_read_only(self):
         """Test DELETE with site read-only mode"""
@@ -1208,6 +1322,7 @@ class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -1224,6 +1339,7 @@ class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -1273,6 +1389,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -1289,6 +1406,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -1346,6 +1464,13 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             method='POST',
             data=self.post_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='POST',
+            data=self.post_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
@@ -1390,6 +1515,13 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.url,
             self.user_no_roles,
             403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='POST',
             data=self.post_data,
         )
@@ -1483,6 +1615,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -1501,6 +1634,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
         self.assert_response_api(self.url, self.good_users_get, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -1542,6 +1676,9 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
         )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_put_anon(self):
@@ -1578,6 +1715,9 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='PUT', data=self.put_data
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
 
     def test_put_read_only(self):
@@ -1632,6 +1772,13 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
             method='PATCH',
             data=self.patch_data,
         )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
+            method='PATCH',
+            data=self.patch_data,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_patch_anon(self):
@@ -1670,6 +1817,13 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
             self.url,
             self.user_no_roles,
             403,
+            method='PATCH',
+            data=self.patch_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.anonymous,
+            401,
             method='PATCH',
             data=self.patch_data,
         )
@@ -1720,6 +1874,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
             403,
             method='DELETE',
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_delete_anon(self):
@@ -1753,6 +1908,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
         )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
     def test_delete_read_only(self):
         """Test DELETE with site read-only mode"""

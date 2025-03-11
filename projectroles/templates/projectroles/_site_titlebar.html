@@ -12,6 +12,7 @@
 {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 {% get_django_setting 'PROJECTROLES_ALLOW_ANONYMOUS' as allow_anon %}
 {% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
+{% get_app_setting 'projectroles' 'site_read_only' as site_read_only %}
 {% static_file_exists 'images/logo_navbar.png' as logo_exists %}
 {% check_backend 'appalerts_backend' as appalerts_active %}
 
@@ -22,7 +23,8 @@
     {# Site title #}
     <a class="navbar-brand" id="sodar-base-navbar-brand" href="/">
       {% if logo_exists %}
-        <img class="sodar-navbar-logo" src="{% static 'images/logo_navbar.png' %}" />
+        <img id="sodar-navbar-logo" alt="{{ site_title }}"
+             src="{% static 'images/logo_navbar.png' %}" />
       {% endif %}
       {{ site_title }}
       {% if site_subtitle %}<span class="text-warning">{{ site_subtitle }}</span>{% endif %}
@@ -55,12 +57,14 @@
                      id="sodar-app-alert-icon"></i>
                   <span id="sodar-app-alert-count">{{ app_alerts }}</span>
                   <span id="sodar-app-alert-legend">alert{% if app_alerts != 1 %}s{% endif %}</span>
-                  <a id="sodar-app-alert-badge-btn-dismiss"
-                     class="text-white ml-1" role="button"
-                     title="Dismiss all" data-toggle="tooltip"
-                     data-dismiss-url="{% url 'appalerts:ajax_dismiss_all' %}">
-                    <i class="iconify" data-icon="mdi:close-thick"></i>
-                  </a>
+                  {% if request.user.is_superuser or not site_read_only %}
+                    <a id="sodar-app-alert-badge-dismiss"
+                       class="text-white ml-1" role="button"
+                       title="Dismiss all" data-toggle="tooltip"
+                       data-dismiss-url="{% url 'appalerts:ajax_dismiss_all' %}">
+                      <i class="iconify" data-icon="mdi:close-thick"></i>
+                    </a>
+                  {% endif %}
                 </div>
               </a>
             </div>

@@ -1932,11 +1932,16 @@ class ProjectRoleView(
             categories=get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
             projects=get_display_name(PROJECT_TYPE_PROJECT, plural=True),
         )
+        context['site_read_only'] = app_settings.get(APP_NAME, 'site_read_only')
         if self.request.user.is_authenticated:
             own_local_as = RoleAssignment.objects.filter(
                 project=project, user=self.request.user
             ).first()
             context['own_local_as'] = own_local_as
+            # If site read-only mode is set, we can skip the rest as the button
+            # is hidden
+            if context['site_read_only']:
+                return context
             context['project_leave_access'] = (
                 own_local_as is not None
                 and own_local_as.role.rank > ROLE_RANKING[PROJECT_ROLE_OWNER]

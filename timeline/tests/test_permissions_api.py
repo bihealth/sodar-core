@@ -56,6 +56,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
@@ -72,6 +73,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""

@@ -37,7 +37,7 @@ pytz>=2024.2
 django-iconify==0.3  # NOTE: v0.4 requires Python>=3.10
 
 # OpenID Connect (OIDC) authentication support
-social-auth-app-django>=5.4.2, <5.5
+social-auth-app-django>=5.4.3, <5.5
 
 # Online documentation via django-docs
 docutils==0.21.2

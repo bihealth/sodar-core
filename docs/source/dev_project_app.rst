@@ -175,7 +175,7 @@ app if needed.
     read-only mode is contained in the ``can_modify_project_data()`` predicate.
     If your view already uses that predicate, no further steps are necessary.
     For site views, ``is_site_writable`` should be used. For more information,
-    see :ref:`dev_resources_read_only`.
+    see :ref:`dev_resource_read_only`.
 
 
 ProjectAppPlugin

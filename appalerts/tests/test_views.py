@@ -1,10 +1,20 @@
-"""View tests for the appalerts app"""
+"""UI and Ajax view tests for the appalerts app"""
 
 from django.urls import reverse
 
 from test_plus.test import TestCase
 
+# Projectroles dependency
+from projectroles.app_settings import AppSettingAPI
+
 from appalerts.tests.test_models import AppAlertMixin
+
+
+app_settings = AppSettingAPI()
+
+
+# Local constants
+APP_NAME_PR = 'projectroles'
 
 
 class ViewTestBase(AppAlertMixin, TestCase):
@@ -27,86 +37,98 @@ class ViewTestBase(AppAlertMixin, TestCase):
 
 
 class TestAppAlertListView(ViewTestBase):
-    """Tests for the alert list view"""
+    """Tests for AppAlertListView"""
 
-    def test_render_superuser(self):
-        """Test rendering of the alert list view as superuser"""
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('appalerts:list')
+
+    def test_get_superuser(self):
+        """Test AppAlertListView GET as superuser"""
         with self.login(self.superuser):
-            response = self.client.get(reverse('appalerts:list'))
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object_list'].count(), 0)
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object_list'].count(), 0)
+        self.assertEqual(response.context['read_only_disable'], False)
 
-    def test_render_regular_user(self):
-        """Test rendering as user with an assigned alert"""
+    def test_get_regular_user(self):
+        """Test GET as user with assigned alert"""
         with self.login(self.regular_user):
-            response = self.client.get(reverse('appalerts:list'))
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object_list'].count(), 1)
-            self.assertEqual(
-                response.context['object_list'][0].pk, self.alert.pk
-            )
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object_list'].count(), 1)
+        self.assertEqual(response.context['object_list'][0].pk, self.alert.pk)
+        self.assertEqual(response.context['read_only_disable'], False)
 
-    def test_render_no_alert_user(self):
-        """Test rendering of the alert list view as user without alerts"""
+    def test_get_no_alert_user(self):
+        """Test GET as user without alerts"""
         with self.login(self.no_alert_user):
-            response = self.client.get(reverse('appalerts:list'))
+            response = self.client.get(self.url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object_list'].count(), 0)
+        self.assertEqual(response.context['object_list'].count(), 0)
+        self.assertEqual(response.context['read_only_disable'], False)
+
+    def test_get_read_only_superuser(self):
+        """Test GET with site read-only mode as superuser"""
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
+        with self.login(self.superuser):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['read_only_disable'], False)
+
+    def test_get_read_only_regular_user(self):
+        """Test GET with site read-only mode as regular user"""
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
+        with self.login(self.regular_user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['read_only_disable'], True)
 
 
 class TestAppAlertRedirectView(ViewTestBase):
-    """Tests for the alert redirect view"""
+    """Tests for AppAlertLinkRedirectView"""
 
-    list_url = reverse('appalerts:list')
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'appalerts:redirect',
+            kwargs={'appalert': self.alert.sodar_uuid},
+        )
+        self.list_url = reverse('appalerts:list')
 
-    def test_redirect_superuser(self):
-        """Test redirecting as superuser"""
+    def test_get_superuser(self):
+        """Test AppAlertLinkRedirectView GET as superuser"""
         self.assertEqual(self.alert.active, True)
         with self.login(self.superuser):
-            response = self.client.get(
-                reverse(
-                    'appalerts:redirect',
-                    kwargs={'appalert': self.alert.sodar_uuid},
-                )
-            )
+            response = self.client.get(self.url)
             self.assertRedirects(response, self.list_url)
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, True)
 
-    def test_redirect_regular_user(self):
-        """Test redirecting as user with assigned alert"""
+    def test_get_regular_user(self):
+        """Test GET as user with assigned alert"""
         self.assertEqual(self.alert.active, True)
         with self.login(self.regular_user):
-            response = self.client.get(
-                reverse(
-                    'appalerts:redirect',
-                    kwargs={'appalert': self.alert.sodar_uuid},
-                )
-            )
+            response = self.client.get(self.url)
             self.assertRedirects(response, self.alert.url)
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, False)
 
-    def test_redirect_no_alert_user(self):
-        """Test redirecting as user without alerts"""
+    def test_get_no_alert_user(self):
+        """Test GET as user without alerts"""
         self.assertEqual(self.alert.active, True)
         with self.login(self.no_alert_user):
-            response = self.client.get(
-                reverse(
-                    'appalerts:redirect',
-                    kwargs={'appalert': self.alert.sodar_uuid},
-                )
-            )
+            response = self.client.get(self.url)
             self.assertRedirects(response, self.list_url)
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, True)
 
 
 class TestAppAlertStatusAjaxView(ViewTestBase):
-    """Tests for the alert status ajax view"""
+    """Tests for AppAlertStatusAjaxView"""
 
     def test_get_user_with_alerts(self):
-        """Test GET as user with alert assigned"""
+        """Test AppAlertStatusAjaxView GET as user with alert assigned"""
         with self.login(self.regular_user):
             response = self.client.get(reverse('appalerts:ajax_status'))
             self.assertEqual(response.status_code, 200)
@@ -121,10 +143,10 @@ class TestAppAlertStatusAjaxView(ViewTestBase):
 
 
 class TestAppAlertDismissAjaxView(ViewTestBase):
-    """Tests for the alert dismissal ajax view"""
+    """Tests for AppAlertDismissAjaxView"""
 
     def test_post_superuser(self):
-        """Test post as superuser"""
+        """Test AppAlertDismissAjaxView POST as superuser"""
         self.assertEqual(self.alert.active, True)
         with self.login(self.superuser):
             response = self.client.post(
@@ -138,7 +160,7 @@ class TestAppAlertDismissAjaxView(ViewTestBase):
         self.assertEqual(self.alert.active, True)
 
     def test_post_regular_user(self):
-        """Test post as user with assigned alert"""
+        """Test POST as user with assigned alert"""
         self.assertEqual(self.alert.active, True)
         with self.login(self.regular_user):
             response = self.client.post(
@@ -152,7 +174,7 @@ class TestAppAlertDismissAjaxView(ViewTestBase):
         self.assertEqual(self.alert.active, False)
 
     def test_post_no_alert_user(self):
-        """Test post as user without alerts"""
+        """Test POST as user without alerts"""
         self.assertEqual(self.alert.active, True)
         with self.login(self.no_alert_user):
             response = self.client.post(
@@ -166,7 +188,7 @@ class TestAppAlertDismissAjaxView(ViewTestBase):
         self.assertEqual(self.alert.active, True)
 
     def test_post_regular_user_all(self):
-        """Test post as user dismissing all alerts"""
+        """Test POST as user dismissing all alerts"""
         self.assertEqual(self.alert.active, True)
         with self.login(self.regular_user):
             response = self.client.post(reverse('appalerts:ajax_dismiss_all'))
@@ -175,7 +197,7 @@ class TestAppAlertDismissAjaxView(ViewTestBase):
         self.assertEqual(self.alert.active, False)
 
     def test_post_no_alert_user_all(self):
-        """Test post as user without alerts trying to dismiss all"""
+        """Test POST as user without alerts trying to dismiss all"""
         self.assertEqual(self.alert.active, True)
         with self.login(self.no_alert_user):
             response = self.client.post(reverse('appalerts:ajax_dismiss_all'))

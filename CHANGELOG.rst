@@ -5,6 +5,44 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.1.1 (2025-03-11)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``ProjectPermissionTestBase.no_role_users`` helper (#1599)
+
+Changed
+-------
+
+- **General**
+    - Upgrade GitHub Actions CI runner to Ubuntu v22.04 (#1563)
+    - Upgrade minimum Django version to v4.2.20 (#1586)
+    - Upgrade critical Python dependencies (#1586)
+    - Update permission tests for no role and anon user checks (#1598)
+- **Adminalerts**
+    - Improve Django message on email sending (#1585)
+    - Update alert email recipients to include admin creator (#1591)
+- **Appalerts**
+    - Hide dismiss controls for non-superusers in site read-only mode (#1602)
+- **Projectroles**
+    - Improve ``PluginAppSettingDef.validate_value()`` type exceptions (#1588)
+    - Update ``sodar-navbar-logo`` element (#1605)
+    - Update remote sync periodic task to support site read-only mode (#1603)
+
+Fixed
+-----
+
+- **Projectroles**
+    - App setting dict ``user_modifiable`` default with ``PROJECT_USER`` scope (#1587)
+    - JSON app setting validation on newly created setting (#1589)
+    - User data not added by ``USER`` scope app setting remote sync (port from v1.0.6) (#1593, #1595)
+    - Invalid legacy values saved for ``project_star`` app setting (#1596)
+    - Leave project button visible and active in site read-only-mode (#1601)
+
+
 v1.1.0 (2025-02-28)
 ===================
 
@@ -126,6 +164,16 @@ Removed
     - ``AppSettingAPI.get_global_value()`` helper (#1394, #1533)
 - **Timeline**
     - Support for deprecated ``get_object_link()`` return values as dict (#1398)
+
+
+v1.0.6 (2025-03-05)
+===================
+
+Fixed
+-----
+
+- **Projectroles**
+   - User data not added by ``USER`` scope app setting remote sync (#1593)
 
 
 v1.0.5 (2025-02-17)
