@@ -44,7 +44,7 @@ class TestProjectTimelineView(ProjectPermissionTestBase):
     def test_get_anon(self):
         """Test GET with anonynomus access"""
         self.project.set_public()
-        self.assert_response(self.url, self.anonymous, 200)
+        self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
         """Test GET with archived project"""
@@ -77,6 +77,7 @@ class TestSiteTimelineView(ProjectPermissionTestBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonynomus access"""
+        self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_read_only(self):
@@ -101,7 +102,7 @@ class TestAdminTimelineView(ProjectPermissionTestBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.assert_response(self.url, self.anonymous, 302)
+        self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -152,7 +153,7 @@ class TestProjectObjectTimelineView(ProjectPermissionTestBase):
     def test_project_event_object_list_anon(self):
         """Test GET with anonynomus access"""
         self.project.set_public()
-        self.assert_response(self.url, self.anonymous, 200)
+        self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
         """Test GET with archived project"""
@@ -195,6 +196,7 @@ class TestSiteObjectTimelineView(ProjectPermissionTestBase):
     def test_get_anon(self):
         """Test GET with anonymous access"""
         self.project.set_public()
+        self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_read_only(self):
