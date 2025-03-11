@@ -23,7 +23,8 @@
     {# Site title #}
     <a class="navbar-brand" id="sodar-base-navbar-brand" href="/">
       {% if logo_exists %}
-        <img class="sodar-navbar-logo" src="{% static 'images/logo_navbar.png' %}" />
+        <img id="sodar-navbar-logo" alt="{{ site_title }}"
+             src="{% static 'images/logo_navbar.png' %}" />
       {% endif %}
       {{ site_title }}
       {% if site_subtitle %}<span class="text-warning">{{ site_subtitle }}</span>{% endif %}
