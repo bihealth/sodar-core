@@ -469,7 +469,7 @@ when creating multi-plugin apps:
   This, again, ensures apps are correctly detected and highlighted in the UI.
 
 
-.. _dev_resources_read_only:
+.. _dev_resource_read_only:
 
 Site Read-Only Mode
 ===================

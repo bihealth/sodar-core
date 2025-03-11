@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.1.1 (WIP)
-************
+v1.1.1 (2025-03-11)
+*******************
 
 Release Highlights
 ==================
@@ -33,7 +33,8 @@ Breaking Changes
 System Prerequisites
 --------------------
 
-The minimum Django version has been bumped to v4.2.20.
+- The minimum Django version has been bumped to v4.2.20.
+- The minimum social-auth-app-django version has been bumped to v5.4.3.
 
 
 v1.1.0 (2025-02-28)
@@ -93,7 +94,7 @@ Site Read-Only Mode
 This release adds the site-wide read-only mode, which is intended to temporarily
 prohibit modifying all data on the site. Rules, logic and/or UI of your apps'
 views may have to be changed to support this functionality. For more
-information, see :ref:`dev_resources_read_only`.
+information, see :ref:`dev_resource_read_only`.
 
 Project Deletion
 ----------------
