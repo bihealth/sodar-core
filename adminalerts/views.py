@@ -18,7 +18,7 @@ from django.views.generic.edit import ModelFormMixin
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.email import get_email_user, get_user_addr, send_generic_mail
+from projectroles.email import get_user_addr, send_generic_mail
 from projectroles.views import (
     LoggedInPermissionMixin,
     HTTPRefererMixin,
@@ -116,7 +116,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
         )
         body = EMAIL_BODY.format(
             action=action,
-            issuer=get_email_user(alert.user),
+            issuer=alert.user.get_display_name(inc_user=True),
             message=alert.message,
         )
         if alert.description:

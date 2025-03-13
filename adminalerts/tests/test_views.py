@@ -50,6 +50,7 @@ class AdminalertsViewTestBase(
         self.superuser = self.make_user('superuser')
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
+        self.superuser.email = 'superuser@example.com'
         self.superuser.save()
         self.user_regular = self.make_user('user_regular')
         # No user
@@ -150,6 +151,7 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
         self.assertIn(ALERT_MSG, mail.outbox[0].body)
         self.assertIn(EMAIL_DESC_LEGEND, mail.outbox[0].body)
         self.assertIn(ALERT_DESC, mail.outbox[0].body)
+        self.assertNotIn(self.superuser.email, mail.outbox[0].body)
 
     def test_post_no_description(self):
         """Test POST with no description"""

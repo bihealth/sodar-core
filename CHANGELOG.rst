@@ -13,6 +13,7 @@ Changed
 
 - **Adminalerts**
     - Sort alert emails alphabetically (#1608)
+    - Hide admin email address in alert template and email (#1612)
 
 Fixed
 -----

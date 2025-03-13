@@ -28,11 +28,7 @@
         <dt class="col-md-2">Expires</dt>
         <dd class="col-md-10">{{ object.date_expire|date:'Y-m-d' }}</dd>
         <dt class="col-md-2">Last Edited By</dt>
-        <dd class="col-md-10">
-          {% autoescape off %}
-            {% get_user_html object.user %}
-          {% endautoescape %}
-        </dd>
+        <dd class="col-md-10">{{ object.user.get_display_name }}</dd>
         {% if object.description.raw %}
           <dd class="col-md-12 px-0 mx-0 mb-0">
             <hr />

@@ -16,6 +16,7 @@ v1.1.2 (WIP)
 Release Highlights
 ==================
 
+- Update adminalerts email sending to hide admin user email address
 - Fix adminalerts email sending for users with no primary address
 
 
