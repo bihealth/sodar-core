@@ -14,6 +14,7 @@ Added
 - **Projectroles**
     - ``PROJECTROLES_SUPPORT_CONTACT`` Django setting (#1613)
     - ``PROJECTROLES_SUPPORT_CONTACT`` usage in ``get_email_footer()`` (#1613)
+    - ``split()`` common template filter tag (#1616)
 
 Changed
 -------

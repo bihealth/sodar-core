@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add optional support contact setting and usage
+- Add common template filter tag split()
 - Update adminalerts email sending to hide admin user email address
 - Fix Django check crash with no database connection
 - Fix adminalerts email sending for users with no primary address
