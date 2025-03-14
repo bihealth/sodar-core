@@ -5,6 +5,34 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.1.2 (2025-03-14)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``PROJECTROLES_SUPPORT_CONTACT`` Django setting (#1613)
+    - ``PROJECTROLES_SUPPORT_CONTACT`` usage in ``get_email_footer()`` (#1613)
+    - ``split()`` common template filter tag (#1616)
+
+Changed
+-------
+
+- **Adminalerts**
+    - Sort alert emails alphabetically (#1608)
+    - Hide admin email address in alert template and email (#1612)
+
+Fixed
+-----
+
+- **Adminalerts**
+    - Alert email not sent for users without primary address (#1607)
+- **Projectroles**
+    - ``check_app_setting_defs()`` crash with no database connection (#1615)
+    - Sporadic UI test failures in ``test_submit_button()`` (#1618)
+
+
 v1.1.1 (2025-03-11)
 ===================
 

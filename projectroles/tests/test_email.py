@@ -300,13 +300,37 @@ class TestEmailSending(
     def test_get_email_footer(self):
         """Test get_email_footer() with default admin"""
         footer = get_email_footer(self.request)
+        self.assertIn(
+            settings.PROJECTROLES_SUPPORT_CONTACT.split(':')[0], footer
+        )
+        self.assertIn(
+            settings.PROJECTROLES_SUPPORT_CONTACT.split(':')[1], footer
+        )
+        self.assertIn(self._get_settings_link(), footer)
+
+    @override_settings(PROJECTROLES_SUPPORT_CONTACT=None)
+    def test_get_email_footer_no_support_contact(self):
+        """Test get_email_footer() with no support contact"""
+        footer = get_email_footer(self.request)
         self.assertIn(settings.ADMINS[0][0], footer)
         self.assertIn(settings.ADMINS[0][1], footer)
         self.assertIn(self._get_settings_link(), footer)
 
     @override_settings(ADMINS=[])
     def test_get_email_footer_no_admin(self):
-        """Test get_email_footer() with empty admin list"""
+        """Test get_email_footer() with no admins"""
+        footer = get_email_footer(self.request)
+        self.assertIn(
+            settings.PROJECTROLES_SUPPORT_CONTACT.split(':')[0], footer
+        )
+        self.assertIn(
+            settings.PROJECTROLES_SUPPORT_CONTACT.split(':')[1], footer
+        )
+        self.assertIn(self._get_settings_link(), footer)
+
+    @override_settings(ADMINS=[], PROJECTROLES_SUPPORT_CONTACT=None)
+    def test_get_email_footer_no_admin_no_support(self):
+        """Test get_email_footer() with no admins and no support contact"""
         self.assertEqual(
             get_email_footer(self.request), self._get_settings_link()
         )
@@ -314,8 +338,12 @@ class TestEmailSending(
     def test_get_email_footer_no_settings(self):
         """Test get_email_footer() with no settings link"""
         footer = get_email_footer(self.request, settings_link=False)
-        self.assertIn(settings.ADMINS[0][0], footer)
-        self.assertIn(settings.ADMINS[0][1], footer)
+        self.assertIn(
+            settings.PROJECTROLES_SUPPORT_CONTACT.split(':')[0], footer
+        )
+        self.assertIn(
+            settings.PROJECTROLES_SUPPORT_CONTACT.split(':')[1], footer
+        )
         self.assertNotIn(self._get_settings_link(), footer)
 
     @override_settings(PROJECTROLES_EMAIL_HEADER=CUSTOM_HEADER)

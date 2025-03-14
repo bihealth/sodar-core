@@ -647,6 +647,8 @@ PROJECTROLES_READ_ONLY_MSG = env.str('PROJECTROLES_READ_ONLY_MSG', None)
 PROJECTROLES_API_USER_DETAIL_RESTRICT = env.bool(
     'PROJECTROLES_API_USER_DETAIL_RESTRICT', False
 )
+# Support contact to be displayed for users, overrides ADMINS. Set as name:email
+PROJECTROLES_SUPPORT_CONTACT = env.str('PROJECTROLES_SUPPORT_CONTACT', None)
 
 # Hide project apps from the UI (sidebar, dropdown menus and project details)
 PROJECTROLES_HIDE_PROJECT_APPS = env.list(

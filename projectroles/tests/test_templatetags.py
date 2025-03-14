@@ -334,7 +334,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         self.assertEqual(c_tags.get_backend_include(APP_NAME_FF, 'js'), '')
 
     def test_include_none_value(self):
-        """Test get_backend_include none attribute check"""
+        """Test get_backend_include() none attribute check"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
         backend_plugin = get_active_plugins('backend')[0]
         type(backend_plugin).javascript_url = None
@@ -348,7 +348,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         )
 
     def test_include_invalid_url(self):
-        """Test get_backend_include file existence check"""
+        """Test get_backend_include() file existence check"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
         backend_plugin = get_active_plugins('backend')[0]
 
@@ -367,7 +367,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         )
 
     def test_get_backend_include(self):
-        """Test get_backend_include"""
+        """Test get_backend_include()"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
         backend_plugin = get_active_plugins('backend')[0]
 
@@ -386,6 +386,11 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             '<link rel="stylesheet" type="text/css" '
             'href="/static/example_backend_app/css/greeting.css"/>',
         )
+
+    def test_split(self):
+        """Test split()"""
+        s = 'xyz'
+        self.assertEqual(c_tags.split(s, 'y'), ['x', 'z'])
 
 
 class TestProjectrolesRoleTags(TemplateTagTestBase):

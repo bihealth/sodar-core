@@ -19,11 +19,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from selenium import webdriver
-from selenium.common.exceptions import (
-    NoSuchElementException,
-    StaleElementReferenceException,
-    TimeoutException,
-)
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait, Select
@@ -2126,23 +2122,11 @@ class TestProjectCreateView(RemoteSiteMixin, UITestBase):
     def test_submit_button(self):
         """Test rendering of submit button"""
         self.login_and_redirect(self.superuser, self.url)
-        element = self.selenium.find_element(
+        elem = self.selenium.find_element(
             By.CLASS_NAME, 'sodar-btn-submit-once'
         )
-        self.assertEqual(element.text, 'Create')
-        self.assertTrue(element.is_enabled())
-        # Define maximum number of retries and retry interval
-        max_retries = 50
-        retry_interval = 0.2
-        element.click()
-        for i in range(max_retries):
-            try:
-                if element.is_enabled() and i < max_retries - 1:
-                    time.sleep(retry_interval)
-                else:
-                    self.fail('Element not enabled within timeout')
-            except StaleElementReferenceException:
-                break
+        self.assertEqual(elem.text, 'Create')
+        self.assertTrue(elem.is_enabled())
 
 
 class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):

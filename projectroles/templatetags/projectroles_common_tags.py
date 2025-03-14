@@ -317,3 +317,9 @@ def get_class(obj, lower=False):
     """Return object class as string"""
     c = obj.__class__.__name__
     return c.lower() if lower else c
+
+
+@register.filter
+def split(s, sep):
+    """Split string by separator"""
+    return s.split(sep)

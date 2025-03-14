@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from django.core.checks import Error, Warning, register
+from django.db import connection
 
 from projectroles import app_settings
 from projectroles.plugins import get_active_plugins
@@ -43,7 +44,13 @@ def check_app_setting_defs(app_configs, **kwargs):
     """
     Check provided plugin app setting definitions to ensure the name of each
     definition is unique within its app plugin.
+
+    This check will be skipped if a database connection is not available.
     """
+    try:
+        connection.ensure_connection()
+    except Exception:
+        return []
     err_plugins = []
     for p in get_active_plugins():
         s_defs = p.app_settings
