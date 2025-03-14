@@ -16,6 +16,7 @@ v1.1.2 (WIP)
 Release Highlights
 ==================
 
+- Add optional support contact setting and usage
 - Update adminalerts email sending to hide admin user email address
 - Fix Django check crash with no database connection
 - Fix adminalerts email sending for users with no primary address

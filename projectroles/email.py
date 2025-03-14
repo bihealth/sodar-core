@@ -318,9 +318,16 @@ def get_email_footer(request, settings_link=True):
     """
     footer = ''
     custom_footer = getattr(settings, 'PROJECTROLES_EMAIL_FOOTER', None)
+    support_contact = getattr(settings, 'PROJECTROLES_SUPPORT_CONTACT', None)
     admin_recipient = settings.ADMINS[0] if settings.ADMINS else None
     if custom_footer:
         footer += '\n' + custom_footer
+    elif support_contact and ':' in support_contact:
+        footer += MESSAGE_FOOTER.format(
+            site_title=SITE_TITLE,
+            admin_name=support_contact.split(':')[0],
+            admin_email=support_contact.split(':')[1],
+        )
     elif admin_recipient:
         footer += MESSAGE_FOOTER.format(
             site_title=SITE_TITLE,
@@ -847,6 +854,7 @@ def send_generic_mail(
     cc=None,
     bcc=None,
     settings_link=True,
+    support_email=False,
 ):
     """
     Send a generic mail with standard header and footer and no-reply
@@ -860,6 +868,7 @@ def send_generic_mail(
     :param cc: List of emails for "cc" field (optional)
     :param bcc: List of emails for "bcc" field (optional)
     :param settings_link: Include link to user settings if True (optional)
+    :param support_email: Include support contact info if True (optional)
     :return: Amount of mail sent (int)
     """
     subject = SUBJECT_PREFIX + subject_body

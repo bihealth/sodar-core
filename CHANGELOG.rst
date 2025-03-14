@@ -8,6 +8,13 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``PROJECTROLES_SUPPORT_CONTACT`` Django setting (#1613)
+    - ``PROJECTROLES_SUPPORT_CONTACT`` usage in ``get_email_footer()`` (#1613)
+
 Changed
 -------
 

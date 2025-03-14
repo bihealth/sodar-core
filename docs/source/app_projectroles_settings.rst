@@ -283,6 +283,9 @@ The following projectroles settings are **optional**:
     users who have roles in at least one category or project. For
     ``UserListAPIView`` this will be restricted to contributor access or above.
     ``UserRetrieveAPIView`` is accessible to users with any role (bool)
+``PROJECTROLES_SUPPORT_CONTACT``
+    Support contact to be displayed for users, overrides ``ADMINS``. Input as
+    "name:email" (string)
 
 Example:
 
