@@ -20,6 +20,8 @@ Fixed
 
 - **Adminalerts**
     - Alert email not sent for users without primary address (#1607)
+- **Projectroles**
+    - ``check_app_setting_defs()`` crash with no database connection (#1615)
 
 
 v1.1.1 (2025-03-11)
