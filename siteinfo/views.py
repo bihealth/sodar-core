@@ -6,7 +6,14 @@ from django.contrib import auth
 from django.views.generic import TemplateView
 
 # Projectroles dependency
-from projectroles.models import Project, RemoteSite, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    RemoteSite,
+    SODAR_CONSTANTS,
+    AUTH_TYPE_LDAP,
+    AUTH_TYPE_LOCAL,
+    AUTH_TYPE_OIDC,
+)
 from projectroles.plugins import get_active_plugins
 from projectroles.views import LoggedInPermissionMixin
 
@@ -161,13 +168,20 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         ).count()
 
         # User statistics
-        context['user_total_count'] = User.objects.all().count()
-        context['user_ldap_count'] = User.objects.exclude(
-            groups__name__in=['', SYSTEM_USER_GROUP]
-        ).count()
-        context['user_local_count'] = User.objects.filter(
-            groups__name__in=['', SYSTEM_USER_GROUP]
-        ).count()
+        users = User.objects.all()
+        context['user_total_count'] = users.count()
+        context['user_ldap_count'] = len(
+            [u for u in users if u.get_auth_type() == AUTH_TYPE_LDAP]
+        )
+        context['user_oidc_count'] = len(
+            [u for u in users if u.get_auth_type() == AUTH_TYPE_OIDC]
+        )
+        local_users = [
+            u
+            for u in users
+            if u.get_auth_type() == AUTH_TYPE_LOCAL and not u.is_superuser
+        ]
+        context['user_local_count'] = len(local_users)
         context['user_admin_count'] = User.objects.filter(
             is_superuser=True
         ).count()

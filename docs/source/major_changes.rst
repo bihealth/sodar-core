@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.3 (WIP)
+************
+
+Release Highlights
+==================
+
+- Add OIDC user count in siteinfo statistics
+
+
 v1.1.2 (2025-03-14)
 *******************
 

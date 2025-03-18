@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Siteinfo**
+    - OIDC users in user statistics (#1623)
+
+
 v1.1.2 (2025-03-14)
 ===================
 
