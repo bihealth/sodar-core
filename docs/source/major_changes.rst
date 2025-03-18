@@ -17,6 +17,8 @@ Release Highlights
 ==================
 
 - Add OIDC user count in siteinfo statistics
+- Add superuser setting deletion arg to cleanappsettings
+- Fix superuser setting deletion by default in cleanappsettings
 
 
 v1.1.2 (2025-03-14)

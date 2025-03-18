@@ -11,8 +11,16 @@ Unreleased
 Added
 -----
 
+- **Projectroles**
+    - ``cleanappsettings`` ``-s`` arg for cleaning superuser ``PROJECT_USER`` settings (#1621)
 - **Siteinfo**
     - OIDC users in user statistics (#1623)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Superuser ``PROJECT_USER`` settings always deleted in ``cleanappsettings`` (#1621)
 
 
 v1.1.2 (2025-03-14)

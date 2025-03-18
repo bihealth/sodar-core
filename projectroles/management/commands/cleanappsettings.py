@@ -65,6 +65,15 @@ class Command(BaseCommand):
             action='store_true',
             help='Log settings to be cleaned up without altering the database',
         )
+        parser.add_argument(
+            '-s',
+            '--superuser',
+            dest='superuser',
+            required=False,
+            default=False,
+            action='store_true',
+            help='Clear PROJECT_USER settings from superusers with no roles',
+        )
 
     def handle(self, *args, **options):
         check = options.get('check', False)
@@ -101,7 +110,12 @@ class Command(BaseCommand):
                     s.delete()
                     continue
             # No user role for PROJECT_USER scope setting
-            if s.project and s.user and not s.project.get_role(s.user):
+            if (
+                s.project
+                and s.user
+                and (not s.user.is_superuser or options.get('superuser', False))
+                and not s.project.get_role(s.user)
+            ):
                 logger.info(self._get_log_msg(s, DELETE_SCOPE_MSG, check))
                 if not check:
                     s.delete()
