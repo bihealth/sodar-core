@@ -48,7 +48,7 @@ class TestPluginAppSettingDef(TestCase):
             'name': DEF_NAME,
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': APP_SETTING_TYPE_STRING,
-            'default': None,
+            'default': '',
             'label': None,
             'placeholder': None,
             'description': None,

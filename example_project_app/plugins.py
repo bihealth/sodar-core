@@ -48,8 +48,7 @@ EXAMPLE_PROJECT_APP_SETTINGS = [
         name='project_str_setting',
         scope=APP_SETTING_SCOPE_PROJECT,
         type=APP_SETTING_TYPE_STRING,
-        label='String setting',
-        default='',
+        label='String setting',  # NOTE: default unset on purpose
         description='Example string project setting',
         placeholder='Example string',
     ),
