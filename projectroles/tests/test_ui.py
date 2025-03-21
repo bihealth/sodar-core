@@ -707,9 +707,12 @@ class TestHomeView(UITestBase):
         link_html = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title'
         ).find_element(By.TAG_NAME, 'a')
-        self.assertEqual(
-            link_html.get_attribute('innerHTML'), self.project.full_title
+        expected = (
+            self.category.title
+            + CAT_DELIMITER
+            + f'<strong>{self.project.title}</strong>'
         )
+        self.assertEqual(link_html.get_attribute('innerHTML'), expected)
         # Assert no extra icons are present
         title = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-list-title-td'
@@ -721,22 +724,19 @@ class TestHomeView(UITestBase):
         with self.assertRaises(NoSuchElementException):
             title.find_element(By.CLASS_NAME, 'sodar-pr-project-public')
 
-    def test_project_list_title_highlight(self):
-        """Test project list title rendering with highlight enabled"""
+    def test_project_list_title_no_highlight(self):
+        """Test project list title rendering with no highlight"""
         app_settings.set(
-            APP_NAME, 'project_list_highlight', True, user=self.user_owner
+            APP_NAME, 'project_list_highlight', False, user=self.user_owner
         )
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         row = self._get_project_row(self.project)
         link_html = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title'
         ).find_element(By.TAG_NAME, 'a')
-        expected = (
-            self.category.title
-            + CAT_DELIMITER
-            + f'<strong>{self.project.title}</strong>'
+        self.assertEqual(
+            link_html.get_attribute('innerHTML'), self.project.full_title
         )
-        self.assertEqual(link_html.get_attribute('innerHTML'), expected)
 
     def test_project_list_title_category(self):
         """Test project list title rendering with category"""

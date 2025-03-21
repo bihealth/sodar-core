@@ -16,6 +16,12 @@ Added
 - **Siteinfo**
     - OIDC users in user statistics (#1623)
 
+Changed
+-------
+
+- **Projectroles**
+    - Change ``project_list_highlight`` app setting default to ``True`` (#1625)
+
 Fixed
 -----
 

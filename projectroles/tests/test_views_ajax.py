@@ -99,7 +99,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             ],
             'parent_depth': 0,
             'messages': {},
-            'user': {'highlight': False, 'superuser': True},
+            'user': {'highlight': True, 'superuser': True},
         }
         self.assertEqual(response.data, expected)
 
@@ -127,7 +127,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             ],
             'parent_depth': 1,
             'messages': {},
-            'user': {'highlight': False, 'superuser': True},
+            'user': {'highlight': True, 'superuser': True},
         }
         self.assertEqual(response.data, expected)
 

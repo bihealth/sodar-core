@@ -149,7 +149,7 @@ PROJECTROLES_APP_SETTINGS = [
         name='project_list_highlight',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_BOOLEAN,
-        default=False,
+        default=True,
         label='Project list title highlight',
         description='Highlight project title in paths displayed in the project '
         'list.',

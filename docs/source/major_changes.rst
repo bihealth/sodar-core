@@ -18,6 +18,7 @@ Release Highlights
 
 - Add OIDC user count in siteinfo statistics
 - Add superuser setting deletion arg to cleanappsettings
+- Update project list highlight setting default value to True
 - Fix superuser setting deletion by default in cleanappsettings
 - Fix unset string app setting default value returned as None
 
