@@ -709,12 +709,12 @@ Example of a simple results template, in case of a single ``all`` category:
   {% endif %}
 
 
-API Views
-=========
-
-API view usage in project apps is detailed in this section.
-
 .. _dev_project_app_rest_api:
+
+REST API Development
+====================
+
+Development of REST API views for project apps is detailed in this section.
 
 Rest API Views
 --------------
@@ -771,15 +771,52 @@ details on the base REST API classes.
 An example "hello world" REST API view for SODAR apps is available in
 ``example_project_app.views.HelloExampleProjectAPIView``.
 
-.. note::
+Model Access and Permissions
+----------------------------
 
-    Internal SODAR Core REST API views, specifically ones used in apps provided
-    by the django-sodar-core package, use different media types and versioning
-    from views to be implemented on your site. From SODAR Core v1.0 onwards,
-    each app is expected to provide their own versioning.
+Make sure to have all objects accessible by their ``sodar_uuid`` field. This is
+strongly recommended for views implemented in your Django site as well, as using
+a field such as ``id`` may reveal internal database details to users as well as
+be incompatible if e.g. mirroring roles between multiple SODAR Core sites.
+
+Serializers
+-----------
+
+Base serializers for SODAR Core based API views are available in
+``projectroles.serializers``. They provide ``Project`` context where needed, as
+well as setting default fields such as ``sodar_uuid`` which should be always
+used in place of ``pk``.
+
+See the :ref:`serializer API documentation <app_projectroles_api_django_serial>`
+for details on using base serializer classes.
+
+Project Type Restriction
+------------------------
+
+IF you want to explicitly restrict access for your API view to a specific
+project type, you can set the ``project_type`` attribute of your class to either
+``PROJECT_TYPE_PROJECT`` or ``PROJECT_TYPE_CATEGORY`` as defined in
+``SODAR_CONSTANTS``. A request to the view using the wrong project type will
+result in a ``403 Not Authorized`` response, with the reason displayed in the
+``detail`` view.
+
+This works with any API view using ``SODARAPIProjectPermission`` as its
+permission class, which includes ``SODARAPIBaseProjectMixin`` and
+``SODARAPIGenericProjectMixin``. An example is shown below.
+
+.. code-block:: python
+
+    from rest_framework.generics import RetrieveAPIView
+    from projectroles.models import SODAR_CONSTANTS
+    from projectroles.views_api import SODARAPIGenericProjectMixin
+
+    class YourAPIView(SODARAPIGenericProjectMixin, RetrieveAPIView):
+        # ...
+        project_type = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+
 
 Ajax API Views
---------------
+==============
 
 To set up Ajax API views for the UI, it is recommended to use the base Ajax
 view classes found in ``projectroles.views_ajax``. These views only support
@@ -811,17 +848,6 @@ Example:
 If you want to wrap a REST API view into an Ajax API view, you can use
 ``SODARBaseAjaxMixin`` and your original view as base to ensure appropriate
 access control.
-
-Serializers
------------
-
-Base serializers for SODAR Core based API views are available in
-``projectroles.serializers``. They provide ``Project`` context where needed, as
-well as setting default fields such as ``sodar_uuid`` which should be always
-used in place of ``pk``.
-
-See the :ref:`serializer API documentation <app_projectroles_api_django_serial>`
-for details on using base serializer classes.
 
 
 .. _dev_project_app_archive:

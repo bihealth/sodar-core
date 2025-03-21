@@ -5,7 +5,8 @@ Sodarcache REST API Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This document contains the HTTP REST API documentation for the ``sodarcache``
-app.
+app. For general information on REST API usage in SODAR Core, see
+:ref:`rest_api_overview`.
 
 
 Sodarcache REST API Versioning

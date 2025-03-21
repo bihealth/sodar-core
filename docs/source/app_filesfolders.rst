@@ -16,4 +16,3 @@ The app is displayed as *"Files"* on the SODAR site.
 
    Installation <app_filesfolders_install>
    Usage <app_filesfolders_usage>
-   REST API Documentation <app_filesfolders_api_rest>

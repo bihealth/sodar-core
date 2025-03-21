@@ -131,9 +131,10 @@ HTML / Javascript / CSS / Bootstrap 4
 .. toctree::
     :maxdepth: 2
     :caption: REST API Documentation
-    :name: rest_api_documentation
+    :name: api_documentation
     :hidden:
 
+    Overview <rest_api_overview>
     Projectroles <app_projectroles_api_rest>
     Filesfolders <app_filesfolders_api_rest>
     Sodarcache <app_sodarcache_api_rest>

@@ -16,4 +16,3 @@ queries to databases other than the local Django PostgreSQL.
     Installation <app_sodarcache_install>
     Usage <app_sodarcache_usage>
     Django API Documentation <app_sodarcache_api_django>
-    REST API Documentation <app_sodarcache_api_rest>

@@ -19,6 +19,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Reorganize REST API documentation (#1624, #1626)
 - **Projectroles**
     - Change ``project_list_highlight`` app setting default to ``True`` (#1625)
 
