@@ -30,6 +30,7 @@ Fixed
 - **Projectroles**
     - Superuser ``PROJECT_USER`` settings always deleted in ``cleanappsettings`` (#1621)
     - Unset ``PluginAppSettingDef`` default string value returned as ``None`` (#1619)
+    - System group set for OIDC user on initial login (#1627, #1628)
 
 
 v1.1.2 (2025-03-14)
