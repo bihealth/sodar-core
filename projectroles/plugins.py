@@ -678,7 +678,11 @@ class PluginAppSettingDef:
         self.name = name
         self.scope = scope
         self.type = type
-        self.default = default
+        self.default = (
+            ''
+            if type == APP_SETTING_TYPE_STRING and default is None
+            else default
+        )
         self.label = label
         self.placeholder = placeholder
         self.description = description

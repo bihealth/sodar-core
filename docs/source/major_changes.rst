@@ -10,6 +10,20 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.3 (2025-03-25)
+*******************
+
+Release Highlights
+==================
+
+- Add OIDC user count in siteinfo statistics
+- Add superuser setting deletion arg to cleanappsettings
+- Update project list highlight setting default value to True
+- Fix superuser setting deletion by default in cleanappsettings
+- Fix unset string app setting default value returned as None
+- Fix user group assignment on initial OIDC user login
+
+
 v1.1.2 (2025-03-14)
 *******************
 

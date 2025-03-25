@@ -5,6 +5,34 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.1.3 (2025-03-25)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``cleanappsettings`` ``-s`` arg for cleaning superuser ``PROJECT_USER`` settings (#1621)
+- **Siteinfo**
+    - OIDC users in user statistics (#1623)
+
+Changed
+-------
+
+- **General**
+    - Reorganize REST API documentation (#1624, #1626)
+- **Projectroles**
+    - Change ``project_list_highlight`` app setting default to ``True`` (#1625)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Superuser ``PROJECT_USER`` settings always deleted in ``cleanappsettings`` (#1621)
+    - Unset ``PluginAppSettingDef`` default string value returned as ``None`` (#1619)
+    - System group set for OIDC user on initial login (#1627, #1628)
+
+
 v1.1.2 (2025-03-14)
 ===================
 

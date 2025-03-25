@@ -692,6 +692,9 @@ class TestCleanAppSettings(
         # Init roles
         self.init_roles()
         # Init users
+        self.superuser = self.make_user('superuser')
+        self.superuser.is_superuser = True
+        self.superuser.save()
         self.user_owner = self.make_user('owner')
         self.user_owner.email = 'owner_user@example.com'
         self.user_owner.save()
@@ -931,6 +934,59 @@ class TestCleanAppSettings(
         self.assertEqual(AppSetting.objects.count(), 6)
         call_command(self.cmd_name)
         self.assertEqual(AppSetting.objects.count(), 6)
+
+    def test_command_project_user_superuser(self):
+        """Test PROJECT_USER scope with no role as superuser"""
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='project_user_bool_setting',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
+            value=True,
+            project=self.project,
+            user=self.superuser,
+        )
+        self.assertEqual(AppSetting.objects.count(), 6)
+
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
+            call_command(self.cmd_name)
+            self.assertEqual(len(cm.output), 2)
+        self.assertEqual(AppSetting.objects.count(), 6)
+        self.assertIsNotNone(
+            AppSetting.objects.filter(name='project_user_bool_setting').first()
+        )
+
+    def test_command_project_user_superuser_enable(self):
+        """Test PROJECT_USER scope with no role as superuser with deletion enabled"""
+        self.make_setting(
+            plugin_name=self.plugin.name,
+            name='project_user_bool_setting',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
+            value=True,
+            project=self.project,
+            user=self.superuser,
+        )
+        self.assertEqual(AppSetting.objects.count(), 6)
+
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
+            call_command(self.cmd_name, superuser=True)
+            self.assertEqual(len(cm.output), 3)
+            self.assertEqual(
+                cm.output[1],
+                (
+                    CLEAN_LOG_PREFIX
+                    + DELETE_PREFIX_MSG.format(
+                        s_name='settings.example_project_app.'
+                        'project_user_bool_setting',
+                        project=f'"{self.project.title}"',
+                        user=f'"{self.superuser.username}"',
+                    )
+                    + DELETE_SCOPE_MSG.format(self.superuser.username)
+                ),
+            )
+        self.assertEqual(AppSetting.objects.count(), 5)
+        self.assertIsNone(
+            AppSetting.objects.filter(name='project_user_bool_setting').first()
+        )
 
     def test_command_check(self):
         """Test cleanappsettings with check mode enabled"""

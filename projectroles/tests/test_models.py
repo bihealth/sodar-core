@@ -45,6 +45,7 @@ AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
 AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
 AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
 OIDC_USER_GROUP = SODAR_CONSTANTS['OIDC_USER_GROUP']
+SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
 APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
@@ -1704,7 +1705,7 @@ class TestSODARUser(TestCase):
     def test_get_auth_type_ldap(self):
         """Test get_auth_type() with LDAP user"""
         self.user.username = 'testuser@TEST'
-        self.user.save()  # NOTE: set_group() is called on user save()
+        self.user.save()
         self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_LDAP)
 
     def test_get_auth_type_ldap_no_group(self):
@@ -1718,6 +1719,16 @@ class TestSODARUser(TestCase):
         group, _ = Group.objects.get_or_create(name=OIDC_USER_GROUP)
         group.user_set.add(self.user)
         self.assertEqual(self.user.get_auth_type(), AUTH_TYPE_OIDC)
+
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='TEST')
+    def test_set_group_system_exist(self):
+        """Test set_group() with existing system user group"""
+        self.assertEqual(self.user.groups.count(), 1)
+        self.assertEqual(self.user.groups.first().name, SYSTEM_USER_GROUP)
+        self.user.username = 'user@TEST'
+        self.user.save()  # set_group() called on save()
+        self.assertEqual(self.user.groups.count(), 1)
+        self.assertEqual(self.user.groups.first().name, 'test')
 
     def test_update_full_name(self):
         """Test update_full_name()"""

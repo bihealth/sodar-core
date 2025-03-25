@@ -1,5 +1,7 @@
 """Tests for the project settings API in the projectroles app"""
 
+import json
+
 from django.test import override_settings
 
 from test_plus.test import TestCase
@@ -330,12 +332,22 @@ class TestAppSettingAPI(
                 project=self.project,
             )
 
-    def test_get_post_safe(self):
+    def test_get_post_safe_json(self):
         """Test get() with JSON setting and post_safe=True"""
         val = app_settings.get(
             plugin_name=self.project_json_setting['plugin_name'],
             setting_name=self.project_json_setting['name'],
             project=self.project_json_setting['project'],
+            post_safe=True,
+        )
+        self.assertEqual(type(val), str)
+
+    def test_get_post_safe_str_none(self):
+        """Test get() with string setting with null default and post_safe=True"""
+        val = app_settings.get(
+            plugin_name=self.project_str_setting['plugin_name'],
+            setting_name=self.project_str_setting['name'],
+            project=self.project_str_setting['project'],
             post_safe=True,
         )
         self.assertEqual(type(val), str)
@@ -910,6 +922,22 @@ class TestAppSettingAPI(
         self.assertEqual(
             defaults[prefix + 'project_json_setting'],
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
+
+    def test_get_defaults_project_post_safe(self):
+        """Test get_defaults() with PROJECT scope and post_safe=True"""
+        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        defaults = app_settings.get_defaults(
+            APP_SETTING_SCOPE_PROJECT, post_safe=True
+        )
+        self.assertEqual(defaults[prefix + 'project_str_setting'], '')
+        self.assertEqual(defaults[prefix + 'project_int_setting'], 0)
+        self.assertEqual(defaults[prefix + 'project_bool_setting'], False)
+        self.assertEqual(
+            defaults[prefix + 'project_json_setting'],
+            json.dumps(
+                {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False}
+            ),
         )
 
     def test_get_defaults_user(self):

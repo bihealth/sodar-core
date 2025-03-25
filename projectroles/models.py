@@ -38,6 +38,7 @@ APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
 APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
+SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 AUTH_TYPE_LOCAL = SODAR_CONSTANTS['AUTH_TYPE_LOCAL']
 AUTH_TYPE_LDAP = SODAR_CONSTANTS['AUTH_TYPE_LDAP']
 AUTH_TYPE_OIDC = SODAR_CONSTANTS['AUTH_TYPE_OIDC']
@@ -1387,7 +1388,7 @@ class SODARUser(AbstractUser):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.set_group()
+        self.set_group()  # Called here to ensure we always have group
 
     def get_full_name(self):
         """Return full name or username if not set"""
@@ -1468,10 +1469,22 @@ class SODARUser(AbstractUser):
             group_name = self.username.split('@')[1].lower()
         # System user group for local users
         else:
-            group_name = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+            group_name = SYSTEM_USER_GROUP
         group, created = Group.objects.get_or_create(name=group_name)
         if group not in self.groups.all():
             group.user_set.add(self)
+            # Remove system group if previously added
+            if (
+                group_name != SYSTEM_USER_GROUP
+                and self.groups.filter(name=SYSTEM_USER_GROUP).count() > 0
+            ):
+                system_group = Group.objects.get(name=SYSTEM_USER_GROUP)
+                system_group.user_set.remove(self)
+                logger.debug(
+                    'Removed system user group "{}" from {}'.format(
+                        SYSTEM_USER_GROUP, self.username
+                    )
+                )
             logger.info(
                 'Set user group "{}" for {}'.format(group_name, self.username)
             )

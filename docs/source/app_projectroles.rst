@@ -23,5 +23,4 @@ and app structure.
     Settings <app_projectroles_settings>
     Usage <app_projectroles_usage>
     Customization <app_projectroles_custom>
-    REST API Documentation <app_projectroles_api_rest>
     Django API Documentation <app_projectroles_api_django>
