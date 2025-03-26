@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.4 (WIP)
+************
+
+Release Highlights
+==================
+
+- Fix subject prefix not included in all sent email
+
+
 v1.1.3 (2025-03-25)
 *******************
 

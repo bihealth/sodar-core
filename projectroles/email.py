@@ -536,7 +536,7 @@ def send_project_leave_mail(project, user, request=None):
     :return: Amount of sent email (int)
     """
     p_label = get_display_name(project.type)
-    subject = SUBJECT_ROLE_LEAVE.format(
+    subject = SUBJECT_PREFIX + SUBJECT_ROLE_LEAVE.format(
         user_name=user.username, project_label=p_label, project=project.title
     )
     message = MESSAGE_ROLE_LEAVE.format(
@@ -578,7 +578,7 @@ def send_invite_mail(invite, request):
     return send_mail(subject, message, [invite.email], request, issuer_emails)
 
 
-def send_accept_note(invite, request, user):
+def send_invite_accept_mail(invite, request, user):
     """
     Send a notification email to the issuer of an invitation when a user
     accepts the invitation.
@@ -612,7 +612,7 @@ def send_accept_note(invite, request, user):
     return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
-def send_expiry_note(invite, request, user_name):
+def send_invite_expiry_mail(invite, request, user_name):
     """
     Send a notification email to the issuer of an invitation when a user
     attempts to accept an expired invitation.
@@ -661,7 +661,7 @@ def send_project_create_mail(project, request):
     if not parent or not parent_owner or parent_owner.user == request.user:
         return 0
 
-    subject = SUBJECT_PROJECT_CREATE.format(
+    subject = SUBJECT_PREFIX + SUBJECT_PROJECT_CREATE.format(
         project_type=get_display_name(project.type, title=True),
         project=project.title,
         user=get_email_user(request.user),
@@ -708,7 +708,7 @@ def send_project_move_mail(project, request):
     if not parent or not parent_owner or parent_owner.user == request.user:
         return 0
 
-    subject = SUBJECT_PROJECT_MOVE.format(
+    subject = SUBJECT_PREFIX + SUBJECT_PROJECT_MOVE.format(
         project_type=get_display_name(project.type, title=True),
         project=project.title,
         user=get_email_user(request.user),

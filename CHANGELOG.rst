@@ -5,6 +5,28 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - Missing email tests (#1636)
+
+Changed
+-------
+
+- **Projectroles**
+    - Rename invite email sending methods (#1635)
+
+Fixed
+-----
+
+- **Projectroles**
+    - ``SUBJECT_PREFIX`` not included in all sent email (#1631)
+
+
 v1.1.3 (2025-03-25)
 ===================
 

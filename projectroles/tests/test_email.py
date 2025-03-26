@@ -11,17 +11,26 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.email import (
     send_role_change_mail,
-    send_generic_mail,
+    send_project_leave_mail,
+    send_invite_mail,
+    send_invite_accept_mail,
+    send_invite_expiry_mail,
     send_project_create_mail,
+    send_project_move_mail,
+    send_project_archive_mail,
+    send_project_delete_mail,
+    send_generic_mail,
     get_email_user,
     get_user_addr,
     get_email_footer,
     SETTINGS_LINK,
+    SUBJECT_PREFIX,
 )
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
     RoleAssignmentMixin,
+    ProjectInviteMixin,
     SODARUserAdditionalEmailMixin,
 )
 
@@ -53,6 +62,7 @@ class TestEmailSending(
     RoleMixin,
     RoleAssignmentMixin,
     SODARUserAdditionalEmailMixin,
+    ProjectInviteMixin,
     TestCase,
 ):
     """Tests for email sending"""
@@ -98,8 +108,8 @@ class TestEmailSending(
         self.request = self.factory.get(reverse('home'))
         self.request.user = self.user_owner
 
-    def test_role_create_mail(self):
-        """Test role creation mail sending"""
+    def test_send_role_change_mail_create(self):
+        """Test send_role_change_mail() with role create"""
         email_sent = send_role_change_mail(
             change_type='create',
             project=self.project,
@@ -113,9 +123,10 @@ class TestEmailSending(
         self.assertEqual(mail.outbox[0].to[0], self.user.email)
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
 
-    def test_role_create_mail_additional(self):
-        """Test role creation with additional sender emails"""
+    def test_send_role_change_mail_additional(self):
+        """Test send_role_change_mail() with additional sender emails"""
         self.make_email(self.user, USER_ADD_EMAIL)
         self.make_email(self.user, USER_ADD_EMAIL2)
         email_sent = send_role_change_mail(
@@ -135,8 +146,8 @@ class TestEmailSending(
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
-    def test_role_create_mail_additional_no_default(self):
-        """Test role creation with additional sender emails but no default email"""
+    def test_send_role_change_mail_additional_no_default(self):
+        """Test send_role_change_mail() with additional sender emails and no default email"""
         self.make_email(self.user, USER_ADD_EMAIL)
         self.make_email(self.user, USER_ADD_EMAIL2)
         self.user.email = ''
@@ -158,8 +169,8 @@ class TestEmailSending(
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
-    def test_role_create_mail_additional_reply(self):
-        """Test role creation with additional reply-to emails"""
+    def test_send_role_change_mail_additional_reply(self):
+        """Test send_role_change_mail() with additional reply-to emails"""
         self.make_email(self.user_owner, USER_ADD_EMAIL)
         self.make_email(self.user_owner, USER_ADD_EMAIL2)
         email_sent = send_role_change_mail(
@@ -182,8 +193,8 @@ class TestEmailSending(
             [self.user_owner.email, USER_ADD_EMAIL, USER_ADD_EMAIL2],
         )
 
-    def test_role_update_mail(self):
-        """Test role updating mail sending"""
+    def test_send_role_change_mail_update(self):
+        """Test send_role_change_mail() with role update"""
         email_sent = send_role_change_mail(
             change_type='update',
             project=self.project,
@@ -198,8 +209,8 @@ class TestEmailSending(
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
-    def test_role_delete_mail(self):
-        """Test role deletion mail sending"""
+    def test_send_role_change_mail_delete(self):
+        """Test send_role_change_mail() with role delete"""
         email_sent = send_role_change_mail(
             change_type='delete',
             project=self.project,
@@ -214,8 +225,73 @@ class TestEmailSending(
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
-    def test_project_create_mail(self):
-        """Test project creation mail sending"""
+    def test_send_invite_mail(self):
+        """Test send_invite_mail()"""
+        invite = self.make_invite(
+            email=self.user.email,
+            project=self.project,
+            role=self.role_guest,
+            issuer=self.user_owner,
+        )
+        email_sent = send_invite_mail(invite, self.request)
+        self.assertEqual(email_sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].to), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.user.email)
+        self.assertEqual(len(mail.outbox[0].reply_to), 1)
+        self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_invite_accept_mail(self):
+        """Test send_invite_accept_mail()"""
+        invite = self.make_invite(
+            email=self.user.email,
+            project=self.project,
+            role=self.role_guest,
+            issuer=self.user_owner,
+        )
+        email_sent = send_invite_accept_mail(invite, self.request, self.user)
+        self.assertEqual(email_sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].to), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
+        self.assertEqual(len(mail.outbox[0].reply_to), 0)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_invite_expiry_mail(self):
+        """Test send_invite_expiry_mail()"""
+        invite = self.make_invite(
+            email=self.user.email,
+            project=self.project,
+            role=self.role_guest,
+            issuer=self.user_owner,
+        )
+        email_sent = send_invite_expiry_mail(
+            invite, self.request, self.user.username
+        )
+        self.assertEqual(email_sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].to), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
+        self.assertEqual(len(mail.outbox[0].reply_to), 0)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_project_leave_mail(self):
+        """Test send_project_move_mail()"""
+        email_sent = send_project_leave_mail(
+            project=self.project,
+            user=self.user,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].to), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
+        self.assertEqual(len(mail.outbox[0].reply_to), 0)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_project_create_mail(self):
+        """Test send_project_create_mail()"""
         new_project = self.make_project(
             'New Project', PROJECT_TYPE_PROJECT, self.category
         )
@@ -231,9 +307,52 @@ class TestEmailSending(
         self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user.email)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
 
-    def test_generic_mail_user(self):
-        """Test send_generic_mail() with a User recipient"""
+    def test_send_project_move_mail(self):
+        """Test send_project_move_mail()"""
+        self.request.user = self.user
+        email_sent = send_project_move_mail(
+            project=self.project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].to), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
+        self.assertEqual(len(mail.outbox[0].reply_to), 1)
+        self.assertEqual(mail.outbox[0].reply_to[0], self.user.email)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_project_archive_mail(self):
+        """Test send_project_archive_mail()"""
+        email_sent = send_project_archive_mail(
+            project=self.project,
+            action='archive',
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].to), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
+        self.assertEqual(len(mail.outbox[0].reply_to), 0)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_project_delete_mail(self):
+        """Test send_project_delete_mail()"""
+        email_sent = send_project_delete_mail(
+            project=self.project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].to), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
+        self.assertEqual(len(mail.outbox[0].reply_to), 0)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_generic_mail_user(self):
+        """Test send_generic_mail() with User recipient"""
         email_sent = send_generic_mail(
             subject_body=SUBJECT_BODY,
             message_body=MESSAGE_BODY,
@@ -247,9 +366,10 @@ class TestEmailSending(
         self.assertEqual(mail.outbox[0].to[0], self.user.email)
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
+        self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
 
-    def test_generic_mail_user_additional(self):
-        """Test send_generic_mail() with a User and additional emails"""
+    def test_send_generic_mail_user_additional(self):
+        """Test send_generic_mail() with User and additional emails"""
         self.make_email(self.user, USER_ADD_EMAIL)
         self.make_email(self.user, USER_ADD_EMAIL2)
         email_sent = send_generic_mail(
@@ -269,8 +389,8 @@ class TestEmailSending(
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
-    def test_generic_mail_str(self):
-        """Test send_generic_mail() with an email string recipient"""
+    def test_send_generic_mail_str(self):
+        """Test send_generic_mail() with email string recipient"""
         email_sent = send_generic_mail(
             subject_body=SUBJECT_BODY,
             message_body=MESSAGE_BODY,
@@ -285,7 +405,7 @@ class TestEmailSending(
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
-    def test_generic_mail_multiple(self):
+    def test_send_generic_mail_multiple(self):
         """Test send_generic_mail() with multiple recipients"""
         user_new = self.make_user('newuser')
         email_sent = send_generic_mail(

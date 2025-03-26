@@ -3048,7 +3048,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             if SEND_EMAIL and app_settings.get(
                 APP_NAME, 'notify_email_role', user=invite.issuer
             ):
-                email.send_expiry_note(
+                email.send_invite_expiry_mail(
                     invite,
                     self.request,
                     user_name=user.get_full_name() if user else invite.email,
@@ -3109,7 +3109,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
         if SEND_EMAIL and app_settings.get(
             APP_NAME, 'notify_email_role', user=invite.issuer
         ):
-            email.send_accept_note(invite, self.request, user)
+            email.send_invite_accept_mail(invite, self.request, user)
 
         # Deactivate the invite
         self.revoke_invite(invite, user, failed=False, timeline=timeline)
