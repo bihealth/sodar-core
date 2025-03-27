@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **Siteinfo**
+    - Inactive users in user statistics (#1640)
 - **Projectroles**
     - Missing email tests (#1636)
     - ``UserAutocompleteAjaxView`` tests (#1644)

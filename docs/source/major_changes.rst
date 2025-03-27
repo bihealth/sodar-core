@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add inactive user and superuser display in UI
+- Add inactive user stats in siteinfo
 - Update user dropdown to exclude inactive users
 - Update email sending to exclude inactive users
 - Fix subject prefix not included in all sent email

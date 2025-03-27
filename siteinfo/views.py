@@ -185,6 +185,9 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         context['user_admin_count'] = User.objects.filter(
             is_superuser=True
         ).count()
+        context['user_inactive_count'] = User.objects.filter(
+            is_active=False
+        ).count()
 
         # App plugins
         project_plugins = get_active_plugins('project_app')
