@@ -3077,46 +3077,6 @@ class TestRoleAssignmentCreateView(
             )
         self.assertEqual(response.status_code, 404)
 
-    def test_get_autocomplete_display_options(self):
-        """Test GET for displaying options by SODARUserRedirectWidget"""
-        data = {
-            'project': self.project.sodar_uuid,
-            'role': self.role_guest.pk,
-            'q': 'test@example.com',
-        }
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:ajax_autocomplete_user_redirect'), data
-            )
-        self.assertEqual(response.status_code, 200)
-        option_new = {
-            'id': 'test@example.com',
-            'text': 'Send an invite to "test@example.com"',
-            'create_id': True,
-        }
-        data = json.loads(response.content)
-        self.assertIn(option_new, data['results'])
-
-    def test_get_autocomplete_display_options_invalid_email(self):
-        """Test GET for displaying options with invalid email"""
-        data = {
-            'project': self.project.sodar_uuid,
-            'role': self.role_guest.pk,
-            'q': 'test@example',
-        }
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:ajax_autocomplete_user_redirect'), data
-            )
-        self.assertEqual(response.status_code, 200)
-        option_new = {
-            'id': 'test@example.com',
-            'text': 'Send an invite to "test@example"',
-            'create_id': True,
-        }
-        data = json.loads(response.content)
-        self.assertNotIn(option_new, data['results'])
-
     def test_get_promote(self):
         """Test GET with inherited role promotion"""
         # Assign category guest user for inherit/promote tests
@@ -3420,29 +3380,6 @@ class TestRoleAssignmentCreateView(
                 project=self.project, user=self.user_new
             ).first()
         )
-
-    def test_post_autocomplete_redirect_to_invite(self):
-        """Test POST for redirecting to ProjectInviteCreateView"""
-        data = {
-            'project': self.project.sodar_uuid,
-            'role': self.role_guest.pk,
-            'text': 'test@example.com',
-        }
-        with self.login(self.user):
-            response = self.client.post(
-                reverse('projectroles:ajax_autocomplete_user_redirect'), data
-            )
-        self.assertEqual(response.status_code, 200)
-        with self.login(self.user):
-            data = json.loads(response.content)
-            self.assertEqual(data['success'], True)
-            self.assertEqual(
-                data['redirect_url'],
-                reverse(
-                    'projectroles:invite_create',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
 
     def test_post_promote(self):
         """Test POST for promoting inherited role"""

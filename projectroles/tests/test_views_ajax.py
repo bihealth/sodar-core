@@ -833,3 +833,190 @@ class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, self.get_serialized_user(self.user))
+
+
+class TestUserAutocompleteAjaxView(
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+):
+    """Tests for UserAutocompleteAjaxView"""
+
+    def _get_forward_qs(self, data):
+        """Return forward querystring for UserAutocompleteAjaxView requests"""
+        return '?forward=' + json.dumps(data)
+
+    def setUp(self):
+        super().setUp()
+        self.user_owner = self.make_user('user_owner')
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        self.user_no_roles = self.make_user('user_no_roles')
+        self.url = reverse('projectroles:ajax_autocomplete_user')
+
+    def test_get(self):
+        """Test UserAutocompleteAjaxView GET with default params"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()['results']), 3)
+
+    def test_get_project(self):
+        """Test GET with project scope"""
+        data = {
+            'project': str(self.project.sodar_uuid),
+            'scope': 'project',
+        }
+        with self.login(self.user):
+            response = self.client.get(self.url + self._get_forward_qs(data))
+        self.assertEqual(response.status_code, 200)
+        results = response.json()['results']
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['id'], str(self.user_owner.sodar_uuid))
+
+    def test_get_project_exclude(self):
+        """Test GET with project_exclude scope"""
+        data = {
+            'project': str(self.project.sodar_uuid),
+            'scope': 'project_exclude',
+        }
+        with self.login(self.user):
+            response = self.client.get(self.url + self._get_forward_qs(data))
+        self.assertEqual(response.status_code, 200)
+        results = response.json()['results']
+        self.assertEqual(len(results), 2)
+        self.assertNotIn(
+            str(self.user_owner.sodar_uuid), [r['id'] for r in results]
+        )
+
+    def test_get_inactive_user(self):
+        """Test GET with inactive user"""
+        self.user_owner.is_active = False
+        self.user_owner.save()
+        data = {
+            'project': str(self.project.sodar_uuid),
+            'scope': 'project',
+        }
+        with self.login(self.user):
+            response = self.client.get(self.url + self._get_forward_qs(data))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()['results']), 0)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_get_disallow_local(self):
+        """Test GET with local users disallowed"""
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()['results']), 0)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_get_disallow_local_as_superuser(self):
+        """Test GET with local users disallowed as superuser"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        # For superuser, all users should be returned
+        self.assertEqual(len(response.json()['results']), 3)
+
+    def test_get_user_exclude(self):
+        """Test GET with user excluding"""
+        data = {
+            'scope': 'all',
+            'exclude': [str(self.user_owner.sodar_uuid)],
+        }
+        with self.login(self.user):
+            response = self.client.get(self.url + self._get_forward_qs(data))
+        self.assertEqual(response.status_code, 200)
+        results = response.json()['results']
+        self.assertEqual(len(results), 2)
+        self.assertNotIn(
+            str(self.user_owner.sodar_uuid), [r['id'] for r in results]
+        )
+
+
+class TestUserAutocompleteRedirectAjaxView(
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+):
+    """Tests for UserAutocompleteRedirectAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.user_owner = self.make_user('user_owner')
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        self.url = reverse('projectroles:ajax_autocomplete_user_redirect')
+
+    def test_get(self):
+        """Test TestUserAutocompleteRedirectAjaxView GET"""
+        data = {
+            'project': self.project.sodar_uuid,
+            'role': self.role_guest.pk,
+            'q': 'test@example.com',
+        }
+        with self.login(self.user):
+            response = self.client.get(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        option_new = {
+            'id': 'test@example.com',
+            'text': 'Send an invite to "test@example.com"',
+            'create_id': True,
+        }
+        data = json.loads(response.content)
+        self.assertIn(option_new, data['results'])
+
+    def test_get_invalid_email(self):
+        """Test GET with invalid email"""
+        data = {
+            'project': self.project.sodar_uuid,
+            'role': self.role_guest.pk,
+            'q': 'test@example',
+        }
+        with self.login(self.user):
+            response = self.client.get(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        option_new = {
+            'id': 'test@example.com',
+            'text': 'Send an invite to "test@example"',
+            'create_id': True,
+        }
+        data = json.loads(response.content)
+        self.assertNotIn(option_new, data['results'])
+
+    def test_post_redirect_to_invite(self):
+        """Test POST for redirecting to ProjectInviteCreateView"""
+        data = {
+            'project': self.project.sodar_uuid,
+            'role': self.role_guest.pk,
+            'text': 'test@example.com',
+        }
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(
+            data['redirect_url'],
+            reverse(
+                'projectroles:invite_create',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )

@@ -13,16 +13,19 @@ Added
 
 - **Projectroles**
     - Missing email tests (#1636)
+    - ``UserAutocompleteAjaxView`` tests (#1644)
 
 Changed
 -------
 
 - **Adminalerts**
-    - Exclude inactive users from email sending (#1632)
+    - Exclude inactive users in email sending (#1632)
 - **Projectroles**
     - Rename invite email sending methods (#1635)
-    - Exclude inactive users from email sending (#1632)
+    - Exclude inactive users in email sending (#1632)
     - Send project notify emails to delegates (#1641)
+    - Exclude inactive users in ``UserAutocompleteAjaxView`` (#1637)
+    - Move ``UserAutocompleteRedirectAjaxView`` view tests to ``test_views_ajax`` (#1644)
 
 Fixed
 -----

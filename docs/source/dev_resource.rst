@@ -70,7 +70,8 @@ SODAR User Selection Field
 Projectroles offers a custom field, widget and accompanying Ajax API views
 for autocomplete-enabled selection of SODAR users in Django forms. The field
 will handle providing appropriate choices according to the view context and user
-permissions, also allowing for customization.
+permissions, also allowing for customization. The field will not return inactive
+users.
 
 The recommended way to use the built-in user form field is by using the
 ``SODARUserChoiceField`` class found in ``projectroles.forms``. The field

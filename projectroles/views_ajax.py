@@ -580,7 +580,7 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
         project_uuid = self.forwarded.get('project', None)
         exclude_uuids = self.forwarded.get('exclude', None)
         scope = self.forwarded.get('scope', 'all')
-        qs = User.objects.all()
+        qs = User.objects.exclude(is_active=False)
 
         # If project UUID is given, only show users that are in the project
         if scope in ['project', 'project_exclude'] and project_uuid:
