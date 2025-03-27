@@ -14,6 +14,10 @@ Added
 - **Projectroles**
     - Missing email tests (#1636)
     - ``UserAutocompleteAjaxView`` tests (#1644)
+    - ``get_user_inactive_icon()`` common template tag (#1638)
+    - ``get_user_superuser_icon()`` common template tag (#1639)
+    - Inactive and superuser status in ``get_user_html()`` (#1638, #1639)
+    - Inactive and superuser status in ``ProjectRoleView`` (#1638, #1639)
 
 Changed
 -------

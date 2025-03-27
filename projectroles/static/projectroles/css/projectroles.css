@@ -790,6 +790,10 @@ a#sodar-pr-link-project-star:active {
   box-shadow: none;
 }
 
+span.sodar-user-html {
+  white-space: nowrap;
+}
+
 .sodar-search-highlight {
   font-weight: bold;
 }

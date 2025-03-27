@@ -16,6 +16,7 @@ v1.1.4 (WIP)
 Release Highlights
 ==================
 
+- Add inactive user and superuser display in UI
 - Update user dropdown to exclude inactive users
 - Update email sending to exclude inactive users
 - Fix subject prefix not included in all sent email
