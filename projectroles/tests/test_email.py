@@ -85,6 +85,10 @@ class TestEmailSending(
         self.user = self.make_user('user')
         self.user.email = 'user@example.com'
         self.user.save()
+        self.user_inactive = self.make_user('user_inactive')
+        self.user_inactive.email = 'user_inactive@example.com'
+        self.user_inactive.is_active = False
+        self.user_inactive.save()
 
         # Init projects
         self.category = self.make_project(
@@ -102,6 +106,9 @@ class TestEmailSending(
         )
         self.user_as = self.make_assignment(
             self.project, self.user, self.role_contributor
+        )
+        self.inactive_as = self.make_assignment(
+            self.project, self.user_inactive, self.role_contributor
         )
         # Set up request factory and default request
         self.factory = RequestFactory()
@@ -309,6 +316,21 @@ class TestEmailSending(
         self.assertEqual(mail.outbox[0].reply_to[0], self.user.email)
         self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
 
+    def test_send_project_create_mail_inactive_parent_owner(self):
+        """Test send_project_create_mail() with inactive parent owner"""
+        self.user_owner.is_active = False
+        self.user_owner.save()
+        new_project = self.make_project(
+            'New Project', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.make_assignment(new_project, self.user, self.role_owner)
+        self.request.user = self.user
+        email_sent = send_project_create_mail(
+            project=new_project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 0)
+
     def test_send_project_move_mail(self):
         """Test send_project_move_mail()"""
         self.request.user = self.user
@@ -323,6 +345,17 @@ class TestEmailSending(
         self.assertEqual(len(mail.outbox[0].reply_to), 1)
         self.assertEqual(mail.outbox[0].reply_to[0], self.user.email)
         self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_project_move_mail_inactive_parent_owner(self):
+        """Test send_project_move_mail() with inactive parent owner"""
+        self.user_owner.is_active = False
+        self.user_owner.save()
+        self.request.user = self.user
+        email_sent = send_project_move_mail(
+            project=self.project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 0)
 
     def test_send_project_archive_mail(self):
         """Test send_project_archive_mail()"""

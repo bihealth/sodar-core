@@ -186,7 +186,7 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_post_inactive(self):
+    def test_post_inactive_alert(self):
         """Test POST with inactive state"""
         self.assertEqual(len(mail.outbox), 0)
         data = self._get_post_data(active=False)
@@ -294,6 +294,24 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
                 'add2@example.com',
                 self.superuser.email,
                 self.user_regular.email,
+            ],
+        )
+
+    def test_post_inactive_user(self):
+        """Test POST with inactive user"""
+        self.user_regular.is_active = False
+        self.user_regular.save()
+        self.assertEqual(len(mail.outbox), 0)
+        data = self._get_post_data()
+        with self.login(self.superuser):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].recipients(),
+            [
+                settings.EMAIL_SENDER,
+                self.superuser.email,  # No self.user_regular
             ],
         )
 

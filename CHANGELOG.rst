@@ -17,8 +17,11 @@ Added
 Changed
 -------
 
+- **Adminalerts**
+    - Exclude inactive users from email sending (#1632)
 - **Projectroles**
     - Rename invite email sending methods (#1635)
+    - Exclude inactive users from email sending (#1632)
 
 Fixed
 -----

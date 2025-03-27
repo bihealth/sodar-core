@@ -16,6 +16,7 @@ v1.1.4 (WIP)
 Release Highlights
 ==================
 
+- Update email sending to exclude inactive users
 - Fix subject prefix not included in all sent email
 
 

@@ -547,6 +547,7 @@ def send_project_leave_mail(project, user, request=None):
         a.user
         for a in project.get_roles(max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE])
         if a.user != user
+        and a.user.is_active
         and app_settings.get(APP_NAME, 'notify_email_role', user=a.user)
     ]
     for r in recipients:
@@ -658,7 +659,12 @@ def send_project_create_mail(project, request):
     parent = project.parent
     parent_owner = project.parent.get_owner() if project.parent else None
     project_owner = project.get_owner()
-    if not parent or not parent_owner or parent_owner.user == request.user:
+    if (
+        not parent
+        or not parent_owner
+        or not parent_owner.user.is_active
+        or parent_owner.user == request.user
+    ):
         return 0
 
     subject = SUBJECT_PREFIX + SUBJECT_PROJECT_CREATE.format(
@@ -705,7 +711,12 @@ def send_project_move_mail(project, request):
     parent = project.parent
     parent_owner = project.parent.get_owner() if project.parent else None
     project_owner = project.get_owner()
-    if not parent or not parent_owner or parent_owner.user == request.user:
+    if (
+        not parent
+        or not parent_owner
+        or not parent_owner.user.is_active
+        or parent_owner.user == request.user
+    ):
         return 0
 
     subject = SUBJECT_PREFIX + SUBJECT_PROJECT_MOVE.format(
@@ -754,6 +765,7 @@ def send_project_archive_mail(project, action, request):
         a.user
         for a in project.get_roles()
         if a.user != user
+        and a.user.is_active
         and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
     ]
     project_users = list(set(project_users))  # Remove possible dupes (see #710)
@@ -811,6 +823,7 @@ def send_project_delete_mail(project, request):
         a.user
         for a in project.get_roles()
         if a.user != user
+        and a.user.is_active
         and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
     ]
     project_users = list(set(project_users))
