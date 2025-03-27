@@ -47,6 +47,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
+APP_NAME = 'projectroles'
 SUBJECT_BODY = 'Test subject'
 MESSAGE_BODY = 'Test message'
 INVALID_EMAIL = 'ahch0La8lo0eeT8u'
@@ -316,10 +317,46 @@ class TestEmailSending(
         self.assertEqual(mail.outbox[0].reply_to[0], self.user.email)
         self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
 
+    def test_send_project_create_mail_parent_delegate(self):
+        """Test send_project_create_mail() with parent delegate"""
+        cat_delegate = self.make_user('cat_delegate')
+        cat_delegate.email = 'cat_delegate@example.com'
+        cat_delegate.save()
+        self.make_assignment(self.category, cat_delegate, self.role_delegate)
+        new_project = self.make_project(
+            'New Project', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.make_assignment(new_project, self.user, self.role_owner)
+        self.request.user = self.user
+        email_sent = send_project_create_mail(
+            project=new_project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 2)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[0].to[0], cat_delegate.email)
+        self.assertEqual(mail.outbox[1].to[0], self.user_owner.email)
+
     def test_send_project_create_mail_inactive_parent_owner(self):
         """Test send_project_create_mail() with inactive parent owner"""
         self.user_owner.is_active = False
         self.user_owner.save()
+        new_project = self.make_project(
+            'New Project', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.make_assignment(new_project, self.user, self.role_owner)
+        self.request.user = self.user
+        email_sent = send_project_create_mail(
+            project=new_project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 0)
+
+    def test_send_project_create_mail_disable_notify(self):
+        """Test send_project_create_mail() with disabled email notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_email_project', False, user=self.user_owner
+        )
         new_project = self.make_project(
             'New Project', PROJECT_TYPE_PROJECT, self.category
         )
@@ -346,6 +383,42 @@ class TestEmailSending(
         self.assertEqual(mail.outbox[0].reply_to[0], self.user.email)
         self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
 
+    def test_send_project_move_mail_parent_delegate(self):
+        """Test send_project_move_mail() with parent delegate"""
+        cat_delegate = self.make_user('cat_delegate')
+        cat_delegate.email = 'cat_delegate@example.com'
+        cat_delegate.save()
+        self.make_assignment(self.category, cat_delegate, self.role_delegate)
+        new_project = self.make_project(
+            'New Project', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.make_assignment(new_project, self.user, self.role_owner)
+        self.request.user = self.user
+        email_sent = send_project_move_mail(
+            project=new_project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 2)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[0].to[0], cat_delegate.email)
+        self.assertEqual(mail.outbox[1].to[0], self.user_owner.email)
+
+    def test_send_project_move_mail_disable_notify(self):
+        """Test send_project_move_mail() with disabled email notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_email_project', False, user=self.user_owner
+        )
+        new_project = self.make_project(
+            'New Project', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.make_assignment(new_project, self.user, self.role_owner)
+        self.request.user = self.user
+        email_sent = send_project_move_mail(
+            project=new_project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 0)
+
     def test_send_project_move_mail_inactive_parent_owner(self):
         """Test send_project_move_mail() with inactive parent owner"""
         self.user_owner.is_active = False
@@ -367,9 +440,32 @@ class TestEmailSending(
         self.assertEqual(email_sent, 1)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(len(mail.outbox[0].to), 1)
-        self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
+        self.assertEqual(mail.outbox[0].to[0], self.user.email)
         self.assertEqual(len(mail.outbox[0].reply_to), 0)
         self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_project_archive_mail_disable_notify(self):
+        """Test send_project_archive_mail() with disabled email notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_email_project', False, user=self.user
+        )
+        email_sent = send_project_archive_mail(
+            project=self.project,
+            action='archive',
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 0)
+
+    def test_send_project_archive_mail_inactive_recipient(self):
+        """Test send_project_archive_mail() with inactive recipient"""
+        self.user.is_active = False
+        self.user.save()
+        email_sent = send_project_archive_mail(
+            project=self.project,
+            action='archive',
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 0)
 
     def test_send_project_delete_mail(self):
         """Test send_project_delete_mail()"""
@@ -380,9 +476,30 @@ class TestEmailSending(
         self.assertEqual(email_sent, 1)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(len(mail.outbox[0].to), 1)
-        self.assertEqual(mail.outbox[0].to[0], self.user_owner.email)
+        self.assertEqual(mail.outbox[0].to[0], self.user.email)
         self.assertEqual(len(mail.outbox[0].reply_to), 0)
         self.assertIn(SUBJECT_PREFIX, mail.outbox[0].subject)
+
+    def test_send_project_delete_mail_disable_notify(self):
+        """Test send_project_delete_mail() with disabled email notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_email_project', False, user=self.user
+        )
+        email_sent = send_project_delete_mail(
+            project=self.project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 0)
+
+    def test_send_project_delete_mail_inactive_recipient(self):
+        """Test send_project_delete_mail() with inactive recipient"""
+        self.user.is_active = False
+        self.user.save()
+        email_sent = send_project_delete_mail(
+            project=self.project,
+            request=self.request,
+        )
+        self.assertEqual(email_sent, 0)
 
     def test_send_generic_mail_user(self):
         """Test send_generic_mail() with User recipient"""

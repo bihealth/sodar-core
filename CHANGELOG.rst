@@ -22,12 +22,23 @@ Changed
 - **Projectroles**
     - Rename invite email sending methods (#1635)
     - Exclude inactive users from email sending (#1632)
+    - Send project notify emails to delegates (#1641)
 
 Fixed
 -----
 
 - **Projectroles**
     - ``SUBJECT_PREFIX`` not included in all sent email (#1631)
+    - Project modify emails only sent to local parent owner (#1641)
+    - Project modify emails not honoring ``notify_email_project`` app settings (#1642)
+    - Invalid email recipient set in ``send_project_archive_mail()`` (#1643)
+    - Invalid email recipient set in ``send_project_delete_mail()`` (#1643)
+
+Removed
+-------
+
+- **Projectroles**
+    - Unused ``support_email`` arg in ``send_generic_mail()`` (#1633)
 
 
 v1.1.3 (2025-03-25)

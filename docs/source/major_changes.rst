@@ -18,6 +18,9 @@ Release Highlights
 
 - Update email sending to exclude inactive users
 - Fix subject prefix not included in all sent email
+- Fix project modify emails only sent to local owner of parent category
+- Fix project modify emails not honoring email sending app setting
+- Fix invalid recipient in project archive and deletion emails
 
 
 v1.1.3 (2025-03-25)
