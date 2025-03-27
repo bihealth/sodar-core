@@ -24,6 +24,7 @@ Release Highlights
 - Fix project modify emails only sent to local owner of parent category
 - Fix project modify emails not honoring email sending app setting
 - Fix invalid recipient in project archive and deletion emails
+- Fix leave project button displaying for superuser with no role
 
 
 v1.1.3 (2025-03-25)

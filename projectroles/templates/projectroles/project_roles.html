@@ -43,7 +43,7 @@
     {{ project_type_title }} Members
   </h3>
   <div class="ml-auto">
-    {% if not site_read_only %}
+    {% if user_has_role and not site_read_only %}
       <span class="d-inline-block" tabindex="0" data-toggle="tooltip"
             id="sodar-pr-btn-leave-tooltip"
             title="{{ project_leave_msg }}">

@@ -2911,6 +2911,7 @@ class TestProjectRoleView(
                 categories='categories', projects='projects'
             ),
         )
+        self.assertEqual(context['user_has_role'], True)
         self.assertEqual(context['own_local_as'], self.owner_as)
         self.assertEqual(context['project_leave_access'], False)
         self.assertEqual(context['project_leave_msg'], ROLE_LEAVE_OWNER_MSG)
@@ -2960,6 +2961,13 @@ class TestProjectRoleView(
         self.assertEqual(response.context['site_read_only'], True)
         self.assertNotIn('project_leave_access', response.context)
         self.assertNotIn('project_leave_msg', response.context)
+
+    def test_get_superuser_no_role(self):
+        """Test GET as superuser with no role in project"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user_has_role'], False)
 
     def test_get_not_found(self):
         """Test GET with invalid project UUID"""

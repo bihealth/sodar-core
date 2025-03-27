@@ -42,6 +42,7 @@ Fixed
     - Project modify emails not honoring ``notify_email_project`` app settings (#1642)
     - Invalid email recipient set in ``send_project_archive_mail()`` (#1643)
     - Invalid email recipient set in ``send_project_delete_mail()`` (#1643)
+    - Leave project button displayed for superuser with no role (#1630)
 
 Removed
 -------

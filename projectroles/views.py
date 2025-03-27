@@ -1934,6 +1934,8 @@ class ProjectRoleView(
         )
         context['site_read_only'] = app_settings.get(APP_NAME, 'site_read_only')
         if self.request.user.is_authenticated:
+            # In case of superuser who may not have role despite accessing view
+            context['user_has_role'] = project.has_role(self.request.user)
             own_local_as = RoleAssignment.objects.filter(
                 project=project, user=self.request.user
             ).first()

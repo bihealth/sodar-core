@@ -2411,6 +2411,12 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
         self.assertEqual(elem.get_attribute('disabled'), 'true')
 
+    def test_leave_button_superuser_no_role(self):
+        """Test rendering leave project button as superuser with no role"""
+        self.login_and_redirect(self.superuser, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+
     def test_role_ops(self):
         """Test rendering role operations dropdown"""
         good_users = [self.superuser, self.user_owner, self.user_delegate]
