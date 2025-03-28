@@ -29,9 +29,12 @@ Changed
 - **Projectroles**
     - Rename invite email sending methods (#1635)
     - Exclude inactive users in email sending (#1632)
-    - Send project notify emails to delegates (#1641)
+    - Send project modify emails to delegates (#1641)
     - Exclude inactive users in ``UserAutocompleteAjaxView`` (#1637)
     - Move ``UserAutocompleteRedirectAjaxView`` view tests to ``test_views_ajax`` (#1644)
+    - Exclude inactive users in project modify app alert creation (#1646)
+    - Create project modify app alerts to delegates (#1647)
+    - Refactor project modify email recipient handling (#1632, #1641, #1649)
 
 Fixed
 -----
@@ -43,6 +46,7 @@ Fixed
     - Invalid email recipient set in ``send_project_archive_mail()`` (#1643)
     - Invalid email recipient set in ``send_project_delete_mail()`` (#1643)
     - Leave project button displayed for superuser with no role (#1630)
+    - Project modify app alerts only created for local parent owner (#1641)
 
 Removed
 -------

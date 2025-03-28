@@ -449,20 +449,17 @@ def get_user_addr(user):
     return ret
 
 
-def get_project_modify_recipients(project, sender):
+def get_project_modify_recipients(recipients):
     """
-    Return owner and delegate recipients for project modify emails. Excludes
-    sender user, inactive users and users with notify_email_project set False.
+    Filter recipient list for project modify emails. Excludes users with
+    notify_email_project set False.
 
-    :param project: Project object
-    :param sender: User object
+    :param recipients: List of SODARUser objects
     """
     return [
-        a.user
-        for a in project.get_roles(max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE])
-        if a.user != sender
-        and a.user.is_active
-        and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
+        u
+        for u in recipients
+        if app_settings.get(APP_NAME, 'notify_email_project', user=u)
     ]
 
 
@@ -664,20 +661,23 @@ def send_invite_expiry_mail(invite, request, user_name):
     return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
-def send_project_create_mail(project, request):
+def send_project_create_mail(project, recipients, request):
     """
     Send email about project creation to owners and delegates of the parent
     category, excluding the project creator. Also excludes users who have set
     notify_email_role to False.
 
-    :param project: Project object for the newly created project
+    Received recipient list must be filtered for email preferences.
+
+    :param project: Project object
+    :param recipients: List of SODARUser objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     parent = project.parent
     if not parent:
         return 0
-    recipients = get_project_modify_recipients(project, request.user)
+    recipients = get_project_modify_recipients(recipients)
     if not recipients:
         return 0
     owner = project.get_owner().user
@@ -718,20 +718,23 @@ def send_project_create_mail(project, request):
     return mail_count
 
 
-def send_project_move_mail(project, request):
+def send_project_move_mail(project, recipients, request):
     """
     Send email about project being moved to the owners and delegates of the
     parent category, excluding the project creator. Also excludes users who have
     set notify_email_role to False.
 
-    :param project: Project object for the newly created project
+    Received recipient list must be filtered for email preferences.
+
+    :param project: Project object
+    :param recipients: List of SODARUser objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     parent = project.parent
     if not parent:
         return 0
-    recipients = get_project_modify_recipients(project, request.user)
+    recipients = get_project_modify_recipients(recipients)
     if not recipients:
         return 0
     owner = project.get_owner().user
@@ -829,23 +832,23 @@ def send_project_archive_mail(project, action, request):
     return mail_count
 
 
-def send_project_delete_mail(project, request):
+def send_project_delete_mail(project, recipients, request):
     """
     Send a notification email on project deletion.
 
+    Received recipient list must be filtered for email preferences.
+
     :param project: Project object
+    :param recipients: List of SODARUser objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     user = request.user
     recipients = [
-        a.user
-        for a in project.get_roles()
-        if a.user != user
-        and a.user.is_active
-        and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
+        u
+        for u in recipients
+        if app_settings.get(APP_NAME, 'notify_email_project', user=u)
     ]
-    recipients = list(set(recipients))
     if not recipients:
         return 0
 

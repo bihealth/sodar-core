@@ -19,9 +19,9 @@ Release Highlights
 - Add inactive user and superuser display in UI
 - Add inactive user stats in siteinfo
 - Update user dropdown to exclude inactive users
-- Update email sending to exclude inactive users
+- Update email sending and app alert creation to exclude inactive users
 - Fix subject prefix not included in all sent email
-- Fix project modify emails only sent to local owner of parent category
+- Fix project modify emails and app alerts only created for local parent owner
 - Fix project modify emails not honoring email sending app setting
 - Fix invalid recipient in project archive and deletion emails
 - Fix leave project button displaying for superuser with no role

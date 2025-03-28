@@ -951,22 +951,38 @@ class TestProjectCreateView(
         self.assertEqual(Project.objects.all().count(), 2)
         project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
         self.assertEqual(project.get_owner().user, user_new)
-        # Alert and email for new user should be created
-        self.assertEqual(self.app_alert_model.objects.count(), 1)
-        self.assertEqual(self.app_alert_model.objects.first().user, user_new)
-        self.assertEqual(len(mail.outbox), 1)
+
+        # Alerts for both owner role and project creation should be sent
+        r_events = self.app_alert_model.objects.filter(alert_name='role_create')
+        self.assertEqual(r_events.count(), 1)
+        self.assertEqual(r_events.first().user, user_new)
+        p_events = self.app_alert_model.objects.filter(
+            alert_name='project_create_parent'
+        )
+        self.assertEqual(p_events.count(), 1)
+        self.assertEqual(p_events.first().user, user_new)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertIn(
             SUBJECT_ROLE_CREATE.format(
                 project_label='project', project=project.title
             ),
             mail.outbox[0].subject,
         )
+        self.assertIn(
+            SUBJECT_PROJECT_CREATE.format(
+                project_type='Project',
+                project=project.title,
+                user=self.user.username,
+            ),
+            mail.outbox[1].subject,
+        )
 
     def test_post_project_different_owner_disable_email(self):
-        """Test POST for project with different owner and disabled email"""
+        """Test POST for project with different owner and disabled email notifications"""
         user_new = self.make_user('user_new')
         self.make_assignment(self.category, user_new, self.role_contributor)
         app_settings.set(APP_NAME, 'notify_email_role', False, user=user_new)
+        app_settings.set(APP_NAME, 'notify_email_project', False, user=user_new)
         data = self._get_post_data(
             title='TestProject',
             project_type=PROJECT_TYPE_PROJECT,
@@ -979,9 +995,38 @@ class TestProjectCreateView(
         self.assertEqual(Project.objects.all().count(), 2)
         project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
         self.assertEqual(project.get_owner().user, user_new)
-        # Alert should be created but no mail should be sent
-        self.assertEqual(self.app_alert_model.objects.count(), 1)
-        self.assertEqual(self.app_alert_model.objects.first().user, user_new)
+        # Alerts should be created but no mail should be sent
+        r_events = self.app_alert_model.objects.filter(alert_name='role_create')
+        self.assertEqual(r_events.count(), 1)
+        self.assertEqual(r_events.first().user, user_new)
+        p_events = self.app_alert_model.objects.filter(
+            alert_name='project_create_parent'
+        )
+        self.assertEqual(p_events.count(), 1)
+        self.assertEqual(p_events.first().user, user_new)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_project_different_owner_inactive(self):
+        """Test POST with different and inactive parent owner"""
+        user_new = self.make_user('user_new')
+        user_new.is_active = False
+        user_new.save()
+        # NOTE: Yes, we can technically still set roles for inactive user
+        self.make_assignment(self.category, user_new, self.role_contributor)
+        data = self._get_post_data(
+            title='TestProject',
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=user_new,
+        )
+        with self.login(self.user):  # Post as category owner
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.all().count(), 2)
+        project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
+        self.assertEqual(project.get_owner().user, user_new)
+        # No alerts, no email
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_post_project_cat_member(self):
@@ -1777,6 +1822,31 @@ class TestProjectUpdateView(
         # Assert alert but no email
         self.assertEqual(self.app_alert_model.objects.count(), 1)
         self.assertEqual(self.app_alert_model.objects.first().user, user_new)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_parent_different_owner_inactive(self):
+        """Test POST with different and inactive parent owner"""
+        user_new = self.make_user('user_new')
+        user_new.is_active = False
+        user_new.save()
+        self.owner_as_cat.user = user_new
+        self.owner_as_cat.save()
+        category_new = self.make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category_new, user_new, self.role_owner)
+        data = model_to_dict(self.project)
+        data['owner'] = self.user.sodar_uuid
+        data['parent'] = category_new.sodar_uuid
+        data.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
+            )
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_post_remote(self):
@@ -2597,23 +2667,31 @@ class TestProjectArchiveView(
         self.assertEqual(self._get_tl().count(), 0)
         self.assertEqual(self._get_alerts().count(), 0)
         self.assertEqual(len(mail.outbox), 0)
-
         with self.login(self.user):
-            response = self.client.post(self.url, {'status': True})
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+            self.client.post(self.url, {'status': True})
         self.project.refresh_from_db()
         self.assertEqual(self.project.archive, True)
         self.assertEqual(self._get_tl().count(), 1)
         # Alert but no email for contributor
         self.assertEqual(self._get_alerts().count(), 1)
         self.assertEqual(self._get_alerts().first().user, self.user_contributor)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_inactive_user(self):
+        """Test POST with inactive user"""
+        self.user_contributor.is_active = False
+        self.user_contributor.save()
+        self.assertEqual(self.project.archive, False)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            self.client.post(self.url, {'status': True})
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, True)
+        self.assertEqual(self._get_tl().count(), 1)
+        # No alert, no email
+        self.assertEqual(self._get_alerts().count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_post_project_archived(self):
@@ -2793,6 +2871,21 @@ class TestProjectDeleteView(
         self.assertEqual(Project.objects.count(), 1)
         alerts = self._get_delete_alerts()
         self.assertEqual(alerts.count(), 3)  # All should receive alert
+        self.assertEqual(len(mail.outbox), 2)  # Only 2 emails
+
+    def test_post_inactive_user(self):
+        """Test POST with inactive user"""
+        self.user_owner.is_active = False
+        self.user_owner.save()
+        self.assertEqual(Project.objects.count(), 2)
+        self.assertEqual(self._get_delete_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):  # POST as self.user again
+            response = self.client.post(self.url, data=self.post_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 1)
+        alerts = self._get_delete_alerts()
+        self.assertEqual(alerts.count(), 2)  # One fever alert
         self.assertEqual(len(mail.outbox), 2)  # Only 2 emails
 
     def test_post_category_with_children(self):
@@ -4260,6 +4353,28 @@ class TestRoleAssignmentOwnDeleteView(
             mail.outbox[0].subject,
         )
 
+    def test_post_inactive_user(self):
+        """Test POST with inactive user"""
+        self.user.is_active = False
+        self.user.save()
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+        url = reverse(
+            'projectroles:role_delete_own',
+            kwargs={'roleassignment': self.contrib_as.sodar_uuid},
+        )
+        with self.login(self.user_contrib):
+            response = self.client.post(url)
+            self.assertRedirects(response, reverse('home'))
+
+        self.assertEqual(RoleAssignment.objects.count(), 2)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete_own'
+            ).count(),
+            0,
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_post_owner(self):
         """Test POST with owner role (should fail)"""
         self.assertEqual(RoleAssignment.objects.count(), 3)
@@ -4439,6 +4554,28 @@ class TestRoleAssignmentOwnerTransferView(
             )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.app_alert_model.objects.count(), 2)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_post_inactive_user(self):
+        """Test POST with inactive user"""
+        self.user_owner.is_active = False
+        self.user_owner.save()
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'project': self.project.sodar_uuid,
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': self.role_guest.pk,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.app_alert_model.objects.count(), 1)
+        self.assertEqual(
+            self.app_alert_model.objects.first().user, self.user_guest
+        )
         self.assertEqual(len(mail.outbox), 1)
 
     def test_post_as_old_owner(self):
@@ -4933,6 +5070,7 @@ class TestProjectInviteAcceptView(
             issuer=self.user,
             message='',
         )
+        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
         self.url = reverse(
             'projectroles:invite_accept',
             kwargs={'secret': self.invite.secret},
@@ -4999,7 +5137,41 @@ class TestProjectInviteAcceptView(
         self.assertEqual(self.invite.is_ldap(), True)
         app_settings.set(APP_NAME, 'notify_email_role', False, user=self.user)
         with self.login(self.user_new):
-            self.client.get(self.url)
+            self.client.get(self.url, follow=True)
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+        self.assertTrue(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).exists()
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='invite_accept'
+            ).count(),
+            1,
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_get_ldap_inactive_user(self):
+        """Test GET with LDAP invite and inactive user"""
+        self.user.is_active = False
+        self.user.save()
+        self.assertEqual(self.invite.is_ldap(), True)
+        with self.login(self.user_new):
+            self.client.get(self.url, follow=True)
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+        self.assertTrue(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).exists()
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='invite_accept'
+            ).count(),
+            0,
+        )
         self.assertEqual(len(mail.outbox), 0)
 
     @override_settings(

@@ -8,7 +8,7 @@ from django.urls import reverse
 from test_plus.test import TestCase, RequestFactory
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS, ROLE_RANKING
 from projectroles.email import (
     send_role_change_mail,
     send_project_leave_mail,
@@ -75,6 +75,32 @@ class TestEmailSending(
                 reverse('userprofile:settings_update')
             )
         )
+
+    @classmethod
+    def _get_project_modify_recipients(cls, project, request_user):
+        """
+        Return owner and delegate users for project omitting request_user.
+        Exclude inactive users but does NOT exclude app settings.
+        """
+        return [
+            a.user
+            for a in project.get_roles(
+                max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+            )
+            if a.user.is_active and a.user != request_user
+        ]
+
+    @classmethod
+    def _get_project_delete_recipients(cls, project, request_user):
+        """
+        Return project users for project omitting request_user. Exclude inactive
+        users but does NOT exclude app settings.
+        """
+        return [
+            a.user
+            for a in project.get_roles()
+            if a.user.is_active and a.user != request_user
+        ]
 
     def setUp(self):
         # Init roles
@@ -307,6 +333,9 @@ class TestEmailSending(
         self.request.user = self.user
         email_sent = send_project_create_mail(
             project=new_project,
+            recipients=self._get_project_modify_recipients(
+                new_project, self.user
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 1)
@@ -330,6 +359,9 @@ class TestEmailSending(
         self.request.user = self.user
         email_sent = send_project_create_mail(
             project=new_project,
+            recipients=self._get_project_modify_recipients(
+                new_project, self.user
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 2)
@@ -348,6 +380,9 @@ class TestEmailSending(
         self.request.user = self.user
         email_sent = send_project_create_mail(
             project=new_project,
+            recipients=self._get_project_modify_recipients(
+                new_project, self.user
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 0)
@@ -364,6 +399,9 @@ class TestEmailSending(
         self.request.user = self.user
         email_sent = send_project_create_mail(
             project=new_project,
+            recipients=self._get_project_modify_recipients(
+                new_project, self.user
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 0)
@@ -373,6 +411,9 @@ class TestEmailSending(
         self.request.user = self.user
         email_sent = send_project_move_mail(
             project=self.project,
+            recipients=self._get_project_modify_recipients(
+                self.project, self.user
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 1)
@@ -396,6 +437,9 @@ class TestEmailSending(
         self.request.user = self.user
         email_sent = send_project_move_mail(
             project=new_project,
+            recipients=self._get_project_modify_recipients(
+                new_project, self.user
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 2)
@@ -415,6 +459,9 @@ class TestEmailSending(
         self.request.user = self.user
         email_sent = send_project_move_mail(
             project=new_project,
+            recipients=self._get_project_modify_recipients(
+                new_project, self.user
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 0)
@@ -426,6 +473,9 @@ class TestEmailSending(
         self.request.user = self.user
         email_sent = send_project_move_mail(
             project=self.project,
+            recipients=self._get_project_modify_recipients(
+                self.project, self.user
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 0)
@@ -471,6 +521,9 @@ class TestEmailSending(
         """Test send_project_delete_mail()"""
         email_sent = send_project_delete_mail(
             project=self.project,
+            recipients=self._get_project_delete_recipients(
+                self.project, self.user_owner
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 1)
@@ -487,6 +540,9 @@ class TestEmailSending(
         )
         email_sent = send_project_delete_mail(
             project=self.project,
+            recipients=self._get_project_delete_recipients(
+                self.project, self.user_owner
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 0)
@@ -497,6 +553,9 @@ class TestEmailSending(
         self.user.save()
         email_sent = send_project_delete_mail(
             project=self.project,
+            recipients=self._get_project_delete_recipients(
+                self.project, self.user_owner
+            ),
             request=self.request,
         )
         self.assertEqual(email_sent, 0)
