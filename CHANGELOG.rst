@@ -20,6 +20,7 @@ Added
     - ``get_user_superuser_icon()`` common template tag (#1639)
     - Inactive and superuser status in ``get_user_html()`` (#1638, #1639)
     - Inactive and superuser status in ``ProjectRoleView`` (#1638, #1639)
+    - ``removeroles`` management command ``deactivate`` arg (#1656)
 
 Changed
 -------

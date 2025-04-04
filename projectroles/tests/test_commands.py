@@ -1070,6 +1070,7 @@ class TestRemoveRoles(
         self.assertEqual(self.project.has_role(user_keep), True)
         self.assertEqual(self.category.has_role(self.user), True)
         self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(self.user.is_active, True)
         self.assertEqual(
             TimelineEvent.objects.filter(event_name='role_delete').count(), 0
         )
@@ -1084,6 +1085,8 @@ class TestRemoveRoles(
         self.assertEqual(self.project.has_role(user_keep), True)
         self.assertEqual(self.category.has_role(self.user), False)
         self.assertEqual(self.project.has_role(self.user), False)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.is_active, True)
         self.assertEqual(
             TimelineEvent.objects.filter(event_name='role_delete').count(), 2
         )
@@ -1091,6 +1094,20 @@ class TestRemoveRoles(
         self.assertEqual(
             AppAlert.objects.filter(alert_name='role_delete').count(), 0
         )
+
+    def test_command_deactivate(self):
+        """Test removing roles from user with deactivation"""
+        # Set up non-owner roles for user in category and project
+        self.make_assignment(self.category, self.user, self.role_contributor)
+        self.make_assignment(self.project, self.user, self.role_guest)
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(self.user.is_active, True)
+        call_command(self.cmd_name, user=self.user, deactivate=True)
+        self.assertEqual(self.category.has_role(self.user), False)
+        self.assertEqual(self.project.has_role(self.user), False)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.is_active, False)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_command_remote(self):
@@ -1148,6 +1165,19 @@ class TestRemoveRoles(
         self.assertEqual(
             AppAlert.objects.filter(alert_name='role_delete').count(), 0
         )
+
+    def test_command_check_deactivate(self):
+        """Test command with check mode and deactivation"""
+        self.make_assignment(self.category, self.user, self.role_contributor)
+        self.make_assignment(self.project, self.user, self.role_guest)
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(self.user.is_active, True)
+        call_command(self.cmd_name, user=self.user, check=True, deactivate=True)
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.is_active, True)
 
     def test_command_owner_unset(self):
         """Test removing owner with unset new owner"""
