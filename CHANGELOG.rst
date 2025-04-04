@@ -49,6 +49,7 @@ Fixed
     - Leave project button displayed for superuser with no role (#1630)
     - Project modify app alerts only created for local parent owner (#1641)
     - Project list highlight fails with root level projects in category details view (#1655)
+    - Project subtitle margin in project header (#1645)
 
 Removed
 -------

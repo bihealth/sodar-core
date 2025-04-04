@@ -14,12 +14,12 @@
     {% include 'projectroles/_project_menu_btn.html' %}
   {% endif %}
 
-  <h2 class="sodar-pr-content-title mr-2">{{ project.title }}</h2>
+  <h2 class="sodar-pr-content-title mr-1">{{ project.title }}</h2>
 
   {# Project starring/unstarring #}
   {% if request.user.is_authenticated and not site_read_only %}
     <a role="link"
-       class="btn btn-link ml-0 mr-2 sodar-pr-btn-title sodar-pr-btn-star"
+       class="btn btn-link ml-1 mr-0 sodar-pr-btn-title sodar-pr-btn-star"
        id="sodar-pr-link-project-star"
        star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
        title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
@@ -35,7 +35,7 @@
   {# Project copy uuid #}
   {% if enable_uuid_copy %}
     <a role="submit"
-       class="btn btn-link mr-2 sodar-pr-btn-title sodar-copy-btn"
+       class="btn btn-link ml-2 mr-0 sodar-pr-btn-title sodar-copy-btn"
        id="sodar-pr-btn-copy-uuid"
        data-clipboard-text="{{ project.sodar_uuid }}"
        title="Copy UUID to clipboard" data-toggle="tooltip" data-placement="top">
@@ -46,11 +46,11 @@
   {% endif %}
 
   {# Secondary title #}
-  <div class="sodar-pr-content-title-secondary text-muted">
-    {% if project.description %}
+  {% if project.description %}
+    <div class="sodar-pr-content-title-secondary text-muted ml-2">
       {{ project.description }}
-    {% endif %}
-  </div>
+    </div>
+  {% endif %}
 
   {# Header icons #}
   <div class="ml-auto">
