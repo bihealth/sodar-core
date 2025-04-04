@@ -137,6 +137,7 @@ $(document).ready(function () {
         }
 
         // Display rows
+        var parent = $('.sodar-pr-project-list-table').attr('data-parent');
         var projectCount = data['projects'].length;
         var starredCount = 0;
         const catDelim = ' / ';
@@ -179,12 +180,12 @@ $(document).ready(function () {
             var titleHtml = '';
             if (data['user']['highlight'] &&
                     projectType.toUpperCase() === 'PROJECT' &&
-                    p['full_title'].includes(catDelim)) {
+                    (parent || p['full_title'].includes(catDelim))) {
                 var titleSplit = p['full_title'].split(catDelim);
                 var splitLen = titleSplit.length;
                 titleHtml = titleSplit.slice(0, splitLen - 1).join(catDelim);
-                titleHtml += catDelim + '<strong>' + titleSplit[splitLen - 1] +
-                    '</strong>';
+                if (titleHtml.length) titleHtml += catDelim;
+                titleHtml += '<strong>' + titleSplit[splitLen - 1] + '</strong>';
             } else titleHtml = p['full_title'];
             row.append($('<td>')
                 .attr('class', 'sodar-pr-project-list-title-td')

@@ -1190,6 +1190,25 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         return tl_event
 
     @classmethod
+    def _get_notify_recipients(cls, project, request):
+        """
+        Return list of owner and delegate users to send notification alerts or
+        emails to. Omits request user. This list can be further filtered down to
+        check for user app settings.
+
+        :param project: Project object
+        :param request: Request object
+        :return: List of SODARUser objects
+        """
+        return [
+            a.user
+            for a in project.get_roles(
+                max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE]
+            )
+            if a.user != request.user and a.user.is_active
+        ]
+
+    @classmethod
     def _notify_users(cls, project, action, owner, old_parent, request):
         """
         Notify users about project creation and update. Displays app alerts
@@ -1201,7 +1220,11 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             project=project, user=owner
         ).first()
         # Owner change notification
-        if request.user != owner and action == PROJECT_ACTION_CREATE:
+        if (
+            request.user != owner
+            and action == PROJECT_ACTION_CREATE
+            and owner.is_active
+        ):
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
@@ -1226,26 +1249,40 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     owner_as.role,
                     request,
                 )
-        # Project creation/moving for parent category owner
-        if (
-            project.parent
-            and project.parent.get_owner().user != owner_as.user
-            and project.parent.get_owner().user != request.user
-        ):
-            parent_owner = project.parent.get_owner().user
-            parent_owner_email = app_settings.get(
-                APP_NAME, 'notify_email_project', user=parent_owner
-            )
-
-            if action == PROJECT_ACTION_CREATE and request.user != parent_owner:
+        # Project creation/moving for parent category owners and delegates
+        if project.parent:
+            recipients = cls._get_notify_recipients(project, request)
+            if action == PROJECT_ACTION_CREATE and recipients:
                 if app_alerts:
+                    for r in recipients:
+                        app_alerts.add_alert(
+                            app_name=APP_NAME,
+                            alert_name='project_create_parent',
+                            user=r,
+                            message='New {} created under category '
+                            '"{}": "{}".'.format(
+                                project.type.lower(),
+                                project.parent.title,
+                                project.title,
+                            ),
+                            url=reverse(
+                                'projectroles:detail',
+                                kwargs={'project': project.sodar_uuid},
+                            ),
+                            project=project,
+                        )
+                if SEND_EMAIL:
+                    email.send_project_create_mail(project, recipients, request)
+
+            elif old_parent and recipients:
+                for r in recipients:
                     app_alerts.add_alert(
                         app_name=APP_NAME,
-                        alert_name='project_create_parent',
-                        user=parent_owner,
-                        message='New {} created under category '
+                        alert_name='project_move_parent',
+                        user=r,
+                        message='{} moved under category '
                         '"{}": "{}".'.format(
-                            project.type.lower(),
+                            project.type.capitalize(),
                             project.parent.title,
                             project.title,
                         ),
@@ -1255,28 +1292,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                         ),
                         project=project,
                     )
-                if SEND_EMAIL and parent_owner_email:
-                    email.send_project_create_mail(project, request)
-
-            elif old_parent and request.user != parent_owner:
-                app_alerts.add_alert(
-                    app_name=APP_NAME,
-                    alert_name='project_move_parent',
-                    user=parent_owner,
-                    message='{} moved under category '
-                    '"{}": "{}".'.format(
-                        project.type.capitalize(),
-                        project.parent.title,
-                        project.title,
-                    ),
-                    url=reverse(
-                        'projectroles:detail',
-                        kwargs={'project': project.sodar_uuid},
-                    ),
-                    project=project,
-                )
-                if SEND_EMAIL and parent_owner_email:
-                    email.send_project_move_mail(project, request)
+                if SEND_EMAIL:
+                    email.send_project_move_mail(project, recipients, request)
 
     @transaction.atomic
     def modify_project(self, data, request, instance=None):
@@ -1571,11 +1588,13 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             )
         # Create timeline event
         self._create_timeline_event(project, request)
+        recipients = users = [
+            a.user
+            for a in project.get_roles()
+            if a.user.is_active and a.user != request.user
+        ]
         # Create app alerts
-        if app_alerts:
-            users = [
-                a.user for a in project.get_roles() if a.user != request.user
-            ]
+        if app_alerts and recipients:
             app_alerts.add_alerts(
                 app_name=APP_NAME,
                 alert_name='project_delete',
@@ -1587,8 +1606,8 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
                 ),
             )
         # Send email
-        if SEND_EMAIL:
-            email.send_project_delete_mail(project, request)
+        if SEND_EMAIL and recipients:
+            email.send_project_delete_mail(project, recipients, request)
         # Actually delete project object
         project.delete()
 
@@ -1730,8 +1749,11 @@ class ProjectArchiveView(
             alert_msg = '{} data is now read-only.'.format(alert_p)
         else:
             alert_msg = '{} data can be modified.'.format(alert_p)
-        users = [a.user for a in project.get_roles() if a.user != user]
-        users = list(set(users))  # Remove possible dupes (see issue #710)
+        users = [
+            a.user
+            for a in project.get_roles()
+            if a.user.is_active and a.user != user
+        ]
         if not users:
             return
         else:
@@ -1934,6 +1956,8 @@ class ProjectRoleView(
         )
         context['site_read_only'] = app_settings.get(APP_NAME, 'site_read_only')
         if self.request.user.is_authenticated:
+            # In case of superuser who may not have role despite accessing view
+            context['user_has_role'] = project.has_role(self.request.user)
             own_local_as = RoleAssignment.objects.filter(
                 project=project, user=self.request.user
             ).first()
@@ -2159,7 +2183,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             for a in project.get_roles(
                 max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE]
             )
-            if a.user != user
+            if a.user.is_active and a.user != user
         ]
         for r in recipients:
             app_alerts.add_alert(
@@ -2671,7 +2695,12 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         if tl_event:
             tl_event.set_status(self._get_timeline_ok_status())
         # Notify old owner
-        if notify_old and not old_inh_owner and issuer != old_owner:
+        if (
+            notify_old
+            and not old_inh_owner
+            and issuer != old_owner
+            and old_owner.is_active
+        ):
             if app_alerts:
                 if old_owner_role:
                     alert_name = 'role_update'
@@ -3048,7 +3077,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             if SEND_EMAIL and app_settings.get(
                 APP_NAME, 'notify_email_role', user=invite.issuer
             ):
-                email.send_expiry_note(
+                email.send_invite_expiry_mail(
                     invite,
                     self.request,
                     user_name=user.get_full_name() if user else invite.email,
@@ -3091,7 +3120,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             tl_event.set_status(timeline.TL_STATUS_OK)
 
         # Notify the issuer by alert and email
-        if app_alerts:
+        if app_alerts and invite.issuer.is_active:
             app_alerts.add_alert(
                 app_name=APP_NAME,
                 alert_name='invite_accept',
@@ -3106,10 +3135,14 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 ),
                 project=invite.project,
             )
-        if SEND_EMAIL and app_settings.get(
-            APP_NAME, 'notify_email_role', user=invite.issuer
+        if (
+            SEND_EMAIL
+            and invite.issuer.is_active
+            and app_settings.get(
+                APP_NAME, 'notify_email_role', user=invite.issuer
+            )
         ):
-            email.send_accept_note(invite, self.request, user)
+            email.send_invite_accept_mail(invite, self.request, user)
 
         # Deactivate the invite
         self.revoke_invite(invite, user, failed=False, timeline=timeline)

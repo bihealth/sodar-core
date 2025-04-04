@@ -171,13 +171,49 @@ def get_project_link(project, full_title=False, request=None):
 
 
 @register.simple_tag
+def get_user_superuser_icon():
+    """Return superuser icon for user"""
+    return (
+        '<i class="iconify text-info ml-1" '
+        'data-icon="mdi:shield-account"></i>'
+    )
+
+
+@register.simple_tag
+def get_user_inactive_icon():
+    """Return inactive icon for user"""
+    return (
+        '<i class="iconify text-secondary ml-1" '
+        'data-icon="mdi:account-off"></i>'
+    )
+
+
+@register.simple_tag
 def get_user_html(user):
     """Return standard HTML representation for a User object"""
-    return (
-        '<a title="{}" href="mailto:{}" data-toggle="tooltip" '
-        'data-placement="top">{}'
-        '</a>'.format(user.get_full_name(), user.email, user.username)
+    email_link = True if user.is_active and user.email else False
+    title = user.get_full_name()
+    if not user.is_active:
+        title += ' (inactive)'
+    elif user.is_superuser:
+        title += ' (superuser)'
+    ret = (
+        '<span class="sodar-user-html{}" data-toggle="tooltip" '
+        'data-placement="top" title="{}">'.format(
+            ' text-secondary' if not user.is_active else '', title
+        )
     )
+    if email_link:
+        ret += '<a href="mailto:{}">'.format(user.email)
+    ret += user.username
+    if email_link:
+        ret += '</a>'
+    if user.is_superuser:
+        ret += get_user_superuser_icon()
+    if not user.is_active:
+        ret += get_user_inactive_icon()
+    ret += '</span>'
+    return ret
 
 
 @register.simple_tag

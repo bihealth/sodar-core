@@ -34,6 +34,8 @@
 {% get_role_perms project request.user as role_perms %}
 {% get_info_link finder_info as finder_info_link %}
 {% get_display_name project.type title=True as project_type_title %}
+{% get_user_superuser_icon as superuser_icon %}
+{% get_user_inactive_icon as inactive_icon %}
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h3>
@@ -41,7 +43,7 @@
     {{ project_type_title }} Members
   </h3>
   <div class="ml-auto">
-    {% if not site_read_only %}
+    {% if user_has_role and not site_read_only %}
       <span class="d-inline-block" tabindex="0" data-toggle="tooltip"
             id="sodar-pr-btn-leave-tooltip"
             title="{{ project_leave_msg }}">
@@ -93,7 +95,9 @@
         <tbody>
           {% for role_as in roles %}
             <tr class="sodar-pr-role-list-row" data-user-uuid="{{ role_as.user.sodar_uuid }}">
-              <td>{{ role_as.user.username }}</td>
+              <td {% if not role_as.user.is_active %}class="text-secondary"{% endif %}>
+                {{ role_as.user.username }}{% if role_as.user.is_superuser %}{{ superuser_icon | safe }}{% endif %}{% if not role_as.user.is_active %}{{ inactive_icon | safe }}{% endif %}
+              </td>
               <td>{{ role_as.user.name }}</td>
               <td><a href="mailto:{{ role_as.user.email }}">{{ role_as.user.email }}</a></td>
               <td class="sodar-pr-role-item-role">

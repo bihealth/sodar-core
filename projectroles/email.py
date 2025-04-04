@@ -449,6 +449,20 @@ def get_user_addr(user):
     return ret
 
 
+def get_project_modify_recipients(recipients):
+    """
+    Filter recipient list for project modify emails. Excludes users with
+    notify_email_project set False.
+
+    :param recipients: List of SODARUser objects
+    """
+    return [
+        u
+        for u in recipients
+        if app_settings.get(APP_NAME, 'notify_email_project', user=u)
+    ]
+
+
 def send_mail(
     subject,
     message,
@@ -536,7 +550,7 @@ def send_project_leave_mail(project, user, request=None):
     :return: Amount of sent email (int)
     """
     p_label = get_display_name(project.type)
-    subject = SUBJECT_ROLE_LEAVE.format(
+    subject = SUBJECT_PREFIX + SUBJECT_ROLE_LEAVE.format(
         user_name=user.username, project_label=p_label, project=project.title
     )
     message = MESSAGE_ROLE_LEAVE.format(
@@ -547,6 +561,7 @@ def send_project_leave_mail(project, user, request=None):
         a.user
         for a in project.get_roles(max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE])
         if a.user != user
+        and a.user.is_active
         and app_settings.get(APP_NAME, 'notify_email_role', user=a.user)
     ]
     for r in recipients:
@@ -578,7 +593,7 @@ def send_invite_mail(invite, request):
     return send_mail(subject, message, [invite.email], request, issuer_emails)
 
 
-def send_accept_note(invite, request, user):
+def send_invite_accept_mail(invite, request, user):
     """
     Send a notification email to the issuer of an invitation when a user
     accepts the invitation.
@@ -612,7 +627,7 @@ def send_accept_note(invite, request, user):
     return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
-def send_expiry_note(invite, request, user_name):
+def send_invite_expiry_mail(invite, request, user_name):
     """
     Send a notification email to the issuer of an invitation when a user
     attempts to accept an expired invitation.
@@ -646,98 +661,118 @@ def send_expiry_note(invite, request, user_name):
     return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
-def send_project_create_mail(project, request):
+def send_project_create_mail(project, recipients, request):
     """
-    Send email about project creation to the owner of the parent category, if
-    they are a different user than the project creator.
+    Send email about project creation to owners and delegates of the parent
+    category, excluding the project creator. Also excludes users who have set
+    notify_email_role to False.
 
-    :param project: Project object for the newly created project
+    Received recipient list must be filtered for email preferences.
+
+    :param project: Project object
+    :param recipients: List of SODARUser objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     parent = project.parent
-    parent_owner = project.parent.get_owner() if project.parent else None
-    project_owner = project.get_owner()
-    if not parent or not parent_owner or parent_owner.user == request.user:
+    if not parent:
         return 0
+    recipients = get_project_modify_recipients(recipients)
+    if not recipients:
+        return 0
+    owner = project.get_owner().user
 
-    subject = SUBJECT_PROJECT_CREATE.format(
+    subject = SUBJECT_PREFIX + SUBJECT_PROJECT_CREATE.format(
         project_type=get_display_name(project.type, title=True),
         project=project.title,
         user=get_email_user(request.user),
     )
-    message = get_email_header(
-        MESSAGE_HEADER.format(
-            recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
-        )
-    )
-    message += MESSAGE_PROJECT_CREATE_BODY.format(
-        user=get_email_user(request.user),
-        project_type=get_display_name(project.type),
-        category=parent.title,
-        project=project.title,
-        owner=get_email_user(project_owner.user),
-        project_url=request.build_absolute_uri(
-            reverse(
-                'projectroles:detail', kwargs={'project': project.sodar_uuid}
+    mail_count = 0
+    for r in recipients:
+        message = get_email_header(
+            MESSAGE_HEADER.format(
+                recipient=r.get_full_name(), site_title=SITE_TITLE
             )
-        ),
-    )
-    message += get_email_footer(request)
-    return send_mail(
-        subject,
-        message,
-        get_user_addr(parent_owner.user),
-        request,
-        reply_to=get_user_addr(request.user),
-    )
+        )
+        message += MESSAGE_PROJECT_CREATE_BODY.format(
+            user=get_email_user(request.user),
+            project_type=get_display_name(project.type),
+            category=parent.title,
+            project=project.title,
+            owner=get_email_user(owner),
+            project_url=request.build_absolute_uri(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.sodar_uuid},
+                )
+            ),
+        )
+        message += get_email_footer(request)
+        mail_count += send_mail(
+            subject,
+            message,
+            get_user_addr(r),
+            request,
+            reply_to=get_user_addr(request.user),
+        )
+    return mail_count
 
 
-def send_project_move_mail(project, request):
+def send_project_move_mail(project, recipients, request):
     """
-    Send email about project being moved to the owner of the parent category, if
-    they are a different user than the project creator.
+    Send email about project being moved to the owners and delegates of the
+    parent category, excluding the project creator. Also excludes users who have
+    set notify_email_role to False.
 
-    :param project: Project object for the newly created project
+    Received recipient list must be filtered for email preferences.
+
+    :param project: Project object
+    :param recipients: List of SODARUser objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     parent = project.parent
-    parent_owner = project.parent.get_owner() if project.parent else None
-    project_owner = project.get_owner()
-    if not parent or not parent_owner or parent_owner.user == request.user:
+    if not parent:
         return 0
+    recipients = get_project_modify_recipients(recipients)
+    if not recipients:
+        return 0
+    owner = project.get_owner().user
 
-    subject = SUBJECT_PROJECT_MOVE.format(
+    subject = SUBJECT_PREFIX + SUBJECT_PROJECT_MOVE.format(
         project_type=get_display_name(project.type, title=True),
         project=project.title,
         user=get_email_user(request.user),
     )
-    message = get_email_header(
-        MESSAGE_HEADER.format(
-            recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
-        )
-    )
-    message += MESSAGE_PROJECT_MOVE_BODY.format(
-        user=get_email_user(request.user),
-        project_type=get_display_name(project.type),
-        category=parent.title,
-        project=project.title,
-        owner=get_email_user(project_owner.user),
-        project_url=request.build_absolute_uri(
-            reverse(
-                'projectroles:detail', kwargs={'project': project.sodar_uuid}
+    mail_count = 0
+    for r in recipients:
+        message = get_email_header(
+            MESSAGE_HEADER.format(
+                recipient=r.get_full_name(), site_title=SITE_TITLE
             )
-        ),
-    )
-    message += get_email_footer(request)
-    return send_mail(
-        subject,
-        message,
-        get_user_addr(parent_owner.user),
-        request,
-        reply_to=get_user_addr(request.user),
-    )
+        )
+        message += MESSAGE_PROJECT_MOVE_BODY.format(
+            user=get_email_user(request.user),
+            project_type=get_display_name(project.type),
+            category=parent.title,
+            project=project.title,
+            owner=get_email_user(owner),
+            project_url=request.build_absolute_uri(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.sodar_uuid},
+                )
+            ),
+        )
+        message += get_email_footer(request)
+        mail_count += send_mail(
+            subject,
+            message,
+            get_user_addr(r),
+            request,
+            reply_to=get_user_addr(request.user),
+        )
+    return mail_count
 
 
 def send_project_archive_mail(project, action, request):
@@ -749,15 +784,14 @@ def send_project_archive_mail(project, action, request):
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
-    user = request.user
-    project_users = [
+    recipients = [
         a.user
         for a in project.get_roles()
-        if a.user != user
+        if a.user != request.user
+        and a.user.is_active
         and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
     ]
-    project_users = list(set(project_users))  # Remove possible dupes (see #710)
-    if not project_users:
+    if not recipients:
         return 0
     mail_count = 0
 
@@ -770,13 +804,13 @@ def send_project_archive_mail(project, action, request):
     subject = SUBJECT_PREFIX + subject.format(
         project_label_title=get_display_name(project.type, title=True),
         project=project.title,
-        user=user.get_full_name(),
+        user=request.user.get_full_name(),
     )
     body_final = body.format(
         project_label_title=get_display_name(project.type, title=True),
         project_label=get_display_name(project.type),
         project=project.title,
-        user=user.get_full_name(),
+        user=request.user.get_full_name(),
         project_url=request.build_absolute_uri(
             reverse(
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
@@ -784,37 +818,38 @@ def send_project_archive_mail(project, action, request):
         ),
     )
 
-    for recipient in project_users:
+    for r in recipients:
         message = get_email_header(
             MESSAGE_HEADER.format(
-                recipient=recipient.get_full_name(), site_title=SITE_TITLE
+                recipient=r.get_full_name(), site_title=SITE_TITLE
             )
         )
         message += body_final
         if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
             message += NO_REPLY_NOTE
         message += get_email_footer(request)
-        mail_count += send_mail(subject, message, get_user_addr(user), request)
+        mail_count += send_mail(subject, message, get_user_addr(r), request)
     return mail_count
 
 
-def send_project_delete_mail(project, request):
+def send_project_delete_mail(project, recipients, request):
     """
     Send a notification email on project deletion.
 
+    Received recipient list must be filtered for email preferences.
+
     :param project: Project object
+    :param recipients: List of SODARUser objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
     user = request.user
-    project_users = [
-        a.user
-        for a in project.get_roles()
-        if a.user != user
-        and app_settings.get(APP_NAME, 'notify_email_project', user=a.user)
+    recipients = [
+        u
+        for u in recipients
+        if app_settings.get(APP_NAME, 'notify_email_project', user=u)
     ]
-    project_users = list(set(project_users))
-    if not project_users:
+    if not recipients:
         return 0
 
     mail_count = 0
@@ -831,17 +866,17 @@ def send_project_delete_mail(project, request):
         user=user.get_full_name(),
     )
 
-    for recipient in project_users:
+    for r in recipients:
         message = get_email_header(
             MESSAGE_HEADER.format(
-                recipient=recipient.get_full_name(), site_title=SITE_TITLE
+                recipient=r.get_full_name(), site_title=SITE_TITLE
             )
         )
         message += body_final
         if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
             message += NO_REPLY_NOTE
         message += get_email_footer(request)
-        mail_count += send_mail(subject, message, get_user_addr(user), request)
+        mail_count += send_mail(subject, message, get_user_addr(r), request)
     return mail_count
 
 
@@ -854,7 +889,6 @@ def send_generic_mail(
     cc=None,
     bcc=None,
     settings_link=True,
-    support_email=False,
 ):
     """
     Send a generic mail with standard header and footer and no-reply
@@ -868,7 +902,6 @@ def send_generic_mail(
     :param cc: List of emails for "cc" field (optional)
     :param bcc: List of emails for "bcc" field (optional)
     :param settings_link: Include link to user settings if True (optional)
-    :param support_email: Include support contact info if True (optional)
     :return: Amount of mail sent (int)
     """
     subject = SUBJECT_PREFIX + subject_body

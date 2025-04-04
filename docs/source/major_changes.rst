@@ -10,6 +10,25 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.4 (2025-04-04)
+*******************
+
+Release Highlights
+==================
+
+- Add inactive user and superuser display in UI
+- Add inactive user stats in siteinfo
+- Add deactivate argument for removeroles management command
+- Update user dropdown to exclude inactive users
+- Update email sending and app alert creation to exclude inactive users
+- Fix subject prefix not included in all sent email
+- Fix project modify emails and app alerts only created for local parent owner
+- Fix project modify emails not honoring email sending app setting
+- Fix invalid recipient in project archive and deletion emails
+- Fix leave project button displaying for superuser with no role
+- Fix project list highlight with root level projects under category details view
+
+
 v1.1.3 (2025-03-25)
 *******************
 

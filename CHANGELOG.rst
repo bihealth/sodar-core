@@ -5,6 +5,59 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.1.4 (2025-04-04)
+===================
+
+Added
+-----
+
+- **Siteinfo**
+    - Inactive users in user statistics (#1640)
+- **Projectroles**
+    - Missing email tests (#1636)
+    - ``UserAutocompleteAjaxView`` tests (#1644)
+    - ``get_user_inactive_icon()`` common template tag (#1638)
+    - ``get_user_superuser_icon()`` common template tag (#1639)
+    - Inactive and superuser status in ``get_user_html()`` (#1638, #1639)
+    - Inactive and superuser status in ``ProjectRoleView`` (#1638, #1639)
+    - ``removeroles`` management command ``deactivate`` arg (#1656)
+
+Changed
+-------
+
+- **Adminalerts**
+    - Exclude inactive users in email sending (#1632)
+- **Projectroles**
+    - Rename invite email sending methods (#1635)
+    - Exclude inactive users in email sending (#1632)
+    - Send project modify emails to delegates (#1641)
+    - Exclude inactive users in ``UserAutocompleteAjaxView`` (#1637)
+    - Move ``UserAutocompleteRedirectAjaxView`` view tests to ``test_views_ajax`` (#1644)
+    - Exclude inactive users in project modify app alert creation (#1646)
+    - Create project modify app alerts to delegates (#1647)
+    - Refactor project modify email recipient handling (#1632, #1641, #1649)
+
+Fixed
+-----
+
+- **Projectroles**
+    - ``SUBJECT_PREFIX`` not included in all sent email (#1631)
+    - Project modify emails only sent to local parent owner (#1641)
+    - Project modify emails not honoring ``notify_email_project`` app settings (#1642)
+    - Invalid email recipient set in ``send_project_archive_mail()`` (#1643)
+    - Invalid email recipient set in ``send_project_delete_mail()`` (#1643)
+    - Leave project button displayed for superuser with no role (#1630)
+    - Project modify app alerts only created for local parent owner (#1641)
+    - Project list highlight fails with root level projects in category details view (#1655)
+    - Project subtitle margin in project header (#1645)
+
+Removed
+-------
+
+- **Projectroles**
+    - Unused ``support_email`` arg in ``send_generic_mail()`` (#1633)
+
+
 v1.1.3 (2025-03-25)
 ===================
 

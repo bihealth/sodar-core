@@ -93,7 +93,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
     def _get_email_recipients(cls, alert):
         """Return list of email addresses for alert email recipients"""
         ret = []
-        for u in User.objects.all():
+        for u in User.objects.exclude(is_active=False):
             if not app_settings.get(APP_NAME, 'notify_email_alert', user=u):
                 continue
             user_emails = get_user_addr(u)

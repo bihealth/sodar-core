@@ -131,6 +131,15 @@ class Command(
             'set to parent owner',
         )
         parser.add_argument(
+            '-d',
+            '--deactivate',
+            dest='deactivate',
+            required=False,
+            default=False,
+            action='store_true',
+            help='Deactivate user after removing their roles',
+        )
+        parser.add_argument(
             '-c',
             '--check',
             dest='check',
@@ -203,6 +212,13 @@ class Command(
                 role_count += 1
             elif not check:
                 fail_count += 1
+        if options['deactivate']:
+            if check:
+                logger.info(f'User to be deactivated: {user.username}')
+            else:
+                user.is_active = False
+                user.save()
+                logger.info(f'User "{user.username}" deactivated')
         if check:
             logger.info('Check done')
         else:

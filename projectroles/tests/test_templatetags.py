@@ -253,10 +253,65 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         """Test get_user_html()"""
         self.assertEqual(
             c_tags.get_user_html(self.user),
-            '<a title="{}" href="mailto:{}" data-toggle="tooltip" '
-            'data-placement="top">{}</a>'.format(
+            '<span class="sodar-user-html" data-toggle="tooltip" '
+            'data-placement="top" title="{}"><a href="mailto:{}">'
+            '{}</a></span>'.format(
                 self.user.get_full_name(), self.user.email, self.user.username
             ),
+        )
+
+    def test_get_user_html_superuser(self):
+        """Test get_user_html() with superuser"""
+        self.user.is_superuser = True
+        self.assertEqual(
+            c_tags.get_user_html(self.user),
+            '<span class="sodar-user-html" data-toggle="tooltip" '
+            'data-placement="top" title="{}"><a href="mailto:{}">'
+            '{}</a><i class="iconify text-info ml-1" '
+            'data-icon="mdi:shield-account"></i></span>'.format(
+                self.user.get_full_name() + ' (superuser)',
+                self.user.email,
+                self.user.username,
+            ),
+        )
+
+    def test_get_user_html_inactive(self):
+        """Test get_user_html() with inactive user"""
+        self.user.is_active = False
+        self.assertEqual(
+            c_tags.get_user_html(self.user),
+            '<span class="sodar-user-html text-secondary" '
+            'data-toggle="tooltip" data-placement="top" title="{}">{}'
+            '<i class="iconify text-secondary ml-1" '
+            'data-icon="mdi:account-off"></i></span>'.format(
+                self.user.get_full_name() + ' (inactive)', self.user.username
+            ),
+        )
+
+    def test_get_user_html_superuser_inactive(self):
+        """Test get_user_html() with inactive superuser"""
+        self.user.is_superuser = True
+        self.user.is_active = False
+        self.assertEqual(
+            c_tags.get_user_html(self.user),
+            '<span class="sodar-user-html text-secondary" '
+            'data-toggle="tooltip" data-placement="top" title="{}">{}'
+            '<i class="iconify text-info ml-1" '
+            'data-icon="mdi:shield-account"></i>'
+            '<i class="iconify text-secondary ml-1" '
+            'data-icon="mdi:account-off"></i></span>'.format(
+                self.user.get_full_name() + ' (inactive)', self.user.username
+            ),
+        )
+
+    def test_get_user_html_no_email(self):
+        """Test get_user_html() with no email on user"""
+        self.user.email = ''
+        self.assertEqual(
+            c_tags.get_user_html(self.user),
+            '<span class="sodar-user-html" '
+            'data-toggle="tooltip" data-placement="top" title="{}">{}'
+            '</span>'.format(self.user.get_full_name(), self.user.username),
         )
 
     def test_get_history_dropdown(self):
