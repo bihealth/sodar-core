@@ -117,14 +117,14 @@ and breaking changes are possible.
 
 .. code-block:: console
 
-    pip install django-sodar-core==1.1.3
+    pip install django-sodar-core==1.1.4
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.
 
 .. code-block:: console
 
-    pip install -e git+https://github.com/bihealth/sodar-core.git@xxxxxxxxxxxxx#egg=django-sodar-core
+    pip install -e git+https://github.com/bihealth/sodar-core.git@xxxxxxxxxxxxx#egg=django-sodar-core --use-pep517
 
 Please note that This package installs a collection of Django apps to be used in
 a Django web site project. See
