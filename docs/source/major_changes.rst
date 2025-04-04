@@ -25,6 +25,7 @@ Release Highlights
 - Fix project modify emails not honoring email sending app setting
 - Fix invalid recipient in project archive and deletion emails
 - Fix leave project button displaying for superuser with no role
+- Fix project list highlight with root level projects under category details view
 
 
 v1.1.3 (2025-03-25)

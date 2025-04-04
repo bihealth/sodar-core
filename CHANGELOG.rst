@@ -47,6 +47,7 @@ Fixed
     - Invalid email recipient set in ``send_project_delete_mail()`` (#1643)
     - Leave project button displayed for superuser with no role (#1630)
     - Project modify app alerts only created for local parent owner (#1641)
+    - Project list highlight fails with root level projects in category details view (#1655)
 
 Removed
 -------

@@ -2005,6 +2005,73 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
                 )
             )
 
+    def test_category_project_list(self):
+        """Test rendering of project list in category"""
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_highlight', user=self.user_owner
+            ),
+            True,
+        )
+        self.login_and_redirect(self.user_owner, self.url_cat)
+        WebDriverWait(self.selenium, 10).until(
+            ec.visibility_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-title')
+            )
+        )
+        elem = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-link'
+        )
+        self.assertEqual(
+            elem.get_attribute('innerHTML'),
+            f'<strong>{self.project.title}</strong>',
+        )
+
+    def test_category_project_list_no_highlight(self):
+        """Test rendering of project list in category with no highlight"""
+        app_settings.set(
+            APP_NAME, 'project_list_highlight', False, user=self.user_owner
+        )
+        self.login_and_redirect(self.user_owner, self.url_cat)
+        WebDriverWait(self.selenium, 10).until(
+            ec.visibility_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-title')
+            )
+        )
+        elem = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-link'
+        )
+        self.assertEqual(elem.get_attribute('innerHTML'), self.project.title)
+
+    def test_category_project_list_subcategory(self):
+        """Test rendering of project list in category with subcategory"""
+        sub_cat_title = 'SubCategory'
+        sub_cat = self.make_project(
+            sub_cat_title, PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(sub_cat, self.user_owner, self.role_owner)
+        # Move project under subcategory
+        self.project.parent = sub_cat
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url_cat)
+        WebDriverWait(self.selenium, 10).until(
+            ec.visibility_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-title')
+            )
+        )
+        elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-link'
+        )
+        self.assertEqual(
+            elems[0].get_attribute('innerHTML'),
+            f'{sub_cat.title}',
+        )
+        self.assertEqual(
+            elems[1].get_attribute('innerHTML'),
+            f'{sub_cat.title}{CAT_DELIMITER}<strong>{self.project.title}'
+            f'</strong>',
+        )
+
 
 class TestProjectCreateView(RemoteSiteMixin, UITestBase):
     """Tests for ProjectCreateView UI"""
