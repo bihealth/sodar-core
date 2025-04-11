@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.5 (WIP)
+*************
+
+Release Highlights
+==================
+
+- Add get_user_badge() common template tag
+
+
 v1.1.4 (2025-04-04)
 *******************
 

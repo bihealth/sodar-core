@@ -314,6 +314,55 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             '</span>'.format(self.user.get_full_name(), self.user.username),
         )
 
+    def test_get_user_badge(self):
+        """Test get_user_badge()"""
+        expected = (
+            f'<span class="badge badge-primary sodar-user-badge '
+            f'sodar-user-badge-active" title="{self.user.get_full_name()}" '
+            f'data-toggle="tooltip" data-uuid="{self.user.sodar_uuid}">'
+            f'<i class="iconify" data-icon="mdi:account"></i> '
+            f'<a class="text-white" href="mailto:{self.user.email}">'
+            f'{self.user.username}</a></span>'
+        )
+        self.assertEqual(c_tags.get_user_badge(self.user), expected)
+
+    def test_get_user_badge_no_email(self):
+        """Test get_user_badge() with no email"""
+        self.user.email = None
+        expected = (
+            f'<span class="badge badge-primary sodar-user-badge '
+            f'sodar-user-badge-active" title="{self.user.get_full_name()}" '
+            f'data-toggle="tooltip" data-uuid="{self.user.sodar_uuid}">'
+            f'<i class="iconify" data-icon="mdi:account"></i> '
+            f'{self.user.username}</span>'
+        )
+        self.assertEqual(c_tags.get_user_badge(self.user), expected)
+
+    def test_get_user_badge_superuser(self):
+        """Test get_user_badge() with superuser"""
+        expected = (
+            f'<span class="badge badge-info sodar-user-badge '
+            f'sodar-user-badge-superuser" '
+            f'title="{self.superuser.get_full_name()}" '
+            f'data-toggle="tooltip" data-uuid="{self.superuser.sodar_uuid}">'
+            f'<i class="iconify" data-icon="mdi:shield-account"></i> '
+            f'<a class="text-white" href="mailto:{self.superuser.email}">'
+            f'{self.superuser.username}</a></span>'
+        )
+        self.assertEqual(c_tags.get_user_badge(self.superuser), expected)
+
+    def test_get_user_badge_inactive(self):
+        """Test get_user_badge() with inactive user"""
+        self.user.is_active = False
+        expected = (
+            f'<span class="badge badge-secondary sodar-user-badge '
+            f'sodar-user-badge-inactive" title="{self.user.get_full_name()}" '
+            f'data-toggle="tooltip" data-uuid="{self.user.sodar_uuid}">'
+            f'<i class="iconify" data-icon="mdi:account-off"></i> '
+            f'{self.user.username}</span>'
+        )
+        self.assertEqual(c_tags.get_user_badge(self.user), expected)
+
     def test_get_history_dropdown(self):
         """Test get_history_dropdown()"""
         url = reverse(

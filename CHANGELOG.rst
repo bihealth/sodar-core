@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - ``get_user_badge()`` common template tag (#1662)
+
+
 v1.1.4 (2025-04-04)
 ===================
 
