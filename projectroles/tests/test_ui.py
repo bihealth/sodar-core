@@ -2438,6 +2438,28 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
 
+    def test_render_role_row(self):
+        """Test rendering user role row"""
+        self.login_and_redirect(self.user_owner, self.url)
+        row = self.selenium.find_element(
+            By.XPATH,
+            f'//tr[@data-user-uuid="{self.user_contributor.sodar_uuid}"]',
+        )
+        for td in row.find_elements(By.TAG_NAME, 'td')[:3]:
+            self.assertNotIn('text-secondary', td.get_attribute('class'))
+
+    def test_render_role_row_inactive(self):
+        """Test rendering user role row with inactive user"""
+        self.user_contributor.is_active = False
+        self.user_contributor.save()
+        self.login_and_redirect(self.user_owner, self.url)
+        row = self.selenium.find_element(
+            By.XPATH,
+            f'//tr[@data-user-uuid="{self.user_contributor.sodar_uuid}"]',
+        )
+        for td in row.find_elements(By.TAG_NAME, 'td')[:3]:
+            self.assertIn('text-secondary', td.get_attribute('class'))
+
     def test_leave_button_owner(self):
         """Test rendering leave project button as owner"""
         self.login_and_redirect(self.user_owner, self.url)

@@ -31,6 +31,18 @@ def get_role_icon(role):
 
 
 @register.simple_tag
+def get_role_class(user):
+    """
+    Return class string for user role based on user status.
+
+    :param user: SODARUser object
+    :return: String
+    """
+    if not user.is_active:
+        return 'text-secondary'
+
+
+@register.simple_tag
 def get_role_perms(project, user):
     """
     Return role perms to template as dict.

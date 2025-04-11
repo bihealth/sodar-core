@@ -14,6 +14,13 @@ Added
 - **Projectroles**
     - ``get_user_badge()`` common template tag (#1662)
 
+Changed
+-------
+
+- **Projectroles**
+    - Update project role list inactive user rendering (#1658)
+    - Move role list item template to ``_project_role_item.html`` (#1664)
+
 
 v1.1.4 (2025-04-04)
 ===================

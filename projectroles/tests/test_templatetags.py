@@ -511,6 +511,15 @@ class TestProjectrolesRoleTags(TemplateTagTestBase):
         )
         self.assertEqual(r_tags.get_role_icon(self.role_guest), 'mdi:account')
 
+    def test_get_role_class(self):
+        """Test get_role_class()"""
+        self.assertEqual(r_tags.get_role_class(self.user), None)
+
+    def test_get_role_class_inactive(self):
+        """Test get_role_class() with inactive user"""
+        self.user.is_active = False
+        self.assertEqual(r_tags.get_role_class(self.user), 'text-secondary')
+
     def test_get_role_perms(self):
         """Test get_role_perms()"""
         self.assertEqual(

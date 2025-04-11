@@ -1,0 +1,39 @@
+{% load projectroles_common_tags %}
+{% load projectroles_role_tags %}
+
+<tr class="sodar-pr-role-list-row" data-user-uuid="{{ role_as.user.sodar_uuid }}">
+  <td {% if not role_as.user.is_active %}class="text-secondary"{% endif %}>
+    {{ role_as.user.username }}{% if role_as.user.is_superuser %}{{ superuser_icon | safe }}{% endif %}{% if not role_as.user.is_active %}{{ inactive_icon | safe }}{% endif %}
+  </td>
+  <td class="{% get_role_class role_as.user %}">{{ role_as.user.name }}</td>
+  <td class="{% get_role_class role_as.user %}">
+    {% if role_as.user.is_active %}<a href="mailto:{{ role_as.user.email }}">{% endif %}
+    {{ role_as.user.email }}
+    {% if role_as.user.is_active %}</a>{% endif %}
+  </td>
+  <td class="sodar-pr-role-item-role {% get_role_class role_as.user %}">
+    {% get_role_display_name role_as.role project title=True as role_display %}
+    {% if role_as.project != project %}
+      <i class="iconify text-primary" data-icon="mdi:arrow-down-circle"></i>
+       <a href="{% url 'projectroles:roles' project=role_as.project.sodar_uuid %}"
+          title="Role inherited from {{ role_as.project.title }}"
+          data-toggle="tooltip" data-placement="top">
+         {{ role_display }}
+       </a>
+    {% else %}
+      <i class="iconify" data-icon="{% get_role_icon role_as.role %}"></i>
+      {{ role_display }}
+      {% if role_as.role.name == 'project finder' %}
+        {{ finder_info_link | safe }}
+      {% endif %}
+    {% endif %}
+  </td>
+  <td>
+    {% display_role_buttons project role_as role_perms as can_display_buttons %}
+    {% if can_display_buttons and role_as.role.name == 'project owner' %}
+      {% include 'projectroles/_project_role_dropdown_owner.html' with user=role_as.user role_as_uuid=role_as.sodar_uuid %}
+    {% elif can_display_buttons %}
+      {% include 'projectroles/_project_role_dropdown.html' with user=role_as.user role_as_uuid=role_as.sodar_uuid %}
+    {% endif %}
+  </td>
+</tr>
