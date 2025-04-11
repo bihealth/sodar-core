@@ -20,6 +20,7 @@ Changed
 - **Projectroles**
     - Update project role list inactive user rendering (#1658)
     - Move role list item template to ``_project_role_item.html`` (#1664)
+    - Improve ``badge-light`` CSS (#1663)
 - **Timeline**
     - Update event details modal rendering to support line breaks (#1660)
 

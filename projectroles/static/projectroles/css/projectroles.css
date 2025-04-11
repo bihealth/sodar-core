@@ -472,6 +472,10 @@ a.btn[disabled='disabled'] {
   opacity: 75%;
 }
 
+.badge-light {
+  border: 1px solid #dfdfdf;
+}
+
 .sodar-list-btn-group {
   height: 1.65em;
 }
