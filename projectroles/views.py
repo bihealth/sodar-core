@@ -2344,7 +2344,7 @@ class RoleAssignmentCreateView(
             if (
                 self.promote_as
                 and self.promote_as.role.rank
-                >= ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR]
+                == ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR]
                 and del_count >= del_limit
             ):
                 messages.warning(

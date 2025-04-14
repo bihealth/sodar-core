@@ -24,6 +24,12 @@ Changed
 - **Timeline**
     - Update event details modal rendering to support line breaks (#1660)
 
+Fixed
+-----
+
+- **Projectroles**
+    - Inherited guest promotion with delegate limit reached (#1666)
+
 
 v1.1.4 (2025-04-04)
 ===================

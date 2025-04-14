@@ -19,6 +19,7 @@ Release Highlights
 - Add get_user_badge() common template tag
 - Update inactive user rendering in project role list
 - Update timeline UI event status to support line breaks
+- Fix inherited guest role promotion with project delegate limit reached
 
 
 v1.1.4 (2025-04-04)
