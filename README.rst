@@ -117,7 +117,7 @@ and breaking changes are possible.
 
 .. code-block:: console
 
-    pip install django-sodar-core==1.1.4
+    pip install django-sodar-core==1.1.5
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.

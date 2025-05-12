@@ -5,6 +5,34 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.1.5 (2025-05-12)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``get_user_badge()`` common template tag (#1662)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v4.2.21 (#1669)
+- **Projectroles**
+    - Update project role list inactive user rendering (#1658)
+    - Move role list item template to ``_project_role_item.html`` (#1664)
+    - Improve ``badge-light`` CSS (#1663)
+- **Timeline**
+    - Update event details modal rendering to support line breaks (#1660)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Inherited guest promotion with delegate limit reached (#1666)
+
+
 v1.1.4 (2025-04-04)
 ===================
 

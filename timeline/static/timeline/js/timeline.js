@@ -52,10 +52,14 @@ $(document).ready(function() {
                     extraData = '';
                 }
                 tableBody.append($('<tr>')
-                    .append($('<td>').html(data['status'][i]['timestamp']))
-                    .append($('<td>').html(data['status'][i]['description'] + extraData))
+                    .append($('<td class="sodar-tl-event-detail-timestamp">').html(
+                        data['status'][i]['timestamp']))
+                    .append($('<td class="sodar-tl-event-detail-description">').html(
+                        data['status'][i]['description'].replaceAll(
+                            '\n', '<br />') + extraData))
                     .append($('<td>')
-                        .attr('class', data['status'][i]['class'])
+                        .attr('class', 'sodar-tl-event-detail-status-type ' +
+                            data['status'][i]['class'])
                         .html(data['status'][i]['type'])
                     )
                 );

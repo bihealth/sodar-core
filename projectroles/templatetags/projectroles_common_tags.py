@@ -190,7 +190,7 @@ def get_user_inactive_icon():
 
 @register.simple_tag
 def get_user_html(user):
-    """Return standard HTML representation for a User object"""
+    """Return HTML representation of a User object"""
     email_link = True if user.is_active and user.email else False
     title = user.get_full_name()
     if not user.is_active:
@@ -212,6 +212,38 @@ def get_user_html(user):
         ret += get_user_superuser_icon()
     if not user.is_active:
         ret += get_user_inactive_icon()
+    ret += '</span>'
+    return ret
+
+
+@register.simple_tag
+def get_user_badge(user):
+    """Return badge HTML for a User object"""
+    if not user.is_active:
+        icon = 'mdi:account-off'
+        badge_class = 'secondary'
+        user_class = 'inactive'
+    elif user.is_superuser:
+        icon = 'mdi:shield-account'
+        badge_class = 'info'
+        user_class = 'superuser'
+    else:
+        icon = 'mdi:account'
+        badge_class = 'primary'
+        user_class = 'active'
+    email = True if user.is_active and user.email else False
+    ret = (
+        f'<span class="badge badge-{badge_class} sodar-user-badge '
+        f'sodar-user-badge-{user_class}" '
+        f'title="{user.get_full_name()}" data-toggle="tooltip" '
+        f'data-uuid="{user.sodar_uuid}">'
+        f'<i class="iconify" data-icon="{icon}"></i> '
+    )
+    if email:
+        ret += f'<a class="text-white" href="mailto:{user.email}">'
+    ret += user.username
+    if email:
+        ret += '</a>'
     ret += '</span>'
     return ret
 

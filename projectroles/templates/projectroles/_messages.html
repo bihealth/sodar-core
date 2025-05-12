@@ -32,13 +32,6 @@
       {% if request.user.is_authenticated or not message.require_auth %}
         <div class="alert alert-{{ message.color }} {% if message.dismissable %}alert-dismissable fade show{% endif %} sodar-alert-top sodar-alert-site-app">
           <div class="sodar-alert-top-content">
-            {% comment %}
-            {% if message.dismissable %}
-              <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link">
-                <i class="iconify text-muted" data-icon="mdi:close-thick"></i>
-              </a>
-            {% endif %}
-            {% endcomment %}
             {{ message.content | safe }}
           </div>
         </div>

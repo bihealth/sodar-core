@@ -10,6 +10,26 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.5 (2025-05-12)
+*******************
+
+Release Highlights
+==================
+
+- Add get_user_badge() common template tag
+- Update inactive user rendering in project role list
+- Update timeline UI event status to support line breaks
+- Fix inherited guest role promotion with project delegate limit reached
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v4.2.21.
+
+
 v1.1.4 (2025-04-04)
 *******************
 
