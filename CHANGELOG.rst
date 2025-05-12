@@ -51,6 +51,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade minimum Django version to v4.2.21 (#1669)
 - **Adminalerts**
     - Exclude inactive users in email sending (#1632)
 - **Projectroles**

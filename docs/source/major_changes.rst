@@ -21,6 +21,14 @@ Release Highlights
 - Update timeline UI event status to support line breaks
 - Fix inherited guest role promotion with project delegate limit reached
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v4.2.21.
+
 
 v1.1.4 (2025-04-04)
 *******************
