@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.1.5 (2025-05-12)
+===================
 
 Added
 -----
@@ -17,6 +17,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade minimum Django version to v4.2.21 (#1669)
 - **Projectroles**
     - Update project role list inactive user rendering (#1658)
     - Move role list item template to ``_project_role_item.html`` (#1664)
@@ -51,8 +53,6 @@ Added
 Changed
 -------
 
-- **General**
-    - Upgrade minimum Django version to v4.2.21 (#1669)
 - **Adminalerts**
     - Exclude inactive users in email sending (#1632)
 - **Projectroles**
