@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.6 (WIP)
+************
+
+Release Highlights
+==================
+
+- Fix timeline search returning duplicate events
+
+
 v1.1.5 (2025-05-12)
 *******************
 

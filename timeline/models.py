@@ -5,7 +5,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Max
 
 # Projectroles dependency
 from projectroles.models import Project
@@ -81,7 +81,8 @@ class TimelineEventManager(models.Manager):
             super()
             .get_queryset()
             .filter(term_query)
-            .order_by('-status_changes__timestamp')
+            .annotate(timestamp=Max('status_changes__timestamp'))
+            .order_by('-timestamp')
         )
         return items[:search_limit]
 

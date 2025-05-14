@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Timeline**
+    - Duplicate events returned by ``search()`` (#1674)
+
+
 v1.1.5 (2025-05-12)
 ===================
 
