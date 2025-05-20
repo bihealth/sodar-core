@@ -5,6 +5,28 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.1.6 (2025-05-20)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``SeleniumSetupMixin`` UI test helper class (#1676)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to setuptools v78.1 (#1677)
+
+Fixed
+-----
+
+- **Timeline**
+    - Duplicate events returned by ``search()`` (#1674)
+
+
 v1.1.5 (2025-05-12)
 ===================
 

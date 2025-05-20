@@ -2,7 +2,7 @@
 wheel>=0.45.1, <0.46
 
 # Setuptools
-setuptools>=75.8.0 , <75.9
+setuptools>=78.1.1, <78.2
 
 # Packaging
 packaging>=24.2, <25.0

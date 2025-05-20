@@ -10,6 +10,24 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.6 (2025-05-20)
+*******************
+
+Release Highlights
+==================
+
+- Add Selenium setup helper mixin for UI tests
+- Fix timeline search returning duplicate events
+- Upgrade critical dependencies
+
+System Prerequisites
+--------------------
+
+The following critical dependencies have been upgraded:
+
+- ``setuptools>=78.1.1, <78.2``
+
+
 v1.1.5 (2025-05-12)
 *******************
 
