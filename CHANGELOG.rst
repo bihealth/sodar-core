@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``SeleniumSetupMixin`` UI test helper class (#1676)
+
 Fixed
 -----
 

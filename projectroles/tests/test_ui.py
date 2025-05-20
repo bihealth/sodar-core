@@ -81,6 +81,39 @@ REMOTE_SITE_ID = 'id_remote_site.{}'.format(REMOTE_SITE_UUID)
 CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
 
 
+class SeleniumSetupMixin:
+    """Mixin for setting up selenium for a test class"""
+
+    #: Selenium Chrome options from settings
+    chrome_options = getattr(
+        settings,
+        'PROJECTROLES_TEST_UI_CHROME_OPTIONS',
+        [
+            'headless=new',
+            'no-sandbox',  # For Gitlab-CI compatibility
+            'disable-dev-shm-usage',  # For testing stability
+        ],
+    )
+
+    #: Selenium window size from settings
+    window_size = getattr(
+        settings, 'PROJECTROLES_TEST_UI_WINDOW_SIZE', (1400, 1000)
+    )
+
+    #: UI test wait time from settings
+    wait_time = getattr(settings, 'PROJECTROLES_TEST_UI_WAIT_TIME', 30)
+
+    def set_up_selenium(self):
+        socket.setdefaulttimeout(60)  # To get around Selenium hangups
+        # Init Chrome
+        options = webdriver.ChromeOptions()
+        for arg in self.chrome_options:
+            options.add_argument(arg)
+        self.selenium = webdriver.Chrome(options=options)
+        # Prevent ElementNotVisibleException
+        self.selenium.set_window_size(self.window_size[0], self.window_size[1])
+
+
 class LiveUserMixin:
     """Mixin for creating users to work with LiveServerTestCase"""
 
@@ -102,6 +135,7 @@ class LiveUserMixin:
 
 
 class UITestBase(
+    SeleniumSetupMixin,
     LiveUserMixin,
     ProjectMixin,
     RoleMixin,
@@ -110,37 +144,12 @@ class UITestBase(
 ):
     """Base class for UI tests"""
 
-    #: Selenium Chrome options from settings
-    chrome_options = getattr(
-        settings,
-        'PROJECTROLES_TEST_UI_CHROME_OPTIONS',
-        [
-            'headless=new',
-            'no-sandbox',  # For Gitlab-CI compatibility
-            'disable-dev-shm-usage',  # For testing stability
-        ],
-    )
-
-    #: Selenium window size from settings
-    window_size = getattr(
-        settings, 'PROJECTROLES_TEST_UI_WINDOW_SIZE', (1400, 1000)
-    )
-
-    #: UI test wait time from settings
-    wait_time = getattr(settings, 'PROJECTROLES_TEST_UI_WAIT_TIME', 30)
-
     def setUp(self):
-        socket.setdefaulttimeout(60)  # To get around Selenium hangups
-        # Init Chrome
-        options = webdriver.ChromeOptions()
-        for arg in self.chrome_options:
-            options.add_argument(arg)
-        self.selenium = webdriver.Chrome(options=options)
-        # Prevent ElementNotVisibleException
-        self.selenium.set_window_size(self.window_size[0], self.window_size[1])
-
+        # Set up Selenium
+        self.set_up_selenium()
         # Init roles
         self.init_roles()
+
         # Init users
         self.superuser = self.make_user('admin', True)
         self.user_owner_cat = self.make_user('user_owner_cat')

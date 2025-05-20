@@ -16,6 +16,7 @@ v1.1.6 (WIP)
 Release Highlights
 ==================
 
+- Add Selenium setup helper mixin for UI tests
 - Fix timeline search returning duplicate events
 
 
