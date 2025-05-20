@@ -14,6 +14,12 @@ Added
 - **Projectroles**
     - ``SeleniumSetupMixin`` UI test helper class (#1676)
 
+Changed
+-------
+
+- **General**
+    - Upgrade to setuptools v78.1 (#1677)
+
 Fixed
 -----
 

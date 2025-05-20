@@ -19,6 +19,13 @@ Release Highlights
 - Add Selenium setup helper mixin for UI tests
 - Fix timeline search returning duplicate events
 
+System Prerequisites
+--------------------
+
+The following critical dependencies have been upgraded:
+
+- ``setuptools>=78.1.1, <78.2``
+
 
 v1.1.5 (2025-05-12)
 *******************
