@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **Projectroles**
+    - Move UI test helpers to ``UITestMixin`` (#1682)
+
+
 v1.1.6 (2025-05-20)
 ===================
 

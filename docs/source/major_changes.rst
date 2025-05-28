@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.1.7 (WIP)
+************
+
+Release Highlights
+==================
+
+- Move UI test helpers into a separate mixin
+
+
 v1.1.6 (2025-05-20)
 *******************
 

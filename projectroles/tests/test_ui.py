@@ -134,78 +134,8 @@ class LiveUserMixin:
         return user
 
 
-class UITestBase(
-    SeleniumSetupMixin,
-    LiveUserMixin,
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
-    LiveServerTestCase,
-):
-    """Base class for UI tests"""
-
-    def setUp(self):
-        # Set up Selenium
-        self.set_up_selenium()
-        # Init roles
-        self.init_roles()
-
-        # Init users
-        self.superuser = self.make_user('admin', True)
-        self.user_owner_cat = self.make_user('user_owner_cat')
-        self.user_delegate_cat = self.make_user('user_delegate_cat')
-        self.user_contributor_cat = self.make_user('user_contributor_cat')
-        self.user_guest_cat = self.make_user('user_guest_cat')
-        self.user_finder_cat = self.make_user('user_finder_cat')
-        self.user_owner = self.make_user('user_owner')
-        self.user_delegate = self.make_user('user_delegate')
-        self.user_contributor = self.make_user('user_contributor')
-        self.user_guest = self.make_user('user_guest')
-        self.user_no_roles = self.make_user('user_no_roles')
-
-        # Init category and project
-        self.category = self.make_project(
-            title='TestCategory', type=PROJECT_TYPE_CATEGORY, parent=None
-        )
-        self.project = self.make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=self.category,
-        )
-
-        # Init role assignments
-        self.owner_as_cat = self.make_assignment(
-            self.category, self.user_owner_cat, self.role_owner
-        )
-        self.delegate_as_cat = self.make_assignment(
-            self.category, self.user_delegate_cat, self.role_delegate
-        )
-        self.contributor_as_cat = self.make_assignment(
-            self.category, self.user_contributor_cat, self.role_contributor
-        )
-        self.guest_as_cat = self.make_assignment(
-            self.category, self.user_guest_cat, self.role_guest
-        )
-        self.finder_as_cat = self.make_assignment(
-            self.category, self.user_finder_cat, self.role_finder
-        )
-        self.owner_as = self.make_assignment(
-            self.project, self.user_owner, self.role_owner
-        )
-        self.delegate_as = self.make_assignment(
-            self.project, self.user_delegate, self.role_delegate
-        )
-        self.contributor_as = self.make_assignment(
-            self.project, self.user_contributor, self.role_contributor
-        )
-        self.guest_as = self.make_assignment(
-            self.project, self.user_guest, self.role_guest
-        )
-
-    def tearDown(self):
-        # Shut down Selenium
-        self.selenium.quit()
-        super().tearDown()
+class UITestMixin:
+    """Helper mixin for UI tests"""
 
     def build_selenium_url(self, url=''):
         """Build absolute URL to work with Selenium"""
@@ -482,6 +412,81 @@ class UITestBase(
         """
         elem = self.selenium.find_element(by, value)
         self.assertEqual(elem.is_displayed(), expected)
+
+
+class UITestBase(
+    SeleniumSetupMixin,
+    LiveUserMixin,
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    UITestMixin,
+    LiveServerTestCase,
+):
+    """Base class for UI tests"""
+
+    def setUp(self):
+        # Set up Selenium
+        self.set_up_selenium()
+        # Init roles
+        self.init_roles()
+
+        # Init users
+        self.superuser = self.make_user('admin', True)
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_delegate_cat = self.make_user('user_delegate_cat')
+        self.user_contributor_cat = self.make_user('user_contributor_cat')
+        self.user_guest_cat = self.make_user('user_guest_cat')
+        self.user_finder_cat = self.make_user('user_finder_cat')
+        self.user_owner = self.make_user('user_owner')
+        self.user_delegate = self.make_user('user_delegate')
+        self.user_contributor = self.make_user('user_contributor')
+        self.user_guest = self.make_user('user_guest')
+        self.user_no_roles = self.make_user('user_no_roles')
+
+        # Init category and project
+        self.category = self.make_project(
+            title='TestCategory', type=PROJECT_TYPE_CATEGORY, parent=None
+        )
+        self.project = self.make_project(
+            title='TestProject',
+            type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+        )
+
+        # Init role assignments
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.delegate_as_cat = self.make_assignment(
+            self.category, self.user_delegate_cat, self.role_delegate
+        )
+        self.contributor_as_cat = self.make_assignment(
+            self.category, self.user_contributor_cat, self.role_contributor
+        )
+        self.guest_as_cat = self.make_assignment(
+            self.category, self.user_guest_cat, self.role_guest
+        )
+        self.finder_as_cat = self.make_assignment(
+            self.category, self.user_finder_cat, self.role_finder
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        self.delegate_as = self.make_assignment(
+            self.project, self.user_delegate, self.role_delegate
+        )
+        self.contributor_as = self.make_assignment(
+            self.project, self.user_contributor, self.role_contributor
+        )
+        self.guest_as = self.make_assignment(
+            self.project, self.user_guest, self.role_guest
+        )
+
+    def tearDown(self):
+        # Shut down Selenium
+        self.selenium.quit()
+        super().tearDown()
 
 
 class TestBaseTemplate(UITestBase):
