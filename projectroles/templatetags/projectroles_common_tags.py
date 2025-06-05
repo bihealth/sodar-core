@@ -154,9 +154,7 @@ def get_role_display_name(
     role_suffix = role.name.split(' ')[1]
     if title:
         role_suffix = role_suffix.title()
-    return '{} {}'.format(
-        _get_display_name(project.type, title=title), role_suffix
-    )
+    return f'{_get_display_name(project.type, title=title)} {role_suffix}'
 
 
 @register.simple_tag
@@ -226,7 +224,7 @@ def get_user_html(user: SODARUser) -> str:
         )
     )
     if email_link:
-        ret += '<a href="mailto:{}">'.format(user.email)
+        ret += f'<a href="mailto:{user.email}">'
     ret += user.username
     if email_link:
         ret += '</a>'

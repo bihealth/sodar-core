@@ -180,7 +180,7 @@ class Folder(BaseFilesfoldersClass):
             ret = self.folder.get_path()
         else:
             ret = 'root/'
-        ret += '{}/'.format(self.name)
+        ret += f'{self.name}/'
         return ret
 
     def is_empty(self) -> bool:

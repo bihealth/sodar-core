@@ -386,10 +386,8 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
             # Only provide results for projects in which user has access
             if not request.user.has_perm('projectroles.view_project', project):
                 logger.error(
-                    'ProjectListColumnAjaxView: User {} not authorized to view '
-                    'project {}'.format(
-                        request.user.username, project.get_log_title()
-                    )
+                    f'ProjectListColumnAjaxView: User {request.user.username} '
+                    f'not authorized to view project {project.get_log_title()}'
                 )
                 continue
             p_uuid = str(project.sodar_uuid)
@@ -433,10 +431,8 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
             # Only provide results for projects in which user has access
             if not request.user.has_perm('projectroles.view_project', project):
                 logger.error(
-                    'ProjectListRoleAjaxView: User {} not authorized to view '
-                    'project {}'.format(
-                        request.user.username, project.get_log_title()
-                    )
+                    f'ProjectListRoleAjaxView: User {request.user.username} '
+                    f'not authorized to view project {project.get_log_title()}'
                 )
                 continue
             ret[str(project.sodar_uuid)] = self._get_user_role(
@@ -678,7 +674,7 @@ class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
         if display_create_option:
             create_option = {
                 'id': q,
-                'text': 'Send an invite to "{}"'.format(q),
+                'text': f'Send an invite to "{q}"',
                 'create_id': True,
             }
             return [create_option]

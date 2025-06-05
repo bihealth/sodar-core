@@ -104,9 +104,9 @@ class SODARFormMixin:
             log_err = ';'.join(error.messages)
         else:
             log_err = error
-        log_msg = 'Field "{}": {}'.format(field, log_err)
+        log_msg = f'Field "{field}": {log_err}'
         if hasattr(self, 'current_user') and self.current_user:
-            log_msg += ' (user={})'.format(self.current_user.username)
+            log_msg += f' (user={self.current_user.username})'
         self.logger.error(log_msg)
         super().add_error(field, error)  # Call the error method in Django forms
 
@@ -140,7 +140,7 @@ class SODARAppSettingFormMixin:
             s_widget_attrs['placeholder'] = s_def.placeholder
         setting_kwargs = {
             'required': False,
-            'label': s_def.label or '{}.{}'.format(plugin_name, s_def.name),
+            'label': s_def.label or f'{plugin_name}.{s_def.name}',
             'help_text': s_def.description,
         }
 
@@ -274,7 +274,7 @@ class SODARAppSettingFormMixin:
                     user_modifiable=user_mod,
                 )
             for s_def in s_defs.values():
-                s_field = 'settings.{}.{}'.format(plugin_name, s_def.name)
+                s_field = f'settings.{plugin_name}.{s_def.name}'
                 # Set field, widget and value
                 self.set_app_setting_field(plugin_name, s_field, s_def)
                 # Set label notes
@@ -334,7 +334,7 @@ class SODARAppSettingFormMixin:
                         **scope_kw,
                     )
                 except Exception as ex:
-                    errors.append((s_field, 'Invalid value: {}'.format(ex)))
+                    errors.append((s_field, f'Invalid value: {ex}'))
 
             # Custom plugin validation for app settings
             if plugin and hasattr(plugin, 'validate_form_app_settings'):
@@ -473,7 +473,7 @@ class SODARUserChoiceField(forms.ModelChoiceField):
         url: Optional[str] = None,
         widget_class: Optional[Any] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """
         Override of ModelChoiceField initialization.
@@ -609,10 +609,11 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         for site in RemoteSite.objects.filter(
             mode=SITE_MODE_TARGET, user_display=True, owner_modifiable=True
         ).order_by('name'):
-            f_name = 'remote_site.{}'.format(site.sodar_uuid)
-            f_label = 'Enable {} on {}'.format(p_display, site.name)
-            f_help = 'Make {} available on remote site "{}" ({})'.format(
-                p_display, site.name, site.url
+            f_name = f'remote_site.{site.sodar_uuid}'
+            f_label = f'Enable {p_display} on {site.name}'
+            f_help = (
+                f'Make {p_display} available on remote site "{site.name}" '
+                f'({site.url})'
             )
             f_initial = False
             if self.instance.pk:
@@ -633,7 +634,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         project: Optional[Project] = None,
         current_user: Optional[SODARUser] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
@@ -810,7 +811,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         if not owner:
             self.add_error(
                 'owner',
-                'Owner must be set for {}'.format(get_display_name(p_type)),
+                f'Owner must be set for {get_display_name(p_type)}',
             )
         # Ensure owner is not changed on update (must use ownership transfer)
         if self.instance_owner_as and owner != self.instance_owner_as.user:
@@ -862,7 +863,7 @@ class RoleAssignmentForm(SODARModelForm):
         current_user: Optional[SODARUser] = None,
         promote_as: Optional[RoleAssignment] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
@@ -1028,7 +1029,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         current_user: SODARUser,
         current_owner: SODARUser,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
@@ -1040,9 +1041,8 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
 
         self.fields['new_owner'] = SODARUserChoiceField(
             label='New owner',
-            help_text='Select a member of the {} to become owner.'.format(
-                get_display_name(project.type)
-            ),
+            help_text=f'Select a member of the '
+            f'{get_display_name(project.type)} to become owner.',
             scope='project',
             project=project,
             exclude=[current_owner],
@@ -1055,7 +1055,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             project, old_owner_as
         )
         self.fields['old_owner_role'] = forms.ChoiceField(
-            label='New role for {}'.format(current_owner.username),
+            label=f'New role for {current_owner.username}',
             help_text='New role for the current owner. Select "Remove" in '
             'the member list to remove the user\'s membership.',
             choices=self.selectable_roles,
@@ -1096,10 +1096,9 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
                 >= del_limit
             ):
                 raise forms.ValidationError(
-                    'The limit of delegates ({}) for this {} has already been '
-                    'reached.'.format(
-                        del_limit, get_display_name(self.project.type)
-                    )
+                    f'The limit of delegates ({del_limit}) for this '
+                    f'{get_display_name(self.project.type)} has already been '
+                    f'reached.'
                 )
         return role
 
@@ -1112,8 +1111,8 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         role_as = self.project.get_role(user)
         if not role_as:
             raise forms.ValidationError(
-                'The new owner has no inherited or local roles in the '
-                '{}.'.format(get_display_name(self.project.type))
+                f'The new owner has no inherited or local roles in the '
+                f'{get_display_name(self.project.type)}.'
             )
         return user
 
@@ -1135,7 +1134,7 @@ class ProjectInviteForm(SODARModelForm):
         mail: Optional[str] = None,
         role: Optional[Role] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
@@ -1167,8 +1166,8 @@ class ProjectInviteForm(SODARModelForm):
         if existing_user:
             self.add_error(
                 'email',
-                'User "{}" already exists in the system with this email. '
-                'Please use "Add Role" instead.'.format(existing_user.username),
+                f'User "{existing_user.username}" already exists in the system '
+                f'with this email. Please use "Add Role" instead.',
             )
 
         # Existing active invite for user in same project
@@ -1222,8 +1221,8 @@ class ProjectInviteForm(SODARModelForm):
             ):
                 self.add_error(
                     'email',
-                    'Local/OIDC users not allowed, email domain {} not'
-                    'recognized for LDAP users'.format(domain),
+                    f'Local/OIDC users not allowed, email domain {domain} not '
+                    f'recognized for LDAP users',
                 )
 
         # Delegate checks
@@ -1245,10 +1244,9 @@ class ProjectInviteForm(SODARModelForm):
             ):
                 self.add_error(
                     'role',
-                    'The delegate limit of {} for this {} has '
-                    'already been reached.'.format(
-                        del_limit, get_display_name(self.project.type)
-                    ),
+                    f'The delegate limit of {del_limit} for this '
+                    f'{get_display_name(self.project.type)} has already been '
+                    f'reached.',
                 )
         return self.cleaned_data
 

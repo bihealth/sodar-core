@@ -44,9 +44,7 @@ class Command(BaseCommand):
                 project = Project.objects.get(sodar_uuid=options['project'])
                 update_kwargs['project'] = project
                 logger.info(
-                    'Limiting sync to project {}'.format(
-                        project.get_log_title()
-                    )
+                    f'Limiting sync to project {project.get_log_title()}'
                 )
             except Project.DoesNotExist:
                 logger.error(
@@ -66,9 +64,7 @@ class Command(BaseCommand):
                 plugin.update_cache(**update_kwargs)
             except Exception as ex:
                 logger.error(
-                    'Update failed for plugin "{}": "{}"'.format(
-                        plugin.name, ex
-                    )
+                    f'Update failed for plugin "{plugin.name}": "{ex}"'
                 )
                 if settings.DEBUG:
                     raise ex

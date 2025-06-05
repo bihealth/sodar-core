@@ -84,9 +84,7 @@ def get_plugin_lookup() -> dict:
         try:
             ret[p.name] = p.get_plugin()
         except Exception as ex:
-            logger.error(
-                'Unable to retrieve plugin "{}": {}'.format(p.name, ex)
-            )
+            logger.error(f'Unable to retrieve plugin "{p.name}": {ex}')
     return ret
 
 
@@ -122,9 +120,8 @@ def get_app_icon_html(event: TimelineEvent, plugin_lookup: dict) -> str:
                 except Exception as ex:
                     url = None
                     logger.error(
-                        'Unable to get URL for entry point "{}": {}'.format(
-                            entry_point, ex
-                        )
+                        f'Unable to get URL for entry point "{entry_point}": '
+                        f'{ex}'
                     )
             title = plugin.title
             if getattr(plugin, 'icon', None):

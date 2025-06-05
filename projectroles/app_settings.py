@@ -242,9 +242,7 @@ class AppSettingAPI:
         """
         plugin = get_app_plugin(plugin_name)
         if not plugin:
-            raise ValueError(
-                'Plugin not found with name "{}"'.format(plugin_name)
-            )
+            raise ValueError(f'Plugin not found with name "{plugin_name}"')
         return plugin
 
     @classmethod
@@ -288,7 +286,7 @@ class AppSettingAPI:
             json.dumps(value)  # Ensure this is valid
             return value
         except Exception:
-            raise ValueError('Value is not valid JSON: {}'.format(value))
+            raise ValueError(f'Value is not valid JSON: {value}')
 
     @classmethod
     def _log_set_debug(
@@ -312,9 +310,9 @@ class AppSettingAPI:
         """
         extra_data = []
         if project:
-            extra_data.append('project={}'.format(project.sodar_uuid))
+            extra_data.append(f'project={project.sodar_uuid}')
         if user:
-            extra_data.append('user={}'.format(user.username))
+            extra_data.append(f'user={user.username}')
         logger.debug(
             '{} app setting: {}.{} = "{}"{}'.format(
                 action,
@@ -352,9 +350,8 @@ class AppSettingAPI:
             s_defs = cls._get_defs(plugin_name=plugin_name)
         if setting_name not in s_defs:
             raise KeyError(
-                'Setting "{}" not found in app plugin "{}"'.format(
-                    setting_name, plugin_name
-                )
+                f'Setting "{setting_name}" not found in app plugin '
+                f'"{plugin_name}"'
             )
         s_def = s_defs[setting_name]
         if callable(s_def.default):
@@ -362,9 +359,8 @@ class AppSettingAPI:
                 return s_def.default(project, user)
             except Exception:
                 logger.error(
-                    'Error in callable setting "{}" for plugin "{}"'.format(
-                        setting_name, plugin_name
-                    )
+                    f'Error in callable setting "{setting_name}" for plugin '
+                    f'"{plugin_name}"'
                 )
                 return APP_SETTING_DEFAULT_VALUES[s_def.type]
         elif s_def.type == APP_SETTING_TYPE_JSON:
@@ -475,19 +471,17 @@ class AppSettingAPI:
         for plugin in app_plugins:
             p_defs = cls.get_definitions(scope, plugin=plugin)
             for s_key in p_defs:
-                ret['settings.{}.{}'.format(plugin.name, s_key)] = (
-                    cls.get_default(
-                        plugin.name,
-                        s_key,
-                        project=project,
-                        user=user,
-                        post_safe=post_safe,
-                    )
+                ret[f'settings.{plugin.name}.{s_key}'] = cls.get_default(
+                    plugin.name,
+                    s_key,
+                    project=project,
+                    user=user,
+                    post_safe=post_safe,
                 )
 
         p_defs = cls.get_definitions(scope, plugin_name=APP_NAME)
         for s_key in p_defs:
-            ret['settings.{}.{}'.format(APP_NAME, s_key)] = cls.get_default(
+            ret[f'settings.{APP_NAME}.{s_key}'] = cls.get_default(
                 APP_NAME,
                 s_key,
                 project=project,
@@ -527,9 +521,8 @@ class AppSettingAPI:
         # Check project type
         if project and project.type not in s_def.project_types:
             raise ValueError(
-                'Project type {} not allowed for setting {}'.format(
-                    project.type, setting_name
-                )
+                f'Project type {project.type} not allowed for setting '
+                f'{setting_name}'
             )
         # Prevent updating global setting on target site
         if s_def.global_edit:
@@ -760,9 +753,8 @@ class AppSettingAPI:
         defs = cls._get_defs(plugin, plugin_name)
         if name not in defs:
             raise ValueError(
-                'App setting not found in plugin "{}" with name "{}"'.format(
-                    plugin_name or plugin.name, name
-                )
+                f'App setting not found in plugin '
+                f'"{plugin_name or plugin.name}" with name "{name}"'
             )
         return defs[name]
 
@@ -865,7 +857,7 @@ def get_example_setting_default(
     """
     response = 'N/A'
     if project and user:
-        response = '{}:{}'.format(project.title, user.username)
+        response = f'{project.title}:{user.username}'
     elif project:
         response = str(project.sodar_uuid)
     elif user:
@@ -888,20 +880,16 @@ def get_example_setting_options(
         ret.append(
             (
                 str(project.sodar_uuid),
-                'Project UUID {} by {}'.format(
-                    project.sodar_uuid, user.username
-                ),
+                f'Project UUID {project.sodar_uuid} by {user.username}',
             )
         )
     elif project:
         ret.append(
             (
                 str(project.sodar_uuid),
-                'Project UUID: {}'.format(project.sodar_uuid),
+                f'Project UUID: {project.sodar_uuid}',
             )
         )
     elif user:
-        ret.append(
-            (str(user.sodar_uuid), 'User UUID: {}'.format(user.sodar_uuid))
-        )
+        ret.append((str(user.sodar_uuid), f'User UUID: {user.sodar_uuid}'))
     return ret

@@ -89,7 +89,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         def _send_request() -> HttpResponse:
             req_method = getattr(self.client, method.lower(), None)
             if not req_method:
-                raise ValueError('Invalid method "{}"'.format(method))
+                raise ValueError(f'Invalid method "{method}"')
             if req_kwargs:  # Override request kwargs if set
                 r_kwargs.update(req_kwargs)
             return req_method(url, **r_kwargs)
@@ -116,7 +116,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
             else:  # Anonymous, no knox
                 response = _send_request()
 
-            msg = 'user={}; content="{}"'.format(user, response.content)
+            msg = f'user={user}; content="{response.content}"'
             self.assertEqual(response.status_code, status_code, msg=msg)
 
             if cleanup_method:

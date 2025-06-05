@@ -844,7 +844,7 @@ class TestBatchEditView(
         self.post_data = {
             'batch-action': 'delete',
             'user-confirmed': '0',
-            'batch_item_Folder_{}'.format(folder.sodar_uuid): '1',
+            f'batch_item_Folder_{folder.sodar_uuid}': '1',
         }
 
     def test_post(self):

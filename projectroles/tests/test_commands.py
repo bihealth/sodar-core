@@ -1385,10 +1385,10 @@ class TestCreateDevUsers(TestCase):
         for u in DEV_USER_NAMES:
             user = User.objects.filter(
                 username=u,
-                name='{} Example'.format(u.capitalize()),
+                name=f'{u.capitalize()} Example',
                 first_name=u.capitalize(),
                 last_name='Example',
-                email='{}@example.com'.format(u),
+                email=f'{u}@example.com',
             ).first()
             self.assertIsNotNone(user)
             self.assertEqual(user.check_password(DEFAULT_PASSWORD), True)

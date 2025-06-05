@@ -914,7 +914,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_project(self):
         """Test get_defaults() with PROJECT scope"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT)
         self.assertEqual(defaults[prefix + 'project_str_setting'], '')
         self.assertEqual(defaults[prefix + 'project_int_setting'], 0)
@@ -926,7 +926,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_project_post_safe(self):
         """Test get_defaults() with PROJECT scope and post_safe=True"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(
             APP_SETTING_SCOPE_PROJECT, post_safe=True
         )
@@ -942,7 +942,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_user(self):
         """Test get_defaults() with USER scope"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_USER)
         self.assertEqual(defaults[prefix + 'user_str_setting'], '')
         self.assertEqual(defaults[prefix + 'user_int_setting'], 0)
@@ -954,7 +954,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_project_user(self):
         """Test get_defaults() with PROJECT_USER scope"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT_USER)
         self.assertEqual(defaults[prefix + 'project_user_str_setting'], '')
         self.assertEqual(defaults[prefix + 'project_user_int_setting'], 0)
@@ -966,7 +966,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_site(self):
         """Test get_defaults() with SITE scope"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_SITE)
         self.assertEqual(defaults[prefix + 'site_bool_setting'], False)
 

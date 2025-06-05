@@ -51,14 +51,11 @@ class AppAlertAPI:
             try:
                 app_plugin = Plugin.objects.get(name=app_name)
             except Plugin.DoesNotExist:
-                raise ValueError(
-                    'Plugin not found with name: {}'.format(app_name)
-                )
+                raise ValueError(f'Plugin not found with name: {app_name}')
         if level not in ALERT_LEVELS:
             raise ValueError(
-                'Invalid level "{}", accepted values: {}'.format(
-                    level, ', '.join(ALERT_LEVELS)
-                )
+                f'Invalid level "{level}", accepted values: '
+                f'{", ".join(ALERT_LEVELS)}'
             )
         return AppAlert.objects.create(
             app_plugin=app_plugin,

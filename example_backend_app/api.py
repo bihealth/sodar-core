@@ -6,6 +6,4 @@ class ExampleAPI:
         self.kwargs = kwargs
 
     def hello(self):
-        return 'Hello world from example_backend_app! (kwargs: {})'.format(
-            self.kwargs
-        )
+        return f'Hello world from example_backend_app! (kwargs: {self.kwargs})'

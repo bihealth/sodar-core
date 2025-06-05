@@ -785,7 +785,7 @@ class PluginAppSettingDef:
         :raise: ValueError if scope is not recognized
         """
         if scope not in APP_SETTING_SCOPES:
-            raise ValueError('Invalid scope "{}"'.format(scope))
+            raise ValueError(f'Invalid scope "{scope}"')
 
     @classmethod
     def validate_type(cls, setting_type: str):
@@ -796,7 +796,7 @@ class PluginAppSettingDef:
         :raise: ValueError if type is not recognized
         """
         if setting_type not in APP_SETTING_TYPES:
-            raise ValueError('Invalid setting type "{}"'.format(setting_type))
+            raise ValueError(f'Invalid setting type "{setting_type}"')
 
     @classmethod
     def validate_type_options(cls, setting_type: str, setting_options: list):
@@ -855,9 +855,8 @@ class PluginAppSettingDef:
         if setting_type == APP_SETTING_TYPE_BOOLEAN:
             if not isinstance(setting_value, bool):
                 raise ValueError(
-                    'Please enter value as bool (value={}; type={})'.format(
-                        setting_value, type(setting_value)
-                    )
+                    f'Please enter value as bool (value={setting_value}; '
+                    f'type={type(setting_value)})'
                 )
         elif setting_type == APP_SETTING_TYPE_INTEGER:
             if (
@@ -865,24 +864,18 @@ class PluginAppSettingDef:
                 and not str(setting_value).isdigit()
             ):
                 raise ValueError(
-                    'Please enter a valid integer value ({})'.format(
-                        setting_value
-                    )
+                    f'Please enter a valid integer value ({setting_value})'
                 )
         elif setting_type == APP_SETTING_TYPE_JSON:
             if setting_value and not isinstance(setting_value, (dict, list)):
                 raise ValueError(
-                    'Please enter JSON value as dict or list '
-                    '(value={}; type={})'.format(
-                        setting_value, type(setting_value)
-                    )
+                    f'Please enter JSON value as dict or list '
+                    f'(value={setting_value}; type={type(setting_value)})'
                 )
             try:
                 json.dumps(setting_value)
             except TypeError:
-                raise ValueError(
-                    'Please enter valid JSON ({})'.format(setting_value)
-                )
+                raise ValueError(f'Please enter valid JSON ({setting_value})')
 
     @classmethod
     def validate_user_modifiable(
@@ -1033,12 +1026,10 @@ def change_plugin_status(name: str, status: int, plugin_type: str = 'app'):
     elif plugin_type == 'site':
         plugin = SiteAppPluginPoint.get_plugin(name)
     else:
-        raise ValueError('Invalid plugin_type: "{}"'.format(plugin_type))
+        raise ValueError(f'Invalid plugin_type: "{plugin_type}"')
     if not plugin:
         raise ValueError(
-            'Plugin of type "{}" not found with name "{}"'.format(
-                plugin_type, name
-            )
+            f'Plugin of type "{plugin_type}" not found with name "{name}"'
         )
     plugin = plugin.get_model()
     plugin.status = status

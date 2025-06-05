@@ -20,10 +20,6 @@ class Command(BaseCommand):
             user.save()  # Group is updated during save
             if user.groups.count() > 0:
                 logger.info(
-                    'Group set: {} -> {}'.format(
-                        user.username, user.groups.first().name
-                    )
+                    f'Group set: {user.username} -> {user.groups.first().name}'
                 )
-        logger.info(
-            'Synchronized groups for {} users'.format(User.objects.count())
-        )
+        logger.info(f'Synchronized groups for {User.objects.count()} users')

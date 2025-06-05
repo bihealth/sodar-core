@@ -139,17 +139,13 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
                 ret[p] = {'stats': p.get_statistics(), 'settings': {}}
             except Exception as ex:
                 ret[p] = {'error': str(ex)}
-                logger.error(
-                    'Exception in {}.get_statistics(): {}'.format(p.name, ex)
-                )
+                logger.error(f'Exception in {p.name}.get_statistics(): {ex}')
             if p.info_settings:
                 try:
                     ret[p]['settings'] = cls._get_settings(p.info_settings)
                 except Exception as ex:
                     logger.error(
-                        'Exception in _get_settings() for {}: {}'.format(
-                            p.name, ex
-                        )
+                        f'Exception in _get_settings() for {p.name}: {ex}'
                     )
         return ret
 

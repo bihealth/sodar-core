@@ -216,7 +216,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         level = self.no_perm_message_level.lower()
         msg_method = getattr(messages, level, None)
         if not msg_method:
-            raise ValueError('Unknown message level "{}"'.format(level))
+            raise ValueError(f'Unknown message level "{level}"')
         if self.no_perm_message:
             msg = self.no_perm_message
         elif self.request.user.is_authenticated:
@@ -743,10 +743,7 @@ class ProjectSearchMixin:
                         plugin.name,
                         ex,
                         '; '.join(
-                            [
-                                '{}={}'.format(k, v)
-                                for k, v in search_kwargs.items()
-                            ]
+                            [f'{k}={v}' for k, v in search_kwargs.items()]
                         ),
                     )
                 )
@@ -921,7 +918,7 @@ class ProjectModifyPluginViewMixin:
             for a in modify_api_apps:
                 plugin = get_app_plugin(a)
                 if not plugin:
-                    msg = 'Unable to find active plugin "{}"'.format(a)
+                    msg = f'Unable to find active plugin "{a}"'
                     logger.error(msg)
                     raise ImproperlyConfigured(msg)
                 app_plugins.append(plugin)
@@ -934,17 +931,13 @@ class ProjectModifyPluginViewMixin:
         for p in app_plugins:
             if not hasattr(p, method_name):
                 continue  # Only there if using ProjectModifyPluginAPIMixin
-            logger.debug(
-                'Calling {}() in plugin "{}"'.format(method_name, p.name)
-            )
+            logger.debug(f'Calling {method_name}() in plugin "{p.name}"')
             try:
                 getattr(p, method_name)(*method_args)
                 called_plugins.append(p)
             except Exception as ex:
                 logger.error(
-                    'Exception in {}() for plugin "{}": {}'.format(
-                        method_name, p.name, ex
-                    )
+                    f'Exception in {method_name}() for plugin "{p.name}": {ex}'
                 )
                 if revert_name:
                     for cp in called_plugins:
@@ -952,9 +945,8 @@ class ProjectModifyPluginViewMixin:
                             cp.getattr(revert_name)(*method_args)
                         except Exception as ex_revert:
                             logger.error(
-                                'Exception in {}() for plugin "{}": {}'.format(
-                                    method_name, cp.name, ex_revert
-                                )
+                                f'Exception in {method_name}() for plugin '
+                                f'"{cp.name}": {ex_revert}'
                             )
                 raise ex
 
@@ -1024,7 +1016,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 )
 
             for s_def in p_settings.values():
-                s_name = 'settings.{}.{}'.format(name, s_def.name)
+                s_name = f'settings.{name}.{s_def.name}'
                 s_data = data.get(s_name)
 
                 if instance.type not in s_def.project_types:
@@ -1148,9 +1140,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 modify = 'Created'
             if modify:
                 logger.debug(
-                    '{} RemoteProject for site "{}" ({}): {}'.format(
-                        modify, site.name, site.sodar_uuid, rp.level
-                    )
+                    f'{modify} RemoteProject for site "{site.name}" '
+                    f'({site.sodar_uuid}): {rp.level}'
                 )
             ret[site_uuid] = rp and rp.level == REMOTE_LEVEL_READ_ROLES
         return ret
@@ -1225,7 +1216,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             project=project,
             app_name=APP_NAME,
             user=request.user,
-            event_name='project_{}'.format(action.lower()),
+            event_name=f'project_{action.lower()}',
             description=tl_desc,
             extra_data=extra_data,
         )
@@ -1312,12 +1303,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                             app_name=APP_NAME,
                             alert_name='project_create_parent',
                             user=r,
-                            message='New {} created under category '
-                            '"{}": "{}".'.format(
-                                project.type.lower(),
-                                project.parent.title,
-                                project.title,
-                            ),
+                            message=f'New {project.type.lower()} created under '
+                            f'category "{project.parent.title}": '
+                            f'"{project.title}".',
                             url=reverse(
                                 'projectroles:detail',
                                 kwargs={'project': project.sodar_uuid},
@@ -1333,12 +1321,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                         app_name=APP_NAME,
                         alert_name='project_move_parent',
                         user=r,
-                        message='{} moved under category '
-                        '"{}": "{}".'.format(
-                            project.type.capitalize(),
-                            project.parent.title,
-                            project.title,
-                        ),
+                        message=f'{project.type.capitalize()} moved under '
+                        f'category "{project.parent.title}": '
+                        f'"{project.title}".',
                         url=reverse(
                             'projectroles:detail',
                             kwargs={'project': project.sodar_uuid},
@@ -1471,7 +1456,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 project._update_public_children()
             except Exception as ex:
                 logger.error(
-                    'Exception in updating has_public_children(): {}'.format(ex)
+                    f'Exception in updating has_public_children(): {ex}'
                 )
 
         # Once all is done, update timeline event, create alerts and emails
@@ -1806,9 +1791,9 @@ class ProjectArchiveView(
             return
         alert_p = get_display_name(PROJECT_TYPE_PROJECT, title=True)
         if action == 'archive':
-            alert_msg = '{} data is now read-only.'.format(alert_p)
+            alert_msg = f'{alert_p} data is now read-only.'
         else:
-            alert_msg = '{} data can be modified.'.format(alert_p)
+            alert_msg = f'{alert_p} data can be modified.'
         users = [
             a.user
             for a in project.get_roles()
@@ -1819,11 +1804,10 @@ class ProjectArchiveView(
         else:
             app_alerts.add_alerts(
                 app_name=APP_NAME,
-                alert_name='project_{}'.format(action),
+                alert_name=f'project_{action}',
                 users=users,
-                message='{} {}d by {}. {}'.format(
-                    alert_p, action, user.get_full_name(), alert_msg
-                ),
+                message=f'{alert_p} {action}d by {user.get_full_name()}. '
+                f'{alert_msg}',
                 url=reverse(
                     'projectroles:detail',
                     kwargs={'project': project.sodar_uuid},
@@ -1902,8 +1886,8 @@ class ProjectArchiveView(
                     project=project,
                     app_name=APP_NAME,
                     user=request.user,
-                    event_name='project_{}'.format(action),
-                    description='{} project'.format(action),
+                    event_name=f'project_{action}',
+                    description=f'{action} project',
                     status_type=timeline.TL_STATUS_OK,
                 )
             # Alert users and send email
@@ -1911,7 +1895,7 @@ class ProjectArchiveView(
             if SEND_EMAIL:  # NOTE: Opt-out settings checked in email method
                 email.send_project_archive_mail(project, action, request)
         except Exception as ex:
-            messages.error(request, 'Failed to alert users: {}'.format(ex))
+            messages.error(request, f'Failed to alert users: {ex}')
         return redirect(redirect_url)
 
 
@@ -1956,7 +1940,7 @@ class ProjectDeleteView(
                 f'Incorrect host name for confirming sheet deletion: '
                 f'"{host_confirm}"'
             )
-            logger.error(msg + ' (correct={})'.format(actual_host))
+            logger.error(msg + f' (correct={actual_host})')
             messages.error(
                 self.request, 'Host name input incorrect, deletion cancelled.'
             )
@@ -2090,7 +2074,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
                 project=project,
                 app_name=APP_NAME,
                 user=request.user,
-                event_name='role_{}'.format(action.lower()),
+                event_name=f'role_{action.lower()}',
                 description=tl_desc,
             )
             tl_event.add_object(user, 'user', user.username)
@@ -2192,9 +2176,7 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
                 ),
             )
         except Exception as ex:
-            messages.error(
-                self.request, 'Membership updating failed: {}'.format(ex)
-            )
+            messages.error(self.request, f'Membership updating failed: {ex}')
         return redirect(
             reverse(
                 'projectroles:roles',
@@ -2429,8 +2411,8 @@ class RoleAssignmentCreateView(
             ):
                 messages.warning(
                     request,
-                    'Local delegate limit ({}) reached, no available roles for '
-                    'promotion.'.format(del_limit),
+                    f'Local delegate limit ({del_limit}) reached, no available '
+                    f'roles for promotion.',
                 )
                 return redirect(redirect_url)
 
@@ -2522,8 +2504,8 @@ class RoleAssignmentDeleteView(
         ):
             messages.error(
                 self.request,
-                'You do not have permission to remove the '
-                'membership of {}.'.format(self.object.role.name),
+                f'You do not have permission to remove the membership of '
+                f'{self.object.role.name}.',
             )
         else:
             try:
@@ -2532,14 +2514,12 @@ class RoleAssignmentDeleteView(
                 )
                 messages.success(
                     self.request,
-                    'Membership of {} removed.'.format(user.username),
+                    f'Membership of {user.username} removed.',
                 )
             except Exception as ex:
                 messages.error(
                     self.request,
-                    'Failed to remove membership of {}: {}'.format(
-                        user.username, ex
-                    ),
+                    f'Failed to remove membership of {user.username}: {ex}',
                 )
         return redirect(
             reverse(
@@ -2604,12 +2584,12 @@ class RoleAssignmentOwnDeleteView(
                 role_as=role_as, request=self.request
             )
             messages.success(
-                self.request, 'Successfully left {}.'.format(project.title)
+                self.request, f'Successfully left {project.title}.'
             )
             return redirect(reverse('home'))
         except Exception as ex:
             messages.error(
-                self.request, 'Failed to leave {}: {}'.format(project.title, ex)
+                self.request, f'Failed to leave {project.title}: {ex}'
             )
             return redirect(
                 reverse(
@@ -2654,7 +2634,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
             return None
         tl_desc = 'transfer ownership from {prev_owner} to {new_owner}, '
         if old_owner_role:
-            tl_desc += 'set old owner as "{}"'.format(old_owner_role.name)
+            tl_desc += f'set old owner as "{old_owner_role.name}"'
         else:
             tl_desc += 'remove old owner role'
         tl_event = timeline.add_event(
@@ -2911,16 +2891,14 @@ class RoleAssignmentOwnerTransferView(
             )
         except Exception as ex:
             # TODO: Add logging
-            messages.error(
-                self.request, 'Unable to transfer ownership: {}'.format(ex)
-            )
+            messages.error(self.request, f'Unable to transfer ownership: {ex}')
             if settings.DEBUG:
                 raise ex
             return redirect(redirect_url)
         if old_owner.username != new_owner.username:
             success_msg = (
-                'Successfully transferred ownership from '
-                '{} to {}.'.format(old_owner.username, new_owner.username)
+                f'Successfully transferred ownership from {old_owner.username} '
+                f'to {new_owner.username}.'
             )
             old_owner_email = app_settings.get(
                 APP_NAME, 'notify_email_role', user=old_owner
@@ -2978,10 +2956,9 @@ class ProjectInviteMixin:
                 project=invite.project,
                 app_name=APP_NAME,
                 user=request.user,
-                event_name='invite_{}'.format(send_str),
-                description='{} project invite with role "{}" to {}'.format(
-                    send_str, invite.role.name, invite.email
-                ),
+                event_name=f'invite_{send_str}',
+                description=f'{send_str} project invite with role '
+                f'"{invite.role.name}" to {invite.email}',
                 status_type=status_type,
                 status_desc=status_desc,
             )
@@ -3181,8 +3158,8 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
         if invite.date_expire < timezone.now():
             messages.error(
                 self.request,
-                'Your invite has expired. Please contact the inviter: '
-                '{} ({})'.format(invite.issuer.name, invite.issuer.email),
+                f'Your invite has expired. Please contact the inviter: '
+                f'{invite.issuer.name} ({invite.issuer.email})',
             )
             # Send notification of expiry to issuer
             if SEND_EMAIL and app_settings.get(
@@ -3216,9 +3193,8 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 app_name=APP_NAME,
                 user=user,
                 event_name='invite_accept',
-                description='accept project invite with role of "{}"'.format(
-                    invite.role.name
-                ),
+                description=f'accept project invite with role of '
+                f'"{invite.role.name}"',
             )
 
         # Create the assignment
@@ -3241,10 +3217,9 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 app_name=APP_NAME,
                 alert_name='invite_accept',
                 user=invite.issuer,
-                message='Invitation sent to "{}" for project "{}" with the '
-                'role "{}" was accepted.'.format(
-                    user.email, invite.project.title, invite.role.name
-                ),
+                message=f'Invitation sent to "{user.email}" for project '
+                f'"{invite.project.title}" with the role "{invite.role.name}" '
+                f'was accepted.',
                 url=reverse(
                     'projectroles:detail',
                     kwargs={'project': invite.project.sodar_uuid},
@@ -3697,9 +3672,9 @@ class RemoteSiteModifyMixin(ModelFormMixin):
             return
         status = form_action if form_action == 'set' else form_action[0:-1]
         if remote_site.mode == SITE_MODE_SOURCE:
-            event_name = 'source_site_{}'.format(status)
+            event_name = f'source_site_{status}'
         else:
-            event_name = 'target_site_{}'.format(status)
+            event_name = f'target_site_{status}'
 
         tl_desc = '{} remote {} site {{{}}}'.format(
             status,
@@ -3740,9 +3715,8 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         self._create_timeline_event(self.object, self.request.user, form_action)
         messages.success(
             self.request,
-            '{} site "{}" {}.'.format(
-                self.object.mode.capitalize(), self.object.name, form_action
-            ),
+            f'{self.object.mode.capitalize()} site "{self.object.name}" '
+            f'{form_action}.',
         )
         return redirect(reverse('projectroles:remote_sites'))
 
@@ -3828,9 +3802,8 @@ class RemoteSiteDeleteView(
             )
         messages.success(
             self.request,
-            '{} site "{}" deleted'.format(
-                self.object.mode.capitalize(), self.object.name
-            ),
+            f'{self.object.mode.capitalize()} site "{self.object.name}" '
+            f'deleted',
         )
         return reverse('projectroles:remote_sites')
 
@@ -4064,7 +4037,7 @@ class RemoteProjectSyncView(
             )
         except Exception as ex:
             messages.error(
-                request, 'Remote sync cancelled with exception: {}'.format(ex)
+                request, f'Remote sync cancelled with exception: {ex}'
             )
             if settings.DEBUG:
                 raise ex

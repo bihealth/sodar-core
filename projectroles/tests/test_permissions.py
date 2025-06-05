@@ -58,7 +58,7 @@ class PermissionTestMixin:
     ) -> HttpResponse:
         req_method = getattr(self.client, method.lower(), None)
         if not req_method:
-            raise ValueError('Invalid method "{}"'.format(method))
+            raise ValueError(f'Invalid method "{method}"')
         return req_method(url, **req_kwargs)
 
     def assert_response(
@@ -118,7 +118,7 @@ class PermissionTestMixin:
                     re_url = reverse('login') + '?next=' + next_url
                 response = self.send_request(url, method, req_kwargs)
 
-            msg = 'user={}'.format(user)
+            msg = f'user={user}'
             self.assertEqual(response.status_code, status_code, msg=msg)
             if status_code == 302:
                 self.assertEqual(response.url, re_url, msg=msg)

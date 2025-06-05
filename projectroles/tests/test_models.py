@@ -409,7 +409,7 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         """Test title validation with category delimiter"""
         with self.assertRaises(ValidationError):
             self.make_project(
-                title='Test{}PROJECT'.format(CAT_DELIMITER),
+                title=f'Test{CAT_DELIMITER}PROJECT',
                 type=PROJECT_TYPE_PROJECT,
                 parent=self.category,
             )
@@ -511,13 +511,9 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test_get_log_title(self):
         """Test get_log_title()"""
-        expected = '"{}" ({})'.format(
-            self.project.title, self.project.sodar_uuid
-        )
+        expected = f'"{self.project.title}" ({self.project.sodar_uuid})'
         self.assertEqual(self.project.get_log_title(), expected)
-        expected = '"{}" ({})'.format(
-            self.project.full_title, self.project.sodar_uuid
-        )
+        expected = f'"{self.project.full_title}" ({self.project.sodar_uuid})'
         self.assertEqual(self.project.get_log_title(full_title=True), expected)
 
     def test_get_role(self):
@@ -1224,7 +1220,7 @@ class TestProjectAppSetting(
 
     def test__str__(self):
         """Test AppSetting __str__()"""
-        expected = 'TestProject: {} / str_setting'.format(EXAMPLE_APP_NAME)
+        expected = f'TestProject: {EXAMPLE_APP_NAME} / str_setting'
         self.assertEqual(str(self.setting_str), expected)
 
     def test__repr__(self):
@@ -1349,7 +1345,7 @@ class TestUserAppSetting(
 
     def test__str__(self):
         """Test AppSetting __str__()"""
-        expected = 'owner: {} / str_setting'.format(EXAMPLE_APP_NAME)
+        expected = f'owner: {EXAMPLE_APP_NAME} / str_setting'
         self.assertEqual(str(self.setting_str), expected)
 
     def test__repr__(self):
@@ -1558,15 +1554,16 @@ class TestRemoteProject(
 
     def test__str__(self):
         """Test RemoteProject __str__()"""
-        expected = '{}: {} ({})'.format(
-            REMOTE_SITE_NAME, str(self.project.sodar_uuid), SITE_MODE_TARGET
+        expected = (
+            f'{REMOTE_SITE_NAME}: {self.project.sodar_uuid} '
+            f'({SITE_MODE_TARGET})'
         )
         self.assertEqual(str(self.remote_project), expected)
 
     def test__repr__(self):
         """Test RemoteProject __repr__()"""
         expected = "RemoteProject('{}', '{}', '{}')".format(
-            REMOTE_SITE_NAME, str(self.project.sodar_uuid), SITE_MODE_TARGET
+            REMOTE_SITE_NAME, self.project.sodar_uuid, SITE_MODE_TARGET
         )
         self.assertEqual(repr(self.remote_project), expected)
 

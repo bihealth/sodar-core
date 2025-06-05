@@ -107,11 +107,11 @@ class BackgroundJobClearViewBase(
                     status_type=timeline.TL_STATUS_OK,
                 )
             messages.success(
-                self.request, 'Removed {} background jobs.'.format(bg_job_count)
+                self.request, f'Removed {bg_job_count} background jobs.'
             )
         except Exception as ex:
             messages.error(
-                self.request, 'Unable to remove background jobs: {}'.format(ex)
+                self.request, f'Unable to remove background jobs: {ex}'
             )
         return redirect(
             reverse('bgjobs:list', kwargs={'project': project.sodar_uuid})

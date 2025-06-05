@@ -47,22 +47,19 @@ class Command(BaseCommand):
                 'roles for existing local users'
             )
         logger.info(
-            'Retrieving data from source site "{}" ({})..'.format(
-                source_site.name, source_site.get_url()
-            )
+            f'Retrieving data from source site "{source_site.name}" '
+            f'({source_site.get_url()})..'
         )
         try:
             remote_data = remote_api.get_remote_data(source_site)
         except Exception as ex:
-            logger.error(
-                'Failed to retrieve data from source site: {}'.format(ex)
-            )
+            logger.error(f'Failed to retrieve data from source site: {ex}')
             sys.exit(1)
 
         logger.info('Synchronizing remote data from source site..')
         try:
             remote_api.sync_remote_data(source_site, remote_data)
         except Exception as ex:
-            logger.error('Remote sync failed with exception: {}'.format(ex))
+            logger.error(f'Remote sync failed with exception: {ex}')
             sys.exit(1)
         logger.info('Syncremote command OK')

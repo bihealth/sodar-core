@@ -120,9 +120,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
             url=self.project_url,
             project=self.project,
         )
-        expected = 'projectroles / {} / {}'.format(
-            ALERT_NAME, self.user.username
-        )
+        expected = f'projectroles / {ALERT_NAME} / {self.user.username}'
         self.assertEqual(str(alert), expected)
 
     def test_str_plugin(self):
@@ -134,9 +132,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
             url=self.project_url,
             project=self.project,
         )
-        expected = 'filesfolders / {} / {}'.format(
-            ALERT_NAME, self.user.username
-        )
+        expected = f'filesfolders / {ALERT_NAME} / {self.user.username}'
         self.assertEqual(str(alert), expected)
 
     def test_repr(self):

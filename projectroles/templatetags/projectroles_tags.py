@@ -189,8 +189,9 @@ def get_login_info() -> str:
             settings.ENABLE_LDAP_SECONDARY
             and settings.AUTH_LDAP2_USERNAME_DOMAIN
         ):
-            ret += ' or <code>username@{}</code>'.format(
-                settings.AUTH_LDAP2_USERNAME_DOMAIN
+            ret += (
+                f' or <code>username@{settings.AUTH_LDAP2_USERNAME_DOMAIN}'
+                f'</code>'
             )
         if getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False):
             ret += (

@@ -194,7 +194,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             request = self.req_factory.get(url)
             self.assertEqual(
                 c_tags.get_full_url(request, url),
-                'http://testserver/project/{}'.format(self.project.sodar_uuid),
+                f'http://testserver/project/{self.project.sodar_uuid}',
             )
 
     def test_get_display_name(self):
@@ -231,21 +231,15 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         """Test get_project_link()"""
         self.assertEqual(
             c_tags.get_project_link(self.project, full_title=False),
-            '<a href="/project/{}" title="{}" data-toggle="tooltip" '
-            'data-placement="top">{}</a>'.format(
-                self.project.sodar_uuid,
-                self.project.description,
-                self.project.title,
-            ),
+            f'<a href="/project/{self.project.sodar_uuid}" '
+            f'title="{self.project.description}" data-toggle="tooltip" '
+            f'data-placement="top">{self.project.title}</a>',
         )
         self.assertEqual(
             c_tags.get_project_link(self.project, full_title=True),
-            '<a href="/project/{}" title="{}" data-toggle="tooltip" '
-            'data-placement="top">{}</a>'.format(
-                self.project.sodar_uuid,
-                self.project.description,
-                self.project.full_title,
-            ),
+            f'<a href="/project/{self.project.sodar_uuid}" '
+            f'title="{self.project.description}" data-toggle="tooltip" '
+            f'data-placement="top">{self.project.full_title}</a>',
         )
         # TODO: Also test remote project link display (with icon)
 
@@ -253,11 +247,10 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         """Test get_user_html()"""
         self.assertEqual(
             c_tags.get_user_html(self.user),
-            '<span class="sodar-user-html" data-toggle="tooltip" '
-            'data-placement="top" title="{}"><a href="mailto:{}">'
-            '{}</a></span>'.format(
-                self.user.get_full_name(), self.user.email, self.user.username
-            ),
+            f'<span class="sodar-user-html" data-toggle="tooltip" '
+            f'data-placement="top" title="{self.user.get_full_name()}">'
+            f'<a href="mailto:{self.user.email}">{self.user.username}</a>'
+            f'</span>',
         )
 
     def test_get_user_html_superuser(self):
@@ -309,9 +302,9 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         self.user.email = ''
         self.assertEqual(
             c_tags.get_user_html(self.user),
-            '<span class="sodar-user-html" '
-            'data-toggle="tooltip" data-placement="top" title="{}">{}'
-            '</span>'.format(self.user.get_full_name(), self.user.username),
+            f'<span class="sodar-user-html" data-toggle="tooltip" '
+            f'data-placement="top" title="{self.user.get_full_name()}">'
+            f'{self.user.username}</span>',
         )
 
     def test_get_user_badge(self):

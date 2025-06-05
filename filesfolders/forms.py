@@ -65,7 +65,7 @@ class FolderForm(FilesfoldersItemForm):
         folder: Optional[Folder] = None,
         project: Optional[Project] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Override for form initialization"""
         super().__init__(
@@ -73,7 +73,7 @@ class FolderForm(FilesfoldersItemForm):
             project=project,
             folder=folder,
             *args,
-            **kwargs
+            **kwargs,
         )
 
         # Creation
@@ -177,9 +177,8 @@ class FileForm(FilesfoldersItemForm):
         ]
         widgets = {'file': DBClearableFileInput}
         help_texts = {
-            'file': 'Uploaded file (maximum size: {})'.format(
-                filesizeformat(MAX_UPLOAD_SIZE)
-            )
+            'file': f'Uploaded file (maximum size: '
+            f'{filesizeformat(MAX_UPLOAD_SIZE)})'
         }
 
     @staticmethod
@@ -193,8 +192,8 @@ class FileForm(FilesfoldersItemForm):
         if file_size > limit:
             self.add_error(
                 'file',
-                'File too large, maximum size is {} bytes '
-                '(file size is {} bytes)'.format(limit, file_size),
+                f'File too large, maximum size is {limit} bytes '
+                f'(file size is {file_size} bytes)',
             )
             return False
         return True
@@ -205,7 +204,7 @@ class FileForm(FilesfoldersItemForm):
         folder: Optional[Folder] = None,
         project: Optional[Project] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Override for form initialization"""
         super().__init__(
@@ -213,7 +212,7 @@ class FileForm(FilesfoldersItemForm):
             folder=folder,
             project=project,
             *args,
-            **kwargs
+            **kwargs,
         )
         if self.instance.pk:
             self.project = self.instance.project
@@ -284,7 +283,7 @@ class FileForm(FilesfoldersItemForm):
             try:
                 zip_file = ZipFile(file)
             except Exception as ex:
-                self.add_error('file', 'Unable to open zip file: {}'.format(ex))
+                self.add_error('file', f'Unable to open zip file: {ex}')
                 return self.cleaned_data
             archive_files = [f for f in zip_file.infolist() if not f.is_dir()]
             if len(archive_files) == 0:
@@ -309,9 +308,7 @@ class FileForm(FilesfoldersItemForm):
                 if File.objects.filter(
                     name=path_split[-1], folder=check_folder
                 ).first():
-                    self.add_error(
-                        'file', 'File already exists: {}'.format(f.filename)
-                    )
+                    self.add_error('file', f'File already exists: {f.filename}')
                     return self.cleaned_data
 
         # Creation
@@ -406,7 +403,7 @@ class HyperLinkForm(FilesfoldersItemForm):
         folder: Optional[Folder] = None,
         project: Optional[Project] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Override for form initialization"""
         super().__init__(
@@ -414,7 +411,7 @@ class HyperLinkForm(FilesfoldersItemForm):
             project=project,
             folder=folder,
             *args,
-            **kwargs
+            **kwargs,
         )
         # Creation
         if not self.instance.pk:

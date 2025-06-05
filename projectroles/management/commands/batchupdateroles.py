@@ -66,9 +66,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
 
     def _update_role(self, project, user, role):
         """Handle role update for an existing user"""
-        logger.info(
-            'Updating role of user {} to {}..'.format(user.username, role.name)
-        )
+        logger.info(f'Updating role of user {user.username} to {role.name}..')
         role_as = project.get_role(user)
         if role_as and role_as.role == self.owner_role:
             logger.warning(
@@ -98,9 +96,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
     def _invite_user(self, email, project, role):
         """Create and send user for user not yet in system"""
         logger.info(
-            'Creating and sending invite to {} for role {}..'.format(
-                email, role.name
-            )
+            f'Creating and sending invite to {email} for role {role.name}..'
         )
         invite = ProjectInvite.objects.filter(
             email=email,
@@ -124,7 +120,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
     def _handle_list_row(self, project, role_name, email):
         """Handle row in CSV list"""
         if role_name not in self.roles:
-            raise Exception('Unknown role: "{}"'.format(role_name))
+            raise Exception(f'Unknown role: "{role_name}"')
         elif role_name == SODAR_CONSTANTS['PROJECT_ROLE_OWNER']:
             raise Exception(
                 'Ownership transfer not permitted in this operation, '
@@ -132,13 +128,13 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             )
         role = self.roles[role_name]
         if not parseaddr(email)[1]:
-            raise Exception('Invalid email: "{}"'.format(email))
+            raise Exception(f'Invalid email: "{email}"')
 
         users = User.objects.filter(email=email)
         if users.count() > 1:
             logger.warning(
-                'Skipping due to multiple user accounts found for '
-                'email "{}"'.format(email)
+                f'Skipping due to multiple user accounts found for email '
+                f'"{email}"'
             )
             return
         user = users.first()
@@ -149,9 +145,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             and del_limit != 0
             and len(project.get_delegates(inherited=False)) >= del_limit
         ):
-            raise Exception(
-                'Delegate limit of {} has been reached'.format(del_limit)
-            )
+            raise Exception(f'Delegate limit of {del_limit} has been reached')
 
         elif role == self.del_role and not self.issuer.has_perm(
             'projectroles.update_project_delegate', project
@@ -165,17 +159,13 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             try:
                 self._update_role(project, user, role)
             except Exception as ex:
-                raise Exception(
-                    'Exception raised by _update_role(): ' '{}'.format(ex)
-                )
+                raise Exception(f'Exception raised by _update_role(): {ex}')
         # Invite user not yet in the system
         else:
             try:
                 self._invite_user(email, project, role)
             except Exception as ex:
-                raise Exception(
-                    'Exception raised by _invite_user(): {}'.format(ex)
-                )
+                raise Exception(f'Exception raised by _invite_user(): {ex}')
 
     # Command ------------------------------------------------------------------
 
@@ -232,7 +222,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             with open(file, 'r') as f:
                 file_data = [d for d in (line.strip() for line in f) if d]
         except Exception as ex:
-            logger.error('Unable to read file: {}'.format(ex))
+            logger.error(f'Unable to read file: {ex}')
             sys.exit(1)
 
         # Validate file
@@ -240,9 +230,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         for d in file_data:
             ds = d.split(';')
             if len(ds) != 3 or len(ds[0]) != 36 or '@' not in ds[1]:
-                logger.error(
-                    'Invalid data in CSV file on row {}'.format(row_num)
-                )
+                logger.error(f'Invalid data in CSV file on row {row_num}')
                 sys.exit(1)
             row_num += 1
 
@@ -256,13 +244,12 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         for p_uuid in project_uuids:
             project = Project.objects.filter(sodar_uuid=p_uuid).first()
             if not project:
-                logger.error('Project not found with UUID: {}'.format(p_uuid))
+                logger.error(f'Project not found with UUID: {p_uuid}')
                 continue
             if project.is_remote():
                 logger.error(
-                    'Skipping remote {} {}'.format(
-                        project.type.lower(), project.get_log_title()
-                    )
+                    f'Skipping remote {project.type.lower()} '
+                    f'{project.get_log_title()}'
                 )
                 continue
 
@@ -270,15 +257,14 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
                 'projectroles.update_project_members', project
             ) or not self.issuer.has_perm('projectroles.invite_users', project):
                 logger.error(
-                    'Skipping project, issuer {} lacks perms to update or '
-                    'invite members'.format(self.issuer.username)
+                    f'Skipping project, issuer {self.issuer.username} lacks '
+                    f'perms to update or invite members'
                 )
                 continue
 
             logger.info(
-                'Updating roles in {} {}..'.format(
-                    project.type.lower(), project.get_log_title()
-                )
+                f'Updating roles in {project.type.lower()} '
+                f'{project.get_log_title()}..'
             )
             for ds in [
                 d.split(';') for d in file_data if d.split(';')[0] == p_uuid

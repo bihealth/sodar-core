@@ -179,7 +179,7 @@ class SodarCacheAPI:
         cls._check_app_name(app_name)
         cls._check_data_type(data_type)
         item = cls.get_cache_item(app_name, name, project)
-        log_msg = 'Updated item "{}:{}"'.format(app_name, name)
+        log_msg = f'Updated item "{app_name}:{name}"'
         if not item:
             if data_type == 'json':
                 item = JSONCacheItem()
@@ -188,10 +188,10 @@ class SodarCacheAPI:
         item.data = data
         if project:
             item.project = project
-            log_msg += ' in project {}'.format(project.get_log_title())
+            log_msg += f' in project {project.get_log_title()}'
         if user:
             item.user = user
-            log_msg += ' by user "{}"'.format(user.username)
+            log_msg += f' by user "{user.username}"'
         item.save()
         logger.info(log_msg)
         return item
@@ -210,9 +210,7 @@ class SodarCacheAPI:
         item = cls.get_cache_item(app_name, name, project)
         if item:
             item.delete()
-            logger.info(
-                'Deleted item "{}:{}" from cache'.format(app_name, name)
-            )
+            logger.info(f'Deleted item "{app_name}:{name}" from cache')
 
     @classmethod
     def get_update_time(

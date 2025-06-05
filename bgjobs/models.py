@@ -162,7 +162,7 @@ class JobModelMessageMixin:
         try:
             yield
         except Exception as e:
-            self.mark_error("Error: %s" % e)
+            self.mark_error(f'Error: {e}')
             raise
         else:
             self.mark_success()
@@ -170,21 +170,19 @@ class JobModelMessageMixin:
     def mark_start(self):
         """Mark the export job as started."""
         self.bg_job.status = JOB_STATE_RUNNING
-        self.bg_job.add_log_entry('%s started' % self.task_desc)
+        self.bg_job.add_log_entry(f'{self.task_desc} started')
         self.bg_job.save()
 
     def mark_error(self, msg: str):
         """Mark the export job as complete successfully."""
         self.bg_job.status = JOB_STATE_FAILED
-        self.bg_job.add_log_entry(
-            '{} file failed: {}'.format(self.task_desc, msg)
-        )
+        self.bg_job.add_log_entry(f'{self.task_desc} file failed: {msg}')
         self.bg_job.save()
 
     def mark_success(self):
         """Mark the export job as complete successfully."""
         self.bg_job.status = JOB_STATE_DONE
-        self.bg_job.add_log_entry('%s succeeded' % self.task_desc)
+        self.bg_job.add_log_entry(f'{self.task_desc} succeeded')
         self.bg_job.save()
 
     def add_log_entry(self, *args, **kwargs) -> BackgroundJobLogEntry:

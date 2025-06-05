@@ -119,8 +119,8 @@ class RetrieveUpdateDestroyAPITimelineMixin(FilesfoldersTimelineMixin):
                 project=instance.project,
                 app_name=APP_NAME,
                 user=self.request.user,
-                event_name='{}_delete'.format(obj_type),
-                description='delete {} {{{}}}'.format(obj_type, obj_type),
+                event_name=f'{obj_type}_delete',
+                description=f'delete {obj_type} {{{obj_type}}}',
                 status_type=timeline.TL_STATUS_OK,
             )
             tl_event.add_object(

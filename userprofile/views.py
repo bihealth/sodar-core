@@ -84,7 +84,7 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
                 )
             for s_def in s_defs.values():
                 yield {
-                    'label': s_def.label or '{}.{}'.format(name, s_def.name),
+                    'label': s_def.label or f'{name}.{s_def.name}',
                     'value': app_settings.get(
                         name, s_def.name, user=self.request.user
                     ),
@@ -169,7 +169,7 @@ class UserEmailMixin:
                 )
         except Exception as ex:
             messages.error(
-                self.request, 'Failed to send verification mail: {}'.format(ex)
+                self.request, f'Failed to send verification mail: {ex}'
             )
 
 
@@ -195,9 +195,7 @@ class UserEmailCreateView(
                 app_name=APP_NAME,
                 user=self.request.user,
                 event_name='email_create',
-                description='create additional email "{}"'.format(
-                    self.object.email
-                ),
+                description=f'create additional email "{self.object.email}"',
                 classified=True,
                 status_type=timeline.TL_STATUS_OK,
             )

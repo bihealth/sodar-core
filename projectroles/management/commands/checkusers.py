@@ -49,12 +49,8 @@ class Command(BaseCommand):
     @classmethod
     def _print_result(cls, django_user, msg):
         print(
-            '{};{};{};{}'.format(
-                django_user.username,
-                django_user.get_full_name(),
-                django_user.email,
-                msg,
-            )
+            f'{django_user.username};{django_user.get_full_name()};'
+            f'{django_user.email};{msg}'
         )
 
     @classmethod
@@ -88,7 +84,7 @@ class Command(BaseCommand):
             'primary' if primary else 'secondary', server_uri
         )
         if not domain_users:
-            logger.debug('No users found for {}, skipping'.format(server_str))
+            logger.debug(f'No users found for {server_str}, skipping')
             return
 
         bind_dn = _get_s('BIND_DN')
@@ -112,9 +108,7 @@ class Command(BaseCommand):
         try:
             lc.simple_bind_s(bind_dn, bind_pw)
         except Exception as ex:
-            logger.error(
-                'Exception connecting to {}: {}'.format(server_str, ex)
-            )
+            logger.error(f'Exception connecting to {server_str}: {ex}')
             return
 
         for d_user in domain_users:
@@ -127,7 +121,7 @@ class Command(BaseCommand):
             if len(l_user) > 0:
                 name, attrs = l_user[0]
                 user_ok = True
-                # logger.debug('Result: {}; {}'.format(name, attrs))
+                # logger.debug(f'Result: {name}; {attrs}')
                 if (
                     'userAccountControl' in attrs
                     and len(attrs['userAccountControl']) > 0
@@ -168,15 +162,12 @@ class Command(BaseCommand):
         self._check_search_base_setting(primary=True)
         self._check_search_base_setting(primary=False)
         u_query = Q(
-            username__endswith='@{}'.format(
-                settings.AUTH_LDAP_USERNAME_DOMAIN.upper()
-            )
+            username__endswith=f'@{settings.AUTH_LDAP_USERNAME_DOMAIN.upper()}'
         )
         if settings.ENABLE_LDAP_SECONDARY:
             q_secondary = Q(
-                username__endswith='@{}'.format(
-                    settings.AUTH_LDAP2_USERNAME_DOMAIN.upper()
-                )
+                username__endswith=f'@'
+                f'{settings.AUTH_LDAP2_USERNAME_DOMAIN.upper()}'
             )
             u_query.add(q_secondary, Q.OR)
         users = User.objects.filter(u_query).order_by('username')

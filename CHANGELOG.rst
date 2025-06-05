@@ -17,6 +17,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Update string formatting (#1562)
 - **Projectroles**
     - Move UI test helpers to ``UITestMixin`` (#1682)
 

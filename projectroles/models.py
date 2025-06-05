@@ -66,9 +66,7 @@ APP_SETTING_TYPES = [
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
-CAT_DELIMITER_ERROR_MSG = 'String "{}" is not allowed in title'.format(
-    CAT_DELIMITER
-)
+CAT_DELIMITER_ERROR_MSG = f'String "{CAT_DELIMITER}" is not allowed in title'
 ROLE_PROJECT_TYPE_ERROR_MSG = (
     'Invalid project type "{project_type}" for ' 'role "{role_name}"'
 )
@@ -472,7 +470,7 @@ class Project(models.Model):
         if role_name not in ROLE_RANKING:
             role = Role.objects.filter(name=role_name).first()
             if not role:
-                raise ValueError('Unknown role "{}"'.format(role_name))
+                raise ValueError(f'Unknown role "{role_name}"')
             rank = role.rank
         else:
             rank = ROLE_RANKING[role_name]
@@ -804,7 +802,7 @@ class RoleAssignment(models.Model):
         ]
 
     def __str__(self):
-        return '{}: {}: {}'.format(self.project, self.role, self.user)
+        return f'{self.project}: {self.role}: {self.user}'
 
     def __repr__(self):
         values = (self.project.title, self.user.username, self.role.name)
@@ -828,9 +826,8 @@ class RoleAssignment(models.Model):
         ).first()
         if role_as and (not self.pk or role_as.pk != self.pk):
             raise ValidationError(
-                'Role {} already set for {} in {}'.format(
-                    role_as.role, role_as.user, role_as.project
-                )
+                f'Role {role_as.role} already set for {role_as.user} in '
+                f'{role_as.project}'
             )
 
     def _validate_owner(self):
@@ -842,9 +839,7 @@ class RoleAssignment(models.Model):
             owner = self.project.get_owner()
             if owner and (not self.pk or owner.pk != self.pk):
                 raise ValidationError(
-                    'User {} already set as owner of {}'.format(
-                        owner, self.project
-                    )
+                    f'User {owner} already set as owner of {self.project}'
                 )
 
     def _validate_delegate(self):
@@ -867,8 +862,8 @@ class RoleAssignment(models.Model):
             is None
         ):
             raise ValidationError(
-                'The local delegate limit for this project ({}) has already '
-                'been reached.'.format(del_limit)
+                f'The local delegate limit for this project ({del_limit}) has '
+                f'already been reached.'
             )
 
     def save(self, *args, **kwargs):
@@ -1004,7 +999,7 @@ class AppSetting(models.Model):
             label = self.user.username
         else:
             label = 'SITE'
-        return '{}: {} / {}'.format(label, plugin_name, self.name)
+        return f'{label}: {plugin_name} / {self.name}'
 
     def __repr__(self):
         values = (
@@ -1264,7 +1259,7 @@ class RemoteSite(models.Model):
         unique_together = ['url', 'mode', 'secret']
 
     def __str__(self):
-        return '{} ({})'.format(self.name, self.mode)
+        return f'{self.name} ({self.mode})'
 
     def __repr__(self):
         values = (self.name, self.mode, self.url)
@@ -1273,9 +1268,7 @@ class RemoteSite(models.Model):
     def _validate_mode(self):
         """Validate mode value"""
         if self.mode not in SODAR_CONSTANTS['SITE_MODES']:
-            raise ValidationError(
-                'Mode "{}" not found in SITE_MODES'.format(self.mode)
-            )
+            raise ValidationError(f'Mode "{self.mode}" not found in SITE_MODES')
 
     def save(self, *args, **kwargs):
         """Version of save() to include custom validation"""
@@ -1369,9 +1362,7 @@ class RemoteProject(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return '{}: {} ({})'.format(
-            self.site.name, str(self.project_uuid), self.site.mode
-        )
+        return f'{self.site.name}: {self.project_uuid} ({self.site.mode})'
 
     def __repr__(self):
         values = (self.site.name, str(self.project_uuid), self.site.mode)
@@ -1421,7 +1412,7 @@ class SODARUser(AbstractUser):
         if hasattr(self, 'name') and self.name:
             return self.name
         elif self.first_name and self.last_name:
-            return '{} {}'.format(self.first_name, self.last_name)
+            return f'{self.first_name} {self.last_name}'
         return self.username
 
     def get_display_name(self, inc_user: bool = False) -> str:
@@ -1445,9 +1436,9 @@ class SODARUser(AbstractUser):
         """
         ret = self.get_full_name()
         if ret != self.username:
-            ret += ' ({})'.format(self.username)
+            ret += f' ({self.username})'
         if email and self.email:
-            ret += ' <{}>'.format(self.email)
+            ret += f' <{self.email}>'
         return ret
 
     def get_auth_type(self) -> str:
@@ -1511,14 +1502,12 @@ class SODARUser(AbstractUser):
                 system_group = Group.objects.get(name=SYSTEM_USER_GROUP)
                 system_group.user_set.remove(self)
                 logger.debug(
-                    'Removed system user group "{}" from {}'.format(
-                        SYSTEM_USER_GROUP, self.username
-                    )
+                    f'Removed system user group "{SYSTEM_USER_GROUP}" from '
+                    f'{self.username}'
                 )
-            logger.info(
-                'Set user group "{}" for {}'.format(group_name, self.username)
-            )
+            logger.info(f'Set user group "{group_name}" for {self.username}')
             return group_name
+        return None
 
     def update_full_name(self) -> str:
         """
@@ -1536,9 +1525,7 @@ class SODARUser(AbstractUser):
             self.name = full_name
             self.save()
             logger.info(
-                'Full name updated for user {}: {}'.format(
-                    self.username, self.name
-                )
+                f'Full name updated for user {self.username}: {self.name}'
             )
         return self.name
 
@@ -1617,7 +1604,7 @@ class SODARUserAdditionalEmail(models.Model):
         unique_together = ['user', 'email']
 
     def __str__(self):
-        return '{}: {}'.format(self.user.username, self.email)
+        return f'{self.user.username}: {self.email}'
 
     def __repr__(self):
         values = (

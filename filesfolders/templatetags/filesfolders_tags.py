@@ -55,9 +55,7 @@ def get_file_icon(file: File) -> str:
         if settings.DEBUG:
             raise ex
         logger.error(
-            'Exception in accessing file data (UUID={}): {}'.format(
-                file.sodar_uuid, ex
-            )
+            f'Exception in accessing file data (UUID={file.sodar_uuid}): {ex}'
         )
         return ret
     if mt == 'application/pdf':

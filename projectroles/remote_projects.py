@@ -194,7 +194,7 @@ class RemoteProjectAPI:
         s_def = all_defs.get(plugin_name, {}).get(app_setting.name, {})
         if not s_def:  # This should not be able to happen, but just in case
             raise Exception(
-                'Definition not found for setting: {}'.format(app_setting.name)
+                f'Definition not found for setting: {app_setting.name}'
             )
 
         # NOTE: Provide user_name in case of local target users
@@ -360,9 +360,7 @@ class RemoteProjectAPI:
             api_req = urllib.request.Request(api_url)
             api_req.add_header(
                 'accept',
-                '{}; version={}'.format(
-                    SYNC_API_MEDIA_TYPE, SYNC_API_DEFAULT_VERSION
-                ),
+                f'{SYNC_API_MEDIA_TYPE}; version={SYNC_API_DEFAULT_VERSION}',
             )
             response = urllib.request.urlopen(api_req)
             remote_data = json.loads(response.read().decode('utf-8'))
@@ -484,9 +482,8 @@ class RemoteProjectAPI:
                     if g.name not in user_data['groups']:
                         g.user_set.remove(user)
                         logger.debug(
-                            'Removed user {} ({}) from group "{}"'.format(
-                                user.username, user.sodar_uuid, g.name
-                            )
+                            f'Removed user {user.username} ({user.sodar_uuid}) '
+                            f'from group "{g.name}"'
                         )
                 existing_groups = [g.name for g in user.groups.all()]
                 for g in user_data['groups']:
@@ -494,9 +491,8 @@ class RemoteProjectAPI:
                         group, created = Group.objects.get_or_create(name=g)
                         group.user_set.add(user)
                         logger.debug(
-                            'Added user {} ({}) to group "{}"'.format(
-                                user.username, user.sodar_uuid, g
-                            )
+                            f'Added user {user.username} ({user.sodar_uuid}) '
+                            f'to group "{g}"'
                         )
 
         # Create new user
@@ -514,15 +510,14 @@ class RemoteProjectAPI:
             }
             user = User.objects.create(**create_values)
             user_data['status'] = 'created'
-            logger.info('Created user: {}'.format(user.username))
+            logger.info(f'Created user: {user.username}')
 
             for g in user_data['groups']:
                 group, created = Group.objects.get_or_create(name=g)
                 group.user_set.add(user)
                 logger.debug(
-                    'Added user {} ({}) to group "{}"'.format(
-                        user.username, user.sodar_uuid, g
-                    )
+                    f'Added user {user.username} ({user.sodar_uuid}) to group '
+                    f'"{g}"'
                 )
 
         # Sync additional emails
@@ -532,9 +527,7 @@ class RemoteProjectAPI:
         for e in deleted_emails:
             e.delete()
             logger.info(
-                'Deleted user {} additional email "{}"'.format(
-                    user.username, e.email
-                )
+                f'Deleted user {user.username} additional email "{e.email}"'
             )
         for e in add_emails:
             if SODARUserAdditionalEmail.objects.filter(
@@ -545,9 +538,8 @@ class RemoteProjectAPI:
                 user=user, email=e, verified=True
             )
             logger.info(
-                'Created user {} additional email "{}"'.format(
-                    user.username, email_obj.email
-                )
+                f'Created user {user.username} additional email '
+                f'"{email_obj.email}"'
             )
         # HACK: Re-add additional emails
         user_data['additional_emails'] = add_emails
@@ -664,10 +656,9 @@ class RemoteProjectAPI:
         ).first()
         if old_project:
             error_msg = (
-                '{} with the title "{}" exists under the same '
-                'parent, unable to create'.format(
-                    old_project.type.capitalize(), old_project.title
-                )
+                f'{old_project.type.capitalize()} with the title '
+                f'"{old_project.title}" exists under the same parent, unable '
+                f'to create'
             )
             self._handle_project_error(error_msg, uuid, project_data, 'create')
             return
@@ -732,7 +723,7 @@ class RemoteProjectAPI:
                 )
             )
         else:
-            logger.debug('Nothing to update for peer site "{}"'.format(uuid))
+            logger.debug(f'Nothing to update for peer site "{uuid}"')
 
     def _update_roles(self, project: Project, project_data: dict):
         """
@@ -825,8 +816,8 @@ class RemoteProjectAPI:
                 if old_owner_as and old_owner_as.user != role_user:
                     old_owner_as.delete()
                     logger.debug(
-                        'Deleted existing owner role from '
-                        'user "{}"'.format(old_owner_as.user.username)
+                        f'Deleted existing owner role from user '
+                        f'"{old_owner_as.user.username}"'
                     )
 
             if old_as and old_as.role != role:
@@ -856,9 +847,7 @@ class RemoteProjectAPI:
                     )
 
                 logger.info(
-                    'Updated role {}: {} = {}'.format(
-                        r_uuid, role_user.username, role.name
-                    )
+                    f'Updated role {r_uuid}: {role_user.username} = {role.name}'
                 )
 
             # Create a new RoleAssignment
@@ -892,9 +881,8 @@ class RemoteProjectAPI:
                         self.source_site, 'site', self.source_site.name
                     )
                 logger.info(
-                    'Created role {}: {} -> {}'.format(
-                        r_uuid, role_user.username, role.name
-                    )
+                    f'Created role {r_uuid}: {role_user.username} -> '
+                    f'{role.name}'
                 )
 
     def _remove_deleted_roles(self, project: Project, project_data: dict):
@@ -1025,9 +1013,8 @@ class RemoteProjectAPI:
             )
             remote_action = 'created'
         logger.debug(
-            '{} RemoteProject {}'.format(
-                remote_action.capitalize(), remote_project.sodar_uuid
-            )
+            f'{remote_action.capitalize()} RemoteProject '
+            f'{remote_project.sodar_uuid}'
         )
 
         # Skip the rest if not updating roles
@@ -1086,11 +1073,7 @@ class RemoteProjectAPI:
                 )
             )
         else:
-            logger.debug(
-                '{} is not a peer project (no remote site field)'.format(
-                    str(uuid)
-                )
-            )
+            logger.debug(f'{uuid} is not a peer project (no remote site field)')
 
     @classmethod
     def _remove_revoked_peers(cls, uuid: str, project_data: dict):
@@ -1198,9 +1181,7 @@ class RemoteProjectAPI:
                     else ad['value']
                 ),
             ):
-                logger.info(
-                    'Skipping setting {}: value unchanged'.format(str(obj))
-                )
+                logger.info(f'Skipping setting {obj}: value unchanged')
                 set_data['status'] = 'skipped'
                 return
             # Else update existing value
@@ -1221,8 +1202,8 @@ class RemoteProjectAPI:
         if app_plugin:
             ad['app_plugin'] = app_plugin
 
-        logger.info('{} setting {}'.format(action_str.capitalize(), str(obj)))
-        logger.debug('Setting data: {}'.format(ad))
+        logger.info(f'{action_str.capitalize()} setting {obj}')
+        logger.debug(f'Setting data: {ad}')
         if action_str == 'updating' and obj:  # Update existing setting object
             for k, v in ad.items():
                 setattr(obj, k, v)
@@ -1262,8 +1243,8 @@ class RemoteProjectAPI:
             )
         except User.DoesNotExist:
             error_msg = (
-                'Local user "{}" defined in PROJECTROLES_DEFAULT_ADMIN '
-                'not found'.format(settings.PROJECTROLES_DEFAULT_ADMIN)
+                f'Local user "{settings.PROJECTROLES_DEFAULT_ADMIN}" defined '
+                f'in PROJECTROLES_DEFAULT_ADMIN not found'
             )
             logger.error(error_msg)
             raise ValueError(error_msg)
@@ -1286,7 +1267,7 @@ class RemoteProjectAPI:
         if self.timeline:
             self.tl_user = request.user if request else self.default_owner
 
-        logger.info('Synchronizing data from "{}"..'.format(site.name))
+        logger.info(f'Synchronizing data from "{site.name}"..')
         # Return unchanged data if no projects with READ_ROLES are included
         if not {
             k: v

@@ -730,7 +730,7 @@ class RoleAssignmentOwnerTransferAPIView(
 
         if d_old_owner_role and not old_owner_role:
             raise serializers.ValidationError(
-                'Unknown role "{}"'.format(d_old_owner_role)
+                f'Unknown role "{d_old_owner_role}"'
             )
         if old_owner_role and project.type not in old_owner_role.project_types:
             raise serializers.ValidationError(
@@ -741,16 +741,12 @@ class RoleAssignmentOwnerTransferAPIView(
         if not old_owner_as:
             raise serializers.ValidationError('Existing owner role not found')
         if not new_owner:
-            raise serializers.ValidationError(
-                'User "{}" not found'.format(d_new_owner)
-            )
+            raise serializers.ValidationError(f'User "{d_new_owner}" not found')
         if new_owner == old_owner:
             raise serializers.ValidationError('Owner role already set for user')
         if not project.has_role(new_owner):
             raise serializers.ValidationError(
-                'User {} is not a member of the project'.format(
-                    new_owner.username
-                )
+                f'User {new_owner.username} is not a member of the project'
             )
         # Validate existing inherited role for old owner, do not allow demoting
         inh_roles = RoleAssignment.objects.filter(
@@ -758,10 +754,8 @@ class RoleAssignmentOwnerTransferAPIView(
         ).order_by('role__rank')
         if inh_roles and old_owner_role.rank > inh_roles.first().role.rank:
             raise serializers.ValidationError(
-                'User {} has inherited role "{}", demoting is not '
-                'allowed'.format(
-                    old_owner.username, inh_roles.first().role.name
-                )
+                f'User {old_owner.username} has inherited role '
+                f'"{inh_roles.first().role.name}", demoting is not allowed'
             )
 
         try:  # All OK, transfer owner
@@ -773,7 +767,7 @@ class RoleAssignmentOwnerTransferAPIView(
                 request=request,
             )
         except Exception as ex:
-            raise APIException('Unable to transfer owner: {}'.format(ex))
+            raise APIException(f'Unable to transfer owner: {ex}')
         return Response(
             {
                 'detail': 'Ownership transferred from {} to {} in '
@@ -919,9 +913,8 @@ class ProjectInviteRevokeAPIView(
         invite = self.revoke_invite(invite, invite.project, request)
         return Response(
             {
-                'detail': 'Invite revoked from email {} in project "{}"'.format(
-                    invite.email, invite.project.title
-                )
+                'detail': f'Invite revoked from email {invite.email} in '
+                f'project "{invite.project.title}"'
             },
             status=200,
         )
@@ -954,9 +947,8 @@ class ProjectInviteResendAPIView(
         self.handle_invite(invite, request, resend=True, add_message=False)
         return Response(
             {
-                'detail': 'Invite resent from email {} in project "{}"'.format(
-                    invite.email, invite.project.title
-                )
+                'detail': f'Invite resent from email {invite.email} in project '
+                f'"{invite.project.title}"'
             },
             status=200,
         )
@@ -1257,9 +1249,7 @@ class ProjectSettingSetAPIView(
             raise serializers.ValidationError(ex)
 
         if timeline:
-            tl_desc = 'set value of {}.settings.{}'.format(
-                plugin_name, setting_name
-            )
+            tl_desc = f'set value of {plugin_name}.settings.{setting_name}'
             if setting_user:
                 tl_desc += ' for user {{{}}}'.format('user')
             setting_obj = self._get_setting_obj(
@@ -1368,11 +1358,7 @@ class UserSettingSetAPIView(
         except Exception as ex:
             raise serializers.ValidationError(ex)
         return Response(
-            {
-                'detail': 'Set value of {}.settings.{}'.format(
-                    plugin_name, setting_name
-                )
-            },
+            {'detail': f'Set value of {plugin_name}.settings.{setting_name}'},
             status=200,
         )
 

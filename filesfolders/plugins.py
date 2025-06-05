@@ -229,10 +229,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         elif column_id == 'links':
             count = HyperLink.objects.filter(project=project).count()
         if count > 0:
-            return '<a href="{}">{}</a>'.format(
-                reverse(
-                    'filesfolders:list', kwargs={'project': project.sodar_uuid}
-                ),
-                count,
+            url = reverse(
+                'filesfolders:list', kwargs={'project': project.sodar_uuid}
             )
+            return f'<a href="{url}">{count}</a>'
         return 0

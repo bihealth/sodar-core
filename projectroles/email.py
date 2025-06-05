@@ -264,7 +264,7 @@ def get_email_user(user: SODARUser) -> str:
     """
     ret = user.get_full_name()
     if user.email:
-        ret += ' ({})'.format(user.email)
+        ret += f' ({user.email})'
     return ret
 
 
@@ -524,7 +524,7 @@ def send_mail(
         )
         return ret
     except Exception as ex:
-        error_msg = 'Error sending email: {}'.format(str(ex))
+        error_msg = f'Error sending email: {str(ex)}'
         logger.error(error_msg)
         if DEBUG:
             raise ex

@@ -198,7 +198,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
             media_type = cls.media_type
         if not version:
             version = cls.api_version
-        return {'HTTP_ACCEPT': '{}; version={}'.format(media_type, version)}
+        return {'HTTP_ACCEPT': f'{media_type}; version={version}'}
 
     @classmethod
     def get_token_header(cls, token: str) -> dict:
@@ -210,8 +210,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         """
         if token is EMPTY_KNOX_TOKEN:
             return {}
-        else:
-            return {'HTTP_AUTHORIZATION': 'token {}'.format(token)}
+        return {'HTTP_AUTHORIZATION': f'token {token}'}
 
     def request_knox(
         self,
@@ -250,7 +249,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
             req_kwargs.update(header)
         req_method = getattr(self.client, method.lower(), None)
         if not req_method:
-            raise ValueError('Unsupported method "{}"'.format(method))
+            raise ValueError(f'Unsupported method "{method}"')
         return req_method(url, **req_kwargs)
 
 
@@ -827,7 +826,7 @@ class TestProjectCreateAPIView(
         """Test POST for project with category delimiter in title (should fail)"""
         self.assertEqual(Project.objects.count(), 2)
         post_data = {
-            'title': 'New{}Project'.format(CAT_DELIMITER),
+            'title': f'New{CAT_DELIMITER}Project',
             'type': PROJECT_TYPE_PROJECT,
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
@@ -1224,7 +1223,7 @@ class TestProjectUpdateAPIView(
 
     def test_patch_project_title_delimiter(self):
         """Test PATCH with category delimiter in project title (should fail)"""
-        patch_data = {'title': 'New{}Project'.format(CAT_DELIMITER)}
+        patch_data = {'title': f'New{CAT_DELIMITER}Project'}
         response = self.request_knox(self.url, method='PATCH', data=patch_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
 
@@ -3677,7 +3676,7 @@ class TestRemoteProjectGetAPIView(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
-            **self.get_accept_header()
+            **self.get_accept_header(),
         )
         self.assertEqual(response.status_code, 200)
         response_dict = json.loads(response.content.decode('utf-8'))
@@ -3690,7 +3689,7 @@ class TestRemoteProjectGetAPIView(
             reverse(
                 'projectroles:api_remote_get', kwargs={'secret': build_secret()}
             ),
-            **self.get_accept_header()
+            **self.get_accept_header(),
         )
         self.assertEqual(response.status_code, 401)
 
@@ -3733,7 +3732,7 @@ class TestRemoteProjectGetAPIView(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
-            **self.get_accept_header(version='0.12.0')
+            **self.get_accept_header(version='0.12.0'),
         )
         self.assertEqual(response.status_code, 406)
 

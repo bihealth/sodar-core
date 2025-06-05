@@ -222,9 +222,7 @@ class RoleAssignmentValidateMixin:
             and len(project.get_delegates(inherited=False)) >= del_limit
         ):
             raise serializers.ValidationError(
-                'Project delegate limit of {} has been reached'.format(
-                    del_limit
-                )
+                f'Project delegate limit of {del_limit} has been reached'
             )
         return attrs
 
@@ -279,8 +277,8 @@ class RoleAssignmentSerializer(
             ).first()
             if old_as:
                 raise serializers.ValidationError(
-                    'User already has the role of "{}" in project '
-                    '(UUID={})'.format(old_as.role.name, old_as.sodar_uuid)
+                    f'User already has the role of "{old_as.role.name}" in '
+                    f'project (UUID={old_as.sodar_uuid})'
                 )
         # Prevent demoting if inherited role exists
         for old_role_as in RoleAssignment.objects.filter(
@@ -288,8 +286,8 @@ class RoleAssignmentSerializer(
         ):
             if attrs['role'].rank > old_role_as.role.rank:
                 raise serializers.ValidationError(
-                    'User inherits role "{}", demoting from inherited role is '
-                    'not allowed'.format(old_role_as.role.name)
+                    f'User inherits role "{old_role_as.role.name}", demoting '
+                    f'from inherited role is not allowed'
                 )
         return attrs
 
@@ -490,9 +488,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             None,
         ]:  # None is ok for PATCH (will be updated in modify_project())
             raise serializers.ValidationError(
-                'Type is not {} or {}'.format(
-                    PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT
-                )
+                f'Type is not {PROJECT_TYPE_CATEGORY} or {PROJECT_TYPE_PROJECT}'
             )
         if (
             project_type

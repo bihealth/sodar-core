@@ -85,7 +85,7 @@ CATEGORY_SETTING_ID = (
 )
 PUBLIC_ACCESS_ID = 'id_public_guest_access'
 REMOTE_SITE_UUID = uuid.uuid4()
-REMOTE_SITE_ID = 'id_remote_site.{}'.format(REMOTE_SITE_UUID)
+REMOTE_SITE_ID = f'id_remote_site.{REMOTE_SITE_UUID}'
 CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
 
 
@@ -131,7 +131,7 @@ class LiveUserMixin:
         kwargs = {
             'username': user_name,
             'password': 'password',
-            'email': '{}@example.com'.format(user_name),
+            'email': f'{user_name}@example.com',
             'is_active': True,
         }
         if superuser:
@@ -343,7 +343,7 @@ class UITestMixin:
                         )
                     ),
                     expected_count,
-                    'expected_user={}'.format(expected_user),
+                    f'expected_user={expected_user}',
                 )
             else:
                 with self.assertRaises(NoSuchElementException):
@@ -561,10 +561,9 @@ class TestHomeView(UITestBase):
     def _get_list_item(self, project: Project) -> WebElement:
         return self.selenium.find_element(
             By.XPATH,
-            '//tr[contains(@class, "sodar-pr-project-list-item '
-            'sodar-pr-project-list-item-{}") and @data-uuid="{}"]'.format(
-                project.type.lower(), project.sodar_uuid
-            ),
+            f'//tr[contains(@class, "sodar-pr-project-list-item '
+            f'sodar-pr-project-list-item-{project.type.lower()}") and '
+            f'@data-uuid="{project.sodar_uuid}"]',
         )
 
     def _get_project_row(self, project: Project) -> WebElement:
@@ -1089,7 +1088,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
         ]
         # Add app plugin navs
         for p in get_active_plugins():
-            self.sidebar_ids.append('sodar-pr-nav-app-plugin-{}'.format(p.name))
+            self.sidebar_ids.append(f'sodar-pr-nav-app-plugin-{p.name}')
 
     def test_render_detail(self):
         """Test visibility of sidebar in the project_detail view"""
@@ -2210,7 +2209,7 @@ class TestProjectCreateView(RemoteSiteMixin, UITestBase):
         WebDriverWait(self.selenium, 10).until(
             ec.presence_of_element_located((By.TAG_NAME, 'svg'))
         )
-        find_args = (By.CSS_SELECTOR, 'div[id="{}"]'.format(PROJECT_SETTING_ID))
+        find_args = (By.CSS_SELECTOR, f'div[id="{PROJECT_SETTING_ID}"]')
         logo = self.selenium.find_element(*find_args).find_element(
             By.TAG_NAME, 'svg'
         )
@@ -2450,8 +2449,8 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         """Return role dropdown for a role"""
         row = self.selenium.find_element(
             By.XPATH,
-            '//tr[@class="sodar-pr-role-list-row" and '
-            '@data-user-uuid="{}"]'.format(user.sodar_uuid),
+            f'//tr[@class="sodar-pr-role-list-row" and '
+            f'@data-user-uuid="{user.sodar_uuid}"]',
         )
         class_name = 'sodar-pr-role-dropdown'
         if owner:

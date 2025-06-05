@@ -52,7 +52,7 @@ class TestAppAlertListView(AlertUITestBase):
     def _find_alert_element(self, alert: AppAlert) -> WebElement:
         """Return element for AppAlert object"""
         return self.selenium.find_element(
-            By.XPATH, '//div[@data-alert-uuid="{}"]'.format(alert.sodar_uuid)
+            By.XPATH, f'//div[@data-alert-uuid="{alert.sodar_uuid}"]'
         )
 
     def setUp(self):

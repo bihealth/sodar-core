@@ -98,7 +98,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
                 continue
             user_emails = get_user_addr(u)
             if not user_emails:
-                logger.warning('No emails set for user: {}'.format(u.username))
+                logger.warning(f'No emails set for user: {u.username}')
                 continue
             ret += [e for e in user_emails if e not in ret]
         return sorted(ret)
@@ -152,7 +152,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
         if email_count > 0:
             email_msg_suffix = ', email sent to site users'
         messages.success(
-            self.request, 'Alert {}d{}.'.format(form_action, email_msg_suffix)
+            self.request, f'Alert {form_action}d{email_msg_suffix}.'
         )
         return redirect(reverse('adminalerts:list'))
 

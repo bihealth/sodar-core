@@ -119,7 +119,7 @@ class FilesfoldersTimelineMixin:
 
         obj_type = TL_OBJ_TYPES[obj.__class__.__name__]
         extra_data = {}
-        tl_desc = '{} {} {{{}}}'.format(view_action, obj_type, obj_type)
+        tl_desc = f'{view_action} {obj_type} {{{obj_type}}}'
 
         if view_action == 'create':
             for a in update_attrs:
@@ -135,7 +135,7 @@ class FilesfoldersTimelineMixin:
             project=obj.project,
             app_name=APP_NAME,
             user=request.user,
-            event_name='{}_{}'.format(obj_type, view_action),
+            event_name=f'{obj_type}_{view_action}',
             description=tl_desc,
             extra_data=extra_data,
             status_type=timeline.TL_STATUS_OK,
@@ -186,9 +186,8 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
         )
         messages.success(
             self.request,
-            '{} "{}" successfully {}d.'.format(
-                self.object.__class__.__name__, self.object.name, view_action
-            ),
+            f'{self.object.__class__.__name__} "{self.object.name}" '
+            f'successfully {view_action}d.',
         )
         # TODO: Repetition, put this in a mixin?
         if self.object.folder:
@@ -211,8 +210,8 @@ class DeleteSuccessMixin(DeletionMixin):
                 project=self.object.project,
                 app_name=APP_NAME,
                 user=self.request.user,
-                event_name='{}_delete'.format(obj_type),
-                description='delete {} {{{}}}'.format(obj_type, obj_type),
+                event_name=f'{obj_type}_delete',
+                description=f'delete {obj_type} {{{obj_type}}}',
                 status_type=timeline.TL_STATUS_OK,
             )
             tl_event.add_object(
@@ -227,9 +226,7 @@ class DeleteSuccessMixin(DeletionMixin):
 
         messages.success(
             self.request,
-            '{} "{}" deleted.'.format(
-                self.object.__class__.__name__, self.object.name
-            ),
+            f'{self.object.__class__.__name__} "{self.object.name}" deleted.',
         )
         # TODO: Repetition, put this in a mixin?
         if self.object.folder:
@@ -276,8 +273,8 @@ class FileServeMixin:
             FileWrapper(file_content), content_type=file_data.content_type
         )
         if SERVE_AS_ATTACHMENT:
-            response['Content-Disposition'] = 'attachment; filename={}'.format(
-                file.name
+            response['Content-Disposition'] = (
+                f'attachment; filename={file.name}'
             )
         if self.request.user.is_authenticated:
             # Add event in Timeline
@@ -404,8 +401,8 @@ class ProjectFileView(
                 if settings.DEBUG:
                     raise ex
                 logger.error(
-                    'Exception in accessing readme file data (UUID={}): '
-                    '{}'.format(readme_file.sodar_uuid, ex)
+                    f'Exception in accessing readme file data '
+                    f'(UUID={readme_file.sodar_uuid}): {ex}'
                 )
         return context
 
@@ -489,9 +486,7 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
         try:
             zip_file = ZipFile(file)
         except Exception as ex:
-            messages.error(
-                self.request, 'Unable to extract zip file: {}'.format(ex)
-            )
+            messages.error(self.request, f'Unable to extract zip file: {ex}')
             return redirect(redirect_url)
 
         new_folders = []
@@ -546,10 +541,8 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
                 app_name=APP_NAME,
                 user=self.request.user,
                 event_name='archive_extract',
-                description='Extract from archive "{}", create {} folders '
-                'and {} files'.format(
-                    file.name, len(new_folders), len(new_files)
-                ),
+                description=f'Extract from archive "{file.name}", create '
+                f'{len(new_folders)} folders and {len(new_files)} files',
                 extra_data={
                     'new_folders': [f.name for f in new_folders],
                     'new_files': [f.name for f in new_files],
@@ -848,7 +841,7 @@ class BatchEditView(
                 ).first(),
                 app_name=APP_NAME,
                 user=self.request.user,
-                event_name='batch_{}'.format(self.batch_action),
+                event_name=f'batch_{self.batch_action}',
                 description='batch {} {} item{} {} {}'.format(
                     self.batch_action,
                     edit_count,

@@ -165,11 +165,11 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(len(objects), 0)
 
     def test__str__(self):
-        expected = '{}: root/folder'.format(PROJECT_NAME)
+        expected = f'{PROJECT_NAME}: root/folder'
         self.assertEqual(str(self.folder), expected)
 
     def test__repr__(self):
-        expected = "Folder('{}', 'folder', '/')".format(PROJECT_NAME)
+        expected = f"Folder('{PROJECT_NAME}', 'folder', '/')"
         self.assertEqual(repr(self.folder), expected)
 
     def test_create_subfolder(self):

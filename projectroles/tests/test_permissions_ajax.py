@@ -325,10 +325,13 @@ class TestRemoteProjectAccessAjaxView(
             level=REMOTE_LEVEL_READ_ROLES,
             project=self.project,
         )
-        self.url = reverse(
-            'projectroles:ajax_remote_access',
-            kwargs={'project': self.project.sodar_uuid},
-        ) + '?rp={}'.format(self.remote_project.sodar_uuid)
+        self.url = (
+            reverse(
+                'projectroles:ajax_remote_access',
+                kwargs={'project': self.project.sodar_uuid},
+            )
+            + f'?rp={self.remote_project.sodar_uuid}'
+        )
         self.good_users = [
             self.superuser,
             self.user_owner_cat,

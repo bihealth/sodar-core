@@ -141,7 +141,7 @@ REMOTE_SITE_NEW_URL = 'https://new.url'
 REMOTE_SITE_NEW_DESC = 'New description'
 REMOTE_SITE_NEW_SECRET = build_secret()
 REMOTE_SITE_UUID = uuid.uuid4()
-REMOTE_SITE_FIELD = 'remote_site.{}'.format(REMOTE_SITE_UUID)
+REMOTE_SITE_FIELD = f'remote_site.{REMOTE_SITE_UUID}'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 INVALID_SETTING_VALUE = 'INVALID VALUE'
 LDAP_DOMAIN = 'EXAMPLE'
@@ -743,9 +743,7 @@ class TestProjectCreateView(
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
-        self.assertNotIn(
-            'remote_site.{}'.format(peer_site.sodar_uuid), form.fields
-        )
+        self.assertNotIn(f'remote_site.{peer_site.sodar_uuid}', form.fields)
 
     @override_settings(PROJECTROLES_SITE_MODE='TARGET')
     @override_settings(PROJECTROLES_TARGET_CREATE=False)
@@ -1093,7 +1091,7 @@ class TestProjectCreateView(
         """Test POST with category delimiter in title (should fail)"""
         self.assertEqual(Project.objects.all().count(), 1)
         data = self._get_post_data(
-            title='Test{}Project'.format(CAT_DELIMITER),
+            title=f'Test{CAT_DELIMITER}Project',
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
             owner=self.user,
@@ -1603,7 +1601,7 @@ class TestProjectUpdateView(
         data = model_to_dict(self.project)
         data['parent'] = self.category.sodar_uuid
         data['owner'] = self.user.sodar_uuid
-        data['title'] = 'Project{}Title'.format(CAT_DELIMITER)
+        data['title'] = f'Project{CAT_DELIMITER}Title'
         data.update(
             app_settings.get_all_by_scope(
                 APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
@@ -6145,7 +6143,7 @@ class TestRemoteProjectBatchUpdateView(
 
     def test_post_confirm(self):
         """Test RemoteProjectBatchUpdateView POST in confirm mode"""
-        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        access_field = f'remote_access_{self.project.sodar_uuid}'
         data = {access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']}
         with self.login(self.user):
             response = self.client.post(self.url, data)
@@ -6161,7 +6159,7 @@ class TestRemoteProjectBatchUpdateView(
 
     def test_post_confirm_no_change(self):
         """Test POST without changes (should redirect)"""
-        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        access_field = f'remote_access_{self.project.sodar_uuid}'
         data = {access_field: SODAR_CONSTANTS['REMOTE_LEVEL_NONE']}
         with self.login(self.user):
             response = self.client.post(self.url, data)
@@ -6189,7 +6187,7 @@ class TestRemoteProjectBatchUpdateView(
             ).count(),
         )
         self.assertEqual(RemoteProject.objects.all().count(), 0)
-        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        access_field = f'remote_access_{self.project.sodar_uuid}'
         data = {
             access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
             'update-confirmed': 1,
@@ -6229,7 +6227,7 @@ class TestRemoteProjectBatchUpdateView(
         )
         self.assertEqual(RemoteProject.objects.all().count(), 1)
 
-        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        access_field = f'remote_access_{self.project.sodar_uuid}'
         data = {
             access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
             'update-confirmed': 1,
