@@ -462,7 +462,7 @@ class TestProjectStarringAjaxView(
 ):
     """Tests for ProjectStarringAjaxView"""
 
-    def _assert_setting_count(self, count):
+    def _assert_setting_count(self, count: int):
         qs = AppSetting.objects.filter(
             app_plugin=None, project=self.project, name='project_star'
         )
@@ -519,7 +519,7 @@ class TestRemoteProjectAccessAjaxView(
     """Tests for RemoteProjectAccessAjaxView"""
 
     @classmethod
-    def _get_query_string(cls, *args):
+    def _get_query_string(cls, *args) -> str:
         """Get query string for GET requests"""
         return '?' + '&'.join(['rp={}'.format(rp.sodar_uuid) for rp in args])
 
@@ -840,7 +840,7 @@ class TestUserAutocompleteAjaxView(
 ):
     """Tests for UserAutocompleteAjaxView"""
 
-    def _get_forward_qs(self, data):
+    def _get_forward_qs(self, data: dict) -> str:
         """Return forward querystring for UserAutocompleteAjaxView requests"""
         return '?forward=' + json.dumps(data)
 

@@ -1,9 +1,14 @@
-"""Tests for models in the projectroles Django app"""
+"""Tests for models in the projectroles app"""
 
 import uuid
 
+from datetime import datetime
+from typing import Any, Optional, Union
+from uuid import UUID
+
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django.db.models import QuerySet
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
@@ -19,6 +24,7 @@ from projectroles.models import (
     AppSetting,
     RemoteSite,
     RemoteProject,
+    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ROLE_RANKING,
@@ -69,16 +75,16 @@ class ProjectMixin:
     @classmethod
     def make_project(
         cls,
-        title,
-        type,
-        parent,
-        description='',
-        readme=None,
-        public_guest_access=False,
-        archive=False,
-        sodar_uuid=None,
-    ):
-        """Create a Project object"""
+        title: str,
+        type: str,
+        parent: Optional[Project],
+        description: str = '',
+        readme: str = None,
+        public_guest_access: bool = False,
+        archive: bool = False,
+        sodar_uuid: Union[str, UUID, None] = None,
+    ) -> Project:
+        """Create Project object"""
         values = {
             'title': title,
             'type': type,
@@ -90,9 +96,7 @@ class ProjectMixin:
         }
         if sodar_uuid:
             values['sodar_uuid'] = sodar_uuid
-        project = Project(**values)
-        project.save()
-        return project
+        return Project.objects.create(**values)
 
 
 class RoleMixin:
@@ -124,12 +128,12 @@ class RoleAssignmentMixin:
     """Helper mixin for RoleAssignment creation"""
 
     @classmethod
-    def make_assignment(cls, project, user, role):
+    def make_assignment(
+        cls, project: Project, user: SODARUser, role: Role
+    ) -> RoleAssignment:
         """Create a RoleAssignment object"""
         values = {'project': project, 'user': user, 'role': role}
-        result = RoleAssignment(**values)
-        result.save()
-        return result
+        return RoleAssignment.objects.create(**values)
 
 
 class ProjectInviteMixin:
@@ -138,16 +142,16 @@ class ProjectInviteMixin:
     @classmethod
     def make_invite(
         cls,
-        email,
-        project,
-        role,
-        issuer,
-        message='',
-        date_expire=None,
-        secret=None,
-        active=True,
-    ):
-        """Create a ProjectInvite object"""
+        email: str,
+        project: Project,
+        role: Role,
+        issuer: SODARUser,
+        message: str = '',
+        date_expire: datetime = None,
+        secret: Optional[str] = None,
+        active: bool = True,
+    ) -> ProjectInvite:
+        """Create ProjectInvite object"""
         values = {
             'email': email,
             'project': project,
@@ -158,9 +162,7 @@ class ProjectInviteMixin:
             'secret': secret or SECRET,
             'active': active,
         }
-        invite = ProjectInvite(**values)
-        invite.save()
-        return invite
+        return ProjectInvite.objects.create(**values)
 
 
 class AppSettingMixin:
@@ -169,17 +171,17 @@ class AppSettingMixin:
     @classmethod
     def make_setting(
         cls,
-        plugin_name,
-        name,
-        setting_type,
-        value,
-        value_json={},
-        user_modifiable=True,
-        project=None,
-        user=None,
-        sodar_uuid=None,
-    ):
-        """Create an AppSetting object"""
+        plugin_name: str,
+        name: str,
+        setting_type: str,
+        value: Any,
+        value_json: Union[dict, list] = {},
+        user_modifiable: bool = True,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+        sodar_uuid: Union[str, UUID, None] = None,
+    ) -> AppSetting:
+        """Create AppSetting object"""
         values = {
             'app_plugin': (
                 None
@@ -196,9 +198,7 @@ class AppSettingMixin:
         }
         if sodar_uuid:
             values['sodar_uuid'] = sodar_uuid
-        setting = AppSetting(**values)
-        setting.save()
-        return setting
+        return AppSetting.objects.create(**values)
 
 
 class RemoteSiteMixin:
@@ -207,16 +207,16 @@ class RemoteSiteMixin:
     @classmethod
     def make_site(
         cls,
-        name,
-        url,
-        user_display=REMOTE_SITE_USER_DISPLAY,
-        owner_modifiable=True,
-        mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
-        description='',
-        secret=build_secret(),
-        sodar_uuid=None,
-    ):
-        """Create a RemoteSite object"""
+        name: str,
+        url: str,
+        user_display: str = REMOTE_SITE_USER_DISPLAY,
+        owner_modifiable: bool = True,
+        mode: str = SODAR_CONSTANTS['SITE_MODE_TARGET'],
+        description: str = '',
+        secret: str = build_secret(),
+        sodar_uuid: Union[str, UUID, None] = None,
+    ) -> RemoteSite:
+        """Create RemoteSite object"""
         values = {
             'name': name,
             'url': url,
@@ -227,9 +227,7 @@ class RemoteSiteMixin:
             'owner_modifiable': owner_modifiable,
             'sodar_uuid': sodar_uuid or uuid.uuid4(),
         }
-        site = RemoteSite(**values)
-        site.save()
-        return site
+        return RemoteSite.objects.create(**values)
 
 
 class RemoteProjectMixin:
@@ -237,9 +235,14 @@ class RemoteProjectMixin:
 
     @classmethod
     def make_remote_project(
-        cls, project_uuid, site, level, date_access=None, project=None
-    ):
-        """Create a RemoteProject object"""
+        cls,
+        project_uuid: Union[str, UUID],
+        site: RemoteSite,
+        level: str,
+        date_access: datetime = None,
+        project: Project = None,
+    ) -> RemoteProject:
+        """Create RemoteProject object"""
         if isinstance(project_uuid, str):
             project_uuid = uuid.UUID(project_uuid)
         values = {
@@ -253,17 +256,17 @@ class RemoteProjectMixin:
                 else Project.objects.filter(sodar_uuid=project_uuid).first()
             ),
         }
-        remote_project = RemoteProject(**values)
-        remote_project.save()
-        return remote_project
+        return RemoteProject.objects.create(**values)
 
 
 class RemoteTargetMixin(RemoteSiteMixin, RemoteProjectMixin):
     """Helper mixin for setting up the site as TARGET for testing"""
 
     @classmethod
-    def set_up_as_target(cls, projects):
-        """Set up current site as a target site"""
+    def set_up_as_target(
+        cls, projects: Union[list, QuerySet]
+    ) -> tuple[RemoteSite, list[Project]]:
+        """Set up current site as target site"""
         source_site = cls.make_site(
             name='Test Source',
             url='http://0.0.0.0',
@@ -289,15 +292,15 @@ class SODARUserMixin:
 
     def make_sodar_user(
         self,
-        username,
-        name,
-        first_name,
-        last_name,
-        email=None,
-        sodar_uuid=None,
-        password='password',
-    ):
-        """Create a SODARUser object"""
+        username: str,
+        name: str,
+        first_name: str,
+        last_name: str,
+        email: Optional[str] = None,
+        sodar_uuid: Union[str, UUID, None] = None,
+        password: str = 'password',
+    ) -> SODARUser:
+        """Create SODARUser object"""
         user = self.make_user(username, password)
         user.name = name
         user.first_name = first_name
@@ -313,16 +316,22 @@ class SODARUserMixin:
 class SODARUserAdditionalEmailMixin:
     """Helper mixin for SODARUserAdditionalEmail creation"""
 
-    def make_email(self, user, email, verified=True, secret=None):
+    @classmethod
+    def make_email(
+        cls,
+        user: SODARUser,
+        email: str,
+        verified: bool = True,
+        secret: Optional[str] = None,
+    ) -> SODARUserAdditionalEmail:
+        """Create SODARUserAdditionalEmail object"""
         values = {
             'user': user,
             'email': email,
             'verified': verified,
             'secret': secret or build_secret(32),
         }
-        email = SODARUserAdditionalEmail(**values)
-        email.save()
-        return email
+        return SODARUserAdditionalEmail.objects.create(**values)
 
 
 class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):

@@ -6,12 +6,14 @@ import ssl
 import urllib
 
 from copy import deepcopy
+from typing import Any, Optional
 
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.http import HttpRequest
 from django.utils import timezone
 from django.urls.base import reverse
 
@@ -24,6 +26,7 @@ from projectroles.models import (
     RoleAssignment,
     RemoteProject,
     RemoteSite,
+    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     AppSetting,
@@ -66,29 +69,25 @@ class RemoteProjectAPI:
     def __init__(self):
         #: Remote data retrieved from source site
         self.remote_data = None
-
         #: Remote source site currently being worked with
         self.source_site = None
-
         #: Timeline API
         self.timeline = get_backend_api('timeline_backend')
-
         #: User for storing timeline events
         self.tl_user = None
-
         #: Default owner for projects
         self.default_owner = None
-
         #: Updated parent projects in current sync operation
         self.updated_parents = []
-
         #: User name/UUID lookup
         self.user_lookup = {}
 
     # Internal Source Site Functions -------------------------------------------
 
     @classmethod
-    def _add_parent_categories(cls, sync_data, category, project_level):
+    def _add_parent_categories(
+        cls, sync_data: dict, category: Project, project_level: str
+    ) -> dict:
         """
         Add parent categories of a project to source site sync data.
 
@@ -131,7 +130,7 @@ class RemoteProjectAPI:
         return sync_data
 
     @classmethod
-    def _add_peer_site(cls, sync_data, site):
+    def _add_peer_site(cls, sync_data: dict, site: RemoteSite) -> dict:
         """
         Add peer site to source site sync data.
 
@@ -150,7 +149,7 @@ class RemoteProjectAPI:
         return sync_data
 
     @classmethod
-    def _add_user(cls, sync_data, user):
+    def _add_user(cls, sync_data: dict, user: SODARUser) -> dict:
         """
         Add user to source site sync data.
 
@@ -177,13 +176,15 @@ class RemoteProjectAPI:
         return sync_data
 
     @classmethod
-    def _add_app_setting(cls, sync_data, app_setting, all_defs):
+    def _add_app_setting(
+        cls, sync_data: dict, app_setting: AppSetting, all_defs: dict
+    ) -> dict:
         """
         Add app setting to sync data on source site.
 
         :param sync_data: Sync data to be updated (dict)
         :param app_setting: AppSetting object
-        :param all_defs: All settings defs
+        :param all_defs: All settings defs (dict)
         :return: Updated sync_data (dict)
         """
         if app_setting.app_plugin:
@@ -221,7 +222,9 @@ class RemoteProjectAPI:
         return sync_data
 
     @classmethod
-    def _get_app_setting_error(cls, app_setting, exception):
+    def _get_app_setting_error(
+        cls, app_setting: AppSetting, exception: Exception
+    ) -> str:
         """
         Return app setting error message to be logged.
 
@@ -240,7 +243,9 @@ class RemoteProjectAPI:
 
     # Source Site API functions ------------------------------------------------
 
-    def get_source_data(self, target_site, req_version=None):
+    def get_source_data(
+        self, target_site: RemoteSite, req_version: Optional[str] = None
+    ) -> dict:
         """
         Get user and project data on a source site to be synchronized into a
         target site.
@@ -334,7 +339,7 @@ class RemoteProjectAPI:
                 logger.error(self._get_app_setting_error(a, ex))
         return sync_data
 
-    def get_remote_data(self, site):
+    def get_remote_data(self, site: RemoteSite) -> dict:
         """
         Method for synchronisation tasks.
 
@@ -377,7 +382,7 @@ class RemoteProjectAPI:
     # Internal Target Site Functions -------------------------------------------
 
     @staticmethod
-    def _is_local_user(user_data):
+    def _is_local_user(user_data: dict) -> bool:
         """
         Return True if user data denotes a local user.
 
@@ -390,7 +395,7 @@ class RemoteProjectAPI:
         )
 
     @staticmethod
-    def _update_obj(obj, obj_data, fields):
+    def _update_obj(obj: Any, obj_data: dict, fields: list) -> Any:
         """
         Update object for target site sync.
 
@@ -404,7 +409,7 @@ class RemoteProjectAPI:
         obj.save()
         return obj
 
-    def _check_local_categories(self, uuid):
+    def _check_local_categories(self, uuid: str) -> bool:
         """
         Check for local category name conflicts on a target site.
 
@@ -430,7 +435,7 @@ class RemoteProjectAPI:
             return self._check_local_categories(c_data['parent_uuid'])
         return False
 
-    def _sync_user(self, uuid, user_data):
+    def _sync_user(self, uuid: str, user_data: dict):
         """
         Synchronize user on target site. For local users, will only update an
         existing user object. Local users must be manually created. If local
@@ -547,7 +552,9 @@ class RemoteProjectAPI:
         # HACK: Re-add additional emails
         user_data['additional_emails'] = add_emails
 
-    def _handle_user_error(self, error_msg, project, role_uuid):
+    def _handle_user_error(
+        self, error_msg: str, project: Project, role_uuid: str
+    ):
         """
         Handle user sync error on target site.
 
@@ -563,13 +570,16 @@ class RemoteProjectAPI:
             role_uuid
         ]['status_msg'] = error_msg
 
-    def _handle_project_error(self, error_msg, uuid, project_data, action):
+    def _handle_project_error(
+        self, error_msg: str, uuid: str, project_data: dict, action: str
+    ):
         """
         Handle project error on target site.
 
         :param error_msg: Error message (string)
         :param uuid: Project UUID (string)
-        :param project_data: Project sync data (string)
+        :param project_data: Project sync data (dict)
+        :param action: Action resulting in error (string)
         """
         logger.error(
             '{} {} "{}" ({}): {}'.format(
@@ -583,12 +593,14 @@ class RemoteProjectAPI:
         self.remote_data['projects'][uuid]['status'] = 'error'
         self.remote_data['projects'][uuid]['status_msg'] = error_msg
 
-    def _update_project(self, project, project_data, parent):
+    def _update_project(
+        self, project: Project, project_data: dict, parent: Project
+    ):
         """
         Update an existing project on target site.
 
         :param project: Project object
-        :param project_data: Project sync data (string)
+        :param project_data: Project sync data (dict)
         :param parent: Project object for parent category
         """
         updated_fields = []
@@ -638,12 +650,12 @@ class RemoteProjectAPI:
         else:
             logger.debug('Nothing to update in project details')
 
-    def _create_project(self, uuid, project_data, parent):
+    def _create_project(self, uuid: str, project_data: dict, parent: Project):
         """
         Create a new project on target site.
 
         :param uuid: Project UUID (string)
-        :param project_data: Project sync data (string)
+        :param project_data: Project sync data (dict)
         :param parent: Project object for parent category
         """
         # Check existing title under the same parent
@@ -683,7 +695,7 @@ class RemoteProjectAPI:
             tl_event.add_object(self.source_site, 'site', self.source_site.name)
         logger.info('Created {}'.format(project_data['type'].lower()))
 
-    def _create_peer_site(self, uuid, site_data):
+    def _create_peer_site(self, uuid: str, site_data: dict):
         """
         Create remote peer site on target site.
 
@@ -700,7 +712,7 @@ class RemoteProjectAPI:
         RemoteSite.objects.create(**create_values)
         logger.info('Created Peer Site {}'.format(create_values['name']))
 
-    def _update_peer_site(self, uuid, site_data):
+    def _update_peer_site(self, uuid: str, site_data: dict):
         """
         Update remote peer site on target site.
 
@@ -722,12 +734,12 @@ class RemoteProjectAPI:
         else:
             logger.debug('Nothing to update for peer site "{}"'.format(uuid))
 
-    def _update_roles(self, project, project_data):
+    def _update_roles(self, project: Project, project_data: dict):
         """
         Create or update project roles on target site.
 
         :param project: Project object
-        :param project_data: Project sync data (string)
+        :param project_data: Project sync data (dict)
         """
         # TODO: Refactor this
         uuid = str(project.sodar_uuid)
@@ -885,12 +897,12 @@ class RemoteProjectAPI:
                     )
                 )
 
-    def _remove_deleted_roles(self, project, project_data):
+    def _remove_deleted_roles(self, project: Project, project_data: dict):
         """
         Remove deleted project roles from target site.
 
         :param project: Project object
-        :param project_data: Project sync data (string)
+        :param project_data: Project sync data (dict)
         """
         timeline = get_backend_api('timeline_backend')
         uuid = str(project.sodar_uuid)
@@ -940,13 +952,13 @@ class RemoteProjectAPI:
                 )
             )
 
-    def _sync_project(self, uuid, project_data):
+    def _sync_project(self, uuid: str, project_data: dict):
         """
         Synchronize a single project on target site. Create/update project, its
         parents and user roles.
 
         :param uuid: Project UUID (string)
-        :param project_data: Project sync data (string)
+        :param project_data: Project sync data (dict)
         """
         # Add/update parents if not yet handled
         if (
@@ -1030,13 +1042,16 @@ class RemoteProjectAPI:
         # Remove deleted user roles (also for REVOKED projects)
         self._remove_deleted_roles(project, project_data)
 
-    def _sync_peer_projects(self, uuid, p_data):
+    def _sync_peer_projects(self, uuid: str, project_data: dict):
         """
         Create RemoteProject objects on target site to represent local project
         on different peer sites.
+
+        :param uuid: Project UUID (string)
+        :param project_data: Project sync data (dict)
         """
-        if p_data.get('remote_sites', None):
-            for remote_site_uuid in p_data['remote_sites']:
+        if project_data.get('remote_sites', None):
+            for remote_site_uuid in project_data['remote_sites']:
                 remote_site = RemoteSite.objects.filter(
                     sodar_uuid=remote_site_uuid
                 ).first()
@@ -1045,7 +1060,7 @@ class RemoteProjectAPI:
                     remote_project = RemoteProject.objects.get(
                         site=remote_site, project_uuid=uuid
                     )
-                    remote_project.level = p_data['level']
+                    remote_project.level = project_data['level']
                     remote_project.project = Project.objects.filter(
                         sodar_uuid=uuid
                     ).first()
@@ -1058,7 +1073,7 @@ class RemoteProjectAPI:
                         site=remote_site,
                         project_uuid=uuid,
                         project=Project.objects.filter(sodar_uuid=uuid).first(),
-                        level=p_data['level'],
+                        level=project_data['level'],
                         date_access=timezone.now(),  # This might not be needed
                     )
                     remote_action = 'created'
@@ -1067,7 +1082,7 @@ class RemoteProjectAPI:
                 '{} Peer project {} for the following peer sites: {}'.format(
                     remote_action.capitalize(),
                     remote_project.sodar_uuid,
-                    ', '.join(p_data['remote_sites']),
+                    ', '.join(project_data['remote_sites']),
                 )
             )
         else:
@@ -1078,12 +1093,12 @@ class RemoteProjectAPI:
             )
 
     @classmethod
-    def _remove_revoked_peers(cls, uuid, project_data):
+    def _remove_revoked_peers(cls, uuid: str, project_data: dict):
         """
         Remove RemoteProject objects for revoked peer projects from target site.
 
         :param uuid: Project UUID (string)
-        :param project_data: Project sync data (string)
+        :param project_data: Project sync data (dict)
         """
         removed_sites = []
 
@@ -1116,7 +1131,7 @@ class RemoteProjectAPI:
                 )
             )
 
-    def _sync_app_setting(self, uuid, set_data):
+    def _sync_app_setting(self, uuid: str, set_data: dict):
         """
         Create or update an AppSetting on a target site.
 
@@ -1219,7 +1234,12 @@ class RemoteProjectAPI:
     # Target Site API functions ------------------------------------------------
 
     @transaction.atomic
-    def sync_remote_data(self, site, remote_data, request=None):
+    def sync_remote_data(
+        self,
+        site: RemoteSite,
+        remote_data: dict,
+        request: Optional[HttpRequest] = None,
+    ) -> dict:
         """
         Synchronize remote user and project data into the local Django database
         on a target site and return information of additions.

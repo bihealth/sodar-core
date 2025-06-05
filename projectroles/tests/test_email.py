@@ -8,7 +8,12 @@ from django.urls import reverse
 from test_plus.test import TestCase, RequestFactory
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODAR_CONSTANTS, ROLE_RANKING
+from projectroles.models import (
+    Project,
+    SODARUser,
+    SODAR_CONSTANTS,
+    ROLE_RANKING,
+)
 from projectroles.email import (
     send_role_change_mail,
     send_project_leave_mail,
@@ -68,7 +73,7 @@ class TestEmailSending(
 ):
     """Tests for email sending"""
 
-    def _get_settings_link(self):
+    def _get_settings_link(self) -> str:
         """Return message footer settings link"""
         return SETTINGS_LINK.format(
             url=self.request.build_absolute_uri(
@@ -77,7 +82,9 @@ class TestEmailSending(
         )
 
     @classmethod
-    def _get_project_modify_recipients(cls, project, request_user):
+    def _get_project_modify_recipients(
+        cls, project: Project, request_user: SODARUser
+    ) -> list[SODARUser]:
         """
         Return owner and delegate users for project omitting request_user.
         Exclude inactive users but does NOT exclude app settings.
@@ -91,7 +98,9 @@ class TestEmailSending(
         ]
 
     @classmethod
-    def _get_project_delete_recipients(cls, project, request_user):
+    def _get_project_delete_recipients(
+        cls, project: Project, request_user: SODARUser
+    ) -> list[SODARUser]:
         """
         Return project users for project omitting request_user. Exclude inactive
         users but does NOT exclude app settings.

@@ -2,13 +2,15 @@
 
 import base64
 
+from typing import Optional
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms.models import model_to_dict
 
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin
 
 from filesfolders.models import File, FileData, Folder, HyperLink
@@ -32,17 +34,18 @@ class FileMixin:
     @classmethod
     def make_file(
         cls,
-        name,
-        file_name,
-        file_content,
-        project,
-        folder,
-        owner,
-        description,
-        public_url,
-        secret,
-        flag=None,
-    ):
+        name: str,
+        file_name: str,
+        file_content: bytes,
+        project: Project,
+        folder: Optional[Folder],
+        owner: SODARUser,
+        description: str,
+        public_url: str,
+        secret: str,
+        flag: Optional[str] = None,
+    ) -> File:
+        """Create File object"""
         values = {
             'name': name,
             'file': SimpleUploadedFile(file_name, file_content),
@@ -54,16 +57,23 @@ class FileMixin:
             'secret': secret,
             'flag': flag,
         }
-        result = File(**values)
-        result.save()
-        return result
+        return File.objects.create(**values)
 
 
 class FolderMixin:
     """Helper mixin for Folder creation"""
 
     @classmethod
-    def make_folder(cls, name, project, folder, owner, description, flag=None):
+    def make_folder(
+        cls,
+        name: str,
+        project: Project,
+        folder: Optional[Folder],
+        owner: SODARUser,
+        description: str,
+        flag: Optional[str] = None,
+    ) -> Folder:
+        """Create Folder object"""
         values = {
             'name': name,
             'project': project,
@@ -72,9 +82,7 @@ class FolderMixin:
             'description': description,
             'flag': flag,
         }
-        result = Folder(**values)
-        result.save()
-        return result
+        return Folder.objects.create(**values)
 
 
 class HyperLinkMixin:
@@ -82,8 +90,16 @@ class HyperLinkMixin:
 
     @classmethod
     def make_hyperlink(
-        cls, name, url, project, folder, owner, description, flag=None
-    ):
+        cls,
+        name: str,
+        url: str,
+        project: Project,
+        folder: Optional[Folder],
+        owner: SODARUser,
+        description: str,
+        flag: Optional[str] = None,
+    ) -> HyperLink:
+        """Create HyperLink object"""
         values = {
             'name': name,
             'url': url,
@@ -93,9 +109,7 @@ class HyperLinkMixin:
             'description': description,
             'flag': flag,
         }
-        result = HyperLink(**values)
-        result.save()
-        return result
+        return HyperLink.objects.create(**values)
 
 
 # Test classes -----------------------------------------------------------

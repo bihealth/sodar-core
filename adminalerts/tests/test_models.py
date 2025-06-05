@@ -5,6 +5,9 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
+# Projectroles dependency
+from projectroles.models import SODARUser
+
 from adminalerts.models import AdminAlert
 
 
@@ -14,14 +17,14 @@ class AdminAlertMixin:
     @classmethod
     def make_alert(
         cls,
-        message,
-        user,
-        description,
-        active=True,
-        require_auth=True,
-        date_expire_days=1,
-    ):
-        """Make and save an AdminAlert"""
+        message: str,
+        user: SODARUser,
+        description: str,
+        active: bool = True,
+        require_auth: bool = True,
+        date_expire_days: int = 1,
+    ) -> AdminAlert:
+        """Create AdminAlert object"""
         values = {
             'message': message,
             'user': user,
@@ -31,9 +34,7 @@ class AdminAlertMixin:
             'active': active,
             'require_auth': require_auth,
         }
-        alert = AdminAlert(**values)
-        alert.save()
-        return alert
+        return AdminAlert.objects.create(**values)
 
 
 class TestAdminAlert(AdminAlertMixin, TestCase):

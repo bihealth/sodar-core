@@ -1,7 +1,9 @@
 """Tests for UI view permissions in the projectroles app"""
 
+from typing import Optional, Union
 from urllib.parse import urlencode, quote
 
+from django.http import HttpResponse
 from django.test import override_settings
 from django.urls import reverse
 from django.core.exceptions import ValidationError
@@ -9,7 +11,7 @@ from django.core.exceptions import ValidationError
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import SODARUser, SODAR_CONSTANTS
 from projectroles.utils import build_secret
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -43,7 +45,7 @@ REMOTE_SITE_SECRET = build_secret()
 class PermissionTestMixin:
     """Helper class for permission tests"""
 
-    def set_site_read_only(self, value=True):
+    def set_site_read_only(self, value: bool = True):
         """
         Helper to set site read only mode to the desired value.
 
@@ -51,7 +53,9 @@ class PermissionTestMixin:
         """
         app_settings.set(APP_NAME, 'site_read_only', value)
 
-    def send_request(self, url, method, req_kwargs):
+    def send_request(
+        self, url: str, method: str, req_kwargs: dict
+    ) -> HttpResponse:
         req_method = getattr(self.client, method.lower(), None)
         if not req_method:
             raise ValueError('Invalid method "{}"'.format(method))
@@ -59,16 +63,16 @@ class PermissionTestMixin:
 
     def assert_response(
         self,
-        url,
-        users,
-        status_code,
-        redirect_user=None,
-        redirect_anon=None,
-        method='GET',
-        data=None,
-        header=None,
-        cleanup_method=None,
-        req_kwargs=None,
+        url: str,
+        users: Union[list, tuple, SODARUser],
+        status_code: int,
+        redirect_user: Optional[str] = None,
+        redirect_anon: Optional[str] = None,
+        method: str = 'GET',
+        data: Optional[dict] = None,
+        header: Optional[dict] = None,
+        cleanup_method: Optional[callable] = None,
+        req_kwargs: Optional[dict] = None,
     ):
         """
         Assert a response status code for url with a list of users. Also checks
@@ -125,7 +129,7 @@ class PermissionTestMixin:
 class IPAllowMixin(AppSettingMixin):
     """Mixin for IP allowing test helpers"""
 
-    def setup_ip_allowing(self, ip_list):
+    def setup_ip_allowing(self, ip_list: list):
         # Init IP restrict setting
         self.make_setting(
             plugin_name=APP_NAME,

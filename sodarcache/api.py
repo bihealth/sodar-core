@@ -2,9 +2,13 @@
 
 import logging
 
+from typing import Optional
+
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 
 # Projectroles dependency
+from projectroles.models import Project, SODARUser
 from projectroles.plugins import get_active_plugins
 from projectroles.utils import get_app_names
 
@@ -29,7 +33,7 @@ class SodarCacheAPI:
     # Internal functions -------------------------------------------------------
 
     @classmethod
-    def _check_app_name(cls, app_name):
+    def _check_app_name(cls, app_name: str):
         """Check if app_name is valid, raise ValueError if not"""
         if app_name not in APP_NAMES:
             raise ValueError(
@@ -39,7 +43,7 @@ class SodarCacheAPI:
             )
 
     @classmethod
-    def _check_data_type(cls, data_type):
+    def _check_data_type(cls, data_type: str):
         """Check if data_type is valid, raise ValueError if not"""
         if data_type not in CACHE_TYPES:
             raise ValueError(
@@ -52,7 +56,9 @@ class SodarCacheAPI:
     # API functions ------------------------------------------------------------
 
     @classmethod
-    def get_project_cache(cls, project, data_type='json'):
+    def get_project_cache(
+        cls, project: Project, data_type: str = 'json'
+    ) -> QuerySet:
         """
         Return all cached data for a project.
 
@@ -65,7 +71,12 @@ class SodarCacheAPI:
         return JSONCacheItem.objects.filter(project=project)
 
     @classmethod
-    def update_cache(cls, name=None, project=None, user=None):
+    def update_cache(
+        cls,
+        name: Optional[str] = None,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ):
         """
         Update items by certain name within a project by calling implemented
         functions in project app plugins.
@@ -79,7 +90,9 @@ class SodarCacheAPI:
             plugin.update_cache(name, project, user)
 
     @classmethod
-    def delete_cache(cls, app_name=None, project=None):
+    def delete_cache(
+        cls, app_name: Optional[str] = None, project: Optional[Project] = None
+    ) -> int:
         """
         Delete cache items. Optionallly limit to project and/or user.
 
@@ -121,7 +134,9 @@ class SodarCacheAPI:
         return 0
 
     @classmethod
-    def get_cache_item(cls, app_name, name, project=None):
+    def get_cache_item(
+        cls, app_name: str, name: str, project: Optional[Project] = None
+    ) -> JSONCacheItem:
         """
         Return cached data by app_name, name (identifier) and optional project.
         Returns None if not found.
@@ -140,8 +155,14 @@ class SodarCacheAPI:
 
     @classmethod
     def set_cache_item(
-        cls, app_name, name, data, data_type='json', project=None, user=None
-    ):
+        cls,
+        app_name: str,
+        name: str,
+        data: dict,
+        data_type: str = 'json',
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> JSONCacheItem:
         """
         Create or update and save a cache item.
 
@@ -176,7 +197,9 @@ class SodarCacheAPI:
         return item
 
     @classmethod
-    def delete_cache_item(cls, app_name, name, project=None):
+    def delete_cache_item(
+        cls, app_name: str, name: str, project: Optional[Project] = None
+    ):
         """
         Method for deleting a cache item.
 
@@ -192,7 +215,9 @@ class SodarCacheAPI:
             )
 
     @classmethod
-    def get_update_time(cls, app_name, name, project=None):
+    def get_update_time(
+        cls, app_name: str, name: str, project: Optional[Project] = None
+    ) -> float:
         """
         Return the time of the last update of a cache object as seconds since
         epoch.

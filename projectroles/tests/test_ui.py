@@ -4,6 +4,7 @@ import socket
 import time
 import uuid
 
+from typing import Optional, Union
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -14,6 +15,7 @@ from django.contrib.auth import (
     HASH_SESSION_KEY,
 )
 from django.contrib.sessions.backends.db import SessionStore
+from django.db.models import QuerySet
 from django.test import LiveServerTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -21,11 +23,17 @@ from django.utils import timezone
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait, Select
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODAR_CONSTANTS, CAT_DELIMITER
+from projectroles.models import (
+    Project,
+    SODARUser,
+    SODAR_CONSTANTS,
+    CAT_DELIMITER,
+)
 from projectroles.plugins import get_active_plugins
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -118,7 +126,7 @@ class LiveUserMixin:
     """Mixin for creating users to work with LiveServerTestCase"""
 
     @classmethod
-    def make_user(cls, user_name, superuser=False):
+    def make_user(cls, user_name: str, superuser: bool = False) -> SODARUser:
         """Make user, superuser if superuser=True"""
         kwargs = {
             'username': user_name,
@@ -137,7 +145,7 @@ class LiveUserMixin:
 class UITestMixin:
     """Helper mixin for UI tests"""
 
-    def build_selenium_url(self, url=''):
+    def build_selenium_url(self, url: str = '') -> str:
         """Build absolute URL to work with Selenium"""
         # NOTE: Chrome v77 refuses to accept cookies for "localhost" (see #337)
         return '{}{}'.format(
@@ -145,14 +153,18 @@ class UITestMixin:
         )
 
     def login_and_redirect(
-        self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
+        self,
+        user: SODARUser,
+        url: str,
+        wait_elem: Optional[str] = None,
+        wait_loc: str = DEFAULT_WAIT_LOC,
     ):
         """
         Login with Selenium by setting a cookie, wait for redirect to given URL.
 
         If PROJECTROLES_TEST_UI_LEGACY_LOGIN=True, use legacy UI login method.
 
-        :param user: User object
+        :param user: SODARUser object
         :param url: URL to redirect to (string)
         :param wait_elem: Wait for existence of an element (string, optional)
         :param wait_loc: Locator of optional wait element (string, corresponds
@@ -196,7 +208,11 @@ class UITestMixin:
 
     # NOTE: Used if PROJECTROLES_TEST_UI_LEGACY_LOGIN is set True
     def login_and_redirect_with_ui(
-        self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
+        self,
+        user: SODARUser,
+        url: str,
+        wait_elem: Optional[str] = None,
+        wait_loc: str = DEFAULT_WAIT_LOC,
     ):
         """
         Login with Selenium and wait for redirect to given URL.
@@ -260,12 +276,12 @@ class UITestMixin:
 
     def assert_element_exists(
         self,
-        users,
-        url,
-        element_id,
-        exists,
-        wait_elem=None,
-        wait_loc=DEFAULT_WAIT_LOC,
+        users: Union[list[SODARUser], QuerySet[SODARUser]],
+        url: str,
+        element_id: str,
+        exists: bool,
+        wait_elem: Optional[str] = None,
+        wait_loc: str = DEFAULT_WAIT_LOC,
     ):
         """
         Assert existence of element on webpage based on logged user.
@@ -290,14 +306,14 @@ class UITestMixin:
 
     def assert_element_count(
         self,
-        expected,
-        url,
-        search_string,
-        attribute='id',
-        path='//',
-        exact=False,
-        wait_elem=None,
-        wait_loc=DEFAULT_WAIT_LOC,
+        expected: list[tuple],
+        url: str,
+        search_string: str,
+        attribute: str = 'id',
+        path: str = '//',
+        exact: bool = False,
+        wait_elem: Optional[str] = None,
+        wait_loc: str = DEFAULT_WAIT_LOC,
     ):
         """
         Assert count of elements containing specified id or class based on
@@ -338,11 +354,11 @@ class UITestMixin:
 
     def assert_element_set(
         self,
-        expected,
-        all_elements,
-        url,
-        wait_elem=None,
-        wait_loc=DEFAULT_WAIT_LOC,
+        expected: list[tuple],
+        all_elements: list[str],
+        url: str,
+        wait_elem: Optional[str] = None,
+        wait_loc: str = DEFAULT_WAIT_LOC,
     ):
         """
         Assert existence of expected elements webpage based on logged user, as
@@ -368,18 +384,18 @@ class UITestMixin:
 
     def assert_element_active(
         self,
-        user,
-        element_id,
-        all_elements,
-        url,
-        wait_elem=None,
-        wait_loc=DEFAULT_WAIT_LOC,
+        user: SODARUser,
+        element_id: str,
+        all_elements: list[str],
+        url: str,
+        wait_elem: Optional[str] = None,
+        wait_loc: str = DEFAULT_WAIT_LOC,
     ):
         """
         Assert the "active" status of an element based on logged user as well
         as unset status of other elements.
 
-        :param user: User for logging in
+        :param user: SODARUser for logging in
         :param element_id: ID of element to test (string)
         :param all_elements: All possible elements in the set (list of strings)
         :param url: URL to test (string)
@@ -402,7 +418,7 @@ class UITestMixin:
             self.assertIsNotNone(element)
             self.assertNotIn('active', element.get_attribute('class'))
 
-    def assert_displayed(self, by, value, expected):
+    def assert_displayed(self, by: str, value: str, expected: bool):
         """
         Assert element is or isn't displayed. Assumes user to be logged in.
 
@@ -531,7 +547,7 @@ class TestHomeView(UITestBase):
         'wait_loc': 'ID',
     }
 
-    def _get_item_vis_count(self):
+    def _get_item_vis_count(self) -> int:
         return len(
             [
                 e
@@ -542,7 +558,7 @@ class TestHomeView(UITestBase):
             ]
         )
 
-    def _get_list_item(self, project):
+    def _get_list_item(self, project: Project) -> WebElement:
         return self.selenium.find_element(
             By.XPATH,
             '//tr[contains(@class, "sodar-pr-project-list-item '
@@ -551,7 +567,7 @@ class TestHomeView(UITestBase):
             ),
         )
 
-    def _get_project_row(self, project):
+    def _get_project_row(self, project: Project) -> WebElement:
         """Return table row for specificed project"""
         return self.selenium.find_element(
             By.ID, f'sodar-pr-project-list-item-{project.sodar_uuid}'
@@ -1564,15 +1580,15 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
     """Tests for ProjectDetailView UI"""
 
     @classmethod
-    def _get_pr_links(cls, *args):
+    def _get_pr_links(cls, *args) -> list[str]:
         """Return full IDs of project links"""
         return ['sodar-pr-link-project-' + x for x in args]
 
     def _setup_remotes(
         self,
-        site_mode=SITE_MODE_TARGET,
-        level=REMOTE_LEVEL_READ_ROLES,
-        user_visibility=True,
+        site_mode: str = SITE_MODE_TARGET,
+        level: str = REMOTE_LEVEL_READ_ROLES,
+        user_visibility: bool = True,
     ):
         """Create remote site and project with given user_visibility setting"""
         self.remote_site = self.make_site(
@@ -2428,7 +2444,9 @@ class TestProjectDeleteView(UITestBase):
 class TestProjectRoleView(RemoteTargetMixin, UITestBase):
     """Tests for ProjectRoleView UI"""
 
-    def _get_role_dropdown(self, user, owner=False):
+    def _get_role_dropdown(
+        self, user: SODARUser, owner: bool = False
+    ) -> WebElement:
         """Return role dropdown for a role"""
         row = self.selenium.find_element(
             By.XPATH,
@@ -2440,7 +2458,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             class_name += '-owner'
         return row.find_element(By.CLASS_NAME, class_name)
 
-    def _get_role_items(self, user):
+    def _get_role_items(self, user: SODARUser) -> list[WebElement]:
         """Return role dropdown items for a role"""
         dropdown = self._get_role_dropdown(user)
         return dropdown.find_elements(By.CLASS_NAME, 'dropdown-item')

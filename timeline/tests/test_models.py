@@ -1,11 +1,14 @@
 """Model tests for the timeline app"""
 
-from test_plus.test import TestCase
+from typing import Any, Optional, Union
+from uuid import UUID
 
 from django.forms.models import model_to_dict
 
+from test_plus.test import TestCase
+
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -42,15 +45,16 @@ class TimelineEventMixin:
     @classmethod
     def make_event(
         cls,
-        project,
-        app,
-        user,
-        event_name,
-        description='',
-        classified=False,
-        extra_data={'test': 'test'},
-        plugin=None,
-    ):
+        project: Optional[Project],
+        app: str,
+        user: Optional[SODARUser],
+        event_name: str,
+        description: str = '',
+        classified: bool = False,
+        extra_data: Union[dict, list] = {'test': 'test'},
+        plugin: Optional[str] = None,
+    ) -> TimelineEvent:
+        """Create TimelineEvent object"""
         values = {
             'project': project,
             'app': app,
@@ -61,16 +65,22 @@ class TimelineEventMixin:
             'extra_data': extra_data or {},
             'plugin': plugin,
         }
-        result = TimelineEvent(**values)
-        result.save()
-        return result
+        return TimelineEvent.objects.create(**values)
 
 
 class TimelineEventObjectRefMixin:
     """Helper mixin for TimelineEventObjectRef creation"""
 
     @classmethod
-    def make_object_ref(cls, event, obj, label, name, uuid, extra_data=None):
+    def make_object_ref(
+        cls,
+        event: TimelineEvent,
+        obj: Any,
+        label: str,
+        name: str,
+        uuid: Union[str, UUID],
+        extra_data: Union[dict, list, None] = None,
+    ) -> TimelineEventObjectRef:
         values = {
             'event': event,
             'label': label,
@@ -79,9 +89,8 @@ class TimelineEventObjectRefMixin:
             'object_uuid': uuid,
             'extra_data': extra_data or {},
         }
-        result = TimelineEventObjectRef(**values)
-        result.save()
-        return result
+        """Create TimelineEventObjectRef object"""
+        return TimelineEventObjectRef.objects.create(**values)
 
 
 class TimelineEventStatusMixin:
@@ -89,17 +98,20 @@ class TimelineEventStatusMixin:
 
     @classmethod
     def make_event_status(
-        cls, event, status_type, description='', extra_data=None
-    ):
+        cls,
+        event: TimelineEvent,
+        status_type: str,
+        description: str = '',
+        extra_data: Union[dict, list, None] = None,
+    ) -> TimelineEventStatus:
         values = {
             'event': event,
             'status_type': status_type,
             'description': description,
             'extra_data': extra_data or {'test': 'test'},
         }
-        result = TimelineEventStatus(**values)
-        result.save()
-        return result
+        """Create TimelineEventStatus object"""
+        return TimelineEventStatus.objects.create(**values)
 
 
 class TimelineEventTestBase(

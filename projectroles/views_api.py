@@ -4,11 +4,13 @@ import sys
 
 from ipaddress import ip_address, ip_network
 from packaging.version import parse as parse_version
+from typing import Optional
 
 from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
+from django.http import HttpRequest
 from django.utils import timezone
 
 from rest_framework import serializers
@@ -47,12 +49,13 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     AppSetting,
+    SODARUser,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
     ROLE_RANKING,
     ROLE_PROJECT_TYPE_ERROR_MSG,
 )
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAppSettingDef, get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.serializers import (
     ProjectSerializer,
@@ -787,7 +790,9 @@ class RoleAssignmentOwnerTransferAPIView(
 class ProjectInviteAPIMixin:
     """Validation helpers for project invite modification via API"""
 
-    def validate(self, invite, request, **kwargs):
+    def validate(
+        self, invite: Optional[ProjectInvite], request: HttpRequest, **kwargs
+    ):
         if not invite:
             raise NotFound(
                 'Invite not found (uuid={})'.format(kwargs['projectinvite'])
@@ -961,13 +966,16 @@ class AppSettingMixin:
     """Helpers for app setting API views"""
 
     @classmethod
-    def get_and_validate_def(cls, plugin_name, setting_name, allowed_scopes):
+    def get_and_validate_def(
+        cls, plugin_name: str, setting_name: str, allowed_scopes: list[str]
+    ) -> PluginAppSettingDef:
         """
         Return settings definition or raise a validation error.
 
         :param plugin_name: Name of app plugin for the setting (string)
         :param setting_name: Setting name (string)
         :param allowed_scopes: Allowed scopes for the setting (list)
+        :return
         """
         try:
             s_def = app_settings.get_definition(
@@ -980,7 +988,7 @@ class AppSettingMixin:
         return s_def
 
     @classmethod
-    def get_request_value(cls, request):
+    def get_request_value(cls, request: HttpRequest) -> str:
         """
         Return setting value from request.
 
@@ -993,7 +1001,13 @@ class AppSettingMixin:
         return request.data['value']
 
     @classmethod
-    def check_project_perms(cls, setting_def, project, request, setting_user):
+    def check_project_perms(
+        cls,
+        setting_def: PluginAppSettingDef,
+        project: Project,
+        request: HttpRequest,
+        setting_user: Optional[SODARUser],
+    ):
         """
         Check permissions for project settings.
 
@@ -1032,8 +1046,12 @@ class AppSettingMixin:
 
     @classmethod
     def _get_setting_obj(
-        cls, plugin_name, setting_name, project=None, user=None
-    ):
+        cls,
+        plugin_name: Optional[str],
+        setting_name: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> AppSetting:
         """
         Return the database object for a setting. Returns None if not available.
 
@@ -1058,8 +1076,12 @@ class AppSettingMixin:
 
     @classmethod
     def get_setting_for_api(
-        cls, plugin_name, setting_name, project=None, user=None
-    ):
+        cls,
+        plugin_name: Optional[str],
+        setting_name: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> AppSetting:
         """
         Return the database object for a setting for API serving. Will create
         the object if not yet created.

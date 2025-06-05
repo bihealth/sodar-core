@@ -1,6 +1,9 @@
 """Plugins for the example_project_app Django app"""
 
+from typing import Optional
+
 from django.contrib import messages
+from django.http import HttpRequest
 from django.urls import reverse
 
 # Projectroles dependency
@@ -8,7 +11,7 @@ from projectroles.app_settings import (
     get_example_setting_default,
     get_example_setting_options,
 )
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     ProjectModifyPluginMixin,
@@ -345,7 +348,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     #: Position in plugin ordering
     plugin_ordering = 100
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         return {
             'example_stat': {
                 'label': 'Example Stat',
@@ -361,12 +364,12 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
 
     def perform_project_modify(
         self,
-        project,
-        action,
-        project_settings,
-        old_data=None,
-        old_settings=None,
-        request=None,
+        project: Project,
+        action: str,
+        project_settings: dict,
+        old_data: Optional[dict] = None,
+        old_settings: Optional[dict] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """Example implementation for project modifying plugin API"""
         if request:
@@ -378,7 +381,12 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
                 ),
             )
 
-    def validate_form_app_settings(self, app_settings, project=None, user=None):
+    def validate_form_app_settings(
+        self,
+        app_settings: dict,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> dict:
         """Example implementation for custom form app setting validation"""
         ret = {}
         if (

@@ -1,5 +1,6 @@
 """Forms for the filesfolders app"""
 
+from typing import Optional
 from zipfile import ZipFile
 
 from django import forms
@@ -11,7 +12,7 @@ from db_file_storage.form_widgets import DBClearableFileInput
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import SODARModelForm
-from projectroles.models import Project
+from projectroles.models import Project, SODARUser
 from projectroles.utils import build_secret
 
 from filesfolders.models import File, Folder, HyperLink
@@ -59,7 +60,12 @@ class FolderForm(FilesfoldersItemForm):
         fields = ['name', 'folder', 'flag', 'description']
 
     def __init__(
-        self, current_user=None, folder=None, project=None, *args, **kwargs
+        self,
+        current_user: Optional[SODARUser] = None,
+        folder: Optional[Folder] = None,
+        project: Optional[Project] = None,
+        *args,
+        **kwargs
     ):
         """Override for form initialization"""
         super().__init__(
@@ -177,13 +183,13 @@ class FileForm(FilesfoldersItemForm):
         }
 
     @staticmethod
-    def _get_file_size(file):
+    def _get_file_size(file) -> int:
         try:
             return file.size
         except NotImplementedError:
             return file.file.size
 
-    def _check_size(self, file_size, limit):
+    def _check_size(self, file_size: int, limit: int) -> bool:
         if file_size > limit:
             self.add_error(
                 'file',
@@ -194,7 +200,12 @@ class FileForm(FilesfoldersItemForm):
         return True
 
     def __init__(
-        self, current_user=None, folder=None, project=None, *args, **kwargs
+        self,
+        current_user: Optional[SODARUser] = None,
+        folder: Optional[Folder] = None,
+        project: Optional[Project] = None,
+        *args,
+        **kwargs
     ):
         """Override for form initialization"""
         super().__init__(
@@ -390,7 +401,12 @@ class HyperLinkForm(FilesfoldersItemForm):
         fields = ['name', 'url', 'folder', 'flag', 'description']
 
     def __init__(
-        self, current_user=None, folder=None, project=None, *args, **kwargs
+        self,
+        current_user: Optional[SODARUser] = None,
+        folder: Optional[Folder] = None,
+        project: Optional[Project] = None,
+        *args,
+        **kwargs
     ):
         """Override for form initialization"""
         super().__init__(

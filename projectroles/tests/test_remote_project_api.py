@@ -3,6 +3,7 @@
 import uuid
 
 from copy import deepcopy
+from typing import Union
 
 from django.conf import settings
 from django.contrib import auth
@@ -144,7 +145,7 @@ EXAMPLE_APP_NAME = 'example_project_app'
 class RemoteProjectAPITestBase(RoleMixin, TestCase):
     """Base class for RemoteProjectAPI tests"""
 
-    def assert_app_setting(self, uuid, expected):
+    def assert_app_setting(self, uuid: Union[str, uuid.UUID], expected: dict):
         """
         Assert app setting model data. Model id and sodar_uuid fields can be
         left out of the expected dict, they will be populated automatically.

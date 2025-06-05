@@ -2,6 +2,9 @@
 
 import uuid
 
+from typing import Optional, Union
+
+from django.http import HttpResponse
 from django.test import override_settings
 from django.urls import reverse
 
@@ -9,6 +12,7 @@ from projectroles.models import (
     Project,
     RoleAssignment,
     ProjectInvite,
+    SODARUser,
     SODAR_CONSTANTS,
 )
 from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
@@ -47,18 +51,18 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
 
     def assert_response_api(
         self,
-        url,
-        users,
-        status_code,
-        method='GET',
-        format='json',
-        data=None,
-        media_type=None,
-        version=None,
-        knox=False,
-        cleanup_method=None,
-        cleanup_kwargs=None,
-        req_kwargs=None,
+        url: str,
+        users: Union[list, tuple, SODARUser],
+        status_code: int,
+        method: str = 'GET',
+        format: str = 'json',
+        data: Optional[dict] = None,
+        media_type: Optional[str] = None,
+        version: Optional[str] = None,
+        knox: bool = False,
+        cleanup_method: Optional[callable] = None,
+        cleanup_kwargs: Optional[dict] = None,
+        req_kwargs: Optional[dict] = None,
     ):
         """
         Assert a response status code for url with API headers and optional
@@ -82,7 +86,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         if cleanup_method and not callable(cleanup_method):
             raise ValueError('cleanup_method is not callable')
 
-        def _send_request():
+        def _send_request() -> HttpResponse:
             req_method = getattr(self.client, method.lower(), None)
             if not req_method:
                 raise ValueError('Invalid method "{}"'.format(method))
@@ -556,7 +560,7 @@ class TestProjectDestroyAPIView(
 ):
     """Tests for ProjectDestroyAPIView permissions"""
 
-    def _cleanup(self, make_project=True):
+    def _cleanup(self, make_project: bool = True):
         if not Project.objects.filter(sodar_uuid=self.cat_uuid).first():
             self.category = self.make_project(
                 title='TestCategory',

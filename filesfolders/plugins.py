@@ -1,8 +1,13 @@
+"""Plugins for the filesfolders app"""
+
+from typing import Optional, Union
+from uuid import UUID
+
 from django.conf import settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     PluginAppSettingDef,
@@ -110,7 +115,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'FILESFOLDERS_SHOW_LIST_COLUMNS',
     ]
 
-    def get_object_link(self, model_str, uuid):
+    def get_object_link(
+        self, model_str: str, uuid: Union[str, UUID]
+    ) -> Optional[PluginObjectLink]:
         """
         Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
@@ -142,7 +149,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             return PluginObjectLink(url=obj.url, name=obj.name, blank=True)
         return None
 
-    def search(self, search_terms, user, search_type=None, keywords=None):
+    def search(
+        self,
+        search_terms: list[str],
+        user: SODARUser,
+        search_type: Optional[str] = None,
+        keywords: Optional[list[str]] = None,
+    ) -> list[PluginSearchResult]:
         """
         Return app items based on one or more search terms, user, optional type
         and optional keywords.
@@ -183,7 +196,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         )
         return [ret]
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         return {
             'file_count': {
                 'label': 'Files',
@@ -199,7 +212,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             },
         }
 
-    def get_project_list_value(self, column_id, project, user):
+    def get_project_list_value(
+        self, column_id: str, project: Project, user: SODARUser
+    ) -> Union[str, int, None]:
         """
         Return a value for the optional additional project list column specific
         to a project.

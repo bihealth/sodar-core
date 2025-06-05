@@ -3,14 +3,21 @@
 import logging
 import re
 
+from typing import Optional
+
 from django.conf import settings
 from django.contrib import auth, messages
 from django.core.mail import EmailMessage
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.timezone import localtime
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
+    Project,
+    Role,
+    ProjectInvite,
+    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ROLE_RANKING,
@@ -248,7 +255,7 @@ longer be accessed.
 # Email composing helpers ------------------------------------------------------
 
 
-def get_email_user(user):
+def get_email_user(user: SODARUser) -> str:
     """
     Return a string representation of a user object for emails.
 
@@ -261,7 +268,13 @@ def get_email_user(user):
     return ret
 
 
-def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
+def get_invite_body(
+    project: Project,
+    issuer: SODARUser,
+    role_name: str,
+    invite_url: str,
+    date_expire_str: str,
+) -> str:
     """
     Return the invite content header.
 
@@ -287,7 +300,7 @@ def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
     return body
 
 
-def get_invite_message(message=None):
+def get_invite_message(message: Optional[str] = None) -> str:
     """
     Return the message from invite issuer, of empty string if not set.
 
@@ -299,16 +312,17 @@ def get_invite_message(message=None):
     return ''
 
 
-def get_email_header(header):
+def get_email_header(header: str) -> str:
     """
     Return the email header.
 
+    :param header: Header string
     :return: string
     """
     return getattr(settings, 'PROJECTROLES_EMAIL_HEADER', None) or header
 
 
-def get_email_footer(request, settings_link=True):
+def get_email_footer(request: HttpRequest, settings_link: bool = True) -> str:
     """
     Return the email footer.
 
@@ -344,7 +358,7 @@ def get_email_footer(request, settings_link=True):
     return footer
 
 
-def get_invite_subject(project):
+def get_invite_subject(project: Project) -> str:
     """
     Return invite email subject.
 
@@ -356,7 +370,7 @@ def get_invite_subject(project):
     )
 
 
-def get_role_change_subject(change_type, project):
+def get_role_change_subject(change_type: str, project: Project) -> str:
     """
     Return role change email subject.
 
@@ -379,8 +393,13 @@ def get_role_change_subject(change_type, project):
 
 
 def get_role_change_body(
-    change_type, project, user_name, role_name, issuer, request
-):
+    change_type: str,
+    project: Project,
+    user_name: str,
+    role_name: str,
+    issuer: SODARUser,
+    request: HttpRequest,
+) -> str:
     """
     Return role change email body.
 
@@ -430,7 +449,7 @@ def get_role_change_body(
     return body
 
 
-def get_user_addr(user):
+def get_user_addr(user: SODARUser) -> list[str]:
     """
     Return all the email addresses for a user as a list. Verified emails set as
     SODARUserAdditionalEmail objects are included. If a user has no main email
@@ -449,12 +468,15 @@ def get_user_addr(user):
     return ret
 
 
-def get_project_modify_recipients(recipients):
+def get_project_modify_recipients(
+    recipients: list[SODARUser],
+) -> list[SODARUser]:
     """
     Filter recipient list for project modify emails. Excludes users with
     notify_email_project set False.
 
     :param recipients: List of SODARUser objects
+    :return: List of SODARUser objects
     """
     return [
         u
@@ -464,14 +486,14 @@ def get_project_modify_recipients(recipients):
 
 
 def send_mail(
-    subject,
-    message,
-    recipient_list,
-    request=None,
-    reply_to=None,
-    cc=None,
-    bcc=None,
-):
+    subject: str,
+    message: str,
+    recipient_list: list,
+    request: Optional[HttpRequest] = None,
+    reply_to: Optional[list] = None,
+    cc: Optional[list] = None,
+    bcc: Optional[list] = None,
+) -> int:
     """
     Wrapper for send_mail() with logging and error messaging.
 
@@ -514,7 +536,13 @@ def send_mail(
 # Sending functions ------------------------------------------------------------
 
 
-def send_role_change_mail(change_type, project, user, role, request):
+def send_role_change_mail(
+    change_type: str,
+    project: Project,
+    user: SODARUser,
+    role: Role,
+    request: HttpRequest,
+) -> int:
     """
     Send email to user when their role in a project has been changed.
 
@@ -540,7 +568,9 @@ def send_role_change_mail(change_type, project, user, role, request):
     )
 
 
-def send_project_leave_mail(project, user, request=None):
+def send_project_leave_mail(
+    project: Project, user: SODARUser, request: Optional[HttpRequest] = None
+) -> int:
     """
     Send email to project owners and delegates when a user leaves a project.
 
@@ -569,7 +599,7 @@ def send_project_leave_mail(project, user, request=None):
     return mail_count
 
 
-def send_invite_mail(invite, request):
+def send_invite_mail(invite: ProjectInvite, request: HttpRequest) -> int:
     """
     Send an email invitation to user not yet registered in the system.
 
@@ -593,7 +623,9 @@ def send_invite_mail(invite, request):
     return send_mail(subject, message, [invite.email], request, issuer_emails)
 
 
-def send_invite_accept_mail(invite, request, user):
+def send_invite_accept_mail(
+    invite: ProjectInvite, request: HttpRequest, user: SODARUser
+) -> int:
     """
     Send a notification email to the issuer of an invitation when a user
     accepts the invitation.
@@ -627,7 +659,9 @@ def send_invite_accept_mail(invite, request, user):
     return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
-def send_invite_expiry_mail(invite, request, user_name):
+def send_invite_expiry_mail(
+    invite: ProjectInvite, request: HttpRequest, user_name: str
+) -> int:
     """
     Send a notification email to the issuer of an invitation when a user
     attempts to accept an expired invitation.
@@ -661,7 +695,9 @@ def send_invite_expiry_mail(invite, request, user_name):
     return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
-def send_project_create_mail(project, recipients, request):
+def send_project_create_mail(
+    project: Project, recipients: list[SODARUser], request: HttpRequest
+) -> int:
     """
     Send email about project creation to owners and delegates of the parent
     category, excluding the project creator. Also excludes users who have set
@@ -718,7 +754,9 @@ def send_project_create_mail(project, recipients, request):
     return mail_count
 
 
-def send_project_move_mail(project, recipients, request):
+def send_project_move_mail(
+    project: Project, recipients: list[SODARUser], request: HttpRequest
+) -> int:
     """
     Send email about project being moved to the owners and delegates of the
     parent category, excluding the project creator. Also excludes users who have
@@ -775,7 +813,9 @@ def send_project_move_mail(project, recipients, request):
     return mail_count
 
 
-def send_project_archive_mail(project, action, request):
+def send_project_archive_mail(
+    project: Project, action: str, request: HttpRequest
+) -> int:
     """
     Send a notification email on project archiving or unarchiving.
 
@@ -832,7 +872,9 @@ def send_project_archive_mail(project, action, request):
     return mail_count
 
 
-def send_project_delete_mail(project, recipients, request):
+def send_project_delete_mail(
+    project: Project, recipients: list[SODARUser], request: HttpRequest
+) -> int:
     """
     Send a notification email on project deletion.
 
@@ -881,15 +923,15 @@ def send_project_delete_mail(project, recipients, request):
 
 
 def send_generic_mail(
-    subject_body,
-    message_body,
-    recipient_list,
-    request=None,
-    reply_to=None,
-    cc=None,
-    bcc=None,
-    settings_link=True,
-):
+    subject_body: str,
+    message_body: str,
+    recipient_list: list,
+    request: Optional[HttpRequest] = None,
+    reply_to: Optional[list] = None,
+    cc: Optional[list] = None,
+    bcc: Optional[list] = None,
+    settings_link: bool = True,
+) -> int:
     """
     Send a generic mail with standard header and footer and no-reply
     notifications.

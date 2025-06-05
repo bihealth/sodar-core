@@ -513,7 +513,7 @@ class TestProjectrolesRoleTags(TemplateTagTestBase):
 
     def test_get_role_class(self):
         """Test get_role_class()"""
-        self.assertEqual(r_tags.get_role_class(self.user), None)
+        self.assertEqual(r_tags.get_role_class(self.user), '')
 
     def test_get_role_class_inactive(self):
         """Test get_role_class() with inactive user"""

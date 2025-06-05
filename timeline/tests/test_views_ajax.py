@@ -1,5 +1,7 @@
 """Ajax API view tests for the timeline app"""
 
+from datetime import datetime
+
 from django.urls import reverse
 from django.utils.timezone import localtime
 
@@ -27,7 +29,7 @@ class TimelineAjaxViewTestBase(
     """Base class for timeline Ajax API view tests"""
 
     @classmethod
-    def _format_ts(cls, timestamp):
+    def _format_ts(cls, timestamp: datetime) -> str:
         """Format timestamp as an expected value from the Ajax API view"""
         return localtime(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 

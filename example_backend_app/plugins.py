@@ -1,3 +1,5 @@
+"""Plugins for the example_backend_app Django app"""
+
 # Projectroles dependency
 from projectroles.plugins import BackendPluginPoint
 
@@ -25,11 +27,11 @@ class BackendPlugin(BackendPluginPoint):
     #: URL of optional css file to be included
     css_url = 'example_backend_app/css/greeting.css'
 
-    def get_api(self, **kwargs):
+    def get_api(self, **kwargs) -> ExampleAPI:
         """Return API entry point object."""
         return ExampleAPI(**kwargs)
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         return {
             'backend_example_stat': {'label': 'Backend example', 'value': True}
         }

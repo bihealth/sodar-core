@@ -4,15 +4,20 @@ import base64
 import json
 import pytz
 
-from knox.models import AuthToken
+from datetime import datetime
+from typing import Optional, Union
 
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core import mail
+from django.db.models import QuerySet
 from django.forms.models import model_to_dict
+from django.http import HttpResponse
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
+
+from knox.models import AuthToken
 
 from test_plus.test import APITestCase
 
@@ -26,6 +31,7 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     AppSetting,
+    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     AUTH_TYPE_LDAP,
@@ -109,7 +115,7 @@ class SerializedObjectMixin:
     """
 
     @classmethod
-    def get_serialized_user(cls, user):
+    def get_serialized_user(cls, user: SODARUser) -> dict:
         """
         Return serialization for a user.
 
@@ -138,7 +144,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
 
     # Copied from Knox tests
     @classmethod
-    def get_basic_auth_header(cls, username, password):
+    def get_basic_auth_header(cls, username: str, password: str) -> str:
         return (
             'Basic %s'
             % base64.b64encode(
@@ -147,7 +153,9 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         )
 
     @classmethod
-    def get_token(cls, user, full_result=False):
+    def get_token(
+        cls, user: SODARUser, full_result: bool = False
+    ) -> Union[str, tuple]:
         """
         Get or create a knox token for a user.
 
@@ -162,7 +170,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         return result if full_result else result[1]
 
     @classmethod
-    def get_drf_datetime(cls, obj_dt):
+    def get_drf_datetime(cls, obj_dt: datetime) -> str:
         """
         Return datetime in DRF compatible format.
 
@@ -176,9 +184,9 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
     @classmethod
     def get_accept_header(
         cls,
-        media_type=None,
-        version=None,
-    ):
+        media_type: Optional[str] = None,
+        version: Optional[str] = None,
+    ) -> dict:
         """
         Return version accept header based on the media type and version string.
 
@@ -193,7 +201,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         return {'HTTP_ACCEPT': '{}; version={}'.format(media_type, version)}
 
     @classmethod
-    def get_token_header(cls, token):
+    def get_token_header(cls, token: str) -> dict:
         """
         Return auth header based on token.
 
@@ -207,15 +215,15 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
 
     def request_knox(
         self,
-        url,
-        method='GET',
-        format='json',
-        data=None,
-        token=None,
-        media_type=None,
-        version=None,
-        header=None,
-    ):
+        url: str,
+        method: str = 'GET',
+        format: str = 'json',
+        data: Optional[dict] = None,
+        token: Optional[str] = None,
+        media_type: Optional[str] = None,
+        version: Optional[str] = None,
+        header: Optional[dict] = None,
+    ) -> HttpResponse:
         """
         Perform a HTTP request with Knox token auth.
 
@@ -226,6 +234,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         :param token: Knox token string (if None, use self.knox_token)
         :param media_type: String (default = cls.media_type)
         :param version: String (default = cls.api_version)
+        :param header: Optional header data (dict)
         :return: Response object
         """
         if not token:
@@ -1359,10 +1368,10 @@ class TestProjectDestroyAPIView(
     """Tests for ProjectDestroyAPIView"""
 
     @classmethod
-    def _get_delete_tl(cls):
+    def _get_delete_tl(cls) -> QuerySet:
         return TimelineEvent.objects.filter(event_name='project_delete')
 
-    def _get_delete_alerts(self):
+    def _get_delete_alerts(self) -> QuerySet:
         return self.app_alert_model.objects.filter(alert_name='project_delete')
 
     def setUp(self):
@@ -3735,7 +3744,7 @@ class TestRemoteProjectGetAPIView(
 class TestIPAllowing(AppSettingMixin, ProjectrolesAPIViewTestBase):
     """Tests for IP allowing settings using ProjectRetrieveAPIView"""
 
-    def _setup_ip_allowing(self, ip_list, role_suffix):
+    def _setup_ip_allowing(self, ip_list: list[str], role_suffix: str):
         """Setup users and roles for IP allowing test"""
         # Create new user
         user = self.make_user(role_suffix)
@@ -3770,7 +3779,11 @@ class TestIPAllowing(AppSettingMixin, ProjectrolesAPIViewTestBase):
         return user  # , user_as, self.cat_owner_as
 
     def _get_project_ip_allowing(
-        self, username, http_attribute, ip_list, blocked=None
+        self,
+        username: str,
+        http_attribute: str,
+        ip_list: list[str],
+        blocked: Optional[bool] = None,
     ):
         """Helper for IP allowing tests"""
         if blocked is None:

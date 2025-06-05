@@ -3,13 +3,17 @@
 import logging
 import uuid
 
+from datetime import datetime
+from typing import Any, Optional
+
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, QuerySet
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -82,7 +86,12 @@ AUTH_PROVIDER_OIDC = 'oidc'
 class ProjectManager(models.Manager):
     """Manager for custom table-level Project queries"""
 
-    def find(self, search_terms, keywords=None, project_type=None):
+    def find(
+        self,
+        search_terms: list[str],
+        keywords: Optional[dict] = None,
+        project_type: Optional[str] = None,
+    ) -> QuerySet:
         """
         Return projects with a partial match in full title or, including titles
         of parent Project objects, or the description of the current object.
@@ -201,26 +210,6 @@ class Project(models.Model):
         )
         return 'Project({})'.format(', '.join(repr(v) for v in values))
 
-    def save(self, *args, **kwargs):
-        """Custom validation and field populating for Project"""
-        self._validate_parent()
-        self._validate_title()
-        self._validate_parent_type()
-        self._validate_public_guest_access()
-        self._validate_archive()
-        # Update full title of self and children
-        self.full_title = self._get_full_title()
-        # TODO: Save with commit=False with other args to avoid double save()?
-        super().save(*args, **kwargs)
-        if self.type == PROJECT_TYPE_CATEGORY:
-            for child in self.children.all():
-                child.save()
-        # Update public children
-        # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
-        if self._has_public_children():
-            self.has_public_children = True
-            super().save(*args, **kwargs)
-
     def _validate_parent(self):
         """
         Validate parent value to ensure project can't be set as its own parent.
@@ -269,15 +258,35 @@ class Project(models.Model):
                 'Archiving a category is not currently supported'
             )
 
-    def get_absolute_url(self):
+    def save(self, *args, **kwargs):
+        """Custom validation and field populating for Project"""
+        self._validate_parent()
+        self._validate_title()
+        self._validate_parent_type()
+        self._validate_public_guest_access()
+        self._validate_archive()
+        # Update full title of self and children
+        self.full_title = self._get_full_title()
+        # TODO: Save with commit=False with other args to avoid double save()?
+        super().save(*args, **kwargs)
+        if self.type == PROJECT_TYPE_CATEGORY:
+            for child in self.children.all():
+                child.save()
+        # Update public children
+        # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
+        if self._has_public_children():
+            self.has_public_children = True
+            super().save(*args, **kwargs)
+
+    def get_absolute_url(self) -> str:
         return reverse(
             'projectroles:detail', kwargs={'project': self.sodar_uuid}
         )
 
     # Internal helpers
 
-    def _get_full_title(self):
-        """Return full title of project with path."""
+    def _get_full_title(self) -> str:
+        """Return full title of project with path"""
         parents = self.get_parents()
         ret = (
             CAT_DELIMITER.join([p.title for p in parents]) + CAT_DELIMITER
@@ -286,7 +295,7 @@ class Project(models.Model):
         )
         return ret + self.title
 
-    def _has_public_children(self):
+    def _has_public_children(self) -> bool:
         """
         Return True if the project has any children with public guest access.
         """
@@ -301,7 +310,7 @@ class Project(models.Model):
         return False
 
     def _update_public_children(self):
-        """Update has_public_children for this project's parents."""
+        """Update has_public_children for this project's parents"""
         if self.parent:
             parent = self.parent
             public_found = False
@@ -317,7 +326,7 @@ class Project(models.Model):
 
     # Custom row-level functions
 
-    def get_parents(self):
+    def get_parents(self) -> list:
         """
         Return a list of parent projects in inheritance order.
 
@@ -332,7 +341,7 @@ class Project(models.Model):
             parent = parent.parent
         return reversed(ret)
 
-    def get_children(self, flat=False):
+    def get_children(self, flat: bool = False) -> QuerySet:
         """
         Return child objects for a Category, sorted by full title.
 
@@ -347,11 +356,13 @@ class Project(models.Model):
             ).order_by('full_title')
         return self.children.all().order_by('title')
 
-    def get_depth(self):
+    def get_depth(self) -> int:
         """Return depth of project in the project tree structure (root=0)"""
         return len(self.full_title.split(CAT_DELIMITER)) - 1
 
-    def get_role(self, user, inherited_only=False):
+    def get_role(
+        self, user: 'SODARUser', inherited_only: bool = False
+    ) -> Optional['RoleAssignment']:
         """
         Return the currently active role for user, or None if not available.
         Returns the highest ranked role including inherited roles. In case of
@@ -379,12 +390,12 @@ class Project(models.Model):
 
     def get_roles(
         self,
-        user=None,
-        inherited=True,
-        inherited_only=False,
-        min_rank=None,
-        max_rank=None,
-    ):
+        user: Optional['SODARUser'] = None,
+        inherited: bool = True,
+        inherited_only: bool = False,
+        min_rank: Optional[int] = None,
+        max_rank: Optional[int] = None,
+    ) -> list['RoleAssignment']:
         """
         Return project role assignments.
 
@@ -443,8 +454,11 @@ class Project(models.Model):
         return list(user_roles.values())
 
     def get_roles_by_rank(
-        self, role_name, inherited=True, inherited_only=False
-    ):
+        self,
+        role_name: str,
+        inherited: bool = True,
+        inherited_only: bool = False,
+    ) -> list['RoleAssignment']:
         """
         Return RoleAssignments for specific role name. Will also include custom
         roles of identical rank once role customization is implemented (see
@@ -469,16 +483,18 @@ class Project(models.Model):
             max_rank=rank,
         )
 
-    def get_owner(self):
+    def get_owner(self) -> Optional['RoleAssignment']:
         """
         Return RoleAssignment for local (non-inherited) owner or None if not
         set.
 
-        :return: QuerySet
+        :return: RoleAssignment or None
         """
         return self.local_roles.filter(role__name=PROJECT_ROLE_OWNER).first()
 
-    def get_owners(self, inherited=True, inherited_only=False):
+    def get_owners(
+        self, inherited: bool = True, inherited_only: bool = False
+    ) -> list['RoleAssignment']:
         """
         Return RoleAssignments for project owner as well as possible inherited
         owners from parent projects.
@@ -495,7 +511,9 @@ class Project(models.Model):
             max_rank=rank,
         )
 
-    def get_delegates(self, inherited=True, inherited_only=False):
+    def get_delegates(
+        self, inherited: bool = True, inherited_only: bool = False
+    ) -> list['RoleAssignment']:
         """
         Return RoleAssignments for delegates. Excludes delegates with an
         inherited owner role.
@@ -512,11 +530,12 @@ class Project(models.Model):
             max_rank=rank,
         )
 
-    def is_owner(self, user):
+    def is_owner(self, user: 'SODARUser') -> bool:
         """
         Return True if user is owner in this project or inherits ownership from
         a parent category.
 
+        :param user: SODARUser object
         :return: Boolean
         """
         if not user.is_authenticated:
@@ -526,11 +545,12 @@ class Project(models.Model):
             return True
         return False
 
-    def is_delegate(self, user):
+    def is_delegate(self, user: 'SODARUser') -> bool:
         """
         Return True if user is delegate in this project or inherits delegate
         status from a parent category.
 
+        :param user: SODARUser object
         :return: Boolean
         """
         if not user.is_authenticated:
@@ -540,11 +560,12 @@ class Project(models.Model):
             return True
         return False
 
-    def is_owner_or_delegate(self, user):
+    def is_owner_or_delegate(self, user: 'SODARUser') -> bool:
         """
         Return True if user is either an owner or a delegate in this project.
         Includes inherited assignments.
 
+        :param user: SODARUser object
         :return: Boolean
         """
         if not user.is_authenticated:
@@ -557,7 +578,7 @@ class Project(models.Model):
             return True
         return False
 
-    def get_members(self, inherited=True):
+    def get_members(self, inherited: bool = True) -> list['RoleAssignment']:
         """
         Return RoleAssignments for members of project excluding owner and
         delegates.
@@ -570,7 +591,7 @@ class Project(models.Model):
             min_rank=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).rank,
         )
 
-    def has_role(self, user):
+    def has_role(self, user: 'SODARUser') -> bool:
         """
         Return whether user has roles in Project. Returns True if user has local
         role, inherits a role from a parent category, or if public guest access
@@ -583,7 +604,7 @@ class Project(models.Model):
             return True
         return False
 
-    def has_role_in_children(self, user):
+    def has_role_in_children(self, user: 'SODARUser') -> bool:
         """
         Return True if user has a role in any of the children in the project.
         Also returns true if public guest access is true for any child.
@@ -607,7 +628,7 @@ class Project(models.Model):
             return True
         return False
 
-    def get_source_site(self):
+    def get_source_site(self) -> Optional['RemoteSite']:
         """
         Return source site or None if this is a locally defined project.
 
@@ -628,7 +649,7 @@ class Project(models.Model):
             pass
         return None
 
-    def is_remote(self):
+    def is_remote(self) -> bool:
         """
         Return True if current project has been retrieved from a remote SODAR
         site.
@@ -643,7 +664,7 @@ class Project(models.Model):
             return True
         return False
 
-    def is_revoked(self):
+    def is_revoked(self) -> bool:
         """
         Return True if remote access has been revoked for the project.
 
@@ -661,7 +682,7 @@ class Project(models.Model):
                 return True
         return False
 
-    def set_public(self, public=True):
+    def set_public(self, public: bool = True):
         """Helper for setting value of public_guest_access"""
         if public != self.public_guest_access:
             # NOTE: Validation no longer raises an exception (see ¤1404)
@@ -671,7 +692,7 @@ class Project(models.Model):
             self.save()
             self._update_public_children()  # Update for parents
 
-    def set_archive(self, status=True):
+    def set_archive(self, status: bool = True):
         """
         Helper for setting archive value. Raises ValidationError for categories.
         """
@@ -679,7 +700,7 @@ class Project(models.Model):
             self.archive = status
             self.save()
 
-    def get_log_title(self, full_title=False):
+    def get_log_title(self, full_title: bool = False) -> str:
         """
         Return a logger-friendly title for the project.
 
@@ -694,7 +715,7 @@ class Project(models.Model):
 # Role -------------------------------------------------------------------------
 
 
-def get_role_project_type_default():
+def get_role_project_type_default() -> list[str]:
     """Return default value for Role.project_type"""
     return [PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT]
 
@@ -789,14 +810,6 @@ class RoleAssignment(models.Model):
         values = (self.project.title, self.user.username, self.role.name)
         return 'RoleAssignment({})'.format(', '.join(repr(v) for v in values))
 
-    def save(self, *args, **kwargs):
-        """Version of save() to include custom validation for RoleAssignment"""
-        self._validate_project_type()
-        self._validate_user()
-        self._validate_owner()
-        self._validate_delegate()
-        super().save(*args, **kwargs)
-
     def _validate_project_type(self):
         """Validate type of project to ensure it is in allowed types"""
         if self.project.type not in self.role.project_types:
@@ -858,6 +871,14 @@ class RoleAssignment(models.Model):
                 'been reached.'.format(del_limit)
             )
 
+    def save(self, *args, **kwargs):
+        """Version of save() to include custom validation for RoleAssignment"""
+        self._validate_project_type()
+        self._validate_user()
+        self._validate_owner()
+        self._validate_delegate()
+        super().save(*args, **kwargs)
+
 
 # AppSetting -------------------------------------------------------------------
 
@@ -866,8 +887,12 @@ class AppSettingManager(models.Manager):
     """Manager for custom table-level AppSetting queries"""
 
     def get_setting_value(
-        self, plugin_name, setting_name, project=None, user=None
-    ):
+        self,
+        plugin_name: str,
+        setting_name: str,
+        project: Optional[Project] = None,
+        user: Optional['SODARUser'] = None,
+    ) -> Any:
         """
         Return value of setting_name for plugin_name in project or for user.
 
@@ -877,7 +902,7 @@ class AppSettingManager(models.Manager):
         :param setting_name: Name of setting (string)
         :param project: Project object or pk
         :param user: User object or pk
-        :return: Value (string)
+        :return: Value (string, int, bool, dict, list or None)
         :raise: AppSetting.DoesNotExist if setting is not found
         """
         query_parameters = {
@@ -1000,7 +1025,7 @@ class AppSetting(models.Model):
 
     # Custom row-level functions
 
-    def get_value(self):
+    def get_value(self) -> Any:
         """Return value of the setting in the format specified in 'type'"""
         if self.type == APP_SETTING_TYPE_INTEGER:
             return int(self.value)
@@ -1106,7 +1131,7 @@ class ProjectInvite(models.Model):
         return 'ProjectInvite({})'.format(', '.join(repr(v) for v in values))
 
     @classmethod
-    def _get_date_expire(cls):
+    def _get_date_expire(cls) -> datetime:
         """
         Return expiry date based on current date + INVITE_EXPIRY_DAYS
 
@@ -1123,7 +1148,7 @@ class ProjectInvite(models.Model):
 
     # Custom row-level functions
 
-    def is_ldap(self):
+    def is_ldap(self) -> bool:
         """
         Return True if invite is intended for an LDAP user.
 
@@ -1146,7 +1171,7 @@ class ProjectInvite(models.Model):
             return True
         return False
 
-    def get_url(self, request):
+    def get_url(self, request: HttpRequest) -> str:
         """
         Return invite URL for a project invitation.
 
@@ -1245,11 +1270,6 @@ class RemoteSite(models.Model):
         values = (self.name, self.mode, self.url)
         return 'RemoteSite({})'.format(', '.join(repr(v) for v in values))
 
-    def save(self, *args, **kwargs):
-        """Version of save() to include custom validation"""
-        self._validate_mode()
-        super().save(*args, **kwargs)
-
     def _validate_mode(self):
         """Validate mode value"""
         if self.mode not in SODAR_CONSTANTS['SITE_MODES']:
@@ -1257,10 +1277,15 @@ class RemoteSite(models.Model):
                 'Mode "{}" not found in SITE_MODES'.format(self.mode)
             )
 
+    def save(self, *args, **kwargs):
+        """Version of save() to include custom validation"""
+        self._validate_mode()
+        super().save(*args, **kwargs)
+
     # Custom row-level functions
 
-    def get_access_date(self):
-        """Return date of latest project access by remote site"""
+    def get_access_date(self) -> Optional[datetime]:
+        """Return date of latest project access by remote site or None"""
         projects = (
             RemoteProject.objects.filter(site=self)
             .exclude(date_access__isnull=True)
@@ -1268,8 +1293,9 @@ class RemoteSite(models.Model):
         )
         if projects.count() > 0:
             return projects.first().date_access
+        return None
 
-    def get_url(self):
+    def get_url(self) -> str:
         """Return sanitized site URL"""
         if self.url[-1] == '/':
             return self.url[:-1]
@@ -1353,7 +1379,7 @@ class RemoteProject(models.Model):
 
     # Custom row-level functions
 
-    def get_project(self):
+    def get_project(self) -> Project:
         """Get the related Project object"""
         return (
             self.project
@@ -1390,7 +1416,7 @@ class SODARUser(AbstractUser):
         super().save(*args, **kwargs)
         self.set_group()  # Called here to ensure we always have group
 
-    def get_full_name(self):
+    def get_full_name(self) -> str:
         """Return full name or username if not set"""
         if hasattr(self, 'name') and self.name:
             return self.name
@@ -1398,7 +1424,7 @@ class SODARUser(AbstractUser):
             return '{} {}'.format(self.first_name, self.last_name)
         return self.username
 
-    def get_display_name(self, inc_user=False):
+    def get_display_name(self, inc_user: bool = False) -> str:
         """
         Return user name for displaying in UI.
 
@@ -1410,7 +1436,7 @@ class SODARUser(AbstractUser):
             ret += f' ({self.username})'
         return ret
 
-    def get_form_label(self, email=False):
+    def get_form_label(self, email: bool = False) -> str:
         """
         Return user label with full name, username and optional email.
 
@@ -1424,7 +1450,7 @@ class SODARUser(AbstractUser):
             ret += ' <{}>'.format(self.email)
         return ret
 
-    def get_auth_type(self):
+    def get_auth_type(self) -> str:
         """
         Return user authentication type: OIDC, LDAP or local.
 
@@ -1441,7 +1467,7 @@ class SODARUser(AbstractUser):
             return AUTH_TYPE_LDAP
         return AUTH_TYPE_LOCAL
 
-    def is_local(self):
+    def is_local(self) -> bool:
         """
         Return True if user is of type AUTH_TYPE_LOCAL.
 
@@ -1449,8 +1475,12 @@ class SODARUser(AbstractUser):
         """
         return self.get_auth_type() == AUTH_TYPE_LOCAL
 
-    def set_group(self):
-        """Set user group based on user name or social auth provider"""
+    def set_group(self) -> Optional[str]:
+        """
+        Set user group based on user name or social auth provider.
+
+        :return: Group name if set (string or None)
+        """
         social_auth = getattr(self, 'social_auth', None)
         if social_auth:
             social_auth = social_auth.first()
@@ -1490,11 +1520,11 @@ class SODARUser(AbstractUser):
             )
             return group_name
 
-    def update_full_name(self):
+    def update_full_name(self) -> str:
         """
         Update full name of user.
 
-        :return: String
+        :return: User full name (string)
         """
         # Save user name from first_name and last_name into name
         full_name = ''
@@ -1512,11 +1542,11 @@ class SODARUser(AbstractUser):
             )
         return self.name
 
-    def update_ldap_username(self):
+    def update_ldap_username(self) -> str:
         """
         Update username for an LDAP user.
 
-        :return: String
+        :return: User username (string)
         """
         # Make domain in username uppercase
         if (

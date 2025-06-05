@@ -2,11 +2,14 @@
 
 import logging
 
+from typing import Any
+
 from django import template
 from django.conf import settings
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
+from projectroles.models import Project
 
 from filesfolders.models import File, HyperLink, FILESFOLDERS_FLAGS
 
@@ -20,12 +23,12 @@ APP_NAME = 'filesfolders'
 
 
 @register.filter
-def get_class(obj):
+def get_class(obj: Any) -> str:
     return obj.__class__.__name__
 
 
 @register.simple_tag
-def get_details_items(project):
+def get_details_items(project: Project) -> list:
     """Return recent files/links for card on project details page"""
     files = File.objects.filter(project=project).order_by('-date_modified')[:5]
     links = HyperLink.objects.filter(project=project).order_by(
@@ -37,13 +40,13 @@ def get_details_items(project):
 
 
 @register.simple_tag
-def allow_public_links(project):
+def allow_public_links(project: Project) -> Any:
     """Return the boolean value for allow_public_links in project settings"""
     return app_settings.get(APP_NAME, 'allow_public_links', project)
 
 
 @register.simple_tag
-def get_file_icon(file):
+def get_file_icon(file: File) -> str:
     """Return file icon"""
     ret = 'file-outline'
     try:
@@ -81,7 +84,7 @@ def get_file_icon(file):
 
 
 @register.simple_tag
-def get_flag(flag_name, tooltip=True):
+def get_flag(flag_name: str, tooltip: bool = True) -> str:
     """Return item flag HTML"""
     f = FILESFOLDERS_FLAGS[flag_name]
     tip_str = ''
@@ -97,7 +100,7 @@ def get_flag(flag_name, tooltip=True):
 
 
 @register.simple_tag
-def get_flag_status(val, choice):
+def get_flag_status(val: str, choice: str) -> str:
     """Return item flag status HTML for form"""
     if val == choice:
         return 'checked="checked"'
@@ -105,6 +108,6 @@ def get_flag_status(val, choice):
 
 
 @register.simple_tag
-def get_flag_classes(flag_name):
+def get_flag_classes(flag_name: str) -> str:
     """Return CSS classes for item link based on flag name"""
     return FILESFOLDERS_FLAGS[flag_name]['text_classes']

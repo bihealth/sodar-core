@@ -9,7 +9,7 @@ from django.urls import reverse
 # Projectroles dependency
 from projectroles.tests.test_permissions_api import ProjectAPIPermissionTestBase
 
-from filesfolders.models import File, HyperLink
+from filesfolders.models import File, Folder, HyperLink
 from filesfolders.tests.test_permissions import FilesfoldersPermissionTestMixin
 from filesfolders.views_api import (
     FILESFOLDERS_API_MEDIA_TYPE,
@@ -213,7 +213,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
 class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
     """Tests for FolderRetrieveUpdateDestroyAPIView permissions"""
 
-    def _make_folder(self):
+    def _make_folder(self) -> Folder:
         folder = self.make_test_folder()
         folder.sodar_uuid = OBJ_UUID
         folder.save()
@@ -568,7 +568,7 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
 class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
     """Tests for FileListCreateAPIView permissions"""
 
-    def _make_post_data(self):
+    def _make_post_data(self) -> dict:
         self.post_data = {
             'name': 'New File',
             'flag': 'IMPORTANT',
@@ -833,7 +833,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
 class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
     """Tests for FileRetrieveUpdateDestroyAPIView permissions"""
 
-    def _make_file(self):
+    def _make_file(self) -> File:
         file = self.make_test_file()
         file.sodar_uuid = OBJ_UUID
         file.save()
@@ -1554,7 +1554,7 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
 ):
     """Tests for HyperLinkRetrieveUpdateDestroyAPIView permissions"""
 
-    def _make_link(self):
+    def _make_link(self) -> HyperLink:
         link = self.make_test_link()
         link.sodar_uuid = OBJ_UUID
         link.save()

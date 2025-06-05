@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -48,7 +49,7 @@ class AlertUITestBase(AppAlertMixin, UITestBase):
 class TestAppAlertListView(AlertUITestBase):
     """Tests for AppAlertListView"""
 
-    def _find_alert_element(self, alert):
+    def _find_alert_element(self, alert: AppAlert) -> WebElement:
         """Return element for AppAlert object"""
         return self.selenium.find_element(
             By.XPATH, '//div[@data-alert-uuid="{}"]'.format(alert.sodar_uuid)

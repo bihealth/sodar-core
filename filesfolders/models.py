@@ -2,9 +2,11 @@
 
 import uuid
 
+from typing import Optional
+
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from db_file_storage.model_utils import delete_file, delete_file_if_needed
 
@@ -61,7 +63,9 @@ FLAG_CHOICES = [
 class FilesfoldersManager(models.Manager):
     """Manager for custom table-level BaseFilesfoldersClass queries"""
 
-    def find(self, search_terms, keywords=None):
+    def find(
+        self, search_terms: list[str], keywords: Optional[dict] = None
+    ) -> QuerySet:
         """
         Return files, folders and/or hyperlinks matching the query.
 
@@ -170,7 +174,7 @@ class Folder(BaseFilesfoldersClass):
         )
         return 'Folder({})'.format(', '.join(repr(v) for v in values))
 
-    def get_path(self):
+    def get_path(self) -> str:
         """Return full path as str"""
         if self.folder:
             ret = self.folder.get_path()
@@ -179,7 +183,7 @@ class Folder(BaseFilesfoldersClass):
         ret += '{}/'.format(self.name)
         return ret
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """Return True if the folder contains no subfolders, files or links"""
         return (
             self.filesfolders_folder_children.count() == 0
@@ -187,7 +191,7 @@ class Folder(BaseFilesfoldersClass):
             and self.filesfolders_hyperlink_children.count() == 0
         )
 
-    def has_in_path(self, folder):
+    def has_in_path(self, folder: 'Folder') -> bool:
         """Return True if folder exists in this folder's parent path"""
         if self.folder == folder:
             return True
@@ -217,8 +221,11 @@ class FileManager(FilesfoldersManager):
     """Manager for custom table-level File queries"""
 
     def get_folder_readme(
-        self, project_pk, folder_pk, mimetype='text/markdown'
-    ):
+        self,
+        project_pk: int,
+        folder_pk: Optional[int],
+        mimetype: str = 'text/markdown',
+    ) -> Optional['File']:
         """
         Return the readme file for a folder or None if not found
         :param project_pk: Pk of the Project

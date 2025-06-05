@@ -16,7 +16,11 @@ from timeline.models import TimelineEvent
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODARUserAdditionalEmail, SODAR_CONSTANTS
+from projectroles.models import (
+    AppSetting,
+    SODARUserAdditionalEmail,
+    SODAR_CONSTANTS,
+)
 from projectroles.tests.test_models import (
     EXAMPLE_APP_NAME,
     AppSettingMixin,
@@ -91,7 +95,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
 class TestUserAppSettingsView(AppSettingMixin, UserViewTestBase):
     """Tests for UserAppSettingsView"""
 
-    def _get_setting(self, name):
+    def _get_setting(self, name) -> AppSetting:
         return app_settings.get(EXAMPLE_APP_NAME, name, user=self.user)
 
     def setUp(self):

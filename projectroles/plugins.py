@@ -2,10 +2,22 @@
 
 import json
 
+from typing import Any, Optional, Union
+from uuid import UUID
+
 from django.conf import settings
+from django.db.models import Model, QuerySet
+from django.http import HttpRequest
 from djangoplugins.point import PluginPoint
 
-from projectroles.models import APP_SETTING_TYPES, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    Role,
+    RoleAssignment,
+    SODARUser,
+    APP_SETTING_TYPES,
+    SODAR_CONSTANTS,
+)
 
 
 # SODAR constants
@@ -56,12 +68,12 @@ class ProjectModifyPluginMixin:
 
     def perform_project_modify(
         self,
-        project,
-        action,
-        project_settings,
-        old_data=None,
-        old_settings=None,
-        request=None,
+        project: Project,
+        action: str,
+        project_settings: dict,
+        old_data: Optional[dict] = None,
+        old_settings: Optional[dict] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """
         Perform additional actions to finalize project creation or update.
@@ -77,12 +89,12 @@ class ProjectModifyPluginMixin:
 
     def revert_project_modify(
         self,
-        project,
-        action,
-        project_settings,
-        old_data=None,
-        old_settings=None,
-        request=None,
+        project: Project,
+        action: str,
+        project_settings: dict,
+        old_data: Optional[dict] = None,
+        old_settings: Optional[dict] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """
         Revert project creation or update if errors have occurred in other apps.
@@ -96,7 +108,13 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_role_modify(self, role_as, action, old_role=None, request=None):
+    def perform_role_modify(
+        self,
+        role_as: RoleAssignment,
+        action: str,
+        old_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
+    ):
         """
         Perform additional actions to finalize role assignment creation or
         update.
@@ -108,7 +126,13 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def revert_role_modify(self, role_as, action, old_role=None, request=None):
+    def revert_role_modify(
+        self,
+        role_as: RoleAssignment,
+        action: str,
+        old_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
+    ):
         """
         Revert role assignment creation or update if errors have occurred in
         other apps.
@@ -120,7 +144,11 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_role_delete(self, role_as, request=None):
+    def perform_role_delete(
+        self,
+        role_as: RoleAssignment,
+        request: Optional[HttpRequest] = None,
+    ):
         """
         Perform additional actions to finalize role assignment deletion.
 
@@ -129,7 +157,11 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def revert_role_delete(self, role_as, request=None):
+    def revert_role_delete(
+        self,
+        role_as: RoleAssignment,
+        request: Optional[HttpRequest] = None,
+    ):
         """
         Revert role assignment deletion deletion if errors have occurred in
         other apps.
@@ -140,7 +172,12 @@ class ProjectModifyPluginMixin:
         pass
 
     def perform_owner_transfer(
-        self, project, new_owner, old_owner, old_owner_role=None, request=None
+        self,
+        project: Project,
+        new_owner: SODARUser,
+        old_owner: SODARUser,
+        old_owner_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """
         Perform additional actions to finalize project ownership transfer.
@@ -154,7 +191,12 @@ class ProjectModifyPluginMixin:
         pass
 
     def revert_owner_transfer(
-        self, project, new_owner, old_owner, old_owner_role=None, request=None
+        self,
+        project: Project,
+        new_owner: SODARUser,
+        old_owner: SODARUser,
+        old_owner_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """
         Revert project ownership transfer if errors have occurred in other apps.
@@ -167,7 +209,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_project_sync(self, project):
+    def perform_project_sync(self, project: Project):
         """
         Synchronize existing projects to ensure related data exists when the
         syncmodifyapi management comment is called. Should mostly be used in
@@ -180,12 +222,12 @@ class ProjectModifyPluginMixin:
 
     def perform_project_setting_update(
         self,
-        plugin_name,
-        setting_name,
-        value,
-        old_value,
-        project=None,
-        user=None,
+        plugin_name: str,
+        setting_name: str,
+        value: Any,
+        old_value: Any,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
     ):
         """
         Perform additional actions when updating a single app setting with
@@ -203,12 +245,12 @@ class ProjectModifyPluginMixin:
 
     def revert_project_setting_update(
         self,
-        plugin_name,
-        setting_name,
-        value,
-        old_value,
-        project=None,
-        user=None,
+        plugin_name: str,
+        setting_name: str,
+        value: Any,
+        old_value: Any,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
     ):
         """
         Revert updating a single app setting with PROJECT scope if errors have
@@ -224,7 +266,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_project_archive(self, project):
+    def perform_project_archive(self, project: Project):
         """
         Perform additional actions to finalize project archiving or unarchiving.
         The state being applied can be derived from the project.archive attr.
@@ -233,7 +275,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def revert_project_archive(self, project):
+    def revert_project_archive(self, project: Project):
         """
         Revert project archiving or unarchiving if errors have occurred in other
         apps. The state being originally set can be derived from the
@@ -243,7 +285,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_project_delete(self, project):
+    def perform_project_delete(self, project: Project):
         """
         Perform additional actions to finalize project deletion.
 
@@ -341,7 +383,9 @@ class ProjectAppPluginPoint(PluginPoint):
     #: Names of plugin specific Django settings to display in siteinfo
     info_settings = []
 
-    def get_object(self, model, uuid):
+    def get_object(
+        self, model: type[Model], uuid: Union[str, UUID]
+    ) -> Optional[Model]:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -355,7 +399,9 @@ class ProjectAppPluginPoint(PluginPoint):
         except model.DoesNotExist:
             return None
 
-    def get_object_link(self, model_str, uuid):
+    def get_object_link(
+        self, model_str: str, uuid: Union[str, UUID]
+    ) -> Optional['PluginObjectLink']:
         """
         Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
@@ -369,11 +415,19 @@ class ProjectAppPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(self, _extra_data, _name):
+    def get_extra_data_link(
+        self, _extra_data: dict, _name: str
+    ) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
-    def search(self, search_terms, user, search_type=None, keywords=None):
+    def search(
+        self,
+        search_terms: list[str],
+        user: SODARUser,
+        search_type: Optional[str] = None,
+        keywords: Optional[list[str]] = None,
+    ) -> list['PluginSearchResult']:
         """
         Return app items based on one or more search terms, user, optional type
         and optional keywords.
@@ -389,7 +443,12 @@ class ProjectAppPluginPoint(PluginPoint):
         #       search template
         return []
 
-    def update_cache(self, name=None, project=None, user=None):
+    def update_cache(
+        self,
+        name: Optional[str] = None,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ):
         """
         Update cached data for this app, limitable to item ID and/or project.
 
@@ -399,7 +458,7 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         return None
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         """
         Return app statistics as a dict. Should take the form of
         {id: {label, value, url (optional), description (optional)}}.
@@ -408,7 +467,9 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         return {}
 
-    def get_project_list_value(self, column_id, project, user):
+    def get_project_list_value(
+        self, column_id: str, project: Project, user: SODARUser
+    ) -> Union[str, int, None]:
         """
         Return a value for the optional additional project list column specific
         to a project.
@@ -420,7 +481,12 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         return None
 
-    def validate_form_app_settings(self, app_settings, project=None, user=None):
+    def validate_form_app_settings(
+        self,
+        app_settings: dict,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> Optional[dict]:
         """
         Validate app settings form data and return a dict of errors.
 
@@ -450,11 +516,11 @@ class BackendPluginPoint(PluginPoint):
     #: Names of plugin specific Django settings to display in siteinfo
     info_settings = []
 
-    def get_api(self):
-        """Return API entry point object."""
+    def get_api(self) -> Any:
+        """Return API entry point object"""
         raise NotImplementedError
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         """
         Return backend statistics as a dict. Should take the form of
         {id: {label, value, url (optional), description (optional)}}.
@@ -463,7 +529,9 @@ class BackendPluginPoint(PluginPoint):
         """
         return {}
 
-    def get_object(self, model, uuid):
+    def get_object(
+        self, model: type[Model], uuid: Union[str, UUID]
+    ) -> Optional[Model]:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -477,7 +545,9 @@ class BackendPluginPoint(PluginPoint):
         except model.DoesNotExist:
             return None
 
-    def get_object_link(self, model_str, uuid):
+    def get_object_link(
+        self, model_str: str, uuid: Union[str, UUID]
+    ) -> Optional['PluginObjectLink']:
         """
         Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
@@ -491,7 +561,9 @@ class BackendPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(self, _extra_data, _name):
+    def get_extra_data_link(
+        self, _extra_data: dict, _name: str
+    ) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
@@ -537,7 +609,7 @@ class SiteAppPluginPoint(PluginPoint):
     #: List of names for plugin specific Django settings to display in siteinfo
     info_settings = []
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         """
         Return app statistics as a dict. Should take the form of
         {id: {label, value, url (optional), description (optional)}}.
@@ -546,7 +618,7 @@ class SiteAppPluginPoint(PluginPoint):
         """
         return {}
 
-    def get_messages(self, user=None):
+    def get_messages(self, user: Optional[SODARUser] = None) -> list[dict]:
         """
         Return a list of messages to be shown to users.
 
@@ -563,7 +635,9 @@ class SiteAppPluginPoint(PluginPoint):
         '''
         return []
 
-    def get_object(self, model, uuid):
+    def get_object(
+        self, model: type[Model], uuid: Union[str, UUID]
+    ) -> Optional[Model]:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -577,7 +651,9 @@ class SiteAppPluginPoint(PluginPoint):
         except model.DoesNotExist:
             return None
 
-    def get_object_link(self, model_str, uuid):
+    def get_object_link(
+        self, model_str: str, uuid: Union[str, UUID]
+    ) -> Optional['PluginObjectLink']:
         """
         Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
@@ -591,11 +667,17 @@ class SiteAppPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(self, _extra_data, _name):
+    def get_extra_data_link(
+        self, _extra_data: dict, _name: str
+    ) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
-    def validate_form_app_settings(self, app_settings, user=None):
+    def validate_form_app_settings(
+        self,
+        app_settings: dict,
+        user: Optional[SODARUser] = None,
+    ) -> Optional[dict]:
         """
         Validate app settings form data and return a dict of errors.
 
@@ -617,18 +699,20 @@ class PluginAppSettingDef:
 
     def __init__(
         self,
-        name,
-        scope,
-        type,
-        default=None,
-        label=None,
-        placeholder=None,
-        description=None,
-        options=None,
-        user_modifiable=None,  # Set None here to validate PROJECT_USER value
-        global_edit=False,
-        project_types=None,
-        widget_attrs=None,
+        name: str,
+        scope: str,
+        type: str,
+        default: Optional[Any] = None,
+        label: Optional[str] = None,
+        placeholder: Optional[str] = None,
+        description: Optional[str] = None,
+        options: Union[callable, list, None] = None,
+        user_modifiable: Optional[
+            bool
+        ] = None,  # Set None here to validate PROJECT_USER value
+        global_edit: bool = False,
+        project_types: Optional[list[str]] = None,
+        widget_attrs: Optional[dict] = None,
     ):
         """
         Initialize PluginAppSettingDef.
@@ -693,7 +777,7 @@ class PluginAppSettingDef:
         self.widget_attrs = widget_attrs or {}
 
     @classmethod
-    def validate_scope(cls, scope):
+    def validate_scope(cls, scope: str):
         """
         Validate the app setting scope.
 
@@ -704,7 +788,7 @@ class PluginAppSettingDef:
             raise ValueError('Invalid scope "{}"'.format(scope))
 
     @classmethod
-    def validate_type(cls, setting_type):
+    def validate_type(cls, setting_type: str):
         """
         Validate the app setting type.
 
@@ -715,7 +799,7 @@ class PluginAppSettingDef:
             raise ValueError('Invalid setting type "{}"'.format(setting_type))
 
     @classmethod
-    def validate_type_options(cls, setting_type, setting_options):
+    def validate_type_options(cls, setting_type: str, setting_options: list):
         """
         Validate existence of options against setting type.
 
@@ -734,7 +818,9 @@ class PluginAppSettingDef:
             )
 
     @classmethod
-    def validate_default_in_options(cls, setting_default, setting_options):
+    def validate_default_in_options(
+        cls, setting_default: Any, setting_options: Any
+    ):
         """
         Validate existence of default value in uncallable options.
 
@@ -758,7 +844,7 @@ class PluginAppSettingDef:
             )
 
     @classmethod
-    def validate_value(cls, setting_type, setting_value):
+    def validate_value(cls, setting_type: str, setting_value: Any):
         """
         Validate non-callable value.
 
@@ -799,7 +885,9 @@ class PluginAppSettingDef:
                 )
 
     @classmethod
-    def validate_user_modifiable(cls, scope, user_modifiable):
+    def validate_user_modifiable(
+        cls, scope: str, user_modifiable: Optional[bool]
+    ):
         """
         Validate user_modifiable against scope.
 
@@ -827,7 +915,7 @@ class PluginObjectLink:
     #: Open the link in a blank browser tab (boolean, default=False)
     blank = False
 
-    def __init__(self, url, name, blank=False):
+    def __init__(self, url: str, name: str, blank: bool = False):
         """
         Initialize PluginObjectLink.
 
@@ -857,7 +945,13 @@ class PluginSearchResult:
     #: List or QuerySet of result objects
     items = []
 
-    def __init__(self, category, title, search_types, items):
+    def __init__(
+        self,
+        category: str,
+        title: str,
+        search_types: Optional[list[str]],
+        items: Union[list, QuerySet],
+    ):
         """
         Initialize PluginSearchResult.
 
@@ -881,7 +975,9 @@ class PluginSearchResult:
 # Plugin API -------------------------------------------------------------------
 
 
-def get_active_plugins(plugin_type='project_app', custom_order=False):
+def get_active_plugins(
+    plugin_type: str = 'project_app', custom_order: bool = False
+) -> Optional[list[PluginPoint]]:
     """
     Return active plugins of a specific type.
 
@@ -920,7 +1016,7 @@ def get_active_plugins(plugin_type='project_app', custom_order=False):
     return None
 
 
-def change_plugin_status(name, status, plugin_type='app'):
+def change_plugin_status(name: str, status: int, plugin_type: str = 'app'):
     """
     Change the status of a selected plugin in the database.
 
@@ -949,7 +1045,9 @@ def change_plugin_status(name, status, plugin_type='app'):
     plugin.save()
 
 
-def get_app_plugin(plugin_name, plugin_type=None):
+def get_app_plugin(
+    plugin_name: str, plugin_type: Optional[str] = None
+) -> Optional[PluginPoint]:
     """
     Return active app plugin.
 
@@ -966,9 +1064,12 @@ def get_app_plugin(plugin_name, plugin_type=None):
             return eval(t).get_plugin(plugin_name)
         except Exception:
             pass
+    return None
 
 
-def get_backend_api(plugin_name, force=False, **kwargs):
+def get_backend_api(
+    plugin_name: str, force: bool = False, **kwargs
+) -> Optional[BackendPluginPoint]:
     """
     Return backend API object.
     NOTE: May raise an exception from plugin.get_api().
@@ -984,6 +1085,7 @@ def get_backend_api(plugin_name, force=False, **kwargs):
         except BackendPluginPoint.DoesNotExist:
             return None
         return plugin.get_api(**kwargs) if plugin.is_active() else None
+    return None
 
 
 # Plugins within projectroles --------------------------------------------------

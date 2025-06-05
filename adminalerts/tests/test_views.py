@@ -36,7 +36,7 @@ class AdminalertsViewTestBase(
 ):
     """Base class for adminalerts view testing"""
 
-    def _make_alert(self):
+    def _make_alert(self) -> AdminAlert:
         return self.make_alert(
             message=ALERT_MSG,
             user=self.superuser,
@@ -99,7 +99,7 @@ class TestAdminAlertDetailView(AdminalertsViewTestBase):
 class TestAdminAlertCreateView(AdminalertsViewTestBase):
     """Tests for AdminAlertCreateView"""
 
-    def _get_post_data(self, **kwargs):
+    def _get_post_data(self, **kwargs) -> dict:
         ret = {
             'message': ALERT_MSG,
             'description': ALERT_DESC,
@@ -346,7 +346,7 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
 class TestAdminAlertUpdateView(AdminalertsViewTestBase):
     """Tests for AdminAlertUpdateView"""
 
-    def _get_post_data(self, **kwargs):
+    def _get_post_data(self, **kwargs) -> dict:
         ret = {
             'message': ALERT_MSG_UPDATED,
             'description': ALERT_DESC_UPDATED,

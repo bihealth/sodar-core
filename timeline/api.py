@@ -3,13 +3,19 @@
 import logging
 import re
 
+from typing import Any, Optional
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.text import Truncator
 
+from djangoplugins.models import PluginPoint
+
 # Projectroles dependency
-from projectroles.models import Project, RemoteSite
+from projectroles.models import Project, RemoteSite, SODARUser
 from projectroles.plugins import get_app_plugin
 from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
@@ -54,7 +60,7 @@ class TimelineAPI:
     # Internal Helpers ---------------------------------------------------------
 
     @classmethod
-    def _get_ref_label(cls, label):
+    def _get_ref_label(cls, label: str) -> str:
         """Return reference object name in displayable form"""
         if not label:
             return OBJ_REF_UNNAMED
@@ -63,7 +69,7 @@ class TimelineAPI:
         return label
 
     @classmethod
-    def _get_history_link(cls, obj_ref):
+    def _get_history_link(cls, obj_ref: TimelineEventObjectRef) -> str:
         """Return history link HTML for event object reference"""
         url_name = 'timeline:list_object_site'
         url_kwargs = {
@@ -83,14 +89,18 @@ class TimelineAPI:
         )
 
     @classmethod
-    def _get_not_found_label(cls, obj_ref):
+    def _get_not_found_label(cls, obj_ref: TimelineEventObjectRef) -> str:
         """Get label for object which is not found in the database"""
         return '<span class="text-danger">{}</span> {}'.format(
             cls._get_ref_label(obj_ref.name), cls._get_history_link(obj_ref)
         )
 
     @classmethod
-    def _get_project_desc(cls, obj_ref, request=None):
+    def _get_project_desc(
+        cls,
+        obj_ref: TimelineEventObjectRef,
+        request: Optional[HttpRequest] = None,
+    ) -> str:
         """Get description HTML for special case: Project model"""
         project = Project.objects.filter(sodar_uuid=obj_ref.object_uuid).first()
         if (
@@ -112,7 +122,11 @@ class TimelineAPI:
         return obj_ref.name
 
     @classmethod
-    def _get_remote_site_desc(cls, obj_ref, request=None):
+    def _get_remote_site_desc(
+        cls,
+        obj_ref: TimelineEventObjectRef,
+        request: Optional[HttpRequest] = None,
+    ) -> str:
         """Get description HTML for special case: RemoteSite model"""
         site = RemoteSite.objects.filter(sodar_uuid=obj_ref.object_uuid).first()
         if site and request and request.user.is_superuser:
@@ -129,7 +143,13 @@ class TimelineAPI:
         return cls._get_not_found_label(obj_ref)
 
     @classmethod
-    def _get_ref_description(cls, event, ref_label, app_plugin, request):
+    def _get_ref_description(
+        cls,
+        event: TimelineEvent,
+        ref_label: str,
+        app_plugin: Optional[PluginPoint] = None,
+        request: Optional[HttpRequest] = None,
+    ) -> str:
         """
         Get reference object description for event description, or unknown label
         if not found.
@@ -212,18 +232,18 @@ class TimelineAPI:
     @classmethod
     def add_event(
         cls,
-        project,
-        app_name,
-        user,
-        event_name,
-        description,
-        classified=False,
-        extra_data=None,
-        status_type=None,
-        status_desc=None,
-        status_extra_data=None,
-        plugin_name=None,
-    ):
+        project: Project,
+        app_name: str,
+        user: Optional[SODARUser],
+        event_name: str,
+        description: str,
+        classified: bool = False,
+        extra_data: dict = None,
+        status_type: str = None,
+        status_desc: str = None,
+        status_extra_data: dict = None,
+        plugin_name: str = None,
+    ) -> TimelineEvent:
         """
         Create and save a timeline event.
 
@@ -282,7 +302,9 @@ class TimelineAPI:
         return event
 
     @classmethod
-    def get_project_events(cls, project, classified=False):
+    def get_project_events(
+        cls, project: Project, classified: bool = False
+    ) -> QuerySet:
         """
         Return timeline events for a project.
 
@@ -296,7 +318,12 @@ class TimelineAPI:
         return events
 
     @classmethod
-    def get_event_description(cls, event, plugin_lookup=None, request=None):
+    def get_event_description(
+        cls,
+        event: TimelineEvent,
+        plugin_lookup: Optional[dict] = None,
+        request: Optional[HttpRequest] = None,
+    ) -> str:
         """
         Return the description of a timeline event as HTML.
 
@@ -343,7 +370,7 @@ class TimelineAPI:
             )
 
     @classmethod
-    def get_object_url(cls, obj, project=None):
+    def get_object_url(cls, obj: Any, project: Optional[Project] = None) -> str:
         """
         Return the URL for a timeline event object history.
 
@@ -362,7 +389,9 @@ class TimelineAPI:
         return reverse(url_name, kwargs=url_kwargs)
 
     @classmethod
-    def get_object_link(cls, obj, project=None):
+    def get_object_link(
+        cls, obj: Any, project: Optional[Project] = None
+    ) -> str:
         """
         Return an inline HTML icon link for a timeline event object history.
 
@@ -377,7 +406,9 @@ class TimelineAPI:
         )
 
     @classmethod
-    def get_models(cls):
+    def get_models(
+        cls,
+    ) -> tuple[type[TimelineEvent], type[TimelineEventObjectRef]]:
         """
         Return timeline event model classes for custom/advanced queries.
 

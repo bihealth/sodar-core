@@ -84,7 +84,7 @@ class AdminAlert(models.Model):
         values = (self.message, self.user.username, self.active)
         return 'AdminAlert({})'.format(', '.join(repr(v) for v in values))
 
-    def is_active(self):
+    def is_active(self) -> bool:
         """Return True if alert is active and has not expired"""
         return (
             True
@@ -92,6 +92,6 @@ class AdminAlert(models.Model):
             else False
         )
 
-    def is_expired(self):
+    def is_expired(self) -> bool:
         """Return True if alert has expired"""
         return True if self.date_expire < timezone.now() else False

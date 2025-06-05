@@ -3,6 +3,8 @@
 import json
 import logging
 
+from typing import Any, Optional
+
 from django import forms
 from django.conf import settings
 from django.contrib import auth
@@ -13,6 +15,7 @@ from django.utils.html import format_html
 
 from dal import autocomplete, forward as dal_forward
 from pagedown.widgets import PagedownWidget
+from djangoplugins.models import PluginPoint
 
 from projectroles.models import (
     Project,
@@ -21,13 +24,14 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
+    SODARUser,
     SODAR_CONSTANTS,
     ROLE_RANKING,
     CAT_DELIMITER,
     CAT_DELIMITER_ERROR_MSG,
 )
 
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAppSettingDef, get_active_plugins
 from projectroles.utils import get_display_name, build_secret
 from projectroles.app_settings import AppSettingAPI
 
@@ -110,7 +114,9 @@ class SODARFormMixin:
 class SODARAppSettingFormMixin:
     """Helpers for app settings handling in forms"""
 
-    def set_app_setting_field(self, plugin_name, s_field, s_def):
+    def set_app_setting_field(
+        self, plugin_name: str, s_field: str, s_def: PluginAppSettingDef
+    ):
         """
         Helper for setting app setting field, widget and value.
 
@@ -201,7 +207,9 @@ class SODARAppSettingFormMixin:
             value = json.dumps(value)
         self.initial[s_field] = value
 
-    def set_app_setting_notes(self, plugin, s_field, s_def):
+    def set_app_setting_notes(
+        self, plugin: PluginPoint, s_field: str, s_def: PluginAppSettingDef
+    ):
         """
         Helper for setting app setting label notes.
 
@@ -226,7 +234,7 @@ class SODARAppSettingFormMixin:
             plugin, self.fields[s_field].label
         )
 
-    def get_app_setting_label(self, plugin, label):
+    def get_app_setting_label(self, plugin: PluginPoint, label: str) -> str:
         """Return label for app setting key"""
         if plugin:
             return format_html(
@@ -242,7 +250,7 @@ class SODARAppSettingFormMixin:
             label,
         )
 
-    def init_app_settings(self, app_plugins, scope, user_mod):
+    def init_app_settings(self, app_plugins: list, scope: str, user_mod: bool):
         """
         Initialize app settings in form. Also sets up self.app_plugins.
 
@@ -275,12 +283,12 @@ class SODARAppSettingFormMixin:
     @classmethod
     def clean_app_settings(
         cls,
-        cleaned_data,
-        app_plugins,
-        scope,
-        user_modifiable,
-        project=None,
-        user=None,
+        cleaned_data: dict,
+        app_plugins: list,
+        scope: str,
+        user_modifiable: bool,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
     ):
         """Validate and clean app settings form fields"""
         scope_kw = {}
@@ -408,13 +416,13 @@ class SODARUserRedirectWidget(SODARUserAutocompleteWidget):
 
 # TODO: Refactor into widget?
 def get_user_widget(
-    scope='all',
-    project=None,
-    exclude=None,
-    forward=None,
-    url=None,
-    widget_class=None,
-):
+    scope: str = 'all',
+    project: Optional[Project] = None,
+    exclude: Optional[list] = None,
+    forward: Optional[list] = None,
+    url: Optional[str] = None,
+    widget_class: Optional[Any] = None,
+) -> Any:
     """
     Get an user autocomplete widget for your form.
 
@@ -458,12 +466,12 @@ class SODARUserChoiceField(forms.ModelChoiceField):
 
     def __init__(
         self,
-        scope='all',
-        project=None,
-        exclude=None,
-        forward=None,
-        url=None,
-        widget_class=None,
+        scope: str = 'all',
+        project: Optional[Project] = None,
+        exclude: Optional[list] = None,
+        forward: Optional[list] = None,
+        url: Optional[str] = None,
+        widget_class: Optional[Any] = None,
         *args,
         **kwargs
     ):
@@ -516,7 +524,9 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         ]
 
     @classmethod
-    def _get_parent_choices(cls, instance, user):
+    def _get_parent_choices(
+        cls, instance: Project, user: SODARUser
+    ) -> list[tuple]:
         """
         Return valid choices of parent categories for moving a project.
 
@@ -618,7 +628,13 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 required=False,
             )
 
-    def __init__(self, project=None, current_user=None, *args, **kwargs):
+    def __init__(
+        self,
+        project: Optional[Project] = None,
+        current_user: Optional[SODARUser] = None,
+        *args,
+        **kwargs
+    ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
         disable_categories = getattr(
@@ -841,7 +857,12 @@ class RoleAssignmentForm(SODARModelForm):
         fields = ['project', 'user', 'role', 'promote']
 
     def __init__(
-        self, project=None, current_user=None, promote_as=None, *args, **kwargs
+        self,
+        project: Optional[Project] = None,
+        current_user: Optional[SODARUser] = None,
+        promote_as: Optional[RoleAssignment] = None,
+        *args,
+        **kwargs
     ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
@@ -975,7 +996,9 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
     """Form for transferring owner role assignment between users"""
 
     @classmethod
-    def _get_old_owner_choices(cls, project, old_owner_as):
+    def _get_old_owner_choices(
+        cls, project: Project, old_owner_as: RoleAssignment
+    ) -> list[tuple]:
         q_kwargs = {'project_types__contains': [project.type]}
         inh_role_as = project.get_role(old_owner_as.user, inherited_only=True)
         if (
@@ -999,7 +1022,14 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             ret.append((0, remove_label))
         return ret
 
-    def __init__(self, project, current_user, current_owner, *args, **kwargs):
+    def __init__(
+        self,
+        project: Project,
+        current_user: SODARUser,
+        current_owner: SODARUser,
+        *args,
+        **kwargs
+    ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
         # Get current user for checking permissions for form items
@@ -1037,7 +1067,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             widget=forms.HiddenInput(), initial=project.sodar_uuid
         )
 
-    def clean_old_owner_role(self):
+    def clean_old_owner_role(self) -> Role:
         field_val = int(self.cleaned_data.get('old_owner_role'))
         if not field_val:
             return None  # Remove old owner role
@@ -1073,7 +1103,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
                 )
         return role
 
-    def clean_new_owner(self):
+    def clean_new_owner(self) -> SODARUser:
         user = self.cleaned_data['new_owner']
         if user == self.current_owner:
             raise forms.ValidationError(
@@ -1100,10 +1130,10 @@ class ProjectInviteForm(SODARModelForm):
 
     def __init__(
         self,
-        project=None,
-        current_user=None,
-        mail=None,
-        role=None,
+        project: Optional[Project] = None,
+        current_user: Optional[SODARUser] = None,
+        mail: Optional[str] = None,
+        role: Optional[Role] = None,
         *args,
         **kwargs
     ):
@@ -1279,7 +1309,9 @@ class RemoteSiteForm(SODARModelForm):
             'secret',
         ]
 
-    def __init__(self, current_user=None, *args, **kwargs):
+    def __init__(
+        self, current_user: Optional[SODARUser] = None, *args, **kwargs
+    ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
         self.current_user = current_user
@@ -1363,7 +1395,7 @@ class LocalUserForm(SODARModelForm):
 # Helper functions -------------------------------------------------------------
 
 
-def get_role_option(project, role):
+def get_role_option(project: Project, role: Role) -> tuple:
     """
     Return form option value for a Role object.
 
@@ -1378,8 +1410,11 @@ def get_role_option(project, role):
 
 
 def get_role_choices(
-    project, current_user, promote_as=None, allow_delegate=True
-):
+    project: Project,
+    current_user: SODARUser,
+    promote_as: Optional[RoleAssignment] = None,
+    allow_delegate: bool = True,
+) -> list[tuple]:
     """
     Return valid role choices according to permissions of current user.
 

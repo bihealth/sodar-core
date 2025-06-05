@@ -8,6 +8,7 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_permissions import ProjectPermissionTestBase
 
+from filesfolders.models import File, Folder
 from filesfolders.tests.test_models import (
     FileMixin,
     FolderMixin,
@@ -37,7 +38,7 @@ SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
 class FilesfoldersPermissionTestMixin(FolderMixin, FileMixin, HyperLinkMixin):
     """Mixin for filesfolders view permission test helpers"""
 
-    def make_test_folder(self):
+    def make_test_folder(self) -> Folder:
         return self.make_folder(
             name='folder',
             project=self.project,
@@ -46,7 +47,7 @@ class FilesfoldersPermissionTestMixin(FolderMixin, FileMixin, HyperLinkMixin):
             description='',
         )
 
-    def make_test_file(self, public=False):
+    def make_test_file(self, public: bool = False) -> File:
         if public:
             app_settings.set(
                 APP_NAME, 'allow_public_links', True, project=self.project

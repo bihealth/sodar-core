@@ -71,9 +71,13 @@ The following conventions should be adhered to in SODAR Core development:
     * Black does not enforce this, so they have to be ensured manually.
 - Do not use RST syntax in docstrings or comments.
     * Exception: Docstrings for REST API endpoint methods.
-- No type hints should be used at the moment.
-    * Possibility to expand the entire project into using type hints will be
-      looked into.
+- Provide type hints for functions you declare.
+    * Make sure the syntax corresponds to the currently supported Python
+      versions.
+    * Exception: Inherited methods from e.g. Django or Django Rest Framework
+      where the signature is already defined and expected to be static. This
+      concerns e.g. Django class-based view methods such as ``get()``,
+      ``get_context_data()`` etc.
 
 Module Imports
 --------------

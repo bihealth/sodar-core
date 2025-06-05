@@ -3,9 +3,13 @@
 import json
 import logging
 
+from typing import Any, Optional, Union
+
 from django.conf import settings
 
-from projectroles.models import AppSetting, SODAR_CONSTANTS
+from djangoplugins.point import PluginPoint
+
+from projectroles.models import AppSetting, Project, SODARUser, SODAR_CONSTANTS
 from projectroles.plugins import (
     PluginAppSettingDef,
     get_app_plugin,
@@ -172,7 +176,9 @@ PROJECTROLES_APP_SETTINGS = [
 
 class AppSettingAPI:
     @classmethod
-    def _validate_project_and_user(cls, scope, project, user):
+    def _validate_project_and_user(
+        cls, scope: str, project: Project, user: SODARUser
+    ):
         """
         Ensure project and user parameters are set according to scope.
 
@@ -196,7 +202,11 @@ class AppSettingAPI:
 
     @classmethod
     def _validate_value_in_options(
-        cls, setting_value, setting_options, project=None, user=None
+        cls,
+        setting_value: str,
+        setting_options: Union[list, callable],
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
     ):
         """
         Ensure setting_value is present in setting_options.
@@ -231,7 +241,7 @@ class AppSettingAPI:
                 )
 
     @classmethod
-    def _get_app_plugin(cls, plugin_name):
+    def _get_app_plugin(cls, plugin_name: str) -> PluginPoint:
         """
         Return app plugin by name.
 
@@ -247,7 +257,11 @@ class AppSettingAPI:
         return plugin
 
     @classmethod
-    def _get_defs(cls, plugin=None, plugin_name=None):
+    def _get_defs(
+        cls,
+        plugin: Optional[PluginPoint] = None,
+        plugin_name: Optional[str] = None,
+    ) -> dict:
         """
         Get app setting definitions for a plugin.
 
@@ -296,7 +310,7 @@ class AppSettingAPI:
         return {s.name: s for s in s_defs}
 
     @classmethod
-    def _get_json_value(cls, value):
+    def _get_json_value(cls, value: Union[str, dict]) -> dict:
         """
         Return JSON value as dict regardless of input type
 
@@ -318,7 +332,13 @@ class AppSettingAPI:
 
     @classmethod
     def _log_set_debug(
-        cls, action, plugin_name, setting_name, value, project, user
+        cls,
+        action: str,
+        plugin_name: str,
+        setting_name: str,
+        value: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
     ):
         """
         Helper method for logging setting changes in set() method.
@@ -327,8 +347,8 @@ class AppSettingAPI:
         :param plugin_name: App plugin name (string)
         :param setting_name: Setting name (string)
         :param value: Setting value (string)
-        :param project: Project object
-        :param user: User object
+        :param project: Project object or None
+        :param user: User object or None
         """
         extra_data = []
         if project:
@@ -347,8 +367,13 @@ class AppSettingAPI:
 
     @classmethod
     def get_default(
-        cls, plugin_name, setting_name, project=None, user=None, post_safe=False
-    ):
+        cls,
+        plugin_name: str,
+        setting_name: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+        post_safe: bool = False,
+    ) -> Any:
         """
         Get default setting value from an app plugin.
 
@@ -357,7 +382,7 @@ class AppSettingAPI:
         :param project: Project object (optional)
         :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
-        :return: Setting value (string, integer or boolean)
+        :return: Setting value
         :raise: ValueError if app plugin is not found
         :raise: KeyError if nothing is found with setting_name
         """
@@ -391,8 +416,13 @@ class AppSettingAPI:
 
     @classmethod
     def get(
-        cls, plugin_name, setting_name, project=None, user=None, post_safe=False
-    ):
+        cls,
+        plugin_name: str,
+        setting_name: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+        post_safe: bool = False,
+    ) -> Any:
         """
         Return app setting value for a project or a user. If not set, return
         default.
@@ -402,7 +432,7 @@ class AppSettingAPI:
         :param project: Project object (optional)
         :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
-        :return: String or None
+        :return: Value
         :raise: KeyError if nothing is found with setting_name
         """
         if not user or user.is_authenticated:
@@ -432,7 +462,13 @@ class AppSettingAPI:
         return val
 
     @classmethod
-    def get_all_by_scope(cls, scope, project=None, user=None, post_safe=False):
+    def get_all_by_scope(
+        cls,
+        scope: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+        post_safe: bool = False,
+    ) -> dict:
         """
         Return all setting values by scope. If a value is not set, return the
         default.
@@ -480,7 +516,13 @@ class AppSettingAPI:
         )
 
     @classmethod
-    def get_defaults(cls, scope, project=None, user=None, post_safe=False):
+    def get_defaults(
+        cls,
+        scope: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+        post_safe: bool = False,
+    ) -> dict:
         """
         Get all default settings for a scope.
 
@@ -521,13 +563,13 @@ class AppSettingAPI:
     @classmethod
     def set(
         cls,
-        plugin_name,
-        setting_name,
-        value,
-        project=None,
-        user=None,
-        validate=True,
-    ):
+        plugin_name: str,
+        setting_name: str,
+        value: Any,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+        validate: bool = True,
+    ) -> bool:
         """
         Set value of an existing project or user settings. Creates the object if
         not found.
@@ -637,7 +679,13 @@ class AppSettingAPI:
             return True
 
     @classmethod
-    def is_set(cls, plugin_name, setting_name, project=None, user=None):
+    def is_set(
+        cls,
+        plugin_name: str,
+        setting_name: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> bool:
         """
         Return True if the setting has been set, instead of retrieving the
         default value from the definition.
@@ -660,7 +708,13 @@ class AppSettingAPI:
         return AppSetting.objects.filter(**q_kwargs).exists()
 
     @classmethod
-    def delete(cls, plugin_name, setting_name, project=None, user=None):
+    def delete(
+        cls,
+        plugin_name: str,
+        setting_name: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ):
         """
         Delete one or more app setting objects. In case of a PROJECT_USER
         setting, can be used to delete all settings related to project.
@@ -700,9 +754,9 @@ class AppSettingAPI:
     @classmethod
     def delete_by_scope(
         cls,
-        scope,
-        project=None,
-        user=None,
+        scope: str,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
     ):
         """
         Delete all app settings within a given scope for a project and/or user.
@@ -722,12 +776,12 @@ class AppSettingAPI:
     @classmethod
     def validate(
         cls,
-        setting_type,
-        setting_value,
-        setting_options,
-        project=None,
-        user=None,
-    ):
+        setting_type: str,
+        setting_value: Any,
+        setting_options: Union[callable, None, list],
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> bool:
         """
         Validate setting value according to its type.
 
@@ -750,12 +804,17 @@ class AppSettingAPI:
         return True
 
     @classmethod
-    def get_definition(cls, name, plugin=None, plugin_name=None):
+    def get_definition(
+        cls,
+        name: str,
+        plugin: Optional[PluginPoint] = None,
+        plugin_name: Optional[str] = None,
+    ) -> dict:
         """
         Return definition for a single app setting, either based on an app name
         or the plugin object.
 
-        :param name: Setting name
+        :param name: Setting name (string)
         :param plugin: Plugin object or None
         :param plugin_name: Name of the app plugin (string or None)
         :return: Dict
@@ -774,11 +833,11 @@ class AppSettingAPI:
     @classmethod
     def get_definitions(
         cls,
-        scope=None,
-        plugin=None,
-        plugin_name=None,
-        user_modifiable=False,
-    ):
+        scope: Optional[str] = None,
+        plugin: Optional[PluginPoint] = None,
+        plugin_name: Optional[str] = None,
+        user_modifiable: bool = False,
+    ) -> dict:
         """
         Return app setting definitions from a plugin, optionally limited by
         scope.
@@ -803,7 +862,7 @@ class AppSettingAPI:
         }
 
     @classmethod
-    def get_projectroles_defs(cls):
+    def get_projectroles_defs(cls) -> dict:
         """
         Return projectroles settings definitions. If it exists, get value from
         settings.PROJECTROLES_APP_SETTINGS_TEST for testing modifications.
@@ -820,7 +879,7 @@ class AppSettingAPI:
         return {s.name: s for s in app_settings}
 
     @classmethod
-    def get_all_defs(cls):
+    def get_all_defs(cls) -> dict:
         """
         Return app setting definitions for projectroles and all active app
         plugins in a dictionary with the app name as key.
@@ -838,7 +897,7 @@ class AppSettingAPI:
         return ret
 
     @classmethod
-    def compare_value(cls, obj, input_value):
+    def compare_value(cls, obj: AppSetting, input_value: Any) -> bool:
         """
         Compare input value to value in an AppSetting object. Return True if
         values match, False if there is a mismatch.
@@ -858,7 +917,9 @@ class AppSettingAPI:
         return obj.value == str(input_value)
 
 
-def get_example_setting_default(project=None, user=None):
+def get_example_setting_default(
+    project: Optional[Project] = None, user: Optional[SODARUser] = None
+) -> str:
     """
     Example method for callable default value retrieval for app settings.
 
@@ -876,7 +937,9 @@ def get_example_setting_default(project=None, user=None):
     return response
 
 
-def get_example_setting_options(project=None, user=None):
+def get_example_setting_options(
+    project: Optional[Project] = None, user: Optional[SODARUser] = None
+) -> list[tuple]:
     """
     Example method for callable option list retrieval for app settings.
 

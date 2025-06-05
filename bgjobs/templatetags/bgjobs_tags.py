@@ -1,4 +1,12 @@
+"""Template tags for the bgjobs app"""
+
+from typing import Any
+
 from django import template
+from django.db.models import QuerySet
+
+# Projectroles dependency
+from projectroles.models import Project
 
 from bgjobs.models import BackgroundJob
 from bgjobs.plugins import BackgroundJobsPluginPoint
@@ -7,13 +15,13 @@ register = template.Library()
 
 
 @register.simple_tag
-def get_details_backgroundjobs(project):
+def get_details_backgroundjobs(project: Project) -> QuerySet:
     """Return active background jobs for the project details page"""
     return BackgroundJob.objects.filter(project=project).order_by('-pk')[:5]
 
 
 @register.filter
-def specialize_job(bg_job):
+def specialize_job(bg_job: BackgroundJob) -> BackgroundJob:
     """
     Given a BackgroundJob, return the specialized job if any.
 
@@ -41,7 +49,7 @@ def specialize_job(bg_job):
 
 # Originally from dict.py in varfish-web (see issue #97)
 @register.filter
-def keyvalue(data, key):
+def keyvalue(data: dict, key: str) -> Any:
     if hasattr(data, 'get'):
         return data.get(key)
     else:

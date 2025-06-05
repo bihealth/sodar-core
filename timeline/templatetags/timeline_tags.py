@@ -1,11 +1,19 @@
+"""Template tags for the timeline app"""
+
 import logging
 
+from typing import Optional
+
 from django import template
+from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.timezone import localtime
 
 from djangoplugins.models import Plugin
 
+# Projectroles dependency
+from projectroles.models import Project
 from projectroles.plugins import ProjectAppPluginPoint
 
 from timeline.api import TimelineAPI
@@ -33,7 +41,7 @@ STATUS_STYLES = {
 
 
 @register.simple_tag
-def get_timestamp(event):
+def get_timestamp(event: TimelineEvent) -> str:
     """Return printable timestamp of event in local timezone"""
     try:
         return localtime(event.get_timestamp()).strftime('%Y-%m-%d %H:%M:%S')
@@ -42,19 +50,25 @@ def get_timestamp(event):
 
 
 @register.simple_tag
-def get_event_name(event):
+def get_event_name(event: TimelineEvent) -> str:
     """Return timeline event name in a user friendly format"""
     return event.event_name.replace('_', ' ').title()
 
 
 @register.simple_tag
-def get_event_description(event, plugin_lookup, request=None):
+def get_event_description(
+    event: TimelineEvent,
+    plugin_lookup: dict,
+    request: Optional[HttpRequest] = None,
+) -> str:
     """Return printable version of event description"""
     return timeline.get_event_description(event, plugin_lookup, request)
 
 
 @register.simple_tag
-def get_details_events(project, view_classified=False):
+def get_details_events(
+    project: Project, view_classified: bool = False
+) -> QuerySet:
     """Return recent events for card on project details page"""
     c_kwargs = {'classified': False} if not view_classified else {}
     return TimelineEvent.objects.filter(project=project, **c_kwargs).order_by(
@@ -63,7 +77,7 @@ def get_details_events(project, view_classified=False):
 
 
 @register.simple_tag
-def get_plugin_lookup():
+def get_plugin_lookup() -> dict:
     """Return lookup dict of app plugins with app name as key"""
     ret = {}
     for p in Plugin.objects.all():
@@ -80,7 +94,7 @@ def get_plugin_lookup():
 
 
 @register.simple_tag
-def get_app_icon_html(event, plugin_lookup):
+def get_app_icon_html(event: TimelineEvent, plugin_lookup: dict) -> str:
     """Return icon link HTML for app by plugin lookup"""
     url = None
     title = event.app
@@ -126,7 +140,7 @@ def get_app_icon_html(event, plugin_lookup):
 
 
 @register.simple_tag
-def get_status_style(status):
+def get_status_style(status: str) -> str:
     """Retrn status style class"""
     return (
         (STATUS_STYLES[status.status_type] + ' text-light')

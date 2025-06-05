@@ -3,11 +3,13 @@
 import json
 import uuid
 
+from typing import Optional
 from urllib.parse import urlencode
 
 from django.contrib import auth
 from django.contrib.messages import get_messages
 from django.core import mail
+from django.db.models import QuerySet
 from django.forms import HiddenInput
 from django.forms.models import model_to_dict
 from django.test import override_settings
@@ -46,6 +48,7 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
+    SODARUser,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
@@ -609,7 +612,13 @@ class TestProjectCreateView(
     """Tests for ProjectCreateView"""
 
     @classmethod
-    def _get_post_data(cls, title, project_type, parent, owner):
+    def _get_post_data(
+        cls,
+        title: str,
+        project_type: str,
+        parent: Optional[Project],
+        owner: SODARUser,
+    ) -> dict:
         """Return POST data for project creation"""
         ret = {
             'title': title,
@@ -1159,7 +1168,7 @@ class TestProjectUpdateView(
     """Tests for ProjectUpdateView"""
 
     @classmethod
-    def _get_post_app_settings(cls, project, user):
+    def _get_post_app_settings(cls, project: Project, user: SODARUser) -> dict:
         """Get postable app settings for project of type PROJECT"""
         if project.type != PROJECT_TYPE_PROJECT:
             raise ValueError('Can only be called for a project')
@@ -1184,7 +1193,7 @@ class TestProjectUpdateView(
         ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         return ps
 
-    def _assert_app_settings(self, post_settings):
+    def _assert_app_settings(self, post_settings: dict):
         """Assert app settings values to match data after POST"""
         for k, v in post_settings.items():
             v_json = None
@@ -2529,17 +2538,17 @@ class TestProjectArchiveView(
     """Tests for ProjectArchiveView"""
 
     @classmethod
-    def _get_tl(cls):
+    def _get_tl(cls) -> QuerySet:
         return TimelineEvent.objects.filter(event_name='project_archive')
 
     @classmethod
-    def _get_tl_un(cls):
+    def _get_tl_un(cls) -> QuerySet:
         return TimelineEvent.objects.filter(event_name='project_unarchive')
 
-    def _get_alerts(self):
+    def _get_alerts(self) -> QuerySet:
         return self.app_alert_model.objects.filter(alert_name='project_archive')
 
-    def _get_alerts_un(self):
+    def _get_alerts_un(self) -> QuerySet:
         return self.app_alert_model.objects.filter(
             alert_name='project_unarchive'
         )
@@ -2735,10 +2744,10 @@ class TestProjectDeleteView(
     """Tests for ProjectDeleteView"""
 
     @classmethod
-    def _get_delete_tl(cls):
+    def _get_delete_tl(cls) -> QuerySet:
         return TimelineEvent.objects.filter(event_name='project_delete')
 
-    def _get_delete_alerts(self):
+    def _get_delete_alerts(self) -> QuerySet:
         return self.app_alert_model.objects.filter(alert_name='project_delete')
 
     def setUp(self):

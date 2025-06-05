@@ -90,7 +90,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
     """Common modification methods for AdminAlert create/update views"""
 
     @classmethod
-    def _get_email_recipients(cls, alert):
+    def _get_email_recipients(cls, alert: AdminAlert) -> list[str]:
         """Return list of email addresses for alert email recipients"""
         ret = []
         for u in User.objects.exclude(is_active=False):
@@ -103,12 +103,13 @@ class AdminAlertModifyMixin(ModelFormMixin):
             ret += [e for e in user_emails if e not in ret]
         return sorted(ret)
 
-    def _send_email(self, alert, action):
+    def _send_email(self, alert: AdminAlert, action: str) -> int:
         """
         Send email alerts to all users except for the alert issuer.
 
         :param alert: AdminAlert object
         :param action: "create" or "update" (string)
+        :return: Amount of sent mail (int)
         """
         subject = EMAIL_SUBJECT.format(
             state='New' if action == 'create' else 'Updated',

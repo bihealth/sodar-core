@@ -65,6 +65,7 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     permission_required = 'userprofile.view_detail'
 
     def _get_user_settings(self):
+        """Return user setting values"""
         plugins = get_active_plugins(
             plugin_type='project_app'
         ) + get_active_plugins(plugin_type='site_app')
@@ -134,7 +135,9 @@ class UserAppSettingsView(
 class UserEmailMixin:
     """Mixin for user email helpers"""
 
-    def send_verify_email(self, email, resend=False):
+    def send_verify_email(
+        self, email: SODARUserAdditionalEmail, resend: bool = False
+    ):
         """
         Send verification message to additional email address.
 

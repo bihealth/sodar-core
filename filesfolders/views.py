@@ -2,6 +2,7 @@
 
 import logging
 
+from typing import Optional, Union
 from wsgiref.util import FileWrapper  # For db files
 from zipfile import ZipFile
 
@@ -10,7 +11,12 @@ from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseRedirect,
+    HttpResponseBadRequest,
+)
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import (
@@ -92,11 +98,11 @@ class FilesfoldersTimelineMixin:
     @classmethod
     def add_item_modify_event(
         cls,
-        obj,
-        request,
-        view_action,
-        update_attrs=DEFAULT_UPDATE_ATTRS,
-        old_data=None,
+        obj: Union[File, Folder, HyperLink],
+        request: HttpRequest,
+        view_action: str,
+        update_attrs: list = DEFAULT_UPDATE_ATTRS,
+        old_data: Optional[dict] = None,
     ):
         """
         Add filesfolders item create/update event to timeline.
@@ -148,7 +154,7 @@ class ViewActionMixin(object):
     def view_action(self):
         raise ImproperlyConfigured('Property "view_action" missing!')
 
-    def get_view_action(self):
+    def get_view_action(self) -> Optional[str]:
         return self.view_action if self.view_action else None
 
 
@@ -763,7 +769,7 @@ class BatchEditView(
     #: Project object
     project = None
 
-    def _render_confirmation(self, **kwargs):
+    def _render_confirmation(self, **kwargs) -> HttpResponse:
         """Render user confirmation"""
         context = {
             'batch_action': self.batch_action,
@@ -802,7 +808,9 @@ class BatchEditView(
                 context['folder_check'] = False
         return super().render_to_response(context)
 
-    def _finalize_edit(self, edit_count, target_folder, **kwargs):
+    def _finalize_edit(
+        self, edit_count: int, target_folder: Optional[Folder], **kwargs
+    ) -> HttpResponseRedirect:
         """Finalize executed batch operation"""
         timeline = get_backend_api('timeline_backend')
         edit_suffix = 's' if edit_count != 1 else ''

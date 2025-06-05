@@ -1,7 +1,9 @@
-"""Tests for management commands in the projectroles Django app"""
+"""Tests for management commands in the projectroles app"""
 
 import os
+
 from tempfile import NamedTemporaryFile
+from typing import Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -106,7 +108,7 @@ class BatchUpdateRolesMixin:
 
     file = None
 
-    def write_file(self, data):
+    def write_file(self, data: Union[str, list]):
         """Write data to temporary CSV file"""
         if not isinstance(data[0], list):
             data = [data]

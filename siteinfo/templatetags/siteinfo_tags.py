@@ -4,7 +4,7 @@ register = template.Library()
 
 
 @register.simple_tag
-def get_info_cls(value, base_class='col-md-7'):
+def get_info_cls(value: str, base_class: str = 'col-md-7') -> str:
     """Return info element class"""
     c = base_class
     if value == '':
@@ -13,7 +13,7 @@ def get_info_cls(value, base_class='col-md-7'):
 
 
 @register.simple_tag
-def get_info_val(value):
+def get_info_val(value: str) -> str:
     """Return info element value"""
     if value == '':
         value = '(Empty value)'

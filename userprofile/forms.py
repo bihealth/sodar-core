@@ -1,3 +1,7 @@
+"""Forms for the userprofile app"""
+
+from typing import Optional
+
 from django import forms
 
 # Projectroles dependency
@@ -8,6 +12,7 @@ from projectroles.forms import (
     SODARAppSettingFormMixin,
 )
 from projectroles.models import (
+    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ADD_EMAIL_ALREADY_SET_MSG,
@@ -65,7 +70,9 @@ class UserEmailForm(SODARModelForm):
         model = SODARUserAdditionalEmail
         fields = ['email', 'user', 'secret']
 
-    def __init__(self, current_user=None, *args, **kwargs):
+    def __init__(
+        self, current_user: Optional[SODARUser] = None, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         if current_user:
             self.current_user = current_user

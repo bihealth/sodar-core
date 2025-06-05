@@ -4,11 +4,13 @@ import logging
 import random
 import string
 
+from typing import Any, Optional
+
 from django.conf import settings
 from django.urls import reverse
 
 from projectroles.plugins import get_active_plugins
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +37,9 @@ ROLE_URLS = [
 USER_DISPLAY_DEPRECATE_MSG = 'The get_user_display_name() utility method has been deprecated and will be removed in v1.2. Use User.get_display_name() instead.'
 
 
-def get_display_name(key, title=False, count=1, plural=False):
+def get_display_name(
+    key: str, title: bool = False, count: int = 1, plural: bool = False
+) -> str:
     """
     Return display name from SODAR_CONSTANTS.
 
@@ -66,7 +70,7 @@ def get_user_display_name(user, inc_user=False):
     return user.get_display_name(inc_user)
 
 
-def build_secret(length=None):
+def build_secret(length: Optional[int] = None) -> str:
     """
     Return secret string for e.g. public URLs.
 
@@ -82,7 +86,7 @@ def build_secret(length=None):
     )
 
 
-def get_app_names():
+def get_app_names() -> list[str]:
     """Return list of names for locally installed non-django apps"""
     ret = []
     for a in settings.INSTALLED_APPS:
@@ -100,9 +104,18 @@ class AppLinkContent:
 
     @classmethod
     def _is_active_projectroles(
-        cls, app_name=None, url_name=None, link_names=None
-    ):
-        """Check if current URL is active under the projectroles app"""
+        cls,
+        app_name: Optional[str] = None,
+        url_name: Optional[str] = None,
+        link_names: Optional[list[str]] = None,
+    ) -> bool:
+        """
+        Check if current URL is active under the projectroles app.
+
+        :param app_name: String or None
+        :param url_name: String or None
+        :param link_names: List of strings or None
+        """
         if not app_name and not url_name:
             return False
         # HACK: Avoid circular import
@@ -115,7 +128,12 @@ class AppLinkContent:
         )
 
     @classmethod
-    def _is_active_plugin(cls, app_plugin, app_name=None, url_name=None):
+    def _is_active_plugin(
+        cls,
+        app_plugin: Any,
+        app_name: Optional[str] = None,
+        url_name: Optional[str] = None,
+    ) -> bool:
         """Check if current URL is active for a specific app plugin"""
         if not app_name and not url_name:
             return False
@@ -141,7 +159,9 @@ class AppLinkContent:
         return False
 
     @classmethod
-    def _is_app_visible(cls, plugin, project, user):
+    def _is_app_visible(
+        cls, plugin: Any, project: Project, user: SODARUser
+    ) -> bool:
         """Check if app should be visible for user in a specific project"""
         can_view_app = user.has_perm(plugin.app_permission, project)
         app_hidden = False
@@ -158,7 +178,7 @@ class AppLinkContent:
         return False
 
     @classmethod
-    def _allow_project_creation(cls):
+    def _allow_project_creation(cls) -> bool:
         """Check whether creating a project is allowed on the site"""
         if (
             settings.PROJECTROLES_SITE_MODE
@@ -169,9 +189,21 @@ class AppLinkContent:
         return True
 
     def get_project_links(
-        self, user, project=None, app_name=None, url_name=None
-    ):
-        """Return project links based on the current project and user"""
+        self,
+        user: SODARUser,
+        project: Optional[Project] = None,
+        app_name: Optional[str] = None,
+        url_name: Optional[str] = None,
+    ) -> list[dict]:
+        """
+        Return project links based on the current project and user.
+
+        :param user: User object
+        :param project: Project object or None
+        :param app_name: App name string or None
+        :param url_name: URL name string or None
+        :return: List of dicts
+        """
         ret = []
         pr_display = get_display_name(PROJECT_TYPE_PROJECT, title=True)
         cat_display = get_display_name(PROJECT_TYPE_CATEGORY, title=True)
@@ -296,8 +328,19 @@ class AppLinkContent:
             ret.append(link)
         return ret
 
-    def get_user_links(self, user, app_name=None, url_name=None):
-        """Return user links for the user dropdown"""
+    def get_user_links(
+        self,
+        user: SODARUser,
+        app_name: Optional[str] = None,
+        url_name: Optional[str] = None,
+    ) -> list[dict]:
+        """
+        Return user links for the user dropdown.
+
+        :param user: SODARUser object
+        :param app_name: App name string or None
+        :param url_name: URL name string or None
+        """
         ret = []
         # Add site-wide apps links
         site_apps = get_active_plugins('site_app')

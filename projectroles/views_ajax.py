@@ -2,7 +2,7 @@
 
 import logging
 
-from dal import autocomplete
+from typing import Optional
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -10,6 +10,8 @@ from django.core.validators import EmailValidator
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
+
+from dal import autocomplete
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -24,11 +26,12 @@ from projectroles.models import (
     RoleAssignment,
     RemoteProject,
     AppSetting,
+    SODARUser,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import ProjectAppPluginPoint, get_active_plugins
 from projectroles.utils import get_display_name, AppLinkContent
 from projectroles.views import ProjectAccessMixin, User
 from projectroles.views_api import (
@@ -118,7 +121,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_projects(cls, user, parent=None):
+    def _get_projects(
+        cls, user: SODARUser, parent: Optional[Project] = None
+    ) -> list[Project]:
         """
         Return a flat list of categories and projects the user can view.
 
@@ -179,7 +184,13 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         return sorted(ret, key=lambda x: x.full_title.lower())
 
     @classmethod
-    def _get_access(cls, project, user, finder_cats, depth):
+    def _get_access(
+        cls,
+        project: Project,
+        user: SODARUser,
+        finder_cats: list[str],
+        depth: int,
+    ) -> bool:
         """
         Return whether user has access to a project for the project list.
 
@@ -322,7 +333,13 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_column_value(cls, app_plugin, column_id, project, user):
+    def _get_column_value(
+        cls,
+        app_plugin: ProjectAppPluginPoint,
+        column_id: str,
+        project: Project,
+        user: SODARUser,
+    ) -> dict:
         """
         Return project list extra column value for a specific project and
         column.
@@ -332,7 +349,7 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
                           plugin.project_list_columns (string)
         :param project: Project object
         :param user: SODARUser object
-        :return: String (may contain HTML)
+        :return: Dict
         """
         try:
             val = app_plugin.get_project_list_value(column_id, project, user)
@@ -392,7 +409,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_user_role(cls, project, user):
+    def _get_user_role(cls, project: Project, user: SODARUser) -> dict:
         """Return user role for project"""
         ret = {'name': None, 'class': None}
         role_as = None

@@ -119,7 +119,7 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
     template_name = 'siteinfo/site_info.html'
 
     @classmethod
-    def _get_settings(cls, keys):
+    def _get_settings(cls, keys: list[str]) -> dict:
         ret = {}
         for k in keys:
             if hasattr(settings, k):
@@ -132,7 +132,7 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         return ret
 
     @classmethod
-    def _get_plugin_stats(cls, p_list):
+    def _get_plugin_stats(cls, p_list: list) -> dict:
         ret = {}
         for p in p_list:
             try:

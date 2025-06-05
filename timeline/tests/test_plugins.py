@@ -18,7 +18,7 @@ from projectroles.tests.test_models import (
 )
 
 from timeline.api import TimelineAPI
-from timeline.models import TL_STATUS_OK
+from timeline.models import TimelineEvent, TL_STATUS_OK
 from timeline.plugins import STATS_DESC_USER_COUNT
 
 # from timeline.tests.test_models import TimelineEventMixin
@@ -84,7 +84,7 @@ class TimelinePluginTestBase(
 class TestProjectAppPlugin(TimelinePluginTestBase):
     """Tests for timeline ProjectAppPlugin"""
 
-    def _add_event(self):
+    def _add_event(self) -> TimelineEvent:
         """Helper for adding event with OK status"""
         event = self.timeline.add_event(**self.event_kw)
         event.set_status(TL_STATUS_OK)
