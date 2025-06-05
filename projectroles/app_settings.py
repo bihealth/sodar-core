@@ -60,15 +60,6 @@ GLOBAL_PROJECT_ERR_MSG = (
 GLOBAL_USER_ERR_MSG = (
     'Overriding global user settings on target site not allowed'
 )
-DEF_DICT_DEPRECATE_MSG = (
-    'Defining app settings as dict is deprecated and will be removed in v1.2. '
-    'Provide definitions as a list of PluginAppSettingDef '
-    'objects (plugin={plugin_name})'
-)
-GET_ALL_DEPRECATE_MSG = (
-    'The get_all() method has been deprecated in v1.1 and will be removed in '
-    'v1.2. Use get_all_by_scope() instead'
-)
 
 
 # Define App Settings for projectroles app
@@ -276,38 +267,7 @@ class AppSettingAPI:
             return cls.get_projectroles_defs()
         if not plugin:
             plugin = cls._get_app_plugin(plugin_name)
-        s_defs = plugin.app_settings
-        # TODO: Remove definition dict support in in v1.2 (#1532)
-        if isinstance(s_defs, dict):
-            logger.warning(
-                DEF_DICT_DEPRECATE_MSG.format(plugin_name=plugin.name)
-            )
-            return {
-                k: PluginAppSettingDef(
-                    name=k,
-                    scope=v.get('scope'),
-                    type=v.get('type'),
-                    default=v.get('default'),
-                    label=v.get('label'),
-                    placeholder=v.get('placeholder'),
-                    description=v.get('description'),
-                    options=v.get('options'),
-                    user_modifiable=v.get(
-                        'user_modifiable',
-                        (
-                            False
-                            if v.get('scope') == APP_SETTING_SCOPE_PROJECT_USER
-                            else True
-                        ),
-                    ),
-                    global_edit=v.get('global', APP_SETTING_GLOBAL_DEFAULT),
-                    project_types=v.get(
-                        'project_types', [PROJECT_TYPE_PROJECT]
-                    ),
-                )
-                for k, v in s_defs.items()
-            }
-        return {s.name: s for s in s_defs}
+        return {s.name: s for s in plugin.app_settings}
 
     @classmethod
     def _get_json_value(cls, value: Union[str, dict]) -> dict:
@@ -490,30 +450,6 @@ class AppSettingAPI:
                     plugin_name, s_def.name, project, user, post_safe
                 )
         return ret
-
-    # TODO: Remove in v1.2 (see #1538)
-    @classmethod
-    def get_all(cls, project=None, user=None, post_safe=False):
-        """
-        Return all setting values with the PROJECT scope. If a value is not
-        found, return the default.
-
-        This method is DEPRECATED and will be removed in v1.2. Please use
-        get_all_by_scope() instead.
-
-        :param project: Project object (optional)
-        :param user: User object (NOTE: Not actually used)
-        :param post_safe: Whether POST safe values should be returned (bool)
-        :return: Dict
-        :raise: ValueError if neither project nor user are set
-        """
-        logger.warning(GET_ALL_DEPRECATE_MSG)
-        return cls.get_all_by_scope(
-            scope=APP_SETTING_SCOPE_PROJECT,
-            project=project,
-            user=None,
-            post_safe=post_safe,
-        )
 
     @classmethod
     def get_defaults(

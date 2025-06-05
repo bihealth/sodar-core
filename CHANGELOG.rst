@@ -20,6 +20,14 @@ Changed
 - **Projectroles**
     - Move UI test helpers to ``UITestMixin`` (#1682)
 
+Removed
+-------
+
+- **Projectroles**
+    - Deprecated ``get_user_display_name()`` utility method (#1884)
+    - Deprecated support for app settings definitions as dict (#1532)
+    - Deprecated ``AppSettingAPI.get_all()`` method (#1538)
+
 
 v1.1.6 (2025-05-20)
 ===================

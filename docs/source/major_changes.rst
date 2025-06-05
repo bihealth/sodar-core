@@ -16,7 +16,24 @@ v1.2.0 (WIP)
 Release Highlights
 ==================
 
-TODO
+- Remove support for SODAR Core features deprecated in v1.1
+
+Breaking Changes
+================
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.1 and have been removed in v1.2.
+
+App Setting Definitions as Dict
+    Provide definitions as  a list of ``PluginAppSettingDef`` objects. See
+    the :ref:`app settings documentation <dev_resource_app_settings>` for
+    details.
+``projectroles.utils.get_user_display_name()``
+    Replaced by ``SODARUser.get_display_name()``.
+``AppSettingAPI.get_all()``
+    Replaced by ``AppSettingAPI.get_all_by_scope()``.
 
 
 v1.1.6 (2025-05-20)

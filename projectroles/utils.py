@@ -34,7 +34,6 @@ ROLE_URLS = [
     'invite_resend',
     'invite_revoke',
 ]
-USER_DISPLAY_DEPRECATE_MSG = 'The get_user_display_name() utility method has been deprecated and will be removed in v1.2. Use User.get_display_name() instead.'
 
 
 def get_display_name(
@@ -55,19 +54,6 @@ def get_display_name(
         'plural' if count != 1 or plural else 'default'
     ]
     return ret.lower() if not title else ret.title()
-
-
-# TODO: Deprecated, remove in v1.2 (see #1488)
-def get_user_display_name(user, inc_user=False):
-    """
-    Return full name of user for displaying.
-
-    :param user: User object
-    :param inc_user: Include user name if true (boolean)
-    :return: String
-    """
-    logger.warning(USER_DISPLAY_DEPRECATE_MSG)
-    return user.get_display_name(inc_user)
 
 
 def build_secret(length: Optional[int] = None) -> str:
