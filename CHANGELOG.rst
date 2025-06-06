@@ -18,8 +18,12 @@ Changed
 -------
 
 - **General**
-    - Update string formatting (#1562)
+    - Upgrade minimum Django version to v4.2.21 (#1686)
     - Upgrade general Python dependencies (#1686)
+    - Upgrade to djangorestframework v3.16 (#1689)
+    - Update string formatting (#1562)
+- **Filesfolders**
+    - Refactor serializers (#1689)
 - **Projectroles**
     - Move UI test helpers to ``UITestMixin`` (#1682)
 

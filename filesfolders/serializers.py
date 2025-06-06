@@ -3,10 +3,6 @@
 # NB: Creating abstract serializers is not easily possible as explained in the
 # following StackOverflow post: https://stackoverflow.com/a/33137535
 
-import uuid
-
-from typing import Optional
-
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
@@ -17,14 +13,15 @@ from projectroles.utils import build_secret
 from filesfolders.models import File, Folder, HyperLink
 
 
-class FilesfoldersSerializerMixin:
-    """Shared code that does not need metaprogramming."""
+class FilesfoldersSerializerBase(SODARProjectModelSerializer):
+    """Base class for filesfolders serializers"""
 
-    def get_folder(self, obj: File) -> Optional[uuid.UUID]:
-        if obj.folder:
-            return obj.folder.sodar_uuid
-        else:
-            return None
+    folder = serializers.SlugRelatedField(
+        slug_field='sodar_uuid', queryset=Folder.objects.all(), required=False
+    )
+    owner = serializers.SlugRelatedField(
+        slug_field='sodar_uuid', read_only=True
+    )
 
     def _process_validated_data(self, validated_data):
         if 'folder' in self.context['request'].data:
@@ -47,9 +44,7 @@ class FilesfoldersSerializerMixin:
         return super().create(validated_data)
 
 
-class FolderSerializer(
-    FilesfoldersSerializerMixin, SODARProjectModelSerializer
-):
+class FolderSerializer(FilesfoldersSerializerBase):
     """
     Serializer for the Folder model.
 
@@ -62,11 +57,6 @@ class FolderSerializer(
     cannot be changed later. The project is set to the current project
     on creation and is not updated later.
     """
-
-    folder = serializers.SerializerMethodField()
-    owner = serializers.SlugRelatedField(
-        slug_field='sodar_uuid', read_only=True
-    )
 
     class Meta:
         model = Folder
@@ -83,7 +73,7 @@ class FolderSerializer(
         read_only_fields = ['date_modified']
 
 
-class FileSerializer(FilesfoldersSerializerMixin, SODARProjectModelSerializer):
+class FileSerializer(FilesfoldersSerializerBase):
     """
     Serializer for the File model.
 
@@ -100,10 +90,6 @@ class FileSerializer(FilesfoldersSerializerMixin, SODARProjectModelSerializer):
     flag is changed.
     """
 
-    folder = serializers.SerializerMethodField()
-    owner = serializers.SlugRelatedField(
-        slug_field='sodar_uuid', read_only=True
-    )
     file = serializers.FileField(write_only=True)
 
     class Meta:
@@ -138,9 +124,7 @@ class FileSerializer(FilesfoldersSerializerMixin, SODARProjectModelSerializer):
         return super().update(instance, validated_data)
 
 
-class HyperLinkSerializer(
-    FilesfoldersSerializerMixin, SODARProjectModelSerializer
-):
+class HyperLinkSerializer(FilesfoldersSerializerBase):
     """
     Serializer for the HyperLink model.
 
@@ -153,11 +137,6 @@ class HyperLinkSerializer(
     cannot be changed later. The project is set to the current project
     on creation and is not updated later.
     """
-
-    folder = serializers.SerializerMethodField()
-    owner = serializers.SlugRelatedField(
-        slug_field='sodar_uuid', read_only=True
-    )
 
     class Meta:
         model = HyperLink

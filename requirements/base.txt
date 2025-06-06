@@ -60,7 +60,7 @@ django-plugins-bihealth>=0.5.2, <0.6
 rules>=3.5, <3.6
 
 # REST framework
-djangorestframework>=3.15.2, <3.16
+djangorestframework>=3.16.0, <3.17
 
 # Keyed list addon for DRF
 drf-keyed-list-bihealth>=0.2.1, <0.3
