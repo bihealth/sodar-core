@@ -176,7 +176,11 @@ class UITestMixin:
                 user, url, wait_elem, wait_loc
             )
         # Cookie login mode
-        self.selenium.get(self.build_selenium_url('/blank/'))
+        self.selenium.get(self.build_selenium_url(reverse('login')))
+        # Wait for page load to prevent RemoteDisconnected
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located((By.ID, 'sodar-content-container'))
+        )
 
         session = SessionStore()
         session[SESSION_KEY] = user.id
