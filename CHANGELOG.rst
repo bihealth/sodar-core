@@ -30,6 +30,12 @@ Removed
     - Deprecated support for app settings definitions as dict (#1532)
     - Deprecated ``AppSettingAPI.get_all()`` method (#1538)
 
+Fixed
+-----
+
+- **Projectroles**
+    - UI tests failing for asserting SVG icons prior to rendering (#1559)
+
 
 v1.1.6 (2025-05-20)
 ===================

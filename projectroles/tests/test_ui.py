@@ -731,7 +731,7 @@ class TestHomeView(UITestBase):
         row = self._get_project_row(self.project)
         icon = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title-container'
-        ).find_element(By.TAG_NAME, 'svg')
+        ).find_element(By.CLASS_NAME, 'iconify')
         self.assertEqual(icon.get_attribute('data-icon'), 'mdi:cube')
         link_html = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title'
@@ -773,7 +773,7 @@ class TestHomeView(UITestBase):
         row = self._get_project_row(self.category)
         icon = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title-container'
-        ).find_element(By.TAG_NAME, 'svg')
+        ).find_element(By.CLASS_NAME, 'iconify')
         self.assertEqual(icon.get_attribute('data-icon'), 'mdi:rhombus-split')
         link_html = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title'
