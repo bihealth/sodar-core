@@ -19,6 +19,7 @@ Changed
 
 - **General**
     - Update string formatting (#1562)
+    - Upgrade general Python dependencies (#1686)
 - **Projectroles**
     - Move UI test helpers to ``UITestMixin`` (#1682)
 
