@@ -16,6 +16,7 @@ v1.2.0 (WIP)
 Release Highlights
 ==================
 
+- Add project invite retrieval REST API view
 - Update projectroles REST API to return user UUIDs instead of nested user
   serializers
 - Upgrade projectroles REST API version to v2.0
@@ -42,6 +43,8 @@ REST API View Changes
     * Allowed versions: ``1.0``, ``1.1``, ``2.0``
     * ``ProjectInviteListAPIView``
         + Replace ``issuer`` field user serializer with user UUID
+    * ``ProjectInviteRetrieveAPIView``
+        + Add view
     * ``ProjectRetrieveAPIView``
         + Replace ``roles`` field user serializer with user UUID
     * ``ProjectSettingRetrieveAPIView``

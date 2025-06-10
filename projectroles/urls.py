@@ -292,6 +292,11 @@ urls_api = [
         name='api_invite_list',
     ),
     path(
+        route='api/invites/retrieve/<uuid:projectinvite>',
+        view=views_api.ProjectInviteRetrieveAPIView.as_view(),
+        name='api_invite_retrieve',
+    ),
+    path(
         route='api/invites/create/<uuid:project>',
         view=views_api.ProjectInviteCreateAPIView.as_view(),
         name='api_invite_create',

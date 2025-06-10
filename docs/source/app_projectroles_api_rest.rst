@@ -47,6 +47,8 @@ Projectroles REST API Views
 
 .. autoclass:: ProjectInviteListAPIView
 
+.. autoclass:: ProjectInviteRetrieveAPIView
+
 .. autoclass:: ProjectInviteCreateAPIView
 
 .. autoclass:: ProjectInviteRevokeAPIView
@@ -76,6 +78,8 @@ v2.0
 
 - ``ProjectInviteListAPIView``
     * Replace ``issuer`` field user serializer with user UUID
+- ``ProjectInviteRetrieveAPIView``
+    * Add view
 - ``ProjectRetrieveAPIView``
     * Replace ``roles`` field user serializer with user UUID
 - ``ProjectSettingRetrieveAPIView``

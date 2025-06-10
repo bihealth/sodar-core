@@ -126,6 +126,8 @@ USER_LIST_RESTRICT_MSG = (
 USER_LIST_INCLUDE_VERSION_MSG = (
     'The include_system_users parameter is not available in API version <1.1'
 )
+VERSION_1_1 = parse_version('1.1')
+VERSION_2_0 = parse_version('2.0')
 
 
 # Permission / Versioning / Renderer Classes -----------------------------------
@@ -571,7 +573,7 @@ class ProjectDestroyAPIView(
 
     def perform_destroy(self, instance):
         """Override perform_destroy() to handle Project deletion"""
-        if parse_version(self.request.version) < parse_version('1.1'):
+        if parse_version(self.request.version) < VERSION_1_1:
             raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION_MSG)
         access, msg = self.check_delete_permission(instance)
         if not access:
@@ -710,7 +712,7 @@ class RoleAssignmentOwnerTransferAPIView(
             )
         # Prevent old_owner_role=None if v1.0
         if (
-            parse_version(request.version) < parse_version('1.1')
+            parse_version(request.version) < VERSION_1_1
             and not d_old_owner_role
         ):
             raise serializers.ValidationError(
@@ -838,6 +840,44 @@ class ProjectInviteListAPIView(
         return ProjectInvite.objects.filter(
             project=self.get_project(), active=True
         ).order_by('pk')
+
+
+class ProjectInviteRetrieveAPIView(
+    ProjectrolesAPIVersioningMixin, SODARAPIGenericProjectMixin, RetrieveAPIView
+):
+    """
+    Retrieve a project invite.
+
+    **URL:** ``/project/api/invites/retrieve/{ProjectInvite.sodar_uuid}``
+
+    **Methods:** ``GET``
+
+    **Returns:**
+
+    - ``date_created``: Creation datetime string (YYYY-MM-DDThh:mm:ssZ)
+    - ``date_expire``: Expiry datetime string (YYYY-MM-DDThh:mm:ssZ)
+    - ``message``: Optional invite message (string)
+    - ``issuer``: UUID of issuing user (string)
+    - ``email``: Email of invited user (string)
+    - ``project``: Project UUID (string)
+    - ``role``: Role for invided user (string, e.g. "project contributor")
+    - ``sodar_uuid``: Invite UUID (string)
+
+    **Version Changes:**
+
+    - ``2.0``: Add view
+    """
+
+    lookup_field = 'sodar_uuid'
+    lookup_url_kwarg = 'projectinvite'
+    permission_required = 'projectroles.invite_users'
+    serializer_class = ProjectInviteSerializer
+
+    def get(self, request, *args, **kwargs):
+        """Override get() to check for API version"""
+        if parse_version(request.version) < VERSION_2_0:
+            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION_MSG)
+        return super().get(request, *args, **kwargs)
 
 
 class ProjectInviteCreateAPIView(
@@ -1437,7 +1477,7 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
         """
         inc_system = self.request.GET.get('include_system_users')
         version = parse_version(self.request.version)
-        if inc_system and version < parse_version('1.1'):
+        if inc_system and version < VERSION_1_1:
             raise NotAcceptable(USER_LIST_INCLUDE_VERSION_MSG)
         qs = User.objects.all().order_by('pk')
         if self.request.user.is_superuser or inc_system:
@@ -1496,7 +1536,7 @@ class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):
             raise NotFound()
 
     def get(self, request, *args, **kwargs):
-        if parse_version(request.version) < parse_version('1.1'):
+        if parse_version(request.version) < VERSION_1_1:
             raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION_MSG)
         if (
             getattr(settings, 'PROJECTROLES_API_USER_DETAIL_RESTRICT', False)

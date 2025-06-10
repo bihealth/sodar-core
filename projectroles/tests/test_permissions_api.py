@@ -1466,6 +1466,72 @@ class TestProjectInviteListAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.anonymous, 401)
 
 
+class TestProjectInviteRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
+    """Tests for ProjectInviteRetrieveAPIView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.invite = self.make_invite(
+            email='new@example.com',
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user_owner,
+        )
+        self.url = reverse(
+            'projectroles:api_invite_retrieve',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        self.good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_owner,
+            self.user_delegate,
+        ]
+        self.bad_users = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_no_roles,
+        ]
+
+    def test_get(self):
+        """Test ProjectInviteRetrieveAPIView GET"""
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
+        self.project.set_public()
+        self.assert_response_api(self.url, self.user_no_roles, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.project.set_public()
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_archive(self):
+        """Test GET with archived project"""
+        self.project.set_archive()
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
+        self.project.set_public()
+        self.assert_response_api(self.url, self.user_no_roles, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_read_only(self):
+        """Test GET with archived project and site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response_api(self.url, self.superuser, 200)
+        self.assert_response_api(self.url, self.auth_non_superusers, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+
 class TestProjectInviteCreateAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for ProjectInviteCreateAPIView permissions"""
 

@@ -2484,7 +2484,7 @@ class TestProjectInviteListAPIView(
 
     def test_get(self):
         """Test ProjectInviteListAPIView GET"""
-        response = self.request_knox(self.url, token=self.get_token(self.user))
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
@@ -2518,7 +2518,7 @@ class TestProjectInviteListAPIView(
         """Test GET with inactive invite"""
         self.invite.active = False
         self.invite.save()
-        response = self.request_knox(self.url, token=self.get_token(self.user))
+        response = self.request_knox(self.url)
 
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
@@ -2542,7 +2542,7 @@ class TestProjectInviteListAPIView(
     def test_get_pagination(self):
         """Test GET with pagination"""
         url = self.url + '?page=1'
-        response = self.request_knox(url, token=self.get_token(self.user))
+        response = self.request_knox(url)
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         expected = {
@@ -2570,9 +2570,7 @@ class TestProjectInviteListAPIView(
 
     def test_get_v1_1(self):
         """Test GET with API version v1.1"""
-        response = self.request_knox(
-            self.url, token=self.get_token(self.user), version='1.1'
-        )
+        response = self.request_knox(self.url, version='1.1')
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
@@ -2601,6 +2599,50 @@ class TestProjectInviteListAPIView(
             },
         ]
         self.assertEqual(response_data, expected)
+
+
+class TestProjectInviteRetrieveAPIView(
+    ProjectInviteMixin, ProjectrolesAPIViewTestBase
+):
+    """Tests for ProjectInviteRetrieveAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        # Create invite
+        self.invite = self.make_invite(
+            email=INVITE_USER_EMAIL,
+            project=self.project,
+            role=self.role_guest,
+            issuer=self.user,
+            message='',
+            secret=build_secret(),
+        )
+        self.url = reverse(
+            'projectroles:api_invite_retrieve',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test ProjectInviteRetrieveAPIView GET"""
+        response = self.request_knox(self.url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'email': INVITE_USER_EMAIL,
+            'project': str(self.project.sodar_uuid),
+            'role': self.role_guest.name,
+            'issuer': str(self.user.sodar_uuid),
+            'date_created': self.get_drf_datetime(self.invite.date_created),
+            'date_expire': self.get_drf_datetime(self.invite.date_expire),
+            'message': '',
+            'sodar_uuid': str(self.invite.sodar_uuid),
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_get_v1_1(self):
+        """Test GET with API version v1.1"""
+        response = self.request_knox(self.url, version='1.1')
+        self.assertEqual(response.status_code, 406)
 
 
 class TestProjectInviteCreateAPIView(
