@@ -99,8 +99,8 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
 PROJECTROLES_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles+json'
 )
-PROJECTROLES_API_DEFAULT_VERSION = '1.1'
-PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1']
+PROJECTROLES_API_DEFAULT_VERSION = '2.0'
+PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1', '2.0']
 SYNC_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles.sync+json'
 )
@@ -463,8 +463,9 @@ class ProjectRetrieveAPIView(
     - ``title``: Project title (string)
     - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
 
-    **Version Changes**:
+    **Version Changes:**
 
+    - ``2.0``: Replace ``roles`` field user serializer with user UUID
     - ``1.1``: Add ``children`` field
     """
 
@@ -560,7 +561,7 @@ class ProjectDestroyAPIView(
 
     **Methods:** ``DELETE``
 
-    **Version Changes**:
+    **Version Changes:**
 
     - ``1.1``: Add view
     """
@@ -690,7 +691,7 @@ class RoleAssignmentOwnerTransferAPIView(
     - ``new_owner``: User name of new owner (string)
     - ``old_owner_role``: Role for old owner (string or None, e.g. "project delegate")
 
-    **Version Changes**:
+    **Version Changes:**
 
     - ``1.1``: Allow empty value for ``old_owner_role``
     """
@@ -823,6 +824,10 @@ class ProjectInviteListAPIView(
     - ``page``: Page number for paginated results (int, optional)
 
     **Returns:** List or paginated dict of project invite details
+
+    **Version Changes:**
+
+    - ``2.0``: Replace ``issuer`` field user serializer with user UUID
     """
 
     pagination_class = SODARPageNumberPagination
@@ -1125,6 +1130,20 @@ class ProjectSettingRetrieveAPIView(
     - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
     - ``user``: User UUID for a PROJECT_USER setting (string or None, optional)
+
+    **Returns:**
+
+    - ``plugin_name``: Name of app plugin for the setting (string)
+    - ``project``: Project UUID or None
+    - ``user``: User UUID or None
+    - ``name``: Setting name (string)
+    - ``type``: Setting type (string)
+    - ``value``: Setting value
+    - ``user_modifiable``: Modifiable by user (boolean)
+
+    **Version Changes:**
+
+    - ``2.0``: Replace ``user`` field user serializer with user UUID
     """
 
     # NOTE: Update project settings perm is checked manually
@@ -1296,6 +1315,20 @@ class UserSettingRetrieveAPIView(
 
     - ``plugin_name``: Name of app plugin for the setting, use "projectroles" for projectroles settings (string)
     - ``setting_name``: Setting name (string)
+
+    **Returns:**
+
+    - ``plugin_name``: Name of app plugin for the setting (string)
+    - ``project``: None
+    - ``user``: User UUID
+    - ``name``: Setting name (string)
+    - ``type``: Setting type (string)
+    - ``value``: Setting value
+    - ``user_modifiable``: Modifiable by user (boolean)
+
+    **Version Changes:**
+
+    - ``2.0``: Replace ``user`` field user serializer with user UUID
     """
 
     serializer_class = AppSettingSerializer
@@ -1385,9 +1418,9 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     - ``include_system_users``: Include system users if True (bool, optional)
     - ``page``: Page number for paginated results (int, optional)
 
-    **Returns**: List or paginated dict of serializers users (see ``CurrentUserRetrieveAPIView``)
+    **Returns:** List or paginated dict of serializers users (see ``CurrentUserRetrieveAPIView``)
 
-    **Version Changes**:
+    **Version Changes:**
 
     - ``1.1``: Add ``include_system_users`` parameter
     """
@@ -1438,7 +1471,7 @@ class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):
 
     **Methods:** ``GET``
 
-    **Returns**:
+    **Returns:**
 
     - ``additional_emails``: Additional verified email addresses for user (list of strings)
     - ``auth_type``: User authentication type (string)
@@ -1448,7 +1481,7 @@ class UserRetrieveAPIView(ProjectrolesAPIVersioningMixin, RetrieveAPIView):
     - ``sodar_uuid``: User UUID (string)
     - ``username``: Username of the user (string)
 
-    **Version Changes**:
+    **Version Changes:**
 
     - ``1.1``: Add view
     """
@@ -1484,11 +1517,11 @@ class CurrentUserRetrieveAPIView(
 
     **Methods:** ``GET``
 
-    **Returns**:
+    **Returns:**
 
     User details, see ``UserRetrieveAPIView``.
 
-    **Version Changes**:
+    **Version Changes:**
 
     - ``1.1``: Add ``auth_type`` field
     """

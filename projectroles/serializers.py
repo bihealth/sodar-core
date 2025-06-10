@@ -48,6 +48,8 @@ REMOTE_MODIFY_MSG = (
     'Modification of remote projects is not allowed, modify on the SOURCE site '
     'instead'
 )
+VERSION_1_1 = parse_version('1.1')
+VERSION_2_0 = parse_version('2.0')
 
 
 # Base Serializers -------------------------------------------------------------
@@ -179,9 +181,10 @@ class SODARUserSerializer(SODARModelSerializer):
         """Override to_representation() to handle version differences"""
         ret = super().to_representation(instance)
         # Omit auth_type from <1.1
-        if 'request' in self.context and parse_version(
-            self.context['request'].version
-        ) < parse_version('1.1'):
+        if (
+            'request' in self.context
+            and parse_version(self.context['request'].version) < VERSION_1_1
+        ):
             ret.pop('auth_type', None)
         return ret
 
@@ -237,6 +240,8 @@ class RoleAssignmentSerializer(
     role = serializers.SlugRelatedField(
         slug_field='name', queryset=Role.objects.all()
     )
+    # Using API <2.0 serializer as default
+    # TODO: Change to SlugRelatedField when removing support for <2.0 (#1691)
     user = serializers.SlugRelatedField(
         slug_field='sodar_uuid', queryset=User.objects.all()
     )
@@ -305,12 +310,27 @@ class RoleAssignmentSerializer(
         )
         return self.instance
 
+    def to_representation(self, instance):
+        """
+        Override to return proper user field depending on API version.
+        NOTE: Requires request in context object!
+        """
+        ret = super().to_representation(instance)
+        if (
+            isinstance(ret.get('user'), dict)
+            and parse_version(self.context['request'].version) >= VERSION_2_0
+        ):
+            ret['user'] = ret['user']['sodar_uuid']
+        return ret
+
 
 class RoleAssignmentNestedListSerializer(
     SODARNestedListSerializer, RoleAssignmentSerializer
 ):
     """Nested list serializer for the RoleAssignment model."""
 
+    # Using API <2.0 serializer as default
+    # TODO: Change to SlugRelatedField when removing support for <2.0 (#1691)
     user = SODARUserSerializer(read_only=True)
 
     class Meta(SODARNestedListSerializer.Meta):
@@ -324,6 +344,8 @@ class ProjectInviteSerializer(
 ):
     """Serializer for the ProjectInvite model"""
 
+    # Using API <2.0 serializer as default
+    # TODO: Change to SlugRelatedField when removing support for <2.0 (#1691)
     issuer = SODARUserSerializer(read_only=True)
     role = serializers.SlugRelatedField(
         slug_field='name', queryset=Role.objects.all()
@@ -371,6 +393,19 @@ class ProjectInviteSerializer(
         obj = super().save(**kwargs)
         self.handle_invite(obj, self.context['request'], add_message=False)
         return self.post_save(obj)
+
+    def to_representation(self, instance):
+        """
+        Override to return proper user field depending on API version.
+        NOTE: Requires request in context object!
+        """
+        ret = super().to_representation(instance)
+        if (
+            isinstance(ret.get('issuer'), dict)
+            and parse_version(self.context['request'].version) >= VERSION_2_0
+        ):
+            ret['issuer'] = ret['issuer']['sodar_uuid']
+        return ret
 
 
 class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
@@ -620,9 +655,10 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Set full_title manually
         ret['full_title'] = project.full_title
         # Remove children field for projects and API version <1.1
-        if project.type == PROJECT_TYPE_PROJECT or parse_version(
-            self.context['request'].version
-        ) < parse_version('1.1'):
+        if (
+            project.type == PROJECT_TYPE_PROJECT
+            or parse_version(self.context['request'].version) < VERSION_1_1
+        ):
             ret.pop('children', None)
         return ret
 
@@ -635,6 +671,8 @@ class AppSettingSerializer(SODARProjectModelSerializer):
     """
 
     plugin_name = serializers.CharField(read_only=True)
+    # Using API <2.0 serializer as default
+    # TODO: Change to SlugRelatedField when removing support for <2.0 (#1691)
     user = SODARUserSerializer(read_only=True)
 
     class Meta:
@@ -658,4 +696,9 @@ class AppSettingSerializer(SODARProjectModelSerializer):
         else:
             ret['plugin_name'] = 'projectroles'
         ret['value'] = instance.get_value()
+        if (
+            isinstance(ret.get('user'), dict)
+            and parse_version(self.context['request'].version) >= VERSION_2_0
+        ):
+            ret['user'] = ret['user']['sodar_uuid']
         return ret

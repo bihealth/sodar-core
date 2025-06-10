@@ -16,6 +16,9 @@ v1.2.0 (WIP)
 Release Highlights
 ==================
 
+- Update projectroles REST API to return user UUIDs instead of nested user
+  serializers
+- Upgrade projectroles REST API version to v2.0
 - Remove support for SODAR Core features deprecated in v1.1
 
 Breaking Changes
@@ -30,6 +33,21 @@ General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your
     project.
+
+REST API View Changes
+---------------------
+
+- Projectroles API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``1.0``, ``1.1``, ``2.0``
+    * ``ProjectInviteListAPIView``
+        + Replace ``issuer`` field user serializer with user UUID
+    * ``ProjectRetrieveAPIView``
+        + Replace ``roles`` field user serializer with user UUID
+    * ``ProjectSettingRetrieveAPIView``
+        + Replace ``user`` field user serializer with user UUID
+    * ``UserSettingRetrieveAPIView``
+        + Replace ``user`` field user serializer with user UUID
 
 Previously Deprecated Features Removed
 --------------------------------------

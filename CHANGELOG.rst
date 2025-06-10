@@ -26,6 +26,8 @@ Changed
     - Refactor serializers (#1689)
 - **Projectroles**
     - Move UI test helpers to ``UITestMixin`` (#1682)
+    - Upgrade projectroles REST API version to v2.0 (#1554)
+    - Replace nested ``SODARUserSerializer`` REST API fields with user UUID (#1554)
 
 Removed
 -------
