@@ -104,8 +104,8 @@ PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1', '2.0']
 SYNC_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles.sync+json'
 )
-SYNC_API_DEFAULT_VERSION = '1.0'
-SYNC_API_ALLOWED_VERSIONS = ['1.0']
+SYNC_API_DEFAULT_VERSION = '2.0'
+SYNC_API_ALLOWED_VERSIONS = ['1.0', '2.0']
 
 # Local constants
 APP_NAME = 'projectroles'

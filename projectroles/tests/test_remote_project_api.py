@@ -35,6 +35,7 @@ from projectroles.tests.test_models import (
     ADD_EMAIL,
 )
 from projectroles.utils import build_secret
+from projectroles.views_api import SYNC_API_DEFAULT_VERSION
 
 
 User = auth.get_user_model()
@@ -218,9 +219,13 @@ class TestGetSourceData(
             secret=PEER_SITE_SECRET,
         )
         self.remote_api = RemoteProjectAPI()
+        self.get_kw = {
+            'target_site': self.target_site,
+            'req_version': SYNC_API_DEFAULT_VERSION,
+        }
 
     def test_get_view_avail(self):
-        """Test getting data with VIEW_AVAIL level"""
+        """Test get_source_data() with VIEW_AVAIL level"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -231,7 +236,7 @@ class TestGetSourceData(
             site=self.peer_site,
             level=REMOTE_LEVEL_VIEW_AVAIL,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         expected = {
             'users': {},
             'projects': {
@@ -249,7 +254,7 @@ class TestGetSourceData(
         self.assertEqual(sync_data, expected)
 
     def test_get_read_info(self):
-        """Test getting data with READ_INFO level"""
+        """Test get_source_data() with READ_INFO level"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -260,7 +265,7 @@ class TestGetSourceData(
             site=self.peer_site,
             level=REMOTE_LEVEL_READ_INFO,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         expected = {
             'users': {},
             'projects': {
@@ -295,7 +300,7 @@ class TestGetSourceData(
         self.assertEqual(sync_data, expected)
 
     def test_get_read_info_nested(self):
-        """Test getting data with READ_INFO and nested categories"""
+        """Test get_source_data() with READ_INFO and nested categories"""
         sub_category = self.make_project(
             'SubCategory', PROJECT_TYPE_CATEGORY, parent=self.category
         )
@@ -307,7 +312,7 @@ class TestGetSourceData(
             site=self.target_site,
             level=REMOTE_LEVEL_READ_INFO,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         expected = {
             'users': {},
             'projects': {
@@ -343,8 +348,7 @@ class TestGetSourceData(
         self.assertEqual(sync_data, expected)
 
     def test_get_read_roles(self):
-        """Test getting data with READ_ROLES level"""
-        self.maxDiff = None
+        """Test get_source_data() with READ_ROLES level"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -355,7 +359,7 @@ class TestGetSourceData(
             site=self.peer_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         expected = {
             'users': {
                 str(self.user_source.sodar_uuid): {
@@ -413,7 +417,7 @@ class TestGetSourceData(
         self.assertEqual(sync_data, expected)
 
     def test_get_read_roles_inherited(self):
-        """Test getting data with READ_ROLES and inherited contributor"""
+        """Test get_source_data() with READ_ROLES and inherited contributor"""
         user_new_name = 'user_new@' + SOURCE_USER_DOMAIN
         user_new = self.make_sodar_user(
             username=user_new_name,
@@ -436,7 +440,7 @@ class TestGetSourceData(
             level=REMOTE_LEVEL_READ_ROLES,
         )
 
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         c_uuid = str(self.category.sodar_uuid)
         a_uuid = str(contrib_as.sodar_uuid)
         self.assertIn(str(user_new.sodar_uuid), sync_data['users'].keys())
@@ -451,7 +455,7 @@ class TestGetSourceData(
         )
 
     def test_get_settings(self):
-        """Test getting data with app settings"""
+        """Test get_source_data() with app settings"""
         self.make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -495,7 +499,7 @@ class TestGetSourceData(
             project=local_project,
             user=self.user_source,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
 
         self.assertEqual(len(sync_data['app_settings']), 3)
         self.assertNotIn(set_local, sync_data['app_settings'])
@@ -559,7 +563,7 @@ class TestGetSourceData(
             AppSetting.objects.filter(project=None).exclude(user=None).count(),
             2,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
 
         self.assertEqual(len(sync_data['users']), 1)
         # NOTE: Local setting should also be included
@@ -611,7 +615,7 @@ class TestGetSourceData(
             value=False,
             user=self.user_source,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         self.assertEqual(len(sync_data['users']), 1)
         self.assertIn(str(self.user_source.sodar_uuid), sync_data['users'])
         self.assertNotIn(str(user_no_roles.sodar_uuid), sync_data['users'])
@@ -640,14 +644,14 @@ class TestGetSourceData(
             value=False,
             user=user_no_roles,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         self.assertEqual(len(sync_data['users']), 2)
         self.assertIn(str(self.user_source.sodar_uuid), sync_data['users'])
         self.assertIn(str(user_no_roles.sodar_uuid), sync_data['users'])
         self.assertEqual(len(sync_data['app_settings']), 2)
 
     def test_get_revoked(self):
-        """Test getting data with REVOKED level"""
+        """Test get_source_data() with REVOKED level"""
         user_source_new = self.make_user('new_source_user')
         self.make_assignment(self.project, user_source_new, self.role_guest)
         self.make_remote_project(
@@ -660,7 +664,7 @@ class TestGetSourceData(
             site=self.peer_site,
             level=REMOTE_LEVEL_REVOKED,
         )
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         expected = {
             'users': {
                 str(self.user_source.sodar_uuid): {
@@ -705,8 +709,8 @@ class TestGetSourceData(
         self.assertEqual(sync_data, expected)
 
     def test_get_no_access(self):
-        """Test getting data with no project access set in source site"""
-        sync_data = self.remote_api.get_source_data(self.target_site)
+        """Test get_source_data() with no project access set in source site"""
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
         expected = {
             'users': {},
             'projects': {},
@@ -714,6 +718,43 @@ class TestGetSourceData(
             'app_settings': {},
         }
         self.assertEqual(sync_data, expected)
+
+    def test_get_viewer_role(self):
+        """Test get_source_data() with project viewer role"""
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        user_viewer = self.make_user('user_viewer')
+        viewer_as = self.make_assignment(
+            self.project, user_viewer, self.role_viewer
+        )
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
+        roles = sync_data['projects'][str(self.project.sodar_uuid)]['roles']
+        self.assertEqual(len(roles.items()), 2)
+        expected = {
+            'user': user_viewer.username,
+            'role': self.role_viewer.name,
+        }
+        self.assertEqual(roles[str(viewer_as.sodar_uuid)], expected)
+
+    def test_get_viewer_role_v1_0(self):
+        """Test get_source_data() with project viewer role and API v1.0"""
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        user_viewer = self.make_user('user_viewer')
+        viewer_as = self.make_assignment(
+            self.project, user_viewer, self.role_viewer
+        )
+        self.get_kw['req_version'] = '1.0'
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
+        roles = sync_data['projects'][str(self.project.sodar_uuid)]['roles']
+        self.assertEqual(len(roles.items()), 1)
+        self.assertNotIn(str(viewer_as.sodar_uuid), roles.keys())
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)

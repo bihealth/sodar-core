@@ -58,7 +58,12 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users_get = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test FolderListCreateAPIView GET"""
@@ -107,8 +112,10 @@ class TestFolderListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -243,7 +250,12 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users_get = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
         self.good_users_update = [
             self.superuser,
             self.user_owner_cat,
@@ -254,9 +266,11 @@ class TestFolderRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.bad_users_update = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -600,7 +614,12 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users_get = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def tearDown(self):
         if hasattr(self, 'post_data'):
@@ -660,8 +679,10 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -871,7 +892,12 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users_get = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
         self.good_users_update = [
             self.superuser,
             self.user_owner_cat,
@@ -882,9 +908,11 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIPermissionTestBase):
         self.bad_users_update = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1312,7 +1340,12 @@ class TestFileServeAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test FileServeAPIView GET"""
@@ -1379,7 +1412,12 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users_get = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test HyperLinkListCreateAPIView GET"""
@@ -1428,8 +1466,10 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -1588,7 +1628,12 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users_get = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users_get = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
         self.good_users_update = [
             self.superuser,
             self.user_owner_cat,
@@ -1599,9 +1644,11 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(
         self.bad_users_update = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 

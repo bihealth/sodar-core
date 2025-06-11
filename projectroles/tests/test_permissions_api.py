@@ -176,6 +176,7 @@ class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
@@ -335,6 +336,7 @@ class TestProjectCreateAPIView(ProjectrolesAPIPermissionTestBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
@@ -457,9 +459,11 @@ class TestProjectUpdateAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -624,9 +628,11 @@ class TestProjectDestroyAPIView(
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.good_users_cat = [
@@ -637,11 +643,13 @@ class TestProjectDestroyAPIView(
         self.bad_users_cat = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -855,9 +863,11 @@ class TestRoleAssignmentCreateAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1018,9 +1028,11 @@ class TestRoleAssignmentUpdateAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1150,9 +1162,11 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1269,10 +1283,12 @@ class TestRoleAssignmentOwnerTransferAPIView(ProjectrolesAPIPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1425,9 +1441,11 @@ class TestProjectInviteListAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1491,9 +1509,11 @@ class TestProjectInviteRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1559,9 +1579,11 @@ class TestProjectInviteCreateAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1724,9 +1746,11 @@ class TestProjectInviteRevokeAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1834,9 +1858,11 @@ class TestProjectInviteResendAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -1923,9 +1949,11 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -2027,10 +2055,12 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(self.url, good_users, 200, data=get_data)
@@ -2071,10 +2101,12 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(self.url, good_users, 200, data=get_data)
@@ -2107,9 +2139,11 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -2255,10 +2289,12 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(
@@ -2469,8 +2505,10 @@ class TestUserListAPIView(ProjectrolesAPIPermissionTestBase):
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(self.url, good_users, 200)
@@ -2517,8 +2555,10 @@ class TestUserRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
             self.user_delegate,
             self.user_contributor,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
         ]
         bad_users = [self.user_no_roles]
         self.assert_response_api(self.url, good_users, 200)

@@ -14,6 +14,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_VIEWER = SODAR_CONSTANTS['PROJECT_ROLE_VIEWER']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
@@ -62,6 +63,17 @@ def is_project_guest(user, obj):
         return False
     role_as = obj.get_role(user)
     return role_as and role_as.role.name == PROJECT_ROLE_GUEST
+
+
+@rules.predicate
+def is_project_viewer(user, obj):
+    """
+    Whether or not the user has the role of project viewer.
+    """
+    if not obj or not user or not user.is_authenticated:
+        return False
+    role_as = obj.get_role(user=user)
+    return role_as and role_as.role.name == PROJECT_ROLE_VIEWER
 
 
 @rules.predicate
@@ -276,7 +288,4 @@ rules.add_perm(
 )
 
 # Allow updating site app settings
-rules.add_perm(
-    'projectroles.update_site_settings',
-    rules.is_superuser,
-)
+rules.add_perm('projectroles.update_site_settings', rules.is_superuser)

@@ -21,6 +21,8 @@ category and project "containers". Users can be granted access to projects using
 roles as described in the next section.
 
 
+.. _app_projectroles_basics_roles:
+
 User Roles in Projects
 ======================
 
@@ -59,8 +61,16 @@ The built-in roles in SODAR Core are as follows:
     - Can modify and delete own data
     - Rank = 30
 - **Project Guest**
-    - Read only access to project data
+    - Read-only access to project data
     - Rank = 40
+- **Project Viewer**
+    - Limited read-only access to project data
+    - User can see category or project readme and its members
+    - User can not access bgjobs, filesfolders or timeline apps in the project
+    - User may or may not access other project apps and data based on site rules
+    - Used for cases where we want to enable discoverability without providing
+      access to e.g. confidential data files
+    - Rank = 45
 - **Project Finder**
     - Role can only been given for categories
     - User can see categories and their member roles

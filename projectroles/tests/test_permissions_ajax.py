@@ -244,10 +244,12 @@ class TestProjectStarringAjaxView(ProjectPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
         self.assert_response(self.url, good_users, 200, method='POST')
@@ -277,11 +279,13 @@ class TestProjectStarringAjaxView(ProjectPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         bad_users = [self.user_no_roles, self.anonymous]
         self.assert_response(self.url_cat, good_users, 200, method='POST')
@@ -338,10 +342,12 @@ class TestRemoteProjectAccessAjaxView(
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         self.bad_users = [
             self.user_finder_cat,
@@ -395,10 +401,12 @@ class TestSidebarContentAjaxView(ProjectPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         self.bad_users = [
             self.user_finder_cat,
@@ -411,11 +419,13 @@ class TestSidebarContentAjaxView(ProjectPermissionTestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         self.bad_users_cat = [self.user_no_roles, self.anonymous]
 

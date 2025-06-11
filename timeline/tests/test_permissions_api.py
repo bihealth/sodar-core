@@ -45,7 +45,12 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test ProjectTimelineEventListAPIView GET"""
@@ -139,7 +144,12 @@ class TestTimelineEventRetrieveAPIView(
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users_project = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users_project = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get_project_event(self):
         """Test TimelineEventRetrieveAPIView GET with project event"""
@@ -176,9 +186,11 @@ class TestTimelineEventRetrieveAPIView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(self.url, good_users, 200)

@@ -454,6 +454,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
             owner=self.user_contributor,
             description='description',
         )
+        self.url = reverse('projectroles:search')
 
     def test_search_results(self):
         """Test search items visibility according to user permissions"""
@@ -463,17 +464,16 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
             (self.user_delegate_cat, 6),
             (self.user_contributor_cat, 6),
             (self.user_guest_cat, 6),
+            (self.user_viewer_cat, 0),
+            (self.user_finder_cat, 0),
             (self.user_owner, 6),
             (self.user_delegate, 6),
             (self.user_contributor, 6),
             (self.user_guest, 6),
+            (self.user_viewer, 0),
             (self.user_no_roles, 0),
         ]
-        url = (
-            reverse('projectroles:search')
-            + '?'
-            + urlencode({'s': 'description'})
-        )
+        url = self.url + '?' + urlencode({'s': 'description'})
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
     def test_search_type_file(self):
@@ -484,17 +484,16 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
             (self.user_delegate_cat, 2),
             (self.user_contributor_cat, 2),
             (self.user_guest_cat, 2),
+            (self.user_viewer_cat, 0),
+            (self.user_finder_cat, 0),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
+            (self.user_viewer, 0),
             (self.user_no_roles, 0),
         ]
-        url = (
-            reverse('projectroles:search')
-            + '?'
-            + urlencode({'s': 'file type:file'})
-        )
+        url = self.url + '?' + urlencode({'s': 'file type:file'})
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
     def test_search_type_folder(self):
@@ -505,17 +504,16 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
             (self.user_delegate_cat, 2),
             (self.user_contributor_cat, 2),
             (self.user_guest_cat, 2),
+            (self.user_viewer_cat, 0),
+            (self.user_finder_cat, 0),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
+            (self.user_viewer, 0),
             (self.user_no_roles, 0),
         ]
-        url = (
-            reverse('projectroles:search')
-            + '?'
-            + urlencode({'s': 'folder type:folder'})
-        )
+        url = self.url + '?' + urlencode({'s': 'folder type:folder'})
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
     def test_search_type_link(self):
@@ -526,17 +524,16 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
             (self.user_delegate_cat, 2),
             (self.user_contributor_cat, 2),
             (self.user_guest_cat, 2),
+            (self.user_viewer_cat, 0),
+            (self.user_finder_cat, 0),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
+            (self.user_viewer, 0),
             (self.user_no_roles, 0),
         ]
-        url = (
-            reverse('projectroles:search')
-            + '?'
-            + urlencode({'s': 'link type:link'})
-        )
+        url = self.url + '?' + urlencode({'s': 'link type:link'})
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
     def test_search_type_nonexisting(self):
@@ -547,17 +544,16 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, UITestBase):
             (self.user_delegate_cat, 0),
             (self.user_contributor_cat, 0),
             (self.user_guest_cat, 0),
+            (self.user_viewer_cat, 0),
+            (self.user_finder_cat, 0),
             (self.user_owner, 0),
             (self.user_delegate, 0),
             (self.user_contributor, 0),
             (self.user_guest, 0),
+            (self.user_viewer, 0),
             (self.user_no_roles, 0),
         ]
-        url = (
-            reverse('projectroles:search')
-            + '?'
-            + urlencode({'s': 'test type:Jaix1au'})
-        )
+        url = self.url + '?' + urlencode({'s': 'test type:Jaix1au'})
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
 

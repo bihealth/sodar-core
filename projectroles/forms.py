@@ -1430,7 +1430,9 @@ def get_role_choices(
         'projectroles.update_project_delegate', obj=project
     ):
         role_excludes.append(PROJECT_ROLE_DELEGATE)
-    qs = Role.objects.filter(project_types__contains=[project.type])
+    qs = Role.objects.filter(project_types__contains=[project.type]).order_by(
+        'rank'
+    )
     if promote_as:
         qs = qs.filter(rank__lt=promote_as.role.rank)
     return [

@@ -6,6 +6,7 @@ import ssl
 import urllib
 
 from copy import deepcopy
+from packaging.version import parse as parse_version
 from typing import Any, Optional
 
 from django.conf import settings
@@ -29,6 +30,7 @@ from projectroles.models import (
     SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
+    ROLE_RANKING,
     AppSetting,
 )
 from projectroles.plugins import get_backend_api
@@ -44,6 +46,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_VIEWER = SODAR_CONSTANTS['PROJECT_ROLE_VIEWER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
@@ -61,6 +64,7 @@ APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 # Local constants
 APP_NAME = 'projectroles'
 NO_LOCAL_USERS_MSG = 'Local users not allowed'
+VERSION_2_0 = parse_version('2.0')
 
 
 class RemoteProjectAPI:
@@ -316,6 +320,18 @@ class RemoteProjectAPI:
             if rp.level in [REMOTE_LEVEL_READ_ROLES, REMOTE_LEVEL_REVOKED]:
                 project_data['roles'] = {}
                 for role_as in project.local_roles.all():
+                    # Omit project viewer roles if API version <2.0
+                    if (
+                        req_version
+                        and parse_version(req_version) < VERSION_2_0
+                        and role_as.role.rank
+                        >= ROLE_RANKING[PROJECT_ROLE_VIEWER]
+                    ):
+                        logger.debug(
+                            f'Skipping {role_as.role.name} role with API v1.0: '
+                            f'{role_as}'
+                        )
+                        continue
                     # If REVOKED, only sync owner and delegate
                     if (
                         rp.level == REMOTE_LEVEL_READ_ROLES

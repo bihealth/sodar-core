@@ -62,7 +62,12 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test CacheItemRetrieveAPIView GET"""
@@ -129,7 +134,12 @@ class TestCacheItemDateRetrieveAPIView(SodarcacheAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test CacheItemDateRetrieveAPIView GET"""
@@ -189,8 +199,10 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
         ]
         self.bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 

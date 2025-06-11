@@ -4459,7 +4459,7 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertIsNotNone(form.fields.get('old_owner_role'))
-        self.assertEqual(len(form.fields['old_owner_role'].choices), 4)
+        self.assertEqual(len(form.fields['old_owner_role'].choices), 5)
         # Assert finder role is not selectable
         self.assertNotIn(
             self.role_finder.pk,
@@ -4512,7 +4512,7 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertIsNotNone(form.fields.get('old_owner_role'))
-        self.assertEqual(len(form.fields['old_owner_role'].choices), 5)
+        self.assertEqual(len(form.fields['old_owner_role'].choices), 6)
         # Assert finder role is selectable
         self.assertIn(
             self.role_finder.pk,

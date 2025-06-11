@@ -43,7 +43,9 @@ class TestProjectEventDetailAjaxView(
             self.user_guest,
         ]
         self.bad_users = [
+            self.user_viewer_cat,
             self.user_finder_cat,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -91,9 +93,11 @@ class TestProjectEventDetailAjaxView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -187,9 +191,11 @@ class TestProjectEventExtraAjaxView(
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -313,9 +319,11 @@ class TestEventStatusExtraAjaxViewProject(
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]

@@ -501,10 +501,13 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
             (self.user_delegate_cat, 2),
             (self.user_contributor_cat, 2),
             (self.user_guest_cat, 2),
+            (self.user_viewer_cat, 1),
+            (self.user_finder_cat, 1),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
+            (self.user_viewer, 1),
             (self.user_no_roles, 1),
         ]
         url = (

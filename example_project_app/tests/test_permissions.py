@@ -31,7 +31,13 @@ class TestExampleView(FolderMixin, AppSettingMixin, ProjectPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
+        bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+            self.anonymous,
+        ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         self.project.set_public()
@@ -71,7 +77,13 @@ class TestExampleView(FolderMixin, AppSettingMixin, ProjectPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        bad_users = [self.user_finder_cat, self.user_no_roles, self.anonymous]
+        bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+            self.anonymous,
+        ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
         self.project.set_public()

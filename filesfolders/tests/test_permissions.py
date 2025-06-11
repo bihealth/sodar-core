@@ -100,7 +100,9 @@ class TestProjectFileView(
             self.user_guest,
         ]
         self.bad_users = [
+            self.user_viewer_cat,
             self.user_finder_cat,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -161,8 +163,10 @@ class TestFolderCreateView(
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -225,9 +229,11 @@ class TestFolderUpdateView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the folder
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -282,9 +288,11 @@ class TestFolderDeleteView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -339,8 +347,10 @@ class TestFileCreateView(
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -402,9 +412,11 @@ class TestFileUpdateView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the file
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -458,9 +470,11 @@ class TestFileDeleteView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -513,8 +527,10 @@ class TestFilePublicLinkView(
         ]
         self.bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -572,6 +588,8 @@ class TestFileServeView(
         ]
         self.bad_users = [
             self.user_finder_cat,
+            self.user_viewer_cat,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -676,8 +694,10 @@ class TestHyperLinkCreateView(
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -740,9 +760,11 @@ class TestHyperLinkUpdateView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -797,9 +819,11 @@ class TestHyperLinkDeleteView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,  # NOTE: not the owner of the link
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -861,8 +885,10 @@ class TestBatchEditView(
         ]
         bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response(

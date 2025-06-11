@@ -457,11 +457,13 @@ class UITestBase(
         self.user_delegate_cat = self.make_user('user_delegate_cat')
         self.user_contributor_cat = self.make_user('user_contributor_cat')
         self.user_guest_cat = self.make_user('user_guest_cat')
+        self.user_viewer_cat = self.make_user('user_viewer_cat')
         self.user_finder_cat = self.make_user('user_finder_cat')
         self.user_owner = self.make_user('user_owner')
         self.user_delegate = self.make_user('user_delegate')
         self.user_contributor = self.make_user('user_contributor')
         self.user_guest = self.make_user('user_guest')
+        self.user_viewer = self.make_user('user_viewer')
         self.user_no_roles = self.make_user('user_no_roles')
 
         # Init category and project
@@ -487,6 +489,9 @@ class UITestBase(
         self.guest_as_cat = self.make_assignment(
             self.category, self.user_guest_cat, self.role_guest
         )
+        self.viewer_as_cat = self.make_assignment(
+            self.category, self.user_viewer_cat, self.role_viewer
+        )
         self.finder_as_cat = self.make_assignment(
             self.category, self.user_finder_cat, self.role_finder
         )
@@ -501,6 +506,9 @@ class UITestBase(
         )
         self.guest_as = self.make_assignment(
             self.project, self.user_guest, self.role_guest
+        )
+        self.viewer_as = self.make_assignment(
+            self.category, self.user_viewer, self.role_viewer
         )
 
     def tearDown(self):
@@ -520,11 +528,13 @@ class TestBaseTemplate(UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         url = reverse('home')
@@ -592,11 +602,13 @@ class TestHomeView(UITestBase):
             (self.user_delegate_cat, 2),
             (self.user_contributor_cat, 2),
             (self.user_guest_cat, 2),
+            (self.user_viewer_cat, 2),
             (self.user_finder_cat, 2),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
+            (self.user_viewer_cat, 2),
         ]
         elem_id = 'sodar-pr-project-list-item'
         self.assert_element_count(
@@ -618,11 +630,13 @@ class TestHomeView(UITestBase):
             (self.user_delegate_cat, 2),
             (self.user_contributor_cat, 2),
             (self.user_guest_cat, 2),
+            (self.user_viewer_cat, 2),
             (self.user_finder_cat, 2),
             (self.user_owner, 2),
             (self.user_delegate, 2),
             (self.user_contributor, 2),
             (self.user_guest, 2),
+            (self.user_viewer, 2),
             (self.user_no_roles, 2),
         ]
         self.assert_element_count(
@@ -1006,11 +1020,13 @@ class TestHomeView(UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_element_exists(
@@ -1139,7 +1155,14 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
             self.user_owner,
             self.user_delegate,
         ]
-        expected_false = [self.user_contributor, self.user_guest]
+        expected_false = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+        ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1169,7 +1192,15 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
             self.user_owner,
             self.user_delegate,
         ]
-        expected_false = [self.user_contributor, self.user_guest]
+        expected_false = [
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+        ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -1197,11 +1228,13 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
         ]
         expected_false = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
@@ -1230,10 +1263,12 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -1264,11 +1299,13 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
@@ -1292,11 +1329,13 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
         ]
         expected_false = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
@@ -1328,11 +1367,13 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
@@ -1476,6 +1517,10 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
 class TestProjectSearchResultsView(UITestBase):
     """Tests for ProjectSearchResultsView UI"""
 
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:search')
+
     def test_search_results(self):
         """Test project search items visibility according to user permissions"""
         expected = [
@@ -1484,36 +1529,36 @@ class TestProjectSearchResultsView(UITestBase):
             (self.user_delegate_cat, 1),
             (self.user_contributor_cat, 1),
             (self.user_guest_cat, 1),
+            (self.user_viewer_cat, 1),
             (self.user_finder_cat, 1),
             (self.user_owner, 1),
             (self.user_delegate, 1),
             (self.user_contributor, 1),
             (self.user_guest, 1),
+            (self.user_viewer, 1),
             (self.user_no_roles, 0),
         ]
-        url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+        url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
     def test_search_type_project(self):
-        """Test project search items visibility with 'project' type"""
+        """Test project search items visibility with project type"""
         expected = [
             (self.superuser, 1),
             (self.user_owner_cat, 1),
             (self.user_delegate_cat, 1),
             (self.user_contributor_cat, 1),
             (self.user_guest_cat, 1),
+            (self.user_viewer_cat, 1),
             (self.user_finder_cat, 1),
             (self.user_owner, 1),
             (self.user_delegate, 1),
             (self.user_contributor, 1),
             (self.user_guest, 1),
+            (self.user_viewer, 1),
             (self.user_no_roles, 0),
         ]
-        url = (
-            reverse('projectroles:search')
-            + '?'
-            + urlencode({'s': 'test type:project'})
-        )
+        url = self.url + '?' + urlencode({'s': 'test type:project'})
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
     def test_search_type_nonexisting(self):
@@ -1524,18 +1569,16 @@ class TestProjectSearchResultsView(UITestBase):
             (self.user_delegate_cat, 0),
             (self.user_contributor_cat, 0),
             (self.user_guest_cat, 0),
+            (self.user_viewer_cat, 0),
             (self.user_finder_cat, 0),
             (self.user_owner, 0),
             (self.user_delegate, 0),
             (self.user_contributor, 0),
             (self.user_guest, 0),
+            (self.user_viewer, 0),
             (self.user_no_roles, 0),
         ]
-        url = (
-            reverse('projectroles:search')
-            + '?'
-            + urlencode({'s': 'test type:Jaix1au'})
-        )
+        url = self.url + '?' + urlencode({'s': 'test type:Jaix1au'})
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
     def test_search_project_link(self):
@@ -1546,14 +1589,16 @@ class TestProjectSearchResultsView(UITestBase):
             (self.user_delegate_cat, 1),
             (self.user_contributor_cat, 1),
             (self.user_guest_cat, 1),
+            (self.user_viewer_cat, 1),
             (self.user_finder_cat, 0),  # This should not exist
             (self.user_owner, 1),
             (self.user_delegate, 1),
             (self.user_contributor, 1),
             (self.user_guest, 1),
+            (self.user_viewer, 1),
             (self.user_no_roles, 0),
         ]
-        url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+        url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(
             expected, url, 'sodar-pr-project-search-link', attribute='class'
         )
@@ -1566,14 +1611,16 @@ class TestProjectSearchResultsView(UITestBase):
             (self.user_delegate_cat, 0),
             (self.user_contributor_cat, 0),
             (self.user_guest_cat, 0),
+            (self.user_viewer_cat, 0),
             (self.user_finder_cat, 1),  # Finder user should see this
             (self.user_owner, 0),
             (self.user_delegate, 0),
             (self.user_contributor, 0),
             (self.user_guest, 0),
+            (self.user_viewer, 0),
             (self.user_no_roles, 0),
         ]
-        url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+        url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(
             expected, url, 'sodar-pr-project-findable', attribute='class'
         )
@@ -1633,10 +1680,12 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             ),
             (self.user_contributor_cat, self._get_pr_links('roles', 'star')),
             (self.user_guest_cat, self._get_pr_links('roles', 'star')),
+            (self.user_viewer_cat, self._get_pr_links('roles', 'star')),
             (self.user_owner, self._get_pr_links('roles', 'update', 'star')),
             (self.user_delegate, self._get_pr_links('roles', 'update', 'star')),
             (self.user_contributor, self._get_pr_links('roles', 'star')),
             (self.user_guest, self._get_pr_links('roles', 'star')),
+            (self.user_viewer, self._get_pr_links('roles', 'star')),
         ]
         self.assert_element_set(expected, PROJECT_LINK_IDS, self.url)
 
@@ -1660,11 +1709,13 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
                 self._get_pr_links('roles', 'create', 'star'),
             ),
             (self.user_guest_cat, self._get_pr_links('roles', 'star')),
+            (self.user_viewer_cat, self._get_pr_links('roles', 'star')),
             (self.user_finder_cat, self._get_pr_links('roles', 'star')),
             (self.user_owner, self._get_pr_links('star')),
             (self.user_delegate, self._get_pr_links('star')),
             (self.user_contributor, self._get_pr_links('star')),
             (self.user_guest, self._get_pr_links('star')),
+            (self.user_viewer, self._get_pr_links('roles', 'star')),
         ]
         self.assert_element_set(expected, PROJECT_LINK_IDS, self.url_cat)
 
@@ -1677,10 +1728,12 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             (self.user_delegate_cat, self._get_pr_links('roles')),
             (self.user_contributor_cat, self._get_pr_links('roles')),
             (self.user_guest_cat, self._get_pr_links('roles')),
+            (self.user_viewer_cat, self._get_pr_links('roles')),
             (self.user_owner, self._get_pr_links('roles')),
             (self.user_delegate, self._get_pr_links('roles')),
             (self.user_contributor, self._get_pr_links('roles')),
             (self.user_guest, self._get_pr_links('roles')),
+            (self.user_viewer, self._get_pr_links('roles')),
         ]
         self.assert_element_set(expected, PROJECT_LINK_IDS, self.url)
 
@@ -1692,11 +1745,13 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -1736,10 +1791,12 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -1781,10 +1838,12 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -1834,11 +1893,13 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -1875,10 +1936,12 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -1923,9 +1986,11 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in expected_true:
             self.login_and_redirect(user, self.url)
@@ -1976,9 +2041,11 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -1998,11 +2065,13 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -2022,10 +2091,12 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         for user in users:
             self.login_and_redirect(user, self.url)
@@ -2562,10 +2633,12 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             self.user_delegate_cat,
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         self.login_and_redirect(self.superuser, self.url)
         btn = self.selenium.find_element(By.ID, 'sodar-pr-role-ops-btn')
@@ -2583,6 +2656,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         self.assert_element_exists(
             good_users, self.url, 'sodar-pr-role-ops-dropdown', True
@@ -2603,9 +2677,11 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         expected_false = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         self.assert_element_exists(
             expected_true, self.url, 'sodar-pr-role-ops-invite', True
@@ -2626,9 +2702,11 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         expected_false = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
         ]
         self.assert_element_exists(
             expected_true, self.url, 'sodar-pr-role-ops-create', True
@@ -2640,16 +2718,18 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
     def test_role_dropdown(self):
         """Test visibility of role management dropdown"""
         expected = [
-            (self.superuser, 6),
-            (self.user_owner_cat, 6),
-            (self.user_delegate_cat, 4),
+            (self.superuser, 8),
+            (self.user_owner_cat, 8),
+            (self.user_delegate_cat, 6),
             (self.user_contributor_cat, 0),
             (self.user_guest_cat, 0),
+            (self.user_viewer_cat, 0),
             (self.user_finder_cat, 0),
-            (self.user_owner, 6),
-            (self.user_delegate, 4),
+            (self.user_owner, 8),
+            (self.user_delegate, 6),
             (self.user_contributor, 0),
             (self.user_guest, 0),
+            (self.user_viewer, 0),
         ]
         self.assert_element_count(
             expected, self.url, 'sodar-pr-role-dropdown', attribute='class'
@@ -2743,16 +2823,18 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         """Test role dropdown with site read-only mode"""
         app_settings.set(APP_NAME, 'site_read_only', True)
         expected = [
-            (self.superuser, 6),
+            (self.superuser, 8),
             (self.user_owner_cat, 0),
             (self.user_delegate_cat, 0),
             (self.user_contributor_cat, 0),
             (self.user_guest_cat, 0),
+            (self.user_viewer_cat, 0),
             (self.user_finder_cat, 0),
             (self.user_owner, 0),
             (self.user_delegate, 0),
             (self.user_contributor, 0),
             (self.user_guest, 0),
+            (self.user_viewer, 0),
         ]
         self.assert_element_count(
             expected, self.url, 'sodar-pr-role-dropdown', attribute='class'

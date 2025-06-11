@@ -16,10 +16,12 @@ v1.2.0 (WIP)
 Release Highlights
 ==================
 
+- Add project viewer role
 - Add project invite retrieval REST API view
 - Update projectroles REST API to return user UUIDs instead of nested user
   serializers
 - Upgrade projectroles REST API version to v2.0
+- Upgrade projectroles sync REST API version to v2.0
 - Remove support for SODAR Core features deprecated in v1.1
 
 Breaking Changes
@@ -34,6 +36,25 @@ General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your
     project.
+
+Project Viewer Role Added
+-------------------------
+
+This release adds support for the
+:ref:`project viewer role <app_projectroles_basics_roles>`. When upgrading, it
+is recommended to review the roles in your SODAR Core based site to ensure
+correct access rights for users. These steps include:
+
+1. Reviewing existing rules to ensure appropriate user access
+2. Updating rules to provide project viewer level access where applicable
+3. Updating all permission tests for views
+4. Appropriately documenting the new role level in site-specific documentation.
+
+.. note::
+
+    If the projectroles remote sync REST API is called from a target site
+    running SODAR Core <v1.2 with the source site running on >=v1.2, project
+    viewer roles will not be synchronized.
 
 REST API View Changes
 ---------------------
@@ -51,6 +72,12 @@ REST API View Changes
         + Replace ``user`` field user serializer with user UUID
     * ``UserSettingRetrieveAPIView``
         + Replace ``user`` field user serializer with user UUID
+- Projectroles sync API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``1.0``, ``2.0``
+    * Add project viewer role sync
+    * **NOTE:** If called with API version ``1.0``, project viewer roles will
+      not be synced to target sites.
 
 Previously Deprecated Features Removed
 --------------------------------------
