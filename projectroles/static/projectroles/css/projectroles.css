@@ -596,15 +596,15 @@ a.sodar-pr-btn-copy-secret i {
   margin-left: 0;
 }
 
-/* Project badge */
-span.sodar-project-badge {
+/* Generic object badge used for projects, users etc */
+span.sodar-obj-badge {
   vertical-align: top;
   margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 300px;
 }
-span.sodar-project-badge a {
+span.sodar-obj-badge a {
   color: inherit;
 }
 

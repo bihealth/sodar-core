@@ -237,8 +237,14 @@ def get_user_html(user: SODARUser) -> str:
 
 
 @register.simple_tag
-def get_user_badge(user: SODARUser) -> str:
-    """Return badge HTML for a User object"""
+def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
+    """
+    Return badge HTML for a User object.
+
+    :param user: SODARUser object
+    :param extra_class: Extra classes to add to element (string, optional)
+    :return: String (contains HTML)
+    """
     if not user.is_active:
         icon = 'mdi:account-off'
         badge_class = 'secondary'
@@ -252,11 +258,15 @@ def get_user_badge(user: SODARUser) -> str:
         badge_class = 'primary'
         user_class = 'active'
     email = True if user.is_active and user.email else False
+    if extra_class and not extra_class.startswith(' '):
+        extra_class = ' ' + extra_class
+    elif not extra_class:
+        extra_class = ''
     ret = (
-        f'<span class="badge badge-{badge_class} sodar-user-badge '
-        f'sodar-user-badge-{user_class}" '
+        f'<span class="badge badge-{badge_class} sodar-obj-badge '
+        f'sodar-user-badge sodar-user-badge-{user_class}{extra_class}" '
         f'title="{user.get_full_name()}" data-toggle="tooltip" '
-        f'data-uuid="{user.sodar_uuid}">'
+        f'data-delay="300" data-uuid="{user.sodar_uuid}">'
         f'<i class="iconify" data-icon="{icon}"></i> '
     )
     if email:

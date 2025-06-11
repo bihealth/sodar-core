@@ -16,6 +16,7 @@ Added
 - **Projectroles**
     - ``ProjectInviteRetrieveAPIView`` REST API view (#1692)
     - Project viewer role (#1650)
+    - ``get_user_badge()`` template tag ``extra_class`` arg (#1693)
 
 Changed
 -------
@@ -32,6 +33,8 @@ Changed
     - Upgrade projectroles REST API version to v2.0 (#1554, #1692)
     - Replace nested ``SODARUserSerializer`` REST API fields with user UUID (#1554)
     - Upgrade projectroles sync REST API version to v2.0 (#1650)
+- **Timeline**
+    - Display user as badge instead of separate column in event lists (#1622)
 
 Removed
 -------
@@ -46,6 +49,7 @@ Fixed
 
 - **Projectroles**
     - UI tests failing for asserting SVG icons prior to rendering (#1559)
+    - Incorrect alignment for ``sodar-user-badge`` (#1694)
 
 
 v1.1.6 (2025-05-20)

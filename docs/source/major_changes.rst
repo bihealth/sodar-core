@@ -20,6 +20,7 @@ Release Highlights
 - Add project invite retrieval REST API view
 - Update projectroles REST API to return user UUIDs instead of nested user
   serializers
+- Update timeline list user displaying
 - Upgrade projectroles REST API version to v2.0
 - Upgrade projectroles sync REST API version to v2.0
 - Remove support for SODAR Core features deprecated in v1.1
