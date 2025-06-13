@@ -48,7 +48,7 @@ a.sodar-tl-link-status-extra-data:hover {
 @media screen and (max-width: 700px) {
   .table#sodar-tl-table thead tr th:nth-child(3),
   .table#sodar-tl-table tbody tr td:nth-child(3) {
-      display: none;
+    display: none;
   }
 }
 

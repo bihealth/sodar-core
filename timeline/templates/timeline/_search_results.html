@@ -7,33 +7,22 @@
 {% get_plugin_lookup as plugin_lookup %}
 
 <style type="text/css">
-  span.sodar-tl-event-badge {
-    vertical-align: top;
-    margin-top: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 300px;
-  }
-  span.sodar-tl-event-badge a {
-    color: inherit;
-  }
-  .table#sodar-tl-search-table tbody tr td:nth-child(1),
-  .table#sodar-tl-search-table tbody tr td:nth-child(2) {
+  .table#sodar-tl-search-table tbody tr td:nth-child(1) {
     white-space: nowrap;
   }
-  .table#sodar-tl-search-table tbody tr td:nth-child(3) {
+  .table#sodar-tl-search-table tbody tr td:nth-child(2) {
     width: 100%;
   }
   /* Responsive modifications */
-  @media screen and (max-width: 1200px) {
-    .table#sodar-tl-search-table tr th:nth-child(2),
-    .table#sodar-tl-search-table tr td:nth-child(2) {
-      display: none;
-    }
-  }
   @media screen and (max-width: 650px) {
     .table#sodar-tl-search-table tr th:nth-child(1),
     .table#sodar-tl-search-table tr td:nth-child(1) {
+      display: none;
+    }
+  }
+  @media screen and (max-width: 1000px) {
+    .table#sodar-tl-search-table thead tr th:nth-child(3),
+    .table#sodar-tl-search-table tbody tr td:nth-child(3) {
       display: none;
     }
   }
@@ -46,8 +35,8 @@
     <thead>
       <tr>
         <th>Timestamp</th>
-        <th>User</th>
         <th>Description</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>

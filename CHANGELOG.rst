@@ -39,7 +39,8 @@ Changed
     - Replace nested ``SODARUserSerializer`` REST API fields with user UUID (#1554)
     - Upgrade projectroles sync REST API version to v2.0 (#1650)
 - **Timeline**
-    - Display user as badge instead of separate column in event lists (#1622)
+    - Display user as badge instead of separate column (#1622, #1698)
+    - Display event status in search results (#1678)
 
 Removed
 -------
