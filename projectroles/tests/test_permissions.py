@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
 from projectroles.utils import build_secret
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -49,9 +49,20 @@ class PermissionTestMixin:
         """
         Helper to set site read only mode to the desired value.
 
-        :param value: BooAPP_NAMElean
+        :param value: Boolean
         """
         app_settings.set(APP_NAME, 'site_read_only', value)
+
+    def set_access_block(self, project: Project, value: bool = True):
+        """
+        Helper to set project access block to the desired value
+
+        :param project: Project object
+        :param value: Boolean
+        """
+        app_settings.set(
+            APP_NAME, 'project_access_block', value, project=project
+        )
 
     def send_request(
         self, url: str, method: str, req_kwargs: dict
@@ -452,6 +463,14 @@ class TestProjectDetailView(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(self.url, self.user_no_roles, 200)
 
+    def test_get_block(self):
+        """Test GET with blocked project"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -526,22 +545,12 @@ class TestProjectCreateView(ProjectPermissionTestBase):
         """Test ProjectCreateView GET for top level creation"""
         self.assert_response(self.url_top, self.good_users_top, 200)
         self.assert_response(self.url_top, self.bad_users_top, 302)
-        self.project.set_public()
-        self.assert_response(self.url_top, self.user_no_roles, 302)
-
-    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_get_top_anon(self):
-        """Test GET for top level creation with anonymous access"""
-        self.project.set_public()
-        self.assert_response(self.url_top, self.no_role_users, 302)
 
     def test_get_top_read_only(self):
         """Test GET for top level with site read-only mode"""
         self.set_site_read_only()
         self.assert_response(self.url_top, self.good_users_top, 200)
         self.assert_response(self.url_top, self.bad_users_top, 302)
-        self.project.set_public()
-        self.assert_response(self.url_top, self.no_role_users, 302)
 
     def test_get_sub(self):
         """Test GET for subproject creation"""
@@ -634,6 +643,14 @@ class TestProjectUpdateView(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -644,7 +661,7 @@ class TestProjectUpdateView(ProjectPermissionTestBase):
         """Test GET with category"""
         self.assert_response(self.url_cat, self.good_users_cat, 200)
         self.assert_response(self.url_cat, self.bad_users_cat, 302)
-        self.project.set_public()
+        self.project.set_public()  # Set project public, ensure category access
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -710,6 +727,14 @@ class TestProjectArchiveView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -813,6 +838,14 @@ class TestProjectDeleteView(
         self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -1059,6 +1092,14 @@ class TestProjectRoleView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -1135,6 +1176,14 @@ class TestRoleAssignmentCreateView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -1227,6 +1276,14 @@ class TestRoleAssignmentUpdateView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -1373,6 +1430,14 @@ class TestRoleAssignmentDeleteView(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -1505,6 +1570,13 @@ class TestRoleAssignmentOwnDeleteView(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.all_users, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.no_role_users, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -1596,6 +1668,14 @@ class TestRoleAssignmentOwnerTransferView(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -1684,6 +1764,14 @@ class TestProjectInviteView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -1777,6 +1865,14 @@ class TestProjectInviteCreateView(ProjectPermissionTestBase):
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -1830,6 +1926,11 @@ class TestProjectInviteResendView(ProjectPermissionTestBase):
             'projectroles:invite_resend',
             kwargs={'projectinvite': invite.sodar_uuid},
         )
+        self.url_redirect_good = reverse(
+            'projectroles:invites',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.url_redirect_bad = reverse('home')
         self.good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -1855,20 +1956,29 @@ class TestProjectInviteResendView(ProjectPermissionTestBase):
             self.url,
             self.good_users,
             302,
-            redirect_user=reverse(
-                'projectroles:invites',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
+            redirect_user=self.url_redirect_good,
         )
-        self.assert_response(self.url, self.bad_users, 302)
+        self.assert_response(
+            self.url, self.bad_users, 302, redirect_user=self.url_redirect_bad
+        )
         self.project.set_public()
-        self.assert_response(self.url, self.no_role_users, 302)
+        self.assert_response(
+            self.url,
+            self.no_role_users,
+            302,
+            redirect_user=self.url_redirect_bad,
+        )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
         self.project.set_public()
-        self.assert_response(self.url, self.no_role_users, 302)
+        self.assert_response(
+            self.url,
+            self.no_role_users,
+            302,
+            redirect_user=self.url_redirect_bad,
+        )
 
     def test_get_archive(self):
         """Test GET with archived project"""
@@ -1877,14 +1987,41 @@ class TestProjectInviteResendView(ProjectPermissionTestBase):
             self.url,
             self.good_users,
             302,
-            redirect_user=reverse(
-                'projectroles:invites',
-                kwargs={'project': self.project.sodar_uuid},
-            ),
+            redirect_user=self.url_redirect_good,
         )
-        self.assert_response(self.url, self.bad_users, 302)
+        self.assert_response(
+            self.url, self.bad_users, 302, redirect_user=self.url_redirect_bad
+        )
         self.project.set_public()
-        self.assert_response(self.url, self.no_role_users, 302)
+        self.assert_response(
+            self.url,
+            self.no_role_users,
+            302,
+            redirect_user=self.url_redirect_bad,
+        )
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(
+            self.url,
+            self.superuser,
+            302,
+            redirect_user=self.url_redirect_good,
+        )
+        self.assert_response(
+            self.url,
+            self.non_superusers,
+            302,
+            redirect_user=self.url_redirect_bad,
+        )
+        self.project.set_public()
+        self.assert_response(
+            self.url,
+            self.non_superusers,
+            302,
+            redirect_user=self.url_redirect_bad,
+        )
 
 
 class TestProjectInviteRevokeView(ProjectPermissionTestBase):
@@ -1943,6 +2080,14 @@ class TestProjectInviteRevokeView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -2004,7 +2149,7 @@ class TestRemoteSiteViews(RemoteSiteMixin, SiteAppPermissionTestBase):
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
 
-    def test_get_remmote_site_update(self):
+    def test_get_remote_site_update(self):
         """Test RemoteSiteUpdateView GET"""
         url = reverse(
             'projectroles:remote_site_update',

@@ -168,13 +168,13 @@ $(document).ready(function () {
             var row = tableBody.find('tr:last');
 
             // Title column
-            var p_elem = '<a>';
-            var p_href = '/project/' + p['uuid'];
-            var p_class = 'sodar-pr-project-link';
+            var tElem = '<a>';
+            var tHref = '/project/' + p['uuid'];
+            var tClass = 'sodar-pr-project-link';
             if (!p['access']) {
-                p_elem = '<span>';
-                p_href = '';
-                p_class = 'text-muted sodar-pr-project-link-disabled';
+                tElem = '<span>';
+                tHref = '';
+                tClass = 'text-muted sodar-pr-project-link-disabled';
             }
             // Highlight project title in category structure
             var titleHtml = '';
@@ -198,9 +198,9 @@ $(document).ready(function () {
                     )
                     .append($('<span>')
                         .attr('class', 'sodar-pr-project-title')
-                        .append($(p_elem)
-                            .attr('class', p_class)
-                            .attr('href', p_href)
+                        .append($(tElem)
+                            .attr('class', tClass)
+                            .attr('href', tHref)
                             .html(titleHtml)
                         )
                     )
@@ -245,8 +245,16 @@ $(document).ready(function () {
                     .attr('data-icon', 'mdi:star')
                 );
             }
+            // Blocked icon
+            if (p['blocked']) {
+                titleSpan.append($('<i>')
+                    .attr('class', 'iconify text-danger ml-2 sodar-pr-project-blocked')
+                    .attr('data-icon', 'mdi:cancel')
+                    .attr('title', 'Access temporarily blocked by administrators')
+                );
+            }
             // Finder link
-            if (!p['access'] && p['finder_url']) {
+            if (!p['blocked'] && !p['access'] && p['finder_url']) {
                 titleSpan.append($('<a>')
                     .attr('href', p['finder_url'])
                     .attr('class', 'sodar-pr-project-findable')

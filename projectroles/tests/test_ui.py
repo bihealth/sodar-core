@@ -741,7 +741,6 @@ class TestHomeView(UITestBase):
             By.ID, 'sodar-pr-project-list-link-star'
         )
         self.assertFalse(button.is_enabled())
-        button.click()
 
     def test_project_list_title(self):
         """Test project list title rendering"""
@@ -769,7 +768,11 @@ class TestHomeView(UITestBase):
         with self.assertRaises(NoSuchElementException):
             title.find_element(By.CLASS_NAME, 'sodar-pr-project-archive')
         with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-block')
+        with self.assertRaises(NoSuchElementException):
             title.find_element(By.CLASS_NAME, 'sodar-pr-project-public')
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-findable')
 
     def test_project_list_title_no_highlight(self):
         """Test project list title rendering with no highlight"""
@@ -848,6 +851,45 @@ class TestHomeView(UITestBase):
         )
         self.assertIsNotNone(
             title.find_element(By.CLASS_NAME, 'sodar-pr-project-archive')
+        )
+
+    def test_project_list_title_block(self):
+        """Test project list title rendering with project access block"""
+        app_settings.set(
+            APP_NAME, 'project_access_block', True, project=self.project
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        # Project is present but it is not a link
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-link')
+        # Blocked icon should be visible
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-blocked')
+        )
+        # Findable icon should not be visible even with access disabled
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-findable')
+
+    def test_project_list_title_block_superuser(self):
+        """Test project list title with project access block as superuser"""
+        app_settings.set(
+            APP_NAME, 'project_access_block', True, project=self.project
+        )
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.project)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        # Link should be available for superuser
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-link')
+        )
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-blocked')
         )
 
     def test_project_list_title_public(self):

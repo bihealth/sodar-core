@@ -73,6 +73,7 @@ from projectroles.views import (
     FORM_INVALID_MSG,
     PROJECT_WELCOME_MSG,
     USER_PROFILE_LDAP_MSG,
+    PROJECT_BLOCK_MSG,
     ROLE_LEAVE_INHERIT_MSG,
     ROLE_LEAVE_OWNER_MSG,
     ROLE_LEAVE_REMOTE_MSG,
@@ -575,11 +576,12 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
     def setUp(self):
         super().setUp()
+        self.user_owner = self.make_user('user_owner')
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
         self.owner_as = self.make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
 
     def test_get(self):
@@ -604,6 +606,24 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 )
             )
         self.assertEqual(response.status_code, 404)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        app_settings.set(
+            APP_NAME, 'project_access_block', True, project=self.project
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            PROJECT_BLOCK_MSG.format(project_type='project') + '.',
+        )
 
 
 class TestProjectCreateView(
@@ -922,9 +942,10 @@ class TestProjectCreateView(
             'allow_public_links',
             'ip_allowlist',
             'ip_restrict',
+            'project_access_block',
         ]
         settings = AppSetting.objects.filter(project=project)
-        self.assertEqual(settings.count(), 14)
+        self.assertEqual(settings.count(), 15)
         for setting in settings:
             self.assertIn(setting.name, project_settings)
 

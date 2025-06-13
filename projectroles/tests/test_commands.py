@@ -21,11 +21,19 @@ from appalerts.models import AppAlert
 # Timeline dependency
 from timeline.models import TimelineEvent
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.management.commands.addremotesite import (
     Command as AddRemoteSiteCommand,
 )
 from projectroles.management.commands.batchupdateroles import (
     Command as BatchUpdateRolesCommand,
+)
+from projectroles.management.commands.blockprojectaccess import (
+    Command as BlockProjectAccessCommand,
+    INVALID_PROJECT_TYPE_MSG,
+    PROJECT_NOT_FOUND_MSG,
+    INVALID_MODE_MSG,
+    MODE_CONVERT_ERR_MSG,
 )
 from projectroles.management.commands.cleanappsettings import (
     LOG_NONE_LABEL,
@@ -64,6 +72,7 @@ from projectroles.tests.test_models import (
 from projectroles.utils import build_secret
 
 
+app_settings = AppSettingAPI()
 User = get_user_model()
 
 
@@ -85,6 +94,7 @@ APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
+APP_NAME = 'projectroles'
 EXAMPLE_APP_NAME = 'example_project_app'
 LOGGER_PREFIX = 'projectroles.management.commands.'
 CLEAN_LOG_PREFIX = 'INFO:projectroles.management.commands.cleanappsettings:'
@@ -94,6 +104,7 @@ REMOTE_SITE_URL = 'https://example.com'
 REMOTE_SITE_URL2 = 'https://another.site.org'
 REMOTE_SITE_SECRET = build_secret(32)
 LDAP_DOMAIN = 'EXAMPLE'
+INVALID_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
 
 
 # Mixins -----------------------------------------------------------------------
@@ -683,6 +694,121 @@ class TestBatchUpdateRoles(
         )
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
+
+
+class TestBlockProjectAccess(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    TestCase,
+):
+    """Tests for blockprojectaccess command"""
+
+    def _assert_setting(self, value: bool = False):
+        """
+        Assert project_access_block setting value.
+
+        :param value: Expected value (bool)
+        """
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_access_block', project=self.project
+            ),
+            value,
+        )
+
+    def setUp(self):
+        super().setUp()
+        # Init roles
+        self.init_roles()
+        # Init users
+        self.user_owner = self.make_user('owner')
+        self.user_owner.email = 'owner_user@example.com'
+        self.user_owner.save()
+        self.user_owner_cat = self.make_user('owner_cat')
+        self.user_owner_cat.email = 'cat_owner_user@example.com'
+        self.user_owner_cat.save()
+        # Init projects
+        self.category = self.make_project(
+            'top_category', PROJECT_TYPE_CATEGORY, None
+        )
+        self.cat_owner_as = self.make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self.make_project(
+            'sub_project', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        # Save UUIDs for easy access
+        self.category_uuid = str(self.category.sodar_uuid)
+        self.project_uuid = str(self.project.sodar_uuid)
+        # Init command class
+        self.command = BlockProjectAccessCommand()
+        self.options = {'project': str(self.project.sodar_uuid), 'mode': '1'}
+        self.logger_name = LOGGER_PREFIX + 'blockprojectaccess'
+
+    def test_command_set(self):
+        """Test blockprojectaccess to set value"""
+        self._assert_setting(False)
+        self.command.handle(**self.options)
+        self._assert_setting(True)
+
+    def test_command_unset(self):
+        """Test blockprojectaccess to unset value"""
+        app_settings.set(
+            APP_NAME, 'project_access_block', True, project=self.project
+        )
+        self._assert_setting(True)
+        self.options['mode'] = '0'
+        self.command.handle(**self.options)
+        self._assert_setting(False)
+
+    def test_command_same_value(self):
+        """Test blockprojectaccess with same value as already set"""
+        self._assert_setting(False)
+        self.options['mode'] = '0'
+        self.command.handle(**self.options)
+        self._assert_setting(False)
+
+    def test_command_category(self):
+        """Test blockprojectaccess with category (should fail)"""
+        self.options['project'] = str(self.category.sodar_uuid)
+        with self.assertLogs(self.logger_name, 'ERROR') as cm:
+            with self.assertRaises(SystemExit):
+                self.command.handle(**self.options)
+        self.assertIn(INVALID_PROJECT_TYPE_MSG, cm.output[0])
+
+    def test_command_invalid_uuid(self):
+        """Test blockprojectaccess with invalid UUID (should fail)"""
+        self.options['project'] = INVALID_UUID
+        with self.assertLogs(self.logger_name, 'ERROR') as cm:
+            with self.assertRaises(SystemExit):
+                self.command.handle(**self.options)
+        self.assertIn(
+            PROJECT_NOT_FOUND_MSG.format(project_uuid=INVALID_UUID),
+            cm.output[0],
+        )
+
+    def test_command_value_out_of_range(self):
+        """Test blockprojectaccess with value out of range (should fail)"""
+        self.options['mode'] = '2'
+        with self.assertLogs(self.logger_name, 'ERROR') as cm:
+            with self.assertRaises(SystemExit):
+                self.command.handle(**self.options)
+        self.assertIn(INVALID_MODE_MSG.format(mode='2'), cm.output[0])
+
+    def test_command_value_not_int(self):
+        """Test blockprojectaccess with non-integer value (should fail)"""
+        self.options['mode'] = 'abc'
+        with self.assertLogs(self.logger_name, 'ERROR') as cm:
+            with self.assertRaises(SystemExit):
+                self.command.handle(**self.options)
+        self.assertIn(
+            MODE_CONVERT_ERR_MSG.format(mode='abc', ex=TypeError()),
+            cm.output[0],
+        )
 
 
 class TestCleanAppSettings(

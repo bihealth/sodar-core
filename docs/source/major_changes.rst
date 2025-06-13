@@ -18,6 +18,8 @@ Release Highlights
 
 - Add project viewer role
 - Add project invite retrieval REST API view
+- Add temporary project access blocking for superusers
+- Add blockprojectaccess management command
 - Update projectroles REST API to return user UUIDs instead of nested user
   serializers
 - Update timeline list user displaying
@@ -56,6 +58,27 @@ correct access rights for users. These steps include:
     If the projectroles remote sync REST API is called from a target site
     running SODAR Core <v1.2 with the source site running on >=v1.2, project
     viewer roles will not be synchronized.
+
+Project Access Blocking Added
+-----------------------------
+
+This release adds the possibility for superusers to temporarily disable all
+non-superuser access to a specific project. It is recommended to add support for
+this feature in your SODAR Core based site.
+
+For project views built on top of SODAR Core base classes using
+``ProjectPermissionMixin`` or ``SODARAPIProjectPermission``, no changes are
+needed. For rule-based access control in custom views, you can use the
+``is_project_accessible()`` predicate found in ``projectroles.rules``.
+Alternatively, you can check for the setting in your custom code using the App
+Settings API. Example:
+
+.. code-block:: python
+
+    from projectroles.app_settings import AppSettingAPI
+    app_settings = AppSettingAPI()
+    app_settings.get('projectroles', 'project_access_block', project=project)
+
 
 REST API View Changes
 ---------------------

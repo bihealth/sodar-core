@@ -16,6 +16,7 @@ from django.http import (
     HttpResponse,
     HttpResponseRedirect,
     HttpResponseBadRequest,
+    HttpResponseForbidden,
 )
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -43,6 +44,7 @@ from projectroles.views import (
     ProjectPermissionMixin,
     CurrentUserFormMixin,
     InvalidFormMixin,
+    PROJECT_BLOCK_MSG,
 )
 
 from filesfolders.forms import FolderForm, FileForm, HyperLinkForm
@@ -57,6 +59,7 @@ storage = DatabaseFileStorage()
 
 # Local constants
 APP_NAME = 'filesfolders'
+APP_NAME_PR = 'projectroles'
 TL_OBJ_TYPES = {'Folder': 'folder', 'File': 'file', 'HyperLink': 'hyperlink'}
 DEFAULT_UPDATE_ATTRS = ['name', 'folder', 'description', 'flag']
 LINK_BAD_REQUEST_MSG = settings.FILESFOLDERS_LINK_BAD_REQUEST_MSG
@@ -75,15 +78,27 @@ class ObjectPermissionMixin(LoggedInPermissionMixin):
             obj = type(self.get_object()).objects.get(
                 sodar_uuid=self.kwargs['item']
             )
-            if obj.owner == self.request.user:
-                return self.request.user.has_perm(
-                    'filesfolders.update_data_own', self.get_permission_object()
-                )
-            return self.request.user.has_perm(
-                'filesfolders.update_data_all', self.get_permission_object()
-            )
         except type(self.get_object()).DoesNotExist:
             return False
+        # Fail if project is blocked
+        if not self.request.user.is_superuser and app_settings.get(
+            APP_NAME_PR, 'project_access_block', project=obj.project
+        ):
+            messages.error(
+                self.request,
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(obj.project.type)
+                )
+                + '.',
+            )
+            return False
+        if obj.owner == self.request.user:
+            return self.request.user.has_perm(
+                'filesfolders.update_data_own', self.get_permission_object()
+            )
+        return self.request.user.has_perm(
+            'filesfolders.update_data_all', self.get_permission_object()
+        )
 
     def get_permission_object(self):
         """Override get_permission_object for checking Project permission"""
@@ -608,7 +623,7 @@ class FileServeView(
 class FileServePublicView(FileServeMixin, View):
     """View for serving file to a public user with secure link"""
 
-    def get(self, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         """Override of GET for checking request URL"""
         try:
             file = File.objects.get(secret=kwargs['secret'])
@@ -623,6 +638,15 @@ class FileServePublicView(FileServeMixin, View):
         # If public URL serving is disabled, don't serve file
         if not file.public_url:
             return HttpResponseBadRequest(LINK_BAD_REQUEST_MSG)
+        # If related project is locked, refuse to serve
+        if not request.user.is_superuser and app_settings.get(
+            APP_NAME_PR, 'project_access_block', project=file.project
+        ):
+            return HttpResponseForbidden(
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(file.project.type)
+                )
+            )
         # Update kwargs with file and project uuid:s
         kwargs.update(
             {'file': file.sodar_uuid, 'project': file.project.sodar_uuid}

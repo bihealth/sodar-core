@@ -101,6 +101,10 @@ LOGIN_MSG = 'Please log in.'
 NO_AUTH_MSG = 'User not authorized for requested action.'
 NO_AUTH_LOGIN_MSG = 'Authentication required, please log in.'
 FORM_INVALID_MSG = 'Form submission failed, see the form for details.'
+PROJECT_BLOCK_MSG = (
+    'Access to {project_type} temporarily blocked by an administrator, please '
+    'try again later'
+)
 PROJECT_WELCOME_MSG = (
     'Welcome to {project_type} "{project_title}". You have been assigned the '
     'role of {role}.'
@@ -317,6 +321,23 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         project = self.get_project()
         if not project:
             raise Http404
+
+        # Prohibit access if project_access_block is set
+        if (
+            not self.request.user.is_superuser
+            and project.type == PROJECT_TYPE_PROJECT
+            and app_settings.get(
+                APP_NAME, 'project_access_block', project=project
+            )
+        ):
+            messages.error(
+                self.request,
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(project.type)
+                )
+                + '.',
+            )
+            return False
 
         # Override permissions for superuser, owner or delegate
         perm_override = (
@@ -1520,9 +1541,8 @@ class ProjectDeleteAccessMixin:
     superuser access if needed, hence we're not implementing this in rules.
     """
 
-    @classmethod
     def check_delete_permission(
-        cls, project: Project
+        self, project: Project
     ) -> tuple[bool, Optional[str]]:
         """
         Check delete permission. Also applies to superusers.
@@ -1530,6 +1550,22 @@ class ProjectDeleteAccessMixin:
         :param project: Project object
         :return: Boolean, string (in case of error) or None
         """
+        # Prohibit access if project_access_block is set
+        if (
+            not self.request.user.is_superuser
+            and project.type == PROJECT_TYPE_PROJECT
+            and app_settings.get(
+                APP_NAME, 'project_access_block', project=project
+            )
+        ):
+            return (
+                False,
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(project.type)
+                )
+                + '.',
+            )
+
         p_type = get_display_name(project.type)
         if (
             project.type == PROJECT_TYPE_CATEGORY
@@ -2551,10 +2587,15 @@ class RoleAssignmentOwnDeleteView(
         NOTE: Single use case so we're not writing a common rules perm
         """
         role_as = self.get_object()
+        if role_as.project.type == PROJECT_TYPE_PROJECT and app_settings.get(
+            APP_NAME, 'project_access_block', project=role_as.project
+        ):
+            return False
+        if app_settings.get(APP_NAME, 'site_read_only'):
+            return False
         user = self.request.user
         if (
-            app_settings.get(APP_NAME, 'site_read_only')
-            or role_as.user != user
+            role_as.user != user
             or role_as.role.rank < ROLE_RANKING[PROJECT_ROLE_DELEGATE]
         ):
             return False

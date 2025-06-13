@@ -80,6 +80,13 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
         self.assert_response_api(self.url, self.user_no_roles, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(self.url, self.superuser, 200)
+        self.assert_response_api(self.url, self.auth_non_superusers, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()

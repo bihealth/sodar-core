@@ -91,6 +91,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                     'archive': False,
                     'remote': False,
                     'revoked': False,
+                    'blocked': False,
                     'starred': False,
                     'access': True,
                     'finder_url': None,
@@ -119,6 +120,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                     'archive': False,
                     'remote': False,
                     'revoked': False,
+                    'blocked': False,
                     'starred': False,
                     'access': True,
                     'finder_url': None,
@@ -170,6 +172,32 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 self.url + '?parent=' + str(self.project.sodar_uuid),
             )
         self.assertEqual(response.status_code, 400)
+
+    def test_get_block_owner(self):
+        """Test GET with project access block as owner"""
+        app_settings.set(
+            APP_NAME, 'project_access_block', True, project=self.project
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertNotIn('blocked', pd[0])
+        self.assertEqual(pd[1]['blocked'], True)
+        self.assertEqual(pd[1]['access'], False)
+
+    def test_get_block_superuser(self):
+        """Test GET with project access block as superuser"""
+        app_settings.set(
+            APP_NAME, 'project_access_block', True, project=self.project
+        )
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertNotIn('blocked', pd[0])
+        self.assertEqual(pd[1]['blocked'], True)
+        self.assertEqual(pd[1]['access'], True)
 
     def test_get_finder(self):
         """Test project list with finder role"""

@@ -184,6 +184,18 @@ def is_site_writable():
     return not app_settings.get(APP_NAME, 'site_read_only')
 
 
+@rules.predicate
+def is_project_accessible():
+    """
+    Return True if project access has not been temporarily blocked by
+    administrator.
+
+    NOTE: Only needed if the view is not using ProjectPermissionMixin or
+    SODARAPIProjectPermission.
+    """
+    return not app_settings.get(APP_NAME, 'project_access_block')
+
+
 # Combined predicates ----------------------------------------------------------
 
 

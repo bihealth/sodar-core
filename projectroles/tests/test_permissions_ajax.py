@@ -265,6 +265,14 @@ class TestProjectStarringAjaxView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.user_no_roles, 200, method='POST')
         self.assert_response(self.url, self.anonymous, 401, method='POST')
 
+    def test_post_block(self):
+        """Test POST with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200, method='POST')
+        self.assert_response(self.url, self.non_superusers, 403, method='POST')
+        self.project.set_public()
+        self.assert_response(self.url, self.non_superusers, 403, method='POST')
+
     def test_post_read_only(self):
         """Test POST with site read-only mode"""
         self.set_site_read_only()

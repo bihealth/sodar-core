@@ -131,6 +131,12 @@ class TestProjectFileView(
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -188,6 +194,12 @@ class TestFolderCreateView(
         self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -256,6 +268,12 @@ class TestFolderUpdateView(
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -315,6 +333,12 @@ class TestFolderDeleteView(
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -365,12 +389,6 @@ class TestFileCreateView(
         self.project.set_public()
         self.assert_response(self.url, self.anonymous, 302)
 
-    def test_get_read_only(self):
-        """Test GET with site read-only mode"""
-        self.set_site_read_only()
-        self.assert_response(self.url, self.superuser, 200)
-        self.assert_response(self.url, self.non_superusers, 302)
-
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
@@ -378,6 +396,18 @@ class TestFileCreateView(
         self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_category(self):
         """Test GET under category (should fail)"""
@@ -439,6 +469,12 @@ class TestFileUpdateView(
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -496,6 +532,12 @@ class TestFileDeleteView(
         self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -555,6 +597,12 @@ class TestFilePublicLinkView(
         self.assert_response(self.url, self.bad_users, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -617,6 +665,12 @@ class TestFileServeView(
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -649,12 +703,23 @@ class TestFileServePublicView(
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 200)
 
-    def test_get_archived(self):
+    def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
         self.assert_response(self.url, self.all_users, 200)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 200)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 403)
+
+    def test_get_read_only(self):
+        """Test GET with site read-only mode"""
+        self.set_site_read_only()
+        self.assert_response(self.url, self.all_users, 200)
 
     def test_get_disabled(self):
         """Test GET with public links disabled (should fail)"""
@@ -662,11 +727,6 @@ class TestFileServePublicView(
             APP_NAME, 'allow_public_links', False, project=self.project
         )
         self.assert_response(self.url, self.all_users, 400)
-
-    def test_get_read_only(self):
-        """Test GET with site read-only mode"""
-        self.set_site_read_only()
-        self.assert_response(self.url, self.all_users, 200)
 
 
 class TestHyperLinkCreateView(
@@ -719,6 +779,12 @@ class TestHyperLinkCreateView(
         self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -787,6 +853,12 @@ class TestHyperLinkUpdateView(
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
         self.set_site_read_only()
@@ -845,6 +917,12 @@ class TestHyperLinkDeleteView(
         self.assert_response(self.url, self.non_superusers, 302)
         self.project.set_public()
         self.assert_response(self.url, self.no_role_users, 302)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 302)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -911,6 +989,28 @@ class TestBatchEditView(
     def test_post_archive(self):
         """Test POST with archived project"""
         self.project.set_archive()
+        self.assert_response(
+            self.url, self.superuser, 200, method='POST', data=self.post_data
+        )
+        self.assert_response(
+            self.url,
+            self.non_superusers,
+            302,
+            method='POST',
+            data=self.post_data,
+        )
+        self.project.set_public()
+        self.assert_response(
+            self.url,
+            self.no_role_users,
+            302,
+            method='POST',
+            data=self.post_data,
+        )
+
+    def test_post_block(self):
+        """Test POST with project access block"""
+        self.set_access_block(self.project)
         self.assert_response(
             self.url, self.superuser, 200, method='POST', data=self.post_data
         )

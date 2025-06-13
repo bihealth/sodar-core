@@ -162,6 +162,17 @@ PROJECTROLES_APP_SETTINGS = [
         user_modifiable=True,
         global_edit=True,
     ),
+    PluginAppSettingDef(
+        name='project_access_block',
+        scope=APP_SETTING_SCOPE_PROJECT,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Block project access',
+        description='Temporarily block all user access to project.',
+        user_modifiable=False,  # Only allow modification by superuser
+        global_edit=False,
+        project_types=[PROJECT_TYPE_PROJECT],
+    ),
 ]
 
 

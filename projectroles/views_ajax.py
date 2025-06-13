@@ -190,6 +190,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         user: SODARUser,
         finder_cats: list[str],
         depth: int,
+        blocked_projects: list[Project],
     ) -> bool:
         """
         Return whether user has access to a project for the project list.
@@ -201,7 +202,10 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         :return: Boolean
         """
         # Disable categories for anonymous users if anonymous access is enabled
-        if not user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY:
+        if project.type == PROJECT_TYPE_CATEGORY and not user.is_authenticated:
+            return False
+        # Disable access for non-superuser in blocked project
+        if project in blocked_projects and not user.is_superuser:
             return False
         # Cases which are always true if we get this far
         if (
@@ -245,10 +249,19 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             )
 
         projects = self._get_projects(request.user, parent)
+        blocked_projects = []
         starred_projects = []
         if request.user.is_authenticated:
             # NOTE: Generally, manipulating AppSetting objects directly is not
             #       advised, but in this case it's pertinent for optimization :)
+            blocked_projects = [
+                s.project
+                for s in AppSetting.objects.filter(
+                    app_plugin=None,
+                    name='project_access_block',
+                    value='1',
+                )
+            ]
             starred_projects = [
                 s.project
                 for s in AppSetting.objects.filter(
@@ -275,7 +288,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         ret_projects = []
         for p in projects:
             p_depth = p.get_depth()
-            p_access = self._get_access(p, request.user, finder_cats, p_depth)
+            p_access = self._get_access(
+                p, request.user, finder_cats, p_depth, blocked_projects
+            )
             p_finder_url = None
             if not p_access and p.parent:
                 p_finder_url = reverse(
@@ -294,6 +309,8 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 'finder_url': p_finder_url,
                 'uuid': str(p.sodar_uuid),
             }
+            if p.type == PROJECT_TYPE_PROJECT:
+                rp['blocked'] = p in blocked_projects
             ret_projects.append(rp)
         ret = {
             'projects': ret_projects,

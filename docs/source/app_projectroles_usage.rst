@@ -240,8 +240,16 @@ specific UIs for this functionality if manual user selection is needed.
 The projectroles app provides the following built-in app settings with the
 project scope:
 
-- ``ip_restrict``: Restrict project access by an allowed IP list if enabled.
-- ``ip_allowlist``: List of allowed IP addresses for project access.
+IP restrict
+    Restrict project access by an allowed IP list if enabled.
+IP allow list
+    List of allowed IP addresses for project access.
+Block project access
+    Temporarily block all non-superuser access to project views. This setting is
+    only available for superusers. It is intended for cases where e.g. problems
+    with project data require it to be temporarily made unavailable for users.
+    The setting can also be toggled using the ``blockprojectaccess`` management
+    command.
 
 To clean up settings which have been stored in the database but have since
 been removed from the plugin app settings definitions, run the following

@@ -207,10 +207,18 @@ class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.good_users, 200)
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
-        self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.assert_response_api(self.url, self.bad_users, 403, knox=True)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(self.url, self.superuser, 200)
+        self.assert_response_api(self.url, self.auth_non_superusers, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+        self.project.set_public()
+        self.assert_response_api(self.url, self.user_no_roles, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
@@ -410,18 +418,20 @@ class TestProjectCreateAPIView(ProjectrolesAPIPermissionTestBase):
     def test_post_parent_read_only(self):
         """Test POST with parent category and site read-only mode"""
         self.set_site_read_only()
-        good_users = [self.superuser]
-        bad_users = self.auth_non_superusers
         self.assert_response_api(
             self.url,
-            good_users,
+            self.superuser,
             201,
             method='POST',
             data=self.post_data_parent,
             cleanup_method=self._cleanup,
         )
         self.assert_response_api(
-            self.url, bad_users, 403, method='POST', data=self.post_data_parent
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data_parent,
         )
         self.assert_response_api(
             self.url,
@@ -545,6 +555,23 @@ class TestProjectUpdateAPIView(ProjectrolesAPIPermissionTestBase):
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
 
+    def test_put_block(self):
+        """Test PUT with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url, self.superuser, 200, method='PUT', data=self.put_data
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PUT',
+            data=self.put_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
+        )
+
     def test_put_read_only(self):
         """Test PUT with site read-only mode"""
         self.set_site_read_only()
@@ -552,7 +579,11 @@ class TestProjectUpdateAPIView(ProjectrolesAPIPermissionTestBase):
             self.url, self.superuser, 200, method='PUT', data=self.put_data
         )
         self.assert_response_api(
-            self.url, self.bad_users, 403, method='PUT', data=self.put_data
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PUT',
+            data=self.put_data,
         )
         self.assert_response_api(
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
@@ -675,6 +706,27 @@ class TestProjectDestroyAPIView(
         self.assert_response_api(
             self.url, self.bad_users, 403, method='DELETE', knox=True
         )
+        self.project.set_public()
+        self.assert_response_api(
+            self.url, self.user_no_roles, 403, method='DELETE'
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
+
+    def test_delete_block(self):
+        """Test DELETE with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            204,
+            method='DELETE',
+            cleanup_method=self._cleanup,
+        )
+        self.set_access_block(self.project)  # Need to reset
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='DELETE'
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='DELETE'
@@ -978,6 +1030,28 @@ class TestRoleAssignmentCreateAPIView(ProjectrolesAPIPermissionTestBase):
             data=self.post_data,
         )
 
+    def test_post_block(self):
+        """Test POST with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            201,
+            method='POST',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='POST', data=self.post_data
+        )
+
     def test_post_read_only(self):
         """Test POST with site read-only mode"""
         self.set_site_read_only()
@@ -1115,6 +1189,23 @@ class TestRoleAssignmentUpdateAPIView(ProjectrolesAPIPermissionTestBase):
             self.url, self.anonymous, 401, method='PUT', data=self.put_data
         )
 
+    def test_put_block(self):
+        """Test PUT with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url, self.superuser, 200, method='PUT', data=self.put_data
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='PUT',
+            data=self.put_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='PUT', data=self.put_data
+        )
+
     def test_put_read_only(self):
         """Test PUT with site read-only mode"""
         self.set_site_read_only()
@@ -1136,7 +1227,7 @@ class TestRoleAssignmentUpdateAPIView(ProjectrolesAPIPermissionTestBase):
 class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
     """Tests for RoleAssignmentDestroyAPIView permissions"""
 
-    def _make_as(self):
+    def _cleanup(self):
         role_as = self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
@@ -1147,7 +1238,7 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
         super().setUp()
         self.assign_user = self.make_user('assign_user')
         self.role_uuid = uuid.uuid4()
-        self._make_as()
+        self._cleanup()
         self.url = reverse(
             'projectroles:api_role_destroy',
             kwargs={'roleassignment': self.role_uuid},
@@ -1177,7 +1268,7 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
             self.good_users,
             204,
             method='DELETE',
-            cleanup_method=self._make_as,
+            cleanup_method=self._cleanup,
         )
         self.assert_response_api(self.url, self.bad_users, 403, method='DELETE')
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
@@ -1186,7 +1277,7 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
             self.good_users,
             204,
             method='DELETE',
-            cleanup_method=self._make_as,
+            cleanup_method=self._cleanup,
             knox=True,
         )
         self.assert_response_api(
@@ -1212,7 +1303,7 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
             self.good_users,
             204,
             method='DELETE',
-            cleanup_method=self._make_as,
+            cleanup_method=self._cleanup,
         )
         self.assert_response_api(self.url, self.bad_users, 403, method='DELETE')
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
@@ -1221,7 +1312,7 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
             self.good_users,
             204,
             method='DELETE',
-            cleanup_method=self._make_as,
+            cleanup_method=self._cleanup,
             knox=True,
         )
         self.assert_response_api(
@@ -1233,6 +1324,21 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
         )
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
 
+    def test_delete_block(self):
+        """Test DELETE with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            204,
+            method='DELETE',
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='DELETE'
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
+
     def test_delete_read_only(self):
         """Test DELETE with site read-only mode"""
         self.set_site_read_only()
@@ -1241,7 +1347,7 @@ class TestRoleAssignmentDestroyAPIView(ProjectrolesAPIPermissionTestBase):
             self.superuser,
             204,
             method='DELETE',
-            cleanup_method=self._make_as,
+            cleanup_method=self._cleanup,
         )
         self.assert_response_api(
             self.url, self.auth_non_superusers, 403, method='DELETE'
@@ -1399,6 +1505,28 @@ class TestRoleAssignmentOwnerTransferAPIView(ProjectrolesAPIPermissionTestBase):
             data=self.post_data,
         )
 
+    def test_post_block(self):
+        """Test POST with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            200,
+            method='POST',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='POST', data=self.post_data
+        )
+
     def test_post_read_only(self):
         """Test POST with site read-only mode"""
         self.set_site_read_only()
@@ -1476,8 +1604,18 @@ class TestProjectInviteListAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.user_no_roles, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
 
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(self.url, self.superuser, 200)
+        self.assert_response_api(self.url, self.auth_non_superusers, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+        self.project.set_public()
+        self.assert_response_api(self.url, self.user_no_roles, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
     def test_get_read_only(self):
-        """Test GET with archived project and site read-only mode"""
+        """Test GET with site read-only mode"""
         self.set_site_read_only()
         self.assert_response_api(self.url, self.superuser, 200)
         self.assert_response_api(self.url, self.auth_non_superusers, 403)
@@ -1540,6 +1678,16 @@ class TestProjectInviteRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
+        self.project.set_public()
+        self.assert_response_api(self.url, self.user_no_roles, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(self.url, self.superuser, 200)
+        self.assert_response_api(self.url, self.auth_non_superusers, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
         self.project.set_public()
         self.assert_response_api(self.url, self.user_no_roles, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
@@ -1694,6 +1842,28 @@ class TestProjectInviteCreateAPIView(ProjectrolesAPIPermissionTestBase):
             data=self.post_data,
         )
 
+    def test_post_block(self):
+        """Test POST with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            201,
+            method='POST',
+            data=self.post_data,
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='POST', data=self.post_data
+        )
+
     def test_post_read_only(self):
         """Test POST with site read-only mode"""
         self.set_site_read_only()
@@ -1817,6 +1987,24 @@ class TestProjectInviteRevokeAPIView(ProjectrolesAPIPermissionTestBase):
         )
         self.assert_response_api(self.url, self.anonymous, 401, method='POST')
 
+    def test_post_block(self):
+        """Test POST with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            200,
+            method='POST',
+            cleanup_method=self._cleanup,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, method='POST')
+
     def test_post_read_only(self):
         """Test POST with site read-only mode"""
         self.set_site_read_only()
@@ -1912,6 +2100,15 @@ class TestProjectInviteResendAPIView(ProjectrolesAPIPermissionTestBase):
         self.project.set_public()
         self.assert_response_api(
             self.url, self.user_no_roles, 403, method='POST'
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, method='POST')
+
+    def test_post_block(self):
+        """Test POST with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(self.url, self.superuser, 200, method='POST')
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, method='POST'
         )
         self.assert_response_api(self.url, self.anonymous, 401, method='POST')
 
@@ -2026,6 +2223,19 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
             self.url, self.anonymous, 401, data=self.get_data
         )
 
+    def test_get_project_setting_block(self):
+        """Test GET with PROJECT scope and project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url, self.superuser, 200, data=self.get_data
+        )
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, data=self.get_data
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, data=self.get_data
+        )
+
     def test_get_project_setting_read_only(self):
         """Test GET with PROJECT scope and site read-only mode"""
         self.set_site_read_only()
@@ -2083,6 +2293,20 @@ class TestProjectSettingRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(
             self.url, self.anonymous, 401, data=self.get_data
         )
+
+    def test_get_project_user_setting_block(self):
+        """Test GET with PROJECT scope and project access block"""
+        self.set_access_block(self.project)
+        get_data = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_str_setting',
+            'user': str(self.user_owner.sodar_uuid),
+        }
+        self.assert_response_api(self.url, self.superuser, 200, data=get_data)
+        self.assert_response_api(
+            self.url, self.auth_non_superusers, 403, data=get_data
+        )
+        self.assert_response_api(self.url, self.anonymous, 401, data=get_data)
 
     def test_get_project_user_setting_read_only(self):
         """Test GET with PROJECT_USER scope and site read-only mode"""
@@ -2254,6 +2478,27 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
             data=self.post_data,
         )
 
+    def test_post_project_setting_block(self):
+        """Test POST with PROJECT scope and project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            200,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='POST', data=self.post_data
+        )
+
     def test_post_project_setting_read_only(self):
         """Test POST with PROJECT scope and site read-only mode"""
         self.set_site_read_only()
@@ -2331,6 +2576,33 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIPermissionTestBase):
             401,
             method='POST',
             data=post_data,
+        )
+
+    def test_post_project_user_setting_block(self):
+        """Test POST with PROJECT_USER scope and project access block"""
+        self.set_access_block(self.project)
+        post_data = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_str_setting',
+            'value': 'value',
+            'user': str(self.user_owner.sodar_uuid),
+        }
+        self.assert_response_api(
+            self.url,
+            self.superuser,
+            200,
+            method='POST',
+            data=post_data,
+        )
+        self.assert_response_api(
+            self.url,
+            self.auth_non_superusers,
+            403,
+            method='POST',
+            data=post_data,
+        )
+        self.assert_response_api(
+            self.url, self.anonymous, 401, method='POST', data=post_data
         )
 
     def test_post_project_user_setting_read_only(self):

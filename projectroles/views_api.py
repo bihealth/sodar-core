@@ -65,6 +65,7 @@ from projectroles.serializers import (
     SODARUserSerializer,
     REMOTE_MODIFY_MSG,
 )
+from projectroles.utils import get_display_name
 from projectroles.views import (
     ProjectAccessMixin,
     ProjectDeleteMixin,
@@ -73,6 +74,7 @@ from projectroles.views import (
     RoleAssignmentOwnerTransferMixin,
     ProjectInviteMixin,
     ProjectModifyPluginViewMixin,
+    PROJECT_BLOCK_MSG,
 )
 
 
@@ -173,6 +175,20 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         elif project_type and project_type != project.type:
             raise PermissionDenied(
                 INVALID_PROJECT_TYPE_MSG.format(project_type=project.type)
+            )
+
+        # Prohibit access if project_access_block is set
+        if (
+            not request.user.is_superuser
+            and project.type == PROJECT_TYPE_PROJECT
+            and app_settings.get(
+                APP_NAME, 'project_access_block', project=project
+            )
+        ):
+            raise PermissionDenied(
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(project.type)
+                )
             )
 
         owner_or_delegate = project.is_owner_or_delegate(request.user)

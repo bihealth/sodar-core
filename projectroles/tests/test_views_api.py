@@ -60,6 +60,7 @@ from projectroles.tests.test_views import (
     REMOTE_SITE_SECRET,
 )
 from projectroles.utils import build_secret
+from projectroles.views import PROJECT_BLOCK_MSG
 
 
 app_settings = AppSettingAPI()
@@ -623,14 +624,24 @@ class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
         """Test GET with inherited member"""
         user_new = self.make_user('user_new')
         self.make_assignment(self.category, user_new, self.role_contributor)
-        url = reverse(
-            'projectroles:api_project_retrieve',
-            kwargs={'project': self.project.sodar_uuid},
-        )
-        response = self.request_knox(url)
+        response = self.request_knox(self.url)
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['roles']), 3)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        app_settings.set(
+            APP_NAME, 'project_access_block', True, project=self.project
+        )
+        response = self.request_knox(
+            self.url, token=self.get_token(self.user_owner)
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.data['detail'],
+            PROJECT_BLOCK_MSG.format(project_type='project'),
+        )
 
     def test_get_category_v1_1(self):
         """Test GET with category and API version v1.1"""
