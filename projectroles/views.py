@@ -602,6 +602,13 @@ class ProjectListContextMixin:
         context['page_options_default'] = app_settings.get(
             APP_NAME, 'project_list_pagination', user=self.request.user
         )
+        if not self.kwargs.get('project'):
+            starred_default = app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.request.user
+            )
+        else:
+            starred_default = False
+        context['project_list_starred_default'] = starred_default
         return context
 
 

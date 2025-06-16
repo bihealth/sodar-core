@@ -482,6 +482,30 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
         return Response(1 if value else 0, status=200)
 
 
+class HomeStarringAjaxView(SODARBaseAjaxView):
+    """
+    View to set default starred setting for user in HomeView project list.
+
+    NOTE: Separate view needed as user is not allwoed to modify this setting
+          via UserSettingSetAPIView
+    """
+
+    def post(self, request, *args, **kwargs):
+        value = bool(int(request.data.get('value')))
+        user = request.user
+        starred_default = app_settings.get(
+            APP_NAME, 'project_list_home_starred', user=user
+        )
+        if value != starred_default:
+            app_settings.set(
+                plugin_name=APP_NAME,
+                setting_name='project_list_home_starred',
+                value=value,
+                user=user,
+            )
+        return Response(1 if value else 0, status=200)
+
+
 class RemoteProjectAccessAjaxView(SODARBaseProjectAjaxView):
     """View to check whether a remote project has been accessed by sync"""
 

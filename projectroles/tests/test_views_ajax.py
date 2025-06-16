@@ -504,37 +504,106 @@ class TestProjectStarringAjaxView(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
+        self.url = reverse(
+            'projectroles:ajax_star',
+            kwargs={'project': self.project.sodar_uuid},
+        )
 
-    def test_project_star(self):
-        """Test Starring a Project"""
+    def test_post(self):
+        """Test ProjectStarringAjaxView POST"""
         self._assert_setting_count(0)
         with self.login(self.user):
-            response = self.client.post(
-                reverse(
-                    'projectroles:ajax_star',
-                    kwargs={'project': self.project.sodar_uuid},
-                )
-            )
+            response = self.client.post(self.url)
         self.assertEqual(response.status_code, 200)
         self._assert_setting_count(1)
-        star = app_settings.get(
-            APP_NAME, 'project_star', self.project, self.user
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'project_star', self.project, self.user),
+            True,
         )
-        self.assertEqual(star, True)
 
-        with self.login(self.user):
-            response = self.client.post(
-                reverse(
-                    'projectroles:ajax_star',
-                    kwargs={'project': self.project.sodar_uuid},
-                )
-            )
-        self.assertEqual(response.status_code, 200)
-        star = app_settings.get(
-            APP_NAME, 'project_star', self.project, self.user
+    def test_post_update(self):
+        """Test POST to update existing value"""
+        app_settings.set(
+            APP_NAME, 'project_star', True, self.project, self.user
         )
         self._assert_setting_count(1)
-        self.assertEqual(star, False)
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'project_star', self.project, self.user),
+            True,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 200)
+        self._assert_setting_count(1)
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'project_star', self.project, self.user),
+            False,
+        )
+
+
+class TestHomeStarringAjaxView(ViewTestBase):
+    """Tests for HomeStarringAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:ajax_star_home')
+
+    def test_post(self):
+        """Test HomeStarringAjaxView POST"""
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user
+            ),
+            False,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data={'value': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user
+            ),
+            True,
+        )
+
+    def test_post_update(self):
+        """Test POST to update existing value"""
+        app_settings.set(
+            APP_NAME, 'project_list_home_starred', True, user=self.user
+        )
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user
+            ),
+            True,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data={'value': '0'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user
+            ),
+            False,
+        )
+
+    def test_post_value_unchanged(self):
+        """Test POST with unchanged value"""
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user
+            ),
+            False,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data={'value': '0'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user
+            ),
+            False,
+        )
 
 
 class TestRemoteProjectAccessAjaxView(

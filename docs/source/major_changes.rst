@@ -20,6 +20,7 @@ Release Highlights
 - Add project invite retrieval REST API view
 - Add temporary project access blocking for superusers
 - Add blockprojectaccess management command
+- Add saving of home view project list starred filter state
 - Update projectroles REST API to return user UUIDs instead of nested user
   serializers
 - Update timeline list user displaying

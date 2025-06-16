@@ -253,10 +253,21 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         with self.login(self.user_owner):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        custom_cols = response.context['project_custom_cols']
+        rc = response.context
+        self.assertEqual(rc['app_alerts'], 0)
+        # Custom columns
+        custom_cols = rc['project_custom_cols']
         self.assertEqual(len(custom_cols), 2)
         self.assertEqual(custom_cols[0]['column_id'], 'links')
-        self.assertEqual(response.context['project_col_count'], 4)
+        self.assertEqual(rc['project_col_count'], 4)
+        # User settings
+        self.assertEqual(rc['page_options_default'], 10)
+        self.assertEqual(rc['project_list_starred_default'], False)
+        # Sidebar defaults
+        self.assertEqual(rc['sidebar_icon_size'], 36)
+        self.assertEqual(rc['sidebar_notch_pos'], 12)
+        self.assertEqual(rc['sidebar_notch_size'], 12)
+        self.assertEqual(rc['sidebar_padding'], 8)
 
     def test_get_superuser(self):
         """Test GET as superuser"""
@@ -274,14 +285,18 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
 
-    def test_get_context_sidebar_icon_size(self):
-        """Test GET context for sidebar icon size"""
-        with self.login(self.user):
+    def test_get_starred_default_set(self):
+        """Test GET with project_list_home_starred=True"""
+        app_settings.set(
+            APP_NAME, 'project_list_home_starred', True, user=self.user_owner
+        )
+        with self.login(self.user_owner):
             response = self.client.get(self.url)
-            self.assertEqual(response.context['sidebar_icon_size'], 36)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_list_starred_default'], True)
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE - 2)
-    def test_get_context_sidebar_icon_size_min(self):
+    def test_get_sidebar_icon_size_min(self):
         """Test GET context for sidebar icon size with value below minimum"""
         with self.login(self.user):
             response = self.client.get(self.url)
@@ -291,7 +306,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             )
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MAX_SIZE + 2)
-    def test_get_context_sidebar_icon_size_max(self):
+    def test_get_sidebar_icon_size_max(self):
         """Test GET context for sidebar icon size with value over max"""
         with self.login(self.user):
             response = self.client.get(self.url)
@@ -300,40 +315,22 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 SIDEBAR_ICON_MAX_SIZE,
             )
 
-    def test_get_context_sidebar_notch_pos(self):
-        """Test GET context for siderbar notch position"""
-        with self.login(self.user):
-            response = self.client.get(self.url)
-            self.assertEqual(response.context['sidebar_notch_pos'], 12)
-
-    def test_get_context_sidebar_notch_size(self):
-        """Test GET context for sidebar notch size"""
-        with self.login(self.user):
-            response = self.client.get(self.url)
-            self.assertEqual(response.context['sidebar_notch_size'], 12)
-
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE)
-    def test_get_context_sidebar_notch_size_min(self):
+    def test_get_sidebar_notch_size_min(self):
         """Test GET context for sidebar notch size with minimum icon size"""
         with self.login(self.user):
             response = self.client.get(self.url)
             self.assertEqual(response.context['sidebar_notch_size'], 9)
 
-    def test_get_context_sidebar_padding(self):
-        """Test GET context for sidebar padding"""
-        with self.login(self.user):
-            response = self.client.get(self.url)
-            self.assertEqual(response.context['sidebar_padding'], 8)
-
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MAX_SIZE)
-    def test_get_context_sidebar_padding_max(self):
+    def test_get_sidebar_padding_max(self):
         """Test GET context for sidebar padding with maximum icon size"""
         with self.login(self.user):
             response = self.client.get(self.url)
             self.assertEqual(response.context['sidebar_padding'], 10)
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE)
-    def test_get_context_sidebar_padding_min(self):
+    def test_get_sidebar_padding_min(self):
         """Test GET context for sidebar padding with minimum icon size"""
         with self.login(self.user):
             response = self.client.get(self.url)
@@ -577,24 +574,33 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
     def setUp(self):
         super().setUp()
         self.user_owner = self.make_user('user_owner')
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner, self.role_owner
+        )
         self.project = self.make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self.make_assignment(
             self.project, self.user_owner, self.role_owner
+        )
+        self.url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.url_cat = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.category.sodar_uuid},
         )
 
     def test_get(self):
         """Test ProjectDetailView GET"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
-                )
-            )
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['object'].pk, self.project.pk)
+        self.assertEqual(response.context['object'], self.project)
 
     def test_get_not_found(self):
         """Test GET with invalid UUID"""
@@ -613,16 +619,33 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             APP_NAME, 'project_access_block', True, project=self.project
         )
         with self.login(self.user_owner):
-            response = self.client.get(
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
-                )
-            )
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             PROJECT_BLOCK_MSG.format(project_type='project') + '.',
+        )
+
+    def test_get_category(self):
+        """Test GET with category"""
+        with self.login(self.user_owner):
+            response = self.client.get(self.url_cat)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['project_list_starred_default'], False
+        )
+
+    def test_get_category_starred_default_set(self):
+        """Test GET with category and project_list_home_starred=True"""
+        app_settings.set(
+            APP_NAME, 'project_list_home_starred', True, user=self.user_owner
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(self.url_cat)
+        self.assertEqual(response.status_code, 200)
+        # Not in HomeView, this should still be False
+        self.assertEqual(
+            response.context['project_list_starred_default'], False
         )
 
 

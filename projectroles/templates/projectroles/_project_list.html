@@ -54,7 +54,8 @@
            data-list-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
            data-custom-col-url="{% url 'projectroles:ajax_project_list_columns' %}"
            data-role-url="{% url 'projectroles:ajax_project_list_roles' %}"
-           data-parent="{% if parent %}{{ parent.sodar_uuid }}{% endif %}">
+           data-parent="{% if parent %}{{ parent.sodar_uuid }}{% endif %}"
+           data-starred-default="{{ project_list_starred_default|yesno:'1,0' }}">
       <thead id="sodar-pr-project-list-header">
         <tr class="sodar-pr-project-list-header">
           <th id="sodar-pr-project-list-header-project">

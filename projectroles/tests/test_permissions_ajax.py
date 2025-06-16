@@ -5,7 +5,10 @@ from django.urls import reverse
 
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
-from projectroles.tests.test_permissions import ProjectPermissionTestBase
+from projectroles.tests.test_permissions import (
+    ProjectPermissionTestBase,
+    SiteAppPermissionTestBase,
+)
 
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -316,6 +319,35 @@ class TestProjectStarringAjaxView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.superuser, 200, method='POST')
         self.assert_response(
             self.url_cat, self.non_superusers, 403, method='POST'
+        )
+
+
+class TestHomeStarringAjaxView(SiteAppPermissionTestBase):
+    """Tests for HomeStarringAjaxView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:ajax_star_home')
+        self.post_data = {'value': '1'}
+
+    def test_post(self):
+        """Test HomeStarringAjaxView POST"""
+        self.assert_response(
+            self.url,
+            [self.superuser, self.regular_user],
+            200,
+            method='POST',
+            data=self.post_data,
+        )
+        self.assert_response(
+            self.url, self.anonymous, 403, method='POST', data=self.post_data
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_post_anon(self):
+        """Test POST with anonymous access"""
+        self.assert_response(
+            self.url, self.anonymous, 403, method='POST', data=self.post_data
         )
 
 

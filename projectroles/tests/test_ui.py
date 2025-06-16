@@ -715,6 +715,12 @@ class TestHomeView(UITestBase):
 
     def test_project_list_star(self):
         """Test project list star filter"""
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user_owner
+            ),
+            False,
+        )
         app_settings.set(
             plugin_name=APP_NAME,
             setting_name='project_star',
@@ -732,6 +738,12 @@ class TestHomeView(UITestBase):
         self.assertEqual(self._get_item_vis_count(), 1)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-project-list-message')
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user_owner
+            ),
+            True,
+        )
 
     def test_project_list_star_no_project(self):
         """Test project list star filter with no starred project"""
@@ -741,6 +753,38 @@ class TestHomeView(UITestBase):
             By.ID, 'sodar-pr-project-list-link-star'
         )
         self.assertFalse(button.is_enabled())
+
+    def test_project_list_filter_star(self):
+        """Test toggling star with filter enabled"""
+        app_settings.set(
+            plugin_name=APP_NAME,
+            setting_name='project_star',
+            value=True,
+            project=self.category,
+            user=self.user_owner,
+            validate=False,
+        ),
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.assertEqual(self._get_item_vis_count(), 2)
+        f_input = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-filter'
+        )
+        f_input.send_keys('testproject')
+        self.assertEqual(self._get_item_vis_count(), 1)
+        self.assertEqual(self._get_list_item(self.project).is_displayed(), True)
+        with self.assertRaises(NoSuchElementException):
+            self._get_list_item(self.category)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-star'
+        )
+        button.click()
+        self.assertEqual(self._get_item_vis_count(), 1)
+        with self.assertRaises(NoSuchElementException):
+            self._get_list_item(self.project)
+        self.assertEqual(
+            self._get_list_item(self.category).is_displayed(), True
+        )
+        self.assertEqual(f_input.get_attribute('value'), '')
 
     def test_project_list_title(self):
         """Test project list title rendering"""
@@ -1676,6 +1720,17 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         """Return full IDs of project links"""
         return ['sodar-pr-link-project-' + x for x in args]
 
+    def _get_pr_item_vis_count(self) -> int:
+        return len(
+            [
+                e
+                for e in self.selenium.find_elements(
+                    By.CLASS_NAME, 'sodar-pr-project-list-item'
+                )
+                if e.get_attribute('style') != 'display: none;'
+            ]
+        )
+
     def _setup_remotes(
         self,
         site_mode: str = SITE_MODE_TARGET,
@@ -2217,6 +2272,45 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             f'{sub_cat.title}{CAT_DELIMITER}<strong>{self.project.title}'
             f'</strong>',
         )
+
+    def test_category_project_list_star(self):
+        """Test category project list star filter"""
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user_owner
+            ),
+            False,
+        )
+        # Set up new starred project
+        new_project = self.make_project(
+            'NewProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.make_assignment(new_project, self.user_owner, self.role_owner)
+        app_settings.set(
+            APP_NAME,
+            'project_star',
+            True,
+            project=new_project,
+            user=self.user_owner,
+        )
+        self.login_and_redirect(self.user_owner, self.url_cat)
+        WebDriverWait(self.selenium, 10).until(
+            ec.visibility_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-title')
+            )
+        )
+        self.assertEqual(self._get_pr_item_vis_count(), 2)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-star'
+        )
+        button.click()
+        self.assertEqual(self._get_pr_item_vis_count(), 1)
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.user_owner
+            ),
+            False,
+        )  # Not in HomeView, default value should not be set
 
 
 class TestProjectCreateView(RemoteSiteMixin, UITestBase):

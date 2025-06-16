@@ -201,6 +201,11 @@ urls_ajax = [
         name='ajax_star',
     ),
     path(
+        route='ajax/star/home',
+        view=views_ajax.HomeStarringAjaxView.as_view(),
+        name='ajax_star_home',
+    ),
+    path(
         route='ajax/remote/access/<uuid:project>',
         view=views_ajax.RemoteProjectAccessAjaxView.as_view(),
         name='ajax_remote_access',

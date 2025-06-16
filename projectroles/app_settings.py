@@ -152,6 +152,16 @@ PROJECTROLES_APP_SETTINGS = [
         global_edit=True,
     ),
     PluginAppSettingDef(
+        name='project_list_home_starred',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Home view project list starred display',
+        description='Initial starred mode to display in home view project list',
+        user_modifiable=True,  # Editable only in project list
+        global_edit=False,
+    ),
+    PluginAppSettingDef(
         name='project_list_pagination',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_INTEGER,

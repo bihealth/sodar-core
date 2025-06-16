@@ -22,6 +22,9 @@ Added
     - ``is_project_accessible()`` rule predicate (#1653)
     - ``PermissionTestMixin.set_access_block()`` helper (#1653)
     - ``blockprojectaccess`` management command (#1653)
+    - ``HomeView`` project list starred filter state saving (#1681)
+    - ``project_list_home_starred`` app setting (#1681)
+    - ``HomeStarringAjaxView`` Ajax API view (#1681)
 
 Changed
 -------
@@ -56,6 +59,7 @@ Fixed
 - **Projectroles**
     - UI tests failing for asserting SVG icons prior to rendering (#1559)
     - Incorrect alignment for ``sodar-user-badge`` (#1694)
+    - Project list starred toggle not working with active filter (#1700)
 
 
 v1.1.6 (2025-05-20)
