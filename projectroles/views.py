@@ -672,6 +672,7 @@ class ProjectDetailView(
                 context['role'] = role_as.role
             except RoleAssignment.DoesNotExist:
                 context['role'] = None
+        # TODO: Update for public_access
         elif self.object.public_guest_access:
             context['role'] = Role.objects.filter(
                 name=PROJECT_ROLE_GUEST
@@ -878,6 +879,7 @@ class ProjectSearchResultsView(
         if not search_type or search_type == 'project':
             context['project_results'] = []
             for p in Project.objects.find(search_terms, project_type='PROJECT'):
+                # TODO: Update for public_access
                 if p.public_guest_access or self.request.user.has_perm(
                     'projectroles.view_project', p
                 ):
@@ -988,6 +990,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
     @staticmethod
     def _get_old_project_data(project: Project) -> dict:
         """Get existing data from project fields"""
+        # TODO: Update for public_access
         return {
             'title': project.title,
             'parent': project.parent,
@@ -1091,6 +1094,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['readme'] != project.readme.raw:
             extra_data['readme'] = project.readme.raw
             upd_fields.append('readme')
+        # TODO: Update for public_access
         if old_data['public_guest_access'] != project.public_guest_access:
             extra_data['public_guest_access'] = project.public_guest_access
             upd_fields.append('public_guest_access')
@@ -1398,8 +1402,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 data['parent'] if 'parent' in data else old_project.parent
             )
             project.public_guest_access = (
-                data.get('public_guest_access') or False
-            )
+                data.get('public_access') is not None
+            )  # DEPRECATED
         else:
             project = Project(
                 title=data.get('title'),
@@ -1407,7 +1411,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 type=data.get('type'),
                 readme=data.get('readme'),
                 parent=data.get('parent'),
-                public_guest_access=data.get('public_guest_access') or False,
+                public_access=data.get('public_access'),
+                public_guest_access=data.get('public_access')
+                is not None,  # DEPRECATED
             )
             project.save()
 
@@ -1475,6 +1481,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             )
 
         # If public access was updated, update has_public_children for parents
+        # TODO: Update for public_access
         if (
             old_project
             and project.parent
@@ -1626,6 +1633,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             )
         }
         parent = str(project.parent.sodar_uuid) if project.parent else None
+        # TODO: Update for public_access
         extra_data = {
             'title': project.title,
             'type': project.type,

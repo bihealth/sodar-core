@@ -45,6 +45,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_VIEWER = SODAR_CONSTANTS['PROJECT_ROLE_VIEWER']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
@@ -520,7 +521,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             'owner',
             'description',
             'readme',
-            'public_guest_access',
+            'public_access',
         ]
 
     @classmethod
@@ -680,6 +681,15 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         self.fields['readme'].widget = SODARPagedownWidget(
             attrs={'show_preview': True}
         )
+        self.fields['public_access'].choices = [
+            (None, 'None'),
+            get_role_option(
+                PROJECT_TYPE_PROJECT, Role.objects.get(name=PROJECT_ROLE_GUEST)
+            ),
+            get_role_option(
+                PROJECT_TYPE_PROJECT, Role.objects.get(name=PROJECT_ROLE_VIEWER)
+            ),
+        ]
 
         # Updating an existing project
         if self.instance.pk:
@@ -693,6 +703,8 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             self.initial['owner'] = self.instance.get_owner().user.sodar_uuid
             # Hide owner widget if updating (changed in member modification UI)
             self.fields['owner'].widget = forms.HiddenInput()
+            # Set initial public access value
+            self.initial['public_access'] = self.instance.public_access
 
             # Set valid choices for parent
             if not disable_categories:
@@ -727,6 +739,8 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             # Hide owner select widget for regular users
             if not self.current_user.is_superuser:
                 self.fields['owner'].widget = forms.HiddenInput()
+            # Set initial public access value
+            self.initial['public_access'] = None
 
             # Creating a subproject
             if parent_project:
@@ -821,13 +835,16 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 'Transfer instead',
             )
 
-        # Ensure public_guest_access is not set on a category
+        # Ensure public_access is not set on a category
         if p_type == PROJECT_TYPE_CATEGORY and self.cleaned_data.get(
-            'public_guest_access'
+            'public_access'
         ):
+            categories_title = get_display_name(
+                PROJECT_TYPE_CATEGORY, plural=True
+            )
             self.add_error(
-                'public_guest_access',
-                'Public guest access is not allowed for categories',
+                'public_access',
+                f'Public access is not allowed for {categories_title}',
             )
 
         # Clean and validate app settings
@@ -1010,7 +1027,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         if inh_role_as:
             q_kwargs['rank__lte'] = inh_role_as.role.rank
         ret = [
-            get_role_option(project, role)
+            get_role_option(project.type, role)
             for role in Role.objects.filter(**q_kwargs).order_by('rank')
         ]
         if (
@@ -1393,16 +1410,16 @@ class LocalUserForm(SODARModelForm):
 # Helper functions -------------------------------------------------------------
 
 
-def get_role_option(project: Project, role: Role) -> tuple:
+def get_role_option(project_type: str, role: Role) -> tuple:
     """
     Return form option value for a Role object.
 
-    :param project: Project object
+    :param project_type Project type (str)
     :param role: Role object
     return: Role key and legend
     """
     return role.pk, '{} {}'.format(
-        get_display_name(project.type, title=True),
+        get_display_name(project_type, title=True),
         role.name.split(' ')[1].capitalize(),
     )
 
@@ -1436,6 +1453,6 @@ def get_role_choices(
     if promote_as:
         qs = qs.filter(rank__lt=promote_as.role.rank)
     return [
-        get_role_option(project, role)
+        get_role_option(project.type, role)
         for role in qs.exclude(name__in=role_excludes)
     ]
