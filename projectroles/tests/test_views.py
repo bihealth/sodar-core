@@ -573,12 +573,13 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
     def setUp(self):
         super().setUp()
+        self.user_owner_cat = self.make_user('user_owner_cat')
         self.user_owner = self.make_user('user_owner')
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.owner_as_cat = self.make_assignment(
-            self.category, self.user_owner, self.role_owner
+            self.category, self.user_owner_cat, self.role_owner
         )
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
@@ -600,7 +601,54 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['object'], self.project)
+        rc = response.context
+        self.assertEqual(rc['object'], self.project)
+        self.assertEqual(rc['role'], None)
+        self.assertEqual(len(rc['target_projects']), 0)
+        self.assertNotIn('peer_projects', rc)
+
+    def test_get_owner(self):
+        """Test GET as project owner"""
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['role'], self.role_owner)
+
+    def test_get_owner_inherited(self):
+        """Test GET as inherited project owner"""
+        with self.login(self.user_owner_cat):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['role'], self.role_owner)
+
+    def test_get_inherited_promoted(self):
+        """Test GET as inherited and promoted user"""
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.category, user_new, self.role_viewer)
+        self.make_assignment(self.project, user_new, self.role_contributor)
+        with self.login(user_new):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['role'], self.role_contributor)
+
+    def test_get_public_no_role(self):
+        """Test GET with public project and no explicit role"""
+        self.project.set_public_access(self.role_guest)
+        user_new = self.make_user('user_new')
+        with self.login(user_new):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['role'], self.role_guest)
+
+    def test_get_public_promote(self):
+        """Test GET with public project and promoted role"""
+        self.project.set_public_access(self.role_guest)
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.project, user_new, self.role_contributor)
+        with self.login(user_new):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['role'], self.role_contributor)
 
     def test_get_not_found(self):
         """Test GET with invalid UUID"""

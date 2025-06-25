@@ -662,20 +662,18 @@ class ProjectDetailView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+        # User role in project
         if self.request.user.is_superuser:
             context['role'] = None
-        elif self.request.user.is_authenticated:
-            try:
-                role_as = RoleAssignment.objects.get(
-                    user=self.request.user, project=self.object
-                )
-                context['role'] = role_as.role
-            except RoleAssignment.DoesNotExist:
-                context['role'] = None
-        elif self.object.public_access:
-            context['role'] = self.object.public_access
         else:
-            context['role'] = None
+            if self.request.user.is_authenticated:
+                role_as = self.object.get_role(self.request.user)
+                context['role'] = role_as.role if role_as else None
+            if not context.get('role'):
+                if self.object.public_access:
+                    context['role'] = self.object.public_access
+                else:
+                    context['role'] = None
 
         # Remote projects
         q_kwargs = {

@@ -50,14 +50,6 @@ Changed
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)
 
-Removed
--------
-
-- **Projectroles**
-    - Deprecated ``get_user_display_name()`` utility method (#1884)
-    - Deprecated support for app settings definitions as dict (#1532)
-    - Deprecated ``AppSettingAPI.get_all()`` method (#1538)
-
 Fixed
 -----
 
@@ -66,6 +58,15 @@ Fixed
     - Incorrect alignment for ``sodar-user-badge`` (#1694)
     - Project list starred toggle not working with active filter (#1700)
     - Role operations dropdown alignment in ``project_invites.html`` (#1704)
+    - Invalid ``role`` values in ``ProjectDetailView`` context data (#1706)
+
+Removed
+-------
+
+- **Projectroles**
+    - Deprecated ``get_user_display_name()`` utility method (#1884)
+    - Deprecated support for app settings definitions as dict (#1532)
+    - Deprecated ``AppSettingAPI.get_all()`` method (#1538)
 
 
 v1.1.6 (2025-05-20)
