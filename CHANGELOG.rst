@@ -65,6 +65,7 @@ Fixed
     - UI tests failing for asserting SVG icons prior to rendering (#1559)
     - Incorrect alignment for ``sodar-user-badge`` (#1694)
     - Project list starred toggle not working with active filter (#1700)
+    - Role operations dropdown alignment in ``project_invites.html`` (#1704)
 
 
 v1.1.6 (2025-05-20)

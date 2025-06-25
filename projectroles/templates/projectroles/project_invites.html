@@ -40,7 +40,9 @@
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h3><i class="iconify" data-icon="mdi:email"></i> Member Invites</h3>
   {% if role_perms.can_invite %}
-    {% include 'projectroles/_project_role_ops.html' with project=project %}
+    <div class="ml-auto">
+      {% include 'projectroles/_project_role_ops.html' with project=project %}
+    </div>
   {% endif %}
 </div>
 
