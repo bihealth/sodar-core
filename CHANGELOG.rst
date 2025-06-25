@@ -27,6 +27,7 @@ Added
     - ``HomeStarringAjaxView`` Ajax API view (#1681)
     - ``Project.public_access`` field (#1702)
     - ``Project.has_role()`` helper ``public`` arg (#1702)
+    - Limited guest role alert in ``ProjectDetailView`` (#1705)
 
 Changed
 -------

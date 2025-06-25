@@ -1916,6 +1916,40 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         expected = [(self.superuser, len(get_active_plugins()))]
         self.assert_element_count(expected, self.url, 'sodar-pr-app-item')
 
+    def test_limited_alert(self):
+        """Test visibility of limited access alert"""
+        expected = [
+            (self.superuser, 0),
+            (self.user_owner_cat, 0),
+            (self.user_delegate_cat, 0),
+            (self.user_contributor_cat, 0),
+            (self.user_guest_cat, 0),
+            (self.user_viewer_cat, 1),
+            (self.user_owner, 0),
+            (self.user_delegate, 0),
+            (self.user_contributor, 0),
+            (self.user_guest, 0),
+            (self.user_viewer, 1),
+        ]
+        self.assert_element_count(
+            expected, self.url, 'sodar-pr-details-alert-limited'
+        )
+
+    def test_limited_alert_category(self):
+        """Test visibility of limited access alert for category"""
+        expected = [
+            (self.superuser, 0),
+            (self.user_owner_cat, 0),
+            (self.user_delegate_cat, 0),
+            (self.user_contributor_cat, 0),
+            (self.user_guest_cat, 0),
+            (self.user_viewer_cat, 1),
+            (self.user_finder_cat, 1),
+        ]
+        self.assert_element_count(
+            expected, self.url_cat, 'sodar-pr-details-alert-limited'
+        )
+
     def test_remote_project(self):
         """Test remote project visbility for all users"""
         self._setup_remotes()
@@ -2192,25 +2226,50 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             )
 
     def test_public_access_default(self):
-        """Test public access icon visibility (should not be visible)"""
+        """Test public access icon with non-public project"""
         self.login_and_redirect(self.user_owner, self.url)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-header-icon-public')
 
-    def test_public_access_guest(self):
-        """Test public access icon visibility with public guest access"""
+    def test_public_access_guest_as_owner(self):
+        """Test public guest access project as owner"""
         self.project.set_public_access(self.role_guest)
         self.login_and_redirect(self.user_owner, self.url)
         self.assertIsNotNone(
             self.selenium.find_element(By.ID, 'sodar-pr-header-icon-public')
         )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-details-alert-limited')
 
-    def test_public_access_viewer(self):
-        """Test public access icon visibility with public viewer access"""
+    def test_public_access_viewer_as_owner(self):
+        """Test public viewer access project as owner"""
         self.project.set_public_access(self.role_viewer)
         self.login_and_redirect(self.user_owner, self.url)
         self.assertIsNotNone(
             self.selenium.find_element(By.ID, 'sodar-pr-header-icon-public')
+        )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-details-alert-limited')
+
+    def test_public_access_guest_no_role(self):
+        """Test public guest access project without role"""
+        self.project.set_public_access(self.role_guest)
+        self.login_and_redirect(self.user_no_roles, self.url)
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-header-icon-public')
+        )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-details-alert-limited')
+
+    def test_public_access_viewer_no_role(self):
+        """Test public viewer access project without role"""
+        self.project.set_public_access(self.role_viewer)
+        self.login_and_redirect(self.user_no_roles, self.url)
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-header-icon-public')
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-details-alert-limited')
         )
 
     def test_archive_default(self):

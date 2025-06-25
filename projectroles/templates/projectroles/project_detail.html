@@ -17,6 +17,16 @@
 <div class="container-fluid sodar-page-container"
      id="sodar-pr-page-container-detail"
      data-project-type="{{ object.type }}">
+  {# Limited role alerts #}
+  {% if role and role.rank >= 45 %}
+    <div class="alert alert-info" id="sodar-pr-details-alert-limited">
+      <i class="iconify" data-icon="mdi:account"></i>
+      You have limited read-only access to this
+      {% get_display_name object.type %} as {{ role.name }}. Some content may be
+      hidden or inaccessible. See site documentation for details.
+    </div>
+  {% endif %}
+
   {# Links to remote projects #}
   {% if object.type == 'PROJECT' %}
     {% if target_projects %}
