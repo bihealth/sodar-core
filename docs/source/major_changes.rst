@@ -18,6 +18,7 @@ Release Highlights
 
 - Add project viewer role
 - Add project viewer role support for project public read-only access
+- Add search by object UUID
 - Add project invite retrieval REST API view
 - Add temporary project access blocking for superusers
 - Add blockprojectaccess management command

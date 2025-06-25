@@ -78,6 +78,11 @@ class FilesfoldersManager(models.Manager):
         for t in search_terms:
             term_query.add(Q(name__icontains=t), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
+            try:
+                uuid.UUID(t)
+                term_query.add(Q(sodar_uuid=t), Q.OR)
+            except ValueError:
+                pass
         return objects.filter(term_query)
 
 

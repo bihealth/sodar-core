@@ -1130,20 +1130,26 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_find_description(self):
         """Test find() with search term for description"""
-        result = Project.objects.find(['xxx'], project_type=None)
+        result = Project.objects.find(['xxx'])
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
     def test_find_description_multi_one(self):
         """Test find() with one valid multi-search term for description"""
-        result = Project.objects.find(['xxx', 'ThisFails'], project_type=None)
+        result = Project.objects.find(['xxx', 'ThisFails'])
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
     def test_find_description_multi_two(self):
         """Test find() with two valid multi-search terms for description"""
-        result = Project.objects.find(['xxx', 'yyy'], project_type=None)
+        result = Project.objects.find(['xxx', 'yyy'])
         self.assertEqual(len(result), 2)
+
+    def test_find_uuid(self):
+        """Test find() with UUID"""
+        result = Project.objects.find([str(self.project.sodar_uuid)])
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.project)
 
     def test_find_multi_fields(self):
         """Test find() with multiple terms for different fields"""

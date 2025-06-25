@@ -113,6 +113,12 @@ class ProjectManager(models.Manager):
         for t in search_terms:
             term_query.add(Q(full_title__icontains=t), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
+            # Only add UUID if term is valid UUID
+            try:
+                uuid.UUID(t)
+                term_query.add(Q(sodar_uuid=t), Q.OR)
+            except ValueError:
+                pass
         return projects.filter(term_query).order_by('full_title')
 
 

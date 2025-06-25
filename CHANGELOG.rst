@@ -13,6 +13,8 @@ Added
 
 - **General**
     - Type hints (#568)
+- **Filesfolders**
+    - Search by object UUID (#1546)
 - **Projectroles**
     - ``ProjectInviteRetrieveAPIView`` REST API view (#1692)
     - Project viewer role (#1650)
@@ -28,6 +30,7 @@ Added
     - ``Project.public_access`` field (#1702)
     - ``Project.has_role()`` helper ``public`` arg (#1702)
     - Limited guest role alert in ``ProjectDetailView`` (#1705)
+    - Search by object UUID (#1546)
 
 Changed
 -------

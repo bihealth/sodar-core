@@ -159,6 +159,12 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.folder)
 
+    def test_find_uuid(self):
+        """Test FilesfoldersManager find() with Folder UUID"""
+        objects = Folder.objects.find(str(self.folder.sodar_uuid))
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.folder)
+
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing Folder"""
         objects = Folder.objects.find(['Jaix1azu'])
@@ -307,6 +313,12 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.file)
 
+    def test_find_uuid(self):
+        """Test FilesfoldersManager find() with File UUID"""
+        objects = File.objects.find(str(self.file.sodar_uuid))
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.file)
+
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing File"""
         objects = File.objects.find(['Jaix1azu'])
@@ -410,6 +422,12 @@ class TestHyperLink(
         objects = HyperLink.objects.find(['description'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.hyperlink)
+
+    def test_find_uuid(self):
+        """Test FilesfoldersManager find() with HyperLink UUID"""
+        objects = HyperLink.objects.find(str(self.hyperlink.sodar_uuid))
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.HyperLink)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing HyperLink"""
