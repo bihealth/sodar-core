@@ -672,10 +672,8 @@ class ProjectDetailView(
                 context['role'] = role_as.role
             except RoleAssignment.DoesNotExist:
                 context['role'] = None
-        elif self.object.public_guest_access:
-            context['role'] = Role.objects.filter(
-                name=PROJECT_ROLE_GUEST
-            ).first()
+        elif self.object.public_access:
+            context['role'] = self.object.public_access
         else:
             context['role'] = None
 
@@ -878,7 +876,7 @@ class ProjectSearchResultsView(
         if not search_type or search_type == 'project':
             context['project_results'] = []
             for p in Project.objects.find(search_terms, project_type='PROJECT'):
-                if p.public_guest_access or self.request.user.has_perm(
+                if p.public_access or self.request.user.has_perm(
                     'projectroles.view_project', p
                 ):
                     context['project_results'].append(p)
@@ -994,7 +992,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             'description': project.description,
             'readme': project.readme.raw,
             'owner': project.get_owner().user,
-            'public_guest_access': project.public_guest_access,
+            'public_access': project.public_access,
         }
 
     @classmethod
@@ -1091,9 +1089,11 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['readme'] != project.readme.raw:
             extra_data['readme'] = project.readme.raw
             upd_fields.append('readme')
-        if old_data['public_guest_access'] != project.public_guest_access:
-            extra_data['public_guest_access'] = project.public_guest_access
-            upd_fields.append('public_guest_access')
+        if old_data['public_access'] != project.public_access:
+            extra_data['public_access'] = (
+                project.public_access.name if project.public_access else None
+            )
+            upd_fields.append('public_access')
 
         # Remote projects
         if (
@@ -1397,9 +1397,10 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             project.parent = (
                 data['parent'] if 'parent' in data else old_project.parent
             )
+            project.public_access = data.get('public_access')
             project.public_guest_access = (
-                data.get('public_guest_access') or False
-            )
+                data.get('public_access') is not None
+            )  # DEPRECATED
         else:
             project = Project(
                 title=data.get('title'),
@@ -1407,7 +1408,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 type=data.get('type'),
                 readme=data.get('readme'),
                 parent=data.get('parent'),
-                public_guest_access=data.get('public_guest_access') or False,
+                public_access=data.get('public_access'),
+                public_guest_access=data.get('public_access')
+                is not None,  # DEPRECATED
             )
             project.save()
 
@@ -1478,7 +1481,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if (
             old_project
             and project.parent
-            and old_project.public_guest_access != project.public_guest_access
+            and old_project.public_access != project.public_access
         ):
             try:
                 project._update_public_children()
@@ -1632,7 +1635,9 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             'parent': parent,
             'description': project.description,
             'readme': project.readme.raw,
-            'public_guest_access': project.public_guest_access,
+            'public_access': (
+                project.public_access.name if project.public_access else None
+            ),
             'archive': project.archive,
             'full_title': project.full_title,
             'sodar_uuid': str(project.sodar_uuid),
@@ -2043,8 +2048,10 @@ class ProjectRoleView(
         )
         context['site_read_only'] = app_settings.get(APP_NAME, 'site_read_only')
         if self.request.user.is_authenticated:
-            # In case of superuser who may not have role despite accessing view
-            context['user_has_role'] = project.has_role(self.request.user)
+            # In case of superuser or public access project
+            context['user_has_role'] = project.has_role(
+                self.request.user, public=False
+            )
             own_local_as = RoleAssignment.objects.filter(
                 project=project, user=self.request.user
             ).first()

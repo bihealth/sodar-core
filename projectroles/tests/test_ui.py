@@ -83,7 +83,7 @@ PROJECT_SETTING_ID = 'div_id_settings.example_project_app.project_int_setting'
 CATEGORY_SETTING_ID = (
     'div_id_settings.example_project_app.category_bool_setting'
 )
-PUBLIC_ACCESS_ID = 'id_public_guest_access'
+PUBLIC_ACCESS_ID = 'id_public_access'
 REMOTE_SITE_UUID = uuid.uuid4()
 REMOTE_SITE_ID = f'id_remote_site.{REMOTE_SITE_UUID}'
 CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
@@ -621,9 +621,31 @@ class TestHomeView(UITestBase):
             **self.wait_kwargs_empty,
         )
 
-    def test_project_list_items_public(self):
-        """Test visibility of project list items with public access project"""
-        self.project.set_public()
+    def test_project_list_items_public_guest(self):
+        """Test project list items with public guest access"""
+        self.project.set_public_access(self.role_guest)
+        expected = [
+            (self.superuser, 2),
+            (self.user_owner_cat, 2),
+            (self.user_delegate_cat, 2),
+            (self.user_contributor_cat, 2),
+            (self.user_guest_cat, 2),
+            (self.user_viewer_cat, 2),
+            (self.user_finder_cat, 2),
+            (self.user_owner, 2),
+            (self.user_delegate, 2),
+            (self.user_contributor, 2),
+            (self.user_guest, 2),
+            (self.user_viewer, 2),
+            (self.user_no_roles, 2),
+        ]
+        self.assert_element_count(
+            expected, self.url, 'sodar-pr-project-list-item', **self.wait_kwargs
+        )
+
+    def test_project_list_items_public_viewer(self):
+        """Test project list items with public viewer access"""
+        self.project.set_public_access(self.role_viewer)
         expected = [
             (self.superuser, 2),
             (self.user_owner_cat, 2),
@@ -644,9 +666,25 @@ class TestHomeView(UITestBase):
         )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_project_list_items_anon(self):
-        """Test visibility of project list items with anonymous access"""
-        self.project.set_public()
+    def test_project_list_items_public_guest_anon(self):
+        """Test project list items with public guest access and anonymous user"""
+        self.project.set_public_access(self.role_guest)
+        self.selenium.get(self.build_selenium_url(self.url))
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-list-item')
+            )
+        )
+        self.assertEqual(self._get_item_vis_count(), 2)
+        links = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-link'
+        )
+        self.assertEqual(len(links), 1)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_project_list_items_public_viewer_anon(self):
+        """Test project list items with public viewer access and anonymous user"""
+        self.project.set_public_access(self.role_viewer)
         self.selenium.get(self.build_selenium_url(self.url))
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
@@ -938,8 +976,7 @@ class TestHomeView(UITestBase):
 
     def test_project_list_title_public(self):
         """Test project list title rendering with public guest access"""
-        self.project.public_guest_access = True
-        self.project.save()
+        self.project.set_public_access(self.role_guest)
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         row = self._get_project_row(self.project)
         title = row.find_element(
@@ -2154,57 +2191,46 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
                 'sodar-pr-link-remote-source', elems[0].get_attribute('class')
             )
 
-    def test_archive_visibility_default(self):
-        """Test archive icon and alert visibility (should not be visible)"""
-        users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_viewer_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_viewer,
-        ]
-        for user in users:
-            self.login_and_redirect(user, self.url)
-            with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element(
-                    By.ID, 'sodar-pr-header-icon-archive'
-                )
-            with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element(By.ID, 'sodar-pr-alert-archive')
+    def test_public_access_default(self):
+        """Test public access icon visibility (should not be visible)"""
+        self.login_and_redirect(self.user_owner, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-header-icon-public')
 
-    def test_archive_visibility_archived(self):
+    def test_public_access_guest(self):
+        """Test public access icon visibility with public guest access"""
+        self.project.set_public_access(self.role_guest)
+        self.login_and_redirect(self.user_owner, self.url)
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-header-icon-public')
+        )
+
+    def test_public_access_viewer(self):
+        """Test public access icon visibility with public viewer access"""
+        self.project.set_public_access(self.role_viewer)
+        self.login_and_redirect(self.user_owner, self.url)
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-header-icon-public')
+        )
+
+    def test_archive_default(self):
+        """Test archive icon and alert visibility (should not be visible)"""
+        self.login_and_redirect(self.user_owner, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-header-icon-archive')
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-alert-archive')
+
+    def test_archive_archived(self):
         """Test archive icon and alert visibility for archived project"""
         self.project.set_archive()
-        users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_viewer_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_viewer,
-        ]
-        for user in users:
-            self.login_and_redirect(user, self.url)
-            self.assertIsNotNone(
-                self.selenium.find_element(By.ID, 'sodar-pr-alert-archive')
-            )
-            self.assertIsNotNone(
-                self.selenium.find_element(
-                    By.ID, 'sodar-pr-header-icon-archive'
-                )
-            )
+        self.login_and_redirect(self.user_owner, self.url)
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-alert-archive')
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-header-icon-archive')
+        )
 
     def test_category_project_list(self):
         """Test rendering of project list in category"""
@@ -2745,6 +2771,13 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
     def test_leave_button_superuser_no_role(self):
         """Test rendering leave project button as superuser with no role"""
         self.login_and_redirect(self.superuser, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
+
+    def test_leave_button_public_access_no_role(self):
+        """Test rendering leave button in public access project with no role"""
+        self.project.set_public_access(self.role_guest)
+        self.login_and_redirect(self.user_no_roles, self.url)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-btn-leave-project')
 

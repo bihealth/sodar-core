@@ -976,7 +976,8 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'type': PROJECT_TYPE_CATEGORY,
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
@@ -1039,7 +1040,8 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'type': PROJECT_TYPE_PROJECT,
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,
@@ -1291,7 +1293,8 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'type': PROJECT_TYPE_PROJECT,
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE + ' / ' + new_project_title,
             'has_public_children': False,
@@ -1851,7 +1854,8 @@ class TestSyncRemoteDataUpdate(
             'type': PROJECT_TYPE_CATEGORY,
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
@@ -1878,7 +1882,8 @@ class TestSyncRemoteDataUpdate(
             'type': PROJECT_TYPE_PROJECT,
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': self.category_obj.pk,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,
@@ -2372,7 +2377,8 @@ class TestSyncRemoteDataUpdate(
             'type': PROJECT_TYPE_CATEGORY,
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
             'has_public_children': False,
@@ -2399,7 +2405,8 @@ class TestSyncRemoteDataUpdate(
             'type': PROJECT_TYPE_PROJECT,
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': self.category_obj.pk,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'has_public_children': False,

@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add project viewer role
+- Add project viewer role support for project public read-only access
 - Add project invite retrieval REST API view
 - Add temporary project access blocking for superusers
 - Add blockprojectaccess management command
@@ -93,6 +94,11 @@ REST API View Changes
         + Add view
     * ``ProjectRetrieveAPIView``
         + Replace ``roles`` field user serializer with user UUID
+        + Replace ``public_guest_access`` field with ``public_access``
+    * ``ProjectCreateAPIView``
+        + Replace ``public_guest_access`` field with ``public_access``
+    * ``ProjectUpdateAPIView``
+        + Replace ``public_guest_access`` field with ``public_access``
     * ``ProjectSettingRetrieveAPIView``
         + Replace ``user`` field user serializer with user UUID
     * ``UserSettingRetrieveAPIView``
@@ -103,6 +109,17 @@ REST API View Changes
     * Add project viewer role sync
     * **NOTE:** If called with API version ``1.0``, project viewer roles will
       not be synced to target sites.
+
+Deprecated Features
+-------------------
+
+These features have been deprecated in v1.2 and will be removed in v1.3.
+
+``Project.public_guest_access``
+    Use ``Project.public_access`` instead. The new field is a foreign key to
+    either the role of ``project guest``, ``project viewer`` or ``None``.
+``Project.set_public()``
+    Use ``Project.set_public_access()`` instead.
 
 Previously Deprecated Features Removed
 --------------------------------------

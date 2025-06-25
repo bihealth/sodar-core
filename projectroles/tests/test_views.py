@@ -669,7 +669,7 @@ class TestProjectCreateView(
             'parent': parent.sodar_uuid if parent else '',
             'owner': owner.sodar_uuid,
             'description': 'description',
-            'public_guest_access': False,
+            'public_access': '',
             REMOTE_SITE_FIELD: False,
         }
         # Add settings values
@@ -874,7 +874,8 @@ class TestProjectCreateView(
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
             'description': 'description',
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': 'NewTestCategory',
             'has_public_children': False,
@@ -939,7 +940,8 @@ class TestProjectCreateView(
             'type': PROJECT_TYPE_PROJECT,
             'parent': self.category.pk,
             'description': 'description',
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': 'TestCategory / TestProject',
             'has_public_children': False,
@@ -1287,6 +1289,34 @@ class TestProjectUpdateView(
             kwargs={'project': self.category.sodar_uuid},
         )
         self.timeline = get_backend_api('timeline_backend')
+        self.post_data = model_to_dict(self.project)
+        self.post_data.update(
+            {
+                'title': 'updated title',
+                'description': 'updated description',
+                'owner': self.user.sodar_uuid,  # NOTE: Must add owner
+                'parent': self.category.sodar_uuid,  # NOTE: Must add parent
+                'public_access': '',  # NOTE: Must set to empty instead of None
+                REMOTE_SITE_FIELD: False,
+            }
+        )
+        self.post_data_cat = model_to_dict(self.category)
+        self.post_data_cat.update(
+            {
+                'title': 'updated title',
+                'description': 'updated description',
+                'owner': self.user.sodar_uuid,
+                'parent': '',
+                'public_access': '',  # This gets passed in POST for category
+            }
+        )
+        # NOTE: Set manually in tests instead if we need to test category with
+        #       multiple users
+        self.post_data_cat.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=self.category, post_safe=True
+            )
+        )
 
     def test_get_project(self):
         """Test GET with project"""
@@ -1503,17 +1533,13 @@ class TestProjectUpdateView(
         self.assertEqual(Project.objects.all().count(), 3)
         self.assertEqual(RemoteProject.objects.count(), 0)
 
-        data = model_to_dict(self.project)
-        data['title'] = 'updated title'
-        data['description'] = 'updated description'
-        data['parent'] = category_new.sodar_uuid  # NOTE: Updated parent
-        data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        data[REMOTE_SITE_FIELD] = False
+        # NOTE: Updated parent
+        self.post_data['parent'] = category_new.sodar_uuid
         # Add settings values
         ps = self._get_post_app_settings(self.project, self.user)
-        data.update(ps)
+        self.post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
 
         self.assertEqual(Project.objects.all().count(), 3)
         self.project.refresh_from_db()
@@ -1523,7 +1549,8 @@ class TestProjectUpdateView(
             'type': PROJECT_TYPE_PROJECT,
             'parent': category_new.pk,
             'description': 'updated description',
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': category_new.title + CAT_DELIMITER + 'updated title',
             'has_public_children': False,
@@ -1597,16 +1624,12 @@ class TestProjectUpdateView(
         self.assertEqual(Project.objects.all().count(), 3)
         self.assertEqual(RemoteProject.objects.count(), 0)
 
-        data = model_to_dict(self.project)
-        data['title'] = 'updated title'
-        data['description'] = 'updated description'
-        data['parent'] = category_new.sodar_uuid
-        data['owner'] = user_new.sodar_uuid
-        data[REMOTE_SITE_FIELD] = False
+        self.post_data['parent'] = category_new.sodar_uuid
+        self.post_data['owner'] = user_new.sodar_uuid
         ps = self._get_post_app_settings(self.project, user_new)
-        data.update(ps)
+        self.post_data.update(ps)
         with self.login(user_new):
-            self.client.post(self.url, data)
+            self.client.post(self.url, self.post_data)
 
         self.assertEqual(Project.objects.all().count(), 3)
         self.project.refresh_from_db()
@@ -1616,7 +1639,8 @@ class TestProjectUpdateView(
             'type': PROJECT_TYPE_PROJECT,
             'parent': category_new.pk,
             'description': 'updated description',
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': category_new.title + CAT_DELIMITER + 'updated title',
             'has_public_children': False,
@@ -1642,36 +1666,24 @@ class TestProjectUpdateView(
 
     def test_post_project_title_delimiter(self):
         """Test POST with category delimiter in title (should fail)"""
-        data = model_to_dict(self.project)
-        data['parent'] = self.category.sodar_uuid
-        data['owner'] = self.user.sodar_uuid
-        data['title'] = f'Project{CAT_DELIMITER}Title'
-        data.update(
-            app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
-            )
-        )
+        self.post_data['title'] = f'Project{CAT_DELIMITER}Title'
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 200)
         self.project.refresh_from_db()
         self.assertEqual(self.project.title, 'TestProject')
 
     def test_post_project_custom_validation(self):
         """Test POST with custom validation and invalid value (should fail)"""
-        data = model_to_dict(self.project)
-        data['parent'] = self.category.sodar_uuid
-        data['owner'] = self.user.sodar_uuid
-        data.update(
-            app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
-            )
-        )
-        data['settings.example_project_app.project_str_setting'] = (
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['settings.example_project_app.project_str_setting'] = (
             INVALID_SETTING_VALUE
         )
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
@@ -1685,44 +1697,49 @@ class TestProjectUpdateView(
         )
 
     def test_post_project_public_access(self):
-        """Test POST with public guest access"""
-        self.assertEqual(self.project.public_guest_access, False)
+        """Test POST with public access"""
+        self.assertEqual(self.project.public_access, None)
+        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
         self.assertEqual(self.category.has_public_children, False)
 
-        data = model_to_dict(self.project)
-        data['public_guest_access'] = True
-        data['parent'] = self.category.sodar_uuid  # NOTE: Must add parent
-        data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        data.update(
-            app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
-            )
-        )
+        self.post_data['public_access'] = self.role_guest.pk
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
 
         self.assertEqual(response.status_code, 302)
         self.project.refresh_from_db()
         self.category.refresh_from_db()
-        self.assertEqual(self.project.public_guest_access, True)
+        self.assertEqual(self.project.public_access, self.role_guest)
+        self.assertEqual(self.project.public_guest_access, True)  # DEPRECATED
         # Assert the parent category has_public_children is set true
+        self.assertEqual(self.category.has_public_children, True)
+
+    def test_post_project_public_access_viewer(self):
+        """Test POST with public access and viewer role"""
+        self.assertEqual(self.project.public_access, None)
+        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
+        self.assertEqual(self.category.has_public_children, False)
+
+        self.post_data['public_access'] = self.role_viewer.pk
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
+        self.category.refresh_from_db()
+        self.assertEqual(self.project.public_access, self.role_viewer)
+        self.assertEqual(self.project.public_guest_access, True)  # DEPRECATED
         self.assertEqual(self.category.has_public_children, True)
 
     def test_post_category(self):
         """Test POST with category"""
         self.assertEqual(Project.objects.all().count(), 2)
-        data = model_to_dict(self.category)
-        data['title'] = 'updated title'
-        data['description'] = 'updated description'
-        data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        data['parent'] = ''
-        data.update(
-            app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT, project=self.category, post_safe=True
-            )
-        )
         with self.login(self.user):
-            response = self.client.post(self.url_cat, data)
+            response = self.client.post(self.url_cat, self.post_data_cat)
         self.assertEqual(response.status_code, 302)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1735,7 +1752,8 @@ class TestProjectUpdateView(
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
             'description': 'updated description',
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': 'updated title',
             'has_public_children': False,
@@ -1778,18 +1796,9 @@ class TestProjectUpdateView(
             self.category.title + CAT_DELIMITER + self.project.title,
         )
 
-        data = model_to_dict(self.category)
-        data['title'] = self.category.title
-        data['description'] = self.category.description
-        data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        data['parent'] = category_new.sodar_uuid  # Updated category
-        data.update(
-            app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT, project=self.category, post_safe=True
-            )
-        )
+        self.post_data_cat['parent'] = category_new.sodar_uuid  # Updated parent
         with self.login(self.user):
-            response = self.client.post(self.url_cat, data)
+            response = self.client.post(self.url_cat, self.post_data_cat)
 
         self.assertEqual(response.status_code, 302)
         # Assert category state and project title after update
@@ -1822,16 +1831,12 @@ class TestProjectUpdateView(
         )
         self.make_assignment(category_new, user_new, self.role_owner)
 
-        data = model_to_dict(self.project)
-        data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        data['parent'] = category_new.sodar_uuid  # Updated category
-        data.update(
-            app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
-            )
-        )
+        self.post_data['title'] = self.project.title  # Keep this for asserting
+        self.post_data['parent'] = category_new.sodar_uuid  # Updated parent
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
 
         self.assertEqual(response.status_code, 302)
         # Assert alert and email (different parent owner)
@@ -1858,16 +1863,11 @@ class TestProjectUpdateView(
         self.make_assignment(category_new, user_new, self.role_owner)
         app_settings.set(APP_NAME, 'notify_email_project', False, user=user_new)
 
-        data = model_to_dict(self.project)
-        data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        data['parent'] = category_new.sodar_uuid  # Updated category
-        data.update(
-            app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
-            )
-        )
+        self.post_data['parent'] = category_new.sodar_uuid  # Updated category
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
 
         self.assertEqual(response.status_code, 302)
         # Assert alert but no email
@@ -1886,16 +1886,11 @@ class TestProjectUpdateView(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.make_assignment(category_new, user_new, self.role_owner)
-        data = model_to_dict(self.project)
-        data['owner'] = self.user.sodar_uuid
-        data['parent'] = category_new.sodar_uuid
-        data.update(
-            app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT, project=self.project, post_safe=True
-            )
-        )
+        self.post_data['parent'] = category_new.sodar_uuid
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
@@ -1903,14 +1898,15 @@ class TestProjectUpdateView(
     def test_post_remote(self):
         """Test POST with enabled remote project"""
         self.assertEqual(RemoteProject.objects.count(), 0)
-        data = model_to_dict(self.project)
-        data['parent'] = self.category.sodar_uuid
-        data['owner'] = self.user.sodar_uuid
-        data[REMOTE_SITE_FIELD] = True
+        post_data = model_to_dict(self.project)
+        post_data['parent'] = self.category.sodar_uuid
+        post_data['owner'] = self.user.sodar_uuid
+        post_data['public_access'] = ''
+        post_data[REMOTE_SITE_FIELD] = True
         ps = self._get_post_app_settings(self.project, self.user)
-        data.update(ps)
+        post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(RemoteProject.objects.count(), 1)
         rp = RemoteProject.objects.first()
@@ -1938,14 +1934,15 @@ class TestProjectUpdateView(
             project=self.project,
         )
         self.assertEqual(RemoteProject.objects.count(), 1)
-        data = model_to_dict(self.project)
-        data['parent'] = self.category.sodar_uuid
-        data['owner'] = self.user.sodar_uuid
-        data[REMOTE_SITE_FIELD] = False
+        post_data = model_to_dict(self.project)
+        post_data['parent'] = self.category.sodar_uuid
+        post_data['owner'] = self.user.sodar_uuid
+        post_data['public_access'] = ''
+        post_data[REMOTE_SITE_FIELD] = False
         ps = self._get_post_app_settings(self.project, self.user)
-        data.update(ps)
+        post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(RemoteProject.objects.count(), 1)
         rp.refresh_from_db()
@@ -1970,14 +1967,15 @@ class TestProjectUpdateView(
             project=self.project,
         )
         self.assertEqual(RemoteProject.objects.count(), 1)
-        data = model_to_dict(self.project)
-        data['parent'] = self.category.sodar_uuid
-        data['owner'] = self.user.sodar_uuid
-        data[REMOTE_SITE_FIELD] = True
+        post_data = model_to_dict(self.project)
+        post_data['parent'] = self.category.sodar_uuid
+        post_data['owner'] = self.user.sodar_uuid
+        post_data['public_access'] = ''
+        post_data[REMOTE_SITE_FIELD] = True
         ps = self._get_post_app_settings(self.project, self.user)
-        data.update(ps)
+        post_data.update(ps)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(RemoteProject.objects.count(), 1)
         rp.refresh_from_db()
@@ -1997,27 +1995,30 @@ class TestProjectUpdateView(
     def test_post_target_remote(self):
         """Test POST with remote project as target"""
         self.set_up_as_target(projects=[self.category, self.project])
-        data = model_to_dict(self.project)
-        data['owner'] = self.user.sodar_uuid
-        data['parent'] = self.category.sodar_uuid
-        data['settings.example_project_app.project_int_setting'] = 0
-        data['settings.example_project_app.project_int_setting_options'] = 0
-        data['settings.example_project_app.project_str_setting'] = 'test'
-        data['settings.example_project_app.project_str_setting_options'] = (
-            'string1'
-        )
-        data['settings.example_project_app.project_bool_setting'] = True
-        data['settings.example_project_app.project_callable_setting'] = (
+        post_data = model_to_dict(self.project)
+        post_data['owner'] = self.user.sodar_uuid
+        post_data['parent'] = self.category.sodar_uuid
+        post_data['public_access'] = ''
+        post_data['settings.example_project_app.project_int_setting'] = 0
+        post_data[
+            'settings.example_project_app.project_int_setting_options'
+        ] = 0
+        post_data['settings.example_project_app.project_str_setting'] = 'test'
+        post_data[
+            'settings.example_project_app.project_str_setting_options'
+        ] = 'string1'
+        post_data['settings.example_project_app.project_bool_setting'] = True
+        post_data['settings.example_project_app.project_callable_setting'] = (
             'No project or user for callable'
         )
-        data[
+        post_data[
             'settings.example_project_app.project_callable_setting_options'
         ] = str(self.project.sodar_uuid)
-        data['settings.projectroles.ip_restrict'] = True
-        data['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
+        post_data['settings.projectroles.ip_restrict'] = True
+        post_data['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         self.assertEqual(Project.objects.all().count(), 2)
         with self.login(self.user):
-            response = self.client.post(self.url, data)
+            response = self.client.post(self.url, post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Project.objects.all().count(), 2)
 
@@ -3113,6 +3114,15 @@ class TestProjectRoleView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['user_has_role'], False)
 
+    def test_get_public_no_role(self):
+        """Test GET for public access project as user with no role"""
+        user_no_roles = self.make_user('user_no_roles')
+        self.project.set_public_access(self.role_guest)
+        with self.login(user_no_roles):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user_has_role'], False)
+
     def test_get_not_found(self):
         """Test GET with invalid project UUID"""
         with self.login(self.user_owner):
@@ -3176,17 +3186,17 @@ class TestRoleAssignmentCreateView(
         self.assertNotIn([choice], form.fields['user'].choices)
         # Assert owner role is not selectable
         self.assertNotIn(
-            get_role_option(self.project, self.role_owner),
+            get_role_option(self.project.type, self.role_owner),
             form.fields['role'].choices,
         )
         # Assert delegate role is selectable
         self.assertIn(
-            get_role_option(self.project, self.role_delegate),
+            get_role_option(self.project.type, self.role_delegate),
             form.fields['role'].choices,
         )
         # Assert finder role is not selectable
         self.assertNotIn(
-            get_role_option(self.project, self.role_finder),
+            get_role_option(self.project.type, self.role_finder),
             form.fields['role'].choices,
         )
 
@@ -3205,16 +3215,16 @@ class TestRoleAssignmentCreateView(
         )
         self.assertNotIn([choice], form.fields['user'].choices)
         self.assertNotIn(
-            get_role_option(self.category, self.role_owner),
+            get_role_option(self.category.type, self.role_owner),
             form.fields['role'].choices,
         )
         self.assertIn(
-            get_role_option(self.category, self.role_delegate),
+            get_role_option(self.category.type, self.role_delegate),
             form.fields['role'].choices,
         )
         # Assert finder role is selectable
         self.assertIn(
-            get_role_option(self.category, self.role_finder),
+            get_role_option(self.category.type, self.role_finder),
             form.fields['role'].choices,
         )
 
@@ -3633,17 +3643,17 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(form.initial['user'], self.user_guest.sodar_uuid)
         # Assert owner role is not selectable
         self.assertNotIn(
-            get_role_option(self.project, self.role_owner),
+            get_role_option(self.project.type, self.role_owner),
             form.fields['role'].choices,
         )
         # Assert delegate role is selectable
         self.assertIn(
-            get_role_option(self.project, self.role_delegate),
+            get_role_option(self.project.type, self.role_delegate),
             form.fields['role'].choices,
         )
         # Assert finder role is not selectable
         self.assertNotIn(
-            get_role_option(self.project, self.role_finder),
+            get_role_option(self.project.type, self.role_finder),
             form.fields['role'].choices,
         )
 
@@ -3666,16 +3676,16 @@ class TestRoleAssignmentUpdateView(
         self.assertIsInstance(form.fields['user'].widget, HiddenInput)
         self.assertEqual(form.initial['user'], user_new.sodar_uuid)
         self.assertNotIn(
-            get_role_option(self.category, self.role_owner),
+            get_role_option(self.category.type, self.role_owner),
             form.fields['role'].choices,
         )
         self.assertIn(
-            get_role_option(self.category, self.role_delegate),
+            get_role_option(self.category.type, self.role_delegate),
             form.fields['role'].choices,
         )
         # Assert finder role is selectable
         self.assertIn(
-            get_role_option(self.category, self.role_finder),
+            get_role_option(self.category.type, self.role_finder),
             form.fields['role'].choices,
         )
 
@@ -3693,7 +3703,7 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(len(form.fields['role'].choices), 1)
         self.assertEqual(
             form.fields['role'].choices[0],
-            get_role_option(self.project, self.role_delegate),
+            get_role_option(self.project.type, self.role_delegate),
         )
 
     def test_get_not_found(self):
@@ -4919,7 +4929,7 @@ class TestProjectInviteCreateView(
         self.assertIsNotNone(form)
         # Assert owner role is not selectable
         self.assertNotIn(
-            get_role_option(self.project, self.role_owner),
+            get_role_option(self.project.type, self.role_owner),
             form.fields['role'].choices,
         )
 
@@ -4936,7 +4946,7 @@ class TestProjectInviteCreateView(
         self.assertIsNotNone(form)
         # Assert owner role is not selectable
         self.assertNotIn(
-            get_role_option(self.project, self.role_owner),
+            get_role_option(self.project.type, self.role_owner),
             form.fields['role'].choices,
         )
         # Assert forwarded mail address and role have been set in the form

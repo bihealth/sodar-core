@@ -67,9 +67,9 @@
       </span>
     {% endif %}
     {# Public access status #}
-    {% if project.type == 'PROJECT' and project.public_guest_access %}
-      <span class="ml-2 sodar-pr-header-icon" title="Public guest access"
-            id="sodar-pr-header-icon-archive-public"
+    {% if project.type == 'PROJECT' and project.public_access %}
+      <span class="ml-2 sodar-pr-header-icon" title="Public read-only access"
+            id="sodar-pr-header-icon-public"
             data-toggle="tooltip" data-placement="left">
         <i class="iconify text-info" data-icon="mdi:earth" data-height="30"></i>
       </span>

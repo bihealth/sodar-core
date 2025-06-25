@@ -240,8 +240,6 @@ class RoleAssignmentSerializer(
     role = serializers.SlugRelatedField(
         slug_field='name', queryset=Role.objects.all()
     )
-    # Using API <2.0 serializer as default
-    # TODO: Change to SlugRelatedField when removing support for <2.0 (#1691)
     user = serializers.SlugRelatedField(
         slug_field='sodar_uuid', queryset=User.objects.all()
     )
@@ -419,6 +417,13 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         queryset=Project.objects.filter(type=PROJECT_TYPE_CATEGORY),
     )
     readme = serializers.CharField(required=False, allow_blank=True)
+    # NOTE: public_access or public_guest_access presence checked in validate()
+    public_access = serializers.SlugRelatedField(
+        slug_field='name',
+        allow_null=True,
+        required=False,
+        queryset=Role.objects.all(),
+    )
     archive = serializers.BooleanField(read_only=True)
     roles = RoleAssignmentNestedListSerializer(
         read_only=True, many=True, source='get_roles'
@@ -438,6 +443,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'parent',
             'description',
             'readme',
+            'public_access',
             'public_guest_access',
             'archive',
             'full_title',
@@ -447,6 +453,46 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'sodar_uuid',
         ]
         read_only_fields = ['full_title']
+
+    def _validate_title(self, parent, attrs):
+        """Validate title field"""
+        title = attrs.get('title')
+        if title and (
+            CAT_DELIMITER in title
+            or title.startswith(CAT_DELIMITER.strip())
+            or title.endswith(CAT_DELIMITER.strip())
+        ):
+            raise serializers.ValidationError(CAT_DELIMITER_ERROR_MSG)
+        if parent and title == parent.title:
+            raise serializers.ValidationError('Title can\'t match with parent')
+        if (
+            title
+            and not self.instance
+            and Project.objects.filter(title=attrs['title'], parent=parent)
+        ):
+            raise serializers.ValidationError(
+                'Title must be unique within parent'
+            )
+
+    def _validate_type(self, attrs):
+        """Validate type field"""
+        project_type = attrs.get('type')
+        if project_type not in [
+            PROJECT_TYPE_CATEGORY,
+            PROJECT_TYPE_PROJECT,
+            None,
+        ]:  # None is ok for PATCH (will be updated in modify_project())
+            raise serializers.ValidationError(
+                f'Type is not {PROJECT_TYPE_CATEGORY} or {PROJECT_TYPE_PROJECT}'
+            )
+        if (
+            project_type
+            and self.instance
+            and attrs['type'] != self.instance.type
+        ):
+            raise serializers.ValidationError(
+                'Changing the project type is not allowed'
+            )
 
     def _validate_parent(self, parent, attrs, current_user, disable_categories):
         """Validate parent field"""
@@ -494,46 +540,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 'Moving a category under its own child is not allowed'
             )
 
-    def _validate_title(self, parent, attrs):
-        """Validate title field"""
-        title = attrs.get('title')
-        if title and (
-            CAT_DELIMITER in title
-            or title.startswith(CAT_DELIMITER.strip())
-            or title.endswith(CAT_DELIMITER.strip())
-        ):
-            raise serializers.ValidationError(CAT_DELIMITER_ERROR_MSG)
-        if parent and title == parent.title:
-            raise serializers.ValidationError('Title can\'t match with parent')
-        if (
-            title
-            and not self.instance
-            and Project.objects.filter(title=attrs['title'], parent=parent)
-        ):
-            raise serializers.ValidationError(
-                'Title must be unique within parent'
-            )
-
-    def _validate_type(self, attrs):
-        """Validate type field"""
-        project_type = attrs.get('type')
-        if project_type not in [
-            PROJECT_TYPE_CATEGORY,
-            PROJECT_TYPE_PROJECT,
-            None,
-        ]:  # None is ok for PATCH (will be updated in modify_project())
-            raise serializers.ValidationError(
-                f'Type is not {PROJECT_TYPE_CATEGORY} or {PROJECT_TYPE_PROJECT}'
-            )
-        if (
-            project_type
-            and self.instance
-            and attrs['type'] != self.instance.type
-        ):
-            raise serializers.ValidationError(
-                'Changing the project type is not allowed'
-            )
-
     def _validate_owner(self, attrs):
         """Validate owner field"""
         if attrs.get('owner'):
@@ -553,6 +559,50 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             raise serializers.ValidationError(
                 'The "owner" parameter must be supplied for project creation'
             )
+
+    def _validate_public_access(self, attrs):
+        """Validate public_access and public_guest_access fields"""
+        req_version = parse_version(self.context['request'].version)
+        req_method = self.context['request'].method
+        # Ensure either public_access or public_guest_access are present
+        # NOTE: Done here for backwards compatibility with <v2.0
+        if req_version >= VERSION_2_0 and 'public_guest_access' in attrs:
+            raise serializers.ValidationError(
+                'Field public_guest_access not supported by API >=v2.0, use '
+                'public_access instead'
+            )
+        if req_method in ['POST', 'PUT']:
+            if req_version >= VERSION_2_0 and 'public_access' not in attrs:
+                raise serializers.ValidationError(
+                    'Field public_access is required'
+                )
+            elif (
+                req_version <= VERSION_1_1
+                and 'public_guest_access' not in attrs
+            ):
+                raise serializers.ValidationError(
+                    'Field public_guest_access is required'
+                )
+
+        # Validate public_access and public_guest_access for categories
+        if attrs.get('type') == PROJECT_TYPE_CATEGORY and (
+            attrs.get('public_guest_access') or attrs.get('public_access')
+        ):
+            raise serializers.ValidationError(
+                'Public guest access is not allowed for categories'
+            )
+
+        # Set appropriate values depending on API version
+        if parse_version(self.context['request'].version) < VERSION_2_0:
+            if attrs['public_guest_access']:
+                role_guest = Role.objects.filter(
+                    name=PROJECT_ROLE_GUEST
+                ).first()
+                attrs['public_access'] = role_guest
+                attrs['public_guest_access'] = True  # DEPRECATED
+            else:
+                attrs['public_access'] = None
+                attrs['public_guest_access'] = False  # DEPRECATED
 
     def validate(self, attrs):
         site_mode = getattr(
@@ -586,13 +636,8 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         self._validate_type(attrs)
         # Validate and set owner
         self._validate_owner(attrs)
-        # Validate public_guest_access for categories
-        if attrs.get('type') == PROJECT_TYPE_CATEGORY and attrs.get(
-            'public_guest_access'
-        ):
-            raise serializers.ValidationError(
-                'Public guest access is not allowed for categories'
-            )
+        # Validate and update public_access and public_guest_access
+        self._validate_public_access(attrs)
 
         # Set readme
         if 'readme' in attrs and 'raw' in attrs['readme']:
@@ -614,6 +659,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         NOTE: Requires request in context object!
         """
         ret = super().to_representation(instance)
+        req_version = parse_version(self.context['request'].version)
         # Set up project to get instance with UUID
         parent = ret.get('parent')
         project = Project.objects.get(
@@ -645,7 +691,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Force project UUID
         if not ret.get('sodar_uuid'):
             ret['sodar_uuid'] = str(project.sodar_uuid)
-        # Add "inherited" info to roles
+        # Add inherited info to roles
         if ret.get('roles'):
             for k, v in ret['roles'].items():
                 role_as = RoleAssignment.objects.get(sodar_uuid=k)
@@ -655,11 +701,14 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Set full_title manually
         ret['full_title'] = project.full_title
         # Remove children field for projects and API version <1.1
-        if (
-            project.type == PROJECT_TYPE_PROJECT
-            or parse_version(self.context['request'].version) < VERSION_1_1
-        ):
+        if project.type == PROJECT_TYPE_PROJECT or req_version < VERSION_1_1:
             ret.pop('children', None)
+        # Replace public_access with public_guest_access if API version <2.0
+        if req_version < VERSION_2_0:
+            ret['public_guest_access'] = ret['public_access'] is not None
+            ret.pop('public_access', None)
+        else:  # Else remove public_guest_access
+            ret.pop('public_guest_access', None)
         return ret
 
 

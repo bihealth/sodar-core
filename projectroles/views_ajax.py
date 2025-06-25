@@ -143,7 +143,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             )
         if user.is_anonymous:
             project_list = project_list.filter(
-                Q(public_guest_access=True) | Q(has_public_children=True)
+                Q(public_access__isnull=False) | Q(has_public_children=True)
             )
         elif not user.is_superuser:
             # Quick and dirty filtering for inheritance using full_title
@@ -159,7 +159,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             project_list = [
                 p
                 for p in project_list
-                if p.public_guest_access
+                if p.public_access
                 or p.has_public_children
                 or any(p.full_title.startswith(c) for c in role_cats)
                 or p.local_roles.filter(user=user).count() > 0
@@ -211,7 +211,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         if (
             user.is_superuser
             or (user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY)
-            or project.public_guest_access
+            or project.public_access
         ):
             return True
         # If user has finder role in a parent category, we need to check role
@@ -300,7 +300,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             rp = {
                 'type': p.type,
                 'full_title': p.full_title[full_title_idx:],
-                'public_guest_access': p.public_guest_access,
+                'public_access': p.public_access is not None,
                 'archive': p.archive,
                 'remote': p.is_remote(),
                 'revoked': p.is_revoked(),
@@ -432,8 +432,8 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
             role_as = project.get_role(user)
             if role_as:
                 ret['name'] = role_as.role.name.split(' ')[1].capitalize()
-        if project.public_guest_access and not role_as:
-            ret['name'] = 'Guest'
+        if project.public_access and not role_as:
+            ret['name'] = project.public_access.name.split(' ')[1].capitalize()
         if not ret['name']:
             ret['name'] = 'N/A'
             ret['class'] = 'text-muted'

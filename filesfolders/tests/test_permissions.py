@@ -112,14 +112,14 @@ class TestProjectFileView(
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 302)
         # Test public project
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
@@ -127,7 +127,7 @@ class TestProjectFileView(
         self.project.set_archive()
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
@@ -178,13 +178,13 @@ class TestFolderCreateView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_archive(self):
@@ -192,7 +192,7 @@ class TestFolderCreateView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -251,13 +251,13 @@ class TestFolderUpdateView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_archive(self):
@@ -265,7 +265,7 @@ class TestFolderUpdateView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -316,13 +316,13 @@ class TestFolderDeleteView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_archive(self):
@@ -330,7 +330,7 @@ class TestFolderDeleteView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -380,13 +380,13 @@ class TestFileCreateView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_archive(self):
@@ -394,7 +394,7 @@ class TestFileCreateView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -452,13 +452,13 @@ class TestFileUpdateView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_archive(self):
@@ -466,7 +466,7 @@ class TestFileUpdateView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -516,13 +516,13 @@ class TestFileDeleteView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_archive(self):
@@ -530,7 +530,7 @@ class TestFileDeleteView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -581,13 +581,13 @@ class TestFilePublicLinkView(
         """Test FilePublicLinkView GET"""
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_archive(self):
@@ -595,7 +595,7 @@ class TestFilePublicLinkView(
         self.project.set_archive()
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -646,14 +646,14 @@ class TestFileServeView(
         """Test FileServeView GET"""
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
@@ -661,7 +661,7 @@ class TestFileServeView(
         self.project.set_archive()
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 302)
 
@@ -694,20 +694,20 @@ class TestFileServePublicView(
     def test_get(self):
         """Test FileServePublicView GET"""
         self.assert_response(self.url, self.all_users, 200)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 200)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
         """Test GET with archived project"""
         self.project.set_archive()
         self.assert_response(self.url, self.all_users, 200)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_block(self):
@@ -763,13 +763,13 @@ class TestHyperLinkCreateView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_archive(self):
@@ -777,7 +777,7 @@ class TestHyperLinkCreateView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -836,13 +836,13 @@ class TestHyperLinkUpdateView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test hyperlink updating with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_archive(self):
@@ -850,7 +850,7 @@ class TestHyperLinkUpdateView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -901,13 +901,13 @@ class TestHyperLinkDeleteView(
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_get_archive(self):
@@ -915,7 +915,7 @@ class TestHyperLinkDeleteView(
         self.project.set_archive()
         self.assert_response(self.url, self.superuser, 200)
         self.assert_response(self.url, self.non_superusers, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 302)
 
     def test_get_block(self):
@@ -975,7 +975,7 @@ class TestBatchEditView(
         self.assert_response(
             self.url, bad_users, 302, method='POST', data=self.post_data
         )
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(
             self.url, bad_users, 302, method='POST', data=self.post_data
         )
@@ -983,7 +983,7 @@ class TestBatchEditView(
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_post_anon(self):
         """Test POST with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 302)
 
     def test_post_archive(self):
@@ -999,7 +999,7 @@ class TestBatchEditView(
             method='POST',
             data=self.post_data,
         )
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(
             self.url,
             self.no_role_users,
@@ -1021,7 +1021,7 @@ class TestBatchEditView(
             method='POST',
             data=self.post_data,
         )
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(
             self.url,
             self.no_role_users,
@@ -1043,7 +1043,7 @@ class TestBatchEditView(
             method='POST',
             data=self.post_data,
         )
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(
             self.url,
             self.no_role_users,

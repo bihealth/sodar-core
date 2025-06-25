@@ -445,7 +445,7 @@ class ProjectListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
                 local_role = p in projects_local
                 if (
                     local_role
-                    or p.public_guest_access
+                    or p.public_access
                     or any(p.full_title.startswith(c) for c in role_cats)
                 ):
                     qs.append(p)
@@ -475,7 +475,7 @@ class ProjectRetrieveAPIView(
     - ``full_title``: Full project title with parent categories (string)
     - ``parent``: Parent category UUID (string or null)
     - ``readme``: Project readme (string, supports markdown)
-    - ``public_guest_access``: Guest access for all users (boolean)
+    - ``public_access``: Read-only access for all users (role name as string or None)
     - ``roles``: Project role assignments (dict, assignment UUID as key)
     - ``sodar_uuid``: Project UUID (string)
     - ``title``: Project title (string)
@@ -483,8 +483,11 @@ class ProjectRetrieveAPIView(
 
     **Version Changes:**
 
-    - ``2.0``: Replace ``roles`` field user serializer with user UUID
-    - ``1.1``: Add ``children`` field
+    - ``2.0``
+        * Replace ``roles`` field user serializer with user UUID
+        * Replace ``public_guest_access`` field with ``public_access``
+    - ``1.1``
+        * Add ``children`` field
     """
 
     permission_required = 'projectroles.view_project'
@@ -497,6 +500,9 @@ class ProjectCreateAPIView(
     """
     Create a project or a category.
 
+    If setting public read-only access for users, provide role name ("project
+    guest" or "project viewer") or None for no access.
+
     **URL:** ``/project/api/create``
 
     **Methods:** ``POST``
@@ -508,8 +514,13 @@ class ProjectCreateAPIView(
     - ``parent``: Parent category UUID (string)
     - ``description``: Project description (string, optional)
     - ``readme``: Project readme (string, optional, supports markdown)
-    - ``public_guest_access``: Guest access for all users (boolean)
+    - ``public_access``: Public read-only access for all users (string or None)
     - ``owner``: User UUID of the project owner (string)
+
+    **Version Changes:**
+
+    - ``2.0``
+        * Replace ``public_guest_access`` field with ``public_access``
     """
 
     permission_classes = [ProjectCreatePermission]
@@ -531,6 +542,9 @@ class ProjectUpdateAPIView(
     The project type can not be updated once a project has been created. The
     parameter is still required for non-partial updates via the ``PUT`` method.
 
+    If setting public read-only access for users, provide role name ("project
+    guest" or "project viewer") or None for no access.
+
     **URL:** ``/project/api/update/{Project.sodar_uuid}``
 
     **Methods:** ``PUT``, ``PATCH``
@@ -542,7 +556,10 @@ class ProjectUpdateAPIView(
     - ``parent``: Parent category UUID (string)
     - ``description``: Project description (string, optional)
     - ``readme``: Project readme (string, optional, supports markdown)
-    - ``public_guest_access``: Guest access for all users (boolean)
+    - ``public_access``: Public read-only access for all users (string or None)
+
+    - ``2.0``
+        * Replace ``public_guest_access`` field with ``public_access``
     """
 
     permission_required = 'projectroles.update_project'

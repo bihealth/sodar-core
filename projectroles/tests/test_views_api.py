@@ -330,7 +330,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
                 'parent': None,
                 'description': self.category.description,
                 'readme': '',
-                'public_guest_access': False,
+                'public_access': None,
                 'archive': False,
                 'full_title': self.category.full_title,
                 'roles': {
@@ -350,7 +350,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
                 'parent': str(self.category.sodar_uuid),
                 'description': self.project.description,
                 'readme': '',
-                'public_guest_access': False,
+                'public_access': None,
                 'archive': False,
                 'full_title': self.project.full_title,
                 'roles': {
@@ -453,12 +453,15 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
             },
         )
 
-    def test_get_public_guest_access(self):
-        """Test GET with public guest access"""
-        self.project.public_guest_access = True
-        self.project.save()
+    def test_get_public(self):
+        """Test GET with public access"""
         user_new = self.make_user('user_new')
-        response = self.request_knox(self.url, token=self.get_token(user_new))
+        token = self.get_token(user_new)
+        response = self.request_knox(self.url, token=token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(json.loads(response.content)), 0)
+        self.project.set_public_access(self.role_guest)
+        response = self.request_knox(self.url, token=token)
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)
@@ -483,7 +486,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
                     'parent': None,
                     'description': self.category.description,
                     'readme': '',
-                    'public_guest_access': False,
+                    'public_access': None,
                     'archive': False,
                     'full_title': self.category.full_title,
                     'roles': {
@@ -518,6 +521,11 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
             self.get_serialized_user(self.user_owner),
         )
         self.assertNotIn('children', rd[1])
+        # Return public_guest_access instead of public_access
+        self.assertNotIn('public_access', rd[0])
+        self.assertNotIn('public_access', rd[1])
+        self.assertEqual(rd[0]['public_guest_access'], False)
+        self.assertEqual(rd[1]['public_guest_access'], False)
 
     def test_get_v1_0(self):
         """Test GET with API version v1.0"""
@@ -563,7 +571,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
             'parent': None,
             'description': self.category.description,
             'readme': '',
-            'public_guest_access': False,
+            'public_access': None,
             'archive': False,
             'full_title': self.category.full_title,
             'roles': {
@@ -590,7 +598,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
             'parent': str(self.category.sodar_uuid),
             'description': self.project.description,
             'readme': '',
-            'public_guest_access': False,
+            'public_access': None,
             'archive': False,
             'full_title': self.project.full_title,
             'roles': {
@@ -643,8 +651,24 @@ class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
             PROJECT_BLOCK_MSG.format(project_type='project'),
         )
 
+    def test_get_public_access(self):
+        """Test GET with project public access enabled"""
+        self.project.set_public_access(self.role_guest)
+        response = self.request_knox(self.url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['public_access'], self.role_guest.name)
+
+    def test_get_public_access_v1_1(self):
+        """Test GET with project public access and API v1.1"""
+        self.project.set_public_access(self.role_guest)
+        response = self.request_knox(self.url, version='1.1')
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['public_guest_access'], True)
+
     def test_get_category_v1_1(self):
-        """Test GET with category and API version v1.1"""
+        """Test GET with category and API v 1.1"""
         response = self.request_knox(self.url_cat, version='1.1')
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
@@ -655,7 +679,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
             'parent': None,
             'description': self.category.description,
             'readme': '',
-            'public_guest_access': False,
+            'public_guest_access': False,  # Old public guest access field
             'archive': False,
             'full_title': self.category.full_title,
             'roles': {
@@ -672,7 +696,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, ProjectrolesAPIViewTestBase):
         self.assertEqual(response_data, expected)
 
     def test_get_category_v1_0(self):
-        """Test GET with category and API version v1.0"""
+        """Test GET with category and API v1.0"""
         response = self.request_knox(self.url_cat, version='1.0')
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
@@ -702,7 +726,7 @@ class TestProjectCreateAPIView(
             'parent': '',
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -720,7 +744,8 @@ class TestProjectCreateAPIView(
             'parent': None,
             'description': new_category.description,
             'readme': new_category.readme.raw,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': new_category.title,
             'has_public_children': False,
@@ -741,7 +766,7 @@ class TestProjectCreateAPIView(
             'parent': None,
             'description': new_category.description,
             'readme': new_category.readme.raw,
-            'public_guest_access': False,
+            'public_access': None,
             'full_title': new_category.full_title,
             'sodar_uuid': str(new_category.sodar_uuid),
         }
@@ -756,7 +781,7 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -773,7 +798,8 @@ class TestProjectCreateAPIView(
             'parent': self.category.pk,
             'description': new_category.description,
             'readme': new_category.readme.raw,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': self.category.title
             + CAT_DELIMITER
@@ -794,11 +820,28 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': new_category.description,
             'readme': new_category.readme.raw,
-            'public_guest_access': False,
+            'public_access': None,
             'full_title': new_category.full_title,
             'sodar_uuid': str(new_category.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)
+
+    def test_post_category_public_access(self):
+        """Test POST for category with public access (should fail)"""
+        post_data = {
+            'title': NEW_CATEGORY_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent': '',
+            'description': 'description',
+            'readme': 'readme',
+            'public_access': PROJECT_ROLE_GUEST,  # Not allowed
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertIsNone(
+            Project.objects.filter(title=NEW_PROJECT_TITLE).first()
+        )
 
     def test_post_project(self):
         """Test POST for project under existing category"""
@@ -809,7 +852,7 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -826,7 +869,8 @@ class TestProjectCreateAPIView(
             'parent': self.category.pk,
             'description': new_project.description,
             'readme': new_project.readme.raw,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': self.category.title
             + CAT_DELIMITER
@@ -847,7 +891,7 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': new_project.description,
             'readme': new_project.readme.raw,
-            'public_guest_access': False,
+            'public_access': None,
             'full_title': new_project.full_title,
             'sodar_uuid': str(new_project.sodar_uuid),
         }
@@ -862,7 +906,7 @@ class TestProjectCreateAPIView(
             'parent': None,
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -879,7 +923,7 @@ class TestProjectCreateAPIView(
             'parent': '',
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -895,7 +939,7 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -911,7 +955,7 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -927,7 +971,7 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': INVALID_UUID,
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -943,7 +987,7 @@ class TestProjectCreateAPIView(
             'parent': INVALID_UUID,
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -959,12 +1003,43 @@ class TestProjectCreateAPIView(
             'parent': str(self.project.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Project.objects.count(), 2)
+
+    def test_post_project_public_access(self):
+        """Test POST for project with public access"""
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'public_access': PROJECT_ROLE_GUEST,
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
+        self.assertEqual(new_project.public_access, self.role_guest)
+        self.assertEqual(new_project.public_guest_access, True)  # DEPRECATED
+
+    def test_post_project_no_public_access_field(self):
+        """Test POST for project without public access field (should fail)"""
+        # NOTE: Testing this here because of the custom required check
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_post_project_target_enabled(self):
@@ -976,7 +1051,7 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -1009,7 +1084,7 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -1031,12 +1106,62 @@ class TestProjectCreateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
-            'public_guest_access': False,
+            'public_access': None,
             'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(Project.objects.count(), 2)
+
+    def test_post_project_v1_1(self):
+        """Test POST for project with API v1.1"""
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'public_guest_access': False,
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(
+            self.url, method='POST', data=post_data, version='1.1'
+        )
+        self.assertEqual(response.status_code, 201, msg=response.content)
+
+    def test_post_project_v1_1_public_access(self):
+        """Test POST for project with API v1.1 and public access"""
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'public_guest_access': True,
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(
+            self.url, method='POST', data=post_data, version='1.1'
+        )
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
+        self.assertEqual(new_project.public_access, self.role_guest)
+        self.assertEqual(new_project.public_guest_access, True)  # DEPRECATED
+
+    def test_post_project_v1_1_no_public_guest_access_field(self):
+        """Test POST for project with API v1.1 and no public_guest_access field"""
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(
+            self.url, method='POST', data=post_data, version='1.1'
+        )
+        self.assertEqual(response.status_code, 400, msg=response.content)
 
 
 class TestProjectUpdateAPIView(
@@ -1064,7 +1189,7 @@ class TestProjectUpdateAPIView(
             'parent': '',
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': False,
+            'public_access': None,
         }
         response = self.request_knox(self.url_cat, method='PUT', data=put_data)
 
@@ -1081,6 +1206,7 @@ class TestProjectUpdateAPIView(
             'parent': None,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
+            'public_access': None,
             'public_guest_access': False,
             'archive': False,
             'full_title': UPDATED_TITLE,
@@ -1095,7 +1221,7 @@ class TestProjectUpdateAPIView(
             'parent': None,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': False,
+            'public_access': None,
             'archive': False,
             'full_title': UPDATED_TITLE,
             'roles': {
@@ -1111,15 +1237,15 @@ class TestProjectUpdateAPIView(
         }
         self.assertEqual(json.loads(response.content), expected)
 
-    def test_put_public_guest_access_category(self):
-        """Test PUT to set public guest access for category (should fail)"""
+    def test_put_public_access_category(self):
+        """Test PUT to set public access for category (should fail)"""
         put_data = {
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_CATEGORY,
             'parent': '',
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': True,
+            'public_access': PROJECT_ROLE_GUEST,
         }
         response = self.request_knox(self.url_cat, method='PUT', data=put_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
@@ -1133,7 +1259,7 @@ class TestProjectUpdateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': True,
+            'public_access': PROJECT_ROLE_GUEST,
         }
         response = self.request_knox(self.url, method='PUT', data=put_data)
 
@@ -1150,6 +1276,7 @@ class TestProjectUpdateAPIView(
             'parent': self.category.pk,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
+            'public_access': self.role_guest.pk,
             'public_guest_access': True,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
@@ -1164,7 +1291,7 @@ class TestProjectUpdateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': True,
+            'public_access': PROJECT_ROLE_GUEST,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
             'roles': {
@@ -1210,7 +1337,8 @@ class TestProjectUpdateAPIView(
             'parent': None,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
@@ -1225,7 +1353,7 @@ class TestProjectUpdateAPIView(
             'parent': None,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': False,
+            'public_access': None,
             'archive': False,
             'full_title': UPDATED_TITLE,
             'roles': {
@@ -1248,7 +1376,7 @@ class TestProjectUpdateAPIView(
             'title': UPDATED_TITLE,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': True,
+            'public_access': PROJECT_ROLE_GUEST,
         }
         response = self.request_knox(self.url, method='PATCH', data=patch_data)
 
@@ -1265,6 +1393,7 @@ class TestProjectUpdateAPIView(
             'parent': self.category.pk,
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
+            'public_access': self.role_guest.pk,
             'public_guest_access': True,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
@@ -1280,7 +1409,7 @@ class TestProjectUpdateAPIView(
             'parent': str(self.category.sodar_uuid),
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'public_guest_access': True,
+            'public_access': PROJECT_ROLE_GUEST,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
             'roles': {
@@ -1402,15 +1531,16 @@ class TestProjectUpdateAPIView(
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_patch_project_public(self):
-        """Test PATCH with changed public guest access"""
+        """Test PATCH with changed public access"""
         self.assertEqual(self.project.public_guest_access, False)
         self.assertEqual(self.category.has_public_children, False)
-        patch_data = {'public_guest_access': True}
+        patch_data = {'public_access': PROJECT_ROLE_GUEST}
         response = self.request_knox(self.url, method='PATCH', data=patch_data)
 
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.project.refresh_from_db()
         self.category.refresh_from_db()
+        self.assertEqual(self.project.public_access, self.role_guest)
         self.assertEqual(self.project.public_guest_access, True)
         # Assert the parent category has_public_children is set true
         self.assertEqual(self.category.has_public_children, True)
@@ -1438,6 +1568,55 @@ class TestProjectUpdateAPIView(
             'readme': UPDATED_README,
         }
         response = self.request_knox(self.url, method='PATCH', data=patch_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    # TODO: Test update with v1.1
+    def test_put_project_v1_1(self):
+        """Test PUT with project and API v1.1"""
+        put_data = {
+            'title': UPDATED_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': UPDATED_DESC,
+            'readme': UPDATED_README,
+            'public_guest_access': True,  # Legacy field
+        }
+        response = self.request_knox(
+            self.url, method='PUT', data=put_data, version='1.1'
+        )
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.project.refresh_from_db()
+        model_dict = model_to_dict(self.project)
+        model_dict['readme'] = model_dict['readme'].raw
+        expected = {
+            'id': self.project.pk,
+            'title': UPDATED_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': self.category.pk,
+            'description': UPDATED_DESC,
+            'readme': UPDATED_README,
+            'public_access': self.role_guest.pk,
+            'public_guest_access': True,
+            'archive': False,
+            'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
+            'has_public_children': False,
+            'sodar_uuid': self.project.sodar_uuid,
+        }
+        self.assertEqual(model_dict, expected)
+
+    def test_put_category_public_access_v1_1(self):
+        """Test PUT with category and public access on API v1.1 (should fail)"""
+        put_data = {
+            'title': UPDATED_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent': '',
+            'description': UPDATED_DESC,
+            'readme': UPDATED_README,
+            'public_guest_access': True,
+        }
+        response = self.request_knox(
+            self.url_cat, method='PUT', data=put_data, version='1.1'
+        )
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 

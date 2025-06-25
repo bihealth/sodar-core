@@ -82,6 +82,11 @@ v2.0
     * Add view
 - ``ProjectRetrieveAPIView``
     * Replace ``roles`` field user serializer with user UUID
+    * Replace ``public_guest_access`` field with ``public_access``
+- ``ProjectCreateAPIView``
+    * Replace ``public_guest_access`` field with ``public_access``
+- ``ProjectUpdateAPIView``
+    * Replace ``public_guest_access`` field with ``public_access``
 - ``ProjectSettingRetrieveAPIView``
     * Replace ``user`` field user serializer with user UUID
 - ``UserSettingRetrieveAPIView``

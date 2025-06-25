@@ -25,6 +25,8 @@ Added
     - ``HomeView`` project list starred filter state saving (#1681)
     - ``project_list_home_starred`` app setting (#1681)
     - ``HomeStarringAjaxView`` Ajax API view (#1681)
+    - ``Project.public_access`` field (#1702)
+    - ``Project.has_role()`` helper ``public`` arg (#1702)
 
 Changed
 -------
@@ -41,6 +43,9 @@ Changed
     - Upgrade projectroles REST API version to v2.0 (#1554, #1692)
     - Replace nested ``SODARUserSerializer`` REST API fields with user UUID (#1554)
     - Upgrade projectroles sync REST API version to v2.0 (#1650)
+    - Deprecate ``Project.public_guest_access``, use ``public_access`` (#1702)
+    - Deprecate ``Project.set_public()``, use ``set_public_access()`` (#1702)
+    - Change ``get_role_option()`` ``project`` arg to ``project_type`` (#1702)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

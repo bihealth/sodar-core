@@ -252,11 +252,11 @@ $(document).ready(function () {
             );
             }
             // Public icon
-            if (p['type'] === 'PROJECT' && p['public_guest_access']) {
+            if (p['type'] === 'PROJECT' && p['public_access']) {
                 titleSpan.append($('<i>')
                     .attr('class', 'iconify text-info ml-2 sodar-pr-project-public')
                     .attr('data-icon', 'mdi:earth')
-                    .attr('title', 'Public guest access')
+                    .attr('title', 'Public read-only access')
                 );
             }
             // Archived icon

@@ -1,8 +1,8 @@
 $(document).ready(function() {
     // Hide settings fields by default
     $('div[id^="div_id_settings"]').hide();
-    // Hide public_guest_access field by default
-    $('#div_id_public_guest_access').hide();
+    // Hide public_access field by default
+    $('#div_id_public_access').hide();
     // Hide remote sites by default
     $('div[id^="div_id_remote_site"]').hide();
 
@@ -15,7 +15,7 @@ $(document).ready(function() {
             if ($projectElements.length > 0) $parentDiv.show();
             else $parentDiv.hide();
         });
-        $('#div_id_public_guest_access').show();
+        $('#div_id_public_access').show();
         $('div[id^="div_id_remote_site"]').show();
     }
     if ($('#sodar-pr-project-form-title').attr('data-project-type') === 'CATEGORY') {
@@ -36,7 +36,7 @@ $(document).ready(function() {
                     .add($parentDiv.find('[data-project-types="project,category"]'));
                 if ($projectElements.length > 0) $parentDiv.show();
                 else $parentDiv.hide();
-                $('#div_id_public_guest_access').show();
+                $('#div_id_public_access').show();
                 $('div[id^="div_id_remote_site"]').show();
             });
         } else if ($('#div_id_type .form-control').val() === 'CATEGORY') {
@@ -46,7 +46,7 @@ $(document).ready(function() {
                     .add($parentDiv.find('[data-project-types="project,category"]'));
                 if ($categoryElements.length > 0) $parentDiv.show();
                 else $parentDiv.hide();
-                $('#div_id_public_guest_access').hide();
+                $('#div_id_public_access').hide();
                 $('div[id^="div_id_remote_site"]').hide();
             });
         }

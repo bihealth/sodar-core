@@ -4,7 +4,7 @@ import logging
 import uuid
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from django.apps import apps
 from django.conf import settings
@@ -72,12 +72,16 @@ CAT_DELIMITER_ERROR_MSG = f'String "{CAT_DELIMITER}" is not allowed in title'
 ROLE_PROJECT_TYPE_ERROR_MSG = (
     'Invalid project type "{project_type}" for ' 'role "{role_name}"'
 )
-CAT_PUBLIC_ACCESS_MSG = 'Public guest access is not allowed for categories'
+CAT_PUBLIC_ACCESS_MSG = 'Public access is not allowed for categories'
 ADD_EMAIL_ALREADY_SET_MSG = 'Email already set as {email_type} email for user'
 REMOTE_PROJECT_UNIQUE_MSG = (
     'RemoteProject with the same project UUID and site anready exists'
 )
 AUTH_PROVIDER_OIDC = 'oidc'
+SET_PUBLIC_DEPRECATE_MSG = (
+    'Project.set_public() has been deprecated and will be removed in SODAR '
+    'Core v1.3. Use set_public_access() instead'
+)
 
 
 # Project ----------------------------------------------------------------------
@@ -160,11 +164,23 @@ class Project(models.Model):
         help_text='Project README (optional, supports markdown)',
     )
 
-    #: Public guest access
+    #: Public guest access (DEPRECATED, to be removed in v1.3. See #1703)
     public_guest_access = models.BooleanField(
         default=False,
         help_text='Allow public guest access for the project, also including '
         'unauthenticated users if allowed on the site',
+    )
+
+    #: Public read-only access
+    public_access = models.ForeignKey(
+        'Role',
+        blank=True,
+        null=True,
+        related_name='public_access',
+        help_text='Allow public access of specific read-only access level for '
+        'project. Includes access for unauthenticated users if allowed on '
+        'site.',
+        on_delete=models.CASCADE,
     )
 
     #: Project is archived (read-only)
@@ -224,16 +240,27 @@ class Project(models.Model):
                 'Subprojects are only allowed within categories'
             )
 
-    def _validate_public_guest_access(self):
+    def _validate_public_access(self):
         """
-        Validate public guest access to ensure it is not set on categories.
+        Validate public access to ensure it is not set on categories and
+        contains one of accepted values.
 
-        NOTE: Does not prevent saving but forces the value to be False, see
-              issue #1404.
+        NOTE: Does not prevent saving but forces the value to be None if in
+              category, see issue #1404.
         """
-        if self.type == PROJECT_TYPE_CATEGORY and self.public_guest_access:
-            logger.warning(CAT_PUBLIC_ACCESS_MSG + ', setting to False')
-            self.public_guest_access = False
+        if self.type == PROJECT_TYPE_CATEGORY and (
+            self.public_access or self.public_guest_access
+        ):
+            logger.warning(CAT_PUBLIC_ACCESS_MSG + ', setting to None')
+            self.public_access = None
+            self.public_guest_access = False  # DEPRECATED
+        if self.public_access and self.public_access.name not in [
+            PROJECT_ROLE_GUEST,
+            PROJECT_ROLE_VIEWER,
+        ]:
+            raise ValidationError(
+                f'Invalid role for public_access: {self.public_access.name}'
+            )
 
     def _validate_title(self):
         """
@@ -263,7 +290,7 @@ class Project(models.Model):
         self._validate_parent()
         self._validate_title()
         self._validate_parent_type()
-        self._validate_public_guest_access()
+        self._validate_public_access()
         self._validate_archive()
         # Update full title of self and children
         self.full_title = self._get_full_title()
@@ -297,12 +324,13 @@ class Project(models.Model):
 
     def _has_public_children(self) -> bool:
         """
-        Return True if the project has any children with public guest access.
+        Return True if the project has any children with public read-only
+        access.
         """
         if self.type != PROJECT_TYPE_CATEGORY:
             return False
         for child in self.get_children():
-            if child.public_guest_access:
+            if child.public_access:
                 return True
             ret = child._has_public_children()
             if ret:
@@ -591,16 +619,18 @@ class Project(models.Model):
             min_rank=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).rank,
         )
 
-    def has_role(self, user: 'SODARUser') -> bool:
+    def has_role(self, user: 'SODARUser', public: bool = True) -> bool:
         """
         Return whether user has roles in Project. Returns True if user has local
-        role, inherits a role from a parent category, or if public guest access
-        is enabled for the project.
+        role, inherits a role from a parent category, or if public access is
+        enabled for the project. If public is set False, discount users with no
+        actual role in a public access project.
 
         :param user: User object
+        :param public: Boolean
         :return: Boolean
         """
-        if self.public_guest_access or self.get_role(user=user):
+        if (public and self.public_access) or self.get_role(user=user):
             return True
         return False
 
@@ -619,7 +649,7 @@ class Project(models.Model):
             return True
         children = self.get_children(flat=True)
         if (
-            any([c.public_guest_access for c in children])
+            any([c.public_access is not None for c in children])
             or RoleAssignment.objects.filter(
                 user=user, project__in=children
             ).count()
@@ -682,15 +712,44 @@ class Project(models.Model):
                 return True
         return False
 
-    def set_public(self, public: bool = True):
-        """Helper for setting value of public_guest_access"""
-        if public != self.public_guest_access:
-            # NOTE: Validation no longer raises an exception (see ¤1404)
-            if self.type == PROJECT_TYPE_CATEGORY and public:
-                raise ValidationError(CAT_PUBLIC_ACCESS_MSG)
-            self.public_guest_access = public
+    def set_public_access(self, role: Union['Role', str, None]):
+        """
+        Set project public_access value.
+
+        If given as str, the Role object with its name coresponding to the
+        value will be queried for an inserted.
+
+        :param role: Role object, string or None
+        """
+        # NOTE: Validation no longer raises an exception (see #1404)
+        if self.type == PROJECT_TYPE_CATEGORY and role:
+            raise ValidationError(CAT_PUBLIC_ACCESS_MSG)
+        if isinstance(role, str):
+            role = Role.objects.get(name=role)
+        if self.public_access != role:
+            self.public_access = role
+            self.public_guest_access = True if role else False  # DEPRECATED
             self.save()
             self._update_public_children()  # Update for parents
+
+    # TODO: Deprecated, remove in v1.3 (#1703)
+    def set_public(self, public: bool = True):
+        """
+        Helper for setting value of public_access.
+
+        DEPRECATED: Will be removed in v1.3. Use set_public_access() instead.
+
+        :param public: Boolean (default=True)
+        """
+        logger.warning(SET_PUBLIC_DEPRECATE_MSG)
+        # NOTE: Validation no longer raises an exception (see #1404)
+        if self.type == PROJECT_TYPE_CATEGORY and public:
+            raise ValidationError(CAT_PUBLIC_ACCESS_MSG)
+        role = Role.objects.get(name=PROJECT_ROLE_GUEST) if public else None
+        self.public_access = role
+        self.public_guest_access = public  # DEPRECATED
+        self.save()
+        self._update_public_children()  # Update for parents
 
     def set_archive(self, status: bool = True):
         """

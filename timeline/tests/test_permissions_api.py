@@ -59,14 +59,14 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.user_no_roles, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.anonymous, 200)
 
     def test_get_archive(self):
@@ -76,7 +76,7 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.user_no_roles, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
 

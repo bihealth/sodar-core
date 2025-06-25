@@ -81,11 +81,13 @@ class ProjectMixin:
         parent: Optional[Project],
         description: str = '',
         readme: str = None,
-        public_guest_access: bool = False,
+        public_access: Union[Role, str, None] = None,
         archive: bool = False,
         sodar_uuid: Union[str, UUID, None] = None,
     ) -> Project:
         """Create Project object"""
+        if isinstance(public_access, str):
+            public_access = Role.objects.get(name=public_access)
         values = {
             'title': title,
             'type': type,
@@ -93,7 +95,10 @@ class ProjectMixin:
             'description': description,
             'readme': readme,
             'archive': archive,
-            'public_guest_access': public_guest_access,
+            'public_access': public_access,
+            'public_guest_access': (
+                True if public_access else False
+            ),  # DEPRECATED
         }
         if sodar_uuid:
             values['sodar_uuid'] = sodar_uuid
@@ -126,6 +131,8 @@ class RoleMixin:
             rank=ROLE_RANKING[PROJECT_ROLE_FINDER],
             project_types=[PROJECT_TYPE_CATEGORY],
         )[0]
+        # Public guest access viewer roles
+        self.guest_roles = [self.role_guest, self.role_viewer]
 
 
 class RoleAssignmentMixin:
@@ -375,7 +382,8 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
             'full_title': 'TestCategory / TestProject',
             'sodar_uuid': self.project.sodar_uuid,
             'description': '',
-            'public_guest_access': False,
+            'public_access': None,
+            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'has_public_children': False,
         }
@@ -427,21 +435,21 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
                 parent=self.project,
             )
 
-    def test_validate_public_guest_access(self):
-        """Test _validate_public_guest_access() with project"""
-        self.assertEqual(self.project.public_guest_access, False)
+    def test_validate_public_access(self):
+        """Test _validate_public_access() with project"""
+        self.assertEqual(self.project.public_access, None)
         # Test with project
-        self.project.public_guest_access = True
+        self.project.public_access = self.role_guest
         self.project.save()
-        self.assertEqual(self.project.public_guest_access, True)
+        self.assertEqual(self.project.public_access, self.role_guest)
 
-    def test_validate_public_guest_access_category(self):
-        """Test _validate_public_guest_access() with category"""
+    def test_validate_public_access_category(self):
+        """Test _validate_public_access() with category"""
         # NOTE: Does not raise error but forces value to be False, see #1404
-        self.assertEqual(self.category.public_guest_access, False)
-        self.category.public_guest_access = True
+        self.assertEqual(self.category.public_access, None)
+        self.category.public_access = self.role_guest
         self.category.save()
-        self.assertEqual(self.category.public_guest_access, False)
+        self.assertEqual(self.category.public_access, None)
 
     def test_get_absolute_url(self):
         """Test get_absolute_url()"""
@@ -485,17 +493,33 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         """Test is_revoked() without remote projects"""
         self.assertEqual(self.project.is_revoked(), False)
 
+    def test_set_public_access(self):
+        """Test set_public_access()"""
+        self.assertEqual(self.project.public_access, None)
+        self.project.set_public_access(self.role_guest)
+        self.assertEqual(self.project.public_access, self.role_guest)
+        self.project.set_public_access(self.role_viewer)
+        self.assertEqual(self.project.public_access, self.role_viewer)
+        self.project.set_public_access(self.role_guest.name)
+        self.assertEqual(self.project.public_access, self.role_guest)
+        self.project.set_public_access(self.role_viewer.name)
+        self.assertEqual(self.project.public_access, self.role_viewer)
+        self.project.set_public_access(None)
+        self.assertEqual(self.project.public_access, None)
+
     def test_set_public(self):
         """Test set_public()"""
-        self.assertFalse(self.project.public_guest_access)
+        # TODO: Deprecated, remove in v1.3 (#1703)
+        self.assertEqual(self.project.public_access, None)
+        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
         self.project.set_public()  # Default = True
-        self.assertTrue(self.project.public_guest_access)
+        self.assertEqual(self.project.public_access, self.role_guest)
+        self.assertEqual(self.project.public_guest_access, True)  # DEPRECATED
         self.project.set_public(False)
-        self.assertFalse(self.project.public_guest_access)
-        self.project.set_public(True)
-        self.assertTrue(self.project.public_guest_access)
+        self.assertEqual(self.project.public_access, None)
+        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
         with self.assertRaises(ValidationError):
-            self.category.set_public(True)
+            self.category.set_public()
 
     def test_set_archive(self):
         """Test set_archive()"""
@@ -784,10 +808,15 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         self.assertTrue(self.project.has_role(self.user_dan))
 
     def test_has_role_public(self):
-        """Test has_role() in project with public guest access"""
-        self.project.set_public()
+        """Test has_role() in project with public access"""
+        self.project.set_public_access(self.role_guest)
         self.assertFalse(self.category.has_role(self.user_bob))
         self.assertTrue(self.project.has_role(self.user_bob))
+
+    def test_has_role_public_false(self):
+        """Test has_role() public access and public=False"""
+        self.project.set_public_access(self.role_guest)
+        self.assertFalse(self.project.has_role(self.user_bob, public=False))
 
 
 class TestRole(RoleMixin, TestCase):

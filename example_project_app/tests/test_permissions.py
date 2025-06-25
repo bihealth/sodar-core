@@ -40,7 +40,7 @@ class TestExampleView(FolderMixin, AppSettingMixin, ProjectPermissionTestBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(url, self.user_no_roles, 200)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -86,7 +86,7 @@ class TestExampleView(FolderMixin, AppSettingMixin, ProjectPermissionTestBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(url, self.user_no_roles, 200)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)

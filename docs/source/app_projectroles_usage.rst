@@ -185,12 +185,13 @@ target category or superuser status.
     For remote project synchronized from another SODAR Core based site, you can
     only edit local application settings in this view.
 
-Public Guest Access
--------------------
+Public Access
+-------------
 
-From the project create/update view, setting *Public Guest Access* will give
-everyone in the system read-only guest access in the project without
-specifically granting it.
+From the project create/update view, setting :guilabel:`Public Access` will give
+everyone in the system read-only access in the project. The read-only access
+level can be chosen between *project guest* (full read-only access to all data)
+and *project viewer* (limited access to basic project information).
 
 .. warning::
 
@@ -200,7 +201,7 @@ specifically granting it.
 
 .. note::
 
-    Public guest access can only be set for projects. Categories will be visible
+    Public access can only be set for projects. Categories will be visible
     for users with access to any category or project under them.
 
 Access on Remote Sites
@@ -568,11 +569,11 @@ target site will sync the data by sending a request to the source site.
 
 .. note::
 
-    If synchronizing a project with *public guest access* enabled, this setting
+    If synchronizing a project with *public access* enabled, this setting
     is **not** automatically set on the target site. If you wish to make the
-    project also publicly accessible on the target site, it needs to be
-    explicitly set by the project owner, delegate or a superuser in the
-    :guilabel:`Update Project` form.
+    project also publicly accessible, it needs to be explicitly set by the
+    project owner, delegate or a superuser in the :guilabel:`Update Project`
+    form on the target site.
 
 As Target Site
 --------------

@@ -75,7 +75,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 {
                     'type': self.category.type,
                     'full_title': self.category.full_title,
-                    'public_guest_access': self.category.public_guest_access,
+                    'public_access': False,
                     'archive': False,
                     'remote': False,
                     'revoked': False,
@@ -87,7 +87,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 {
                     'type': self.project.type,
                     'full_title': self.project.full_title,
-                    'public_guest_access': self.project.public_guest_access,
+                    'public_access': False,
                     'archive': False,
                     'remote': False,
                     'revoked': False,
@@ -116,7 +116,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 {
                     'type': self.project.type,
                     'full_title': self.project.title,  # Not full_title
-                    'public_guest_access': self.project.public_guest_access,
+                    'public_access': False,
                     'archive': False,
                     'remote': False,
                     'revoked': False,
@@ -305,16 +305,14 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['projects'][1]['archive'], True)
 
-    def test_get_public_guest_access(self):
-        """Test GET with public guest access"""
-        self.project.public_guest_access = True
+    def test_get_public_access(self):
+        """Test GET with public read-only access"""
+        self.project.public_access = self.role_guest
         self.project.save()
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.data['projects'][1]['public_guest_access'], True
-        )
+        self.assertEqual(response.data['projects'][1]['public_access'], True)
 
 
 class TestProjectListColumnAjaxView(
