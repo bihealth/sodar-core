@@ -17,6 +17,7 @@ def populate_viewer_role(apps, schema_editor):
     Role = apps.get_model('projectroles', 'Role')
     Role.objects.create(name=ROLE_NAME, rank=ROLE_RANK, description=ROLE_DESC)
 
+
 def revert_viewer_role(apps, schema_editor):
     """Revert Role object creation for viewer role"""
     Role = apps.get_model('projectroles', 'Role')

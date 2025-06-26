@@ -17,6 +17,7 @@ def populate_public_access(apps, schema_editor):
             p.public_access = role_guest
             p.save()
 
+
 def revert_public_access(apps, schema_editor):
     """Revert Project.public_access populating"""
     Project = apps.get_model('projectroles', 'Project')
@@ -24,6 +25,7 @@ def revert_public_access(apps, schema_editor):
         if p.public_access:
             p.public_access = None
             p.save()
+
 
 class Migration(migrations.Migration):
 

@@ -24,11 +24,11 @@ target_port = 8001
 
 .PHONY: black
 black:
-	black . -l 80 --skip-string-normalization --exclude ".git|.venv|.tox|build|env|src|docs|migrations|versioneer.py" $(arg)
+	black . $(arg)
 
 
 .PHONY: flake
-flake:
+flake:e
 	flake8 .
 
 

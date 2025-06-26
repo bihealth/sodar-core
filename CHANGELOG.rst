@@ -43,6 +43,7 @@ Changed
     - Upgrade general Python dependencies (#1686)
     - Upgrade to djangorestframework v3.16 (#1689)
     - Update string formatting (#1562)
+    - Move black configuration into ``pyproject.toml`` (#1454)
 - **Filesfolders**
     - Refactor serializers (#1689)
 - **Projectroles**
