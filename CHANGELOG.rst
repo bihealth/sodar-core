@@ -25,7 +25,7 @@ Added
     - ``PermissionTestMixin.set_access_block()`` helper (#1653)
     - ``blockprojectaccess`` management command (#1653)
     - ``HomeView`` project list starred filter state saving (#1681)
-    - ``project_list_home_starred`` app setting (#1681)
+    - ``project_list_home_starred`` app setting (#1681, #1707)
     - ``HomeStarringAjaxView`` Ajax API view (#1681)
     - ``Project.public_access`` field (#1702)
     - ``Project.has_role()`` helper ``public`` arg (#1702)

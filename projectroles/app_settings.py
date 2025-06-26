@@ -194,7 +194,7 @@ PROJECTROLES_APP_SETTINGS = [
         default=False,
         label='Home view project list starred display',
         description='Initial starred mode to display in home view project list',
-        user_modifiable=True,  # Editable only in project list
+        user_modifiable=False,  # Editable only in project list
         global_edit=False,
     ),
     PluginAppSettingDef(
