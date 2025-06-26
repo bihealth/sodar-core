@@ -19,11 +19,11 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.plugins import get_active_plugins
-from projectroles.utils import AppLinkContent
+from projectroles.app_links import AppLinkAPI
 
 
 register = template.Library()
-app_links = AppLinkContent()
+app_links = AppLinkAPI()
 app_settings = AppSettingAPI()
 
 

@@ -52,6 +52,8 @@ Changed
     - Deprecate ``Project.public_guest_access``, use ``public_access`` (#1702)
     - Deprecate ``Project.set_public()``, use ``set_public_access()`` (#1702)
     - Change ``get_role_option()`` ``project`` arg to ``project_type`` (#1702)
+    - Rename ``AppLinkContent`` to ``AppLinkAPI`` (#1709)
+    - Move ``AppLinkAPI`` into ``app_links`` (#1709)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

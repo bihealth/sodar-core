@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
+from projectroles.app_links import AppLinkAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
 from projectroles.tests.test_models import (
@@ -22,10 +23,9 @@ from projectroles.tests.test_views import (
     PROJECT_TYPE_PROJECT,
 )
 from projectroles.tests.test_views_api import SerializedObjectMixin
-from projectroles.utils import AppLinkContent
 
 
-app_links = AppLinkContent()
+app_links = AppLinkAPI()
 app_settings = AppSettingAPI()
 
 

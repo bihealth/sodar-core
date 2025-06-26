@@ -20,6 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rules.contrib.views import PermissionRequiredMixin
 
+from projectroles.app_links import AppLinkAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
@@ -32,7 +33,7 @@ from projectroles.models import (
     ROLE_RANKING,
 )
 from projectroles.plugins import ProjectAppPluginPoint, get_active_plugins
-from projectroles.utils import get_display_name, AppLinkContent
+from projectroles.utils import get_display_name
 from projectroles.views import ProjectAccessMixin, User
 from projectroles.views_api import (
     SODARAPIProjectPermission,
@@ -556,7 +557,7 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         app_name = request.GET.get('app_name')
         # Get the content for the sidebar
-        app_links = AppLinkContent()
+        app_links = AppLinkAPI()
         sidebar_links = app_links.get_project_links(
             request.user, project, app_name=app_name
         )
@@ -611,7 +612,7 @@ class UserDropdownContentAjaxView(SODARBaseAjaxView):
     def get(self, request, *args, **kwargs):
         app_name = request.GET.get('app_name')
         # Get the content for the user dropdown
-        app_links = AppLinkContent()
+        app_links = AppLinkAPI()
         user_dropdown_links = app_links.get_user_links(
             request.user, app_name=app_name
         )

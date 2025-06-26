@@ -6,7 +6,7 @@ from django.conf import settings
 
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.urls import urlpatterns
-from projectroles.utils import ROLE_URLS
+from projectroles.app_links import ROLE_URLS
 
 
 SIDEBAR_ICON_MIN_SIZE = 18
