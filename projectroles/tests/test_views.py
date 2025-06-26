@@ -3055,9 +3055,9 @@ class TestProjectDeleteView(
             response = self.client.post(self.url, data=self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Project.objects.count(), 1)
-        alerts = self._get_delete_alerts()
+        alerts = self._get_delete_alerts()  # All should receive email
         self.assertEqual(alerts.count(), 2)  # Only 2 alerts
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 3)
 
     def test_post_disable_email(self):
         """Test POST with disabled email notifications"""
@@ -3072,8 +3072,7 @@ class TestProjectDeleteView(
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Project.objects.count(), 1)
         alerts = self._get_delete_alerts()
-        self.assertEqual(alerts.count(), 3)  # All should receive alert
-        # TODO: Is this correct?
+        self.assertEqual(alerts.count(), 3)  # All should receive alerts
         self.assertEqual(len(mail.outbox), 2)  # Only 2 emails
 
     def test_post_inactive_user(self):

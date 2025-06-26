@@ -1692,16 +1692,19 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         recipients = users = [
             a.user
             for a in project.get_roles()
-            if a.user.is_active
-            and a.user != request.user
-            and app_settings.get(APP_NAME, 'notify_alert_project', user=a.user)
+            if a.user.is_active and a.user != request.user
         ]
         # Create app alerts
         if app_alerts and recipients:
+            alert_users = [
+                u
+                for u in users
+                if app_settings.get(APP_NAME, 'notify_alert_project', user=u)
+            ]
             app_alerts.add_alerts(
                 app_name=APP_NAME,
                 alert_name='project_delete',
-                users=users,
+                users=alert_users,
                 message=PROJECT_DELETE_MSG.format(
                     project_type=get_display_name(project.type, title=True),
                     project_title=project.title,

@@ -32,7 +32,7 @@ Added
     - Limited guest role alert in ``ProjectDetailView`` (#1705)
     - Search by object UUID (#1546)
     - ``notify_alert_project`` and ``notify_alert_role`` app settings (#1648)
-    - App alert disabling for project and role updates (#1648)
+    - App alert disabling for project and role updates (#1648, #1708)
 
 Changed
 -------
