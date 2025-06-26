@@ -427,7 +427,7 @@ class TestHyperLink(
         """Test FilesfoldersManager find() with HyperLink UUID"""
         objects = HyperLink.objects.find(str(self.hyperlink.sodar_uuid))
         self.assertEqual(len(objects), 1)
-        self.assertEqual(objects[0], self.HyperLink)
+        self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing HyperLink"""
