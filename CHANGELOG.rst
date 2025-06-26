@@ -13,6 +13,7 @@ Added
 
 - **General**
     - Type hints (#568)
+    - Build configuration in ``pyproject.toml`` (#1673)
 - **Filesfolders**
     - Search by object UUID (#1546)
 - **Projectroles**
