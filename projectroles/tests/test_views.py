@@ -1078,6 +1078,33 @@ class TestProjectCreateView(
             mail.outbox[1].subject,
         )
 
+    def test_post_project_different_owner_disable_alerts(self):
+        """Test POST for project with different owner and disabled alert notifications"""
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.category, user_new, self.role_contributor)
+        app_settings.set(APP_NAME, 'notify_alert_role', False, user=user_new)
+        app_settings.set(APP_NAME, 'notify_alert_project', False, user=user_new)
+        data = self._get_post_data(
+            title='TestProject',
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=user_new,
+        )
+        with self.login(self.user):  # Post as category owner
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.all().count(), 2)
+        project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
+        self.assertEqual(project.get_owner().user, user_new)
+        # Alerts should not be created, mail should be sent
+        r_events = self.app_alert_model.objects.filter(alert_name='role_create')
+        self.assertEqual(r_events.count(), 0)
+        p_events = self.app_alert_model.objects.filter(
+            alert_name='project_create_parent'
+        )
+        self.assertEqual(p_events.count(), 0)
+        self.assertEqual(len(mail.outbox), 2)
+
     def test_post_project_different_owner_disable_email(self):
         """Test POST for project with different owner and disabled email notifications"""
         user_new = self.make_user('user_new')
@@ -1158,6 +1185,27 @@ class TestProjectCreateView(
             ),
             mail.outbox[0].subject,
         )
+
+    def test_post_project_cat_member_disable_alerts(self):
+        """Test POST for project as category member with disabled alerts"""
+        user_new = self.make_user('user_new')
+        self.make_assignment(self.category, user_new, self.role_contributor)
+        app_settings.set(
+            APP_NAME, 'notify_alert_project', False, user=self.user
+        )
+        data = self._get_post_data(
+            title='TestProject',
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=user_new,
+        )
+        with self.login(user_new):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
+        self.assertEqual(project.get_owner().user, user_new)
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_post_project_cat_member_disable_email(self):
         """Test POST for project as category member with disabled email"""
@@ -1899,6 +1947,28 @@ class TestProjectUpdateView(
             ),
             mail.outbox[0].subject,
         )
+
+    def test_post_parent_different_owner_disable_alerts(self):
+        """Test POST with updated parent and different parent owner with disabled alerts"""
+        user_new = self.make_user('user_new')
+        self.owner_as_cat.user = user_new
+        self.owner_as_cat.save()
+        category_new = self.make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category_new, user_new, self.role_owner)
+        app_settings.set(APP_NAME, 'notify_alert_project', False, user=user_new)
+
+        self.post_data['parent'] = category_new.sodar_uuid  # Updated category
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 302)
+        # Assert email but no alert
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_post_parent_different_owner_disable_email(self):
         """Test POST with updated parent and different parent owner with disabled email"""
@@ -2758,6 +2828,24 @@ class TestProjectArchiveView(
             mail.outbox[0].subject,
         )
 
+    def test_post_disable_alerts(self):
+        """Test POST with disabled alerts"""
+        app_settings.set(
+            APP_NAME, 'notify_alert_project', False, user=self.user_contributor
+        )
+        self.assertEqual(self.project.archive, False)
+        self.assertEqual(self._get_tl().count(), 0)
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            self.client.post(self.url, {'status': True})
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.archive, True)
+        self.assertEqual(self._get_tl().count(), 1)
+        # Email but no alert
+        self.assertEqual(self._get_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_post_disable_email(self):
         """Test POST with disabled email"""
         app_settings.set(
@@ -2955,6 +3043,22 @@ class TestProjectDeleteView(
         )
         self.assertEqual(len(mail.outbox), 2)
 
+    def test_post_disable_alerts(self):
+        """Test POST with disabled alert notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_alert_project', False, user=self.user_owner
+        )
+        self.assertEqual(Project.objects.count(), 2)
+        self.assertEqual(self._get_delete_alerts().count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):  # POST as self.user again
+            response = self.client.post(self.url, data=self.post_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 1)
+        alerts = self._get_delete_alerts()
+        self.assertEqual(alerts.count(), 2)  # Only 2 alerts
+        self.assertEqual(len(mail.outbox), 2)
+
     def test_post_disable_email(self):
         """Test POST with disabled email notifications"""
         app_settings.set(
@@ -2963,14 +3067,13 @@ class TestProjectDeleteView(
         self.assertEqual(Project.objects.count(), 2)
         self.assertEqual(self._get_delete_alerts().count(), 0)
         self.assertEqual(len(mail.outbox), 0)
-
         with self.login(self.user):  # POST as self.user again
             response = self.client.post(self.url, data=self.post_data)
-
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Project.objects.count(), 1)
         alerts = self._get_delete_alerts()
         self.assertEqual(alerts.count(), 3)  # All should receive alert
+        # TODO: Is this correct?
         self.assertEqual(len(mail.outbox), 2)  # Only 2 emails
 
     def test_post_inactive_user(self):
@@ -3502,6 +3605,27 @@ class TestRoleAssignmentCreateView(
             mail.outbox[0].subject,
         )
 
+    def test_post_disable_alerts(self):
+        """Test POST with disabled alert notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_alert_role', False, user=self.user_new
+        )
+        data = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_guest.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_create'
+            ).count(),
+            0,
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_post_disable_email(self):
         """Test POST with disabled email notifications"""
         app_settings.set(
@@ -3816,6 +3940,27 @@ class TestRoleAssignmentUpdateView(
             mail.outbox[0].subject,
         )
 
+    def test_post_disable_alerts(self):
+        """Test POST with disabled alert notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_alert_role', False, user=self.user_guest
+        )
+        data = {
+            'project': self.role_as.project.sodar_uuid,
+            'user': self.user_guest.sodar_uuid,
+            'role': self.role_contributor.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_update'
+            ).count(),
+            0,
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_post_disable_email(self):
         """Test POST with disabled email notifications"""
         app_settings.set(
@@ -4088,6 +4233,32 @@ class TestRoleAssignmentDeleteView(
             ),
             mail.outbox[0].subject,
         )
+
+    def test_post_disable_alerts(self):
+        """Test POST with disabled alert notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_alert_role', False, user=self.user_contrib
+        )
+        alert = self.app_alerts.add_alert(
+            APP_NAME,
+            'test_alert',
+            self.user_contrib,
+            'test',
+            project=self.project,
+        )
+        self.assertEqual(alert.active, True)
+        with self.login(self.user):
+            response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete'
+            ).count(),
+            0,
+        )
+        alert.refresh_from_db()
+        self.assertEqual(alert.active, False)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_post_disable_email(self):
         """Test POST with disabled email notifications"""
@@ -4664,6 +4835,26 @@ class TestRoleAssignmentOwnerTransferView(
                 m.subject,
             )
 
+    def test_post_disable_alerts(self):
+        """Test POST with disabled alert notifications"""
+        app_settings.set(
+            APP_NAME, 'notify_alert_role', False, user=self.user_owner
+        )
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'project': self.project.sodar_uuid,
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': self.role_guest.pk,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.app_alert_model.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 2)
+
     def test_post_disable_email(self):
         """Test POST with disabled email notifications"""
         app_settings.set(
@@ -4683,6 +4874,8 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 1)
+
+    # TODO: Test with disabled alerts!
 
     def test_post_inactive_user(self):
         """Test POST with inactive user"""
@@ -5258,6 +5451,27 @@ class TestProjectInviteAcceptView(
             ),
             mail.outbox[0].subject,
         )
+
+    @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
+    def test_get_ldap_disable_alerts(self):
+        """Test GET with LDAP invite and disabled alert notifications"""
+        self.assertEqual(self.invite.is_ldap(), True)
+        app_settings.set(APP_NAME, 'notify_alert_role', False, user=self.user)
+        with self.login(self.user_new):
+            self.client.get(self.url, follow=True)
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+        self.assertTrue(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).exists()
+        )
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='invite_accept'
+            ).count(),
+            0,
+        )
+        self.assertEqual(len(mail.outbox), 1)
 
     @override_settings(ENABLE_LDAP=True, AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
     def test_get_ldap_disable_email(self):

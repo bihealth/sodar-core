@@ -93,6 +93,24 @@ PROJECTROLES_APP_SETTINGS = [
         project_types=[PROJECT_TYPE_PROJECT, PROJECT_TYPE_CATEGORY],
     ),
     PluginAppSettingDef(
+        name='notify_alert_project',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
+        label='Receive alerts for {} updates'.format(
+            get_display_name(PROJECT_TYPE_PROJECT)
+        ),
+        description=(
+            'Receive UI alerts for {} or {} creation, updating, moving, '
+            'archiving and deletion.'.format(
+                get_display_name(PROJECT_TYPE_CATEGORY),
+                get_display_name(PROJECT_TYPE_PROJECT),
+            )
+        ),
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
         name='notify_email_project',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_BOOLEAN,
@@ -103,6 +121,24 @@ PROJECTROLES_APP_SETTINGS = [
         description=(
             'Receive email notifications for {} or {} creation, updating, '
             'moving, archiving and deletion.'.format(
+                get_display_name(PROJECT_TYPE_CATEGORY),
+                get_display_name(PROJECT_TYPE_PROJECT),
+            )
+        ),
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
+        name='notify_alert_role',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
+        label='Receive alerts for {} membership updates'.format(
+            get_display_name(PROJECT_TYPE_PROJECT)
+        ),
+        description=(
+            'Receive UI alerts for {} or {} membership updates and invitation '
+            'activity.'.format(
                 get_display_name(PROJECT_TYPE_CATEGORY),
                 get_display_name(PROJECT_TYPE_PROJECT),
             )

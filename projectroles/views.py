@@ -1295,7 +1295,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             and action == PROJECT_ACTION_CREATE
             and owner.is_active
         ):
-            if app_alerts:
+            if app_alerts and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=owner
+            ):
                 app_alerts.add_alert(
                     app_name=APP_NAME,
                     alert_name='role_create',
@@ -1319,45 +1321,53 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     owner_as.role,
                     request,
                 )
-        # Project creation/moving for parent category owners and delegates
-        if project.parent:
-            recipients = cls._get_notify_recipients(project, request)
-            if action == PROJECT_ACTION_CREATE and recipients:
-                if app_alerts:
-                    for r in recipients:
-                        app_alerts.add_alert(
-                            app_name=APP_NAME,
-                            alert_name='project_create_parent',
-                            user=r,
-                            message=f'New {project.type.lower()} created under '
-                            f'category "{project.parent.title}": '
-                            f'"{project.title}".',
-                            url=reverse(
-                                'projectroles:detail',
-                                kwargs={'project': project.sodar_uuid},
-                            ),
-                            project=project,
-                        )
-                if SEND_EMAIL:
-                    email.send_project_create_mail(project, recipients, request)
 
-            elif old_parent and recipients:
+        # Project creation/moving for parent category owners and delegates
+        if not project.parent:
+            return
+        recipients = cls._get_notify_recipients(project, request)
+        # TODO: Could optimize this by pre-retrieving notify settings
+        if action == PROJECT_ACTION_CREATE and recipients:
+            if app_alerts:
                 for r in recipients:
+                    if not app_settings.get(
+                        APP_NAME, 'notify_alert_project', user=r
+                    ):
+                        continue
                     app_alerts.add_alert(
                         app_name=APP_NAME,
-                        alert_name='project_move_parent',
+                        alert_name='project_create_parent',
                         user=r,
-                        message=f'{project.type.capitalize()} moved under '
-                        f'category "{project.parent.title}": '
-                        f'"{project.title}".',
+                        message=f'New {project.type.lower()} created under '
+                        f'category "{project.parent.title}": {project.title}".',
                         url=reverse(
                             'projectroles:detail',
                             kwargs={'project': project.sodar_uuid},
                         ),
                         project=project,
                     )
-                if SEND_EMAIL:
-                    email.send_project_move_mail(project, recipients, request)
+            if SEND_EMAIL:
+                email.send_project_create_mail(project, recipients, request)
+        elif old_parent and recipients:
+            for r in recipients:
+                if not app_settings.get(
+                    APP_NAME, 'notify_alert_project', user=r
+                ):
+                    continue
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='project_move_parent',
+                    user=r,
+                    message=f'{project.type.capitalize()} moved under category '
+                    f'"{project.parent.title}": {project.title}".',
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_project_move_mail(project, recipients, request)
 
     @transaction.atomic
     def modify_project(
@@ -1682,7 +1692,9 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         recipients = users = [
             a.user
             for a in project.get_roles()
-            if a.user.is_active and a.user != request.user
+            if a.user.is_active
+            and a.user != request.user
+            and app_settings.get(APP_NAME, 'notify_alert_project', user=a.user)
         ]
         # Create app alerts
         if app_alerts and recipients:
@@ -1843,7 +1855,9 @@ class ProjectArchiveView(
         users = [
             a.user
             for a in project.get_roles()
-            if a.user.is_active and a.user != user
+            if a.user.is_active
+            and a.user != user
+            and app_settings.get(APP_NAME, 'notify_alert_project', user=a.user)
         ]
         if not users:
             return
@@ -2147,7 +2161,9 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             tl_event.set_status('OK')
 
         if request.user != user:
-            if app_alerts:
+            if app_alerts and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=user
+            ):
                 if action == PROJECT_ACTION_CREATE:
                     alert_msg = ROLE_CREATE_MSG
                 else:  # Update
@@ -2286,7 +2302,9 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             for a in project.get_roles(
                 max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE]
             )
-            if a.user.is_active and a.user != user
+            if a.user.is_active
+            and a.user != user
+            and app_settings.get(APP_NAME, 'notify_alert_role', user=user)
         ]
         for r in recipients:
             app_alerts.add_alert(
@@ -2387,7 +2405,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         if app_alerts:
             if request and request.user == user:
                 self._add_leave_alerts(app_alerts, project, user)
-            else:
+            elif app_settings.get(APP_NAME, 'notify_alert_role', user=user):
                 self._add_user_alert(app_alerts, project, user, inh_as)
             if not inh_as:
                 self._dismiss_user_alerts(app_alerts, project, user)
@@ -2821,7 +2839,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
             and issuer != old_owner
             and old_owner.is_active
         ):
-            if app_alerts:
+            if app_alerts and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=old_owner
+            ):
                 if old_owner_role:
                     alert_name = 'role_update'
                     message = ROLE_UPDATE_MSG.format(
@@ -2862,7 +2882,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                 )
         # Notify new owner
         if not new_inh_owner and issuer != new_owner:
-            if app_alerts:
+            if app_alerts and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=new_owner
+            ):
                 app_alerts.add_alert(
                     app_name=APP_NAME,
                     alert_name='role_update',
@@ -3265,7 +3287,13 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             tl_event.set_status(timeline.TL_STATUS_OK)
 
         # Notify the issuer by alert and email
-        if app_alerts and invite.issuer.is_active:
+        if (
+            app_alerts
+            and invite.issuer.is_active
+            and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=invite.issuer
+            )
+        ):
             app_alerts.add_alert(
                 app_name=APP_NAME,
                 alert_name='invite_accept',
