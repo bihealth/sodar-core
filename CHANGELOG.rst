@@ -59,6 +59,7 @@ Changed
     - Rename ``AppLinkContent`` to ``AppLinkAPI`` (#1709)
     - Move ``AppLinkAPI`` into ``app_links`` (#1709)
     - Deprecate ``_project_badge.html`` include template (#1695)
+    - Remove redundant ``RoleAssignmentOwnerTransferForm`` ``project`` field (#1654)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

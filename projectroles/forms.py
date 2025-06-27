@@ -1080,10 +1080,6 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             disabled=True if len(self.selectable_roles) == 1 else False,
         )
 
-        self.fields['project'] = forms.Field(
-            widget=forms.HiddenInput(), initial=project.sodar_uuid
-        )
-
     def clean_old_owner_role(self) -> Role:
         field_val = int(self.cleaned_data.get('old_owner_role'))
         if not field_val:

@@ -4799,7 +4799,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_guest.pk,
                 },
@@ -4845,7 +4844,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_guest.pk,
                 },
@@ -4865,7 +4863,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_guest.pk,
                 },
@@ -4886,7 +4883,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_guest.pk,
                 },
@@ -4904,7 +4900,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_guest.pk,
                 },
@@ -4937,7 +4932,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_contributor.pk,
                 },
@@ -4959,7 +4953,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': self.role_owner.pk,
                 },
@@ -4989,7 +4982,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_new.sodar_uuid,
                     'old_owner_role': self.role_contributor.pk,
                 },
@@ -5012,7 +5004,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_owner_cat.sodar_uuid,
                     'old_owner_role': self.role_contributor.pk,
                 },
@@ -5043,7 +5034,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_new.sodar_uuid,
                     'old_owner_role': self.role_contributor.pk,
                 },
@@ -5065,7 +5055,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': 0,
                 },
@@ -5114,7 +5103,6 @@ class TestRoleAssignmentOwnerTransferView(
             response = self.client.post(
                 self.url,
                 data={
-                    'project': self.project.sodar_uuid,
                     'new_owner': self.user_guest.sodar_uuid,
                     'old_owner_role': 0,
                 },

@@ -2951,7 +2951,7 @@ class RoleAssignmentOwnerTransferView(
         return context
 
     def form_valid(self, form):
-        project = form.project
+        project = self.get_project()
         old_owner = form.current_owner
         old_owner_as = project.get_owner()
         new_owner = form.cleaned_data['new_owner']
