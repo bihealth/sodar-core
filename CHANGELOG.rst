@@ -35,7 +35,7 @@ Added
     - ``notify_alert_project`` and ``notify_alert_role`` app settings (#1648)
     - App alert disabling for project and role updates (#1648, #1708)
     - ``get_project_badge()`` common template tag (#1695)
-    - Next and last links in Django pagination template (#1714)
+    - First and last links in pagination controls (#1714, #1715)
 
 Changed
 -------
@@ -74,6 +74,7 @@ Fixed
     - Project list starred toggle not working with active filter (#1700)
     - Role operations dropdown alignment in ``project_invites.html`` (#1704)
     - Invalid ``role`` values in ``ProjectDetailView`` context data (#1706)
+    - Incorrect icon placement in DataTables custom pagination links (#1716)
 
 Removed
 -------

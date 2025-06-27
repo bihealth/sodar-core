@@ -356,16 +356,21 @@ $(document).ready(function () {
             ordering: false,
             scrollX: false,
             paging: true,
+            pagingType: 'full_numbers',
             pageLength: window.projectListPagination,
             lengthChange: true,
             scrollCollapse: true,
             info: false,
             language: {
                 paginate: {
+                    first: '<i class="iconify text-primary" ' +
+                        'data-icon="mdi:arrow-left-circle-outline"></i> First',
                     previous: '<i class="iconify text-primary" ' +
                         'data-icon="mdi:arrow-left-circle"></i> Prev',
-                    next: '<i class="iconify text-primary" ' +
-                        'data-icon="mdi:arrow-right-circle"></i> Next'
+                    next: 'Next <i class="iconify text-primary" ' +
+                        'data-icon="mdi:arrow-right-circle"></i>',
+                    last: 'Last <i class="iconify text-primary" ' +
+                        'data-icon="mdi:arrow-right-circle-outline"></i>',
                 }
             },
             dom: 'tp'
