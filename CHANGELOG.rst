@@ -35,6 +35,7 @@ Added
     - ``notify_alert_project`` and ``notify_alert_role`` app settings (#1648)
     - App alert disabling for project and role updates (#1648, #1708)
     - ``get_project_badge()`` common template tag (#1695)
+    - Next and last links in Django pagination template (#1714)
 
 Changed
 -------
