@@ -86,7 +86,8 @@
         </div>
         <div class="col pl-0">
           {% if a.project %}
-            {% include 'projectroles/_project_badge.html' with project=a.project color=a.level can_view=can_view_project %}
+            {% get_project_badge a.project a.level can_view_project 'mr-1' as project_badge %}
+            {{ project_badge | safe }}
           {% endif %}
           {{ a.message | safe }}
         </div>

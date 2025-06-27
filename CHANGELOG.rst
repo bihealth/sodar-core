@@ -34,6 +34,7 @@ Added
     - Search by object UUID (#1546)
     - ``notify_alert_project`` and ``notify_alert_role`` app settings (#1648)
     - App alert disabling for project and role updates (#1648, #1708)
+    - ``get_project_badge()`` common template tag (#1695)
 
 Changed
 -------
@@ -44,6 +45,7 @@ Changed
     - Upgrade to djangorestframework v3.16 (#1689)
     - Update string formatting (#1562)
     - Move black configuration into ``pyproject.toml`` (#1454)
+    - Replace ``_project_badge.html`` includes with ``get_project_badge()`` (#1695)
 - **Filesfolders**
     - Refactor serializers (#1689)
 - **Projectroles**
@@ -56,6 +58,7 @@ Changed
     - Change ``get_role_option()`` ``project`` arg to ``project_type`` (#1702)
     - Rename ``AppLinkContent`` to ``AppLinkAPI`` (#1709)
     - Move ``AppLinkAPI`` into ``app_links`` (#1709)
+    - Deprecate ``_project_badge.html`` include template (#1695)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

@@ -31,7 +31,8 @@
       {{ user_badge | safe }}
     {% endif %}
     {% if event.project and user.is_superuser and timeline_mode == 'admin' %}
-      {% include 'projectroles/_project_badge.html' with project=event.project color='info' can_view=True %}
+      {% get_project_badge event.project extra_class='mr-1' as project_badge %}
+      {{ project_badge | safe }}
     {% endif %}
     {% get_event_description event plugin_lookup request as event_desc %}
     {{ event_desc|safe|capfirst }}

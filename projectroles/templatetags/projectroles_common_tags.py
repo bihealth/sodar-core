@@ -37,6 +37,7 @@ register = template.Library()
 
 
 # SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
@@ -247,15 +248,15 @@ def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
     """
     if not user.is_active:
         icon = 'mdi:account-off'
-        badge_class = 'secondary'
+        variant = 'secondary'
         user_class = 'inactive'
     elif user.is_superuser:
         icon = 'mdi:shield-account'
-        badge_class = 'info'
+        variant = 'info'
         user_class = 'superuser'
     else:
         icon = 'mdi:account'
-        badge_class = 'primary'
+        variant = 'primary'
         user_class = 'active'
     email = True if user.is_active and user.email else False
     if extra_class and not extra_class.startswith(' '):
@@ -263,7 +264,7 @@ def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
     elif not extra_class:
         extra_class = ''
     ret = (
-        f'<span class="badge badge-{badge_class} sodar-obj-badge '
+        f'<span class="badge badge-{variant} sodar-obj-badge '
         f'sodar-user-badge sodar-user-badge-{user_class}{extra_class}" '
         f'title="{user.get_full_name()}" data-toggle="tooltip" '
         f'data-delay="300" data-uuid="{user.sodar_uuid}">'
@@ -274,6 +275,48 @@ def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
     ret += user.username
     if email:
         ret += '</a>'
+    ret += '</span>'
+    return ret
+
+
+@register.simple_tag
+def get_project_badge(
+    project: Project,
+    variant: Optional[str] = None,
+    can_view: bool = True,
+    extra_class: Optional[str] = None,
+) -> str:
+    """
+    Return badge HTML for a Project object.
+
+    :param project: Project object
+    :param variant: Badge variant (string)
+    :param can_view: Display project link if True (bool)
+    :param extra_class: Extra classes to add to element (string, optional)
+    :return: String (contains HTML)
+    """
+    if not can_view:
+        variant = 'secondary'
+    elif not variant:
+        variant = 'info'
+    extra_class = (' ' + extra_class) if extra_class else ''
+    ret = (
+        f'<span class="badge badge-{variant.lower()} sodar-obj-badge '
+        f'sodar-project-badge{extra_class}" title="{project.full_title}" '
+        f'data-toggle="tooltip" data-delay="300">'
+    )
+    if project.type == PROJECT_TYPE_PROJECT:
+        icon = 'mdi:cube'
+    else:
+        icon = 'mdi:rhombus-split'
+    ret += f'<i class="iconify" data-icon="{icon}"></i> '
+    if can_view:
+        url = reverse(
+            'projectroles:detail', kwargs={'project': project.sodar_uuid}
+        )
+        ret += f'<a href="{url}">{project.title}</a>'
+    else:
+        ret += project.title
     ret += '</span>'
     return ret
 

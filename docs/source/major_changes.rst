@@ -122,6 +122,8 @@ These features have been deprecated in v1.2 and will be removed in v1.3.
     either the role of ``project guest``, ``project viewer`` or ``None``.
 ``Project.set_public()``
     Use ``Project.set_public_access()`` instead.
+``_project_badge.html`` Include Template
+    Use ``projectroles_common_tags.get_project_badge()`` instead.
 
 Previously Deprecated Features Removed
 --------------------------------------

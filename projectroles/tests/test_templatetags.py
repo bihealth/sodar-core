@@ -379,6 +379,100 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             c_tags.get_user_badge(self.user, extra_class='mr-1'), expected
         )
 
+    def test_get_project_badge(self):
+        """Test get_project_badge()"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-info sodar-obj-badge '
+            f'sodar-project-badge" title="{self.project.full_title}" '
+            f'data-toggle="tooltip" data-delay="300">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> '
+            f'<a href="{url}">{self.project.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(c_tags.get_project_badge(self.project), expected)
+
+    def test_get_project_badge_category(self):
+        """Test get_project_badge() with category"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-info sodar-obj-badge '
+            f'sodar-project-badge" title="{self.category.full_title}" '
+            f'data-toggle="tooltip" data-delay="300">'
+            f'<i class="iconify" data-icon="mdi:rhombus-split"></i> '
+            f'<a href="{url}">{self.category.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(c_tags.get_project_badge(self.category), expected)
+
+    def test_get_project_badge_can_view_false(self):
+        """Test get_project_badge() with can_view=False"""
+        expected = (
+            f'<span class="badge badge-secondary sodar-obj-badge '
+            f'sodar-project-badge" title="{self.project.full_title}" '
+            f'data-toggle="tooltip" data-delay="300">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> {self.project.title}'
+            f'</span>'
+        )
+        self.assertEqual(
+            c_tags.get_project_badge(self.project, can_view=False), expected
+        )
+
+    def test_get_project_badge_variant(self):
+        """Test get_project_badge() with specified variant"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-danger sodar-obj-badge '
+            f'sodar-project-badge" title="{self.project.full_title}" '
+            f'data-toggle="tooltip" data-delay="300">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> '
+            f'<a href="{url}">{self.project.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(
+            c_tags.get_project_badge(self.project, variant='danger'), expected
+        )
+
+    def test_get_project_badge_variant_uppercase(self):
+        """Test get_project_badge() with variant in uppercase"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-danger sodar-obj-badge '
+            f'sodar-project-badge" title="{self.project.full_title}" '
+            f'data-toggle="tooltip" data-delay="300">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> '
+            f'<a href="{url}">{self.project.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(
+            c_tags.get_project_badge(self.project, variant='DANGER'), expected
+        )
+
+    def test_get_project_badge_extra_class(self):
+        """Test get_project_badge() with extra_class set"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-info sodar-obj-badge '
+            f'sodar-project-badge mr-1" title="{self.project.full_title}" '
+            f'data-toggle="tooltip" data-delay="300">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> '
+            f'<a href="{url}">{self.project.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(
+            c_tags.get_project_badge(self.project, extra_class='mr-1'), expected
+        )
+
     def test_get_history_dropdown(self):
         """Test get_history_dropdown()"""
         url = reverse(
