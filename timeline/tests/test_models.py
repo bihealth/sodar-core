@@ -329,13 +329,14 @@ class TestTimelineEvent(
     def test_add_object_no_name(self):
         """Test add_object() with no name for object"""
         new_user = self.make_user('new_user')
+        new_user.name = 'New User'
         new_as = self.make_assignment(
             self.project, new_user, self.role_delegate
         )
         new_obj = self.event.add_object(obj=new_as, label='new_label', name='')
         self.assertEqual(new_obj.name, OBJ_REF_UNNAMED)
 
-    def test_find_name(self):
+    def test_find_event_name(self):
         """Test TimelineEvent.find() with event name"""
         objects = TimelineEvent.objects.find(['test_event'])
         self.assertEqual(len(objects), 1)
@@ -356,6 +357,33 @@ class TestTimelineEvent(
     def test_find_fail(self):
         """Test TimelineEvent.find() with no matches"""
         objects = TimelineEvent.objects.find(['asdfasdfafasdf'])
+        self.assertEqual(len(objects), 0)
+
+    def test_find_user_username(self):
+        """Test TimelineEvent.find() with user username"""
+        objects = TimelineEvent.objects.find([self.user_owner.username])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_user_username_not_found(self):
+        """Test TimelineEvent.find() with user username not found"""
+        user_new = self.make_user('user_new')
+        objects = TimelineEvent.objects.find([user_new.username])
+        self.assertEqual(len(objects), 0)
+
+    def test_find_user_full_name(self):
+        """Test TimelineEvent.find() with user full name"""
+        self.user_owner.name = 'Owner User'
+        self.user_owner.save()
+        objects = TimelineEvent.objects.find([self.user_owner.name])
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+
+    def test_find_user_full_name_not_found(self):
+        """Test TimelineEvent.find() with user full name not found"""
+        self.user_owner.name = 'Owner User'
+        self.user_owner.save()
+        objects = TimelineEvent.objects.find(['Other User'])
         self.assertEqual(len(objects), 0)
 
 

@@ -86,6 +86,8 @@ class TimelineEventManager(models.Manager):
             term_query.add(Q(event_name__icontains=t.replace(' ', '_')), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
             term_query.add(Q(event_objects__name__icontains=t), Q.OR)
+            term_query.add(Q(user__name__icontains=t), Q.OR)
+            term_query.add(Q(user__username__icontains=t), Q.OR)
         items = (
             super()
             .get_queryset()

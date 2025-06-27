@@ -25,6 +25,7 @@ Release Highlights
 - Add blockprojectaccess management command
 - Add saving of home view project list starred filter state
 - Add first and last links in pagination controls
+- Add user full name and username in timeline event search
 - Update projectroles REST API to return user UUIDs instead of nested user
   serializers
 - Update timeline list user displaying
