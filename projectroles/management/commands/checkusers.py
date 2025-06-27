@@ -43,7 +43,8 @@ USER_OK_MSG = 'OK'
 class Command(BaseCommand):
     help = (
         'Check user status and report disabled or removed users. Prints out '
-        'user name, real name, email and status as semicolon-separated values.'
+        'user name, real name, email and status as semicolon-separated values. '
+        'Disabled users can optionally be set inactive on the server.'
     )
 
     @classmethod
@@ -64,13 +65,14 @@ class Command(BaseCommand):
             logger.error(s_name + ' not in Django settings')
             sys.exit(1)
 
-    def _check_ldap_users(self, users, primary, all_users):
+    def _check_ldap_users(self, users, primary, all_users, deactivate):
         """
         Check and print out user status for a specific LDAP server.
 
         :param users: QuerySet of SODARUser objects
         :param primary: Whether to check for primary or secondary server (bool)
         :param all_users: Display status for all users (bool)
+        :param deactivate: Set disabled users to inactive if True (bool)
         """
 
         def _get_s(name):
@@ -128,7 +130,12 @@ class Command(BaseCommand):
                 ):
                     val = int(attrs['userAccountControl'][0].decode('utf-8'))
                     if val in UAC_DISABLED_VALUES:
-                        self._print_result(d_user, USER_DISABLED_MSG)
+                        msg = USER_DISABLED_MSG
+                        if deactivate and d_user.is_active:
+                            d_user.is_active = False
+                            d_user.save()
+                            msg += ' (set inactive)'
+                        self._print_result(d_user, msg)
                         user_ok = False
                     elif val == UAC_LOCKED_VALUE:
                         self._print_result(d_user, USER_LOCKED_MSG)
@@ -148,11 +155,19 @@ class Command(BaseCommand):
             help='Display results for all users even if status is OK',
         )
         parser.add_argument(
+            '-d',
+            '--deactivate',
+            dest='deactivate',
+            required=False,
+            action='store_true',
+            help='Set disabled users to inactive if found',
+        )
+        parser.add_argument(
             '-l',
             '--limit',
             dest='limit',
             required=False,
-            help='Limit search to "ldap1" or "ldap2".',
+            help='Limit search to "ldap1" or "ldap2"',
         )
 
     def handle(self, *args, **options):
@@ -172,11 +187,9 @@ class Command(BaseCommand):
             u_query.add(q_secondary, Q.OR)
         users = User.objects.filter(u_query).order_by('username')
         limit = options.get('limit')
+        all_users = options.get('all', False)
+        deactivate = options.get('deactivate', False)
         if not limit or limit == 'ldap1':
-            self._check_ldap_users(
-                users, primary=True, all_users=options.get('all', False)
-            )
+            self._check_ldap_users(users, True, all_users, deactivate)
         if settings.ENABLE_LDAP_SECONDARY and (not limit or limit == 'ldap2'):
-            self._check_ldap_users(
-                users, primary=False, all_users=options.get('all', False)
-            )
+            self._check_ldap_users(users, False, all_users, deactivate)

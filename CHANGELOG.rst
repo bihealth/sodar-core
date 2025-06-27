@@ -36,6 +36,7 @@ Added
     - App alert disabling for project and role updates (#1648, #1708)
     - ``get_project_badge()`` common template tag (#1695)
     - First and last links in pagination controls (#1714, #1715)
+    - Optional disabled user deactivation in ``checkusers`` command (#1697)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 
