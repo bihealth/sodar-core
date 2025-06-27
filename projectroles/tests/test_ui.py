@@ -1067,7 +1067,7 @@ class TestHomeView(UITestBase):
             self._get_project_row(self.project)
 
         # Navigate to page 2
-        btn = self.selenium.find_element(By.XPATH, '//a[@data-dt-idx="2"]')
+        btn = self.selenium.find_element(By.XPATH, '//a[@data-dt-idx="3"]')
         btn.click()
         WebDriverWait(self.selenium, 15).until(
             ec.presence_of_element_located(
