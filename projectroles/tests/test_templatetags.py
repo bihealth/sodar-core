@@ -243,6 +243,42 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         )
         # TODO: Also test remote project link display (with icon)
 
+    def test_get_user_superuser_icon(self):
+        """Test get_user_superuser_icon()"""
+        expected = (
+            '<span title="Superuser" data-toggle="tooltip" data-delay="300">'
+            '<i class="iconify text-info ml-1" '
+            'data-icon="mdi:shield-account"></i>'
+            '</span>'
+        )
+        self.assertEqual(c_tags.get_user_superuser_icon(), expected)
+
+    def test_get_user_superuser_icon_tooltip_false(self):
+        """Test get_user_superuser_icon() with tooltip=False"""
+        expected = (
+            '<i class="iconify text-info ml-1" '
+            'data-icon="mdi:shield-account"></i>'
+        )
+        self.assertEqual(c_tags.get_user_superuser_icon(False), expected)
+
+    def test_get_user_inactive_icon(self):
+        """Test get_user_inactive_icon()"""
+        expected = (
+            '<span title="Inactive" data-toggle="tooltip" data-delay="300">'
+            '<i class="iconify text-secondary ml-1" '
+            'data-icon="mdi:account-off"></i>'
+            '</span>'
+        )
+        self.assertEqual(c_tags.get_user_inactive_icon(), expected)
+
+    def test_get_user_inactive_icon_tooltip_false(self):
+        """Test get_user_inactive_icon() with tooltip=False"""
+        expected = (
+            '<i class="iconify text-secondary ml-1" '
+            'data-icon="mdi:account-off"></i>'
+        )
+        self.assertEqual(c_tags.get_user_inactive_icon(False), expected)
+
     def test_get_user_html(self):
         """Test get_user_html()"""
         self.assertEqual(

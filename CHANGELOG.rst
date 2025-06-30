@@ -39,6 +39,7 @@ Added
     - Optional disabled user deactivation in ``checkusers`` command (#1697)
     - ``ProjectRoleView`` list pagination, ordering and filtering (#980, #1712)
     - ``PROJECTROLES_ROLE_PAGINATION`` Django setting (#1712)
+    - ``ProjectRoleView`` user icon tooltips (#1688)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 

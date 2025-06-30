@@ -192,21 +192,33 @@ def get_project_link(
 
 
 @register.simple_tag
-def get_user_superuser_icon() -> str:
+def get_user_superuser_icon(tooltip: bool = True) -> str:
     """Return superuser icon for user"""
-    return (
+    ret = ''
+    if tooltip:
+        ret += '<span title="Superuser" data-toggle="tooltip" data-delay="300">'
+    ret += (
         '<i class="iconify text-info ml-1" '
         'data-icon="mdi:shield-account"></i>'
     )
+    if tooltip:
+        ret += '</span>'
+    return ret
 
 
 @register.simple_tag
-def get_user_inactive_icon() -> str:
+def get_user_inactive_icon(tooltip: bool = True) -> str:
     """Return inactive icon for user"""
-    return (
+    ret = ''
+    if tooltip:
+        ret += '<span title="Inactive" data-toggle="tooltip" data-delay="300">'
+    ret += (
         '<i class="iconify text-secondary ml-1" '
         'data-icon="mdi:account-off"></i>'
     )
+    if tooltip:
+        ret += '</span>'
+    return ret
 
 
 @register.simple_tag
@@ -230,9 +242,9 @@ def get_user_html(user: SODARUser) -> str:
     if email_link:
         ret += '</a>'
     if user.is_superuser:
-        ret += get_user_superuser_icon()
+        ret += get_user_superuser_icon(False)
     if not user.is_active:
-        ret += get_user_inactive_icon()
+        ret += get_user_inactive_icon(False)
     ret += '</span>'
     return ret
 
