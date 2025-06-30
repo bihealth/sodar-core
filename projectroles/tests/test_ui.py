@@ -2745,7 +2745,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         """Return role dropdown for a role"""
         row = self.selenium.find_element(
             By.XPATH,
-            f'//tr[@class="sodar-pr-role-list-row" and '
+            f'//tr[contains(@class, "sodar-pr-role-list-row") and '
             f'@data-user-uuid="{user.sodar_uuid}"]',
         )
         class_name = 'sodar-pr-role-dropdown'
@@ -2764,6 +2764,10 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         self.url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
+        self.wait_kw = {
+            'wait_elem': 'dataTable',
+            'wait_loc': 'CLASS_NAME',
+        }
 
     def test_render_role_row(self):
         """Test rendering user role row"""
@@ -2965,7 +2969,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
 
     def test_role_dropdown_owner_local(self):
         """Test role dropdown items for local owner"""
-        self.login_and_redirect(self.superuser, self.url)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
         elem = self._get_role_dropdown(self.user_owner, owner=True)
         self.assertIsNotNone(
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-transfer')
@@ -2976,13 +2980,13 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         # Set category owner to new user
         self.owner_as_cat.user = self.user_assign
         self.owner_as_cat.save()
-        self.login_and_redirect(self.superuser, self.url)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
         with self.assertRaises(NoSuchElementException):
             self._get_role_dropdown(self.user_assign, owner=True)
 
     def test_role_dropdown_delegate_local(self):
         """Test role dropdown items for local delegate"""
-        self.login_and_redirect(self.superuser, self.url)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
         elem = self._get_role_dropdown(self.user_delegate)
         self.assertIsNotNone(
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
@@ -2993,13 +2997,13 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
 
     def test_role_dropdown_delegate_inherited(self):
         """Test role dropdown items for inherited delegate"""
-        self.login_and_redirect(self.superuser, self.url)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
         with self.assertRaises(NoSuchElementException):
             self._get_role_dropdown(self.user_delegate_cat)
 
     def test_role_dropdown_contrib_local(self):
         """Test role dropdown items for local contributor"""
-        self.login_and_redirect(self.superuser, self.url)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
         elem = self._get_role_dropdown(self.user_contributor)
         self.assertIsNotNone(
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
@@ -3013,7 +3017,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         self.make_assignment(
             self.category, self.user_assign, self.role_contributor
         )
-        self.login_and_redirect(self.superuser, self.url)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
         elem = self._get_role_dropdown(self.user_assign)
         self.assertIsNotNone(
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-promote')
@@ -3025,7 +3029,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
 
     def test_role_dropdown_guest_local(self):
         """Test role dropdown items for local guest"""
-        self.login_and_redirect(self.superuser, self.url)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
         elem = self._get_role_dropdown(self.user_guest)
         self.assertIsNotNone(
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-update')
@@ -3037,7 +3041,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
     def test_role_dropdown_guest_inherited(self):
         """Test role dropdown items for inherited guest"""
         self.make_assignment(self.category, self.user_assign, self.role_guest)
-        self.login_and_redirect(self.superuser, self.url)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
         elem = self._get_role_dropdown(self.user_assign)
         self.assertIsNotNone(
             elem.find_element(By.CLASS_NAME, 'sodar-pr-role-item-promote')
@@ -3065,8 +3069,48 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             (self.user_viewer, 0),
         ]
         self.assert_element_count(
-            expected, self.url, 'sodar-pr-role-dropdown', attribute='class'
+            expected,
+            self.url,
+            'sodar-pr-role-dropdown',
+            attribute='class',
+            **self.wait_kw,
         )
+
+    def test_pagination_default(self):
+        """Test role list pagination with default settings"""
+        self.assertEqual(settings.PROJECTROLES_ROLE_PAGINATION, 15)
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
+        elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-role-list-row'
+        )
+        self.assertEqual(len(elems), 10)
+        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        self.assertEqual(elem.is_displayed(), False)
+
+    @override_settings(PROJECTROLES_ROLE_PAGINATION=2)
+    def test_pagination_limit(self):
+        """Test role list pagination with limit"""
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
+        elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-role-list-row'
+        )
+        self.assertEqual(len(elems), 2)
+        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        self.assertEqual(elem.is_displayed(), True)
+
+    def test_filter(self):
+        """Test role list filtering"""
+        self.login_and_redirect(self.superuser, self.url, **self.wait_kw)
+        elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-role-list-row'
+        )
+        self.assertEqual(len(elems), 10)
+        f_input = self.selenium.find_element(By.ID, 'sodar-pr-role-list-filter')
+        f_input.send_keys('owner')
+        elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-role-list-row'
+        )
+        self.assertEqual(len(elems), 2)  # Category and project owner
 
 
 class TestRoleAssignmentCreateView(UITestBase):

@@ -169,10 +169,10 @@ Updating Categories and Projects
 An existing project or category can be updated from the
 **Update Project/Category** link in the side bar. Again, a similar form as
 before will be presented to the user. The owner can not be changed here, but
-must be modified in the *Members* view instead. It is possible to move the
-current category or project under another category by altering the ``parent``
-field. The user who does the updating must have a sufficient role in the
-target category or superuser status.
+must be modified in the :guilabel:`Members` view instead. It is possible to move
+the current category or project under another category by altering the
+``parent`` field. The user who does the updating must have a sufficient role in
+the target category or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_project_update.png
     :align: center
@@ -317,7 +317,7 @@ confirm the action.
 Member Management
 =================
 
-Project member roles can be viewed and modified through the **Members**
+Project member roles can be viewed and modified through the :guilabel:`Members`
 link on the sidebar. Modification requires a sufficient role in the project or
 category (owner or delegate) or superuser status.
 
@@ -326,6 +326,10 @@ category (owner or delegate) or superuser status.
     :scale: 55%
 
     Project member list view
+
+The member table lists all members of the category or project, initially ordered
+by descending order of role level. The table can be sorted by any column and
+filtered by typing test into the input box on the top right side of the table.
 
 All members of categories automatically inherit identical access rights to
 subcategories and projects under those categories. Inherited member roles can be
@@ -341,9 +345,9 @@ Adding Members
 
 There are two ways to add new members to a project or a category:
 
-- **Add Member** is used to add member roles to system users.
-- **Invite Member** is used to send email invites to users not yet registered
-  in the system.
+- :guilabel:`Add Member` is used to add member roles to system users.
+- :guilabel:`Send Invite` is used to send email invites to users not yet
+  registered in the system.
 
 Addition or modification of users sends an email notification to the user in
 question if email sending is enabled on your Django server. The emails can be

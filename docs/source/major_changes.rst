@@ -20,6 +20,7 @@ Release Highlights
 - Add project viewer role support for project public read-only access
 - Add search by object UUID
 - Add user opt-out settings for app alert notifications
+- Add project member list pagination, ordering and filtering
 - Add project invite retrieval REST API view
 - Add temporary project access blocking for superusers
 - Add blockprojectaccess management command

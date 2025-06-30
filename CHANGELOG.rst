@@ -37,6 +37,8 @@ Added
     - ``get_project_badge()`` common template tag (#1695)
     - First and last links in pagination controls (#1714, #1715)
     - Optional disabled user deactivation in ``checkusers`` command (#1697)
+    - ``ProjectRoleView`` list pagination, ordering and filtering (#980, #1712)
+    - ``PROJECTROLES_ROLE_PAGINATION`` Django setting (#1712)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 
@@ -64,6 +66,7 @@ Changed
     - Move ``AppLinkAPI`` into ``app_links`` (#1709)
     - Deprecate ``_project_badge.html`` include template (#1695)
     - Remove redundant ``RoleAssignmentOwnerTransferForm`` ``project`` field (#1654)
+    - Render project role list using DataTables (#1712)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

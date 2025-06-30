@@ -2047,6 +2047,7 @@ class ProjectRoleView(
         context['roles'] = sorted(
             project.get_roles(), key=lambda x: [x.role.rank, x.user.username]
         )
+        context['role_pagination'] = settings.PROJECTROLES_ROLE_PAGINATION
         owner_rank = ROLE_RANKING[PROJECT_ROLE_OWNER]
         context['enable_owner_transfer'] = any(
             [r.role.rank >= owner_rank for r in context['roles']]

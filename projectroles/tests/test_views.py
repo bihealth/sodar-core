@@ -6,6 +6,7 @@ import uuid
 from typing import Optional
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import auth
 from django.contrib.messages import get_messages
 from django.core import mail
@@ -3198,6 +3199,9 @@ class TestProjectRoleView(
             },
         ]
         self.assertEqual([model_to_dict(m) for m in context['roles']], expected)
+        self.assertEqual(
+            context['role_pagination'], settings.PROJECTROLES_ROLE_PAGINATION
+        )
         self.assertNotIn('remote_role_url', context)
         self.assertEqual(context['site_read_only'], False)
         self.assertEqual(
