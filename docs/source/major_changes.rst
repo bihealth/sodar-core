@@ -43,7 +43,7 @@ System Prerequisites
 --------------------
 
 Django Version
-    The minimum Django version has been bumped to v4.2.22.
+    The minimum Django version has been bumped to v4.2.23.
 General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your
