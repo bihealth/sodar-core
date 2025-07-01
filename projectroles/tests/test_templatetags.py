@@ -247,7 +247,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_get_user_superuser_icon(self):
         """Test get_user_superuser_icon()"""
         expected = (
-            '<span title="Superuser" data-toggle="tooltip" data-delay="300">'
+            '<span title="Superuser" data-toggle="tooltip">'
             '<i class="iconify text-info ml-1" '
             'data-icon="mdi:shield-account"></i>'
             '</span>'
@@ -265,7 +265,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_get_user_inactive_icon(self):
         """Test get_user_inactive_icon()"""
         expected = (
-            '<span title="Inactive" data-toggle="tooltip" data-delay="300">'
+            '<span title="Inactive" data-toggle="tooltip">'
             '<i class="iconify text-secondary ml-1" '
             'data-icon="mdi:account-off"></i>'
             '</span>'
@@ -350,7 +350,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'<span class="badge badge-primary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-active" '
             f'title="{self.user.get_full_name()}" '
-            f'data-toggle="tooltip" data-delay="300" '
+            f'data-toggle="tooltip" '
             f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account"></i> '
             f'<a class="text-white" href="mailto:{self.user.email}">'
@@ -365,7 +365,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'<span class="badge badge-primary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-active" '
             f'title="{self.user.get_full_name()}" '
-            f'data-toggle="tooltip" data-delay="300" '
+            f'data-toggle="tooltip" '
             f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account"></i> '
             f'{self.user.username}</span>'
@@ -378,7 +378,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'<span class="badge badge-info sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-superuser" '
             f'title="{self.superuser.get_full_name()}" '
-            f'data-toggle="tooltip" data-delay="300" '
+            f'data-toggle="tooltip" '
             f'data-uuid="{self.superuser.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:shield-account"></i> '
             f'<a class="text-white" href="mailto:{self.superuser.email}">'
@@ -393,7 +393,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'<span class="badge badge-secondary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-inactive" '
             f'title="{self.user.get_full_name()}" '
-            f'data-toggle="tooltip" data-delay="300" '
+            f'data-toggle="tooltip" '
             f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account-off"></i> '
             f'{self.user.username}</span>'
@@ -406,7 +406,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'<span class="badge badge-primary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-active mr-1" '
             f'title="{self.user.get_full_name()}" '
-            f'data-toggle="tooltip" data-delay="300" '
+            f'data-toggle="tooltip" '
             f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account"></i> '
             f'<a class="text-white" href="mailto:{self.user.email}">'
@@ -424,7 +424,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         expected = (
             f'<span class="badge badge-info sodar-obj-badge '
             f'sodar-project-badge" title="{self.project.full_title}" '
-            f'data-toggle="tooltip" data-delay="300">'
+            f'data-toggle="tooltip">'
             f'<i class="iconify" data-icon="mdi:cube"></i> '
             f'<a href="{url}">{self.project.title}</a>'
             f'</span>'
@@ -439,7 +439,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         expected = (
             f'<span class="badge badge-info sodar-obj-badge '
             f'sodar-project-badge" title="{self.category.full_title}" '
-            f'data-toggle="tooltip" data-delay="300">'
+            f'data-toggle="tooltip">'
             f'<i class="iconify" data-icon="mdi:rhombus-split"></i> '
             f'<a href="{url}">{self.category.title}</a>'
             f'</span>'
@@ -451,7 +451,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         expected = (
             f'<span class="badge badge-secondary sodar-obj-badge '
             f'sodar-project-badge" title="{self.project.full_title}" '
-            f'data-toggle="tooltip" data-delay="300">'
+            f'data-toggle="tooltip">'
             f'<i class="iconify" data-icon="mdi:cube"></i> {self.project.title}'
             f'</span>'
         )
@@ -467,7 +467,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         expected = (
             f'<span class="badge badge-danger sodar-obj-badge '
             f'sodar-project-badge" title="{self.project.full_title}" '
-            f'data-toggle="tooltip" data-delay="300">'
+            f'data-toggle="tooltip">'
             f'<i class="iconify" data-icon="mdi:cube"></i> '
             f'<a href="{url}">{self.project.title}</a>'
             f'</span>'
@@ -484,7 +484,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         expected = (
             f'<span class="badge badge-danger sodar-obj-badge '
             f'sodar-project-badge" title="{self.project.full_title}" '
-            f'data-toggle="tooltip" data-delay="300">'
+            f'data-toggle="tooltip">'
             f'<i class="iconify" data-icon="mdi:cube"></i> '
             f'<a href="{url}">{self.project.title}</a>'
             f'</span>'
@@ -501,7 +501,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         expected = (
             f'<span class="badge badge-info sodar-obj-badge '
             f'sodar-project-badge mr-1" title="{self.project.full_title}" '
-            f'data-toggle="tooltip" data-delay="300">'
+            f'data-toggle="tooltip">'
             f'<i class="iconify" data-icon="mdi:cube"></i> '
             f'<a href="{url}">{self.project.title}</a>'
             f'</span>'

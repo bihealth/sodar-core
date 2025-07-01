@@ -8,7 +8,7 @@
 {# can_view (boolean) #}
 <span class="badge sodar-obj-badge sodar-project-badge mr-1
              badge-{% if not can_view %}secondary{% else %}{{ color|lower }}{% endif %}"
-      title="{{ project.full_title }}" data-toggle="tooltip" data-delay="300">
+      title="{{ project.full_title }}" data-toggle="tooltip">
   <i class="iconify"
      data-icon="{% if project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
   </i>

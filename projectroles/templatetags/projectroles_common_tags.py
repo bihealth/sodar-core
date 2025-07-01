@@ -197,7 +197,7 @@ def get_user_superuser_icon(tooltip: bool = True) -> str:
     """Return superuser icon for user"""
     ret = ''
     if tooltip:
-        ret += '<span title="Superuser" data-toggle="tooltip" data-delay="300">'
+        ret += '<span title="Superuser" data-toggle="tooltip">'
     ret += (
         '<i class="iconify text-info ml-1" '
         'data-icon="mdi:shield-account"></i>'
@@ -212,7 +212,7 @@ def get_user_inactive_icon(tooltip: bool = True) -> str:
     """Return inactive icon for user"""
     ret = ''
     if tooltip:
-        ret += '<span title="Inactive" data-toggle="tooltip" data-delay="300">'
+        ret += '<span title="Inactive" data-toggle="tooltip">'
     ret += (
         '<i class="iconify text-secondary ml-1" '
         'data-icon="mdi:account-off"></i>'
@@ -280,7 +280,7 @@ def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
         f'<span class="badge badge-{variant} sodar-obj-badge '
         f'sodar-user-badge sodar-user-badge-{user_class}{extra_class}" '
         f'title="{user.get_full_name()}" data-toggle="tooltip" '
-        f'data-delay="300" data-uuid="{user.sodar_uuid}">'
+        f'data-uuid="{user.sodar_uuid}">'
         f'<i class="iconify" data-icon="{icon}"></i> '
     )
     if email:
@@ -316,7 +316,7 @@ def get_project_badge(
     ret = (
         f'<span class="badge badge-{variant.lower()} sodar-obj-badge '
         f'sodar-project-badge{extra_class}" title="{project.full_title}" '
-        f'data-toggle="tooltip" data-delay="300">'
+        f'data-toggle="tooltip">'
     )
     if project.type == PROJECT_TYPE_PROJECT:
         icon = 'mdi:cube'

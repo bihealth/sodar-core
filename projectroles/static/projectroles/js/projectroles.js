@@ -58,10 +58,12 @@ $('[data-toggle="popover"]').popover({
 $(function () {
     // For cases where data-toggle is also needed for another functionality
     $('[data-tooltip="tooltip"]').tooltip({
-        trigger: 'hover'
+        trigger: 'hover',
+        delay: {'show': 300, 'hide': 0}
     });
     $('[data-toggle="tooltip"]').tooltip({
-        trigger: 'hover'
+        trigger: 'hover',
+        delay: {'show': 300, 'hide': 0}
     });
 });
 

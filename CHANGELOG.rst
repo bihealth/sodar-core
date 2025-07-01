@@ -71,6 +71,7 @@ Changed
     - Remove redundant ``RoleAssignmentOwnerTransferForm`` ``project`` field (#1654)
     - Render project role list using DataTables (#1712)
     - Deprecate plugin helper methods in ``projectroles.plugins`` root (#1335)
+    - Set default delay for Bootstrap tooltips (#1651)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)
