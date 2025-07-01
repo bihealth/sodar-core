@@ -9,6 +9,7 @@ $(document).ready(function() {
 
     $('.sodar-search-table').each(function() {
         $(this).DataTable({
+            order: [], // Disable default ordering
             scrollX: false,
             paging: true,
             pagingType: 'full_numbers',

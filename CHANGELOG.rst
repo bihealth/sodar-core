@@ -88,6 +88,7 @@ Fixed
     - Role operations dropdown alignment in ``project_invites.html`` (#1704)
     - Invalid ``role`` values in ``ProjectDetailView`` context data (#1706)
     - Incorrect icon placement in DataTables custom pagination links (#1716)
+    - Plugin ``search()`` order not respected by results view DataTables (#1699, #1720)
 
 Removed
 -------
