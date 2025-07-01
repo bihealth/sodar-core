@@ -27,11 +27,13 @@ Release Highlights
 - Add saving of home view project list starred filter state
 - Add first and last links in pagination controls
 - Add user full name and username in timeline event search
+- Add PluginAPI class for plugin helpers
 - Update projectroles REST API to return user UUIDs instead of nested user
   serializers
 - Update timeline list user displaying
 - Upgrade projectroles REST API version to v2.0
 - Upgrade projectroles sync REST API version to v2.0
+- Deprecate plugin helper methods in projectroles.plugins root
 - Remove support for SODAR Core features deprecated in v1.1
 
 Breaking Changes
@@ -127,6 +129,14 @@ These features have been deprecated in v1.2 and will be removed in v1.3.
     Use ``Project.set_public_access()`` instead.
 ``_project_badge.html`` Include Template
     Use ``projectroles_common_tags.get_project_badge()`` instead.
+``projectroles.plugins.get_active_plugins()``
+    Use ``projectroles.plugins.PluginAPI`` instead.
+``projectroles.plugins.change_plugin_status()``
+    Use ``projectroles.plugins.PluginAPI`` instead.
+``projectroles.plugins.get_app_plugin()``
+    Use ``projectroles.plugins.PluginAPI`` instead.
+``projectroles.plugins.get_backend_api()``
+    Use ``projectroles.plugins.PluginAPI`` instead.
 
 Previously Deprecated Features Removed
 --------------------------------------

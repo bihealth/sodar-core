@@ -6,8 +6,11 @@ from django.conf import settings
 from django.urls import reverse
 
 from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.utils import get_display_name
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -164,7 +167,7 @@ class AppLinkAPI:
                 }
             )
             # Add app plugins links
-            app_plugins = get_active_plugins(custom_order=True)
+            app_plugins = plugin_api.get_active_plugins(custom_order=True)
             for plugin in app_plugins:
                 if self._is_app_visible(plugin, project, user):
                     ret.append(
@@ -274,7 +277,7 @@ class AppLinkAPI:
         """
         ret = []
         # Add site-wide apps links
-        site_apps = get_active_plugins('site_app')
+        site_apps = plugin_api.get_active_plugins('site_app')
         for app in site_apps:
             if not app.app_permission or user.has_perm(app.app_permission):
                 ret.append(

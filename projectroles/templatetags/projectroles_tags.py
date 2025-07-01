@@ -18,13 +18,14 @@ from projectroles.models import (
     RemoteProject,
     SODAR_CONSTANTS,
 )
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.app_links import AppLinkAPI
 
 
-register = template.Library()
 app_links = AppLinkAPI()
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
+register = template.Library()
 
 
 # SODAR constants
@@ -57,13 +58,13 @@ def sodar_constant(value: str) -> Optional[str]:
 @register.simple_tag
 def get_backend_plugins() -> list:
     """Get active backend plugins"""
-    return get_active_plugins('backend')
+    return plugin_api.get_active_plugins('backend')
 
 
 @register.simple_tag
 def get_site_app_messages(user: SODARUser) -> list:
     """Get messages from site apps"""
-    plugins = get_active_plugins('site_app')
+    plugins = plugin_api.get_active_plugins('site_app')
     ret = []
     for p in plugins:
         ret += p.get_messages(user)

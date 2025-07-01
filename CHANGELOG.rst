@@ -40,6 +40,7 @@ Added
     - ``ProjectRoleView`` list pagination, ordering and filtering (#980, #1712)
     - ``PROJECTROLES_ROLE_PAGINATION`` Django setting (#1712)
     - ``ProjectRoleView`` user icon tooltips (#1688)
+    - ``PluginAPI`` class for plugin helpers (#1335)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 
@@ -53,6 +54,7 @@ Changed
     - Update string formatting (#1562)
     - Move black configuration into ``pyproject.toml`` (#1454)
     - Replace ``_project_badge.html`` includes with ``get_project_badge()`` (#1695)
+    - Update usage of deprecated plugin helpers (#1335)
 - **Filesfolders**
     - Refactor serializers (#1689)
 - **Projectroles**
@@ -68,6 +70,7 @@ Changed
     - Deprecate ``_project_badge.html`` include template (#1695)
     - Remove redundant ``RoleAssignmentOwnerTransferForm`` ``project`` field (#1654)
     - Render project role list using DataTables (#1712)
+    - Deprecate plugin helper methods in ``projectroles.plugins`` root (#1335)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

@@ -16,8 +16,10 @@ The backend API can be retrieved as follows.
 
 .. code-block:: python
 
-    from projectroles.plugins import get_backend_api
-    app_alerts = get_backend_api('sodar_cache')
+    from projectroles.plugins import PluginAPI
+
+    plugin_api = PluginAPI()
+    app_alerts = plugin_api.get_backend_api('sodar_cache')
 
 Make sure to also enable ``sodar_cache`` in the ``ENABLED_BACKEND_PLUGINS``
 Django setting.

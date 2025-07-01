@@ -25,11 +25,12 @@ from projectroles.models import (
     SODARUser,
     SODAR_CONSTANTS,
 )
-from projectroles.plugins import get_backend_api, BackendPluginPoint
+from projectroles.plugins import BackendPluginPoint, PluginAPI
 from projectroles.utils import get_display_name as _get_display_name
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 site = import_module(settings.SITE_PACKAGE)
 User = get_user_model()
 
@@ -370,7 +371,7 @@ def get_backend_include(backend_name: str, include_type: str = 'js') -> str:
 @register.simple_tag
 def get_history_dropdown(obj: Any, project: Optional[Project] = None) -> str:
     """Return link to object timeline events within project"""
-    timeline = get_backend_api('timeline_backend')
+    timeline = plugin_api.get_backend_api('timeline_backend')
     if not timeline:
         return ''
     url = timeline.get_object_url(obj, project)

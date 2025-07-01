@@ -22,12 +22,13 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     ROLE_RANKING,
 )
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import PluginAPI
 from projectroles.utils import get_display_name
 
 
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -349,7 +350,7 @@ def get_email_footer(request: HttpRequest, settings_link: bool = True) -> str:
             admin_email=admin_recipient[1],
         )
     # Add user settings link if enabled and userprofile app is active
-    if request and settings_link and get_app_plugin('userprofile'):
+    if request and settings_link and plugin_api.get_app_plugin('userprofile'):
         footer += SETTINGS_LINK.format(
             url=request.build_absolute_uri(
                 reverse('userprofile:settings_update')

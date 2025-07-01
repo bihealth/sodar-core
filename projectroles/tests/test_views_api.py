@@ -38,7 +38,7 @@ from projectroles.models import (
     AUTH_TYPE_LOCAL,
     CAT_DELIMITER,
 )
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_app_settings import AppSettingInitMixin
 from projectroles.tests.test_models import (
@@ -64,6 +64,7 @@ from projectroles.views import PROJECT_BLOCK_MSG
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -1634,7 +1635,9 @@ class TestProjectDestroyAPIView(
 
     def setUp(self):
         super().setUp()
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:api_project_destroy',
             kwargs={'project': self.project.sodar_uuid},

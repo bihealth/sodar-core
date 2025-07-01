@@ -21,7 +21,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     AppSetting,
 )
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -38,6 +38,7 @@ from projectroles.utils import build_secret
 from projectroles.views_api import SYNC_API_DEFAULT_VERSION
 
 
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -1644,7 +1645,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'sodar_uuid': obj.sodar_uuid,
         }
         self.assertEqual(model_to_dict(obj), expected)
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME).get_model()
+        app_plugin = plugin_api.get_app_plugin(EXAMPLE_APP_NAME).get_model()
 
         obj = AppSetting.objects.get(
             app_plugin=app_plugin, name='user_str_setting'

@@ -30,8 +30,11 @@ from projectroles.models import (
     ROLE_RANKING,
     CAT_DELIMITER,
 )
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import PluginAPI
 from projectroles.utils import build_secret
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -197,7 +200,7 @@ class AppSettingMixin:
             'app_plugin': (
                 None
                 if plugin_name == 'projectroles'
-                else get_app_plugin(plugin_name).get_model()
+                else plugin_api.get_app_plugin(plugin_name).get_model()
             ),
             'project': project,
             'name': name,
@@ -1213,7 +1216,9 @@ class TestProjectAppSetting(
         """Test AppSetting initialization"""
         expected = {
             'id': self.setting_str.pk,
-            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'app_plugin': plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
+            .get_model()
+            .pk,
             'project': self.project.pk,
             'name': 'str_setting',
             'type': APP_SETTING_TYPE_STRING,
@@ -1229,7 +1234,9 @@ class TestProjectAppSetting(
         """Test initialization with integer value"""
         expected = {
             'id': self.setting_int.pk,
-            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'app_plugin': plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
+            .get_model()
+            .pk,
             'project': self.project.pk,
             'name': 'int_setting',
             'type': APP_SETTING_TYPE_INTEGER,
@@ -1245,7 +1252,9 @@ class TestProjectAppSetting(
         """Test initialization with JSON value"""
         expected = {
             'id': self.setting_json.pk,
-            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'app_plugin': plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
+            .get_model()
+            .pk,
             'project': self.project.pk,
             'name': 'json_setting',
             'type': APP_SETTING_TYPE_JSON,
@@ -1338,7 +1347,9 @@ class TestUserAppSetting(
         """Test AppSetting initialization"""
         expected = {
             'id': self.setting_str.pk,
-            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'app_plugin': plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
+            .get_model()
+            .pk,
             'project': None,
             'name': 'str_setting',
             'type': APP_SETTING_TYPE_STRING,
@@ -1354,7 +1365,9 @@ class TestUserAppSetting(
         """Test initialization with integer value"""
         expected = {
             'id': self.setting_int.pk,
-            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'app_plugin': plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
+            .get_model()
+            .pk,
             'project': None,
             'name': 'int_setting',
             'type': APP_SETTING_TYPE_INTEGER,
@@ -1370,7 +1383,9 @@ class TestUserAppSetting(
         """Test initialization with integer value"""
         expected = {
             'id': self.setting_json.pk,
-            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'app_plugin': plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
+            .get_model()
+            .pk,
             'project': None,
             'name': 'json_setting',
             'type': APP_SETTING_TYPE_JSON,

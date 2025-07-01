@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.tests.test_ui import UITestBase
 
 from timeline.models import TL_STATUS_OK
@@ -22,6 +22,9 @@ from timeline.tests.test_models import (
     TimelineEventStatusMixin,
     EXTRA_DATA,
 )
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -43,7 +46,7 @@ class TestProjectListView(
 
     def setUp(self):
         super().setUp()
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,
@@ -158,7 +161,7 @@ class TestSiteListView(
 
     def setUp(self):
         super().setUp()
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         # Init default event
         self.event = self.timeline.add_event(
             project=None,
@@ -251,7 +254,7 @@ class TestAdminListView(
 
     def setUp(self):
         super().setUp()
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         self.url = reverse('timeline:list_admin')
         # Init default event
         self.event = self.timeline.add_event(
@@ -302,7 +305,7 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
 
     def setUp(self):
         super().setUp()
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,
@@ -428,7 +431,7 @@ class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
 
     def setUp(self):
         super().setUp()
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         # Init default event
         self.event = self.timeline.add_event(
             project=self.project,

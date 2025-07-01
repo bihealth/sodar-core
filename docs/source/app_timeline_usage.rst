@@ -69,12 +69,14 @@ The most common use case is to save events within the Class-Based Views of your
 Django site, but technically this can be done by any part of the code in your
 Django apps.
 
-Initialize the API using ``projectroles.plugins.get_backend_api()`` as follows:
+Initialize the API using ``PluginAPI.get_backend_api()`` as follows:
 
 .. code-block:: python
 
-    from projectroles.plugins import get_backend_api
-    timeline = get_backend_api('timeline_backend')
+    from projectroles.plugins import PluginAPI
+
+    plugin_api = PluginAPI()
+    timeline = plugin_api.get_backend_api('timeline_backend')
 
     if timeline:    # Only proceed if the backend was successfully initialized
         pass        # Save your events here..

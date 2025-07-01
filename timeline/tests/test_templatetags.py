@@ -6,7 +6,7 @@ from django.utils.timezone import localtime
 from djangoplugins.models import Plugin
 
 # Projectroles dependency
-from projectroles.plugins import get_app_plugin, get_backend_api
+from projectroles.plugins import PluginAPI
 
 from timeline.models import TimelineEvent, DEFAULT_MESSAGES
 from timeline.templatetags import timeline_tags as tags
@@ -17,6 +17,9 @@ from timeline.tests.test_models import (
     TimelineEventStatusMixin,
     TimelineEventObjectRefMixin,
 )
+
+
+plugin_api = PluginAPI()
 
 
 # Local constants
@@ -56,7 +59,7 @@ class TestTemplateTags(
         # Generate plugin lookup dict
         self.plugin_lookup = tags.get_plugin_lookup()
         # Get timeline API
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
 
     def test_get_timestamp(self):
         """Test get_timestamp()"""
@@ -186,7 +189,7 @@ class TestTemplateTags(
 
     def test_get_app_icon_html_plugin(self):
         """Test get_app_icon_html() on event from an app plugin"""
-        plugin = get_app_plugin(APP_NAME_FF)
+        plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         url = reverse(
             plugin.entry_point_url_id,
             kwargs={'project': self.project.sodar_uuid},
@@ -223,7 +226,7 @@ class TestTemplateTags(
 
     def test_get_app_icon_html_example_project_app(self):
         """Test get_app_icon_html() on event from an app plugin"""
-        plugin = get_app_plugin('example_project_app')
+        plugin = plugin_api.get_app_plugin('example_project_app')
         url = reverse(
             plugin.entry_point_url_id,
             kwargs={'project': self.project.sodar_uuid},
@@ -242,7 +245,7 @@ class TestTemplateTags(
 
     def test_get_app_icon_html_example_site_app(self):
         """Test get_app_icon_html() on event from an app plugin"""
-        plugin = get_app_plugin('example_site_app')
+        plugin = plugin_api.get_app_plugin('example_site_app')
         url = reverse(
             plugin.entry_point_url_id,
             kwargs={},

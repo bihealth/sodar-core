@@ -31,12 +31,13 @@ from projectroles.models import (
     CAT_DELIMITER_ERROR_MSG,
 )
 
-from projectroles.plugins import PluginAppSettingDef, get_active_plugins
+from projectroles.plugins import PluginAppSettingDef, PluginAPI
 from projectroles.utils import get_display_name, build_secret
 from projectroles.app_settings import AppSettingAPI
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -656,7 +657,9 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         ):
             self._init_remote_sites()
         # Init app settings fields
-        self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
+        self.app_plugins = sorted(
+            plugin_api.get_active_plugins(), key=lambda x: x.name
+        )
         user_mod = False if self.current_user.is_superuser else True
         self.init_app_settings(
             self.app_plugins, APP_SETTING_SCOPE_PROJECT, user_mod
@@ -1285,8 +1288,10 @@ class SiteAppSettingsForm(SODARAppSettingFormMixin, SODARForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Init app settings fields
-        project_plugins = get_active_plugins(plugin_type='project_app')
-        site_plugins = get_active_plugins(plugin_type='site_app')
+        project_plugins = plugin_api.get_active_plugins(
+            plugin_type='project_app'
+        )
+        site_plugins = plugin_api.get_active_plugins(plugin_type='site_app')
         self.app_plugins = project_plugins + site_plugins
         self.init_app_settings(self.app_plugins, APP_SETTING_SCOPE_SITE, True)
 

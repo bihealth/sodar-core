@@ -10,15 +10,12 @@ from django.conf import settings
 from djangoplugins.point import PluginPoint
 
 from projectroles.models import AppSetting, Project, SODARUser, SODAR_CONSTANTS
-from projectroles.plugins import (
-    PluginAppSettingDef,
-    get_app_plugin,
-    get_active_plugins,
-)
+from projectroles.plugins import PluginAppSettingDef, PluginAPI
 from projectroles.utils import get_display_name
 
 
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -297,7 +294,7 @@ class AppSettingAPI:
         :return: App plugin object
         :raise: ValueError if plugin is not found with the name
         """
-        plugin = get_app_plugin(plugin_name)
+        plugin = plugin_api.get_app_plugin(plugin_name)
         if not plugin:
             raise ValueError(f'Plugin not found with name "{plugin_name}"')
         return plugin
@@ -523,7 +520,7 @@ class AppSettingAPI:
         """
         PluginAppSettingDef.validate_scope(scope)
         ret = {}
-        app_plugins = get_active_plugins()
+        app_plugins = plugin_api.get_active_plugins()
 
         for plugin in app_plugins:
             p_defs = cls.get_definitions(scope, plugin=plugin)
@@ -874,8 +871,8 @@ class AppSettingAPI:
         ret = {APP_NAME: cls.get_projectroles_defs()}
         plugins = (
             []
-            + get_active_plugins('project_app')
-            + get_active_plugins('site_app')
+            + plugin_api.get_active_plugins('project_app')
+            + plugin_api.get_active_plugins('site_app')
         )
         for p in plugins:
             ret[p.name] = cls._get_defs(p)

@@ -96,10 +96,10 @@ of the groups.
       requirements
     * E.g. ``from rest_framework import serializers``
 - SODAR Core ``projectroles`` imports
-    * E.g. ``from projectroles.plugins import get_backend_api``
+    * E.g. ``from projectroles.plugins import PluginAPI``
     * Prefix these with ``# Projectroles dependency``
     * Hardcoded imports from other SODAR Core apps should be avoided, use
-      ``get_backend_api()`` instead.
+      ``PluginAPI.get_backend_api()`` instead.
 - Imports from within the current app
     * E.g. ``from yourapp.forms import YourForm``
     * For consistency and clarity, give the full module path for imports. E.g.

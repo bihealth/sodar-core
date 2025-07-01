@@ -9,10 +9,11 @@ from django.core.management.base import BaseCommand
 # Projectroles dependency
 from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import Project
-from projectroles.plugins import get_active_plugins, get_backend_api
+from projectroles.plugins import PluginAPI
 
 
 logger = ManagementCommandLogger(__name__)
+plugin_api = PluginAPI()
 
 
 class Command(BaseCommand):
@@ -33,7 +34,7 @@ class Command(BaseCommand):
                 'SodarCache backend not enabled in settings, cancelled'
             )
             sys.exit(1)
-        cache_backend = get_backend_api('sodar_cache')
+        cache_backend = plugin_api.get_backend_api('sodar_cache')
         if not cache_backend:
             logger.error('SodarCache backend plugin not available, cancelled')
             sys.exit(1)
@@ -57,7 +58,7 @@ class Command(BaseCommand):
         if not update_kwargs:
             logger.info('Synchronizing cache for all projects')
 
-        plugins = get_active_plugins(plugin_type='project_app')
+        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         errors = False
         for plugin in plugins:
             try:

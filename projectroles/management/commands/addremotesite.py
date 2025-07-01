@@ -12,10 +12,11 @@ from django.core.management.base import BaseCommand
 
 from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 
 
 logger = ManagementCommandLogger(__name__)
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -103,7 +104,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         logger.info('Creating remote site..')
         name = options['name']
         url = options['url']

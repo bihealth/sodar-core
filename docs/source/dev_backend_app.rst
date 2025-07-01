@@ -104,13 +104,15 @@ Implementing the following is **optional**:
 Using the Plugin
 ----------------
 
-To retrieve the API for the plugin, use the
-function ``projectroles.plugins.get_backend_api()`` as follows:
+To retrieve the API for the plugin, use the ``PluginAPI.get_backend_api()``
+method as follows:
 
 .. code-block:: python
 
-    from projectroles.plugins import get_backend_api
-    example_api = get_backend_api('example_backend_app')
+    from projectroles.plugins import PluginAPI
+
+    plugin_api = PluginAPI()
+    example_api = plugin_api.get_backend_api('example_backend_app')
 
     if example_api:     # Make sure the API is there, and only after that..
         pass            # ..do stuff with the API

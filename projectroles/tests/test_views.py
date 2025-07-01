@@ -53,11 +53,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
-from projectroles.plugins import (
-    PluginAppSettingDef,
-    get_backend_api,
-    get_active_plugins,
-)
+from projectroles.plugins import PluginAppSettingDef, PluginAPI
 from projectroles.utils import build_secret, get_display_name
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -98,6 +94,7 @@ from projectroles.context_processors import (
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -358,7 +355,7 @@ class TestProjectSearchResultsView(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-        self.plugins = get_active_plugins(plugin_type='project_app')
+        self.plugins = plugin_api.get_active_plugins(plugin_type='project_app')
 
     def test_get(self):
         """Test ProjectSearchResultsView GET"""
@@ -744,7 +741,9 @@ class TestProjectCreateView(
             user_display=True,
             sodar_uuid=REMOTE_SITE_UUID,
         )
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
@@ -1376,7 +1375,9 @@ class TestProjectUpdateView(
             user_display=True,
             sodar_uuid=REMOTE_SITE_UUID,
         )
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:update',
             kwargs={'project': self.project.sodar_uuid},
@@ -1385,7 +1386,7 @@ class TestProjectUpdateView(
             'projectroles:update',
             kwargs={'project': self.category.sodar_uuid},
         )
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         self.post_data = model_to_dict(self.project)
         self.post_data.update(
             {
@@ -2733,7 +2734,9 @@ class TestProjectArchiveView(
         self.contributor_as = self.make_assignment(
             self.project, self.user_contributor, self.role_contributor
         )
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:archive',
             kwargs={'project': self.project.sodar_uuid},
@@ -2950,7 +2953,9 @@ class TestProjectDeleteView(
         self.contributor_as = self.make_assignment(
             self.project, self.user_contributor, self.role_contributor
         )
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:delete',
             kwargs={'project': self.project.sodar_uuid},
@@ -3313,7 +3318,9 @@ class TestRoleAssignmentCreateView(
         )
         self.user_new = self.make_user('user_new')
         # Set up helpers
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:role_create',
             kwargs={'project': self.project.sodar_uuid},
@@ -3799,7 +3806,9 @@ class TestRoleAssignmentUpdateView(
             self.project, self.user_guest, self.role_guest
         )
         # Set up helpers
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:role_update',
             kwargs={'roleassignment': self.role_as.sodar_uuid},
@@ -4113,7 +4122,7 @@ class TestRoleAssignmentDeleteView(
         )
         self.user_new = self.make_user('user_new')
         # Set up helpers
-        self.app_alerts = get_backend_api('appalerts_backend')
+        self.app_alerts = plugin_api.get_backend_api('appalerts_backend')
         self.app_alert_model = self.app_alerts.get_model()
         self.url = reverse(
             'projectroles:role_delete',
@@ -4546,7 +4555,7 @@ class TestRoleAssignmentOwnDeleteView(
         )
         self.user_new = self.make_user('user_new')
         # Set up helpers
-        self.app_alerts = get_backend_api('appalerts_backend')
+        self.app_alerts = plugin_api.get_backend_api('appalerts_backend')
         self.app_alert_model = self.app_alerts.get_model()
 
     def test_get(self):
@@ -4720,7 +4729,9 @@ class TestRoleAssignmentOwnerTransferView(
         # User without roles
         self.user_new = self.make_user('user_new')
         # Set up helpers
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:role_owner_transfer',
             kwargs={'project': self.project.sodar_uuid},
@@ -5382,7 +5393,9 @@ class TestProjectInviteAcceptView(
             issuer=self.user,
             message='',
         )
-        self.app_alert_model = get_backend_api('appalerts_backend').get_model()
+        self.app_alert_model = plugin_api.get_backend_api(
+            'appalerts_backend'
+        ).get_model()
         self.url = reverse(
             'projectroles:invite_accept',
             kwargs={'secret': self.invite.secret},

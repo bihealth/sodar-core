@@ -14,10 +14,14 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import BackendPluginPoint, get_backend_api
+from projectroles.plugins import BackendPluginPoint, PluginAPI
 from projectroles.views_api import SODARAPIGenericProjectMixin
 
 from sodarcache.serializers import JSONCacheItemSerializer
+
+
+plugin_api = PluginAPI()
+
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -62,7 +66,7 @@ class SodarcacheAPIViewMixin:
 
         :Return: SodarCacheAPI object
         """
-        cache_backend = get_backend_api('sodar_cache')
+        cache_backend = plugin_api.get_backend_api('sodar_cache')
         if not cache_backend:
             raise cls.BackendUnavailable()
         return cache_backend

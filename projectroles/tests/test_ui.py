@@ -34,7 +34,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -48,6 +48,7 @@ from projectroles.utils import build_secret
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -1230,7 +1231,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
             'sodar-pr-nav-project-update',
         ]
         # Add app plugin navs
-        for p in get_active_plugins():
+        for p in plugin_api.get_active_plugins():
             self.sidebar_ids.append(f'sodar-pr-nav-app-plugin-{p.name}')
 
     def test_render_detail(self):
@@ -1254,7 +1255,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-        expected = [(self.superuser, len(get_active_plugins()))]
+        expected = [(self.superuser, len(plugin_api.get_active_plugins()))]
         self.assert_element_count(expected, url, 'sodar-pr-nav-app-plugin')
 
     @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=['timeline'])
@@ -1264,8 +1265,8 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
         expected = [
-            (self.superuser, len(get_active_plugins()) - 1),
-            (self.user_owner, len(get_active_plugins()) - 1),
+            (self.superuser, len(plugin_api.get_active_plugins()) - 1),
+            (self.user_owner, len(plugin_api.get_active_plugins()) - 1),
         ]
         self.assert_element_count(expected, url, 'sodar-pr-nav-app-plugin')
 
@@ -1906,14 +1907,14 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
 
     def test_plugin_links(self):
         """Test visibility of app plugin links"""
-        expected = [(self.superuser, len(get_active_plugins()))]
+        expected = [(self.superuser, len(plugin_api.get_active_plugins()))]
         self.assert_element_count(
             expected, self.url, 'sodar-pr-link-app-plugin'
         )
 
     def test_plugin_cards(self):
         """Test visibility of app plugin cards"""
-        expected = [(self.superuser, len(get_active_plugins()))]
+        expected = [(self.superuser, len(plugin_api.get_active_plugins()))]
         self.assert_element_count(expected, self.url, 'sodar-pr-app-item')
 
     def test_limited_alert(self):

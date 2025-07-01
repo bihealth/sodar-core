@@ -9,13 +9,14 @@ from django.db.models import QuerySet
 
 # Projectroles dependency
 from projectroles.models import Project, SODARUser
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.utils import get_app_names
 
 from sodarcache.models import JSONCacheItem
 
 
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 User = get_user_model()
 
 
@@ -85,7 +86,7 @@ class SodarCacheAPI:
         :param project: Project object to limit update to (optional)
         :param user: User object to denote user triggering the update (optional)
         """
-        plugins = get_active_plugins(plugin_type='project_app')
+        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         for plugin in plugins:
             plugin.update_cache(name, project, user)
 

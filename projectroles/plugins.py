@@ -1,6 +1,7 @@
 """Plugin point definitions and plugin API for apps based on projectroles"""
 
 import json
+import logging
 
 from typing import Any, Optional, Union
 from uuid import UUID
@@ -18,6 +19,9 @@ from projectroles.models import (
     APP_SETTING_TYPES,
     SODAR_CONSTANTS,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 # SODAR constants
@@ -46,6 +50,12 @@ APP_SETTING_SCOPES = [
     APP_SETTING_SCOPE_SITE,
 ]
 APP_SETTING_OPTION_TYPES = [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
+# TODO: Remove in v1.3 (see #1718)
+PLUGIN_API_DEPRECATE_MSG = (
+    'Importing and calling {method}() directly from projectroles.plugins has '
+    'been deprecated and will be removed in v1.3. Use '
+    'projectroles.plugins.PluginAPI instead.'
+)
 
 # From djangoplugins
 ENABLED = 0
@@ -968,50 +978,150 @@ class PluginSearchResult:
 # Plugin API -------------------------------------------------------------------
 
 
+class PluginAPI:
+    """API for SODAR Core plugin retrieval"""
+
+    @classmethod
+    def get_active_plugins(
+        cls, plugin_type: str = 'project_app', custom_order: bool = False
+    ) -> Optional[list[PluginPoint]]:
+        """
+        Return active plugins of a specific type.
+
+        :param plugin_type: "project_app", "site_app" or "backend" (string)
+        :param custom_order: Order by plugin_ordering for project apps (boolean)
+        :return: List or None
+        :raise: ValueError if plugin_type is not recognized
+        """
+        if plugin_type not in PLUGIN_TYPES.keys():
+            raise ValueError(
+                'Invalid value for plugin_type. Accepted values: {}'.format(
+                    ', '.join(PLUGIN_TYPES.keys())
+                )
+            )
+        plugins = eval(PLUGIN_TYPES[plugin_type]).get_plugins()
+        if plugins:
+            ret = [
+                p
+                for p in plugins
+                if (
+                    p.is_active()
+                    and (
+                        plugin_type in ['project_app', 'site_app']
+                        or p.name in settings.ENABLED_BACKEND_PLUGINS
+                    )
+                )
+            ]
+            return sorted(
+                ret,
+                key=lambda x: (
+                    x.plugin_ordering
+                    if custom_order and plugin_type == 'project_app'
+                    else x.name
+                ),
+            )
+        return None
+
+    @classmethod
+    def change_plugin_status(
+        cls, name: str, status: int, plugin_type: str = 'app'
+    ):
+        """
+        Change the status of a selected plugin in the database.
+
+        :param name: Plugin name (string)
+        :param status: Status (int, see djangoplugins)
+        :param plugin_type: Type of plugin ("app", "backend" or "site")
+        :raise: ValueError if plugin_type is invalid or plugin with name not
+                found
+        """
+        # NOTE: Used to forge plugin to a specific status for e.g. testing
+        if plugin_type == 'app':
+            plugin = ProjectAppPluginPoint.get_plugin(name)
+        elif plugin_type == 'backend':
+            plugin = BackendPluginPoint.get_plugin(name)
+        elif plugin_type == 'site':
+            plugin = SiteAppPluginPoint.get_plugin(name)
+        else:
+            raise ValueError(f'Invalid plugin_type: "{plugin_type}"')
+        if not plugin:
+            raise ValueError(
+                f'Plugin of type "{plugin_type}" not found with name "{name}"'
+            )
+        plugin = plugin.get_model()
+        plugin.status = status
+        plugin.save()
+
+    @classmethod
+    def get_app_plugin(
+        cls, plugin_name: str, plugin_type: Optional[str] = None
+    ) -> Optional[PluginPoint]:
+        """
+        Return active app plugin.
+
+        :param plugin_name: Plugin name (string)
+        :param plugin_type: Plugin type (string or None for all types)
+        :return: Plugin object or None if not found or inactive
+        """
+        if plugin_type:
+            plugin_types = [PLUGIN_TYPES[plugin_type]]
+        else:
+            plugin_types = PLUGIN_TYPES.values()
+        for t in plugin_types:
+            try:
+                return eval(t).get_plugin(plugin_name)
+            except Exception:
+                pass
+        return None
+
+    @classmethod
+    def get_backend_api(
+        cls, plugin_name: str, force: bool = False, **kwargs
+    ) -> Optional[BackendPluginPoint]:
+        """
+        Return backend API object.
+        NOTE: May raise an exception from plugin.get_api().
+
+        :param plugin_name: Plugin name (string)
+        :param force: Return plugin regardless of status in
+                      ENABLED_BACKEND_PLUGINS
+        :param kwargs: Optional kwargs for API
+        :return: Plugin object or None if not found
+        """
+        if plugin_name in settings.ENABLED_BACKEND_PLUGINS or force:
+            try:
+                plugin = BackendPluginPoint.get_plugin(plugin_name)
+            except BackendPluginPoint.DoesNotExist:
+                return None
+            return plugin.get_api(**kwargs) if plugin.is_active() else None
+        return None
+
+
+# TODO: Remove in v1.3 (see #1718)
 def get_active_plugins(
     plugin_type: str = 'project_app', custom_order: bool = False
 ) -> Optional[list[PluginPoint]]:
     """
     Return active plugins of a specific type.
 
+    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
+
     :param plugin_type: "project_app", "site_app" or "backend" (string)
     :param custom_order: Order by plugin_ordering for project apps (boolean)
     :return: List or None
     :raise: ValueError if plugin_type is not recognized
     """
-    if plugin_type not in PLUGIN_TYPES.keys():
-        raise ValueError(
-            'Invalid value for plugin_type. Accepted values: {}'.format(
-                ', '.join(PLUGIN_TYPES.keys())
-            )
-        )
-    plugins = eval(PLUGIN_TYPES[plugin_type]).get_plugins()
-    if plugins:
-        ret = [
-            p
-            for p in plugins
-            if (
-                p.is_active()
-                and (
-                    plugin_type in ['project_app', 'site_app']
-                    or p.name in settings.ENABLED_BACKEND_PLUGINS
-                )
-            )
-        ]
-        return sorted(
-            ret,
-            key=lambda x: (
-                x.plugin_ordering
-                if custom_order and plugin_type == 'project_app'
-                else x.name
-            ),
-        )
-    return None
+    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_active_plugins'))
+    plugin_api = PluginAPI()
+    return plugin_api.get_active_plugins(plugin_type, custom_order)
 
 
+# TODO: Remove in v1.3 (see #1718)
 def change_plugin_status(name: str, status: int, plugin_type: str = 'app'):
     """
     Change the status of a selected plugin in the database.
+
+    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
 
     :param name: Plugin name (string)
     :param status: Status (int, see djangoplugins)
@@ -1019,45 +1129,32 @@ def change_plugin_status(name: str, status: int, plugin_type: str = 'app'):
     :raise: ValueError if plugin_type is invalid or plugin with name not found
     """
     # NOTE: Used to forge plugin to a specific status for e.g. testing
-    if plugin_type == 'app':
-        plugin = ProjectAppPluginPoint.get_plugin(name)
-    elif plugin_type == 'backend':
-        plugin = BackendPluginPoint.get_plugin(name)
-    elif plugin_type == 'site':
-        plugin = SiteAppPluginPoint.get_plugin(name)
-    else:
-        raise ValueError(f'Invalid plugin_type: "{plugin_type}"')
-    if not plugin:
-        raise ValueError(
-            f'Plugin of type "{plugin_type}" not found with name "{name}"'
-        )
-    plugin = plugin.get_model()
-    plugin.status = status
-    plugin.save()
+    logger.warning(
+        PLUGIN_API_DEPRECATE_MSG.format(method='change_plugin_status')
+    )
+    plugin_api = PluginAPI()
+    plugin_api.change_plugin_status(name, status, plugin_type)
 
 
+# TODO: Remove in v1.3 (see #1718)
 def get_app_plugin(
     plugin_name: str, plugin_type: Optional[str] = None
 ) -> Optional[PluginPoint]:
     """
     Return active app plugin.
 
+    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
+
     :param plugin_name: Plugin name (string)
     :param plugin_type: Plugin type (string or None for all types)
     :return: Plugin object or None if not found or inactive
     """
-    if plugin_type:
-        plugin_types = [PLUGIN_TYPES[plugin_type]]
-    else:
-        plugin_types = PLUGIN_TYPES.values()
-    for t in plugin_types:
-        try:
-            return eval(t).get_plugin(plugin_name)
-        except Exception:
-            pass
-    return None
+    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_app_plugin'))
+    plugin_api = PluginAPI()
+    return plugin_api.get_app_plugin(plugin_name, plugin_type)
 
 
+# TODO: Remove in v1.3 (see #1718)
 def get_backend_api(
     plugin_name: str, force: bool = False, **kwargs
 ) -> Optional[BackendPluginPoint]:
@@ -1065,18 +1162,16 @@ def get_backend_api(
     Return backend API object.
     NOTE: May raise an exception from plugin.get_api().
 
+    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
+
     :param plugin_name: Plugin name (string)
     :param force: Return plugin regardless of status in ENABLED_BACKEND_PLUGINS
     :param kwargs: Optional kwargs for API
     :return: Plugin object or None if not found
     """
-    if plugin_name in settings.ENABLED_BACKEND_PLUGINS or force:
-        try:
-            plugin = BackendPluginPoint.get_plugin(plugin_name)
-        except BackendPluginPoint.DoesNotExist:
-            return None
-        return plugin.get_api(**kwargs) if plugin.is_active() else None
-    return None
+    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_backend_api'))
+    plugin_api = PluginAPI()
+    return plugin_api.get_backend_api(plugin_name, force, **kwargs)
 
 
 # Plugins within projectroles --------------------------------------------------

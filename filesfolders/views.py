@@ -33,7 +33,7 @@ from db_file_storage.storage import DatabaseFileStorage
 
 # Projectroles dependency
 from projectroles.models import Project, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.utils import build_secret, get_display_name
 from projectroles.views import (
@@ -54,6 +54,7 @@ from filesfolders.utils import build_public_url
 
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 storage = DatabaseFileStorage()
 
 
@@ -128,7 +129,7 @@ class FilesfoldersTimelineMixin:
         :param update_attrs: List of attribute names to include in extra_data
         :param old_data: Data from existing object in case of update (dict)
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return
 
@@ -216,7 +217,7 @@ class DeleteSuccessMixin(DeletionMixin):
     """Mixin for overriding get_success_url in deletion form views"""
 
     def get_success_url(self):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         # Add event in Timeline
         if timeline:
             obj_type = TL_OBJ_TYPES[self.object.__class__.__name__]
@@ -256,7 +257,7 @@ class FileServeMixin:
 
     def get(self, *args, **kwargs):
         """GET request to return the file as attachment"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if kwargs.get('project'):
             redirect_url = reverse(
                 'filesfolders:list', kwargs={'project': kwargs['project']}
@@ -479,7 +480,7 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
 
     def form_valid(self, form):
         """Override form_valid() for zip file unpacking"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
 
         # Regular file upload
         if not form.cleaned_data.get('unpack_archive'):
@@ -829,7 +830,7 @@ class BatchEditView(
         self, edit_count: int, target_folder: Optional[Folder], **kwargs
     ) -> HttpResponseRedirect:
         """Finalize executed batch operation"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         edit_suffix = 's' if edit_count != 1 else ''
         fail_suffix = 's' if len(self.failed) != 1 else ''
 

@@ -17,11 +17,12 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     ADD_EMAIL_ALREADY_SET_MSG,
 )
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.utils import build_secret
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 
 
 # SODAR Constants
@@ -41,8 +42,10 @@ class UserAppSettingsForm(SODARAppSettingFormMixin, SODARForm):
         self.user = kwargs.pop('current_user')
         super().__init__(*args, **kwargs)
         # Init app settings fields
-        project_plugins = get_active_plugins(plugin_type='project_app')
-        site_plugins = get_active_plugins(plugin_type='site_app')
+        project_plugins = plugin_api.get_active_plugins(
+            plugin_type='project_app'
+        )
+        site_plugins = plugin_api.get_active_plugins(plugin_type='site_app')
         self.app_plugins = project_plugins + site_plugins
         user_mod = False if self.user.is_superuser else True
         self.init_app_settings(

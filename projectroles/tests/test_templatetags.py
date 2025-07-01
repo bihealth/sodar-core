@@ -14,7 +14,7 @@ from test_plus.test import TestCase
 import projectroles
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
-from projectroles.plugins import get_app_plugin, get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.templatetags import (
     projectroles_common_tags as c_tags,
     projectroles_role_tags as r_tags,
@@ -29,6 +29,7 @@ from projectroles.tests.test_models import (
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 site = import_module(settings.SITE_PACKAGE)
 
 
@@ -586,7 +587,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_include_none_value(self):
         """Test get_backend_include() none attribute check"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
-        backend_plugin = get_active_plugins('backend')[0]
+        backend_plugin = plugin_api.get_active_plugins('backend')[0]
         type(backend_plugin).javascript_url = None
         type(backend_plugin).css_url = None
 
@@ -600,7 +601,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_include_invalid_url(self):
         """Test get_backend_include() file existence check"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
-        backend_plugin = get_active_plugins('backend')[0]
+        backend_plugin = plugin_api.get_active_plugins('backend')[0]
 
         type(backend_plugin).javascript_url = (
             'example_backend_app/js/NOT_EXISTING_JS.js'
@@ -619,7 +620,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_get_backend_include(self):
         """Test get_backend_include()"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
-        backend_plugin = get_active_plugins('backend')[0]
+        backend_plugin = plugin_api.get_active_plugins('backend')[0]
 
         type(backend_plugin).javascript_url = (
             'example_backend_app/js/greeting.js'
@@ -773,14 +774,14 @@ class TestProjectrolesTags(TemplateTagTestBase):
 
     def test_is_app_visible(self):
         """Test is_app_visible()"""
-        app_plugin = get_app_plugin(APP_NAME_FF)
+        app_plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.project, self.user), True
         )
 
     def test_is_app_visible_category(self):
         """Test is_app_visible() with a category"""
-        app_plugin = get_app_plugin(APP_NAME_FF)
+        app_plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.category, self.user),
             False,
@@ -788,7 +789,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
 
     def test_is_app_visible_category_enabled(self):
         """Test is_app_visible() with category_enable=True"""
-        app_plugin = get_app_plugin('timeline')
+        app_plugin = plugin_api.get_app_plugin('timeline')
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.category, self.user), True
         )
@@ -796,7 +797,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
     @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=[APP_NAME_FF])
     def test_is_app_visible_hide(self):
         """Test is_app_visible() with a hidden app and normal/superuser"""
-        app_plugin = get_app_plugin(APP_NAME_FF)
+        app_plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         superuser = self.make_user('superuser')
         superuser.is_superuser = True
         superuser.save()
@@ -809,7 +810,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
 
     def test_get_app_link_state(self):
         """Test get_app_link_state()"""
-        app_plugin = get_app_plugin(APP_NAME_FF)
+        app_plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         # TODO: Why does this also require app_name?
         self.assertEqual(
             tags.get_app_link_state(app_plugin, APP_NAME_FF, 'list'),

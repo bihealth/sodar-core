@@ -8,7 +8,7 @@ from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.tests.test_models import (
     RemoteSiteMixin,
     REMOTE_SITE_NAME,
@@ -31,6 +31,9 @@ from timeline.tests.test_models import (
     TimelineEventStatusMixin,
     EXTRA_DATA,
 )
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -69,7 +72,7 @@ class TestTimelineAPI(
 ):
     def setUp(self):
         super().setUp()
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         self.superuser = self.make_user('superuser')
         self.superuser.is_superuser = True
         self.superuser.save()

@@ -4,7 +4,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.tests.test_permissions_api import ProjectAPIPermissionTestBase
 
 from sodarcache.tests.test_views_api import (
@@ -19,6 +19,9 @@ from sodarcache.views_api import (
 )
 
 
+plugin_api = PluginAPI()
+
+
 class SodarcacheAPIPermissionTestBase(ProjectAPIPermissionTestBase):
     """Base class for sodarcache REST API view permission tests"""
 
@@ -27,7 +30,7 @@ class SodarcacheAPIPermissionTestBase(ProjectAPIPermissionTestBase):
 
     def setUp(self):
         super().setUp()
-        self.cache_backend = get_backend_api('sodar_cache')
+        self.cache_backend = plugin_api.get_backend_api('sodar_cache')
 
 
 class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):

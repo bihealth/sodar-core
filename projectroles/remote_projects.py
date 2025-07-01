@@ -33,11 +33,12 @@ from projectroles.models import (
     ROLE_RANKING,
     AppSetting,
 )
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 
 
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -76,7 +77,7 @@ class RemoteProjectAPI:
         #: Remote source site currently being worked with
         self.source_site = None
         #: Timeline API
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         #: User for storing timeline events
         self.tl_user = None
         #: Default owner for projects
@@ -908,7 +909,7 @@ class RemoteProjectAPI:
         :param project: Project object
         :param project_data: Project sync data (dict)
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         uuid = str(project.sodar_uuid)
         current_users = [v['user'] for k, v in project_data['roles'].items()]
         deleted_roles = (

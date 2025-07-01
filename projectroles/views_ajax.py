@@ -32,7 +32,7 @@ from projectroles.models import (
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import ProjectAppPluginPoint, get_active_plugins
+from projectroles.plugins import ProjectAppPluginPoint, PluginAPI
 from projectroles.utils import get_display_name
 from projectroles.views import ProjectAccessMixin, User
 from projectroles.views_api import (
@@ -41,8 +41,9 @@ from projectroles.views_api import (
 )
 
 
-logger = logging.getLogger(__name__)
 app_settings = AppSettingAPI()
+logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 
 
 # SODAR consants
@@ -393,7 +394,7 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
         )
         plugins = [
             ap
-            for ap in get_active_plugins(plugin_type='project_app')
+            for ap in plugin_api.get_active_plugins(plugin_type='project_app')
             if ap.project_list_columns
             and (
                 ap.name != 'filesfolders'

@@ -10,7 +10,7 @@ from rest_framework.versioning import AcceptHeaderVersioning
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.views_api import (
     SODARAPIGenericProjectMixin,
     SODARPageNumberPagination,
@@ -28,6 +28,9 @@ from filesfolders.views import (
     TL_OBJ_TYPES,
     APP_NAME,
 )
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -109,7 +112,7 @@ class RetrieveUpdateDestroyAPITimelineMixin(FilesfoldersTimelineMixin):
 
     def perform_destroy(self, instance):
         instance.delete()
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
 
         # Add event in Timeline
         if timeline:

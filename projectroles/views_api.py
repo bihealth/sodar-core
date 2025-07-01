@@ -55,7 +55,7 @@ from projectroles.models import (
     ROLE_RANKING,
     ROLE_PROJECT_TYPE_ERROR_MSG,
 )
-from projectroles.plugins import PluginAppSettingDef, get_backend_api
+from projectroles.plugins import PluginAppSettingDef, PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.serializers import (
     ProjectSerializer,
@@ -79,6 +79,7 @@ from projectroles.views import (
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -1279,7 +1280,7 @@ class ProjectSettingSetAPIView(
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         plugin_name = request.data.get('plugin_name')
         setting_name = request.data.get('setting_name')
 

@@ -17,7 +17,7 @@ from django.views.generic import (
 from projectroles.app_settings import AppSettingAPI
 from projectroles.email import send_generic_mail, get_email_user
 from projectroles.models import SODARUserAdditionalEmail, SODAR_CONSTANTS
-from projectroles.plugins import get_active_plugins, get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.views import (
     LoggedInPermissionMixin,
     HTTPRefererMixin,
@@ -28,8 +28,9 @@ from projectroles.views import (
 from userprofile.forms import UserAppSettingsForm, UserEmailForm
 
 
-User = auth.get_user_model()
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
+User = auth.get_user_model()
 
 
 # SODAR Constants
@@ -66,9 +67,9 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
 
     def _get_user_settings(self):
         """Return user setting values"""
-        plugins = get_active_plugins(
+        plugins = plugin_api.get_active_plugins(
             plugin_type='project_app'
-        ) + get_active_plugins(plugin_type='site_app')
+        ) + plugin_api.get_active_plugins(plugin_type='site_app')
         for plugin in plugins + [None]:
             if plugin:
                 name = plugin.name
@@ -187,7 +188,7 @@ class UserEmailCreateView(
     template_name = 'userprofile/email_form.html'
 
     def get_success_url(self):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         self.send_verify_email(self.object)
         if timeline:
             timeline.add_event(

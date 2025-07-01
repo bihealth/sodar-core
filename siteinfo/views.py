@@ -14,8 +14,13 @@ from projectroles.models import (
     AUTH_TYPE_LOCAL,
     AUTH_TYPE_OIDC,
 )
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.views import LoggedInPermissionMixin
+
+
+logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -106,12 +111,6 @@ CORE_SETTINGS = [
 ]
 
 
-# Access Django user model
-User = auth.get_user_model()
-
-logger = logging.getLogger(__name__)
-
-
 class SiteInfoView(LoggedInPermissionMixin, TemplateView):
     """Site info view"""
 
@@ -186,9 +185,9 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         ).count()
 
         # App plugins
-        project_plugins = get_active_plugins('project_app')
-        backend_plugins = get_active_plugins('backend')
-        site_plugins = get_active_plugins('site_app')
+        project_plugins = plugin_api.get_active_plugins('project_app')
+        backend_plugins = plugin_api.get_active_plugins('backend')
+        site_plugins = plugin_api.get_active_plugins('site_app')
 
         # Plugin statistics
         context['project_plugins'] = self._get_plugin_stats(project_plugins)

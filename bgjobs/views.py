@@ -15,7 +15,10 @@ from projectroles.views import (
     ProjectContextMixin,
     ProjectPermissionMixin,
 )
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
+
+
+plugin_api = PluginAPI()
 
 
 # Local variables
@@ -94,7 +97,7 @@ class BackgroundJobClearViewBase(
             bg_job_count = bg_jobs.count()
             bg_jobs.delete()
 
-            timeline = get_backend_api('timeline_backend')
+            timeline = plugin_api.get_backend_api('timeline_backend')
             if timeline:
                 timeline.add_event(
                     project=self.get_project(self.request, self.kwargs),

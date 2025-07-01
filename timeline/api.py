@@ -16,7 +16,7 @@ from djangoplugins.models import PluginPoint
 
 # Projectroles dependency
 from projectroles.models import Project, RemoteSite, SODARUser
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import PluginAPI
 from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
 
@@ -35,6 +35,7 @@ from timeline.models import (
 
 
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 User = get_user_model()
 
 
@@ -336,7 +337,7 @@ class TimelineAPI:
             if plugin_lookup:
                 app_plugin = plugin_lookup.get(plugin_name)
             else:
-                app_plugin = get_app_plugin(plugin_name)
+                app_plugin = plugin_api.get_app_plugin(plugin_name)
             if not app_plugin:
                 msg = PLUGIN_NOT_FOUND_MSG.format(plugin_name=plugin_name)
                 logger.error(msg + f' (UUID={event.sodar_uuid})')

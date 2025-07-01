@@ -55,18 +55,14 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     ROLE_RANKING,
 )
-from projectroles.plugins import (
-    BackendPluginPoint,
-    get_active_plugins,
-    get_app_plugin,
-    get_backend_api,
-)
+from projectroles.plugins import BackendPluginPoint, PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_display_name
 
 
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -373,7 +369,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         if project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
             if request_url.app_name != APP_NAME:
-                app_plugin = get_app_plugin(request_url.app_name)
+                app_plugin = plugin_api.get_app_plugin(request_url.app_name)
                 if app_plugin and app_plugin.category_enable:
                     return True
                 return False
@@ -424,7 +420,7 @@ class PluginContextMixin(ContextMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['app_plugins'] = get_active_plugins(
+        context['app_plugins'] = plugin_api.get_active_plugins(
             plugin_type='project_app', custom_order=True
         )
         return context
@@ -572,7 +568,7 @@ class ProjectListContextMixin:
         ret = []
         for app_plugin in [
             ap
-            for ap in get_active_plugins(plugin_type='project_app')
+            for ap in plugin_api.get_active_plugins(plugin_type='project_app')
             if ap.project_list_columns
         ]:
             # HACK for filesfolders columns (see issues #737 and #738)
@@ -716,7 +712,7 @@ class ProjectSearchMixin:
         :param search_keywords: Optional keywords (list of strings or None)
         :return: List
         """
-        plugins = get_active_plugins(plugin_type='project_app')
+        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         ret = []
         omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
 
@@ -940,16 +936,16 @@ class ProjectModifyPluginViewMixin:
         app_plugins = []
         if modify_api_apps:
             for a in modify_api_apps:
-                plugin = get_app_plugin(a)
+                plugin = plugin_api.get_app_plugin(a)
                 if not plugin:
                     msg = f'Unable to find active plugin "{a}"'
                     logger.error(msg)
                     raise ImproperlyConfigured(msg)
                 app_plugins.append(plugin)
         else:
-            app_plugins = get_active_plugins('backend') + get_active_plugins(
-                'project_app'
-            )
+            app_plugins = plugin_api.get_active_plugins(
+                'backend'
+            ) + plugin_api.get_active_plugins('project_app')
 
         called_plugins = []
         for p in app_plugins:
@@ -1020,7 +1016,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         :param user: User initiating the project update
         :return: Dict
         """
-        app_plugins = [p for p in get_active_plugins() if p.app_settings]
+        app_plugins = [
+            p for p in plugin_api.get_active_plugins() if p.app_settings
+        ]
         project_settings = {}
         p_kwargs = {}
         # Show unmodifiable settings to superusers
@@ -1123,7 +1121,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
     @staticmethod
     def _get_timeline_ok_status() -> str:
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             raise ImproperlyConfigured('Timeline backend not found')
         else:
@@ -1206,7 +1204,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         request: HttpRequest,
     ):
         """Create timeline event for action"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return None
         type_str = project.type.capitalize()
@@ -1284,7 +1282,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         Notify users about project creation and update. Displays app alerts
         and/or sends emails depending on the site configuration.
         """
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         # Create alerts and send emails
         owner_as = RoleAssignment.objects.filter(
             project=project, user=owner
@@ -1627,7 +1625,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         :param project: Project object
         :param request: HttpRequest object
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return
         local_users = {
@@ -1681,7 +1679,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         :param project: Project object of project to be deleted
         :param request: HttpRequest object
         """
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         # Call project modify API plugin
         if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             self.call_project_modify_api(
@@ -1847,7 +1845,7 @@ class ProjectArchiveView(
         :param action: String ("archive" or "unarchive")
         :param user: User initiating project archiving/unarchiving
         """
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         if not app_alerts:
             return
         alert_p = get_display_name(PROJECT_TYPE_PROJECT, title=True)
@@ -1895,7 +1893,7 @@ class ProjectArchiveView(
 
     def post(self, request, **kwargs):
         """Override post() to handle POST from confirmation template"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         project = self.get_project()
         redirect_url = reverse(
             'projectroles:detail', kwargs={'project': project.sodar_uuid}
@@ -2121,8 +2119,8 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         :param promote: Promoting an inherited user (boolean, default=False)
         :return: Created or updated RoleAssignment object
         """
-        app_alerts = get_backend_api('appalerts_backend')
-        timeline = get_backend_api('timeline_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         tl_event = None
         action = PROJECT_ACTION_UPDATE if instance else PROJECT_ACTION_CREATE
         user = data.get('user')
@@ -2360,8 +2358,8 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         :param request: HttpRequest object or None
         :param notify: Add app alerts and send email if True
         """
-        app_alerts = get_backend_api('appalerts_backend')
-        timeline = get_backend_api('timeline_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         tl_event = None
         project = role_as.project
         user = role_as.user
@@ -2680,11 +2678,11 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     role_owner = None
 
     def _get_timeline_ok_status(self) -> Optional[str]:
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         return timeline.TL_STATUS_OK if timeline else None
 
     def _get_timeline_failed_status(self) -> Optional[str]:
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         return timeline.TL_STATUS_FAILED if timeline else None
 
     def _create_timeline_event(
@@ -2704,7 +2702,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :param old_owner_role: Role object for old owner's new role or None
         :param issuer: User who initiated ownership transfer or None
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return None
         tl_desc = 'transfer ownership from {prev_owner} to {new_owner}, '
@@ -2802,7 +2800,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :param request: HttpRequest object or None
         :param notify_old: Notify old owner (boolean, default=True)
         """
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
         old_owner = old_owner_as.user
         # Old owner inheritance
@@ -3013,7 +3011,7 @@ class ProjectInviteMixin:
         :param resend: Send or resend (bool)
         :param add_message: Add Django message on success/failure (bool)
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         send_str = 'resend' if resend else 'send'
         status_type = timeline.TL_STATUS_OK
         status_desc = None
@@ -3070,7 +3068,7 @@ class ProjectInviteMixin:
         :param request: HttpRequest object
         :return: ProjectInvite object
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if invite:
             invite.active = False
             invite.save()
@@ -3264,7 +3262,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
         timeline: Optional[BackendPluginPoint] = None,
     ):
         """Create role assignment for invited user"""
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         tl_event = None
         if timeline:
             tl_event = timeline.add_event(
@@ -3389,7 +3387,7 @@ class ProjectInviteProcessLoginView(
         invite = self.get_invite(kwargs['secret'])
         if not invite:
             return self.redirect_error(INVITE_NOT_FOUND_MSG)
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         # Check if user has already accepted the invite
         if self.user_role_exists(invite, self.request.user):
             # NOTE: No message, simply redirect
@@ -3434,7 +3432,7 @@ class ProjectInviteProcessNewUserView(ProjectInviteProcessMixin, FormView):
         invite = self.get_invite(self.kwargs['secret'])
         if not invite:
             return self.redirect_error(INVITE_NOT_FOUND_MSG)
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         # Redirect to login process view if OIDC is enabled but local isn't
         if settings.ENABLE_OIDC and not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             return redirect(
@@ -3514,7 +3512,7 @@ class ProjectInviteProcessNewUserView(ProjectInviteProcessMixin, FormView):
         invite = self.get_invite(self.kwargs['secret'])
         if not invite:
             return redirect(reverse('home'))
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
 
         # Check if local users are allowed
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
@@ -3752,7 +3750,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         :param form_action: String
         :param form_action:
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return
         status = form_action if form_action == 'set' else form_action[0:-1]
@@ -3867,7 +3865,7 @@ class RemoteSiteDeleteView(
     slug_field = 'sodar_uuid'
 
     def get_success_url(self):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if timeline:
             event_name = '{}_site_delete'.format(
                 'source' if self.object.mode == SITE_MODE_SOURCE else 'target'
@@ -3939,7 +3937,7 @@ class RemoteProjectBatchUpdateView(
         return context
 
     def post(self, request, *args, **kwargs):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         post_data = request.POST
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
@@ -4099,7 +4097,7 @@ class RemoteProjectSyncView(
             )
             return redirect(redirect_url)
 
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         remote_api = RemoteProjectAPI()
         context = self.get_context_data(*args, **kwargs)
         source_site = context['site']
