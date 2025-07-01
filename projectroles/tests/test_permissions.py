@@ -44,6 +44,37 @@ REMOTE_SITE_SECRET = build_secret()
 class PermissionTestMixin:
     """Helper class for permission tests"""
 
+    def setup_user_helpers(self):
+        """
+        Set up user helpers for easy reference to specific groups.
+
+        NOTE: Expects the users having set up in the class beforehand.
+        """
+        self.all_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+            self.user_no_roles,
+            self.anonymous,
+        ]  # All users
+        # All authenticated users
+        self.auth_users = self.all_users[:-1]
+        # All users except for superuser
+        self.non_superusers = self.all_users[1:]
+        # All authenticated non-superusers
+        self.auth_non_superusers = self.non_superusers[:-1]
+        # No roles user and anonymous user
+        self.no_role_users = [self.user_no_roles, self.anonymous]
+
     def set_site_read_only(self, value: bool = True):
         """
         Helper to set site read only mode to the desired value.
@@ -251,31 +282,8 @@ class ProjectPermissionTestBase(
         self.viewer_as = self.make_assignment(
             self.project, self.user_viewer, self.role_viewer
         )
-        # User helpers
-        self.all_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_viewer_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_viewer,
-            self.user_no_roles,
-            self.anonymous,
-        ]  # All users
-        # All authenticated users
-        self.auth_users = self.all_users[:-1]
-        # All users except for superuser
-        self.non_superusers = self.all_users[1:]
-        # All authenticated non-superusers
-        self.auth_non_superusers = self.non_superusers[:-1]
-        # No roles user and anonymous user
-        self.no_role_users = [self.user_no_roles, self.anonymous]
+        # Set up user helpers
+        self.setup_user_helpers()
 
 
 class SiteAppPermissionTestBase(

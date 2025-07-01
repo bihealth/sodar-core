@@ -41,6 +41,7 @@ Added
     - ``PROJECTROLES_ROLE_PAGINATION`` Django setting (#1712)
     - ``ProjectRoleView`` user icon tooltips (#1688)
     - ``PluginAPI`` class for plugin helpers (#1335)
+    - ``PermissionTestMixin.setup_user_helpers()`` helper (#1600)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 
@@ -72,6 +73,7 @@ Changed
     - Render project role list using DataTables (#1712)
     - Deprecate plugin helper methods in ``projectroles.plugins`` root (#1335)
     - Set default delay for Bootstrap tooltips (#1651)
+    - Move permission test user helper setup in ``PermissionTestMixin.setup_user_helpers()`` (#1600)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)
