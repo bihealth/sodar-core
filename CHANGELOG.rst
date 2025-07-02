@@ -42,6 +42,7 @@ Added
     - ``ProjectRoleView`` user icon tooltips (#1688)
     - ``PluginAPI`` class for plugin helpers (#1335)
     - ``PermissionTestMixin.setup_user_helpers()`` helper (#1600)
+    - ``ip_allow_list`` validation (#1667)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 
@@ -74,6 +75,7 @@ Changed
     - Deprecate plugin helper methods in ``projectroles.plugins`` root (#1335)
     - Set default delay for Bootstrap tooltips (#1651)
     - Move permission test user helper setup in ``PermissionTestMixin.setup_user_helpers()`` (#1600)
+    - Replace ``ip_allowlist`` JSON setting with ``ip_allow_list`` string setting (#1667)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

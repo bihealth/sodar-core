@@ -206,16 +206,18 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
                 if v:
                     client_address = ip_address(v.split(',')[0])
                     break
-            else:  # Can't fetch client ip address
+            else:  # Can't fetch client IP address
                 return False
 
-            for record in app_settings.get(APP_NAME, 'ip_allowlist', project):
-                if '/' in record:
-                    if client_address in ip_network(record):
+            ips = app_settings.get(APP_NAME, 'ip_allow_list', project)
+            if not ips:
+                return False
+            for ip in [s.strip() for s in ips.split(',')]:
+                if '/' in ip:
+                    if client_address in ip_network(ip):
                         break
-                else:
-                    if client_address == ip_address(record):
-                        break
+                elif client_address == ip_address(ip):
+                    break
             else:
                 return False
 
@@ -1306,6 +1308,22 @@ class ProjectSettingSetAPIView(
                 sodar_uuid=request.data['user']
             ).first()
         self.check_project_perms(s_def, project, request, setting_user)
+
+        # Custom projectroles validation
+        if (
+            plugin_name == APP_NAME
+            and setting_name == 'ip_allow_list'
+            and value
+        ):
+            ips = [s.strip() for s in value.split(',')]
+            for ip in ips:
+                try:
+                    if '/' in ip:
+                        ip_network(ip)
+                    else:
+                        ip_address(ip)
+                except ValueError as ex:
+                    raise serializers.ValidationError(ex)
 
         # Set setting value with validation, return possible errors
         try:

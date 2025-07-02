@@ -182,7 +182,11 @@ class RemoteProjectAPI:
 
     @classmethod
     def _add_app_setting(
-        cls, sync_data: dict, app_setting: AppSetting, all_defs: dict
+        cls,
+        sync_data: dict,
+        app_setting: AppSetting,
+        all_defs: dict,
+        req_version: Optional[str] = None,
     ) -> dict:
         """
         Add app setting to sync data on source site.
@@ -190,6 +194,7 @@ class RemoteProjectAPI:
         :param sync_data: Sync data to be updated (dict)
         :param app_setting: AppSetting object
         :param all_defs: All settings defs (dict)
+        :param req_version: Request version (string or None for default)
         :return: Updated sync_data (dict)
         """
         if app_setting.app_plugin:
@@ -202,12 +207,32 @@ class RemoteProjectAPI:
                 f'Definition not found for setting: {app_setting.name}'
             )
 
+        # Return old-style ip_allowlist if request version <2.0
+        if (
+            app_setting.name == 'ip_allow_list'
+            and req_version
+            and parse_version(req_version) < VERSION_2_0
+        ):
+            s_name = 'ip_allowlist'
+            s_type = APP_SETTING_TYPE_JSON
+            s_value = ''
+            s_value_json = (
+                [v.strip() for v in app_setting.value.split(',')]
+                if app_setting.value
+                else []
+            )
+        else:
+            s_name = app_setting.name
+            s_type = app_setting.type
+            s_value = app_setting.value
+            s_value_json = app_setting.value_json
+
         # NOTE: Provide user_name in case of local target users
         sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
-            'name': app_setting.name,
-            'type': app_setting.type,
-            'value': app_setting.value,
-            'value_json': app_setting.value_json,
+            'name': s_name,
+            'type': s_type,
+            'value': s_value,
+            'value_json': s_value_json,
             'app_plugin': (
                 app_setting.app_plugin.name if app_setting.app_plugin else None
             ),
@@ -256,7 +281,7 @@ class RemoteProjectAPI:
         target site.
 
         :param target_site: RemoteSite object for target site
-        :param req_version: Request version (string)
+        :param req_version: Request version (string or None for default)
         :return: Dict
         """
         sync_data = {
@@ -284,7 +309,9 @@ class RemoteProjectAPI:
             # Get and add app settings for project
             for a in AppSetting.objects.filter(project=project):
                 try:
-                    sync_data = self._add_app_setting(sync_data, a, all_defs)
+                    sync_data = self._add_app_setting(
+                        sync_data, a, all_defs, req_version
+                    )
                 except Exception as ex:
                     logger.error(self._get_app_setting_error(a, ex))
 

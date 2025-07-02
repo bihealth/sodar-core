@@ -1013,7 +1013,7 @@ class TestProjectCreateView(
             'project_str_setting',
             'project_str_setting_options',
             'allow_public_links',
-            'ip_allowlist',
+            'ip_allow_list',
             'ip_restrict',
             'project_access_block',
         ]
@@ -1330,7 +1330,7 @@ class TestProjectUpdateView(
             str(project.sodar_uuid)
         )
         ps['settings.projectroles.ip_restrict'] = True
-        ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
+        ps['settings.projectroles.ip_allow_list'] = '192.168.1.1'
         return ps
 
     def _assert_app_settings(self, post_settings: dict):
@@ -1597,7 +1597,7 @@ class TestProjectUpdateView(
             form.fields['settings.projectroles.ip_restrict'].disabled
         )
         self.assertTrue(
-            form.fields['settings.projectroles.ip_allowlist'].disabled
+            form.fields['settings.projectroles.ip_allow_list'].disabled
         )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -2135,7 +2135,7 @@ class TestProjectUpdateView(
             'settings.example_project_app.project_callable_setting_options'
         ] = str(self.project.sodar_uuid)
         post_data['settings.projectroles.ip_restrict'] = True
-        post_data['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
+        post_data['settings.projectroles.ip_allow_list'] = '192.168.1.1'
         self.assertEqual(Project.objects.all().count(), 2)
         with self.login(self.user):
             response = self.client.post(self.url, post_data)
@@ -2161,6 +2161,23 @@ class TestProjectForm(
             'projectroles:update',
             kwargs={'project': self.project.sodar_uuid},
         )
+        self.post_data = {
+            'settings.example_project_app.project_str_setting': 'updated',
+            'settings.example_project_app.project_int_setting': 170,
+            'settings.example_project_app.'
+            'project_str_setting_options': 'string2',
+            'settings.example_project_app.project_int_setting_options': 1,
+            'settings.example_project_app.project_bool_setting': True,
+            'settings.example_project_app.'
+            'project_json_setting': '{"Test": "Updated"}',
+            'settings.example_project_app.'
+            'project_callable_setting_options': str(self.project.sodar_uuid),
+            'settings.projectroles.ip_restrict': True,
+            'settings.projectroles.ip_allow_list': '192.168.1.1',
+            'owner': self.user.sodar_uuid,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+        }
 
     def test_get(self):
         """Test GET for settings values"""
@@ -2176,7 +2193,7 @@ class TestProjectForm(
         field = fields['settings.example_project_app.project_int_setting']
         self.assertEqual(field.widget.attrs['placeholder'], 0)
         self.assertIsNotNone(fields['settings.projectroles.ip_restrict'])
-        self.assertIsNotNone(fields['settings.projectroles.ip_allowlist'])
+        self.assertIsNotNone(fields['settings.projectroles.ip_allow_list'])
 
     def test_post(self):
         """Test POST to modify settings values"""
@@ -2225,32 +2242,13 @@ class TestProjectForm(
             False,
         )
         self.assertEqual(
-            app_settings.get(APP_NAME, 'ip_allowlist', project=self.project),
-            [],
+            app_settings.get(APP_NAME, 'ip_allow_list', project=self.project),
+            '',
         )
 
-        data = {
-            'settings.example_project_app.project_str_setting': 'updated',
-            'settings.example_project_app.project_int_setting': 170,
-            'settings.example_project_app.'
-            'project_str_setting_options': 'string2',
-            'settings.example_project_app.project_int_setting_options': 1,
-            'settings.example_project_app.project_bool_setting': True,
-            'settings.example_project_app.'
-            'project_json_setting': '{"Test": "Updated"}',
-            'settings.example_project_app.'
-            'project_callable_setting_options': str(self.project.sodar_uuid),
-            'settings.projectroles.ip_restrict': True,
-            'settings.projectroles.ip_allowlist': '["192.168.1.1"]',
-            'owner': self.user.sodar_uuid,
-            'title': 'TestProject',
-            'type': PROJECT_TYPE_PROJECT,
-        }
         with self.login(self.user):
-            response = self.client.post(self.url, data)
-
-        # Assert redirect
-        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+            # Assert redirect
             self.assertRedirects(
                 response,
                 reverse(
@@ -2304,8 +2302,57 @@ class TestProjectForm(
             True,
         )
         self.assertEqual(
-            app_settings.get(APP_NAME, 'ip_allowlist', project=self.project),
-            ['192.168.1.1'],
+            app_settings.get(APP_NAME, 'ip_allow_list', project=self.project),
+            '192.168.1.1',
+        )
+
+    def test_post_ip_allow_list_network(self):
+        """Test POST with ip_allow_list network value"""
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'ip_allow_list', project=self.project),
+            '',
+        )
+        self.post_data['settings.projectroles.ip_allow_list'] = '192.168.1.0/24'
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'ip_allow_list', project=self.project),
+            '192.168.1.0/24',
+        )
+
+    def test_post_ip_allow_list_multiple(self):
+        """Test POST with ip_allow_list multiple values"""
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'ip_allow_list', project=self.project),
+            '',
+        )
+        self.post_data['settings.projectroles.ip_allow_list'] = (
+            '192.168.1.1,192.168.1.0/24'
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'ip_allow_list', project=self.project),
+            '192.168.1.1,192.168.1.0/24',
+        )
+
+    def test_post_ip_allow_list_invalid(self):
+        """Test POST with ip_allow_list invalid value"""
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'ip_allow_list', project=self.project),
+            '',
+        )
+        self.post_data['settings.projectroles.ip_allow_list'] = (
+            '192.168.1.1,abcdef'
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            app_settings.get(APP_NAME, 'ip_allow_list', project=self.project),
+            '',
         )
 
 
@@ -2357,8 +2404,8 @@ class TestProjectFormTarget(
             self.assertIsNotNone(fields['settings.example_project_app.' + s])
         self.assertIsNotNone(fields['settings.projectroles.ip_restrict'])
         self.assertTrue(fields['settings.projectroles.ip_restrict'].disabled)
-        self.assertIsNotNone(fields['settings.projectroles.ip_allowlist'])
-        self.assertTrue(fields['settings.projectroles.ip_allowlist'].disabled)
+        self.assertIsNotNone(fields['settings.projectroles.ip_allow_list'])
+        self.assertTrue(fields['settings.projectroles.ip_allow_list'].disabled)
 
     def test_post(self):
         """Test POST to modify settings values as target"""

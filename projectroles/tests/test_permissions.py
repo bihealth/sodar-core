@@ -32,7 +32,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
-APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
+APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -170,7 +170,7 @@ class PermissionTestMixin:
 class IPAllowMixin(AppSettingMixin):
     """Mixin for IP allowing test helpers"""
 
-    def setup_ip_allowing(self, ip_list: list):
+    def setup_ip_allowing(self, ip_list: list[str] = []):
         # Init IP restrict setting
         self.make_setting(
             plugin_name=APP_NAME,
@@ -182,10 +182,10 @@ class IPAllowMixin(AppSettingMixin):
         # Init IP allowlist setting
         self.make_setting(
             plugin_name=APP_NAME,
-            name='ip_allowlist',
-            setting_type=APP_SETTING_TYPE_JSON,
-            value=None,
-            value_json=ip_list,
+            name='ip_allow_list',
+            setting_type=APP_SETTING_TYPE_STRING,
+            value=','.join(ip_list),
+            value_json=None,
             project=self.project,
         )
 
@@ -2590,7 +2590,7 @@ class TestIPAllowing(IPAllowMixin, ProjectPermissionTestBase):
 
     def test_get_http_x_forwarded_for_block_all(self):
         """Test GET with HTTP_X_FORWARDED_FOR and block all"""
-        self.setup_ip_allowing([])
+        self.setup_ip_allowing()
         good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -2620,7 +2620,7 @@ class TestIPAllowing(IPAllowMixin, ProjectPermissionTestBase):
 
     def test_get_x_forwarded_for_block_all(self):
         """Test GET with X_FORWARDED_FOR and block all"""
-        self.setup_ip_allowing([])
+        self.setup_ip_allowing()
         good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -2650,7 +2650,7 @@ class TestIPAllowing(IPAllowMixin, ProjectPermissionTestBase):
 
     def test_get_forwarded_block_all(self):
         """Test GET with FORWARDED and block all"""
-        self.setup_ip_allowing([])
+        self.setup_ip_allowing()
         good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -2680,7 +2680,7 @@ class TestIPAllowing(IPAllowMixin, ProjectPermissionTestBase):
 
     def test_get_remote_addr_block_all(self):
         """Test GET with REMOTE_ADDR fwd and block all"""
-        self.setup_ip_allowing([])
+        self.setup_ip_allowing()
         good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -2959,7 +2959,7 @@ class TestIPAllowingTargetSite(
 
     def test_get_http_x_forwarded_for_block_all(self):
         """Test GET with X_FORWARDED_FOR and block all"""
-        self.setup_ip_allowing([])
+        self.setup_ip_allowing()
         good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -2984,7 +2984,7 @@ class TestIPAllowingTargetSite(
 
     def test_get_x_forwarded_for_block_all(self):
         """Test GET with FORWARDED and block all"""
-        self.setup_ip_allowing([])
+        self.setup_ip_allowing()
         good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -3009,7 +3009,7 @@ class TestIPAllowingTargetSite(
 
     def test_get_forwarded_block_all(self):
         """Test GET with FORWARDED and block all"""
-        self.setup_ip_allowing([])
+        self.setup_ip_allowing()
         good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -3034,7 +3034,7 @@ class TestIPAllowingTargetSite(
 
     def test_get_remote_addr_block_all(self):
         """Test GET with REMOTE_ADDR fwd and block all"""
-        self.setup_ip_allowing([])
+        self.setup_ip_allowing()
         good_users = [
             self.superuser,
             self.user_owner_cat,

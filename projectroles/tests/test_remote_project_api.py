@@ -138,7 +138,7 @@ NEW_PEER_DESC = PEER_SITE_DESC + ' new'
 NEW_PEER_USER_DISPLAY = not PEER_SITE_USER_DISPLAY
 
 SET_IP_RESTRICT_UUID = str(uuid.uuid4())
-SET_IP_ALLOWLIST_UUID = str(uuid.uuid4())
+SET_IP_ALLOW_LIST_UUID = str(uuid.uuid4())
 SET_STAR_UUID = str(uuid.uuid4())
 
 EXAMPLE_APP_NAME = 'example_project_app'
@@ -475,12 +475,12 @@ class TestGetSourceData(
             value=True,
             project=self.project,
         )
-        set_ip_allowlist = self.make_setting(
+        set_ip_allow_list = self.make_setting(
             plugin_name=APP_NAME,
-            name='ip_allowlist',
-            setting_type=APP_SETTING_TYPE_JSON,
-            value=None,
-            value_json=['127.0.0.1'],
+            name='ip_allow_list',
+            setting_type=APP_SETTING_TYPE_STRING,
+            value='127.0.0.1',
+            value_json=None,
             project=self.project,
         )
         set_star = self.make_setting(
@@ -517,12 +517,12 @@ class TestGetSourceData(
             'global': True,
         }
         self.assertEqual(set_data, expected)
-        set_data = sync_data['app_settings'][str(set_ip_allowlist.sodar_uuid)]
+        set_data = sync_data['app_settings'][str(set_ip_allow_list.sodar_uuid)]
         expected = {
-            'name': set_ip_allowlist.name,
-            'type': set_ip_allowlist.type,
-            'value': None,
-            'value_json': set_ip_allowlist.value_json,
+            'name': set_ip_allow_list.name,
+            'type': set_ip_allow_list.type,
+            'value': set_ip_allow_list.value,
+            'value_json': None,
             'app_plugin': None,
             'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': None,
@@ -650,6 +650,42 @@ class TestGetSourceData(
         self.assertIn(str(self.user_source.sodar_uuid), sync_data['users'])
         self.assertIn(str(user_no_roles.sodar_uuid), sync_data['users'])
         self.assertEqual(len(sync_data['app_settings']), 2)
+
+    def test_get_settings_v1_0(self):
+        """Test get_source_data() with app settings and API v1.0"""
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        local_project = self.make_project(
+            'LocalProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.make_assignment(local_project, self.user_source, self.role_owner)
+        set_ip_allow_list = self.make_setting(
+            plugin_name=APP_NAME,
+            name='ip_allow_list',
+            setting_type=APP_SETTING_TYPE_STRING,
+            value='127.0.0.1,192.168.0.1',
+            value_json=None,
+            project=self.project,
+        )
+        self.get_kw['req_version'] = '1.0'
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
+
+        set_data = sync_data['app_settings'][str(set_ip_allow_list.sodar_uuid)]
+        expected = {
+            'name': 'ip_allowlist',
+            'type': APP_SETTING_TYPE_JSON,
+            'value': '',
+            'value_json': ['127.0.0.1', '192.168.0.1'],
+            'app_plugin': None,
+            'project_uuid': str(self.project.sodar_uuid),
+            'user_uuid': None,
+            'user_name': None,
+            'global': True,
+        }
+        self.assertEqual(set_data, expected)
 
     def test_get_revoked(self):
         """Test get_source_data() with REVOKED level"""
@@ -851,11 +887,11 @@ class SyncRemoteDataTestBase(
                     'user_uuid': None,
                     'global': True,
                 },
-                SET_IP_ALLOWLIST_UUID: {
-                    'name': 'ip_allowlist',
-                    'type': APP_SETTING_TYPE_JSON,
+                SET_IP_ALLOW_LIST_UUID: {
+                    'name': 'ip_allow_list',
+                    'type': APP_SETTING_TYPE_STRING,
                     'value': '',
-                    'value_json': [],
+                    'value_json': None,
                     'app_plugin': None,  # None is for 'projectroles' app
                     'project_uuid': SOURCE_PROJECT_UUID,
                     'user_uuid': None,
@@ -1169,16 +1205,16 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
-            'name': 'ip_allowlist',
-            'type': APP_SETTING_TYPE_JSON,
+            'name': 'ip_allow_list',
+            'type': APP_SETTING_TYPE_STRING,
             'value': '',
-            'value_json': [],
+            'value_json': None,
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
             'user_modifiable': True,
         }
-        self.assert_app_setting(SET_IP_ALLOWLIST_UUID, expected)
+        self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
             'name': 'project_star',
             'type': APP_SETTING_TYPE_BOOLEAN,
@@ -1224,7 +1260,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             SOURCE_PROJECT_ROLE4_UUID
         ]['status'] = 'created'
         expected['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'created'
-        expected['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'created'
+        expected['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'created'
         expected['app_settings'][SET_STAR_UUID]['status'] = 'created'
         self.assertEqual(self.default_data, expected)
 
@@ -1232,7 +1268,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         """Test sync with local app setting"""
         remote_data = self.default_data
         remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
-        remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['global'] = False
+        remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['global'] = False
         expected = deepcopy(remote_data)
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
@@ -1246,7 +1282,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             SOURCE_PROJECT_ROLE_UUID
         ]['status'] = 'created'
         expected['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'created'
-        expected['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'created'
+        expected['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'created'
         expected['app_settings'][SET_STAR_UUID]['status'] = 'created'
         self.assertEqual(remote_data, expected)
 
@@ -1330,7 +1366,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'status'
         ] = 'created'
         expected['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'created'
-        expected['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'created'
+        expected['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'created'
         expected['app_settings'][SET_STAR_UUID]['status'] = 'created'
         self.assertEqual(remote_data, expected)
 
@@ -1773,12 +1809,12 @@ class TestSyncRemoteDataUpdate(
         )
         self.make_setting(
             plugin_name=APP_NAME,
-            name='ip_allowlist',
-            setting_type=APP_SETTING_TYPE_JSON,
-            value=None,
-            value_json=[],
+            name='ip_allow_list',
+            setting_type=APP_SETTING_TYPE_STRING,
+            value='',
+            value_json=None,
             project=self.project_obj,
-            sodar_uuid=SET_IP_ALLOWLIST_UUID,
+            sodar_uuid=SET_IP_ALLOW_LIST_UUID,
         )
         self.make_setting(
             plugin_name=APP_NAME,
@@ -1835,9 +1871,10 @@ class TestSyncRemoteDataUpdate(
         og_data = deepcopy(remote_data)
         # Change projectroles app settings
         remote_data['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
-        remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['value_json'] = [
-            '192.168.1.1'
-        ]
+        remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
+            'value'
+        ] = '192.168.1.1'
+
         self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1989,16 +2026,16 @@ class TestSyncRemoteDataUpdate(
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
-            'name': 'ip_allowlist',
-            'type': APP_SETTING_TYPE_JSON,
-            'value': '',
-            'value_json': ['192.168.1.1'],
+            'name': 'ip_allow_list',
+            'type': APP_SETTING_TYPE_STRING,
+            'value': '192.168.1.1',
+            'value_json': None,
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
             'user_modifiable': True,
         }
-        self.assert_app_setting(SET_IP_ALLOWLIST_UUID, expected)
+        self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
             'name': 'project_star',
             'type': APP_SETTING_TYPE_BOOLEAN,
@@ -2021,11 +2058,11 @@ class TestSyncRemoteDataUpdate(
             'status'
         ] = 'created'
         expected['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
-        expected['app_settings'][SET_IP_ALLOWLIST_UUID]['value_json'] = [
-            '192.168.1.1'
-        ]
+        expected['app_settings'][SET_IP_ALLOW_LIST_UUID][
+            'value'
+        ] = '192.168.1.1'
         expected['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'updated'
-        expected['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'updated'
+        expected['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'updated'
         expected['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
         self.assertEqual(remote_data, expected)
 
@@ -2134,9 +2171,9 @@ class TestSyncRemoteDataUpdate(
         """Test update with local app settings (should not be updated)"""
         remote_data = self.default_data
         remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
-        remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['global'] = False
+        remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['global'] = False
         remote_data['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
-        remote_data['app_settings'][SET_IP_ALLOWLIST_UUID]['value_json'] = [
+        remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['value_json'] = [
             '192.168.1.1'
         ]
         og_data = deepcopy(remote_data)
@@ -2154,16 +2191,16 @@ class TestSyncRemoteDataUpdate(
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
-            'name': 'ip_allowlist',
-            'type': APP_SETTING_TYPE_JSON,
-            'value': None,
-            'value_json': [],
+            'name': 'ip_allow_list',
+            'type': APP_SETTING_TYPE_STRING,
+            'value': '',
+            'value_json': None,
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
             'user_modifiable': True,
         }
-        self.assert_app_setting(SET_IP_ALLOWLIST_UUID, expected)
+        self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
             'name': 'project_star',
             'type': APP_SETTING_TYPE_BOOLEAN,
@@ -2180,7 +2217,7 @@ class TestSyncRemoteDataUpdate(
         og_data['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
         og_data['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
         og_data['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'skipped'
-        og_data['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'skipped'
         og_data['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
         self.assertEqual(remote_data, og_data)
 
@@ -2349,7 +2386,7 @@ class TestSyncRemoteDataUpdate(
             'status': 'deleted',
         }
         og_data['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'skipped'
-        og_data['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'skipped'
         og_data['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
         self.assertEqual(remote_data, og_data)
 
@@ -2486,7 +2523,7 @@ class TestSyncRemoteDataUpdate(
         self.assertEqual(peer_project_dict, expected)
 
         og_data['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'skipped'
-        og_data['app_settings'][SET_IP_ALLOWLIST_UUID]['status'] = 'skipped'
+        og_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'skipped'
         og_data['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
         self.assertEqual(og_data, remote_data)
 

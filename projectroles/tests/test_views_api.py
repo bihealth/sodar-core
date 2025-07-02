@@ -3569,6 +3569,56 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         obj = AppSetting.objects.get(name=setting_name, project=self.project)
         self.assertEqual(obj.get_value(), value)
 
+    def test_post_ip_allow_list(self):
+        """Test POST with ip_allow_list"""
+        setting_name = 'ip_allow_list'
+        value = '192.168.0.1'
+        self.assertIsNone(
+            AppSetting.objects.filter(
+                name=setting_name, project=self.project
+            ).first()
+        )
+        post_data = {
+            'plugin_name': APP_NAME,
+            'setting_name': setting_name,
+            'value': value,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        obj = AppSetting.objects.get(name=setting_name, project=self.project)
+        self.assertEqual(obj.get_value(), value)
+
+    def test_post_ip_allow_list_multiple(self):
+        """Test POST with ip_allow_list with multiple values"""
+        setting_name = 'ip_allow_list'
+        value = '192.168.1.1,192.168.1.0/24'
+        post_data = {
+            'plugin_name': APP_NAME,
+            'setting_name': setting_name,
+            'value': value,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        obj = AppSetting.objects.get(name=setting_name, project=self.project)
+        self.assertEqual(obj.get_value(), value)
+
+    def test_post_ip_allow_list_invalid(self):
+        """Test POST with ip_allow_list with invalid value"""
+        setting_name = 'ip_allow_list'
+        value = '192.168.1.1,abcdef'
+        post_data = {
+            'plugin_name': APP_NAME,
+            'setting_name': setting_name,
+            'value': value,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertIsNone(
+            AppSetting.objects.filter(
+                name=setting_name, project=self.project
+            ).first()
+        )
+
 
 class TestUserSettingRetrievePIView(
     AppSettingMixin, AppSettingInitMixin, ProjectrolesAPIViewTestBase
@@ -4148,10 +4198,10 @@ class TestIPAllowing(AppSettingMixin, ProjectrolesAPIViewTestBase):
         # Init IP allowlist setting
         self.make_setting(
             plugin_name=APP_NAME,
-            name='ip_allowlist',
-            setting_type=APP_SETTING_TYPE_JSON,
-            value=None,
-            value_json=ip_list,
+            name='ip_allow_list',
+            setting_type=APP_SETTING_TYPE_STRING,
+            value=','.join(ip_list),
+            value_json=None,
             project=self.project,
         )
         return user  # , user_as, self.cat_owner_as

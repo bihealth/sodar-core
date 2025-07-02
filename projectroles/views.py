@@ -353,14 +353,17 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
                 if v:
                     client_address = ip_address(v.split(',')[0])
                     break
-            else:  # Can't fetch client ip address
+            else:  # Can't fetch client IP address
                 return False
 
-            for record in app_settings.get(APP_NAME, 'ip_allowlist', project):
-                if '/' in record:
-                    if client_address in ip_network(record):
+            ips = app_settings.get(APP_NAME, 'ip_allow_list', project)
+            if not ips:
+                return False
+            for ip in [s.strip() for s in ips.split(',')]:
+                if '/' in ip:
+                    if client_address in ip_network(ip):
                         break
-                elif client_address == ip_address(record):
+                elif client_address == ip_address(ip):
                     break
             else:
                 return False

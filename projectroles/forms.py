@@ -3,6 +3,7 @@
 import json
 import logging
 
+from ipaddress import ip_address, ip_network
 from typing import Any, Optional
 
 from django import forms
@@ -862,6 +863,19 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             self.cleaned_data[key] = value
         for field, error in errors:
             self.add_error(field, error)
+        # Custom projectroles validation
+        ip_field = 'settings.projectroles.ip_allow_list'
+        if self.cleaned_data.get(ip_field):
+            ips = [s.strip() for s in self.cleaned_data[ip_field].split(',')]
+            for ip in ips:
+                try:
+                    if '/' in ip:
+                        ip_network(ip)
+                    else:
+                        ip_address(ip)
+                except ValueError as ex:
+                    self.add_error(ip_field, ex)
+                    break
         return self.cleaned_data
 
 

@@ -242,9 +242,9 @@ The projectroles app provides the following built-in app settings with the
 project scope:
 
 IP restrict
-    Restrict project access by an allowed IP list if enabled.
+    Restrict project access to the IP allow list if enabled.
 IP allow list
-    List of allowed IP addresses for project access.
+    Comma-separated list of allowed IP addresses for project access.
 Block project access
     Temporarily block all non-superuser access to project views. This setting is
     only available for superusers. It is intended for cases where e.g. problems
