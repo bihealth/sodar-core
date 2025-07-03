@@ -76,6 +76,7 @@ Changed
     - Set default delay for Bootstrap tooltips (#1651)
     - Move permission test user helper setup in ``PermissionTestMixin.setup_user_helpers()`` (#1600)
     - Replace ``ip_allowlist`` JSON setting with ``ip_allow_list`` string setting (#1667)
+    - Refactor remote sync API tests (#1323, #1723)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)
