@@ -386,13 +386,16 @@ class ProjectFileView(
         context['links'] = HyperLink.objects.filter(
             project=project, folder=root_folder
         )
+        context['allow_public_links'] = app_settings.get(
+            APP_NAME, 'allow_public_links', project=project
+        )
+
+        # Get folder ReadMe
         folder_pk = (
             Folder.objects.get(sodar_uuid=self.kwargs['folder']).pk
             if 'folder' in self.kwargs
             else None
         )
-
-        # Get folder ReadMe
         readme_md = File.objects.get_folder_readme(
             project_pk=project.pk, folder_pk=folder_pk, mimetype='text/markdown'
         )

@@ -59,6 +59,7 @@ Changed
     - Update usage of deprecated plugin helpers (#1335)
 - **Filesfolders**
     - Refactor serializers (#1689)
+    - Refactor view context data and helpers (#1685)
 - **Projectroles**
     - Move UI test helpers to ``UITestMixin`` (#1682)
     - Upgrade projectroles REST API version to v2.0 (#1554, #1692)
@@ -96,6 +97,8 @@ Fixed
 Removed
 -------
 
+- **Filesfolders**
+    - ``allow_public_links()`` template tag (#1685)
 - **Projectroles**
     - Deprecated ``get_user_display_name()`` utility method (#1884)
     - Deprecated support for app settings definitions as dict (#1532)

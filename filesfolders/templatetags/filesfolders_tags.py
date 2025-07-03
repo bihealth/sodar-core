@@ -40,12 +40,6 @@ def get_details_items(project: Project) -> list:
 
 
 @register.simple_tag
-def allow_public_links(project: Project) -> Any:
-    """Return the boolean value for allow_public_links in project settings"""
-    return app_settings.get(APP_NAME, 'allow_public_links', project)
-
-
-@register.simple_tag
 def get_file_icon(file: File) -> str:
     """Return file icon"""
     ret = 'file-outline'

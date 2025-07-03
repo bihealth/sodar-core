@@ -136,6 +136,7 @@ class TestProjectFileView(ViewTestBase):
         self.assertIsNotNone(response.context['folders'])
         self.assertIsNotNone(response.context['files'])
         self.assertIsNotNone(response.context['links'])
+        self.assertEqual(response.context['allow_public_links'], True)
 
     def test_get_invalid_uuid(self):
         """Test GET with invalid project UUID"""
