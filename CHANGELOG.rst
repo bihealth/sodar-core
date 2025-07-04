@@ -83,6 +83,10 @@ Changed
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)
+- **Userprofile**
+    - Refactor ``details.html`` template (#1580)
+    - Display user setting descriptions as tooltips (#1710)
+    - Move ``UserDetailView`` Django and app settings to view context data (#1725)
 
 Fixed
 -----

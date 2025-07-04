@@ -39,6 +39,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 # Local Constants
 APP_NAME = 'userprofile'
+APP_NAME_PR = 'projectroles'
 SETTING_UPDATE_MSG = 'User settings updated.'
 VERIFY_EMAIL_SUBJECT = 'Verify your additional email address for {site}'
 VERIFY_EMAIL_BODY = r'''
@@ -93,12 +94,17 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
                 }
 
     def get_context_data(self, **kwargs):
-        result = super().get_context_data(**kwargs)
-        result['user_settings'] = list(self._get_user_settings())
-        result['add_emails'] = SODARUserAdditionalEmail.objects.filter(
+        context = super().get_context_data(**kwargs)
+        context['user_settings'] = list(self._get_user_settings())
+        context['add_emails'] = SODARUserAdditionalEmail.objects.filter(
             user=self.request.user
         ).order_by('email')
-        return result
+        context['site_read_only'] = app_settings.get(
+            APP_NAME_PR, 'site_read_only'
+        )
+        context['send_email'] = settings.PROJECTROLES_SEND_EMAIL
+        context['site_mode'] = settings.PROJECTROLES_SITE_MODE
+        return context
 
 
 class UserAppSettingsView(
