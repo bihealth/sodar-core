@@ -44,6 +44,7 @@ Added
     - ``PluginAPI`` class for plugin helpers (#1335)
     - ``PermissionTestMixin.setup_user_helpers()`` helper (#1600)
     - ``ip_allow_list`` validation (#1667)
+    - ``category_public_stats`` app setting (#1701)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 

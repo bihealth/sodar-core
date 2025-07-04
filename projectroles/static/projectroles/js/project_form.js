@@ -5,10 +5,10 @@ $(document).ready(function () {
   $('#div_id_public_access').hide()
   // Hide remote sites by default
   $('div[id^="div_id_remote_site"]').hide()
+  let formTitle = $('#sodar-pr-project-form-title')
 
   // Check if it's category/project update and show corresponding fields
-  if ($('#sodar-pr-project-form-title').attr('data-project-type') ===
-    'PROJECT') {
+  if (formTitle.attr('data-project-type') === 'PROJECT') {
     $('div[id^="div_id_settings"]').each(function () {
       let $parentDiv = $(this)
       let $projectElements = $parentDiv.find(
@@ -20,8 +20,7 @@ $(document).ready(function () {
     $('#div_id_public_access').show()
     $('div[id^="div_id_remote_site"]').show()
   }
-  if ($('#sodar-pr-project-form-title').attr('data-project-type') ===
-    'CATEGORY') {
+  if (formTitle.attr('data-project-type') === 'CATEGORY') {
     $('div[id^="div_id_settings"]').each(function () {
       let $parentDiv = $(this)
       let $categoryElements = $parentDiv.find(

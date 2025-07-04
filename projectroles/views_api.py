@@ -1324,6 +1324,7 @@ class ProjectSettingSetAPIView(
                         ip_address(ip)
                 except ValueError as ex:
                     raise serializers.ValidationError(ex)
+        # TODO: Add custom validation for category_public_stats
 
         # Set setting value with validation, return possible errors
         try:

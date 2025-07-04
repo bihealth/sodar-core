@@ -3619,6 +3619,8 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
             ).first()
         )
 
+    # TODO: Add tests for category_public_stats
+
 
 class TestUserSettingRetrievePIView(
     AppSettingMixin, AppSettingInitMixin, ProjectrolesAPIViewTestBase
