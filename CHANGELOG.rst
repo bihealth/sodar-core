@@ -14,6 +14,7 @@ Added
 - **General**
     - Type hints (#568)
     - Build configuration in ``pyproject.toml`` (#1673)
+    - JQuery beautification support with js-beautify (#1717)
 - **Filesfolders**
     - Search by object UUID (#1546)
 - **Projectroles**
@@ -57,6 +58,7 @@ Changed
     - Move black configuration into ``pyproject.toml`` (#1454)
     - Replace ``_project_badge.html`` includes with ``get_project_badge()`` (#1695)
     - Update usage of deprecated plugin helpers (#1335)
+    - Reformat JQuery files (#1717)
 - **Filesfolders**
     - Refactor serializers (#1689)
     - Refactor view context data and helpers (#1685)

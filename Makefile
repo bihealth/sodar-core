@@ -5,6 +5,7 @@ define USAGE=
 @echo -e "Usage:"
 @echo -e "\tmake black [arg=--<arg>]                 -- black formatting"
 @echo -e "\tmake flake                               -- run flake8"
+@echo -e "\tmake js-beautify arg=<path>              -- run js-beautify on Javascript file(s)"
 @echo -e "\tmake celery                              -- start celery worker"
 @echo -e "\tmake serve                               -- start source server"
 @echo -e "\tmake serve_target                        -- start target server"
@@ -28,8 +29,13 @@ black:
 
 
 .PHONY: flake
-flake:e
+flake:
 	flake8 .
+
+
+.PHONY: js-beautify
+js-beautify:
+	js-beautify -anr -s 2 -w 80 $(arg)
 
 
 .PHONY: celery

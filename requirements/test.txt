@@ -25,3 +25,6 @@ black==25.1.0
 
 # Coveralls for coverage reporting
 coveralls==4.0.1
+
+# JQuery beautifying
+jsbeautifier==1.15.4

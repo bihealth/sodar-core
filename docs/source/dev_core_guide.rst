@@ -42,9 +42,10 @@ Before submitting a pull request for review, ensure the following:
   :ref:`dev_core_guide_test`).
 - You have updated documentation if your pull requests adds or modifies features
   (see :ref:`dev_core_guide_doc`).
-- ``make black`` has been run for the latest commit.
-- ``flake8 .`` produces no errors.
 - All tests pass with ``make test``.
+- ``make black`` has been run for the latest commit.
+- ``make flake8`` produces no errors.
+- ``make js-beautify arg=$filename`` has been run for any updated JQuery files.
 
 Your pull request should work on the Python versions currently supported by the
 SODAR Core dev version. These will be checked by GitHub Actions CI upon pushing
