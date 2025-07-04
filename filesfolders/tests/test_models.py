@@ -41,7 +41,7 @@ class FileMixin:
         folder: Optional[Folder],
         owner: SODARUser,
         description: str,
-        public_url: str,
+        public_url: bool,
         secret: str,
         flag: Optional[str] = None,
     ) -> File:

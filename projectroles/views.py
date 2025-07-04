@@ -1205,7 +1205,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         sites: list,
         project_settings: dict,
         request: HttpRequest,
-    ):
+    ) -> Any:  # Actually TimelineEvent but not declared here
         """Create timeline event for action"""
         timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:

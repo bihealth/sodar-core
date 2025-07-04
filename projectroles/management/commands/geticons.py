@@ -27,7 +27,7 @@ COLL_URL = (
 class Command(BaseCommand):
     help = 'Retrieves or updates JSON Iconify icons'
 
-    def _download(self, url, base_path, file_name):
+    def _download(self, url: str, base_path: str, file_name: str):
         """
         Download file.
 

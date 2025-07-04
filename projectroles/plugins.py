@@ -714,7 +714,7 @@ class PluginAppSettingDef:
         type: str,
         default: Optional[Any] = None,
         label: Optional[str] = None,
-        placeholder: Optional[str] = None,
+        placeholder: Union[str, int, None] = None,
         description: Optional[str] = None,
         options: Union[callable, list, None] = None,
         user_modifiable: Optional[

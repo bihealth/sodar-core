@@ -9,8 +9,9 @@ import sys
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
+from projectroles.models import SODARUser
 from projectroles.management.logging import ManagementCommandLogger
 
 
@@ -48,24 +49,30 @@ class Command(BaseCommand):
     )
 
     @classmethod
-    def _print_result(cls, django_user, msg):
+    def _print_result(cls, django_user: SODARUser, msg: str):
         print(
             f'{django_user.username};{django_user.get_full_name()};'
             f'{django_user.email};{msg}'
         )
 
     @classmethod
-    def _get_setting_prefix(cls, primary):
+    def _get_setting_prefix(cls, primary: bool) -> str:
         return 'AUTH_LDAP{}_'.format('' if primary else '2')
 
-    def _check_search_base_setting(self, primary):
+    def _check_search_base_setting(self, primary: bool):
         pf = self._get_setting_prefix(primary)
         s_name = pf + 'USER_SEARCH_BASE'
         if not hasattr(settings, s_name):
             logger.error(s_name + ' not in Django settings')
             sys.exit(1)
 
-    def _check_ldap_users(self, users, primary, all_users, deactivate):
+    def _check_ldap_users(
+        self,
+        users: QuerySet[SODARUser],
+        primary: bool,
+        all_users: bool,
+        deactivate: bool,
+    ):
         """
         Check and print out user status for a specific LDAP server.
 

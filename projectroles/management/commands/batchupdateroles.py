@@ -15,6 +15,7 @@ from projectroles.models import (
     Project,
     Role,
     ProjectInvite,
+    SODARUser,
     SODAR_CONSTANTS,
 )
 from projectroles.views import RoleAssignmentModifyMixin, ProjectInviteMixin
@@ -53,8 +54,12 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
 
     # Internal helpers ---------------------------------------------------------
 
-    def _make_request(self):
-        """Make HttpRequest to supply to view-based handlers"""
+    def _make_request(self) -> HttpRequest:
+        """
+        Make HttpRequest to supply to view-based handlers.
+
+        :return: HttpRequest object
+        """
         host = settings.SODAR_API_DEFAULT_HOST
         request = MockRequest()
         request.mock_scheme(host)
@@ -64,8 +69,14 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         request.user = self.issuer
         return request
 
-    def _update_role(self, project, user, role):
-        """Handle role update for an existing user"""
+    def _update_role(self, project: Project, user: SODARUser, role: Role):
+        """
+        Handle role update for an existing user.
+
+        :param project: Project object
+        ;param user: SODARUser object
+        :param role: Role object
+        """
         logger.info(f'Updating role of user {user.username} to {role.name}..')
         role_as = project.get_role(user)
         if role_as and role_as.role == self.owner_role:
@@ -93,8 +104,14 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         )
         self.update_count += 1
 
-    def _invite_user(self, email, project, role):
-        """Create and send user for user not yet in system"""
+    def _invite_user(self, email: str, project: Project, role: Role):
+        """
+        Create and send user for user not yet in system.
+
+        :param email: String
+        :param project: Project object
+        :param role: Role object
+        """
         logger.info(
             f'Creating and sending invite to {email} for role {role.name}..'
         )
@@ -117,8 +134,14 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         self.handle_invite(invite, self.request, add_message=False)
         self.invite_count += 1
 
-    def _handle_list_row(self, project, role_name, email):
-        """Handle row in CSV list"""
+    def _handle_list_row(self, project: Project, role_name: str, email: str):
+        """
+        Handle row in CSV list.
+
+        :param project: Project object
+        :param role_name: String
+        :param email: String
+        """
         if role_name not in self.roles:
             raise Exception(f'Unknown role: "{role_name}"')
         elif role_name == SODAR_CONSTANTS['PROJECT_ROLE_OWNER']:

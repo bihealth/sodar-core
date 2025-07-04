@@ -12,7 +12,7 @@ Added
 -----
 
 - **General**
-    - Type hints (#568)
+    - Type hints (#568, #1687)
     - Build configuration in ``pyproject.toml`` (#1673)
     - JQuery beautification support with js-beautify (#1717)
 - **Filesfolders**

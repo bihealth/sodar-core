@@ -9,7 +9,12 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from projectroles.management.logging import ManagementCommandLogger
-from projectroles.models import RoleAssignment, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    RoleAssignment,
+    SODARUser,
+    SODAR_CONSTANTS,
+)
 from projectroles.views import (
     RoleAssignmentOwnerTransferMixin,
     RoleAssignmentDeleteMixin,
@@ -36,7 +41,9 @@ class Command(
     )
 
     @classmethod
-    def _get_parent_owner(cls, project, prev_owner):
+    def _get_parent_owner(
+        cls, project: Project, prev_owner: SODARUser
+    ) -> SODARUser:
         """Return assignment for first parent owner who is not previous owner"""
         if not project.parent:
             return None
@@ -45,7 +52,15 @@ class Command(
             return parent_owner_as.user
         return cls._get_parent_owner(project.parent, prev_owner)
 
-    def _reassign_owner(self, project, user, owner, role_as, p_title, check):
+    def _reassign_owner(
+        self,
+        project: Project,
+        user: SODARUser,
+        owner: SODARUser,
+        role_as: RoleAssignment,
+        p_title: str,
+        check: bool,
+    ) -> bool:
         """Reassign owner role"""
         # Fail top category if no new owner is specified
         if not owner and not project.parent:
@@ -90,7 +105,9 @@ class Command(
             )
             return False
 
-    def _remove_role(self, role_as, p_title, check):
+    def _remove_role(
+        self, role_as: RoleAssignment, p_title: str, check: bool
+    ) -> bool:
         """Remove non-owner role"""
         r_name = role_as.role.name
         if check:
