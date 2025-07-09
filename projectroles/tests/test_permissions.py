@@ -507,6 +507,14 @@ class TestProjectDetailView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 302)
 
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_public_block_anon(self):
+        """Test GET with blocked public access project with anonymous access"""
+        self.set_access_block(self.project)
+        for role in self.guest_roles:
+            self.project.set_public_access(role)
+            self.assert_response(self.url, self.non_superusers, 302)
+
     def test_get_category(self):
         """Test GET with category"""
         self.assert_response(self.url_cat, self.good_users_cat, 200)

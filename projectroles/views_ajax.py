@@ -282,20 +282,19 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         ]
 
         projects = self._get_projects(request.user, public_stat_cats, parent)
-        blocked_projects = []
+        # NOTE: Generally, manipulating AppSetting objects directly is not
+        #       advised, but in this case it's pertinent for optimization :)
+        blocked_projects = [
+            s.project
+            for s in AppSetting.objects.filter(
+                app_plugin=None,
+                name='project_access_block',
+                value='1',
+            )
+        ]
         starred_projects = []
         finder_cats = []
         if request.user.is_authenticated:
-            # NOTE: Generally, manipulating AppSetting objects directly is not
-            #       advised, but in this case it's pertinent for optimization :)
-            blocked_projects = [
-                s.project
-                for s in AppSetting.objects.filter(
-                    app_plugin=None,
-                    name='project_access_block',
-                    value='1',
-                )
-            ]
             starred_projects = [
                 s.project
                 for s in AppSetting.objects.filter(

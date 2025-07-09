@@ -22,7 +22,7 @@ Added
     - ``ProjectInviteRetrieveAPIView`` REST API view (#1692)
     - Project viewer role (#1650)
     - ``get_user_badge()`` template tag ``extra_class`` arg (#1693)
-    - Project access blocking for superusers (#1653)
+    - Project access blocking for superusers (#1653, #1726)
     - ``project_access_block`` app setting (#1653)
     - ``is_project_accessible()`` rule predicate (#1653)
     - ``PermissionTestMixin.set_access_block()`` helper (#1653)
