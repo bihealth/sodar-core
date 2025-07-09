@@ -546,7 +546,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             user.is_superuser
             or not instance.parent
             or (
-                instance.type == PROJECT_TYPE_PROJECT
+                instance.is_project()
                 and getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
             )
         ):
@@ -585,7 +585,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                     categories.append(c)
 
         # If instance is category, exclude children
-        if instance.type == PROJECT_TYPE_CATEGORY:
+        if instance.is_category():
             categories = [
                 c
                 for c in categories
@@ -656,8 +656,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             parent_cat = Project.objects.filter(sodar_uuid=project).first()
         # Add remote site fields if on source site
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE and (
-            parent_cat
-            or (self.instance.pk and self.instance.type == PROJECT_TYPE_PROJECT)
+            parent_cat or (self.instance.pk and self.instance.is_project())
         ):
             self._init_remote_sites()
         # Init app settings fields

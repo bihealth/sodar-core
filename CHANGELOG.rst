@@ -53,6 +53,7 @@ Added
     - ``PluginCategoryStatistic`` class (#1701)
     - ``ProjectAppPluginPoint.get_category_stats()`` method (#1701)
     - ``CategoryStatisticsAjaxView`` Ajax view (#1701)
+    - ``Project.is_project()`` and ``is_category()`` helpers (#1727)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 
@@ -89,6 +90,7 @@ Changed
     - Move permission test user helper setup in ``PermissionTestMixin.setup_user_helpers()`` (#1600)
     - Replace ``ip_allowlist`` JSON setting with ``ip_allow_list`` string setting (#1667)
     - Refactor remote sync API tests (#1323, #1723)
+    - Refactor project type checks to use new helpers (#1727)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

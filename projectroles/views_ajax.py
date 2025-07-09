@@ -223,13 +223,10 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         :return: Boolean
         """
         # Top level categories with public stats are shown to everybody
-        if (
-            project.type == PROJECT_TYPE_CATEGORY
-            and project in public_stat_cats
-        ):
+        if project.is_category() and project in public_stat_cats:
             return True
         # Disable categories for anonymous users if anonymous access is enabled
-        if project.type == PROJECT_TYPE_CATEGORY and not user.is_authenticated:
+        if project.is_category() and not user.is_authenticated:
             return False
         # Disable access for non-superuser in blocked project
         if project in blocked_projects and not user.is_superuser:
@@ -237,7 +234,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         # Cases which are always true if we get this far
         if (
             user.is_superuser
-            or (user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY)
+            or (user.is_authenticated and project.is_category())
             or project.public_access
         ):
             return True
@@ -266,7 +263,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         parent = (
             Project.objects.get(sodar_uuid=parent_uuid) if parent_uuid else None
         )
-        if parent and parent.type != PROJECT_TYPE_CATEGORY:
+        if parent and parent.is_project():
             return Response(
                 {
                     'detail': 'Querying for a project list under a project is '
@@ -333,7 +330,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     'projectroles:roles',
                     kwargs={'project': p.parent.sodar_uuid},
                 )
-            p_stats = p.type == PROJECT_TYPE_CATEGORY and p in public_stat_cats
+            p_stats = p.is_category() and p in public_stat_cats
             rp = {
                 'type': p.type,
                 'full_title': p.full_title[full_title_idx:],
@@ -347,7 +344,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 'finder_url': p_finder_url,
                 'uuid': str(p.sodar_uuid),
             }
-            if p.type == PROJECT_TYPE_PROJECT:
+            if p.is_project():
                 rp['blocked'] = p in blocked_projects
             ret_projects.append(rp)
         ret = {
@@ -566,7 +563,7 @@ class CategoryStatisticsAjaxView(SODARBaseAjaxView):
         ).first()
         if not project:
             return Response({'detail': 'Project not found'}, status=404)
-        if project.type != PROJECT_TYPE_CATEGORY:
+        if project.is_project():
             return Response(
                 {'detail': 'Only allowed for categories'}, status=403
             )

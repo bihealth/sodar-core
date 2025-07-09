@@ -322,7 +322,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         # Prohibit access if project_access_block is set
         if (
             not self.request.user.is_superuser
-            and project.type == PROJECT_TYPE_PROJECT
+            and project.is_project()
             and app_settings.get(
                 APP_NAME, 'project_access_block', project=project
             )
@@ -370,7 +370,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
                 return False
 
         # Disable project app access for categories unless specifically enabled
-        if project.type == PROJECT_TYPE_CATEGORY:
+        if project.is_category():
             request_url = resolve(self.request.get_full_path())
             if request_url.app_name != APP_NAME:
                 app_plugin = plugin_api.get_app_plugin(request_url.app_name)
@@ -678,7 +678,7 @@ class ProjectDetailView(
         has_child_role = False
         if user.is_superuser:
             context['show_limited_alert'] = False
-            context['show_project_list'] = project.type == PROJECT_TYPE_CATEGORY
+            context['show_project_list'] = project.is_category()
             has_child_role = True
         elif user.is_authenticated:
             has_child_role = project.has_role_in_children(user)
@@ -688,14 +688,11 @@ class ProjectDetailView(
                 context['role'] is not None
                 and context['role'].rank >= ROLE_RANKING[PROJECT_ROLE_VIEWER]
             )
-            context['show_project_list'] = (
-                project.type == PROJECT_TYPE_CATEGORY
-                and (
-                    context['role'] is not None
-                    or project.public_access is not None
-                    or project.has_public_children
-                    or has_child_role
-                )
+            context['show_project_list'] = project.is_category() and (
+                context['role'] is not None
+                or project.public_access is not None
+                or project.has_public_children
+                or has_child_role
             )
         else:  # Anonymous user
             context['show_limited_alert'] = (
@@ -1128,7 +1125,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         # Remote projects
         if (
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
-            and project.type == PROJECT_TYPE_PROJECT
+            and project.is_project()
         ):
             for s in [f.split('.')[1] for f in self.site_fields]:
                 if 'remote_sites' not in upd_fields and (
@@ -1463,7 +1460,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         sites = {}
         if (
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
-            and project.type == PROJECT_TYPE_PROJECT
+            and project.is_project()
         ):
             self.site_fields = [f for f in data if f.startswith('remote_site.')]
             old_sites = self._get_remote_project_data(project)
@@ -1603,7 +1600,7 @@ class ProjectDeleteAccessMixin:
         # Prohibit access if project_access_block is set
         if (
             not self.request.user.is_superuser
-            and project.type == PROJECT_TYPE_PROJECT
+            and project.is_project()
             and app_settings.get(
                 APP_NAME, 'project_access_block', project=project
             )
@@ -1617,10 +1614,7 @@ class ProjectDeleteAccessMixin:
             )
 
         p_type = get_display_name(project.type)
-        if (
-            project.type == PROJECT_TYPE_CATEGORY
-            and project.get_children().count() > 0
-        ):
+        if project.is_category() and project.get_children().count() > 0:
             return False, PROJECT_DELETE_CAT_ERR_MSG.format(project_type=p_type)
         # Disallow for remote projects which haven't been revoked
         if project.is_remote():
@@ -1635,7 +1629,7 @@ class ProjectDeleteAccessMixin:
                 )
         # Disallow for source projects with non-revoked remote projects
         # NOTE: Categories can be deleted
-        elif project.type == PROJECT_TYPE_PROJECT:
+        elif project.is_project():
             rps = RemoteProject.objects.filter(
                 project_uuid=project.sodar_uuid, site__mode=SITE_MODE_TARGET
             ).exclude(level__in=[REMOTE_LEVEL_NONE, REMOTE_LEVEL_REVOKED])
@@ -1816,7 +1810,7 @@ class ProjectCreateView(
         """Override get() to limit project creation under other projects"""
         if 'project' in self.kwargs:
             project = Project.objects.get(sodar_uuid=self.kwargs['project'])
-            if project.type != PROJECT_TYPE_CATEGORY:
+            if project.is_project():
                 messages.error(
                     self.request,
                     'Creating nested {} is not allowed.'.format(
@@ -1913,7 +1907,7 @@ class ProjectArchiveView(
     def get(self, request, *args, **kwargs):
         """Override get() to check project type"""
         project = self.get_project()
-        if project.type != PROJECT_TYPE_PROJECT:
+        if project.is_category():
             messages.error(request, CAT_ARCHIVE_ERR_MSG)
             return redirect(
                 reverse(
@@ -1932,7 +1926,7 @@ class ProjectArchiveView(
         redirect_url = reverse(
             'projectroles:detail', kwargs={'project': project.sodar_uuid}
         )
-        if project.type == PROJECT_TYPE_CATEGORY:
+        if project.is_category():
             messages.error(request, CAT_ARCHIVE_ERR_MSG)
             return redirect(redirect_url)
 
@@ -2368,7 +2362,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         """
         AppAlert = app_alerts.get_model()
         dis_projects = [project]
-        if project.type == PROJECT_TYPE_CATEGORY:
+        if project.is_category():
             for c in project.get_children(flat=True):
                 if not c.has_role(user):
                     dis_projects.append(c)
@@ -2423,7 +2417,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         # Delete corresponding PROJECT_USER settings
         if (
             not project.get_role(user)
-            and project.type == PROJECT_TYPE_CATEGORY
+            and project.is_category()
             and not RoleAssignment.objects.filter(
                 project__in=project.get_children(flat=True), user=user
             ).exists()
@@ -2653,7 +2647,7 @@ class RoleAssignmentOwnDeleteView(
         NOTE: Single use case so we're not writing a common rules perm
         """
         role_as = self.get_object()
-        if role_as.project.type == PROJECT_TYPE_PROJECT and app_settings.get(
+        if role_as.project.is_project() and app_settings.get(
             APP_NAME, 'project_access_block', project=role_as.project
         ):
             return False

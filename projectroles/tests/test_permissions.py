@@ -101,7 +101,7 @@ class PermissionTestMixin:
         :param category: Project object (must be top level category)
         :param value: Boolean
         """
-        if category.type != PROJECT_TYPE_CATEGORY or category.parent:
+        if category.is_project() or category.parent:
             raise ValueError('This is only allowed for top level categories')
         app_settings.set(
             APP_NAME, 'category_public_stats', value, project=category

@@ -10,7 +10,7 @@
              badge-{% if not can_view %}secondary{% else %}{{ color|lower }}{% endif %}"
       title="{{ project.full_title }}" data-toggle="tooltip">
   <i class="iconify"
-     data-icon="{% if project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
+     data-icon="{% if project.is_project %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
   </i>
   {% if can_view %}
     <a href="{% url 'projectroles:detail' project=project.sodar_uuid %}">

@@ -184,7 +184,7 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         # Prohibit access if project_access_block is set
         if (
             not request.user.is_superuser
-            and project.type == PROJECT_TYPE_PROJECT
+            and project.is_project()
             and app_settings.get(
                 APP_NAME, 'project_access_block', project=project
             )
@@ -455,7 +455,7 @@ class ProjectListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
                     or any(p.full_title.startswith(c) for c in role_cats)
                 ):
                     qs.append(p)
-                if local_role and p.type == PROJECT_TYPE_CATEGORY:
+                if local_role and p.is_category():
                     role_cats.append(p.full_title + CAT_DELIMITER)
         return qs
 
@@ -1330,7 +1330,7 @@ class ProjectSettingSetAPIView(
         if (
             plugin_name == APP_NAME
             and setting_name == 'category_public_stats'
-            and (project.parent or project.type == PROJECT_TYPE_PROJECT)
+            and (project.parent or project.is_project())
         ):
             raise serializers.ValidationError(CAT_PUBLIC_STATS_API_MSG)
 

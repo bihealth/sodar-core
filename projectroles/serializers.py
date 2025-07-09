@@ -506,7 +506,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             raise exceptions.PermissionDenied(
                 'User lacks permission to place project under given category'
             )
-        if parent and parent.type != PROJECT_TYPE_CATEGORY:
+        if parent and parent.is_project():
             raise serializers.ValidationError('Parent is not a category')
         elif (
             'parent' in attrs
@@ -533,7 +533,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         if (
             parent
             and self.instance
-            and self.instance.type == PROJECT_TYPE_CATEGORY
+            and self.instance.is_category()
             and parent in self.instance.get_children(flat=True)
         ):
             raise serializers.ValidationError(
@@ -670,7 +670,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
         # Return only title, full title and UUID for projects with finder role
         if (
-            project.type == PROJECT_TYPE_PROJECT
+            project.is_project()
             and project.parent
             and not project.has_role(user)
         ):
@@ -701,7 +701,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Set full_title manually
         ret['full_title'] = project.full_title
         # Remove children field for projects and API version <1.1
-        if project.type == PROJECT_TYPE_PROJECT or req_version < VERSION_1_1:
+        if project.is_project() or req_version < VERSION_1_1:
             ret.pop('children', None)
         # Replace public_access with public_guest_access if API version <2.0
         if req_version < VERSION_2_0:

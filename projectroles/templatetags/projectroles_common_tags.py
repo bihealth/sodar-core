@@ -38,7 +38,6 @@ register = template.Library()
 
 
 # SODAR constants
-PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
@@ -318,7 +317,7 @@ def get_project_badge(
         f'sodar-project-badge{extra_class}" title="{project.full_title}" '
         f'data-toggle="tooltip">'
     )
-    if project.type == PROJECT_TYPE_PROJECT:
+    if project.is_project():
         icon = 'mdi:cube'
     else:
         icon = 'mdi:rhombus-split'

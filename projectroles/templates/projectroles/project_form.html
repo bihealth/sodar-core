@@ -44,7 +44,7 @@
 
       {# TODO: Convert to btn-group, how to enable tooltip for disabled button? #}
       <div class="ml-auto">
-        {% if object.type == 'PROJECT' %}
+        {% if object.is_project %}
           <a role="button" class="btn btn-warning"
              href="{% url 'projectroles:archive' project=object.sodar_uuid %}"
              id="sodar-pr-btn-archive">

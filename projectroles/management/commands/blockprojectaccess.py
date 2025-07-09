@@ -9,15 +9,12 @@ from django.core.management.base import BaseCommand
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.management.logging import ManagementCommandLogger
-from projectroles.models import Project, SODAR_CONSTANTS
+from projectroles.models import Project
 
 
 app_settings = AppSettingAPI()
 logger = ManagementCommandLogger(__name__)
 
-
-# SODAR constants
-PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -60,7 +57,7 @@ class Command(BaseCommand):
         if not project:
             logger.error(PROJECT_NOT_FOUND_MSG.format(project_uuid=p_uuid))
             sys.exit(1)
-        if project.type != PROJECT_TYPE_PROJECT:
+        if project.is_category():
             logger.error(INVALID_PROJECT_TYPE_MSG)
             sys.exit(1)
         try:

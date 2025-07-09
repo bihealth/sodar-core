@@ -462,6 +462,16 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         )
         self.assertEqual(self.project.get_absolute_url(), expected_url)
 
+    def test_is_project(self):
+        """Test is_project()"""
+        self.assertEqual(self.category.is_project(), False)
+        self.assertEqual(self.project.is_project(), True)
+
+    def test_is_category(self):
+        """Test is_category()"""
+        self.assertEqual(self.category.is_category(), True)
+        self.assertEqual(self.project.is_category(), False)
+
     def test_get_children_category(self):
         """Test get_children() with top category"""
         children = self.category.get_children()

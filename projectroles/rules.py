@@ -108,7 +108,7 @@ def has_category_child_role(user, obj):
     current one, if the current project is a category. Also returns True if
     user is anonymous and category includes children with public guest access.
     """
-    return obj.type == PROJECT_TYPE_CATEGORY and (
+    return obj.is_category() and (
         (
             user.is_authenticated
             and (obj.has_role(user) or obj.has_role_in_children(user))
@@ -139,7 +139,7 @@ def is_modifiable_project(user, obj):
 def is_public_stats_category(user, obj):
     """Whether or not project is top level category with public stats enabled"""
     if (
-        obj.type == PROJECT_TYPE_CATEGORY
+        obj.is_category()
         and not obj.parent
         and app_settings.get(APP_NAME, 'category_public_stats', project=obj)
     ):

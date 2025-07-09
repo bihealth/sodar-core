@@ -1430,7 +1430,7 @@ class TestProjectUpdateView(
     @classmethod
     def _get_post_app_settings(cls, project: Project, user: SODARUser) -> dict:
         """Get postable app settings for project of type PROJECT"""
-        if project.type != PROJECT_TYPE_PROJECT:
+        if project.is_category():
             raise ValueError('Can only be called for a project')
         ps = app_settings.get_all_by_scope(
             APP_SETTING_SCOPE_PROJECT, project=project, post_safe=True

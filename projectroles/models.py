@@ -241,7 +241,7 @@ class Project(models.Model):
 
     def _validate_parent_type(self):
         """Validate parent value to ensure parent can not be a project"""
-        if self.parent and self.parent.type == PROJECT_TYPE_PROJECT:
+        if self.parent and self.parent.is_project():
             raise ValidationError(
                 'Subprojects are only allowed within categories'
             )
@@ -254,7 +254,7 @@ class Project(models.Model):
         NOTE: Does not prevent saving but forces the value to be None if in
               category, see issue #1404.
         """
-        if self.type == PROJECT_TYPE_CATEGORY and (
+        if self.is_category() and (
             self.public_access or self.public_guest_access
         ):
             logger.warning(CAT_PUBLIC_ACCESS_MSG + ', setting to None')
@@ -286,7 +286,7 @@ class Project(models.Model):
         Validate archive status against project type to ensure archiving is only
         applied to projects.
         """
-        if self.archive and self.type != PROJECT_TYPE_PROJECT:
+        if self.archive and self.is_category():
             raise ValidationError(
                 'Archiving a category is not currently supported'
             )
@@ -302,7 +302,7 @@ class Project(models.Model):
         self.full_title = self._get_full_title()
         # TODO: Save with commit=False with other args to avoid double save()?
         super().save(*args, **kwargs)
-        if self.type == PROJECT_TYPE_CATEGORY:
+        if self.is_category():
             for child in self.children.all():
                 child.save()
         # Update public children
@@ -333,7 +333,7 @@ class Project(models.Model):
         Return True if the project has any children with public read-only
         access.
         """
-        if self.type != PROJECT_TYPE_CATEGORY:
+        if self.is_project():
             return False
         for child in self.get_children():
             if child.public_access:
@@ -360,6 +360,14 @@ class Project(models.Model):
 
     # Custom row-level functions
 
+    def is_project(self) -> bool:
+        """Return True if project is of type PROJECT_TYPE_PROJECT"""
+        return self.type == PROJECT_TYPE_PROJECT
+
+    def is_category(self) -> bool:
+        """Return True if project is of type PROJECT_TYPE_CATEGORY"""
+        return self.type == PROJECT_TYPE_CATEGORY
+
     def get_parents(self) -> list:
         """
         Return a list of parent projects in inheritance order.
@@ -382,7 +390,7 @@ class Project(models.Model):
         :param flat: Return all children recursively as a flat list (bool)
         :return: QuerySet
         """
-        if self.type != PROJECT_TYPE_CATEGORY:
+        if self.is_project():
             return Project.objects.none()
         if flat:
             return Project.objects.filter(
@@ -648,7 +656,7 @@ class Project(models.Model):
         :param user: User object
         :return: Boolean
         """
-        if self.type != PROJECT_TYPE_CATEGORY:
+        if self.is_project():
             return False
         # User with role in self has at least the same role in children
         if self.has_role(user):
@@ -728,7 +736,7 @@ class Project(models.Model):
         :param role: Role object, string or None
         """
         # NOTE: Validation no longer raises an exception (see #1404)
-        if self.type == PROJECT_TYPE_CATEGORY and role:
+        if self.is_category() and role:
             raise ValidationError(CAT_PUBLIC_ACCESS_MSG)
         if isinstance(role, str):
             role = Role.objects.get(name=role)
@@ -749,7 +757,7 @@ class Project(models.Model):
         """
         logger.warning(SET_PUBLIC_DEPRECATE_MSG)
         # NOTE: Validation no longer raises an exception (see #1404)
-        if self.type == PROJECT_TYPE_CATEGORY and public:
+        if self.is_category() and public:
             raise ValidationError(CAT_PUBLIC_ACCESS_MSG)
         role = Role.objects.get(name=PROJECT_ROLE_GUEST) if public else None
         self.public_access = role

@@ -52,7 +52,7 @@
   {% endif %}
 
   {# Links to remote projects #}
-  {% if object.type == 'PROJECT' %}
+  {% if object.is_project %}
     {% if target_projects %}
       <div class="card" id="sodar-pr-details-card-remote">
         <div class="card-header">
@@ -106,7 +106,7 @@
   </div>
 
   {# Category statistics #}
-  {% if object.type == 'CATEGORY' %}
+  {% if object.is_category %}
     {% include 'projectroles/_category_stats.html' %}
   {% endif %}
 
@@ -158,7 +158,7 @@
     window.projectListPagination = {{ page_options_default }};
     window.remoteLinkUrl = "{% url 'projectroles:ajax_remote_access' project=object.sodar_uuid %}";
   </script>
-  {% if object.type == 'CATEGORY' %}
+  {% if object.is_category %}
     <!-- DataTables -->
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
     <!-- Category stats -->

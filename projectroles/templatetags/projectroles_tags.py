@@ -29,8 +29,6 @@ register = template.Library()
 
 
 # SODAR constants
-PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
@@ -104,7 +102,7 @@ def is_app_visible(
     if (
         can_view_app
         and not app_hidden
-        and (project.type == PROJECT_TYPE_PROJECT or plugin.category_enable)
+        and (project.is_project() or plugin.category_enable)
     ):
         return True
     return False

@@ -106,7 +106,7 @@ class AppLinkAPI:
         if (
             can_view_app
             and not app_hidden
-            and (project.type == PROJECT_TYPE_PROJECT or plugin.category_enable)
+            and (project.is_project() or plugin.category_enable)
         ):
             return True
         return False
@@ -156,7 +156,7 @@ class AppLinkAPI:
                     'label': f'{current_display} Overview',
                     'icon': (
                         'mdi:rhombus-split'
-                        if project.type == PROJECT_TYPE_CATEGORY
+                        if project.is_category()
                         else 'mdi:cube'
                     ),
                     'active': self._is_active_projectroles(
@@ -233,7 +233,7 @@ class AppLinkAPI:
         }
         if (
             project
-            and project.type == PROJECT_TYPE_CATEGORY
+            and project.is_category()
             and user.has_perm('projectroles.create_project', project)
             and allow_create
             and not project.is_remote()
