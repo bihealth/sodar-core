@@ -174,7 +174,7 @@
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true;
-    if ($('#sodar-pr-project-list').length) {
+    if ($('#sodar-pr-page-container-detail').attr('data-project-type') === 'CATEGORY') {
         tour.addStep('project_type_note', {
             title: 'Note on ' +
                    '{% get_display_name 'CATEGORY' plural=True title=True %} ',
@@ -216,6 +216,17 @@
                   'important links and updates for members.',
             attachTo: '#sodar-pr-details-card-readme top',
             advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+    if ($('#sodar-pr-details-card-stats').length) {
+        tour.addStep('category_stats', {
+            title: '{% get_display_name 'CATEGORY' title=True %} Statistics',
+            text: 'This card displays statistics of data in this ' +
+                  '{% get_display_name 'CATEGORY' %}. Different apps on the ' +
+                  'site may display different statistics.',
+            advanceOn: '.docs-link click',
+            attachTo: '#sodar-pr-details-card-stats top',
             showCancelLink: true
         });
     }
