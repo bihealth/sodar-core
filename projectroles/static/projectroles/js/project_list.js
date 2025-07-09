@@ -142,6 +142,8 @@ function toggleStarring(initial) {
 // Project list data retrieval and updating
 $(document).ready(function () {
   let table = $('#sodar-pr-project-list-table')
+  if (!table.length) return // Skip if project list is disabled for view
+
   let listUrl = table.attr('data-list-url')
   let parent = table.attr('data-parent')
   let starredDefault = table.attr('data-starred-default')
@@ -252,7 +254,7 @@ $(document).ready(function () {
         else textClass = 'text-info'
         titleSpan.append($('<i>')
           .attr('class',
-            'iconify text-info ml-2 sodar-pr-remote-project-icon ' +
+            'iconify text-info ml-1 sodar-pr-remote-project-icon ' +
             textClass)
           .attr('data-icon', 'mdi:cloud')
           .attr('title', 'Remote synchronized from source site')
@@ -262,16 +264,23 @@ $(document).ready(function () {
       if (p['type'] === 'PROJECT' && p['public_access']) {
         titleSpan.append($('<i>')
           .attr('class',
-            'iconify text-info ml-2 sodar-pr-project-public')
+            'iconify text-info ml-1 sodar-pr-project-public')
           .attr('data-icon', 'mdi:earth')
           .attr('title', 'Public read-only access')
+        )
+      } else if (p['type'] === 'CATEGORY' && p['public_stats']) {
+        titleSpan.append($('<i>')
+          .attr('class',
+            'iconify text-info ml-1 sodar-pr-project-stats')
+          .attr('data-icon', 'mdi:chart-box')
+          .attr('title', 'Public statistics displayed')
         )
       }
       // Archived icon
       if (p['type'] === 'PROJECT' && p['archive']) {
         titleSpan.append($('<i>')
           .attr('class',
-            'iconify text-info ml-2 sodar-pr-project-archive')
+            'iconify text-info ml-1 sodar-pr-project-archive')
           .attr('data-icon', 'mdi:archive')
           .attr('title', 'Archived')
         )
@@ -280,7 +289,7 @@ $(document).ready(function () {
       if (p['starred']) {
         titleSpan.append($('<i>')
           .attr('class',
-            'iconify text-warning ml-2 sodar-pr-project-starred')
+            'iconify text-warning ml-1 sodar-pr-project-starred')
           .attr('data-icon', 'mdi:star')
         )
       }
@@ -288,7 +297,7 @@ $(document).ready(function () {
       if (p['blocked']) {
         titleSpan.append($('<i>')
           .attr('class',
-            'iconify text-danger ml-2 sodar-pr-project-blocked')
+            'iconify text-danger ml-1 sodar-pr-project-blocked')
           .attr('data-icon', 'mdi:cancel')
           .attr('title',
             'Access temporarily blocked by administrators')
@@ -302,7 +311,7 @@ $(document).ready(function () {
           .attr('title', 'Findable project: Request access from ' +
             'category owner or delegate')
           .append($('<i>')
-            .attr('class', 'iconify ml-2')
+            .attr('class', 'iconify ml-1')
             .attr('data-icon', 'mdi:account-supervisor')
 
           )

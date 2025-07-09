@@ -7,6 +7,28 @@
 
 {% block title %}Project {{ object.title }}{% endblock title %}
 
+{% block css %}
+    {{ block.super }}
+    <style type="text/css">
+      div#sodar-pr-details-card-stats-loading {
+        height: 110px;
+      }
+      div#sodar-pr-details-card-stats-loading svg {
+        margin-top: 32px;
+      }
+      div#sodar-pr-details-card-stats-body {
+        min-height: 126px;
+      }
+      div.sodar-pr-dashboard-card-stats {
+        max-width: 200px;
+        min-width: 150px;
+      }
+      span.sodar-pr-dashboard-card-stats-unit {
+        font-size: 16px;
+      }
+    </style>
+{% endblock css %}
+
 {% block projectroles %}
 
 {% has_perm 'projectroles.update_project' request.user object as can_update_project %}
@@ -16,14 +38,16 @@
 
 <div class="container-fluid sodar-page-container"
      id="sodar-pr-page-container-detail"
-     data-project-type="{{ object.type }}">
+     data-project-type="{{ object.type }}"
+     data-project-uuid="{{ object.sodar_uuid }}">
   {# Limited role alerts #}
-  {% if role and role.rank >= 45 %}
+  {% if show_limited_alert %}
     <div class="alert alert-info" id="sodar-pr-details-alert-limited">
       <i class="iconify" data-icon="mdi:account"></i>
       You have limited read-only access to this
-      {% get_display_name object.type %} as {{ role.name }}. Some content may be
-      hidden or inaccessible. See site documentation for details.
+      {% get_display_name object.type %}{% if role %}as {{ role.name }}{% endif %}.
+      Some content may be hidden or inaccessible. See site documentation for
+      details.
     </div>
   {% endif %}
 
@@ -81,8 +105,14 @@
     </div>
   </div>
 
-  {# Subprojects #}
+  {# Category statistics #}
   {% if object.type == 'CATEGORY' %}
+    {% include 'projectroles/_category_stats.html' %}
+  {% endif %}
+
+  {# Project list for subprojects #}
+  {# Only show if user has role or public access is set (hide for stats-only) #}
+  {% if show_project_list %}
     {% include 'projectroles/_project_list.html' with parent=object %}
   {% endif %}
 
@@ -131,6 +161,8 @@
   {% if object.type == 'CATEGORY' %}
     <!-- DataTables -->
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
+    <!-- Category stats -->
+    <script type="text/javascript" src="{% static 'projectroles/js/category_stats.js' %}"></script>
     <!-- Project list -->
     <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
   {% endif %}

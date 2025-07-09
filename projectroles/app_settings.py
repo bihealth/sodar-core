@@ -215,6 +215,21 @@ PROJECTROLES_APP_SETTINGS = [
         global_edit=False,
         project_types=[PROJECT_TYPE_PROJECT],
     ),
+    PluginAppSettingDef(
+        name='category_public_stats',
+        scope=APP_SETTING_SCOPE_PROJECT,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Display public category statistics',
+        description='Enable all users to view {} readme and statistics. '
+        'Limited to top level {}.'.format(
+            get_display_name(PROJECT_TYPE_CATEGORY),
+            get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
+        ),
+        user_modifiable=True,  # Only allow modification by superuser
+        global_edit=False,
+        project_types=[PROJECT_TYPE_CATEGORY],
+    ),
 ]
 
 

@@ -94,6 +94,10 @@ and/or shortcuts to app functionalities. Here you can also access project apps
 from the project sidebar. For project apps, the sidebar link leads to the app
 entry point view as defined in the app plugin.
 
+For categories, the view also displays the :guilabel:`Category Statistics` card.
+This card contains statistics from site apps regarding data in projects within
+the category and its possible subcategories.
+
 For each page in a project app which extends the default projectroles template
 layout, the **project title bar** is displayed on the top of the page. This
 contains the project title and description and a link to "star" the project into
@@ -204,6 +208,16 @@ and *project viewer* (limited access to basic project information).
     Public access can only be set for projects. Categories will be visible
     for users with access to any category or project under them.
 
+Top Level Category Public Statistics
+------------------------------------
+
+It is possible to display category statistics for selected top level categories
+to all users regardless of their access level. This can be toggled in the
+category updating view under :guilabel:`Display public category statistics`.
+
+This will grant the users access to the category details page with only the
+category readme and statistics visible.
+
 Access on Remote Sites
 ----------------------
 
@@ -251,6 +265,9 @@ Block project access
     with project data require it to be temporarily made unavailable for users.
     The setting can also be toggled using the ``blockprojectaccess`` management
     command.
+Display public category statistics
+    If enabled, display statistics of the category to all users regardless of
+    explicit category access. Only available for top level categories.
 
 To clean up settings which have been stored in the database but have since
 been removed from the plugin app settings definitions, run the following

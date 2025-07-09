@@ -227,6 +227,10 @@ div.sodar-pr-app-search-container {
   max-height: 400px;
 }
 
+div.sodar-dashboard-card {
+  background-color: #d1ecf1;
+}
+
 
 /* Tables within cards ------------------------------------------------------ */
 

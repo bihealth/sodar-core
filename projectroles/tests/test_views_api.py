@@ -316,6 +316,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
 
     def setUp(self):
         super().setUp()
+        self.user_new = self.make_user('user_new')
         self.url = reverse('projectroles:api_project_list')
 
     def test_get(self):
@@ -396,17 +397,19 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
 
     def test_get_no_roles(self):
         """Test GET without roles"""
-        user_new = self.make_user('user_new')
-        response = self.request_knox(self.url, token=self.get_token(user_new))
+        response = self.request_knox(
+            self.url, token=self.get_token(self.user_new)
+        )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 0)
 
     def test_get_member(self):
         """Test GET with only local role"""
-        user_new = self.make_user('user_new')
-        self.make_assignment(self.project, user_new, self.role_contributor)
-        response = self.request_knox(self.url, token=self.get_token(user_new))
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        response = self.request_knox(
+            self.url, token=self.get_token(self.user_new)
+        )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)
@@ -424,18 +427,22 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
             'SubProject', PROJECT_TYPE_PROJECT, sub_category
         )
         self.make_assignment(sub_project, self.user_owner, self.role_owner)
-        user_new = self.make_user('user_new')
-        self.make_assignment(self.category, user_new, self.role_contributor)
-        response = self.request_knox(self.url, token=self.get_token(user_new))
+        self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        response = self.request_knox(
+            self.url, token=self.get_token(self.user_new)
+        )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 4)
 
     def test_get_finder(self):
         """Test GET with finder"""
-        user_new = self.make_user('user_new')
-        self.make_assignment(self.category, user_new, self.role_finder)
-        response = self.request_knox(self.url, token=self.get_token(user_new))
+        self.make_assignment(self.category, self.user_new, self.role_finder)
+        response = self.request_knox(
+            self.url, token=self.get_token(self.user_new)
+        )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
@@ -456,8 +463,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
 
     def test_get_public(self):
         """Test GET with public access"""
-        user_new = self.make_user('user_new')
-        token = self.get_token(user_new)
+        token = self.get_token(self.user_new)
         response = self.request_knox(self.url, token=token)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(json.loads(response.content)), 0)
@@ -469,6 +475,16 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
         self.assertEqual(
             response_data[0]['sodar_uuid'], str(self.project.sodar_uuid)
         )
+
+    def test_get_category_public_stats_no_role(self):
+        """Test GET with category public stats and user with no role"""
+        app_settings.set(
+            APP_NAME, 'category_public_stats', True, project=self.category
+        )
+        token = self.get_token(self.user_new)
+        response = self.request_knox(self.url, token=token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(json.loads(response.content)), 0)
 
     def test_get_pagination(self):
         """Test GET with pagination"""
@@ -3416,6 +3432,10 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
             'projectroles:api_project_setting_set',
             kwargs={'project': self.project.sodar_uuid},
         )
+        self.url_cat = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': self.category.sodar_uuid},
+        )
 
     def test_post_project(self):
         """Test TestProjectSettingSetAPIView POST with PROJECT scope setting"""
@@ -3612,6 +3632,89 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
             'value': value,
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertIsNone(
+            AppSetting.objects.filter(
+                name=setting_name, project=self.project
+            ).first()
+        )
+
+    def test_post_category_public_stats(self):
+        """Test POST with category_public_stats"""
+        setting_name = 'category_public_stats'
+        value = True
+        self.assertIsNone(
+            AppSetting.objects.filter(
+                name=setting_name, project=self.category
+            ).first()
+        )
+        post_data = {
+            'plugin_name': APP_NAME,
+            'setting_name': setting_name,
+            'value': value,
+        }
+        response = self.request_knox(
+            self.url_cat,
+            method='POST',
+            data=post_data,
+            token=self.get_token(self.user),
+        )
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        obj = AppSetting.objects.get(name=setting_name, project=self.category)
+        self.assertEqual(obj.get_value(), value)
+
+    def test_post_category_public_stats_subcategory(self):
+        """Test POST with category_public_stats in subcategory (should fail)"""
+        sub_cat = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(sub_cat, self.user_owner_cat, self.role_owner)
+        setting_name = 'category_public_stats'
+        value = True
+        self.assertIsNone(
+            AppSetting.objects.filter(
+                name=setting_name, project=sub_cat
+            ).first()
+        )
+        post_data = {
+            'plugin_name': APP_NAME,
+            'setting_name': setting_name,
+            'value': value,
+        }
+        url = reverse(
+            'projectroles:api_project_setting_set',
+            kwargs={'project': sub_cat.sodar_uuid},
+        )
+        response = self.request_knox(
+            url, method='POST', data=post_data, token=self.get_token(self.user)
+        )
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertIsNone(
+            AppSetting.objects.filter(
+                name=setting_name, project=sub_cat
+            ).first()
+        )
+
+    def test_post_category_public_stats_project(self):
+        """Test POST with category_public_stats in project (should fail)"""
+        setting_name = 'category_public_stats'
+        value = False  # Should also fail with value=False
+        self.assertIsNone(
+            AppSetting.objects.filter(
+                name=setting_name, project=self.project
+            ).first()
+        )
+        post_data = {
+            'plugin_name': APP_NAME,
+            'setting_name': setting_name,
+            'value': value,
+        }
+        response = self.request_knox(
+            self.url,
+            method='POST',
+            data=post_data,
+            token=self.get_token(self.user),
+        )
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertIsNone(
             AppSetting.objects.filter(

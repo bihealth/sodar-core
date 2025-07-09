@@ -73,6 +73,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_VIEWER = SODAR_CONSTANTS['PROJECT_ROLE_VIEWER']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
@@ -661,26 +662,56 @@ class ProjectDetailView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+        project = self.object
+        user = self.request.user
         # User role in project
-        if self.request.user.is_superuser:
+        if user.is_superuser:
             context['role'] = None
         else:
-            if self.request.user.is_authenticated:
-                role_as = self.object.get_role(self.request.user)
+            if user.is_authenticated:
+                role_as = project.get_role(self.request.user)
                 context['role'] = role_as.role if role_as else None
             if not context.get('role'):
-                if self.object.public_access:
-                    context['role'] = self.object.public_access
-                else:
-                    context['role'] = None
+                context['role'] = project.public_access
+
+        # Visibility settings
+        has_child_role = False
+        if user.is_superuser:
+            context['show_limited_alert'] = False
+            context['show_project_list'] = project.type == PROJECT_TYPE_CATEGORY
+            has_child_role = True
+        elif user.is_authenticated:
+            has_child_role = project.has_role_in_children(user)
+            context['show_limited_alert'] = (
+                not context['role'] and not has_child_role
+            ) or (
+                context['role'] is not None
+                and context['role'].rank >= ROLE_RANKING[PROJECT_ROLE_VIEWER]
+            )
+            context['show_project_list'] = (
+                project.type == PROJECT_TYPE_CATEGORY
+                and (
+                    context['role'] is not None
+                    or project.public_access is not None
+                    or project.has_public_children
+                    or has_child_role
+                )
+            )
+        else:  # Anonymous user
+            context['show_limited_alert'] = (
+                not project.public_access
+                or project.public_access.rank
+                >= ROLE_RANKING[PROJECT_ROLE_VIEWER]
+            )
+            context['show_project_list'] = project.has_public_children
 
         # Remote projects
         q_kwargs = {
-            'project_uuid': self.object.sodar_uuid,
+            'project_uuid': project.sodar_uuid,
             'level': REMOTE_LEVEL_READ_ROLES,
         }
         if not self.request.user.has_perm(
-            'projectroles.view_hidden_projects', self.object
+            'projectroles.view_hidden_projects', project
         ):
             q_kwargs['site__user_display'] = True
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:

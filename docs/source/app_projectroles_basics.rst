@@ -96,7 +96,7 @@ projects:
 
 .. note::
 
-    Currently, only superusers can assign owner roles for top-level categories.
+    Currently, only superusers can assign owner roles for top level categories.
 
 New types of roles can be defined for third party apps by extending the default
 model's database table in the projectroles app. Existing SODAR Core apps do not

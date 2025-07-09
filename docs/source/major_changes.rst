@@ -18,6 +18,8 @@ Release Highlights
 
 - Add project viewer role
 - Add project viewer role support for project public read-only access
+- Add category statistics card and plugin API
+- Add top level category public statistics viewing
 - Add search by object UUID
 - Add user opt-out settings for app alert notifications
 - Add project member list pagination, ordering and filtering

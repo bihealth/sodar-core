@@ -196,6 +196,11 @@ urls_ajax = [
         name='ajax_project_list_roles',
     ),
     path(
+        route='ajax/stats/category/<uuid:project>',
+        view=views_ajax.CategoryStatisticsAjaxView.as_view(),
+        name='ajax_stats_category',
+    ),
+    path(
         route='ajax/star/<uuid:project>',
         view=views_ajax.ProjectStarringAjaxView.as_view(),
         name='ajax_star',

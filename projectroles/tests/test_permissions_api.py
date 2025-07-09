@@ -170,6 +170,10 @@ class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
             'projectroles:api_project_retrieve',
             kwargs={'project': self.project.sodar_uuid},
         )
+        self.url_cat = reverse(
+            'projectroles:api_project_retrieve',
+            kwargs={'project': self.category.sodar_uuid},
+        )
         self.good_users = [
             self.superuser,
             self.user_owner_cat,
@@ -230,6 +234,26 @@ class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
         self.set_site_read_only()
         self.assert_response_api(self.url, self.good_users, 200)
         self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_category(self):
+        """Test GET with category"""
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_category_public_stats(self):
+        """Test GET with category and public stats"""
+        self.set_category_public_stats(self.category)
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_category_public_stats_anon(self):
+        """Test GET with category and public stats and anonymous access"""
+        self.set_category_public_stats(self.category)
+        self.assert_response_api(self.url, self.user_no_roles, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
 
 

@@ -76,6 +76,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                     'type': self.category.type,
                     'full_title': self.category.full_title,
                     'public_access': False,
+                    'public_stats': False,
                     'archive': False,
                     'remote': False,
                     'revoked': False,
@@ -88,6 +89,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                     'type': self.project.type,
                     'full_title': self.project.full_title,
                     'public_access': False,
+                    'public_stats': False,
                     'archive': False,
                     'remote': False,
                     'revoked': False,
@@ -117,6 +119,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                     'type': self.project.type,
                     'full_title': self.project.title,  # Not full_title
                     'public_access': False,
+                    'public_stats': False,
                     'archive': False,
                     'remote': False,
                     'revoked': False,
@@ -144,23 +147,32 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.assertEqual(response.data['user']['highlight'], True)
 
     def test_get_inherited_owner(self):
-        """Test project list for inherited owner"""
+        """Test GET as inherited owner"""
         with self.login(self.user_owner_cat):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['projects']), 2)
 
     def test_get_inherited_contrib(self):
-        """Test project list for inherited contributor"""
+        """Test GET as inherited contributor"""
         with self.login(self.user_contributor_cat):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['projects']), 2)
 
-    def test_get_no_results(self):
-        """Test project list with no results"""
+    def test_get_no_roles(self):
+        """Test project list as user with no roles"""
         with self.login(self.user_no_roles):
             response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['projects'], [])
+        self.assertIsNotNone(response.data['messages'].get('no_projects'))
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET as anonymous user"""
+        # with self.login(self.user_no_roles):
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['projects'], [])
         self.assertIsNotNone(response.data['messages'].get('no_projects'))
@@ -200,21 +212,21 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         self.assertEqual(pd[1]['access'], True)
 
     def test_get_finder(self):
-        """Test project list with finder role"""
+        """Test GET with finder role"""
         user_finder = self.make_user('user_finder')
         self.make_assignment(self.category, user_finder, self.role_finder)
         with self.login(user_finder):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        res_data = response.data['projects']
-        self.assertEqual(len(res_data), 2)
-        self.assertEqual(res_data[0]['full_title'], self.category.full_title)
-        self.assertEqual(res_data[0]['access'], True)
-        self.assertEqual(res_data[0]['finder_url'], None)
-        self.assertEqual(res_data[1]['full_title'], self.project.full_title)
-        self.assertEqual(res_data[1]['access'], False)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['full_title'], self.category.full_title)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[0]['finder_url'], None)
+        self.assertEqual(pd[1]['full_title'], self.project.full_title)
+        self.assertEqual(pd[1]['access'], False)
         self.assertEqual(
-            res_data[1]['finder_url'],
+            pd[1]['finder_url'],
             reverse(
                 'projectroles:roles',
                 kwargs={'project': self.category.sodar_uuid},
@@ -222,7 +234,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         )
 
     def test_get_finder_parent(self):
-        """Test project list with finder role inside parent"""
+        """Test GET with finder role inside parent"""
         user_finder = self.make_user('user_finder')
         self.make_assignment(self.category, user_finder, self.role_finder)
         with self.login(user_finder):
@@ -230,13 +242,13 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 self.url + '?parent=' + str(self.category.sodar_uuid),
             )
         self.assertEqual(response.status_code, 200)
-        res_data = response.data['projects']
-        self.assertEqual(len(res_data), 1)
-        self.assertEqual(res_data[0]['full_title'], self.project.title)
-        self.assertEqual(res_data[0]['access'], False)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 1)
+        self.assertEqual(pd[0]['full_title'], self.project.title)
+        self.assertEqual(pd[0]['access'], False)
 
     def test_get_finder_nested(self):
-        """Test project list with finder role and nested access"""
+        """Test GET with finder role and nested access"""
         sub_cat = self.make_project(
             'SubCategory', PROJECT_TYPE_CATEGORY, self.category
         )
@@ -250,14 +262,14 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         with self.login(user_finder):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        res_data = response.data['projects']
-        self.assertEqual(len(res_data), 3)
-        self.assertEqual(res_data[0]['full_title'], self.category.full_title)
-        self.assertEqual(res_data[0]['access'], True)
-        self.assertEqual(res_data[1]['full_title'], sub_cat.full_title)
-        self.assertEqual(res_data[1]['access'], True)
-        self.assertEqual(res_data[2]['full_title'], sub_project.full_title)
-        self.assertEqual(res_data[2]['access'], False)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 3)
+        self.assertEqual(pd[0]['full_title'], self.category.full_title)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[1]['full_title'], sub_cat.full_title)
+        self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[2]['full_title'], sub_project.full_title)
+        self.assertEqual(pd[2]['access'], False)
 
     def test_get_finder_other_branch(self):
         """Test project list with finder role in another branch"""
@@ -276,16 +288,16 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         with self.login(user_finder):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        res_data = response.data['projects']
-        self.assertEqual(len(res_data), 4)
-        self.assertEqual(res_data[0]['full_title'], self.category.full_title)
-        self.assertEqual(res_data[0]['access'], True)
-        self.assertEqual(res_data[1]['full_title'], self.project.full_title)
-        self.assertEqual(res_data[1]['access'], True)
-        self.assertEqual(res_data[2]['full_title'], branch_cat.full_title)
-        self.assertEqual(res_data[2]['access'], True)
-        self.assertEqual(res_data[3]['full_title'], branch_project.full_title)
-        self.assertEqual(res_data[3]['access'], False)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 4)
+        self.assertEqual(pd[0]['full_title'], self.category.full_title)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[1]['full_title'], self.project.full_title)
+        self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[2]['full_title'], branch_cat.full_title)
+        self.assertEqual(pd[2]['access'], True)
+        self.assertEqual(pd[3]['full_title'], branch_project.full_title)
+        self.assertEqual(pd[3]['access'], False)
 
     def test_get_starred(self):
         """Test GET with starred project"""
@@ -312,7 +324,65 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['projects'][1]['public_access'], True)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[1]['public_access'], True)
+        self.assertEqual(pd[1]['access'], True)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_public_access_anon(self):
+        """Test GET with public read-only access and anonymous user"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[1]['public_access'], True)
+        self.assertEqual(pd[1]['access'], True)
+
+    def test_get_category_public_stats(self):
+        """Test GET with category public stats"""
+        app_settings.set(
+            APP_NAME, 'category_public_stats', True, project=self.category
+        )
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['full_title'], self.category.full_title)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[0]['public_access'], False)
+        self.assertEqual(pd[0]['public_stats'], True)
+
+    def test_get_category_public_stats_no_roles(self):
+        """Test GET with category public stats as user with no roles"""
+        app_settings.set(
+            APP_NAME, 'category_public_stats', True, project=self.category
+        )
+        with self.login(self.user_no_roles):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 1)
+        self.assertEqual(pd[0]['full_title'], self.category.full_title)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[0]['public_stats'], True)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_category_public_stats_anon(self):
+        """Test GET with category public stats as anonymous user"""
+        app_settings.set(
+            APP_NAME, 'category_public_stats', True, project=self.category
+        )
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 1)
+        self.assertEqual(pd[0]['full_title'], self.category.full_title)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[0]['public_stats'], True)
 
 
 class TestProjectListColumnAjaxView(
@@ -401,24 +471,24 @@ class TestProjectListRoleAjaxView(
 
     def setUp(self):
         super().setUp()
-        self.user_cat_owner = self.make_user('cat_owner')
-        self.user_pro_owner = self.make_user('pro_owner')
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_owner = self.make_user('user_owner')
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.owner_as_cat = self.make_assignment(
-            self.category, self.user_cat_owner, self.role_owner
+            self.category, self.user_owner_cat, self.role_owner
         )
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self.make_assignment(
-            self.project, self.user_pro_owner, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
 
     def test_post_category_owner(self):
         """Test POST for role retrieval as category owner"""
-        with self.login(self.user_cat_owner):
+        with self.login(self.user_owner_cat):
             response = self.client.post(
                 reverse('projectroles:ajax_project_list_roles'),
                 json.dumps(
@@ -440,7 +510,7 @@ class TestProjectListRoleAjaxView(
 
     def test_post_project_owner(self):
         """Test POST for role retrieval as project owner"""
-        with self.login(self.user_pro_owner):
+        with self.login(self.user_owner):
             response = self.client.post(
                 reverse('projectroles:ajax_project_list_roles'),
                 json.dumps(
@@ -481,6 +551,92 @@ class TestProjectListRoleAjaxView(
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, {})
+
+
+class TestCategoryStatisticsAjaxView(
+    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+):
+    """Tests for CategoryStatisticsAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.user_owner = self.make_user('user_owner')
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+
+    def test_get(self):
+        """Test CategoryStatisticsAjaxView GET"""
+        with self.login(self.user_owner):
+            response = self.client.get(
+                reverse(
+                    'projectroles:ajax_stats_category',
+                    kwargs={'project': self.category.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        expected = [
+            {
+                'title': 'Projects',
+                'value': 1,
+                'unit': None,
+                'description': 'Projects in this category',
+                'icon': 'mdi:cube',
+            },
+            {
+                'title': 'Members',
+                'value': 1,
+                'unit': None,
+                'description': 'Users with roles in this category',
+                'icon': 'mdi:account-multiple',
+            },
+            {
+                'title': 'Files',
+                'value': 0,
+                'unit': None,
+                'description': 'Files uploaded to projects in this category',
+                'icon': 'mdi:file',
+            },
+        ]
+        self.assertEqual(response.data['stats'], expected)
+
+    def test_get_project(self):
+        """Test GET with project (should fail)"""
+        with self.login(self.user_owner):
+            response = self.client.get(
+                reverse(
+                    'projectroles:ajax_stats_category',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_subcategory(self):
+        """Test GET with subcategory"""
+        new_category = self.make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(new_category, self.user_owner, self.role_owner)
+        with self.login(self.user_owner):
+            response = self.client.get(
+                reverse(
+                    'projectroles:ajax_stats_category',
+                    kwargs={'project': new_category.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['stats'][0]['value'], 0)
+        self.assertEqual(response.data['stats'][1]['value'], 1)  # User exists
+        self.assertEqual(response.data['stats'][2]['value'], 0)
 
 
 class TestProjectStarringAjaxView(

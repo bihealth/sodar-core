@@ -7,19 +7,28 @@ from django.conf import settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    SODARUser,
+    SODAR_CONSTANTS,
+    CAT_DELIMITER,
+)
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     PluginAppSettingDef,
     PluginObjectLink,
     PluginSearchResult,
+    PluginCategoryStatistic,
 )
+from projectroles.utils import get_display_name
 
 from filesfolders.models import File, Folder, HyperLink
 from filesfolders.urls import urlpatterns
 
 
 # SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 
@@ -211,6 +220,36 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'value': HyperLink.objects.all().count(),
             },
         }
+
+    def get_category_stats(
+        self, category: Project
+    ) -> list[PluginCategoryStatistic]:
+        """
+        Return app statistics for the given category. Expected to return
+        cumulative statistics for all projects under the category and its
+        possible subcategories.
+
+        :param category: Project object of CATEGORY type
+        :return: List of PluginCategoryStatistic objects
+        """
+        children = Project.objects.filter(
+            type=PROJECT_TYPE_PROJECT,
+            full_title__startswith=category.full_title + CAT_DELIMITER,
+        )
+        val = File.objects.filter(project__in=children).count()
+        desc = 'Files uploaded to {} in this {}'.format(
+            get_display_name(PROJECT_TYPE_PROJECT, plural=True),
+            get_display_name(PROJECT_TYPE_CATEGORY),
+        )
+        return [
+            PluginCategoryStatistic(
+                plugin=self,
+                title='Files',
+                value=val,
+                description=desc,
+                icon='mdi:file',
+            )
+        ]
 
     def get_project_list_value(
         self, column_id: str, project: Project, user: SODARUser

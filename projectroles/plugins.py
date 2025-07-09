@@ -477,6 +477,19 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         return {}
 
+    def get_category_stats(
+        self, category: Project
+    ) -> list['PluginCategoryStatistic']:
+        """
+        Return app statistics for the given category. Expected to return
+        cumulative statistics for all projects under the category and its
+        possible subcategories.
+
+        :param category: Project object of CATEGORY type
+        :return: List of PluginCategoryStatistic objects
+        """
+        return []
+
     def get_project_list_value(
         self, column_id: str, project: Project, user: SODARUser
     ) -> Union[str, int, None]:
@@ -973,6 +986,54 @@ class PluginSearchResult:
                 'At least one type keyword must be provided in search_types'
             )
         self.items = items
+
+
+class PluginCategoryStatistic:
+    """Class representing an item of category statistics"""
+
+    #: Plugin from which this item is initialized (None for projectroles)
+    plugin = None
+    #: Title to be displayed (string)
+    title = None
+    #: Value of the statistic (int or float)
+    value = 0
+    #: Optional unit (string or None)
+    unit = None
+    #: Optional description to be displayed as tooltip (string or None)
+    description = None
+    #: Optional icon namespace and ID (string or None)
+
+    def __init__(
+        self,
+        plugin: Optional[ProjectAppPluginPoint],
+        title: str,
+        value: Union[int, float],
+        unit: Optional[str] = None,
+        description: Optional[str] = None,
+        icon: Optional[str] = None,
+    ):
+        """
+        Initialize PluginCategoryStatistic.
+
+        :param plugin: ProjectAppPluginPoint object (None for projectroles)
+        :param title: String
+        :param value: Integer or float
+        :param unit: String or None
+        :param description: String or None
+        :param icon: String or None
+        :raises: ValueError if value is not integer or float
+        """
+        self.plugin = plugin
+        self.title = title
+        if not isinstance(value, int) and not isinstance(value, float):
+            raise ValueError('Value must be integer or float')
+        self.value = value
+        self.unit = unit
+        self.description = description
+        if icon:
+            self.icon = icon
+        elif plugin:
+            self.icon = getattr(plugin, 'icon')
 
 
 # Plugin API -------------------------------------------------------------------

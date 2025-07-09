@@ -136,6 +136,18 @@ def is_modifiable_project(user, obj):
 
 
 @rules.predicate
+def is_public_stats_category(user, obj):
+    """Whether or not project is top level category with public stats enabled"""
+    if (
+        obj.type == PROJECT_TYPE_CATEGORY
+        and not obj.parent
+        and app_settings.get(APP_NAME, 'category_public_stats', project=obj)
+    ):
+        return True
+    return False
+
+
+@rules.predicate
 def can_modify_project_data(user, obj):
     """
     Whether or not project app data can be modified, due to e.g. project
@@ -224,7 +236,8 @@ is_role_update_user = is_project_owner | is_project_delegate
 
 # Allow viewing project/category details
 rules.add_perm(
-    'projectroles.view_project', can_view_project | has_category_child_role
+    'projectroles.view_project',
+    can_view_project | is_public_stats_category | has_category_child_role,
 )
 
 # Allow project updating
@@ -290,7 +303,8 @@ rules.add_perm(
 # Allow starring/unstarring a project
 rules.add_perm(
     'projectroles.star_project',
-    (can_view_project | has_category_child_role) & is_site_writable,
+    (can_view_project | is_public_stats_category | has_category_child_role)
+    & is_site_writable,
 )
 
 # Allow updating remote sites and remote project access

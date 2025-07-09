@@ -129,6 +129,9 @@ USER_LIST_RESTRICT_MSG = (
 USER_LIST_INCLUDE_VERSION_MSG = (
     'The include_system_users parameter is not available in API version <1.1'
 )
+CAT_PUBLIC_STATS_API_MSG = (
+    'Setting category_public_stats is only allowed for top level categories'
+)
 VERSION_1_1 = parse_version('1.1')
 VERSION_2_0 = parse_version('2.0')
 
@@ -1324,6 +1327,12 @@ class ProjectSettingSetAPIView(
                         ip_address(ip)
                 except ValueError as ex:
                     raise serializers.ValidationError(ex)
+        if (
+            plugin_name == APP_NAME
+            and setting_name == 'category_public_stats'
+            and (project.parent or project.type == PROJECT_TYPE_PROJECT)
+        ):
+            raise serializers.ValidationError(CAT_PUBLIC_STATS_API_MSG)
 
         # Set setting value with validation, return possible errors
         try:

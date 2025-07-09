@@ -84,6 +84,9 @@ REMOVE_ROLE_LABEL = '--- Remove role from {project_title} ---'
 INVITE_EXISTS_MSG = (
     'Active invite already exists for {user_email} in {project_title}'
 )
+CAT_PUBLIC_STATS_FIELD = 'settings.projectroles.category_public_stats'
+CAT_PUBLIC_STATS_ERR_MSG = 'This field can only be set for top level categories'
+IP_ALLOW_LIST_FIELD = 'settings.projectroles.ip_allow_list'
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -648,12 +651,12 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         if current_user:
             self.current_user = current_user
         # Access parent project if present
-        parent_project = None
+        parent_cat = None
         if project:
-            parent_project = Project.objects.filter(sodar_uuid=project).first()
+            parent_cat = Project.objects.filter(sodar_uuid=project).first()
         # Add remote site fields if on source site
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE and (
-            parent_project
+            parent_cat
             or (self.instance.pk and self.instance.type == PROJECT_TYPE_PROJECT)
         ):
             self._init_remote_sites()
@@ -665,6 +668,9 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         self.init_app_settings(
             self.app_plugins, APP_SETTING_SCOPE_PROJECT, user_mod
         )
+        # Hide category_public_stats if not in top level category
+        if parent_cat and CAT_PUBLIC_STATS_FIELD in self.fields:
+            self.fields[CAT_PUBLIC_STATS_FIELD].widget = forms.HiddenInput()
 
         # Update help texts to match DISPLAY_NAMES
         self.fields['title'].help_text = 'Title'
@@ -733,8 +739,8 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             self.fields['parent'].widget = forms.HiddenInput()
 
             # Set owner
-            if self.current_user.is_superuser and parent_project:
-                self.initial['owner'] = parent_project.get_owner().user
+            if self.current_user.is_superuser and parent_cat:
+                self.initial['owner'] = parent_cat.get_owner().user
             else:
                 self.initial['owner'] = self.current_user
             self.fields['owner'].label_from_instance = (
@@ -747,9 +753,9 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             self.initial['public_access'] = None
 
             # Creating a subproject
-            if parent_project:
+            if parent_cat:
                 # Parent must be current parent
-                self.initial['parent'] = parent_project.sodar_uuid
+                self.initial['parent'] = parent_cat.sodar_uuid
                 # Set initial value for type
                 self.initial['type'] = None
             # Creating a top level project
@@ -864,9 +870,11 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         for field, error in errors:
             self.add_error(field, error)
         # Custom projectroles validation
-        ip_field = 'settings.projectroles.ip_allow_list'
-        if self.cleaned_data.get(ip_field):
-            ips = [s.strip() for s in self.cleaned_data[ip_field].split(',')]
+        if self.cleaned_data.get(IP_ALLOW_LIST_FIELD):
+            ips = [
+                s.strip()
+                for s in self.cleaned_data[IP_ALLOW_LIST_FIELD].split(',')
+            ]
             for ip in ips:
                 try:
                     if '/' in ip:
@@ -874,8 +882,12 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                     else:
                         ip_address(ip)
                 except ValueError as ex:
-                    self.add_error(ip_field, ex)
+                    self.add_error(IP_ALLOW_LIST_FIELD, ex)
                     break
+        if self.cleaned_data.get(CAT_PUBLIC_STATS_FIELD) and (
+            parent or self.cleaned_data['type'] == PROJECT_TYPE_PROJECT
+        ):
+            self.add_error(CAT_PUBLIC_STATS_FIELD, CAT_PUBLIC_STATS_ERR_MSG)
         return self.cleaned_data
 
 

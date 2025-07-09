@@ -17,6 +17,7 @@ Added
     - JQuery beautification support with js-beautify (#1717)
 - **Filesfolders**
     - Search by object UUID (#1546)
+    - ``get_category_stats()`` implementation (#1701)
 - **Projectroles**
     - ``ProjectInviteRetrieveAPIView`` REST API view (#1692)
     - Project viewer role (#1650)
@@ -44,6 +45,14 @@ Added
     - ``PluginAPI`` class for plugin helpers (#1335)
     - ``PermissionTestMixin.setup_user_helpers()`` helper (#1600)
     - ``ip_allow_list`` validation (#1667)
+    - Top level category public statistics viewing (#1701)
+    - ``ProjectDetailView`` category statistics card (#1701)
+    - ``category_public_stats`` app setting (#1701)
+    - ``is_public_stats_category()`` rule predicate (#1701)
+    - ``PermissonTestMixin.set_category_public_stats()`` helper (#1701)
+    - ``PluginCategoryStatistic`` class (#1701)
+    - ``ProjectAppPluginPoint.get_category_stats()`` method (#1701)
+    - ``CategoryStatisticsAjaxView`` Ajax view (#1701)
 - **Timeline**
     - Include user full name and username in event search (#1713)
 

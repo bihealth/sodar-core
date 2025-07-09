@@ -856,6 +856,8 @@ class TestHomeView(UITestBase):
             title.find_element(By.CLASS_NAME, 'sodar-pr-project-public')
         with self.assertRaises(NoSuchElementException):
             title.find_element(By.CLASS_NAME, 'sodar-pr-project-findable')
+        with self.assertRaises(NoSuchElementException):
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-stats')
 
     def test_project_list_title_no_highlight(self):
         """Test project list title rendering with no highlight"""
@@ -985,6 +987,20 @@ class TestHomeView(UITestBase):
         )
         self.assertIsNotNone(
             title.find_element(By.CLASS_NAME, 'sodar-pr-project-public')
+        )
+
+    def test_project_list_title_category_public_stats(self):
+        """Test project list title rendering with category_public_stats"""
+        app_settings.set(
+            APP_NAME, 'category_public_stats', True, project=self.category
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        row = self._get_project_row(self.category)
+        title = row.find_element(
+            By.CLASS_NAME, 'sodar-pr-project-list-title-td'
+        )
+        self.assertIsNotNone(
+            title.find_element(By.CLASS_NAME, 'sodar-pr-project-stats')
         )
 
     def test_project_list_custom_cols(self):
@@ -1800,6 +1816,10 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         self.url_cat = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
         )
+        self.cat_stat_wait_kw = {
+            'wait_elem': 'sodar-pr-dashboard-card-stats',
+            'wait_loc': 'CLASS_NAME',
+        }
 
     def test_project_links(self):
         """Test visibility of project links"""
@@ -1871,6 +1891,12 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             (self.user_viewer, self._get_pr_links('roles')),
         ]
         self.assert_element_set(expected, PROJECT_LINK_IDS, self.url)
+
+    def test_project_category_stats(self):
+        """Test category stats visibility under project (should not exist)"""
+        self.login_and_redirect(self.user_owner, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-details-card-stats')
 
     def test_copy_uuid_visibility_default(self):
         """Test default UUID copy button visibility (should not be visible)"""
@@ -2292,6 +2318,19 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             self.selenium.find_element(By.ID, 'sodar-pr-header-icon-archive')
         )
 
+    def test_category_stats(self):
+        """Test rendering of category statistics"""
+        self.login_and_redirect(
+            self.user_owner, self.url_cat, **self.cat_stat_wait_kw
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-details-card-stats')
+        )
+        elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-dashboard-card-stats'
+        )
+        self.assertEqual(len(elems), 3)
+
     def test_category_project_list(self):
         """Test rendering of project list in category"""
         self.assertEqual(
@@ -2397,6 +2436,60 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             ),
             False,
         )  # Not in HomeView, default value should not be set
+
+    def test_category_public_stats_no_role(self):
+        """Test category with category_public_stats and user with no role"""
+        app_settings.set(
+            APP_NAME, 'category_public_stats', True, project=self.category
+        )
+        self.login_and_redirect(
+            self.user_no_roles, self.url_cat, **self.cat_stat_wait_kw
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-details-alert-limited')
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-details-card-readme')
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-details-card-stats')
+        )
+        elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-dashboard-card-stats'
+        )
+        self.assertEqual(len(elems), 3)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-project-list-table')
+
+    def test_category_public_stats_local_role(self):
+        """Test category with category_public_stats and user with local role"""
+        app_settings.set(
+            APP_NAME, 'category_public_stats', True, project=self.category
+        )
+        self.login_and_redirect(self.user_contributor_cat, self.url_cat)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-details-alert-limited')
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-details-card-readme')
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-project-list-table')
+        )
+
+    def test_category_public_stats_child_role(self):
+        """Test category with category_public_stats and user with child role"""
+        app_settings.set(
+            APP_NAME, 'category_public_stats', True, project=self.category
+        )
+        self.login_and_redirect(self.user_contributor, self.url_cat)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-details-alert-limited')
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-details-card-readme')
+        )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.ID, 'sodar-pr-project-list-table')
+        )
 
 
 class TestProjectCreateView(RemoteSiteMixin, UITestBase):
