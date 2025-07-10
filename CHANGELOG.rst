@@ -91,6 +91,7 @@ Changed
     - Replace ``ip_allowlist`` JSON setting with ``ip_allow_list`` string setting (#1667)
     - Refactor remote sync API tests (#1323, #1723)
     - Refactor project type checks to use new helpers (#1727)
+    - Improve project header and description layout (#1731)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)
