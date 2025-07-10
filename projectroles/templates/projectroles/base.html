@@ -109,11 +109,13 @@
     {% get_admin_warning as admin_warning %}
     <script type="text/javascript">
       $(document).ready(function() {
-        $('#sodar-navbar-link-admin-warning').click(function () {
+        $('#sodar-navbar-link-admin').click(function () {
+          console.debug('Clicked')
           $('#sodar-modal').find('.modal-dialog').addClass('w-50')
           $('.modal-title').text('Warning!')
           let htmlData = '{{ admin_warning|safe }}'
           $('.modal-body').html(htmlData)
+          $('#sodar-modal').modal('show')
           $('#sodar-pr-btn-admin-continue').click(function () {
               $('#sodar-modal').modal('hide')
           })

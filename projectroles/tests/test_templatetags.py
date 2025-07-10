@@ -1091,7 +1091,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
                 },
                 {
                     'name': 'admin',
-                    'url': '/admin/',
+                    'url': None,  # No URL for Django admin, opens warning modal
                     'label': 'Django Admin',
                     'icon': 'mdi:cogs',
                     'active': False,

@@ -296,7 +296,7 @@ class AppLinkAPI:
             ret.append(
                 {
                     'name': 'admin',
-                    'url': reverse('admin:index'),
+                    'url': None,
                     'label': 'Django Admin',
                     'icon': 'mdi:cogs',
                     'active': False,

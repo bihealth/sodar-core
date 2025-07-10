@@ -522,7 +522,7 @@ class TestBaseTemplate(UITestBase):
     """Tests for the base project template"""
 
     def test_admin_link(self):
-        """Test admin site link visibility according to user permissions"""
+        """Test Dajngo admin link visibility according to user permissions"""
         expected_true = [self.superuser]
         expected_false = [
             self.user_owner_cat,
@@ -542,6 +542,25 @@ class TestBaseTemplate(UITestBase):
         elem_id = 'sodar-navbar-link-admin'
         self.assert_element_exists(expected_true, url, elem_id, True)
         self.assert_element_exists(expected_false, url, elem_id, False)
+
+    def test_admin_link_modal(self):
+        """Test Django admin warning modal opening"""
+        self.login_and_redirect(self.superuser, reverse('home'))
+        modal = self.selenium.find_element(By.ID, 'sodar-modal')
+        self.assertEqual(modal.is_displayed(), False)
+        # Open dropdown and click link
+        self.selenium.find_element(By.ID, 'sodar-navbar-user-dropdown').click()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located((By.ID, 'sodar-navbar-link-admin'))
+        )
+        link = self.selenium.find_element(By.ID, 'sodar-navbar-link-admin')
+        link.click()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.ID, 'sodar-pr-admin-warning-modal-content')
+            )
+        )
+        self.assertEqual(modal.is_displayed(), True)
 
 
 class TestHomeView(UITestBase):
@@ -594,6 +613,18 @@ class TestHomeView(UITestBase):
                 (By.CLASS_NAME, 'sodar-pr-project-list-load-icon')
             )
         )
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('home')
+        self.wait_kwargs = {
+            'wait_elem': 'sodar-pr-project-list-item',
+            'wait_loc': 'CLASS_NAME',
+        }
+        self.wait_kwargs_empty = {
+            'wait_elem': 'sodar-pr-project-list-message',
+            'wait_loc': 'ID',
+        }
 
     def test_project_list_items(self):
         """Test visibility of project list items"""

@@ -50,7 +50,7 @@
       <a class="dropdown-item {% if link.active %}active{% endif %}
                 {% if link.name == 'sign-out' %}text-danger{% endif %}
                 {% if link.name == 'sign-in' %}text-primary{% endif %}"
-         href="{{ link.url }}"
+         {% if link.url %}href="{{ link.url }}"{% endif %}
          id="sodar-navbar-link-{{ link.name }}">
         <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
       </a>

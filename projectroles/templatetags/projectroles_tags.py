@@ -269,7 +269,8 @@ def get_sidebar_app_legend(title: str) -> str:
 @register.simple_tag
 def get_admin_warning() -> str:
     """Return Django admin warning HTML"""
-    ret = (
+    ret = '<div id="sodar-pr-admin-warning-modal-content">'
+    ret += (
         '<p class="text-danger">Editing database objects other than users '
         'directly in the Django admin view is <strong>not</strong> '
         'recommended!</p>'
@@ -285,6 +286,7 @@ def get_admin_warning() -> str:
         '<i class="iconify" data-icon="mdi:cogs"></i> Continue to Django Admin'
         '</a></p>'.format(reverse('admin:index'))
     )
+    ret += '</div>'
     return ret
 
 
