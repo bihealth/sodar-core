@@ -62,6 +62,7 @@ Changed
 -------
 
 - **General**
+    - Upgrade develoment and deployment platform to Ubuntu v24.04 (#1563)
     - Upgrade minimum Django version to v4.2.23 (#1686)
     - Upgrade general Python dependencies (#1686)
     - Upgrade to djangorestframework v3.16 (#1689)

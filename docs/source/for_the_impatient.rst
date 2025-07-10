@@ -77,7 +77,7 @@ is the same as for SODAR Core itself. For a step-by-step guide, see
 
 .. note::
 
-    This guide and associated helper scripts are targeting Ubuntu 20.04. For
+    This guide and associated helper scripts are targeting Ubuntu 24.04. For
     other Linux distributions or operating systems, you may have to adjust them
     as required. This is out of the scope of this documentation.
 

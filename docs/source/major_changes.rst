@@ -35,6 +35,7 @@ Release Highlights
 - Update timeline list user displaying
 - Upgrade projectroles REST API version to v2.0
 - Upgrade projectroles sync REST API version to v2.0
+- Upgrade supported develoment and deployment platform to Ubuntu v24.04
 - Deprecate plugin helper methods in projectroles.plugins root
 - Remove support for SODAR Core features deprecated in v1.1
 
@@ -44,6 +45,9 @@ Breaking Changes
 System Prerequisites
 --------------------
 
+OS Version
+    **Ubuntu v24.04** is now the recommended OS version, both for development
+    and deployment. Older versions are no longer supported.
 Django Version
     The minimum Django version has been bumped to v4.2.23.
 General Python Dependencies
