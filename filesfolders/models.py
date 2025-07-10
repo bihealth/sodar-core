@@ -79,7 +79,7 @@ class FilesfoldersManager(models.Manager):
             term_query.add(Q(name__icontains=t), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
             try:
-                uuid.UUID(t)
+                uuid.UUID(t.replace('-', ''))
                 term_query.add(Q(sodar_uuid=t), Q.OR)
             except ValueError:
                 pass
