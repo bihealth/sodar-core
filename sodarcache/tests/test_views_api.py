@@ -11,7 +11,7 @@ from test_plus.test import APITestCase
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -24,6 +24,9 @@ from sodarcache.views_api import (
     SODARCACHE_API_MEDIA_TYPE,
     SODARCACHE_API_DEFAULT_VERSION,
 )
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -59,7 +62,7 @@ class SodarcacheAPIViewTestBase(
     def setUp(self):
         super().setUp()
         # Get cache backend
-        self.cache_backend = get_backend_api('sodar_cache')
+        self.cache_backend = plugin_api.get_backend_api('sodar_cache')
         # Init roles
         self.init_roles()
         # Init users

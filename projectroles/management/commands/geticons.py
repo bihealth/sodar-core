@@ -27,7 +27,7 @@ COLL_URL = (
 class Command(BaseCommand):
     help = 'Retrieves or updates JSON Iconify icons'
 
-    def _download(self, url, base_path, file_name):
+    def _download(self, url: str, base_path: str, file_name: str):
         """
         Download file.
 
@@ -35,11 +35,11 @@ class Command(BaseCommand):
         :param base_path: Base path in local file system
         :param file_name: File name
         """
-        logger.debug('Downloading "{}"..'.format(file_name))
+        logger.debug(f'Downloading "{file_name}"..')
         response = urllib.request.urlopen(url)
         with open(os.path.join(base_path, file_name), 'wb') as f:
             f.write(response.read())
-        logger.info('Download of "{}" OK'.format(file_name))
+        logger.info(f'Download of "{file_name}" OK')
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -72,9 +72,8 @@ class Command(BaseCommand):
         if not os.path.exists(coll_path):
             os.makedirs(coll_path, mode=0o755)
             logger.info(
-                'Created Iconify JSON directories in {}/static'.format(
-                    settings.SITE_PACKAGE
-                )
+                f'Created Iconify JSON directories in {settings.SITE_PACKAGE}'
+                f'/static'
             )
         else:
             logger.debug('Found existing Iconify JSON dirs')

@@ -46,12 +46,16 @@ class Migration(migrations.Migration):
                 (
                     'sodar_uuid',
                     models.UUIDField(
-                        default=uuid.uuid4, help_text='BG Job SODAR UUID', unique=True
+                        default=uuid.uuid4,
+                        help_text='BG Job SODAR UUID',
+                        unique=True,
                     ),
                 ),
                 (
                     'job_type',
-                    models.CharField(help_text='Type of the job', max_length=512),
+                    models.CharField(
+                        help_text='Type of the job', max_length=512
+                    ),
                 ),
                 ('name', models.CharField(max_length=512)),
                 ('description', models.TextField()),

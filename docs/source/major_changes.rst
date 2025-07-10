@@ -10,6 +10,155 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.2.0 (2025-07-10)
+*******************
+
+Release Highlights
+==================
+
+- Add project viewer role
+- Add project viewer role support for project public read-only access
+- Add category statistics card and plugin API
+- Add top level category public statistics viewing
+- Add search by object UUID
+- Add user opt-out settings for app alert notifications
+- Add project member list pagination, ordering and filtering
+- Add project invite retrieval REST API view
+- Add temporary project access blocking for superusers
+- Add blockprojectaccess management command
+- Add saving of home view project list starred filter state
+- Add first and last links in pagination controls
+- Add user full name and username in timeline event search
+- Add PluginAPI class for plugin helpers
+- Update projectroles REST API to return user UUIDs instead of nested user
+  serializers
+- Update timeline list user displaying
+- Upgrade projectroles REST API version to v2.0
+- Upgrade projectroles sync REST API version to v2.0
+- Upgrade supported develoment and deployment platform to Ubuntu v24.04
+- Deprecate plugin helper methods in projectroles.plugins root
+- Remove support for SODAR Core features deprecated in v1.1
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+OS Version
+    **Ubuntu v24.04** is now the recommended OS version, both for development
+    and deployment. Older versions are no longer supported.
+Django Version
+    The minimum Django version has been bumped to v4.2.23.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project.
+
+Project Viewer Role Added
+-------------------------
+
+This release adds support for the
+:ref:`project viewer role <app_projectroles_basics_roles>`. When upgrading, it
+is recommended to review the roles in your SODAR Core based site to ensure
+correct access rights for users. These steps include:
+
+1. Reviewing existing rules to ensure appropriate user access
+2. Updating rules to provide project viewer level access where applicable
+3. Updating all permission tests for views
+4. Appropriately documenting the new role level in site-specific documentation.
+
+.. note::
+
+    If the projectroles remote sync REST API is called from a target site
+    running SODAR Core <v1.2 with the source site running on >=v1.2, project
+    viewer roles will not be synchronized.
+
+Project Access Blocking Added
+-----------------------------
+
+This release adds the possibility for superusers to temporarily disable all
+non-superuser access to a specific project. It is recommended to add support for
+this feature in your SODAR Core based site.
+
+For project views built on top of SODAR Core base classes using
+``ProjectPermissionMixin`` or ``SODARAPIProjectPermission``, no changes are
+needed. For rule-based access control in custom views, you can use the
+``is_project_accessible()`` predicate found in ``projectroles.rules``.
+Alternatively, you can check for the setting in your custom code using the App
+Settings API. Example:
+
+.. code-block:: python
+
+    from projectroles.app_settings import AppSettingAPI
+    app_settings = AppSettingAPI()
+    app_settings.get('projectroles', 'project_access_block', project=project)
+
+
+REST API View Changes
+---------------------
+
+- Projectroles API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``1.0``, ``1.1``, ``2.0``
+    * ``ProjectInviteListAPIView``
+        + Replace ``issuer`` field user serializer with user UUID
+    * ``ProjectInviteRetrieveAPIView``
+        + Add view
+    * ``ProjectRetrieveAPIView``
+        + Replace ``roles`` field user serializer with user UUID
+        + Replace ``public_guest_access`` field with ``public_access``
+    * ``ProjectCreateAPIView``
+        + Replace ``public_guest_access`` field with ``public_access``
+    * ``ProjectUpdateAPIView``
+        + Replace ``public_guest_access`` field with ``public_access``
+    * ``ProjectSettingRetrieveAPIView``
+        + Replace ``user`` field user serializer with user UUID
+    * ``UserSettingRetrieveAPIView``
+        + Replace ``user`` field user serializer with user UUID
+- Projectroles sync API
+    * Current version: ``2.0`` (breaking changes)
+    * Allowed versions: ``1.0``, ``2.0``
+    * Add project viewer role sync
+    * **NOTE:** If called with API version ``1.0``, project viewer roles will
+      not be synced to target sites.
+
+Deprecated Features
+-------------------
+
+These features have been deprecated in v1.2 and will be removed in v1.3.
+
+``Project.public_guest_access``
+    Use ``Project.public_access`` instead. The new field is a foreign key to
+    either the role of ``project guest``, ``project viewer`` or ``None``.
+``Project.set_public()``
+    Use ``Project.set_public_access()`` instead.
+``_project_badge.html`` Include Template
+    Use ``projectroles_common_tags.get_project_badge()`` instead.
+``projectroles.plugins.get_active_plugins()``
+    Use ``projectroles.plugins.PluginAPI`` instead.
+``projectroles.plugins.change_plugin_status()``
+    Use ``projectroles.plugins.PluginAPI`` instead.
+``projectroles.plugins.get_app_plugin()``
+    Use ``projectroles.plugins.PluginAPI`` instead.
+``projectroles.plugins.get_backend_api()``
+    Use ``projectroles.plugins.PluginAPI`` instead.
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.1 and have been removed in v1.2.
+
+App Setting Definitions as Dict
+    Provide definitions as  a list of ``PluginAppSettingDef`` objects. See
+    the :ref:`app settings documentation <dev_resource_app_settings>` for
+    details.
+``projectroles.utils.get_user_display_name()``
+    Replaced by ``SODARUser.get_display_name()``.
+``AppSettingAPI.get_all()``
+    Replaced by ``AppSettingAPI.get_all_by_scope()``.
+
+
 v1.1.6 (2025-05-20)
 *******************
 

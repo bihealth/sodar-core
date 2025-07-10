@@ -17,7 +17,7 @@ from django.views.generic import (
 from projectroles.app_settings import AppSettingAPI
 from projectroles.email import send_generic_mail, get_email_user
 from projectroles.models import SODARUserAdditionalEmail, SODAR_CONSTANTS
-from projectroles.plugins import get_active_plugins, get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.views import (
     LoggedInPermissionMixin,
     HTTPRefererMixin,
@@ -28,8 +28,9 @@ from projectroles.views import (
 from userprofile.forms import UserAppSettingsForm, UserEmailForm
 
 
-User = auth.get_user_model()
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
+User = auth.get_user_model()
 
 
 # SODAR Constants
@@ -38,6 +39,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
 # Local Constants
 APP_NAME = 'userprofile'
+APP_NAME_PR = 'projectroles'
 SETTING_UPDATE_MSG = 'User settings updated.'
 VERIFY_EMAIL_SUBJECT = 'Verify your additional email address for {site}'
 VERIFY_EMAIL_BODY = r'''
@@ -65,9 +67,10 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     permission_required = 'userprofile.view_detail'
 
     def _get_user_settings(self):
-        plugins = get_active_plugins(
+        """Return user setting values"""
+        plugins = plugin_api.get_active_plugins(
             plugin_type='project_app'
-        ) + get_active_plugins(plugin_type='site_app')
+        ) + plugin_api.get_active_plugins(plugin_type='site_app')
         for plugin in plugins + [None]:
             if plugin:
                 name = plugin.name
@@ -83,7 +86,7 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
                 )
             for s_def in s_defs.values():
                 yield {
-                    'label': s_def.label or '{}.{}'.format(name, s_def.name),
+                    'label': s_def.label or f'{name}.{s_def.name}',
                     'value': app_settings.get(
                         name, s_def.name, user=self.request.user
                     ),
@@ -91,12 +94,17 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
                 }
 
     def get_context_data(self, **kwargs):
-        result = super().get_context_data(**kwargs)
-        result['user_settings'] = list(self._get_user_settings())
-        result['add_emails'] = SODARUserAdditionalEmail.objects.filter(
+        context = super().get_context_data(**kwargs)
+        context['user_settings'] = list(self._get_user_settings())
+        context['add_emails'] = SODARUserAdditionalEmail.objects.filter(
             user=self.request.user
         ).order_by('email')
-        return result
+        context['site_read_only'] = app_settings.get(
+            APP_NAME_PR, 'site_read_only'
+        )
+        context['send_email'] = settings.PROJECTROLES_SEND_EMAIL
+        context['site_mode'] = settings.PROJECTROLES_SITE_MODE
+        return context
 
 
 class UserAppSettingsView(
@@ -134,7 +142,9 @@ class UserAppSettingsView(
 class UserEmailMixin:
     """Mixin for user email helpers"""
 
-    def send_verify_email(self, email, resend=False):
+    def send_verify_email(
+        self, email: SODARUserAdditionalEmail, resend: bool = False
+    ):
         """
         Send verification message to additional email address.
 
@@ -166,7 +176,7 @@ class UserEmailMixin:
                 )
         except Exception as ex:
             messages.error(
-                self.request, 'Failed to send verification mail: {}'.format(ex)
+                self.request, f'Failed to send verification mail: {ex}'
             )
 
 
@@ -184,7 +194,7 @@ class UserEmailCreateView(
     template_name = 'userprofile/email_form.html'
 
     def get_success_url(self):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         self.send_verify_email(self.object)
         if timeline:
             timeline.add_event(
@@ -192,9 +202,7 @@ class UserEmailCreateView(
                 app_name=APP_NAME,
                 user=self.request.user,
                 event_name='email_create',
-                description='create additional email "{}"'.format(
-                    self.object.email
-                ),
+                description=f'create additional email "{self.object.email}"',
                 classified=True,
                 status_type=timeline.TL_STATUS_OK,
             )

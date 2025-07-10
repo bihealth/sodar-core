@@ -4,11 +4,15 @@ from math import ceil
 
 from django.conf import settings
 
-from projectroles.plugins import get_active_plugins, get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.urls import urlpatterns
-from projectroles.utils import ROLE_URLS
+from projectroles.app_links import ROLE_URLS
 
 
+plugin_api = PluginAPI()
+
+
+# Local constants
 SIDEBAR_ICON_MIN_SIZE = 18
 SIDEBAR_ICON_MAX_SIZE = 42
 
@@ -25,7 +29,7 @@ def site_app_processor(request):
     """
     Context processor for providing site apps for the site titlebar dropdown.
     """
-    site_apps = get_active_plugins('site_app')
+    site_apps = plugin_api.get_active_plugins('site_app')
     return {
         'site_apps': [
             a
@@ -40,7 +44,7 @@ def app_alerts_processor(request):
     Context processor for checking app alert status.
     """
     if request.user and request.user.is_authenticated:
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         if app_alerts:
             return {
                 'app_alerts': app_alerts.get_model()

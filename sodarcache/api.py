@@ -2,16 +2,21 @@
 
 import logging
 
+from typing import Optional
+
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 
 # Projectroles dependency
-from projectroles.plugins import get_active_plugins
+from projectroles.models import Project, SODARUser
+from projectroles.plugins import PluginAPI
 from projectroles.utils import get_app_names
 
 from sodarcache.models import JSONCacheItem
 
 
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 User = get_user_model()
 
 
@@ -21,15 +26,15 @@ LABEL_MAX_WIDTH = 32
 CACHE_TYPES = ['json']
 
 
-class SodarCacheAPI:
-    """SodarCache backend API to be used by Django apps."""
+class SODARCacheAPI:
+    """SODARCache backend API to be used by Django apps."""
 
     # TODO: Make model selection dynamic once we introduce types other than JSON
 
     # Internal functions -------------------------------------------------------
 
     @classmethod
-    def _check_app_name(cls, app_name):
+    def _check_app_name(cls, app_name: str):
         """Check if app_name is valid, raise ValueError if not"""
         if app_name not in APP_NAMES:
             raise ValueError(
@@ -39,7 +44,7 @@ class SodarCacheAPI:
             )
 
     @classmethod
-    def _check_data_type(cls, data_type):
+    def _check_data_type(cls, data_type: str):
         """Check if data_type is valid, raise ValueError if not"""
         if data_type not in CACHE_TYPES:
             raise ValueError(
@@ -52,7 +57,9 @@ class SodarCacheAPI:
     # API functions ------------------------------------------------------------
 
     @classmethod
-    def get_project_cache(cls, project, data_type='json'):
+    def get_project_cache(
+        cls, project: Project, data_type: str = 'json'
+    ) -> QuerySet:
         """
         Return all cached data for a project.
 
@@ -65,7 +72,12 @@ class SodarCacheAPI:
         return JSONCacheItem.objects.filter(project=project)
 
     @classmethod
-    def update_cache(cls, name=None, project=None, user=None):
+    def update_cache(
+        cls,
+        name: Optional[str] = None,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ):
         """
         Update items by certain name within a project by calling implemented
         functions in project app plugins.
@@ -74,12 +86,14 @@ class SodarCacheAPI:
         :param project: Project object to limit update to (optional)
         :param user: User object to denote user triggering the update (optional)
         """
-        plugins = get_active_plugins(plugin_type='project_app')
+        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         for plugin in plugins:
             plugin.update_cache(name, project, user)
 
     @classmethod
-    def delete_cache(cls, app_name=None, project=None):
+    def delete_cache(
+        cls, app_name: Optional[str] = None, project: Optional[Project] = None
+    ) -> int:
         """
         Delete cache items. Optionallly limit to project and/or user.
 
@@ -121,7 +135,9 @@ class SodarCacheAPI:
         return 0
 
     @classmethod
-    def get_cache_item(cls, app_name, name, project=None):
+    def get_cache_item(
+        cls, app_name: str, name: str, project: Optional[Project] = None
+    ) -> JSONCacheItem:
         """
         Return cached data by app_name, name (identifier) and optional project.
         Returns None if not found.
@@ -140,8 +156,14 @@ class SodarCacheAPI:
 
     @classmethod
     def set_cache_item(
-        cls, app_name, name, data, data_type='json', project=None, user=None
-    ):
+        cls,
+        app_name: str,
+        name: str,
+        data: dict,
+        data_type: str = 'json',
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> JSONCacheItem:
         """
         Create or update and save a cache item.
 
@@ -158,7 +180,7 @@ class SodarCacheAPI:
         cls._check_app_name(app_name)
         cls._check_data_type(data_type)
         item = cls.get_cache_item(app_name, name, project)
-        log_msg = 'Updated item "{}:{}"'.format(app_name, name)
+        log_msg = f'Updated item "{app_name}:{name}"'
         if not item:
             if data_type == 'json':
                 item = JSONCacheItem()
@@ -167,16 +189,18 @@ class SodarCacheAPI:
         item.data = data
         if project:
             item.project = project
-            log_msg += ' in project {}'.format(project.get_log_title())
+            log_msg += f' in project {project.get_log_title()}'
         if user:
             item.user = user
-            log_msg += ' by user "{}"'.format(user.username)
+            log_msg += f' by user "{user.username}"'
         item.save()
         logger.info(log_msg)
         return item
 
     @classmethod
-    def delete_cache_item(cls, app_name, name, project=None):
+    def delete_cache_item(
+        cls, app_name: str, name: str, project: Optional[Project] = None
+    ):
         """
         Method for deleting a cache item.
 
@@ -187,12 +211,12 @@ class SodarCacheAPI:
         item = cls.get_cache_item(app_name, name, project)
         if item:
             item.delete()
-            logger.info(
-                'Deleted item "{}:{}" from cache'.format(app_name, name)
-            )
+            logger.info(f'Deleted item "{app_name}:{name}" from cache')
 
     @classmethod
-    def get_update_time(cls, app_name, name, project=None):
+    def get_update_time(
+        cls, app_name: str, name: str, project: Optional[Project] = None
+    ) -> float:
         """
         Return the time of the last update of a cache object as seconds since
         epoch.

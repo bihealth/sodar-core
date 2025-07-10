@@ -45,7 +45,12 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test ProjectTimelineEventListAPIView GET"""
@@ -54,14 +59,14 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.user_no_roles, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.anonymous, 200)
 
     def test_get_archive(self):
@@ -71,8 +76,15 @@ class TestProjectTimelineEventListAPIView(TimelineAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.user_no_roles, 200)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response_api(self.url, self.superuser, 200)
+        self.assert_response_api(self.url, self.auth_non_superusers, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
 
     def test_get_read_only(self):
@@ -139,7 +151,12 @@ class TestTimelineEventRetrieveAPIView(
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users_project = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users_project = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get_project_event(self):
         """Test TimelineEventRetrieveAPIView GET with project event"""
@@ -176,9 +193,11 @@ class TestTimelineEventRetrieveAPIView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
         self.assert_response_api(self.url, good_users, 200)

@@ -12,10 +12,11 @@ from django.core.management.base import BaseCommand
 
 from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 
 
 logger = ManagementCommandLogger(__name__)
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -103,7 +104,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         logger.info('Creating remote site..')
         name = options['name']
         url = options['url']
@@ -113,14 +114,14 @@ class Command(BaseCommand):
             url = ''.join(['http://', url])
         pattern = re.compile(r'(http|https)://.*\..*')
         if not pattern.match(url):
-            logger.error('Invalid URL "{}"'.format(url))
+            logger.error(f'Invalid URL "{url}"')
             sys.exit(1)
 
         # Validate site mode
         site_mode = options['mode'].upper()
         host_mode = settings.PROJECTROLES_SITE_MODE
         if site_mode not in [SITE_MODE_SOURCE, SITE_MODE_TARGET]:
-            logger.error('Invalid mode "{}"'.format(site_mode))
+            logger.error(f'Invalid mode "{site_mode}"')
             sys.exit(1)
         if site_mode == host_mode:
             logger.error('Attempting to create site with the same mode as host')
@@ -156,7 +157,7 @@ class Command(BaseCommand):
                 project=None,
                 app_name='projectroles',
                 user=None,
-                event_name='{}_site_create'.format(site_mode.lower()),
+                event_name=f'{site_mode.lower()}_site_create',
                 description='create {} remote site {{{}}} via management '
                 'command'.format(site_mode.lower(), 'remote_site'),
                 classified=True,
@@ -164,6 +165,4 @@ class Command(BaseCommand):
                 extra_data=create_kw,
             )
             tl_event.add_object(obj=site, label='remote_site', name=site.name)
-        logger.info(
-            'Created remote site "{}" with mode {}'.format(site.name, site.mode)
-        )
+        logger.info(f'Created remote site "{site.name}" with mode {site.mode}')

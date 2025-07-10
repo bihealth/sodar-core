@@ -48,23 +48,23 @@
   <script type="text/javascript">
     // TODO: Move to js file and unify with roleassignment_form js
     $(document).ready(function() {
-        $('#sodar-pr-invite-preview-link').click(function () {
-            $('.modal-title').text('Invite Preview');
-            var body = '{{ preview_body }}';
-            var roleName = $('#id_role').find('option:selected').text();
-            var message = $('#id_message').val();
-            body = body.replace('{role_name}', roleName);
-            var htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>';
-            htmlData += '<strong>To:</strong><pre>' + $('#id_email').val() + '</pre>';
-            htmlData += '<strong>Body:</strong>';
-            htmlData += '<pre id="sodar-email-body">' + body;
-            if (message !== '') {
-                htmlData += '{{ preview_message }}'.replace('{message}', message);
-            }
-            htmlData += '{{ preview_footer }}';
-            htmlData += '</pre>';
-            $('.modal-body').html(htmlData);
-        });
-    });
+      $('#sodar-pr-invite-preview-link').click(function () {
+        $('.modal-title').text('Invite Preview')
+        let body = '{{ preview_body }}'
+        let roleName = $('#id_role').find('option:selected').text()
+        let message = $('#id_message').val()
+        body = body.replace('{role_name}', roleName)
+        let htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>'
+        htmlData += '<strong>To:</strong><pre>' + $('#id_email').val() + '</pre>'
+        htmlData += '<strong>Body:</strong>'
+        htmlData += '<pre id="sodar-email-body">' + body
+        if (message !== '') {
+          htmlData += '{{ preview_message }}'.replace('{message}', message)
+        }
+        htmlData += '{{ preview_footer }}'
+        htmlData += '</pre>'
+        $('.modal-body').html(htmlData)
+      })
+    })
   </script>
 {% endblock javascript %}

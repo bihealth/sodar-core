@@ -94,6 +94,10 @@ and/or shortcuts to app functionalities. Here you can also access project apps
 from the project sidebar. For project apps, the sidebar link leads to the app
 entry point view as defined in the app plugin.
 
+For categories, the view also displays the :guilabel:`Category Statistics` card.
+This card contains statistics from site apps regarding data in projects within
+the category and its possible subcategories.
+
 For each page in a project app which extends the default projectroles template
 layout, the **project title bar** is displayed on the top of the page. This
 contains the project title and description and a link to "star" the project into
@@ -169,10 +173,10 @@ Updating Categories and Projects
 An existing project or category can be updated from the
 **Update Project/Category** link in the side bar. Again, a similar form as
 before will be presented to the user. The owner can not be changed here, but
-must be modified in the *Members* view instead. It is possible to move the
-current category or project under another category by altering the ``parent``
-field. The user who does the updating must have a sufficient role in the
-target category or superuser status.
+must be modified in the :guilabel:`Members` view instead. It is possible to move
+the current category or project under another category by altering the
+``parent`` field. The user who does the updating must have a sufficient role in
+the target category or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_project_update.png
     :align: center
@@ -185,12 +189,13 @@ target category or superuser status.
     For remote project synchronized from another SODAR Core based site, you can
     only edit local application settings in this view.
 
-Public Guest Access
--------------------
+Public Access
+-------------
 
-From the project create/update view, setting *Public Guest Access* will give
-everyone in the system read-only guest access in the project without
-specifically granting it.
+From the project create/update view, setting :guilabel:`Public Access` will give
+everyone in the system read-only access in the project. The read-only access
+level can be chosen between *project guest* (full read-only access to all data)
+and *project viewer* (limited access to basic project information).
 
 .. warning::
 
@@ -200,8 +205,18 @@ specifically granting it.
 
 .. note::
 
-    Public guest access can only be set for projects. Categories will be visible
+    Public access can only be set for projects. Categories will be visible
     for users with access to any category or project under them.
+
+Top Level Category Public Statistics
+------------------------------------
+
+It is possible to display category statistics for selected top level categories
+to all users regardless of their access level. This can be toggled in the
+category updating view under :guilabel:`Display public category statistics`.
+
+This will grant the users access to the category details page with only the
+category readme and statistics visible.
 
 Access on Remote Sites
 ----------------------
@@ -240,8 +255,19 @@ specific UIs for this functionality if manual user selection is needed.
 The projectroles app provides the following built-in app settings with the
 project scope:
 
-- ``ip_restrict``: Restrict project access by an allowed IP list if enabled.
-- ``ip_allowlist``: List of allowed IP addresses for project access.
+IP restrict
+    Restrict project access to the IP allow list if enabled.
+IP allow list
+    Comma-separated list of allowed IP addresses for project access.
+Block project access
+    Temporarily block all non-superuser access to project views. This setting is
+    only available for superusers. It is intended for cases where e.g. problems
+    with project data require it to be temporarily made unavailable for users.
+    The setting can also be toggled using the ``blockprojectaccess`` management
+    command.
+Display public category statistics
+    If enabled, display statistics of the category to all users regardless of
+    explicit category access. Only available for top level categories.
 
 To clean up settings which have been stored in the database but have since
 been removed from the plugin app settings definitions, run the following
@@ -308,7 +334,7 @@ confirm the action.
 Member Management
 =================
 
-Project member roles can be viewed and modified through the **Members**
+Project member roles can be viewed and modified through the :guilabel:`Members`
 link on the sidebar. Modification requires a sufficient role in the project or
 category (owner or delegate) or superuser status.
 
@@ -317,6 +343,10 @@ category (owner or delegate) or superuser status.
     :scale: 55%
 
     Project member list view
+
+The member table lists all members of the category or project, initially ordered
+by descending order of role level. The table can be sorted by any column and
+filtered by typing test into the input box on the top right side of the table.
 
 All members of categories automatically inherit identical access rights to
 subcategories and projects under those categories. Inherited member roles can be
@@ -332,9 +362,9 @@ Adding Members
 
 There are two ways to add new members to a project or a category:
 
-- **Add Member** is used to add member roles to system users.
-- **Invite Member** is used to send email invites to users not yet registered
-  in the system.
+- :guilabel:`Add Member` is used to add member roles to system users.
+- :guilabel:`Send Invite` is used to send email invites to users not yet
+  registered in the system.
 
 Addition or modification of users sends an email notification to the user in
 question if email sending is enabled on your Django server. The emails can be
@@ -560,11 +590,11 @@ target site will sync the data by sending a request to the source site.
 
 .. note::
 
-    If synchronizing a project with *public guest access* enabled, this setting
+    If synchronizing a project with *public access* enabled, this setting
     is **not** automatically set on the target site. If you wish to make the
-    project also publicly accessible on the target site, it needs to be
-    explicitly set by the project owner, delegate or a superuser in the
-    :guilabel:`Update Project` form.
+    project also publicly accessible, it needs to be explicitly set by the
+    project owner, delegate or a superuser in the :guilabel:`Update Project`
+    form on the target site.
 
 As Target Site
 --------------

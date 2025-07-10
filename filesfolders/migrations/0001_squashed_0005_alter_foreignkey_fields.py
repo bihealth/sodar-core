@@ -56,7 +56,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     'name',
-                    models.CharField(help_text='Name for the object', max_length=255),
+                    models.CharField(
+                        help_text='Name for the object', max_length=255
+                    ),
                 ),
                 (
                     'date_modified',
@@ -83,7 +85,9 @@ class Migration(migrations.Migration):
                 (
                     'description',
                     models.CharField(
-                        blank=True, help_text='Description (optional)', max_length=255
+                        blank=True,
+                        help_text='Description (optional)',
+                        max_length=255,
                     ),
                 ),
                 (
@@ -98,7 +102,8 @@ class Migration(migrations.Migration):
                     'folder',
                     models.ForeignKey(
                         blank=True,
-                        help_text='Folder under which object exists (null if root folder)',
+                        help_text='Folder under which object exists (null if '
+                        'root folder)',
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='%(app_label)s_%(class)s_children',
@@ -142,7 +147,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     'name',
-                    models.CharField(help_text='Name for the object', max_length=255),
+                    models.CharField(
+                        help_text='Name for the object', max_length=255
+                    ),
                 ),
                 (
                     'date_modified',
@@ -169,7 +176,9 @@ class Migration(migrations.Migration):
                 (
                     'description',
                     models.CharField(
-                        blank=True, help_text='Description (optional)', max_length=255
+                        blank=True,
+                        help_text='Description (optional)',
+                        max_length=255,
                     ),
                 ),
                 (
@@ -186,7 +195,8 @@ class Migration(migrations.Migration):
                         blank=True,
                         help_text='Uploaded file',
                         null=True,
-                        upload_to='filesfolders.FileData/bytes/file_name/content_type',
+                        upload_to='filesfolders.FileData/bytes/file_name/'
+                        'content_type',
                     ),
                 ),
                 (
@@ -208,7 +218,8 @@ class Migration(migrations.Migration):
                     'folder',
                     models.ForeignKey(
                         blank=True,
-                        help_text='Folder under which object exists (null if root folder)',
+                        help_text='Folder under which object exists (null if '
+                        'root folder)',
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='%(app_label)s_%(class)s_children',
@@ -252,7 +263,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     'name',
-                    models.CharField(help_text='Name for the object', max_length=255),
+                    models.CharField(
+                        help_text='Name for the object', max_length=255
+                    ),
                 ),
                 (
                     'date_modified',
@@ -279,7 +292,9 @@ class Migration(migrations.Migration):
                 (
                     'description',
                     models.CharField(
-                        blank=True, help_text='Description (optional)', max_length=255
+                        blank=True,
+                        help_text='Description (optional)',
+                        max_length=255,
                     ),
                 ),
                 (
@@ -290,12 +305,18 @@ class Migration(migrations.Migration):
                         unique=True,
                     ),
                 ),
-                ('url', models.URLField(help_text='URL for the link', max_length=2000)),
+                (
+                    'url',
+                    models.URLField(
+                        help_text='URL for the link', max_length=2000
+                    ),
+                ),
                 (
                     'folder',
                     models.ForeignKey(
                         blank=True,
-                        help_text='Folder under which object exists (null if root folder)',
+                        help_text='Folder under which object exists (null if '
+                        'root folder)',
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='%(app_label)s_%(class)s_children',

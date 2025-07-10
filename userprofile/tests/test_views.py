@@ -16,7 +16,11 @@ from timeline.models import TimelineEvent
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import SODARUserAdditionalEmail, SODAR_CONSTANTS
+from projectroles.models import (
+    AppSetting,
+    SODARUserAdditionalEmail,
+    SODAR_CONSTANTS,
+)
 from projectroles.tests.test_models import (
     EXAMPLE_APP_NAME,
     AppSettingMixin,
@@ -39,6 +43,7 @@ User = auth.get_user_model()
 
 
 # SODAR constants
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
@@ -76,6 +81,9 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.context['user_settings'])
         self.assertEqual(response.context['add_emails'].count(), 0)
+        self.assertEqual(response.context['site_read_only'], False)
+        self.assertEqual(response.context['send_email'], True)
+        self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
 
     def test_get_additional_email(self):
         """Test GET with additional email"""
@@ -91,7 +99,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
 class TestUserAppSettingsView(AppSettingMixin, UserViewTestBase):
     """Tests for UserAppSettingsView"""
 
-    def _get_setting(self, name):
+    def _get_setting(self, name) -> AppSetting:
         return app_settings.get(EXAMPLE_APP_NAME, name, user=self.user)
 
     def setUp(self):

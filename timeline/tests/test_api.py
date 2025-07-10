@@ -1,13 +1,14 @@
 """API tests for the timeline app"""
 
 from django.contrib.auth.models import AnonymousUser
+from django.http import HttpRequest
 from django.forms.models import model_to_dict
 from django.test import RequestFactory
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.plugins import PluginAPI
 from projectroles.tests.test_models import (
     RemoteSiteMixin,
     REMOTE_SITE_NAME,
@@ -32,6 +33,9 @@ from timeline.tests.test_models import (
 )
 
 
+plugin_api = PluginAPI()
+
+
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
@@ -49,7 +53,7 @@ class TimelineAPIMixin:
     """Helpers for timeline API use"""
 
     @classmethod
-    def get_request(cls, user, project):
+    def get_request(cls, user: SODARUser, project: Project) -> HttpRequest:
         """Return mock request"""
         request = RequestFactory().get(
             'timeline:list', kwargs={'project': project}
@@ -68,7 +72,7 @@ class TestTimelineAPI(
 ):
     def setUp(self):
         super().setUp()
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
         self.superuser = self.make_user('superuser')
         self.superuser.is_superuser = True
         self.superuser.save()

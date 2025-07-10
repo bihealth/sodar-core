@@ -5,11 +5,11 @@ from test_plus.test import TestCase
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import (
-    get_backend_api,
     ProjectAppPluginPoint,
     BackendPluginPoint,
     SiteAppPluginPoint,
     PluginSearchResult,
+    PluginAPI,
 )
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -18,11 +18,14 @@ from projectroles.tests.test_models import (
 )
 
 from timeline.api import TimelineAPI
-from timeline.models import TL_STATUS_OK
+from timeline.models import TimelineEvent, TL_STATUS_OK
 from timeline.plugins import STATS_DESC_USER_COUNT
 
 # from timeline.tests.test_models import TimelineEventMixin
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -84,7 +87,7 @@ class TimelinePluginTestBase(
 class TestProjectAppPlugin(TimelinePluginTestBase):
     """Tests for timeline ProjectAppPlugin"""
 
-    def _add_event(self):
+    def _add_event(self) -> TimelineEvent:
         """Helper for adding event with OK status"""
         event = self.timeline.add_event(**self.event_kw)
         event.set_status(TL_STATUS_OK)
@@ -100,7 +103,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
             'event_name': EVENT_NAME,
             'description': 'description',
         }
-        self.timeline = get_backend_api('timeline_backend')
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
 
     def test_plugin_retrieval(self):
         """Test retrieving ProjectAppPlugin"""

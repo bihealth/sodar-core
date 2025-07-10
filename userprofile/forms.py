@@ -1,3 +1,7 @@
+"""Forms for the userprofile app"""
+
+from typing import Optional
+
 from django import forms
 
 # Projectroles dependency
@@ -8,15 +12,17 @@ from projectroles.forms import (
     SODARAppSettingFormMixin,
 )
 from projectroles.models import (
+    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ADD_EMAIL_ALREADY_SET_MSG,
 )
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.utils import build_secret
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 
 
 # SODAR Constants
@@ -36,8 +42,10 @@ class UserAppSettingsForm(SODARAppSettingFormMixin, SODARForm):
         self.user = kwargs.pop('current_user')
         super().__init__(*args, **kwargs)
         # Init app settings fields
-        project_plugins = get_active_plugins(plugin_type='project_app')
-        site_plugins = get_active_plugins(plugin_type='site_app')
+        project_plugins = plugin_api.get_active_plugins(
+            plugin_type='project_app'
+        )
+        site_plugins = plugin_api.get_active_plugins(plugin_type='site_app')
         self.app_plugins = project_plugins + site_plugins
         user_mod = False if self.user.is_superuser else True
         self.init_app_settings(
@@ -65,7 +73,9 @@ class UserEmailForm(SODARModelForm):
         model = SODARUserAdditionalEmail
         fields = ['email', 'user', 'secret']
 
-    def __init__(self, current_user=None, *args, **kwargs):
+    def __init__(
+        self, current_user: Optional[SODARUser] = None, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         if current_user:
             self.current_user = current_user

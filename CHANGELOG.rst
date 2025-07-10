@@ -5,6 +5,130 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.2.0 (2025-07-10)
+===================
+
+Added
+-----
+
+- **General**
+    - Type hints (#568, #1687)
+    - Build configuration in ``pyproject.toml`` (#1673)
+    - JQuery beautification support with js-beautify (#1717)
+- **Filesfolders**
+    - Search by object UUID (#1546)
+    - ``get_category_stats()`` implementation (#1701)
+- **Projectroles**
+    - ``ProjectInviteRetrieveAPIView`` REST API view (#1692)
+    - Project viewer role (#1650)
+    - ``get_user_badge()`` template tag ``extra_class`` arg (#1693)
+    - Project access blocking for superusers (#1653, #1726)
+    - ``project_access_block`` app setting (#1653)
+    - ``is_project_accessible()`` rule predicate (#1653)
+    - ``PermissionTestMixin.set_access_block()`` helper (#1653)
+    - ``blockprojectaccess`` management command (#1653)
+    - ``HomeView`` project list starred filter state saving (#1681)
+    - ``project_list_home_starred`` app setting (#1681, #1707)
+    - ``HomeStarringAjaxView`` Ajax API view (#1681)
+    - ``Project.public_access`` field (#1702)
+    - ``Project.has_role()`` helper ``public`` arg (#1702)
+    - Limited guest role alert in ``ProjectDetailView`` (#1705)
+    - Search by object UUID (#1546)
+    - ``notify_alert_project`` and ``notify_alert_role`` app settings (#1648)
+    - App alert disabling for project and role updates (#1648, #1708)
+    - ``get_project_badge()`` common template tag (#1695)
+    - First and last links in pagination controls (#1714, #1715)
+    - Optional disabled user deactivation in ``checkusers`` command (#1697)
+    - ``ProjectRoleView`` list pagination, ordering and filtering (#980, #1712)
+    - ``PROJECTROLES_ROLE_PAGINATION`` Django setting (#1712)
+    - ``ProjectRoleView`` user icon tooltips (#1688)
+    - ``PluginAPI`` class for plugin helpers (#1335)
+    - ``PermissionTestMixin.setup_user_helpers()`` helper (#1600)
+    - ``ip_allow_list`` validation (#1667)
+    - Category statistics (#1701)
+    - Top level category public statistics viewing (#1701)
+    - ``ProjectDetailView`` category statistics card (#1701,#1732, #1733)
+    - ``category_public_stats`` app setting (#1701)
+    - ``is_public_stats_category()`` rule predicate (#1701)
+    - ``PermissonTestMixin.set_category_public_stats()`` helper (#1701)
+    - ``PluginCategoryStatistic`` class (#1701)
+    - ``ProjectAppPluginPoint.get_category_stats()`` method (#1701)
+    - ``CategoryStatisticsAjaxView`` Ajax view (#1701)
+    - ``Project.is_project()`` and ``is_category()`` helpers (#1727)
+- **Timeline**
+    - Include user full name and username in event search (#1713)
+
+Changed
+-------
+
+- **General**
+    - Upgrade develoment and deployment platform to Ubuntu v24.04 (#1563)
+    - Upgrade minimum Django version to v4.2.23 (#1686)
+    - Upgrade general Python dependencies (#1686)
+    - Upgrade to djangorestframework v3.16 (#1689)
+    - Update string formatting (#1562)
+    - Move black configuration into ``pyproject.toml`` (#1454)
+    - Replace ``_project_badge.html`` includes with ``get_project_badge()`` (#1695)
+    - Update usage of deprecated plugin helpers (#1335)
+    - Reformat JQuery files (#1717)
+- **Filesfolders**
+    - Refactor serializers (#1689)
+    - Refactor view context data and helpers (#1685)
+- **Projectroles**
+    - Move UI test helpers to ``UITestMixin`` (#1682)
+    - Upgrade projectroles REST API version to v2.0 (#1554, #1692)
+    - Replace nested ``SODARUserSerializer`` REST API fields with user UUID (#1554)
+    - Upgrade projectroles sync REST API version to v2.0 (#1650)
+    - Deprecate ``Project.public_guest_access``, use ``public_access`` (#1702)
+    - Deprecate ``Project.set_public()``, use ``set_public_access()`` (#1702)
+    - Change ``get_role_option()`` ``project`` arg to ``project_type`` (#1702)
+    - Rename ``AppLinkContent`` to ``AppLinkAPI`` (#1709)
+    - Move ``AppLinkAPI`` into ``app_links`` (#1709)
+    - Deprecate ``_project_badge.html`` include template (#1695)
+    - Remove redundant ``RoleAssignmentOwnerTransferForm`` ``project`` field (#1654)
+    - Render project role list using DataTables (#1712)
+    - Deprecate plugin helper methods in ``projectroles.plugins`` root (#1335)
+    - Set default delay for Bootstrap tooltips (#1651)
+    - Move permission test user helper setup in ``PermissionTestMixin.setup_user_helpers()`` (#1600)
+    - Replace ``ip_allowlist`` JSON setting with ``ip_allow_list`` string setting (#1667)
+    - Refactor remote sync API tests (#1323, #1723)
+    - Refactor project type checks to use new helpers (#1727)
+    - Improve project header and description layout (#1731)
+    - Update remote sync user status on additional email change (#1480)
+- **Sodarcache**
+    - Rename ``SODARCacheAPI`` (#1683)
+- **Timeline**
+    - Display user as badge instead of separate column (#1622, #1698)
+    - Display event status in search results (#1678)
+- **Userprofile**
+    - Refactor ``details.html`` template (#1580)
+    - Display user setting descriptions as tooltips (#1710)
+    - Move ``UserDetailView`` Django and app settings to view context data (#1725)
+
+Fixed
+-----
+
+- **Projectroles**
+    - UI tests failing for asserting SVG icons prior to rendering (#1559)
+    - Incorrect alignment for ``sodar-user-badge`` (#1694)
+    - Project list starred toggle not working with active filter (#1700)
+    - Role operations dropdown alignment in ``project_invites.html`` (#1704)
+    - Invalid ``role`` values in ``ProjectDetailView`` context data (#1706)
+    - Incorrect icon placement in DataTables custom pagination links (#1716)
+    - Plugin ``search()`` order not respected by results view DataTables (#1699, #1720)
+    - Django admin warning modal not displayed (#1730)
+
+Removed
+-------
+
+- **Filesfolders**
+    - ``allow_public_links()`` template tag (#1685)
+- **Projectroles**
+    - Deprecated ``get_user_display_name()`` utility method (#1884)
+    - Deprecated support for app settings definitions as dict (#1532)
+    - Deprecated ``AppSettingAPI.get_all()`` method (#1538)
+
+
 v1.1.6 (2025-05-20)
 ===================
 

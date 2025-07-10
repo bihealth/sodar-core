@@ -1,6 +1,7 @@
 """UI views for the appalerts app"""
 
 from django.contrib import messages
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import ListView, View
@@ -65,7 +66,7 @@ class AppAlertLinkRedirectView(
 
     permission_required = 'appalerts.view_alerts'
 
-    def _handle_error(self, msg):
+    def _handle_error(self, msg: str) -> HttpResponseRedirect:
         messages.error(self.request, msg)
         return redirect(reverse('appalerts:list'))
 

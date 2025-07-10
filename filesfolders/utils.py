@@ -1,9 +1,12 @@
 """Utility functions for the filesfolders app"""
 
+from django.http import HttpRequest
 from django.urls import reverse
 
+from filesfolders.models import File
 
-def build_public_url(file, request):
+
+def build_public_url(file: File, request: HttpRequest) -> str:
     """
     Return public URL for a file.
 

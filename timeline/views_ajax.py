@@ -2,7 +2,9 @@
 
 import html
 
-from django.http import HttpResponseForbidden
+from typing import Any, Optional
+
+from django.http import HttpRequest, HttpResponseForbidden
 from django.utils.timezone import localtime
 from django.urls import reverse
 
@@ -22,7 +24,10 @@ from timeline.templatetags.timeline_tags import get_status_style
 class EventDetailMixin:
     """Mixin for event detail retrieval helpers"""
 
-    def form_status_extra_url(self, status, request):
+    @classmethod
+    def get_status_extra_url(
+        cls, status: TimelineEventStatus, request: HttpRequest
+    ) -> Optional[str]:
         """Return URL for extra status data"""
         if status.extra_data == {} or not request.user.has_perm(
             'timeline.view_event_extra_data', status.event.project
@@ -33,12 +38,14 @@ class EventDetailMixin:
             kwargs={'eventstatus': status.sodar_uuid},
         )
 
-    def get_event_details(self, event, request):
+    def get_event_details(
+        self, event: TimelineEvent, request: HttpRequest
+    ) -> dict:
         """
         Return event details.
 
         :param event: TimelineEvent object
-        :param request: Django request object
+        :param request: HttpRequest object
         :return: Dict
         """
         ret = {
@@ -60,7 +67,7 @@ class EventDetailMixin:
                     'description': s.description,
                     'type': s.status_type,
                     'class': get_status_style(s),
-                    'extra_status_link': self.form_status_extra_url(s, request),
+                    'extra_status_link': self.get_status_extra_url(s, request),
                 }
             )
         return ret
@@ -69,7 +76,7 @@ class EventDetailMixin:
 class EventExtraDataMixin:
     """Mixin for event extra data retrieval helpers"""
 
-    def _json_to_html(self, obj_json):
+    def _json_to_html(self, obj_json: Any) -> str:
         """Return HTML representation of JSON object"""
         str_list = []
         self._html_print_obj(obj_json, str_list, 0)
@@ -83,7 +90,7 @@ class EventExtraDataMixin:
         )
         return ''.join(str_list)
 
-    def _html_print_obj(self, obj_json, str_list: list, indent):
+    def _html_print_obj(self, obj_json: Any, str_list: list, indent: int):
         """Print JSON object to HTML string list"""
         if isinstance(obj_json, dict):
             self._html_print_dict(obj_json, str_list, indent)
@@ -100,14 +107,14 @@ class EventExtraDataMixin:
         elif obj_json is None:
             str_list.append('null')
 
-    def _html_print_dict(self, dct: dict, str_list, indent):
+    def _html_print_dict(self, html_dict: dict, str_list, indent: int):
         """Print JSON dict to HTML string list"""
         str_list.append('<span class="json-open-bracket">{</span><br>')
         str_list.append(
             '<span class="json-collapse-1" style="display: inline;">'
         )
         indent += 1
-        for key, value in dct.items():
+        for key, value in html_dict.items():
             str_list.append('<span class="json-indent">')
             str_list.append('&nbsp;&nbsp;' * indent)
             str_list.append('</span>')
@@ -119,14 +126,14 @@ class EventExtraDataMixin:
             self._html_print_obj(value, str_list, indent)
             str_list.append('</span>')
             str_list.append('<span class="json-comma">,</span><br>')
-        if len(dct) > 0:
+        if len(html_dict) > 0:
             del str_list[-1]
             str_list.append('<br>')
         str_list.append('</span>')
         str_list.append('&nbsp;&nbsp;' * (indent - 1))
         str_list.append('<span class="json-close-bracket">}</span>')
 
-    def _html_print_array(self, array, str_list, indent):
+    def _html_print_array(self, array: list, str_list: list, indent: int):
         """Print JSON array to HTML string list"""
         str_list.append('<span class="json-open-bracket">[</span><br>')
         str_list.append(
@@ -148,9 +155,12 @@ class EventExtraDataMixin:
         str_list.append('&nbsp;&nbsp;' * (indent - 1))
         str_list.append('<span class="json-close-bracket">]</span>')
 
-    def get_event_extra(self, event, status=None):
+    def get_event_extra(
+        self, event: TimelineEvent, status: Optional[TimelineEventStatus] = None
+    ) -> dict:
         """
         Return event extra data.
+
         :param event: TimelineEvent object
         :param status: TimelineEventStatus object
         :return: JSON-serializable dict

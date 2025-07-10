@@ -136,6 +136,7 @@ class TestProjectFileView(ViewTestBase):
         self.assertIsNotNone(response.context['folders'])
         self.assertIsNotNone(response.context['files'])
         self.assertIsNotNone(response.context['links'])
+        self.assertEqual(response.context['allow_public_links'], True)
 
     def test_get_invalid_uuid(self):
         """Test GET with invalid project UUID"""
@@ -1239,11 +1240,9 @@ class TestBatchEditView(ViewTestBase):
     def test_get_delete(self):
         """Test BatchEditView GET with deleting"""
         post_data = {'batch-action': 'delete', 'user-confirmed': '0'}
-        post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
-        post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
-        post_data[
-            'batch_item_HyperLink_{}'.format(self.hyperlink.sodar_uuid)
-        ] = 1
+        post_data[f'batch_item_File_{self.file.sodar_uuid}'] = 1
+        post_data[f'batch_item_Folder_{self.folder.sodar_uuid}'] = 1
+        post_data[f'batch_item_HyperLink_{self.hyperlink.sodar_uuid}'] = 1
         with self.login(self.user):
             response = self.client.post(self.url, post_data)
         self.assertEqual(response.status_code, 200)
@@ -1251,10 +1250,8 @@ class TestBatchEditView(ViewTestBase):
     def test_get_move(self):
         """Test GET when moving"""
         post_data = {'batch-action': 'move', 'user-confirmed': '0'}
-        post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
-        post_data[
-            'batch_item_HyperLink_{}'.format(self.hyperlink.sodar_uuid)
-        ] = 1
+        post_data[f'batch_item_File_{self.file.sodar_uuid}'] = 1
+        post_data[f'batch_item_HyperLink_{self.hyperlink.sodar_uuid}'] = 1
         with self.login(self.user):
             response = self.client.post(self.url, post_data)
         self.assertEqual(response.status_code, 200)
@@ -1266,11 +1263,9 @@ class TestBatchEditView(ViewTestBase):
         self.assertEqual(HyperLink.objects.all().count(), 1)
 
         post_data = {'batch-action': 'delete', 'user-confirmed': '1'}
-        post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
-        post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
-        post_data[
-            'batch_item_HyperLink_{}'.format(self.hyperlink.sodar_uuid)
-        ] = 1
+        post_data[f'batch_item_File_{self.file.sodar_uuid}'] = 1
+        post_data[f'batch_item_Folder_{self.folder.sodar_uuid}'] = 1
+        post_data[f'batch_item_HyperLink_{self.hyperlink.sodar_uuid}'] = 1
         with self.login(self.user):
             response = self.client.post(self.url, post_data)
 
@@ -1299,9 +1294,9 @@ class TestBatchEditView(ViewTestBase):
         self.assertEqual(Folder.objects.all().count(), 2)
 
         post_data = {'batch-action': 'delete', 'user-confirmed': '1'}
-        post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
-        post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
-        post_data['batch_item_Folder_{}'.format(new_folder.sodar_uuid)] = 1
+        post_data[f'batch_item_File_{self.file.sodar_uuid}'] = 1
+        post_data[f'batch_item_Folder_{self.folder.sodar_uuid}'] = 1
+        post_data[f'batch_item_HyperLink_{self.hyperlink.sodar_uuid}'] = 1
         with self.login(self.user):
             response = self.client.post(self.url, post_data)
 
@@ -1319,12 +1314,10 @@ class TestBatchEditView(ViewTestBase):
             'batch-action': 'move',
             'user-confirmed': '1',
             'target-folder': target_folder.sodar_uuid,
+            f'batch_item_File_{self.file.sodar_uuid}': 1,
+            f'batch_item_Folder_{self.folder.sodar_uuid}': 1,
+            f'batch_item_HyperLink_{self.hyperlink.sodar_uuid}': 1,
         }
-        post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
-        post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
-        post_data[
-            'batch_item_HyperLink_{}'.format(self.hyperlink.sodar_uuid)
-        ] = 1
         with self.login(self.user):
             response = self.client.post(self.url, post_data)
 
@@ -1360,12 +1353,10 @@ class TestBatchEditView(ViewTestBase):
             'batch-action': 'move',
             'user-confirmed': '1',
             'target-folder': target_folder.sodar_uuid,
+            f'batch_item_File_{self.file.sodar_uuid}': 1,
+            f'batch_item_Folder_{self.folder.sodar_uuid}': 1,
+            f'batch_item_HyperLink_{self.hyperlink.sodar_uuid}': 1,
         }
-        post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
-        post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
-        post_data[
-            'batch_item_HyperLink_{}'.format(self.hyperlink.sodar_uuid)
-        ] = 1
         with self.login(self.user):
             response = self.client.post(self.url, post_data)
 

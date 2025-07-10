@@ -5,7 +5,7 @@ from django.core.checks import Error, Warning, register
 from django.db import connection
 
 from projectroles import app_settings
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 
 
 # Local constants
@@ -51,8 +51,9 @@ def check_app_setting_defs(app_configs, **kwargs):
         connection.ensure_connection()
     except Exception:
         return []
+    plugin_api = PluginAPI()
     err_plugins = []
-    for p in get_active_plugins():
+    for p in plugin_api.get_active_plugins():
         s_defs = p.app_settings
         if isinstance(s_defs, list):
             s_names = [d.name for d in s_defs]

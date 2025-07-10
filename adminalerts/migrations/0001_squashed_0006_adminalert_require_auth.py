@@ -40,14 +40,16 @@ class Migration(migrations.Migration):
                 (
                     'message',
                     models.CharField(
-                        help_text='Alert message to be shown for users', max_length=255
+                        help_text='Alert message to be shown for users',
+                        max_length=255,
                     ),
                 ),
                 (
                     'description',
                     markupfield.fields.MarkupField(
                         blank=True,
-                        help_text='Full description of alert (optional, will be shown on a separate page)',
+                        help_text='Full description of alert (optional, will '
+                        'be shown on a separate page)',
                         null=True,
                         rendered_field=True,
                     ),
@@ -60,13 +62,16 @@ class Migration(migrations.Migration):
                 ),
                 (
                     'date_expire',
-                    models.DateTimeField(help_text='Alert expiration timestamp'),
+                    models.DateTimeField(
+                        help_text='Alert expiration timestamp'
+                    ),
                 ),
                 (
                     'active',
                     models.BooleanField(
                         default=True,
-                        help_text='Alert status (for disabling the alert before expiration)',
+                        help_text='Alert status (for disabling the alert '
+                        'before expiration)',
                     ),
                 ),
                 (
@@ -86,7 +91,10 @@ class Migration(migrations.Migration):
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
-                ('_description_rendered', models.TextField(editable=False, null=True)),
+                (
+                    '_description_rendered',
+                    models.TextField(editable=False, null=True),
+                ),
                 (
                     'description_markup_type',
                     models.CharField(
@@ -105,7 +113,8 @@ class Migration(migrations.Migration):
                 (
                     'require_auth',
                     models.BooleanField(
-                        default=True, help_text='Require authorization to view alert'
+                        default=True,
+                        help_text='Require authorization to view alert',
                     ),
                 ),
             ],

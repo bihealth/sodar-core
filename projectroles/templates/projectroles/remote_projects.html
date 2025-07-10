@@ -117,66 +117,65 @@
   <!-- Tour content -->
   {% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
   <script type="text/javascript">
-    tourEnabled = true;
+    tourEnabled = true
     tour.addStep('remote_projects', {
-        title: 'Remote Projects',
-        text: 'This view enables you to allow or revoke access to specific ' +
-              '{% get_display_name 'PROJECT' plural=True %} on the selected ' +
-              'target site.',
+      title: 'Remote Projects',
+      text: 'This view enables you to allow or revoke access to specific ' +
+            '{% get_display_name 'PROJECT' plural=True %} on the selected ' +
+            'target site.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    if ($('#sodar-pr-remote-project-table').length) {
+      tour.addStep('remote_project_table', {
+        title: 'Remote Project Table',
+        text: 'The {% get_display_name 'PROJECT' plural=True %} ' +
+              'available for synchronizing are listed in this table. ' +
+              '{% get_display_name 'CATEGORY' title=True plural=True %} ' +
+              'are excluded.',
+        attachTo: '#sodar-pr-remote-project-table top',
         advanceOn: '.docs-link click',
         showCancelLink: true
-    });
-    if ($('#sodar-pr-remote-project-table').length) {
-        tour.addStep('remote_project_table', {
-            title: 'Remote Project Table',
-            text: 'The {% get_display_name 'PROJECT' plural=True %} ' +
-                  'available for synchronizing are listed in this table. ' +
-                  '{% get_display_name 'CATEGORY' title=True plural=True %} ' +
-                  'are excluded.',
-            attachTo: '#sodar-pr-remote-project-table top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      })
     }
     if ($('.sodar-pr-remote-project-access').length) {
-        tour.addStep('remote_project_table', {
-            title: 'Last Accessed Date',
-            text: 'This column displays the date and time the ' +
-                  '{% get_display_name 'PROJECT' %} was accessed, or "Never" ' +
-                  'if sync is yet to be performed.',
-            attachTo: '.sodar-pr-remote-project-access top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      tour.addStep('remote_project_table', {
+        title: 'Last Accessed Date',
+        text: 'This column displays the date and time the ' +
+              '{% get_display_name 'PROJECT' %} was accessed, or "Never" ' +
+              'if sync is yet to be performed.',
+        attachTo: '.sodar-pr-remote-project-access top',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
     }
     if ($('.sodar-pr-remote-project-level').length) {
-        tour.addStep('remote_project_level', {
-            title: '{% get_display_name 'PROJECT' title=True %} Access Level',
-            {% if site_mode == 'SOURCE' %}
-            text: 'This column allows you to select the access level for ' +
-                  'each {% get_display_name 'PROJECT' %}. Currently two ' +
-                  'levels are available: "No access" and "Read members". The ' +
-                  'latter synchronizes member access to the target site.',
-            {% else %}
-            text: 'The current access level for each ' +
-                  '{% get_display_name 'PROJECT' %} is displayed in this ' +
-                  'column.',
-            {% endif %}
-            attachTo: '.sodar-pr-remote-project-level left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      tour.addStep('remote_project_level', {
+        title: '{% get_display_name 'PROJECT' title=True %} Access Level',
+        {% if site_mode == 'SOURCE' %}
+        text: 'This column allows you to select the access level for ' +
+              'each {% get_display_name 'PROJECT' %}. Currently two levels ' +
+              'are available: "No access" and "Read members". The latter ' +
+              'synchronizes member access to the target site.',
+        {% else %}
+        text: 'The current access level for each ' +
+              '{% get_display_name 'PROJECT' %} is displayed in this column.',
+        {% endif %}
+        attachTo: '.sodar-pr-remote-project-level left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
     }
     if ($('#sodar-pr-remote-sync-submit-btn').length) {
-        tour.addStep('remote_project_submit', {
-            title: 'Submit Access Updates',
-            text: 'To submit your access updates, click on this button. It ' +
-                  'will take you to a view where you have to review and ' +
-                  'confirm the changes.',
-            attachTo: '#sodar-pr-remote-sync-submit-btn left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      tour.addStep('remote_project_submit', {
+        title: 'Submit Access Updates',
+        text: 'To submit your access updates, click on this button. It will ' +
+              'take you to a view where you have to review and confirm the ' +
+              'changes.',
+        attachTo: '#sodar-pr-remote-sync-submit-btn left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
     }
   </script>
 {% endblock javascript %}

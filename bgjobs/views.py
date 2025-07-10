@@ -15,7 +15,10 @@ from projectroles.views import (
     ProjectContextMixin,
     ProjectPermissionMixin,
 )
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
+
+
+plugin_api = PluginAPI()
 
 
 # Local variables
@@ -94,7 +97,7 @@ class BackgroundJobClearViewBase(
             bg_job_count = bg_jobs.count()
             bg_jobs.delete()
 
-            timeline = get_backend_api('timeline_backend')
+            timeline = plugin_api.get_backend_api('timeline_backend')
             if timeline:
                 timeline.add_event(
                     project=self.get_project(self.request, self.kwargs),
@@ -107,11 +110,11 @@ class BackgroundJobClearViewBase(
                     status_type=timeline.TL_STATUS_OK,
                 )
             messages.success(
-                self.request, 'Removed {} background jobs.'.format(bg_job_count)
+                self.request, f'Removed {bg_job_count} background jobs.'
             )
         except Exception as ex:
             messages.error(
-                self.request, 'Unable to remove background jobs: {}'.format(ex)
+                self.request, f'Unable to remove background jobs: {ex}'
             )
         return redirect(
             reverse('bgjobs:list', kwargs={'project': project.sodar_uuid})

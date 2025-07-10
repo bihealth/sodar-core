@@ -1,10 +1,13 @@
 """Tests for models in the sodarcache app"""
 
-from test_plus.test import TestCase
+from typing import Union
+
 from django.forms.models import model_to_dict
 
+from test_plus.test import TestCase
+
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -30,7 +33,15 @@ class JSONCacheItemMixin:
     """Helper mixin for JSONCacheItem creation"""
 
     @classmethod
-    def make_item(cls, project, app_name, name, user, data):
+    def make_item(
+        cls,
+        project: Project,
+        app_name: str,
+        name: str,
+        user: SODARUser,
+        data: Union[dict, list],
+    ) -> JSONCacheItem:
+        """Create JSONCacheItem object"""
         values = {
             'project': project,
             'app_name': app_name,
@@ -38,9 +49,7 @@ class JSONCacheItemMixin:
             'name': name,
             'data': data,
         }
-        result = JSONCacheItem(**values)
-        result.save()
-        return result
+        return JSONCacheItem.objects.create(**values)
 
 
 class JSONCacheItemTestBase(

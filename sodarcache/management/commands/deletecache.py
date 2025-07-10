@@ -38,9 +38,7 @@ class Command(BaseCommand):
             try:
                 project = Project.objects.get(sodar_uuid=options['project'])
                 logger.info(
-                    'Limiting deletion to project {}"'.format(
-                        project.get_log_title()
-                    )
+                    f'Limiting deletion to project {project.get_log_title()}"'
                 )
                 items = JSONCacheItem.objects.filter(project=project)
             except Project.DoesNotExist:

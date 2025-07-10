@@ -183,6 +183,7 @@ h2.sodar-pr-content-title {
 
 .sodar-pr-content-title-secondary {
   margin-top: 6px;
+  margin-bottom: 12px;
 }
 
 .sodar-pr-content-title-secondary:first-line {
@@ -225,6 +226,10 @@ div.sodar-card-body-info {
 
 div.sodar-pr-app-search-container {
   max-height: 400px;
+}
+
+div.sodar-dashboard-card {
+  background-color: #d1ecf1;
 }
 
 
@@ -596,15 +601,15 @@ a.sodar-pr-btn-copy-secret i {
   margin-left: 0;
 }
 
-/* Project badge */
-span.sodar-project-badge {
+/* Generic object badge used for projects, users etc */
+span.sodar-obj-badge {
   vertical-align: top;
   margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 300px;
 }
-span.sodar-project-badge a {
+span.sodar-obj-badge a {
   color: inherit;
 }
 

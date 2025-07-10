@@ -1,15 +1,20 @@
 """Backend API for the appalerts app"""
 
+from typing import Optional
+
 from djangoplugins.models import Plugin
 
 from appalerts.models import AppAlert, ALERT_LEVELS
+
+# Projectroles dependency
+from projectroles.models import Project, SODARUser
 
 
 class AppAlertAPI:
     """App Alerts backend API"""
 
     @classmethod
-    def get_model(cls):
+    def get_model(cls) -> type[AppAlert]:
         """
         Return AppAlert model for direct model access.
 
@@ -20,14 +25,14 @@ class AppAlertAPI:
     @classmethod
     def add_alert(
         cls,
-        app_name,
-        alert_name,
-        user,
-        message,
-        level='INFO',
-        url=None,
-        project=None,
-    ):
+        app_name: str,
+        alert_name: str,
+        user: SODARUser,
+        message: str,
+        level: str = 'INFO',
+        url: Optional[str] = None,
+        project: Optional[Project] = None,
+    ) -> AppAlert:
         """
         Create an AppAlert.
 
@@ -46,14 +51,11 @@ class AppAlertAPI:
             try:
                 app_plugin = Plugin.objects.get(name=app_name)
             except Plugin.DoesNotExist:
-                raise ValueError(
-                    'Plugin not found with name: {}'.format(app_name)
-                )
+                raise ValueError(f'Plugin not found with name: {app_name}')
         if level not in ALERT_LEVELS:
             raise ValueError(
-                'Invalid level "{}", accepted values: {}'.format(
-                    level, ', '.join(ALERT_LEVELS)
-                )
+                f'Invalid level "{level}", accepted values: '
+                f'{", ".join(ALERT_LEVELS)}'
             )
         return AppAlert.objects.create(
             app_plugin=app_plugin,
@@ -68,13 +70,13 @@ class AppAlertAPI:
     @classmethod
     def add_alerts(
         cls,
-        app_name,
-        alert_name,
-        users,
-        message,
-        level='INFO',
-        url=None,
-        project=None,
+        app_name: str,
+        alert_name: str,
+        users: list[SODARUser],
+        message: str,
+        level: str = 'INFO',
+        url: Optional[str] = None,
+        project: Optional[Project] = None,
     ):
         """
         Create an AppAlert for multiple users.

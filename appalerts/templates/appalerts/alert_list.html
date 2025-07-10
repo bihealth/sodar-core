@@ -10,7 +10,7 @@
   {{ block.super }}
   <style type="text/css">
     .sodar-app-alert-row div:nth-child(1) {
-        max-width: 40px;
+      max-width: 40px;
     }
   </style>
 {% endblock css %}
@@ -86,7 +86,8 @@
         </div>
         <div class="col pl-0">
           {% if a.project %}
-            {% include 'projectroles/_project_badge.html' with project=a.project color=a.level can_view=can_view_project %}
+            {% get_project_badge a.project a.level can_view_project 'mr-1' as project_badge %}
+            {{ project_badge | safe }}
           {% endif %}
           {{ a.message | safe }}
         </div>
@@ -139,123 +140,121 @@
 
   <!-- Tour content -->
   <script type="text/javascript">
-      tourEnabled = true;
-      tour.addStep('app_alerts', {
-          title: 'App Alerts',
-          text: 'In this application you can view, follow up and dismiss ' +
-                'alerts created for your from other apps. These usually ' +
-                'consist of some actions by other users or asynchronous ' +
-                'processes requiring your attention.',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-      if ($('#sodar-app-alert-empty').is(':visible')) {
-          tour.addStep('app_alerts_empty', {
-              title: 'No Alerts Message',
-              text: 'This is where your alerts will be displayed. Currently ' +
-                    'there are no alerts to display in this view.',
-              attachTo: '#sodar-app-alert-empty top',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('.sodar-app-alert-item').length) {
-          tour.addStep('alert', {
-              title: 'App Alert',
-              text: 'This is an app alert. It contains details about the ' +
-                    'event along with links to follow and/or dismiss the ' +
-                    'alert. The color of the alert denotes the type and ' +
-                    'severity of the alert. Blue for informational, green ' +
-                    'for success, yellow for warning and red for an error ' +
-                    'or failure.',
-              attachTo: '.sodar-app-alert-item top',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('.sodar-app-alert-app-icon').length) {
-          tour.addStep('alert', {
-              title: 'App Icon',
-              text: 'This icon depicts the application from which the alert ' +
-                    'was raised. The name of the app is displayed as a ' +
-                    'tooltip when you hover the mouse on top of it.',
-              attachTo: '.sodar-app-alert-app-icon right',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('.sodar-app-alert-date-icon').length) {
-          tour.addStep('alert', {
-              title: 'Date of Creation',
-              text: 'The timestamp of this event\'s creation is displayed as ' +
-                    'the tooltip for this icon.',
-              attachTo: '.sodar-app-alert-date-icon right',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('.sodar-project-badge').length) {
-          tour.addStep('alert', {
-              title: 'Alert {% get_display_name 'PROJECT' title=True %} or ' +
-                     '{% get_display_name 'CATEGORY' title=True %}',
-              text: 'This badge links to the ' +
-                    '{% get_display_name 'PROJECT' %} or ' +
-                    '{% get_display_name 'CATEGORY' %} to which the alerted ' +
-                    'activity is related.',
-              attachTo: '.sodar-project-badge top',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('.sodar-ap-btn-link').length) {
-          tour.addStep('alert', {
-              title: 'Follow and Dismiss Alert',
-              text: 'This link dismisses the alert and takes you to the ' +
-                     'corresponding app and {% get_display_name 'PROJECT' %}.',
-              attachTo: '.sodar-ap-btn-link left',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('.sodar-ap-btn-dismiss-single').length) {
-          tour.addStep('alert', {
-              title: 'Dismiss Alert',
-              text: 'Clicking on this button dismisses the alert and keeps ' +
-                    'you in the alert list view.',
-              attachTo: '.sodar-ap-btn-dismiss-single left',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('#sodar-ap-ops-dropdown').length) {
-          tour.addStep('alert', {
-              title: 'Alert Operations',
-              text: 'From this dropdown you can view dismissed alerts as ' +
-                    'well as dismiss all of your currently active alerts.',
-              attachTo: '#sodar-ap-ops-dropdown left',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('#sodar-ap-btn-active').length) {
-          tour.addStep('alert', {
-              title: 'Alert Operations',
-              text: 'This button returns you to the list of active alerts.',
-              attachTo: '#sodar-ap-btn-active left',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      if ($('.sodar-pr-pagination').length) {
-          tour.addStep('timeline_pagination', {
-              title: 'Timeline Pagination',
-              text: 'Here you can navigate through the subpages of the alert ' +
-                    'list.',
-              attachTo: '.sodar-pr-pagination top',
-              advanceOn: '.docs-link click',
-              showCancelLink: true,
-              scrollTo: true
-           });
-       }
+    tourEnabled = true
+    tour.addStep('app_alerts', {
+      title: 'App Alerts',
+      text: 'In this application you can view, follow up and dismiss alerts ' +
+            'created for your from other apps. These usually consist of some ' +
+            'some actions by other users or asynchronous processes requiring ' +
+            'your attention.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    if ($('#sodar-app-alert-empty').is(':visible')) {
+      tour.addStep('app_alerts_empty', {
+        title: 'No Alerts Message',
+        text: 'This is where your alerts will be displayed. Currently there ' +
+              'are no alerts to display in this view.',
+        attachTo: '#sodar-app-alert-empty top',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-app-alert-item').length) {
+      tour.addStep('alert', {
+        title: 'App Alert',
+        text: 'This is an app alert. It contains details about the event ' +
+              'along with links to follow and/or dismiss the alert. The ' +
+              'color of the alert denotes the type and severity of the ' +
+              'alert. Blue for informational, green for success, yellow for ' +
+              'warning and red for an error or failure.',
+        attachTo: '.sodar-app-alert-item top',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-app-alert-app-icon').length) {
+      tour.addStep('alert', {
+        title: 'App Icon',
+        text: 'This icon depicts the application from which the alert was ' +
+              'raised. The name of the app is displayed as a tooltip when ' +
+              'you hover the mouse on top of it.',
+        attachTo: '.sodar-app-alert-app-icon right',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-app-alert-date-icon').length) {
+      tour.addStep('alert', {
+        title: 'Date of Creation',
+        text: 'The timestamp of this event\'s creation is displayed as the ' +
+              'tooltip for this icon.',
+        attachTo: '.sodar-app-alert-date-icon right',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-project-badge').length) {
+      tour.addStep('alert', {
+        title: 'Alert {% get_display_name 'PROJECT' title=True %} or ' +
+               '{% get_display_name 'CATEGORY' title=True %}',
+        text: 'This badge links to the ' +
+              '{% get_display_name 'PROJECT' %} or ' +
+              '{% get_display_name 'CATEGORY' %} to which the alerted ' +
+              'activity is related.',
+        attachTo: '.sodar-project-badge top',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-ap-btn-link').length) {
+      tour.addStep('alert', {
+        title: 'Follow and Dismiss Alert',
+        text: 'This link dismisses the alert and takes you to the ' +
+              'corresponding app and {% get_display_name 'PROJECT' %}.',
+        attachTo: '.sodar-ap-btn-link left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-ap-btn-dismiss-single').length) {
+      tour.addStep('alert', {
+        title: 'Dismiss Alert',
+        text: 'Clicking on this button dismisses the alert and keeps you in ' +
+              'the alert list view.',
+        attachTo: '.sodar-ap-btn-dismiss-single left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('#sodar-ap-ops-dropdown').length) {
+      tour.addStep('alert', {
+        title: 'Alert Operations',
+        text: 'From this dropdown you can view dismissed alerts as well as ' +
+              'dismiss all of your currently active alerts.',
+        attachTo: '#sodar-ap-ops-dropdown left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('#sodar-ap-btn-active').length) {
+      tour.addStep('alert', {
+        title: 'Alert Operations',
+        text: 'This button returns you to the list of active alerts.',
+        attachTo: '#sodar-ap-btn-active left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-pr-pagination').length) {
+      tour.addStep('timeline_pagination', {
+        title: 'Timeline Pagination',
+        text: 'Here you can navigate through the subpages of the alert list.',
+        attachTo: '.sodar-pr-pagination top',
+        advanceOn: '.docs-link click',
+        showCancelLink: true,
+        scrollTo: true
+      })
+    }
   </script>
 {% endblock javascript %}

@@ -1,7 +1,9 @@
 """Plugins for the Timeline app"""
 
+from typing import Optional
+
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import SODARUser, SODAR_CONSTANTS
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     BackendPluginPoint,
@@ -74,7 +76,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     info_settings = ['TIMELINE_PAGINATION', 'TIMELINE_SEARCH_LIMIT']
 
     @classmethod
-    def _check_permission(cls, user, event):
+    def _check_permission(cls, user: SODARUser, event: TimelineEvent) -> bool:
         """Check if user has permission to view event"""
         if event.project and event.classified:
             return user.has_perm(
@@ -86,7 +88,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             return user.has_perm('timeline.view_classified_site_event')
         return user.has_perm('timeline.view_site_timeline')
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         return {
             'event_count': {
                 'label': 'Events',
@@ -102,7 +104,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             },
         }
 
-    def search(self, search_terms, user, search_type=None, keywords=None):
+    def search(
+        self,
+        search_terms: list[str],
+        user: SODARUser,
+        search_type: Optional[str] = None,
+        keywords: Optional[list[str]] = None,
+    ) -> list[PluginSearchResult]:
         """
         Return app items based on one or more search terms, user, optional type
         and optional keywords.
@@ -142,7 +150,7 @@ class BackendPlugin(BackendPluginPoint):
     #: Description string
     description = 'Timeline backend for modifying events'
 
-    def get_api(self, **kwargs):
+    def get_api(self, **kwargs) -> TimelineAPI:
         """Return API entry point object."""
         return TimelineAPI()
 

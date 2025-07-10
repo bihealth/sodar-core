@@ -2,6 +2,7 @@
 
 import logging
 
+from typing import Optional, Union
 from wsgiref.util import FileWrapper  # For db files
 from zipfile import ZipFile
 
@@ -10,7 +11,13 @@ from django.contrib import messages
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseRedirect,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+)
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import (
@@ -26,7 +33,7 @@ from db_file_storage.storage import DatabaseFileStorage
 
 # Projectroles dependency
 from projectroles.models import Project, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.utils import build_secret, get_display_name
 from projectroles.views import (
@@ -37,6 +44,7 @@ from projectroles.views import (
     ProjectPermissionMixin,
     CurrentUserFormMixin,
     InvalidFormMixin,
+    PROJECT_BLOCK_MSG,
 )
 
 from filesfolders.forms import FolderForm, FileForm, HyperLinkForm
@@ -46,11 +54,13 @@ from filesfolders.utils import build_public_url
 
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 storage = DatabaseFileStorage()
 
 
 # Local constants
 APP_NAME = 'filesfolders'
+APP_NAME_PR = 'projectroles'
 TL_OBJ_TYPES = {'Folder': 'folder', 'File': 'file', 'HyperLink': 'hyperlink'}
 DEFAULT_UPDATE_ATTRS = ['name', 'folder', 'description', 'flag']
 LINK_BAD_REQUEST_MSG = settings.FILESFOLDERS_LINK_BAD_REQUEST_MSG
@@ -69,15 +79,27 @@ class ObjectPermissionMixin(LoggedInPermissionMixin):
             obj = type(self.get_object()).objects.get(
                 sodar_uuid=self.kwargs['item']
             )
-            if obj.owner == self.request.user:
-                return self.request.user.has_perm(
-                    'filesfolders.update_data_own', self.get_permission_object()
-                )
-            return self.request.user.has_perm(
-                'filesfolders.update_data_all', self.get_permission_object()
-            )
         except type(self.get_object()).DoesNotExist:
             return False
+        # Fail if project is blocked
+        if not self.request.user.is_superuser and app_settings.get(
+            APP_NAME_PR, 'project_access_block', project=obj.project
+        ):
+            messages.error(
+                self.request,
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(obj.project.type)
+                )
+                + '.',
+            )
+            return False
+        if obj.owner == self.request.user:
+            return self.request.user.has_perm(
+                'filesfolders.update_data_own', self.get_permission_object()
+            )
+        return self.request.user.has_perm(
+            'filesfolders.update_data_all', self.get_permission_object()
+        )
 
     def get_permission_object(self):
         """Override get_permission_object for checking Project permission"""
@@ -92,11 +114,11 @@ class FilesfoldersTimelineMixin:
     @classmethod
     def add_item_modify_event(
         cls,
-        obj,
-        request,
-        view_action,
-        update_attrs=DEFAULT_UPDATE_ATTRS,
-        old_data=None,
+        obj: Union[File, Folder, HyperLink],
+        request: HttpRequest,
+        view_action: str,
+        update_attrs: list = DEFAULT_UPDATE_ATTRS,
+        old_data: Optional[dict] = None,
     ):
         """
         Add filesfolders item create/update event to timeline.
@@ -107,13 +129,13 @@ class FilesfoldersTimelineMixin:
         :param update_attrs: List of attribute names to include in extra_data
         :param old_data: Data from existing object in case of update (dict)
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return
 
         obj_type = TL_OBJ_TYPES[obj.__class__.__name__]
         extra_data = {}
-        tl_desc = '{} {} {{{}}}'.format(view_action, obj_type, obj_type)
+        tl_desc = f'{view_action} {obj_type} {{{obj_type}}}'
 
         if view_action == 'create':
             for a in update_attrs:
@@ -129,7 +151,7 @@ class FilesfoldersTimelineMixin:
             project=obj.project,
             app_name=APP_NAME,
             user=request.user,
-            event_name='{}_{}'.format(obj_type, view_action),
+            event_name=f'{obj_type}_{view_action}',
             description=tl_desc,
             extra_data=extra_data,
             status_type=timeline.TL_STATUS_OK,
@@ -148,7 +170,7 @@ class ViewActionMixin(object):
     def view_action(self):
         raise ImproperlyConfigured('Property "view_action" missing!')
 
-    def get_view_action(self):
+    def get_view_action(self) -> Optional[str]:
         return self.view_action if self.view_action else None
 
 
@@ -180,9 +202,8 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
         )
         messages.success(
             self.request,
-            '{} "{}" successfully {}d.'.format(
-                self.object.__class__.__name__, self.object.name, view_action
-            ),
+            f'{self.object.__class__.__name__} "{self.object.name}" '
+            f'successfully {view_action}d.',
         )
         # TODO: Repetition, put this in a mixin?
         if self.object.folder:
@@ -196,7 +217,7 @@ class DeleteSuccessMixin(DeletionMixin):
     """Mixin for overriding get_success_url in deletion form views"""
 
     def get_success_url(self):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         # Add event in Timeline
         if timeline:
             obj_type = TL_OBJ_TYPES[self.object.__class__.__name__]
@@ -205,8 +226,8 @@ class DeleteSuccessMixin(DeletionMixin):
                 project=self.object.project,
                 app_name=APP_NAME,
                 user=self.request.user,
-                event_name='{}_delete'.format(obj_type),
-                description='delete {} {{{}}}'.format(obj_type, obj_type),
+                event_name=f'{obj_type}_delete',
+                description=f'delete {obj_type} {{{obj_type}}}',
                 status_type=timeline.TL_STATUS_OK,
             )
             tl_event.add_object(
@@ -221,9 +242,7 @@ class DeleteSuccessMixin(DeletionMixin):
 
         messages.success(
             self.request,
-            '{} "{}" deleted.'.format(
-                self.object.__class__.__name__, self.object.name
-            ),
+            f'{self.object.__class__.__name__} "{self.object.name}" deleted.',
         )
         # TODO: Repetition, put this in a mixin?
         if self.object.folder:
@@ -238,7 +257,7 @@ class FileServeMixin:
 
     def get(self, *args, **kwargs):
         """GET request to return the file as attachment"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if kwargs.get('project'):
             redirect_url = reverse(
                 'filesfolders:list', kwargs={'project': kwargs['project']}
@@ -270,8 +289,8 @@ class FileServeMixin:
             FileWrapper(file_content), content_type=file_data.content_type
         )
         if SERVE_AS_ATTACHMENT:
-            response['Content-Disposition'] = 'attachment; filename={}'.format(
-                file.name
+            response['Content-Disposition'] = (
+                f'attachment; filename={file.name}'
             )
         if self.request.user.is_authenticated:
             # Add event in Timeline
@@ -367,13 +386,16 @@ class ProjectFileView(
         context['links'] = HyperLink.objects.filter(
             project=project, folder=root_folder
         )
+        context['allow_public_links'] = app_settings.get(
+            APP_NAME, 'allow_public_links', project=project
+        )
+
+        # Get folder ReadMe
         folder_pk = (
             Folder.objects.get(sodar_uuid=self.kwargs['folder']).pk
             if 'folder' in self.kwargs
             else None
         )
-
-        # Get folder ReadMe
         readme_md = File.objects.get_folder_readme(
             project_pk=project.pk, folder_pk=folder_pk, mimetype='text/markdown'
         )
@@ -398,8 +420,8 @@ class ProjectFileView(
                 if settings.DEBUG:
                     raise ex
                 logger.error(
-                    'Exception in accessing readme file data (UUID={}): '
-                    '{}'.format(readme_file.sodar_uuid, ex)
+                    f'Exception in accessing readme file data '
+                    f'(UUID={readme_file.sodar_uuid}): {ex}'
                 )
         return context
 
@@ -461,7 +483,7 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
 
     def form_valid(self, form):
         """Override form_valid() for zip file unpacking"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
 
         # Regular file upload
         if not form.cleaned_data.get('unpack_archive'):
@@ -483,9 +505,7 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
         try:
             zip_file = ZipFile(file)
         except Exception as ex:
-            messages.error(
-                self.request, 'Unable to extract zip file: {}'.format(ex)
-            )
+            messages.error(self.request, f'Unable to extract zip file: {ex}')
             return redirect(redirect_url)
 
         new_folders = []
@@ -540,10 +560,8 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
                 app_name=APP_NAME,
                 user=self.request.user,
                 event_name='archive_extract',
-                description='Extract from archive "{}", create {} folders '
-                'and {} files'.format(
-                    file.name, len(new_folders), len(new_files)
-                ),
+                description=f'Extract from archive "{file.name}", create '
+                f'{len(new_folders)} folders and {len(new_files)} files',
                 extra_data={
                     'new_folders': [f.name for f in new_folders],
                     'new_files': [f.name for f in new_files],
@@ -609,7 +627,7 @@ class FileServeView(
 class FileServePublicView(FileServeMixin, View):
     """View for serving file to a public user with secure link"""
 
-    def get(self, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         """Override of GET for checking request URL"""
         try:
             file = File.objects.get(secret=kwargs['secret'])
@@ -624,6 +642,15 @@ class FileServePublicView(FileServeMixin, View):
         # If public URL serving is disabled, don't serve file
         if not file.public_url:
             return HttpResponseBadRequest(LINK_BAD_REQUEST_MSG)
+        # If related project is locked, refuse to serve
+        if not request.user.is_superuser and app_settings.get(
+            APP_NAME_PR, 'project_access_block', project=file.project
+        ):
+            return HttpResponseForbidden(
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(file.project.type)
+                )
+            )
         # Update kwargs with file and project uuid:s
         kwargs.update(
             {'file': file.sodar_uuid, 'project': file.project.sodar_uuid}
@@ -763,7 +790,7 @@ class BatchEditView(
     #: Project object
     project = None
 
-    def _render_confirmation(self, **kwargs):
+    def _render_confirmation(self, **kwargs) -> HttpResponse:
         """Render user confirmation"""
         context = {
             'batch_action': self.batch_action,
@@ -802,9 +829,11 @@ class BatchEditView(
                 context['folder_check'] = False
         return super().render_to_response(context)
 
-    def _finalize_edit(self, edit_count, target_folder, **kwargs):
+    def _finalize_edit(
+        self, edit_count: int, target_folder: Optional[Folder], **kwargs
+    ) -> HttpResponseRedirect:
         """Finalize executed batch operation"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         edit_suffix = 's' if edit_count != 1 else ''
         fail_suffix = 's' if len(self.failed) != 1 else ''
 
@@ -840,7 +869,7 @@ class BatchEditView(
                 ).first(),
                 app_name=APP_NAME,
                 user=self.request.user,
-                event_name='batch_{}'.format(self.batch_action),
+                event_name=f'batch_{self.batch_action}',
                 description='batch {} {} item{} {} {}'.format(
                     self.batch_action,
                     edit_count,

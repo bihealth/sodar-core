@@ -78,39 +78,38 @@
   {{ block.super }}
   <!-- Tour content -->
   <script type="text/javascript">
-      tourEnabled = true;
-      tour.addStep('tokens', {
-          title: 'API Tokens App',
-          text: 'In this application you can create and manage API tokens to ' +
-                'be used with the REST API endpoints of the site. Tokens are ' +
-                'user specific and may have an expiry date.',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-      tour.addStep('token_create', {
-          title: 'Create Token',
-          text: 'To create a new API token, click on this button and follow ' +
-                'the instructions in the displayed forms.',
-          attachTo: '#sodar-tk-create-btn left',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-      tour.addStep('token_list', {
-          title: 'Token List',
-          text: 'Tokens assigned to you can be seen in this list.',
-          attachTo: '#sodar-tk-table top',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-      if ($('.sodar-tk-item-dropdown').length) {
-          tour.addStep('token_dropdown', {
-              title: 'Token Dropdown',
-              text: 'Through this dropdown you can delete the corresponding ' +
-                    'token.',
-              attachTo: '.sodar-tk-item-dropdown left',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
+    tourEnabled = true
+    tour.addStep('tokens', {
+      title: 'API Tokens App',
+      text: 'In this application you can create and manage API tokens to be ' +
+            'used with the REST API endpoints of the site. Tokens are user ' +
+            'specific and may have an expiry date.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    tour.addStep('token_create', {
+      title: 'Create Token',
+      text: 'To create a new API token, click on this button and follow the ' +
+            'instructions in the displayed forms.',
+      attachTo: '#sodar-tk-create-btn left',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    tour.addStep('token_list', {
+      title: 'Token List',
+      text: 'Tokens assigned to you can be seen in this list.',
+      attachTo: '#sodar-tk-table top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    if ($('.sodar-tk-item-dropdown').length) {
+      tour.addStep('token_dropdown', {
+        title: 'Token Dropdown',
+        text: 'Through this dropdown you can delete the corresponding token.',
+        attachTo: '.sodar-tk-item-dropdown left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
   </script>
 {% endblock javascript %}

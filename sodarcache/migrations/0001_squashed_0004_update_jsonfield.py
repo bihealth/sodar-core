@@ -35,11 +35,15 @@ class Migration(migrations.Migration):
                         verbose_name='ID',
                     ),
                 ),
-                ('app_name', models.CharField(help_text='App name', max_length=255)),
+                (
+                    'app_name',
+                    models.CharField(help_text='App name', max_length=255),
+                ),
                 (
                     'name',
                     models.CharField(
-                        help_text='Name or title of the item given by the data setting app',
+                        help_text='Name or title of the item given by the data '
+                        'setting app',
                         max_length=255,
                     ),
                 ),
@@ -52,18 +56,23 @@ class Migration(migrations.Migration):
                 (
                     'sodar_uuid',
                     models.UUIDField(
-                        default=uuid.uuid4, help_text='Item SODAR UUID', unique=True
+                        default=uuid.uuid4,
+                        help_text='Item SODAR UUID',
+                        unique=True,
                     ),
                 ),
                 (
                     'data',
-                    models.JSONField(default=dict, help_text='Cached data as JSON'),
+                    models.JSONField(
+                        default=dict, help_text='Cached data as JSON'
+                    ),
                 ),
                 (
                     'project',
                     models.ForeignKey(
                         blank=True,
-                        help_text='Project in which the item belongs (optional)',
+                        help_text='Project in which the item belongs '
+                        '(optional)',
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='cached_items',

@@ -14,7 +14,7 @@ from test_plus.test import TestCase
 import projectroles
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
-from projectroles.plugins import get_app_plugin, get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.templatetags import (
     projectroles_common_tags as c_tags,
     projectroles_role_tags as r_tags,
@@ -29,6 +29,7 @@ from projectroles.tests.test_models import (
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 site = import_module(settings.SITE_PACKAGE)
 
 
@@ -194,7 +195,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             request = self.req_factory.get(url)
             self.assertEqual(
                 c_tags.get_full_url(request, url),
-                'http://testserver/project/{}'.format(self.project.sodar_uuid),
+                f'http://testserver/project/{self.project.sodar_uuid}',
             )
 
     def test_get_display_name(self):
@@ -231,33 +232,62 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         """Test get_project_link()"""
         self.assertEqual(
             c_tags.get_project_link(self.project, full_title=False),
-            '<a href="/project/{}" title="{}" data-toggle="tooltip" '
-            'data-placement="top">{}</a>'.format(
-                self.project.sodar_uuid,
-                self.project.description,
-                self.project.title,
-            ),
+            f'<a href="/project/{self.project.sodar_uuid}" '
+            f'title="{self.project.description}" data-toggle="tooltip" '
+            f'data-placement="top">{self.project.title}</a>',
         )
         self.assertEqual(
             c_tags.get_project_link(self.project, full_title=True),
-            '<a href="/project/{}" title="{}" data-toggle="tooltip" '
-            'data-placement="top">{}</a>'.format(
-                self.project.sodar_uuid,
-                self.project.description,
-                self.project.full_title,
-            ),
+            f'<a href="/project/{self.project.sodar_uuid}" '
+            f'title="{self.project.description}" data-toggle="tooltip" '
+            f'data-placement="top">{self.project.full_title}</a>',
         )
         # TODO: Also test remote project link display (with icon)
+
+    def test_get_user_superuser_icon(self):
+        """Test get_user_superuser_icon()"""
+        expected = (
+            '<span title="Superuser" data-toggle="tooltip">'
+            '<i class="iconify text-info ml-1" '
+            'data-icon="mdi:shield-account"></i>'
+            '</span>'
+        )
+        self.assertEqual(c_tags.get_user_superuser_icon(), expected)
+
+    def test_get_user_superuser_icon_tooltip_false(self):
+        """Test get_user_superuser_icon() with tooltip=False"""
+        expected = (
+            '<i class="iconify text-info ml-1" '
+            'data-icon="mdi:shield-account"></i>'
+        )
+        self.assertEqual(c_tags.get_user_superuser_icon(False), expected)
+
+    def test_get_user_inactive_icon(self):
+        """Test get_user_inactive_icon()"""
+        expected = (
+            '<span title="Inactive" data-toggle="tooltip">'
+            '<i class="iconify text-secondary ml-1" '
+            'data-icon="mdi:account-off"></i>'
+            '</span>'
+        )
+        self.assertEqual(c_tags.get_user_inactive_icon(), expected)
+
+    def test_get_user_inactive_icon_tooltip_false(self):
+        """Test get_user_inactive_icon() with tooltip=False"""
+        expected = (
+            '<i class="iconify text-secondary ml-1" '
+            'data-icon="mdi:account-off"></i>'
+        )
+        self.assertEqual(c_tags.get_user_inactive_icon(False), expected)
 
     def test_get_user_html(self):
         """Test get_user_html()"""
         self.assertEqual(
             c_tags.get_user_html(self.user),
-            '<span class="sodar-user-html" data-toggle="tooltip" '
-            'data-placement="top" title="{}"><a href="mailto:{}">'
-            '{}</a></span>'.format(
-                self.user.get_full_name(), self.user.email, self.user.username
-            ),
+            f'<span class="sodar-user-html" data-toggle="tooltip" '
+            f'data-placement="top" title="{self.user.get_full_name()}">'
+            f'<a href="mailto:{self.user.email}">{self.user.username}</a>'
+            f'</span>',
         )
 
     def test_get_user_html_superuser(self):
@@ -309,17 +339,19 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         self.user.email = ''
         self.assertEqual(
             c_tags.get_user_html(self.user),
-            '<span class="sodar-user-html" '
-            'data-toggle="tooltip" data-placement="top" title="{}">{}'
-            '</span>'.format(self.user.get_full_name(), self.user.username),
+            f'<span class="sodar-user-html" data-toggle="tooltip" '
+            f'data-placement="top" title="{self.user.get_full_name()}">'
+            f'{self.user.username}</span>',
         )
 
     def test_get_user_badge(self):
         """Test get_user_badge()"""
         expected = (
-            f'<span class="badge badge-primary sodar-user-badge '
-            f'sodar-user-badge-active" title="{self.user.get_full_name()}" '
-            f'data-toggle="tooltip" data-uuid="{self.user.sodar_uuid}">'
+            f'<span class="badge badge-primary sodar-obj-badge '
+            f'sodar-user-badge sodar-user-badge-active" '
+            f'title="{self.user.get_full_name()}" '
+            f'data-toggle="tooltip" '
+            f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account"></i> '
             f'<a class="text-white" href="mailto:{self.user.email}">'
             f'{self.user.username}</a></span>'
@@ -330,9 +362,11 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         """Test get_user_badge() with no email"""
         self.user.email = None
         expected = (
-            f'<span class="badge badge-primary sodar-user-badge '
-            f'sodar-user-badge-active" title="{self.user.get_full_name()}" '
-            f'data-toggle="tooltip" data-uuid="{self.user.sodar_uuid}">'
+            f'<span class="badge badge-primary sodar-obj-badge '
+            f'sodar-user-badge sodar-user-badge-active" '
+            f'title="{self.user.get_full_name()}" '
+            f'data-toggle="tooltip" '
+            f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account"></i> '
             f'{self.user.username}</span>'
         )
@@ -341,10 +375,11 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_get_user_badge_superuser(self):
         """Test get_user_badge() with superuser"""
         expected = (
-            f'<span class="badge badge-info sodar-user-badge '
-            f'sodar-user-badge-superuser" '
+            f'<span class="badge badge-info sodar-obj-badge '
+            f'sodar-user-badge sodar-user-badge-superuser" '
             f'title="{self.superuser.get_full_name()}" '
-            f'data-toggle="tooltip" data-uuid="{self.superuser.sodar_uuid}">'
+            f'data-toggle="tooltip" '
+            f'data-uuid="{self.superuser.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:shield-account"></i> '
             f'<a class="text-white" href="mailto:{self.superuser.email}">'
             f'{self.superuser.username}</a></span>'
@@ -355,13 +390,125 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         """Test get_user_badge() with inactive user"""
         self.user.is_active = False
         expected = (
-            f'<span class="badge badge-secondary sodar-user-badge '
-            f'sodar-user-badge-inactive" title="{self.user.get_full_name()}" '
-            f'data-toggle="tooltip" data-uuid="{self.user.sodar_uuid}">'
+            f'<span class="badge badge-secondary sodar-obj-badge '
+            f'sodar-user-badge sodar-user-badge-inactive" '
+            f'title="{self.user.get_full_name()}" '
+            f'data-toggle="tooltip" '
+            f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account-off"></i> '
             f'{self.user.username}</span>'
         )
         self.assertEqual(c_tags.get_user_badge(self.user), expected)
+
+    def test_get_user_badge_extra_class(self):
+        """Test get_user_badge() with extra_class"""
+        expected = (
+            f'<span class="badge badge-primary sodar-obj-badge '
+            f'sodar-user-badge sodar-user-badge-active mr-1" '
+            f'title="{self.user.get_full_name()}" '
+            f'data-toggle="tooltip" '
+            f'data-uuid="{self.user.sodar_uuid}">'
+            f'<i class="iconify" data-icon="mdi:account"></i> '
+            f'<a class="text-white" href="mailto:{self.user.email}">'
+            f'{self.user.username}</a></span>'
+        )
+        self.assertEqual(
+            c_tags.get_user_badge(self.user, extra_class='mr-1'), expected
+        )
+
+    def test_get_project_badge(self):
+        """Test get_project_badge()"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-info sodar-obj-badge '
+            f'sodar-project-badge" title="{self.project.full_title}" '
+            f'data-toggle="tooltip">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> '
+            f'<a href="{url}">{self.project.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(c_tags.get_project_badge(self.project), expected)
+
+    def test_get_project_badge_category(self):
+        """Test get_project_badge() with category"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-info sodar-obj-badge '
+            f'sodar-project-badge" title="{self.category.full_title}" '
+            f'data-toggle="tooltip">'
+            f'<i class="iconify" data-icon="mdi:rhombus-split"></i> '
+            f'<a href="{url}">{self.category.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(c_tags.get_project_badge(self.category), expected)
+
+    def test_get_project_badge_can_view_false(self):
+        """Test get_project_badge() with can_view=False"""
+        expected = (
+            f'<span class="badge badge-secondary sodar-obj-badge '
+            f'sodar-project-badge" title="{self.project.full_title}" '
+            f'data-toggle="tooltip">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> {self.project.title}'
+            f'</span>'
+        )
+        self.assertEqual(
+            c_tags.get_project_badge(self.project, can_view=False), expected
+        )
+
+    def test_get_project_badge_variant(self):
+        """Test get_project_badge() with specified variant"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-danger sodar-obj-badge '
+            f'sodar-project-badge" title="{self.project.full_title}" '
+            f'data-toggle="tooltip">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> '
+            f'<a href="{url}">{self.project.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(
+            c_tags.get_project_badge(self.project, variant='danger'), expected
+        )
+
+    def test_get_project_badge_variant_uppercase(self):
+        """Test get_project_badge() with variant in uppercase"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-danger sodar-obj-badge '
+            f'sodar-project-badge" title="{self.project.full_title}" '
+            f'data-toggle="tooltip">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> '
+            f'<a href="{url}">{self.project.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(
+            c_tags.get_project_badge(self.project, variant='DANGER'), expected
+        )
+
+    def test_get_project_badge_extra_class(self):
+        """Test get_project_badge() with extra_class set"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        expected = (
+            f'<span class="badge badge-info sodar-obj-badge '
+            f'sodar-project-badge mr-1" title="{self.project.full_title}" '
+            f'data-toggle="tooltip">'
+            f'<i class="iconify" data-icon="mdi:cube"></i> '
+            f'<a href="{url}">{self.project.title}</a>'
+            f'</span>'
+        )
+        self.assertEqual(
+            c_tags.get_project_badge(self.project, extra_class='mr-1'), expected
+        )
 
     def test_get_history_dropdown(self):
         """Test get_history_dropdown()"""
@@ -440,7 +587,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_include_none_value(self):
         """Test get_backend_include() none attribute check"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
-        backend_plugin = get_active_plugins('backend')[0]
+        backend_plugin = plugin_api.get_active_plugins('backend')[0]
         type(backend_plugin).javascript_url = None
         type(backend_plugin).css_url = None
 
@@ -454,7 +601,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_include_invalid_url(self):
         """Test get_backend_include() file existence check"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
-        backend_plugin = get_active_plugins('backend')[0]
+        backend_plugin = plugin_api.get_active_plugins('backend')[0]
 
         type(backend_plugin).javascript_url = (
             'example_backend_app/js/NOT_EXISTING_JS.js'
@@ -473,7 +620,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_get_backend_include(self):
         """Test get_backend_include()"""
         # TODO: Replace with get_app_plugin once implemented for backend plugins
-        backend_plugin = get_active_plugins('backend')[0]
+        backend_plugin = plugin_api.get_active_plugins('backend')[0]
 
         type(backend_plugin).javascript_url = (
             'example_backend_app/js/greeting.js'
@@ -513,7 +660,7 @@ class TestProjectrolesRoleTags(TemplateTagTestBase):
 
     def test_get_role_class(self):
         """Test get_role_class()"""
-        self.assertEqual(r_tags.get_role_class(self.user), None)
+        self.assertEqual(r_tags.get_role_class(self.user), '')
 
     def test_get_role_class_inactive(self):
         """Test get_role_class() with inactive user"""
@@ -627,14 +774,14 @@ class TestProjectrolesTags(TemplateTagTestBase):
 
     def test_is_app_visible(self):
         """Test is_app_visible()"""
-        app_plugin = get_app_plugin(APP_NAME_FF)
+        app_plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.project, self.user), True
         )
 
     def test_is_app_visible_category(self):
         """Test is_app_visible() with a category"""
-        app_plugin = get_app_plugin(APP_NAME_FF)
+        app_plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.category, self.user),
             False,
@@ -642,7 +789,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
 
     def test_is_app_visible_category_enabled(self):
         """Test is_app_visible() with category_enable=True"""
-        app_plugin = get_app_plugin('timeline')
+        app_plugin = plugin_api.get_app_plugin('timeline')
         self.assertEqual(
             tags.is_app_visible(app_plugin, self.category, self.user), True
         )
@@ -650,7 +797,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
     @override_settings(PROJECTROLES_HIDE_PROJECT_APPS=[APP_NAME_FF])
     def test_is_app_visible_hide(self):
         """Test is_app_visible() with a hidden app and normal/superuser"""
-        app_plugin = get_app_plugin(APP_NAME_FF)
+        app_plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         superuser = self.make_user('superuser')
         superuser.is_superuser = True
         superuser.save()
@@ -663,7 +810,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
 
     def test_get_app_link_state(self):
         """Test get_app_link_state()"""
-        app_plugin = get_app_plugin(APP_NAME_FF)
+        app_plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         # TODO: Why does this also require app_name?
         self.assertEqual(
             tags.get_app_link_state(app_plugin, APP_NAME_FF, 'list'),
@@ -944,7 +1091,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
                 },
                 {
                     'name': 'admin',
-                    'url': '/admin/',
+                    'url': None,  # No URL for Django admin, opens warning modal
                     'label': 'Django Admin',
                     'icon': 'mdi:cogs',
                     'active': False,

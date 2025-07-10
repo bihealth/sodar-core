@@ -26,5 +26,5 @@ class ProfilerMiddleware(MiddlewareMixin):
             old_stdout, sys.stdout = sys.stdout, out
             self.profiler.print_stats(1)
             sys.stdout = old_stdout
-            response.content = '<pre>{}</pre>'.format(out.getvalue())
+            response.content = f'<pre>{out.getvalue()}</pre>'
         return response

@@ -3,24 +3,34 @@
 import mistune
 
 from importlib import import_module
+from typing import Any, Optional, Union
+from uuid import UUID
 
 from django import template
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpRequest
 from django.template.loader import get_template
 from django.templatetags.static import static
 from django.urls import reverse
 
 import projectroles
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api, BackendPluginPoint
+from projectroles.models import (
+    Project,
+    Role,
+    RemoteProject,
+    SODARUser,
+    SODAR_CONSTANTS,
+)
+from projectroles.plugins import BackendPluginPoint, PluginAPI
 from projectroles.utils import get_display_name as _get_display_name
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 site = import_module(settings.SITE_PACKAGE)
 User = get_user_model()
 
@@ -37,37 +47,37 @@ SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 
 
 @register.simple_tag
-def site_version():
+def site_version() -> str:
     """Return the site version"""
     return site.__version__ if hasattr(site, '__version__') else '[UNKNOWN]'
 
 
 @register.simple_tag
-def core_version():
+def core_version() -> str:
     """Return the SODAR Core version"""
     return projectroles.__version__
 
 
 @register.simple_tag
-def check_backend(name):
+def check_backend(name: str) -> bool:
     """Return True if backend app is available and enabled, else False"""
     return True if name in settings.ENABLED_BACKEND_PLUGINS else False
 
 
 @register.simple_tag
-def get_project_by_uuid(sodar_uuid):
+def get_project_by_uuid(sodar_uuid: Union[str, UUID]) -> Optional[Project]:
     """Return Project by sodar_uuid"""
     return Project.objects.filter(sodar_uuid=sodar_uuid).first()
 
 
 @register.simple_tag
-def get_user_by_uuid(sodar_uuid):
+def get_user_by_uuid(sodar_uuid: Union[str, UUID]) -> Optional[SODARUser]:
     """Return SODARUser by sodar_uuid"""
     return User.objects.filter(sodar_uuid=sodar_uuid).first()
 
 
 @register.simple_tag
-def get_user_by_username(username):
+def get_user_by_username(username: str) -> Optional[SODARUser]:
     """Return User by username"""
     return User.objects.filter(username=username).first()
 
@@ -76,7 +86,7 @@ def get_user_by_username(username):
 
 
 @register.simple_tag
-def get_django_setting(name, default=None, js=False):
+def get_django_setting(name: str, default: Any = None, js: bool = False) -> Any:
     """
     Return value of Django setting by name or the default value if the setting
     is not found. Return a Javascript-safe value if js=True.
@@ -88,19 +98,24 @@ def get_django_setting(name, default=None, js=False):
 
 
 @register.simple_tag
-def get_app_setting(plugin_name, setting_name, project=None, user=None):
-    """Get a project/user specific app setting from AppSettingAPI"""
+def get_app_setting(
+    plugin_name: str,
+    setting_name: str,
+    project: Optional[Project] = None,
+    user: Optional[SODARUser] = None,
+) -> Any:
+    """Get a project/user specific app setting value from AppSettingAPI"""
     return app_settings.get(plugin_name, setting_name, project, user)
 
 
 @register.simple_tag
-def static_file_exists(path):
+def static_file_exists(path: str) -> bool:
     """Return True/False based on whether a static file exists"""
     return True if finders.find(path) else False
 
 
 @register.simple_tag
-def template_exists(path):
+def template_exists(path: str) -> bool:
     """Return True/False based on whether a template exists"""
     try:
         get_template(path)
@@ -110,7 +125,7 @@ def template_exists(path):
 
 
 @register.simple_tag
-def get_full_url(request, url):
+def get_full_url(request: HttpRequest, url: str) -> str:
     """Get full URL based on a local URL"""
     return request.scheme + '://' + request.get_host() + url
 
@@ -119,13 +134,17 @@ def get_full_url(request, url):
 
 
 @register.simple_tag
-def get_display_name(key, title=False, count=1, plural=False):
+def get_display_name(
+    key: str, title: bool = False, count: int = 1, plural: bool = False
+) -> str:
     """Return display name from SODAR_CONSTANTS"""
     return _get_display_name(key, title, count, plural)
 
 
 @register.simple_tag
-def get_role_display_name(role, project, title=False):
+def get_role_display_name(
+    role: Role, project: Project, title: bool = False
+) -> str:
     """
     Return display name for role assignment.
 
@@ -136,13 +155,11 @@ def get_role_display_name(role, project, title=False):
     role_suffix = role.name.split(' ')[1]
     if title:
         role_suffix = role_suffix.title()
-    return '{} {}'.format(
-        _get_display_name(project.type, title=title), role_suffix
-    )
+    return f'{_get_display_name(project.type, title=title)} {role_suffix}'
 
 
 @register.simple_tag
-def get_project_title_html(project):
+def get_project_title_html(project: Project) -> str:
     """Return HTML version of the full project title including parents"""
     ret = ''
     if project.get_parents():
@@ -152,7 +169,11 @@ def get_project_title_html(project):
 
 
 @register.simple_tag
-def get_project_link(project, full_title=False, request=None):
+def get_project_link(
+    project: str,
+    full_title: bool = False,
+    request: Optional[HttpRequest] = None,
+) -> str:
     """Return link to project with a simple or full title"""
     remote_icon = ''
     if request:
@@ -171,25 +192,37 @@ def get_project_link(project, full_title=False, request=None):
 
 
 @register.simple_tag
-def get_user_superuser_icon():
+def get_user_superuser_icon(tooltip: bool = True) -> str:
     """Return superuser icon for user"""
-    return (
+    ret = ''
+    if tooltip:
+        ret += '<span title="Superuser" data-toggle="tooltip">'
+    ret += (
         '<i class="iconify text-info ml-1" '
         'data-icon="mdi:shield-account"></i>'
     )
+    if tooltip:
+        ret += '</span>'
+    return ret
 
 
 @register.simple_tag
-def get_user_inactive_icon():
+def get_user_inactive_icon(tooltip: bool = True) -> str:
     """Return inactive icon for user"""
-    return (
+    ret = ''
+    if tooltip:
+        ret += '<span title="Inactive" data-toggle="tooltip">'
+    ret += (
         '<i class="iconify text-secondary ml-1" '
         'data-icon="mdi:account-off"></i>'
     )
+    if tooltip:
+        ret += '</span>'
+    return ret
 
 
 @register.simple_tag
-def get_user_html(user):
+def get_user_html(user: SODARUser) -> str:
     """Return HTML representation of a User object"""
     email_link = True if user.is_active and user.email else False
     title = user.get_full_name()
@@ -204,37 +237,47 @@ def get_user_html(user):
         )
     )
     if email_link:
-        ret += '<a href="mailto:{}">'.format(user.email)
+        ret += f'<a href="mailto:{user.email}">'
     ret += user.username
     if email_link:
         ret += '</a>'
     if user.is_superuser:
-        ret += get_user_superuser_icon()
+        ret += get_user_superuser_icon(False)
     if not user.is_active:
-        ret += get_user_inactive_icon()
+        ret += get_user_inactive_icon(False)
     ret += '</span>'
     return ret
 
 
 @register.simple_tag
-def get_user_badge(user):
-    """Return badge HTML for a User object"""
+def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
+    """
+    Return badge HTML for a User object.
+
+    :param user: SODARUser object
+    :param extra_class: Extra classes to add to element (string, optional)
+    :return: String (contains HTML)
+    """
     if not user.is_active:
         icon = 'mdi:account-off'
-        badge_class = 'secondary'
+        variant = 'secondary'
         user_class = 'inactive'
     elif user.is_superuser:
         icon = 'mdi:shield-account'
-        badge_class = 'info'
+        variant = 'info'
         user_class = 'superuser'
     else:
         icon = 'mdi:account'
-        badge_class = 'primary'
+        variant = 'primary'
         user_class = 'active'
     email = True if user.is_active and user.email else False
+    if extra_class and not extra_class.startswith(' '):
+        extra_class = ' ' + extra_class
+    elif not extra_class:
+        extra_class = ''
     ret = (
-        f'<span class="badge badge-{badge_class} sodar-user-badge '
-        f'sodar-user-badge-{user_class}" '
+        f'<span class="badge badge-{variant} sodar-obj-badge '
+        f'sodar-user-badge sodar-user-badge-{user_class}{extra_class}" '
         f'title="{user.get_full_name()}" data-toggle="tooltip" '
         f'data-uuid="{user.sodar_uuid}">'
         f'<i class="iconify" data-icon="{icon}"></i> '
@@ -249,7 +292,49 @@ def get_user_badge(user):
 
 
 @register.simple_tag
-def get_backend_include(backend_name, include_type='js'):
+def get_project_badge(
+    project: Project,
+    variant: Optional[str] = None,
+    can_view: bool = True,
+    extra_class: Optional[str] = None,
+) -> str:
+    """
+    Return badge HTML for a Project object.
+
+    :param project: Project object
+    :param variant: Badge variant (string)
+    :param can_view: Display project link if True (bool)
+    :param extra_class: Extra classes to add to element (string, optional)
+    :return: String (contains HTML)
+    """
+    if not can_view:
+        variant = 'secondary'
+    elif not variant:
+        variant = 'info'
+    extra_class = (' ' + extra_class) if extra_class else ''
+    ret = (
+        f'<span class="badge badge-{variant.lower()} sodar-obj-badge '
+        f'sodar-project-badge{extra_class}" title="{project.full_title}" '
+        f'data-toggle="tooltip">'
+    )
+    if project.is_project():
+        icon = 'mdi:cube'
+    else:
+        icon = 'mdi:rhombus-split'
+    ret += f'<i class="iconify" data-icon="{icon}"></i> '
+    if can_view:
+        url = reverse(
+            'projectroles:detail', kwargs={'project': project.sodar_uuid}
+        )
+        ret += f'<a href="{url}">{project.title}</a>'
+    else:
+        ret += project.title
+    ret += '</span>'
+    return ret
+
+
+@register.simple_tag
+def get_backend_include(backend_name: str, include_type: str = 'js') -> str:
     """
     Return import string for backend app Javascript or CSS. Returns empty string
     if not found.
@@ -283,9 +368,9 @@ def get_backend_include(backend_name, include_type='js'):
 
 
 @register.simple_tag
-def get_history_dropdown(obj, project=None):
+def get_history_dropdown(obj: Any, project: Optional[Project] = None) -> str:
     """Return link to object timeline events within project"""
-    timeline = get_backend_api('timeline_backend')
+    timeline = plugin_api.get_backend_api('timeline_backend')
     if not timeline:
         return ''
     url = timeline.get_object_url(obj, project)
@@ -297,7 +382,7 @@ def get_history_dropdown(obj, project=None):
 
 
 @register.simple_tag
-def highlight_search_term(item, terms):
+def highlight_search_term(item: str, terms: list[str]) -> str:
     """Return string with search term highlighted"""
     # Skip highlighting for multiple terms (at least for now)
     if isinstance(terms, list) and len(terms) > 1:
@@ -328,7 +413,7 @@ def highlight_search_term(item, terms):
 
 
 @register.simple_tag
-def get_info_link(content, html=False):
+def get_info_link(content: str, html: bool = False) -> str:
     """Return info popover link icon"""
     return (
         '<a class="sodar-info-link" tabindex="0" data-toggle="popover" '
@@ -339,7 +424,7 @@ def get_info_link(content, html=False):
 
 
 @register.simple_tag
-def get_remote_icon(project, request):
+def get_remote_icon(project: Project, request: HttpRequest) -> str:
     """Get remote project icon HTML"""
     if project.is_remote() and request.user.is_superuser:
         remote_project = RemoteProject.objects.filter(
@@ -361,13 +446,13 @@ def get_remote_icon(project, request):
 
 
 @register.simple_tag
-def render_markdown(raw_markdown):
+def render_markdown(raw_markdown: str) -> str:
     """Markdown field rendering helper"""
     return mistune.html(raw_markdown)
 
 
 @register.filter
-def force_wrap(s, length):
+def force_wrap(s: str, length: int) -> str:
     """Force wrapping of string"""
     # If string contains spaces or hyphens, leave wrapping to browser
     if not {' ', '-'}.intersection(s) and len(s) > length:
@@ -381,13 +466,13 @@ def force_wrap(s, length):
 
 
 @register.simple_tag
-def get_class(obj, lower=False):
+def get_class(obj: any, lower: bool = False) -> str:
     """Return object class as string"""
     c = obj.__class__.__name__
     return c.lower() if lower else c
 
 
 @register.filter
-def split(s, sep):
+def split(s: str, sep: str) -> list:
     """Split string by separator"""
     return s.split(sep)

@@ -1,11 +1,27 @@
 """Plugin point definitions and plugin API for apps based on projectroles"""
 
 import json
+import logging
+
+from typing import Any, Optional, Union
+from uuid import UUID
 
 from django.conf import settings
+from django.db.models import Model, QuerySet
+from django.http import HttpRequest
 from djangoplugins.point import PluginPoint
 
-from projectroles.models import APP_SETTING_TYPES, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    Role,
+    RoleAssignment,
+    SODARUser,
+    APP_SETTING_TYPES,
+    SODAR_CONSTANTS,
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 # SODAR constants
@@ -34,6 +50,12 @@ APP_SETTING_SCOPES = [
     APP_SETTING_SCOPE_SITE,
 ]
 APP_SETTING_OPTION_TYPES = [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
+# TODO: Remove in v1.3 (see #1718)
+PLUGIN_API_DEPRECATE_MSG = (
+    'Importing and calling {method}() directly from projectroles.plugins has '
+    'been deprecated and will be removed in v1.3. Use '
+    'projectroles.plugins.PluginAPI instead.'
+)
 
 # From djangoplugins
 ENABLED = 0
@@ -56,12 +78,12 @@ class ProjectModifyPluginMixin:
 
     def perform_project_modify(
         self,
-        project,
-        action,
-        project_settings,
-        old_data=None,
-        old_settings=None,
-        request=None,
+        project: Project,
+        action: str,
+        project_settings: dict,
+        old_data: Optional[dict] = None,
+        old_settings: Optional[dict] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """
         Perform additional actions to finalize project creation or update.
@@ -77,12 +99,12 @@ class ProjectModifyPluginMixin:
 
     def revert_project_modify(
         self,
-        project,
-        action,
-        project_settings,
-        old_data=None,
-        old_settings=None,
-        request=None,
+        project: Project,
+        action: str,
+        project_settings: dict,
+        old_data: Optional[dict] = None,
+        old_settings: Optional[dict] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """
         Revert project creation or update if errors have occurred in other apps.
@@ -96,7 +118,13 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_role_modify(self, role_as, action, old_role=None, request=None):
+    def perform_role_modify(
+        self,
+        role_as: RoleAssignment,
+        action: str,
+        old_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
+    ):
         """
         Perform additional actions to finalize role assignment creation or
         update.
@@ -108,7 +136,13 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def revert_role_modify(self, role_as, action, old_role=None, request=None):
+    def revert_role_modify(
+        self,
+        role_as: RoleAssignment,
+        action: str,
+        old_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
+    ):
         """
         Revert role assignment creation or update if errors have occurred in
         other apps.
@@ -120,7 +154,11 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_role_delete(self, role_as, request=None):
+    def perform_role_delete(
+        self,
+        role_as: RoleAssignment,
+        request: Optional[HttpRequest] = None,
+    ):
         """
         Perform additional actions to finalize role assignment deletion.
 
@@ -129,7 +167,11 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def revert_role_delete(self, role_as, request=None):
+    def revert_role_delete(
+        self,
+        role_as: RoleAssignment,
+        request: Optional[HttpRequest] = None,
+    ):
         """
         Revert role assignment deletion deletion if errors have occurred in
         other apps.
@@ -140,7 +182,12 @@ class ProjectModifyPluginMixin:
         pass
 
     def perform_owner_transfer(
-        self, project, new_owner, old_owner, old_owner_role=None, request=None
+        self,
+        project: Project,
+        new_owner: SODARUser,
+        old_owner: SODARUser,
+        old_owner_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """
         Perform additional actions to finalize project ownership transfer.
@@ -154,7 +201,12 @@ class ProjectModifyPluginMixin:
         pass
 
     def revert_owner_transfer(
-        self, project, new_owner, old_owner, old_owner_role=None, request=None
+        self,
+        project: Project,
+        new_owner: SODARUser,
+        old_owner: SODARUser,
+        old_owner_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
     ):
         """
         Revert project ownership transfer if errors have occurred in other apps.
@@ -167,7 +219,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_project_sync(self, project):
+    def perform_project_sync(self, project: Project):
         """
         Synchronize existing projects to ensure related data exists when the
         syncmodifyapi management comment is called. Should mostly be used in
@@ -180,12 +232,12 @@ class ProjectModifyPluginMixin:
 
     def perform_project_setting_update(
         self,
-        plugin_name,
-        setting_name,
-        value,
-        old_value,
-        project=None,
-        user=None,
+        plugin_name: str,
+        setting_name: str,
+        value: Any,
+        old_value: Any,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
     ):
         """
         Perform additional actions when updating a single app setting with
@@ -203,12 +255,12 @@ class ProjectModifyPluginMixin:
 
     def revert_project_setting_update(
         self,
-        plugin_name,
-        setting_name,
-        value,
-        old_value,
-        project=None,
-        user=None,
+        plugin_name: str,
+        setting_name: str,
+        value: Any,
+        old_value: Any,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
     ):
         """
         Revert updating a single app setting with PROJECT scope if errors have
@@ -224,7 +276,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_project_archive(self, project):
+    def perform_project_archive(self, project: Project):
         """
         Perform additional actions to finalize project archiving or unarchiving.
         The state being applied can be derived from the project.archive attr.
@@ -233,7 +285,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def revert_project_archive(self, project):
+    def revert_project_archive(self, project: Project):
         """
         Revert project archiving or unarchiving if errors have occurred in other
         apps. The state being originally set can be derived from the
@@ -243,7 +295,7 @@ class ProjectModifyPluginMixin:
         """
         pass
 
-    def perform_project_delete(self, project):
+    def perform_project_delete(self, project: Project):
         """
         Perform additional actions to finalize project deletion.
 
@@ -341,7 +393,9 @@ class ProjectAppPluginPoint(PluginPoint):
     #: Names of plugin specific Django settings to display in siteinfo
     info_settings = []
 
-    def get_object(self, model, uuid):
+    def get_object(
+        self, model: type[Model], uuid: Union[str, UUID]
+    ) -> Optional[Model]:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -355,7 +409,9 @@ class ProjectAppPluginPoint(PluginPoint):
         except model.DoesNotExist:
             return None
 
-    def get_object_link(self, model_str, uuid):
+    def get_object_link(
+        self, model_str: str, uuid: Union[str, UUID]
+    ) -> Optional['PluginObjectLink']:
         """
         Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
@@ -369,11 +425,19 @@ class ProjectAppPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(self, _extra_data, _name):
+    def get_extra_data_link(
+        self, _extra_data: dict, _name: str
+    ) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
-    def search(self, search_terms, user, search_type=None, keywords=None):
+    def search(
+        self,
+        search_terms: list[str],
+        user: SODARUser,
+        search_type: Optional[str] = None,
+        keywords: Optional[list[str]] = None,
+    ) -> list['PluginSearchResult']:
         """
         Return app items based on one or more search terms, user, optional type
         and optional keywords.
@@ -389,7 +453,12 @@ class ProjectAppPluginPoint(PluginPoint):
         #       search template
         return []
 
-    def update_cache(self, name=None, project=None, user=None):
+    def update_cache(
+        self,
+        name: Optional[str] = None,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ):
         """
         Update cached data for this app, limitable to item ID and/or project.
 
@@ -399,7 +468,7 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         return None
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         """
         Return app statistics as a dict. Should take the form of
         {id: {label, value, url (optional), description (optional)}}.
@@ -408,7 +477,22 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         return {}
 
-    def get_project_list_value(self, column_id, project, user):
+    def get_category_stats(
+        self, category: Project
+    ) -> list['PluginCategoryStatistic']:
+        """
+        Return app statistics for the given category. Expected to return
+        cumulative statistics for all projects under the category and its
+        possible subcategories.
+
+        :param category: Project object of CATEGORY type
+        :return: List of PluginCategoryStatistic objects
+        """
+        return []
+
+    def get_project_list_value(
+        self, column_id: str, project: Project, user: SODARUser
+    ) -> Union[str, int, None]:
         """
         Return a value for the optional additional project list column specific
         to a project.
@@ -420,7 +504,12 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         return None
 
-    def validate_form_app_settings(self, app_settings, project=None, user=None):
+    def validate_form_app_settings(
+        self,
+        app_settings: dict,
+        project: Optional[Project] = None,
+        user: Optional[SODARUser] = None,
+    ) -> Optional[dict]:
         """
         Validate app settings form data and return a dict of errors.
 
@@ -450,11 +539,11 @@ class BackendPluginPoint(PluginPoint):
     #: Names of plugin specific Django settings to display in siteinfo
     info_settings = []
 
-    def get_api(self):
-        """Return API entry point object."""
+    def get_api(self) -> Any:
+        """Return API entry point object"""
         raise NotImplementedError
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         """
         Return backend statistics as a dict. Should take the form of
         {id: {label, value, url (optional), description (optional)}}.
@@ -463,7 +552,9 @@ class BackendPluginPoint(PluginPoint):
         """
         return {}
 
-    def get_object(self, model, uuid):
+    def get_object(
+        self, model: type[Model], uuid: Union[str, UUID]
+    ) -> Optional[Model]:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -477,7 +568,9 @@ class BackendPluginPoint(PluginPoint):
         except model.DoesNotExist:
             return None
 
-    def get_object_link(self, model_str, uuid):
+    def get_object_link(
+        self, model_str: str, uuid: Union[str, UUID]
+    ) -> Optional['PluginObjectLink']:
         """
         Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
@@ -491,7 +584,9 @@ class BackendPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(self, _extra_data, _name):
+    def get_extra_data_link(
+        self, _extra_data: dict, _name: str
+    ) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
@@ -537,7 +632,7 @@ class SiteAppPluginPoint(PluginPoint):
     #: List of names for plugin specific Django settings to display in siteinfo
     info_settings = []
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         """
         Return app statistics as a dict. Should take the form of
         {id: {label, value, url (optional), description (optional)}}.
@@ -546,7 +641,7 @@ class SiteAppPluginPoint(PluginPoint):
         """
         return {}
 
-    def get_messages(self, user=None):
+    def get_messages(self, user: Optional[SODARUser] = None) -> list[dict]:
         """
         Return a list of messages to be shown to users.
 
@@ -563,7 +658,9 @@ class SiteAppPluginPoint(PluginPoint):
         '''
         return []
 
-    def get_object(self, model, uuid):
+    def get_object(
+        self, model: type[Model], uuid: Union[str, UUID]
+    ) -> Optional[Model]:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -577,7 +674,9 @@ class SiteAppPluginPoint(PluginPoint):
         except model.DoesNotExist:
             return None
 
-    def get_object_link(self, model_str, uuid):
+    def get_object_link(
+        self, model_str: str, uuid: Union[str, UUID]
+    ) -> Optional['PluginObjectLink']:
         """
         Return URL referring to an object used by the app, along with a name to
         be shown to the user for linking.
@@ -591,11 +690,17 @@ class SiteAppPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(self, _extra_data, _name):
+    def get_extra_data_link(
+        self, _extra_data: dict, _name: str
+    ) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
-    def validate_form_app_settings(self, app_settings, user=None):
+    def validate_form_app_settings(
+        self,
+        app_settings: dict,
+        user: Optional[SODARUser] = None,
+    ) -> Optional[dict]:
         """
         Validate app settings form data and return a dict of errors.
 
@@ -617,18 +722,20 @@ class PluginAppSettingDef:
 
     def __init__(
         self,
-        name,
-        scope,
-        type,
-        default=None,
-        label=None,
-        placeholder=None,
-        description=None,
-        options=None,
-        user_modifiable=None,  # Set None here to validate PROJECT_USER value
-        global_edit=False,
-        project_types=None,
-        widget_attrs=None,
+        name: str,
+        scope: str,
+        type: str,
+        default: Optional[Any] = None,
+        label: Optional[str] = None,
+        placeholder: Union[str, int, None] = None,
+        description: Optional[str] = None,
+        options: Union[callable, list, None] = None,
+        user_modifiable: Optional[
+            bool
+        ] = None,  # Set None here to validate PROJECT_USER value
+        global_edit: bool = False,
+        project_types: Optional[list[str]] = None,
+        widget_attrs: Optional[dict] = None,
     ):
         """
         Initialize PluginAppSettingDef.
@@ -693,7 +800,7 @@ class PluginAppSettingDef:
         self.widget_attrs = widget_attrs or {}
 
     @classmethod
-    def validate_scope(cls, scope):
+    def validate_scope(cls, scope: str):
         """
         Validate the app setting scope.
 
@@ -701,10 +808,10 @@ class PluginAppSettingDef:
         :raise: ValueError if scope is not recognized
         """
         if scope not in APP_SETTING_SCOPES:
-            raise ValueError('Invalid scope "{}"'.format(scope))
+            raise ValueError(f'Invalid scope "{scope}"')
 
     @classmethod
-    def validate_type(cls, setting_type):
+    def validate_type(cls, setting_type: str):
         """
         Validate the app setting type.
 
@@ -712,10 +819,10 @@ class PluginAppSettingDef:
         :raise: ValueError if type is not recognized
         """
         if setting_type not in APP_SETTING_TYPES:
-            raise ValueError('Invalid setting type "{}"'.format(setting_type))
+            raise ValueError(f'Invalid setting type "{setting_type}"')
 
     @classmethod
-    def validate_type_options(cls, setting_type, setting_options):
+    def validate_type_options(cls, setting_type: str, setting_options: list):
         """
         Validate existence of options against setting type.
 
@@ -734,7 +841,9 @@ class PluginAppSettingDef:
             )
 
     @classmethod
-    def validate_default_in_options(cls, setting_default, setting_options):
+    def validate_default_in_options(
+        cls, setting_default: Any, setting_options: Any
+    ):
         """
         Validate existence of default value in uncallable options.
 
@@ -758,7 +867,7 @@ class PluginAppSettingDef:
             )
 
     @classmethod
-    def validate_value(cls, setting_type, setting_value):
+    def validate_value(cls, setting_type: str, setting_value: Any):
         """
         Validate non-callable value.
 
@@ -769,9 +878,8 @@ class PluginAppSettingDef:
         if setting_type == APP_SETTING_TYPE_BOOLEAN:
             if not isinstance(setting_value, bool):
                 raise ValueError(
-                    'Please enter value as bool (value={}; type={})'.format(
-                        setting_value, type(setting_value)
-                    )
+                    f'Please enter value as bool (value={setting_value}; '
+                    f'type={type(setting_value)})'
                 )
         elif setting_type == APP_SETTING_TYPE_INTEGER:
             if (
@@ -779,27 +887,23 @@ class PluginAppSettingDef:
                 and not str(setting_value).isdigit()
             ):
                 raise ValueError(
-                    'Please enter a valid integer value ({})'.format(
-                        setting_value
-                    )
+                    f'Please enter a valid integer value ({setting_value})'
                 )
         elif setting_type == APP_SETTING_TYPE_JSON:
             if setting_value and not isinstance(setting_value, (dict, list)):
                 raise ValueError(
-                    'Please enter JSON value as dict or list '
-                    '(value={}; type={})'.format(
-                        setting_value, type(setting_value)
-                    )
+                    f'Please enter JSON value as dict or list '
+                    f'(value={setting_value}; type={type(setting_value)})'
                 )
             try:
                 json.dumps(setting_value)
             except TypeError:
-                raise ValueError(
-                    'Please enter valid JSON ({})'.format(setting_value)
-                )
+                raise ValueError(f'Please enter valid JSON ({setting_value})')
 
     @classmethod
-    def validate_user_modifiable(cls, scope, user_modifiable):
+    def validate_user_modifiable(
+        cls, scope: str, user_modifiable: Optional[bool]
+    ):
         """
         Validate user_modifiable against scope.
 
@@ -827,7 +931,7 @@ class PluginObjectLink:
     #: Open the link in a blank browser tab (boolean, default=False)
     blank = False
 
-    def __init__(self, url, name, blank=False):
+    def __init__(self, url: str, name: str, blank: bool = False):
         """
         Initialize PluginObjectLink.
 
@@ -857,7 +961,13 @@ class PluginSearchResult:
     #: List or QuerySet of result objects
     items = []
 
-    def __init__(self, category, title, search_types, items):
+    def __init__(
+        self,
+        category: str,
+        title: str,
+        search_types: Optional[list[str]],
+        items: Union[list, QuerySet],
+    ):
         """
         Initialize PluginSearchResult.
 
@@ -878,51 +988,201 @@ class PluginSearchResult:
         self.items = items
 
 
+class PluginCategoryStatistic:
+    """Class representing an item of category statistics"""
+
+    #: Plugin from which this item is initialized (None for projectroles)
+    plugin = None
+    #: Title to be displayed (string)
+    title = None
+    #: Value of the statistic (int or float)
+    value = 0
+    #: Optional unit (string or None)
+    unit = None
+    #: Optional description to be displayed as tooltip (string or None)
+    description = None
+    #: Optional icon namespace and ID (string or None)
+
+    def __init__(
+        self,
+        plugin: Optional[ProjectAppPluginPoint],
+        title: str,
+        value: Union[int, float],
+        unit: Optional[str] = None,
+        description: Optional[str] = None,
+        icon: Optional[str] = None,
+    ):
+        """
+        Initialize PluginCategoryStatistic.
+
+        :param plugin: ProjectAppPluginPoint object (None for projectroles)
+        :param title: String
+        :param value: Integer or float
+        :param unit: String or None
+        :param description: String or None
+        :param icon: String or None
+        :raises: ValueError if value is not integer or float
+        """
+        self.plugin = plugin
+        self.title = title
+        if not isinstance(value, int) and not isinstance(value, float):
+            raise ValueError('Value must be integer or float')
+        self.value = value
+        self.unit = unit
+        self.description = description
+        if icon:
+            self.icon = icon
+        elif plugin:
+            self.icon = getattr(plugin, 'icon')
+
+
 # Plugin API -------------------------------------------------------------------
 
 
-def get_active_plugins(plugin_type='project_app', custom_order=False):
+class PluginAPI:
+    """API for SODAR Core plugin retrieval"""
+
+    @classmethod
+    def get_active_plugins(
+        cls, plugin_type: str = 'project_app', custom_order: bool = False
+    ) -> Optional[list[PluginPoint]]:
+        """
+        Return active plugins of a specific type.
+
+        :param plugin_type: "project_app", "site_app" or "backend" (string)
+        :param custom_order: Order by plugin_ordering for project apps (boolean)
+        :return: List or None
+        :raise: ValueError if plugin_type is not recognized
+        """
+        if plugin_type not in PLUGIN_TYPES.keys():
+            raise ValueError(
+                'Invalid value for plugin_type. Accepted values: {}'.format(
+                    ', '.join(PLUGIN_TYPES.keys())
+                )
+            )
+        plugins = eval(PLUGIN_TYPES[plugin_type]).get_plugins()
+        if plugins:
+            ret = [
+                p
+                for p in plugins
+                if (
+                    p.is_active()
+                    and (
+                        plugin_type in ['project_app', 'site_app']
+                        or p.name in settings.ENABLED_BACKEND_PLUGINS
+                    )
+                )
+            ]
+            return sorted(
+                ret,
+                key=lambda x: (
+                    x.plugin_ordering
+                    if custom_order and plugin_type == 'project_app'
+                    else x.name
+                ),
+            )
+        return None
+
+    @classmethod
+    def change_plugin_status(
+        cls, name: str, status: int, plugin_type: str = 'app'
+    ):
+        """
+        Change the status of a selected plugin in the database.
+
+        :param name: Plugin name (string)
+        :param status: Status (int, see djangoplugins)
+        :param plugin_type: Type of plugin ("app", "backend" or "site")
+        :raise: ValueError if plugin_type is invalid or plugin with name not
+                found
+        """
+        # NOTE: Used to forge plugin to a specific status for e.g. testing
+        if plugin_type == 'app':
+            plugin = ProjectAppPluginPoint.get_plugin(name)
+        elif plugin_type == 'backend':
+            plugin = BackendPluginPoint.get_plugin(name)
+        elif plugin_type == 'site':
+            plugin = SiteAppPluginPoint.get_plugin(name)
+        else:
+            raise ValueError(f'Invalid plugin_type: "{plugin_type}"')
+        if not plugin:
+            raise ValueError(
+                f'Plugin of type "{plugin_type}" not found with name "{name}"'
+            )
+        plugin = plugin.get_model()
+        plugin.status = status
+        plugin.save()
+
+    @classmethod
+    def get_app_plugin(
+        cls, plugin_name: str, plugin_type: Optional[str] = None
+    ) -> Optional[PluginPoint]:
+        """
+        Return active app plugin.
+
+        :param plugin_name: Plugin name (string)
+        :param plugin_type: Plugin type (string or None for all types)
+        :return: Plugin object or None if not found or inactive
+        """
+        if plugin_type:
+            plugin_types = [PLUGIN_TYPES[plugin_type]]
+        else:
+            plugin_types = PLUGIN_TYPES.values()
+        for t in plugin_types:
+            try:
+                return eval(t).get_plugin(plugin_name)
+            except Exception:
+                pass
+        return None
+
+    @classmethod
+    def get_backend_api(
+        cls, plugin_name: str, force: bool = False, **kwargs
+    ) -> Optional[BackendPluginPoint]:
+        """
+        Return backend API object.
+        NOTE: May raise an exception from plugin.get_api().
+
+        :param plugin_name: Plugin name (string)
+        :param force: Return plugin regardless of status in
+                      ENABLED_BACKEND_PLUGINS
+        :param kwargs: Optional kwargs for API
+        :return: Plugin object or None if not found
+        """
+        if plugin_name in settings.ENABLED_BACKEND_PLUGINS or force:
+            try:
+                plugin = BackendPluginPoint.get_plugin(plugin_name)
+            except BackendPluginPoint.DoesNotExist:
+                return None
+            return plugin.get_api(**kwargs) if plugin.is_active() else None
+        return None
+
+
+# TODO: Remove in v1.3 (see #1718)
+def get_active_plugins(
+    plugin_type: str = 'project_app', custom_order: bool = False
+) -> Optional[list[PluginPoint]]:
     """
     Return active plugins of a specific type.
+
+    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
 
     :param plugin_type: "project_app", "site_app" or "backend" (string)
     :param custom_order: Order by plugin_ordering for project apps (boolean)
     :return: List or None
     :raise: ValueError if plugin_type is not recognized
     """
-    if plugin_type not in PLUGIN_TYPES.keys():
-        raise ValueError(
-            'Invalid value for plugin_type. Accepted values: {}'.format(
-                ', '.join(PLUGIN_TYPES.keys())
-            )
-        )
-    plugins = eval(PLUGIN_TYPES[plugin_type]).get_plugins()
-    if plugins:
-        ret = [
-            p
-            for p in plugins
-            if (
-                p.is_active()
-                and (
-                    plugin_type in ['project_app', 'site_app']
-                    or p.name in settings.ENABLED_BACKEND_PLUGINS
-                )
-            )
-        ]
-        return sorted(
-            ret,
-            key=lambda x: (
-                x.plugin_ordering
-                if custom_order and plugin_type == 'project_app'
-                else x.name
-            ),
-        )
-    return None
+    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_active_plugins'))
+    plugin_api = PluginAPI()
+    return plugin_api.get_active_plugins(plugin_type, custom_order)
 
 
-def change_plugin_status(name, status, plugin_type='app'):
+# TODO: Remove in v1.3 (see #1718)
+def change_plugin_status(name: str, status: int, plugin_type: str = 'app'):
     """
     Change the status of a selected plugin in the database.
+
+    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
 
     :param name: Plugin name (string)
     :param status: Status (int, see djangoplugins)
@@ -930,60 +1190,49 @@ def change_plugin_status(name, status, plugin_type='app'):
     :raise: ValueError if plugin_type is invalid or plugin with name not found
     """
     # NOTE: Used to forge plugin to a specific status for e.g. testing
-    if plugin_type == 'app':
-        plugin = ProjectAppPluginPoint.get_plugin(name)
-    elif plugin_type == 'backend':
-        plugin = BackendPluginPoint.get_plugin(name)
-    elif plugin_type == 'site':
-        plugin = SiteAppPluginPoint.get_plugin(name)
-    else:
-        raise ValueError('Invalid plugin_type: "{}"'.format(plugin_type))
-    if not plugin:
-        raise ValueError(
-            'Plugin of type "{}" not found with name "{}"'.format(
-                plugin_type, name
-            )
-        )
-    plugin = plugin.get_model()
-    plugin.status = status
-    plugin.save()
+    logger.warning(
+        PLUGIN_API_DEPRECATE_MSG.format(method='change_plugin_status')
+    )
+    plugin_api = PluginAPI()
+    plugin_api.change_plugin_status(name, status, plugin_type)
 
 
-def get_app_plugin(plugin_name, plugin_type=None):
+# TODO: Remove in v1.3 (see #1718)
+def get_app_plugin(
+    plugin_name: str, plugin_type: Optional[str] = None
+) -> Optional[PluginPoint]:
     """
     Return active app plugin.
+
+    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
 
     :param plugin_name: Plugin name (string)
     :param plugin_type: Plugin type (string or None for all types)
     :return: Plugin object or None if not found or inactive
     """
-    if plugin_type:
-        plugin_types = [PLUGIN_TYPES[plugin_type]]
-    else:
-        plugin_types = PLUGIN_TYPES.values()
-    for t in plugin_types:
-        try:
-            return eval(t).get_plugin(plugin_name)
-        except Exception:
-            pass
+    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_app_plugin'))
+    plugin_api = PluginAPI()
+    return plugin_api.get_app_plugin(plugin_name, plugin_type)
 
 
-def get_backend_api(plugin_name, force=False, **kwargs):
+# TODO: Remove in v1.3 (see #1718)
+def get_backend_api(
+    plugin_name: str, force: bool = False, **kwargs
+) -> Optional[BackendPluginPoint]:
     """
     Return backend API object.
     NOTE: May raise an exception from plugin.get_api().
+
+    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
 
     :param plugin_name: Plugin name (string)
     :param force: Return plugin regardless of status in ENABLED_BACKEND_PLUGINS
     :param kwargs: Optional kwargs for API
     :return: Plugin object or None if not found
     """
-    if plugin_name in settings.ENABLED_BACKEND_PLUGINS or force:
-        try:
-            plugin = BackendPluginPoint.get_plugin(plugin_name)
-        except BackendPluginPoint.DoesNotExist:
-            return None
-        return plugin.get_api(**kwargs) if plugin.is_active() else None
+    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_backend_api'))
+    plugin_api = PluginAPI()
+    return plugin_api.get_backend_api(plugin_name, force, **kwargs)
 
 
 # Plugins within projectroles --------------------------------------------------

@@ -16,38 +16,40 @@
 
   <h2 class="sodar-pr-content-title mr-1">{{ project.title }}</h2>
 
-  {# Project starring/unstarring #}
-  {% if request.user.is_authenticated and not site_read_only %}
-    <a role="link"
-       class="btn btn-link ml-1 mr-0 sodar-pr-btn-title sodar-pr-btn-star"
-       id="sodar-pr-link-project-star"
-       star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
-       title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
-       data-toggle="tooltip" data-placement="top">
-      {% if project_starred %}
-        <i class="iconify text-warning" data-icon="mdi:star" data-height="30"></i>
-      {% else %}
-        <i class="iconify text-muted" data-icon="mdi:star-outline" data-height="30"></i>
-      {% endif %}
-    </a>
-  {% endif %}
+  <span class="sodar-pr-content-title-controls mr-2">
+    {# Project starring/unstarring #}
+    {% if request.user.is_authenticated and not site_read_only %}
+      <a role="link"
+         class="btn btn-link ml-1 mr-0 sodar-pr-btn-title sodar-pr-btn-star"
+         id="sodar-pr-link-project-star"
+         star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
+         title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
+         data-toggle="tooltip" data-placement="top">
+        {% if project_starred %}
+          <i class="iconify text-warning" data-icon="mdi:star" data-height="30"></i>
+        {% else %}
+          <i class="iconify text-muted" data-icon="mdi:star-outline" data-height="30"></i>
+        {% endif %}
+      </a>
+    {% endif %}
 
-  {# Project copy uuid #}
-  {% if enable_uuid_copy %}
-    <a role="submit"
-       class="btn btn-link ml-2 mr-0 sodar-pr-btn-title sodar-copy-btn"
-       id="sodar-pr-btn-copy-uuid"
-       data-clipboard-text="{{ project.sodar_uuid }}"
-       title="Copy UUID to clipboard" data-toggle="tooltip" data-placement="top">
-      <i class="iconify text-muted"
-         data-icon="mdi:clipboard-text-multiple-outline" data-height="30">
-      </i>
-    </a>
-  {% endif %}
+    {# Project copy uuid #}
+    {% if enable_uuid_copy %}
+      <a role="submit"
+         class="btn btn-link ml-2 mr-0 sodar-pr-btn-title sodar-copy-btn"
+         id="sodar-pr-btn-copy-uuid"
+         data-clipboard-text="{{ project.sodar_uuid }}"
+         title="Copy UUID to clipboard" data-toggle="tooltip" data-placement="top">
+        <i class="iconify text-muted"
+           data-icon="mdi:clipboard-text-multiple-outline" data-height="30">
+        </i>
+      </a>
+    {% endif %}
+  </span>
 
   {# Secondary title #}
   {% if project.description %}
-    <div class="sodar-pr-content-title-secondary text-muted ml-2">
+    <div class="sodar-pr-content-title-secondary text-muted">
       {{ project.description }}
     </div>
   {% endif %}
@@ -67,15 +69,15 @@
       </span>
     {% endif %}
     {# Public access status #}
-    {% if project.type == 'PROJECT' and project.public_guest_access %}
-      <span class="ml-2 sodar-pr-header-icon" title="Public guest access"
-            id="sodar-pr-header-icon-archive-public"
+    {% if project.is_project and project.public_access %}
+      <span class="ml-2 sodar-pr-header-icon" title="Public read-only access"
+            id="sodar-pr-header-icon-public"
             data-toggle="tooltip" data-placement="left">
         <i class="iconify text-info" data-icon="mdi:earth" data-height="30"></i>
       </span>
     {% endif %}
     {# Archive status #}
-    {% if project.type == 'PROJECT' and project.archive %}
+    {% if project.is_project and project.archive %}
       <span class="ml-2 sodar-pr-header-icon" title="Archived"
             id="sodar-pr-header-icon-archive"
             data-toggle="tooltip" data-placement="left">
@@ -87,7 +89,7 @@
 
 {% get_display_name project.type as project_display %}
 
-{% if project.type == 'PROJECT' and project.archive %}
+{% if project.is_project and project.archive %}
   <div class="alert alert-info mt-3 mb-0" id="sodar-pr-alert-archive">
     <i class="iconify" data-icon="mdi:archive"></i> This {{ project_display }}
     has been archived. Access to data in {{ project_display }} apps has been set

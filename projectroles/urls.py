@@ -196,9 +196,19 @@ urls_ajax = [
         name='ajax_project_list_roles',
     ),
     path(
+        route='ajax/stats/category/<uuid:project>',
+        view=views_ajax.CategoryStatisticsAjaxView.as_view(),
+        name='ajax_stats_category',
+    ),
+    path(
         route='ajax/star/<uuid:project>',
         view=views_ajax.ProjectStarringAjaxView.as_view(),
         name='ajax_star',
+    ),
+    path(
+        route='ajax/star/home',
+        view=views_ajax.HomeStarringAjaxView.as_view(),
+        name='ajax_star_home',
     ),
     path(
         route='ajax/remote/access/<uuid:project>',
@@ -290,6 +300,11 @@ urls_api = [
         route='api/invites/list/<uuid:project>',
         view=views_api.ProjectInviteListAPIView.as_view(),
         name='api_invite_list',
+    ),
+    path(
+        route='api/invites/retrieve/<uuid:projectinvite>',
+        view=views_api.ProjectInviteRetrieveAPIView.as_view(),
+        name='api_invite_retrieve',
     ),
     path(
         route='api/invites/create/<uuid:project>',

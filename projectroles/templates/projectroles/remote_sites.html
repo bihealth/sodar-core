@@ -116,61 +116,61 @@
   <!-- Tour content -->
   {% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
   <script type="text/javascript">
-    tourEnabled = true;
+    tourEnabled = true
     tour.addStep('remote_sites', {
-        title: 'Remote Sites',
-        text: 'This view enables you to manage remote sites, which are used ' +
-              'to synchronize {% get_display_name 'PROJECT' plural=True %} ' +
-              'and member access between multiple sites.',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'Remote Sites',
+      text: 'This view enables you to manage remote sites, which are used to ' +
+            'synchronize {% get_display_name 'PROJECT' plural=True %} and ' +
+            'member access between multiple sites.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     {% if site_mode == 'SOURCE' %}
     tour.addStep('site_mode_source', {
-        title: 'This Is a Source Site',
-        text: 'Your site has been set up in the SOURCE mode. It can act as ' +
-              'the source to synchronize ' +
-              '{% get_display_name 'PROJECT' plural=True %} and member access' +
-              'to other TARGET sites. You can add an arbitrary amount of ' +
-              'TARGET sites for this site.',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'This Is a Source Site',
+      text: 'Your site has been set up in the SOURCE mode. It can act as the ' +
+            'source to synchronize ' +
+            '{% get_display_name 'PROJECT' plural=True %} and member access' +
+            'to other TARGET sites. You can add an arbitrary amount of ' +
+            'TARGET sites for this site.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     tour.addStep('site_btn_add_source', {
-        title: 'Add Target Site',
-        text: 'Click on this button to add a new target site.',
-        advanceOn: '.docs-link click',
-        attachTo: '#sodar-pr-remote-site-add-btn left',
-        showCancelLink: true
-    });
+      title: 'Add Target Site',
+      text: 'Click on this button to add a new target site.',
+      advanceOn: '.docs-link click',
+      attachTo: '#sodar-pr-remote-site-add-btn left',
+      showCancelLink: true
+    })
     if ($('#sodar-pr-remote-site-table').length) {
-        tour.addStep('site_table_source', {
-            title: 'Target Site Table',
-            text: 'This table lists the existing target sites for this source ' +
-                  'site.',
-            advanceOn: '.docs-link click',
-            attachTo: '#sodar-pr-remote-site-table top',
-            showCancelLink: true
-        });
+      tour.addStep('site_table_source', {
+        title: 'Target Site Table',
+        text: 'This table lists the existing target sites for this source ' +
+              'site.',
+        advanceOn: '.docs-link click',
+        attachTo: '#sodar-pr-remote-site-table top',
+        showCancelLink: true
+      })
     }
     {% else %} {# site_mode == 'TARGET' #}
     tour.addStep('site_mode_target', {
-        title: 'This Is a Target Site',
-        text: 'Your site has been set up in the TARGET mode. You can set ' +
-              'exactly one SOURCE site from which ' +
-              '{% get_display_name 'PROJECT' plural=True %} and member access' +
-              'are synchronized to this site.',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'This Is a Target Site',
+      text: 'Your site has been set up in the TARGET mode. You can set ' +
+            'exactly one SOURCE site from which ' +
+            '{% get_display_name 'PROJECT' plural=True %} and member access' +
+            'are synchronized to this site.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     if ($('#sodar-pr-remote-site-add-btn').length) {
-        tour.addStep('site_btn_add_target', {
-            title: 'Set Source Site',
-            text: 'Click on this button to set a source site.',
-            advanceOn: '.docs-link click',
-            attachTo: '#sodar-pr-remote-site-add-btn left',
-            showCancelLink: true
-        });
+      tour.addStep('site_btn_add_target', {
+        title: 'Set Source Site',
+        text: 'Click on this button to set a source site.',
+        advanceOn: '.docs-link click',
+        attachTo: '#sodar-pr-remote-site-add-btn left',
+        showCancelLink: true
+      })
     }
     if ($('#sodar-pr-remote-site-table').length) {
         tour.addStep('site_table_target', {
@@ -183,70 +183,70 @@
     }
     {% endif %}
     if ($('.sodar-pr-remote-site-row').length) {
-        tour.addStep('site_item_title', {
-            title: 'Site Title',
-            text: 'The title of a remote site can be seen here. In case of a ' +
-                  'target site, the title links to the project access ' +
-                  'management form.',
-            advanceOn: '.docs-link click',
-            attachTo: '.sodar-pr-remote-site-title top',
-            showCancelLink: true
-        });
-        if ($('.sodar-pr-remote-site-desc').length) {
-            tour.addStep('site_item_desc', {
-                title: 'Site Description',
-                text: 'An optional description for the site can be seen by ' +
-                      'clicking this icon.',
-                advanceOn: '.docs-link click',
-                attachTo: '.sodar-pr-remote-site-desc top',
-                showCancelLink: true
-            });
-        }
-        tour.addStep('site_item_count', {
-            title: 'Site Project Count',
-            text: 'The amount of projects currently synchronized to/from this ' +
-                  'site are displayed here.',
-            advanceOn: '.docs-link click',
-            attachTo: '.sodar-pr-remote-site-count top',
-            showCancelLink: true
-        });
-        tour.addStep('site_item_secret', {
-            title: 'Site Token',
-            text: 'The secret token for the site is displayed here. This ' +
-                  'secret needs to be shared between sites to enable sync. ' +
-                  'Clicking the button copies the secret into your clipboard. ',
-            advanceOn: '.docs-link click',
-            attachTo: '.sodar-pr-remote-site-secret top',
-            showCancelLink: true
-        });
-        tour.addStep('site_item_access', {
-            title: 'Last Accessed Date',
-            text: 'This column displays the date and time the site was last ' +
-                  'accessed for remote sync, or "Never" if sync is yet to be ' +
-                  'performed.',
-            advanceOn: '.docs-link click',
-            attachTo: '.sodar-pr-remote-site-access top',
-            showCancelLink: true
-        });
-        tour.addStep('site_item_visible', {
-            title: 'Site Visibility',
-            text: 'This column displays whether the site is displayed to ' +
-                  'regular users in the UI. For sites for e.g. testing or ' +
-                  'staging, this may be disabled.',
-            advanceOn: '.docs-link click',
-            attachTo: '.sodar-pr-remote-site-visible left',
-            showCancelLink: true
-        });
+      tour.addStep('site_item_title', {
+        title: 'Site Title',
+        text: 'The title of a remote site can be seen here. In case of a ' +
+              'target site, the title links to the project access management ' +
+              'form.',
+        advanceOn: '.docs-link click',
+        attachTo: '.sodar-pr-remote-site-title top',
+        showCancelLink: true
+      })
+      if ($('.sodar-pr-remote-site-desc').length) {
+        tour.addStep('site_item_desc', {
+          title: 'Site Description',
+          text: 'An optional description for the site can be seen by ' +
+                'clicking this icon.',
+          advanceOn: '.docs-link click',
+          attachTo: '.sodar-pr-remote-site-desc top',
+          showCancelLink: true
+        })
+      }
+      tour.addStep('site_item_count', {
+        title: 'Site Project Count',
+        text: 'The amount of projects currently synchronized to/from this ' +
+              'site are displayed here.',
+        advanceOn: '.docs-link click',
+        attachTo: '.sodar-pr-remote-site-count top',
+        showCancelLink: true
+      })
+      tour.addStep('site_item_secret', {
+        title: 'Site Token',
+        text: 'The secret token for the site is displayed here. This ' +
+              'secret needs to be shared between sites to enable sync. ' +
+              'Clicking the button copies the secret into your clipboard. ',
+        advanceOn: '.docs-link click',
+        attachTo: '.sodar-pr-remote-site-secret top',
+        showCancelLink: true
+      })
+      tour.addStep('site_item_access', {
+        title: 'Last Accessed Date',
+        text: 'This column displays the date and time the site was last ' +
+              'accessed for remote sync, or "Never" if sync is yet to be ' +
+              'performed.',
+        advanceOn: '.docs-link click',
+        attachTo: '.sodar-pr-remote-site-access top',
+        showCancelLink: true
+      })
+      tour.addStep('site_item_visible', {
+        title: 'Site Visibility',
+        text: 'This column displays whether the site is displayed to ' +
+              'regular users in the UI. For sites for e.g. testing or ' +
+              'staging, this may be disabled.',
+        advanceOn: '.docs-link click',
+        attachTo: '.sodar-pr-remote-site-visible left',
+        showCancelLink: true
+      })
     }
     if ($('.sodar-pr-remote-site-dropdown').length) {
-        tour.addStep('site_item_dropdown', {
-            title: 'Site Dropdown',
-            text: 'Through this dropdown you can access functionality to ' +
-                  'modify the site and configure project sync.',
+      tour.addStep('site_item_dropdown', {
+        title: 'Site Dropdown',
+        text: 'Through this dropdown you can access functionality to modify ' +
+              'the site and configure project sync.',
         advanceOn: '.docs-link click',
         attachTo: '.sodar-pr-remote-site-dropdown left',
         showCancelLink: true
-      });
+      })
     }
   </script>
 {% endblock javascript %}

@@ -1,0 +1,21 @@
+{% load projectroles_common_tags %}
+
+{% get_display_name 'CATEGORY' title=True as cat_title %}
+
+<div class="card" id="sodar-pr-details-card-stats">
+  <div class="card-header">
+    <h4>
+      <i class="iconify" data-icon="mdi:chart-box"></i>
+      {{ cat_title }} Statistics
+    </h4>
+  </div>
+  <div class="card-body px-3" id="sodar-pr-details-card-stats-body">
+    <div class="card-deck pr-3" id="sodar-pr-details-card-stats-deck">
+      <div class="w-100 text-center" id="sodar-pr-details-card-stats-loading">
+        <i class="iconify spin text-secondary"
+           data-icon="mdi:loading" data-height="48">
+        </i>
+      </div>
+    </div>
+  </div>
+</div>

@@ -33,8 +33,8 @@ class Command(BaseCommand):
             dest='password',
             type=str,
             required=False,
-            help='Password to use for created dev users. If not given, the '
-            'default password "{}" will be used'.format(DEFAULT_PASSWORD),
+            help=f'Password to use for created dev users. If not given, the '
+            f'default password "{DEFAULT_PASSWORD}" will be used',
         )
 
     def handle(self, *args, **options):
@@ -52,19 +52,17 @@ class Command(BaseCommand):
         password = make_password(pw)
         for u in DEV_USER_NAMES:
             if User.objects.filter(username=u).first():
-                logger.info('User "{}" already exists'.format(u))
+                logger.info(f'User "{u}" already exists')
                 continue
             try:
                 User.objects.create(
                     username=u,
                     first_name=u.capitalize(),
                     last_name=LAST_NAME,
-                    name='{} {}'.format(u.capitalize(), LAST_NAME),
-                    email='{}@{}'.format(u, EMAIL_DOMAIN),
+                    name=f'{u.capitalize()} {LAST_NAME}',
+                    email=f'{u}@{EMAIL_DOMAIN}',
                     password=password,
                 )
-                logger.info('Created user "{}"'.format(u))
+                logger.info(f'Created user "{u}"')
             except Exception as ex:
-                logger.error(
-                    'Exception in creating user "{}": {}'.format(u, ex)
-                )
+                logger.error(f'Exception in creating user "{u}": {ex}')

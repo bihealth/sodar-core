@@ -1,5 +1,7 @@
 """REST API views for the sodarcache app"""
 
+from typing import Optional
+
 from rest_framework import serializers
 from rest_framework.exceptions import APIException, NotFound, ParseError
 from rest_framework.generics import RetrieveAPIView
@@ -12,10 +14,14 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import BackendPluginPoint, PluginAPI
 from projectroles.views_api import SODARAPIGenericProjectMixin
 
 from sodarcache.serializers import JSONCacheItemSerializer
+
+
+plugin_api = PluginAPI()
+
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -54,13 +60,13 @@ class SodarcacheAPIViewMixin:
     versioning_class = SodarcacheAPIVersioning
 
     @classmethod
-    def get_backend(cls):
+    def get_backend(cls) -> Optional[BackendPluginPoint]:
         """
         Return sodarcache backend or raise 503 if not enabled.
 
         :Return: SodarCacheAPI object
         """
-        cache_backend = get_backend_api('sodar_cache')
+        cache_backend = plugin_api.get_backend_api('sodar_cache')
         if not cache_backend:
             raise cls.BackendUnavailable()
         return cache_backend
@@ -89,7 +95,7 @@ class CacheItemRetrieveAPIView(
     - ``date_modified``: Item modification datetime (YYYY-MM-DDThh:mm:ssZ)
     - ``user``: UUID of user who created the item (string)
 
-    **Version Changes**:
+    **Version Changes:**
 
     - ``2.0``: Return ``user`` as UUID instead of ``SODARUserSerializer`` dict
     """

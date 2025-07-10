@@ -5,6 +5,7 @@ import logging
 import re
 
 from ipaddress import ip_address, ip_network
+from typing import Any, Optional
 from urllib.parse import unquote_plus, urlparse
 
 from django.apps import apps
@@ -14,7 +15,7 @@ from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.db.models import QuerySet
-from django.http import Http404
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import redirect
 from django.urls import resolve, reverse, reverse_lazy
 from django.utils import timezone
@@ -50,20 +51,18 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
+    SODARUser,
     SODAR_CONSTANTS,
     ROLE_RANKING,
 )
-from projectroles.plugins import (
-    get_active_plugins,
-    get_app_plugin,
-    get_backend_api,
-)
+from projectroles.plugins import BackendPluginPoint, PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_display_name
 
 
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 User = auth.get_user_model()
 
 
@@ -74,6 +73,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_VIEWER = SODAR_CONSTANTS['PROJECT_ROLE_VIEWER']
 PROJECT_ROLE_FINDER = SODAR_CONSTANTS['PROJECT_ROLE_FINDER']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
@@ -98,6 +98,10 @@ LOGIN_MSG = 'Please log in.'
 NO_AUTH_MSG = 'User not authorized for requested action.'
 NO_AUTH_LOGIN_MSG = 'Authentication required, please log in.'
 FORM_INVALID_MSG = 'Form submission failed, see the form for details.'
+PROJECT_BLOCK_MSG = (
+    'Access to {project_type} temporarily blocked by an administrator, please '
+    'try again later'
+)
 PROJECT_WELCOME_MSG = (
     'Welcome to {project_type} "{project_title}". You have been assigned the '
     'role of {role}.'
@@ -165,7 +169,7 @@ class LoginRequiredMixin(AccessMixin):
     mode.
     """
 
-    def is_login_required(self):
+    def is_login_required(self) -> bool:
         if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False) or getattr(
             settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
         ):
@@ -213,7 +217,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         level = self.no_perm_message_level.lower()
         msg_method = getattr(messages, level, None)
         if not msg_method:
-            raise ValueError('Unknown message level "{}"'.format(level))
+            raise ValueError(f'Unknown message level "{level}"')
         if self.no_perm_message:
             msg = self.no_perm_message
         elif self.request.user.is_authenticated:
@@ -239,7 +243,9 @@ class ProjectAccessMixin:
     #: Model class to use for projects. Can be overridden by e.g. a proxy model
     project_class = Project
 
-    def get_project(self, request=None, kwargs=None):
+    def get_project(
+        self, request: Optional[HttpRequest] = None, kwargs: Any = None
+    ) -> Optional[Project]:
         """
         Return SODAR Project object based or None if not found, based on
         the current request and view kwargs. If arguments are not provided,
@@ -294,7 +300,8 @@ class ProjectAccessMixin:
             ):
                 return obj.get_project()
         except model.DoesNotExist:
-            return None
+            pass
+        return None
 
 
 class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
@@ -311,6 +318,23 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         project = self.get_project()
         if not project:
             raise Http404
+
+        # Prohibit access if project_access_block is set
+        if (
+            not self.request.user.is_superuser
+            and project.is_project()
+            and app_settings.get(
+                APP_NAME, 'project_access_block', project=project
+            )
+        ):
+            messages.error(
+                self.request,
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(project.type)
+                )
+                + '.',
+            )
+            return False
 
         # Override permissions for superuser, owner or delegate
         perm_override = (
@@ -330,23 +354,26 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
                 if v:
                     client_address = ip_address(v.split(',')[0])
                     break
-            else:  # Can't fetch client ip address
+            else:  # Can't fetch client IP address
                 return False
 
-            for record in app_settings.get(APP_NAME, 'ip_allowlist', project):
-                if '/' in record:
-                    if client_address in ip_network(record):
+            ips = app_settings.get(APP_NAME, 'ip_allow_list', project)
+            if not ips:
+                return False
+            for ip in [s.strip() for s in ips.split(',')]:
+                if '/' in ip:
+                    if client_address in ip_network(ip):
                         break
-                elif client_address == ip_address(record):
+                elif client_address == ip_address(ip):
                     break
             else:
                 return False
 
         # Disable project app access for categories unless specifically enabled
-        if project.type == PROJECT_TYPE_CATEGORY:
+        if project.is_category():
             request_url = resolve(self.request.get_full_path())
             if request_url.app_name != APP_NAME:
-                app_plugin = get_app_plugin(request_url.app_name)
+                app_plugin = plugin_api.get_app_plugin(request_url.app_name)
                 if app_plugin and app_plugin.category_enable:
                     return True
                 return False
@@ -397,7 +424,7 @@ class PluginContextMixin(ContextMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['app_plugins'] = get_active_plugins(
+        context['app_plugins'] = plugin_api.get_active_plugins(
             plugin_type='project_app', custom_order=True
         )
         return context
@@ -475,7 +502,7 @@ class ProjectModifyPermissionMixin(
             else perm
         )
 
-    def _get_allow_remote_edit(self):
+    def _get_allow_remote_edit(self) -> bool:
         return getattr(self, 'allow_remote_edit', False)
 
     def handle_no_permission(self):
@@ -534,17 +561,18 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
 class ProjectListContextMixin:
     """Mixin for adding context data for displaying the project list."""
 
-    def _get_custom_cols(self, user):
+    def _get_custom_cols(self, user: SODARUser) -> list[dict]:
         """
         Return list of custom columns for projects including project data.
 
         :param user: User object
+        :return: List of dicts
         """
         i = 0
-        cols = []
+        ret = []
         for app_plugin in [
             ap
-            for ap in get_active_plugins(plugin_type='project_app')
+            for ap in plugin_api.get_active_plugins(plugin_type='project_app')
             if ap.project_list_columns
         ]:
             # HACK for filesfolders columns (see issues #737 and #738)
@@ -558,9 +586,9 @@ class ProjectListContextMixin:
                 v['app_plugin'] = app_plugin
                 v['column_id'] = k
                 v['ordering'] = v.get('ordering') or i
-                cols.append(v)
+                ret.append(v)
                 i += 1
-        return sorted(cols, key=lambda x: x['ordering'])
+        return sorted(ret, key=lambda x: x['ordering'])
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -574,6 +602,13 @@ class ProjectListContextMixin:
         context['page_options_default'] = app_settings.get(
             APP_NAME, 'project_list_pagination', user=self.request.user
         )
+        if not self.kwargs.get('project'):
+            starred_default = app_settings.get(
+                APP_NAME, 'project_list_home_starred', user=self.request.user
+            )
+        else:
+            starred_default = False
+        context['project_list_starred_default'] = starred_default
         return context
 
 
@@ -627,30 +662,53 @@ class ProjectDetailView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        if self.request.user.is_superuser:
+        project = self.object
+        user = self.request.user
+        # User role in project
+        if user.is_superuser:
             context['role'] = None
-        elif self.request.user.is_authenticated:
-            try:
-                role_as = RoleAssignment.objects.get(
-                    user=self.request.user, project=self.object
-                )
-                context['role'] = role_as.role
-            except RoleAssignment.DoesNotExist:
-                context['role'] = None
-        elif self.object.public_guest_access:
-            context['role'] = Role.objects.filter(
-                name=PROJECT_ROLE_GUEST
-            ).first()
         else:
-            context['role'] = None
+            if user.is_authenticated:
+                role_as = project.get_role(self.request.user)
+                context['role'] = role_as.role if role_as else None
+            if not context.get('role'):
+                context['role'] = project.public_access
+
+        # Visibility settings
+        has_child_role = False
+        if user.is_superuser:
+            context['show_limited_alert'] = False
+            context['show_project_list'] = project.is_category()
+            has_child_role = True
+        elif user.is_authenticated:
+            has_child_role = project.has_role_in_children(user)
+            context['show_limited_alert'] = (
+                not context['role'] and not has_child_role
+            ) or (
+                context['role'] is not None
+                and context['role'].rank >= ROLE_RANKING[PROJECT_ROLE_VIEWER]
+            )
+            context['show_project_list'] = project.is_category() and (
+                context['role'] is not None
+                or project.public_access is not None
+                or project.has_public_children
+                or has_child_role
+            )
+        else:  # Anonymous user
+            context['show_limited_alert'] = (
+                not project.public_access
+                or project.public_access.rank
+                >= ROLE_RANKING[PROJECT_ROLE_VIEWER]
+            )
+            context['show_project_list'] = project.has_public_children
 
         # Remote projects
         q_kwargs = {
-            'project_uuid': self.object.sodar_uuid,
+            'project_uuid': project.sodar_uuid,
             'level': REMOTE_LEVEL_READ_ROLES,
         }
         if not self.request.user.has_perm(
-            'projectroles.view_hidden_projects', self.object
+            'projectroles.view_hidden_projects', project
         ):
             q_kwargs['site__user_display'] = True
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
@@ -671,8 +729,12 @@ class ProjectSearchMixin:
     """Common functionalities for search views"""
 
     def _get_app_results(
-        self, user, search_terms, search_type, search_keywords
-    ):
+        self,
+        user: SODARUser,
+        search_terms: list[str],
+        search_type: Optional[str],
+        search_keywords: Optional[list[str]],
+    ) -> list:
         """
         Return app plugin search results.
 
@@ -681,7 +743,7 @@ class ProjectSearchMixin:
         :param search_keywords: Optional keywords (list of strings or None)
         :return: List
         """
-        plugins = get_active_plugins(plugin_type='project_app')
+        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         ret = []
         omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
 
@@ -732,21 +794,23 @@ class ProjectSearchMixin:
                         plugin.name,
                         ex,
                         '; '.join(
-                            [
-                                '{}={}'.format(k, v)
-                                for k, v in search_kwargs.items()
-                            ]
+                            [f'{k}={v}' for k, v in search_kwargs.items()]
                         ),
                     )
                 )
             ret.append(search_res)
         return ret
 
-    def _get_not_found(self, search_type, project_results, app_results):
+    def _get_not_found(
+        self,
+        search_type: Optional[str],
+        project_results: list,
+        app_results: list,
+    ) -> list:
         """
         Return list of apps for which objects were search for but not returned.
 
-        :param search_type: Type keyword for search if set
+        :param search_type: Type keyword for search or None
         :param project_results: Results for projectroles search
         :param app_results: Results for app plugin search
         :return: List
@@ -781,7 +845,9 @@ class ProjectSearchResultsView(
 
     template_name = 'projectroles/search_results.html'
 
-    def _handle_context(self, request, *args, **kwargs):
+    def _handle_context(
+        self, request: HttpRequest, *args, **kwargs
+    ) -> HttpResponse:
         """Handle context and render to response in GET/POST requests"""
         context = self.get_context_data(*args, **kwargs)
         if not context['search_terms']:
@@ -835,7 +901,7 @@ class ProjectSearchResultsView(
         if not search_type or search_type == 'project':
             context['project_results'] = []
             for p in Project.objects.find(search_terms, project_type='PROJECT'):
-                if p.public_guest_access or self.request.user.has_perm(
+                if p.public_access or self.request.user.has_perm(
                     'projectroles.view_project', p
                 ):
                     context['project_results'].append(p)
@@ -884,7 +950,9 @@ class ProjectModifyPluginViewMixin:
     """Helpers for project modify API"""
 
     @classmethod
-    def call_project_modify_api(cls, method_name, revert_name, method_args):
+    def call_project_modify_api(
+        cls, method_name: str, revert_name: Optional[str], method_args: list
+    ):
         """
         Call project modify API for a specific method and parameters. This
         method Will run reversion methods for all plugins if execution for one
@@ -899,32 +967,28 @@ class ProjectModifyPluginViewMixin:
         app_plugins = []
         if modify_api_apps:
             for a in modify_api_apps:
-                plugin = get_app_plugin(a)
+                plugin = plugin_api.get_app_plugin(a)
                 if not plugin:
-                    msg = 'Unable to find active plugin "{}"'.format(a)
+                    msg = f'Unable to find active plugin "{a}"'
                     logger.error(msg)
                     raise ImproperlyConfigured(msg)
                 app_plugins.append(plugin)
         else:
-            app_plugins = get_active_plugins('backend') + get_active_plugins(
-                'project_app'
-            )
+            app_plugins = plugin_api.get_active_plugins(
+                'backend'
+            ) + plugin_api.get_active_plugins('project_app')
 
         called_plugins = []
         for p in app_plugins:
             if not hasattr(p, method_name):
                 continue  # Only there if using ProjectModifyPluginAPIMixin
-            logger.debug(
-                'Calling {}() in plugin "{}"'.format(method_name, p.name)
-            )
+            logger.debug(f'Calling {method_name}() in plugin "{p.name}"')
             try:
                 getattr(p, method_name)(*method_args)
                 called_plugins.append(p)
             except Exception as ex:
                 logger.error(
-                    'Exception in {}() for plugin "{}": {}'.format(
-                        method_name, p.name, ex
-                    )
+                    f'Exception in {method_name}() for plugin "{p.name}": {ex}'
                 )
                 if revert_name:
                     for cp in called_plugins:
@@ -932,9 +996,8 @@ class ProjectModifyPluginViewMixin:
                             cp.getattr(revert_name)(*method_args)
                         except Exception as ex_revert:
                             logger.error(
-                                'Exception in {}() for plugin "{}": {}'.format(
-                                    method_name, cp.name, ex_revert
-                                )
+                                f'Exception in {method_name}() for plugin '
+                                f'"{cp.name}": {ex_revert}'
                             )
                 raise ex
 
@@ -946,7 +1009,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
     site_fields = {}
 
     @staticmethod
-    def _get_old_project_data(project):
+    def _get_old_project_data(project: Project) -> dict:
         """Get existing data from project fields"""
         return {
             'title': project.title,
@@ -954,11 +1017,11 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             'description': project.description,
             'readme': project.readme.raw,
             'owner': project.get_owner().user,
-            'public_guest_access': project.public_guest_access,
+            'public_access': project.public_access,
         }
 
     @classmethod
-    def _get_remote_project_data(cls, project):
+    def _get_remote_project_data(cls, project: Project) -> dict:
         """Return existing remote project data"""
         ret = {}
         existing_sites = []
@@ -973,7 +1036,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         return ret
 
     @staticmethod
-    def _get_app_settings(data, instance, user):
+    def _get_app_settings(
+        data, instance: Optional[Project], user: SODARUser
+    ) -> dict:
         """
         Return a dictionary of project app settings and their values.
 
@@ -982,7 +1047,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         :param user: User initiating the project update
         :return: Dict
         """
-        app_plugins = [p for p in get_active_plugins() if p.app_settings]
+        app_plugins = [
+            p for p in plugin_api.get_active_plugins() if p.app_settings
+        ]
         project_settings = {}
         p_kwargs = {}
         # Show unmodifiable settings to superusers
@@ -1002,7 +1069,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 )
 
             for s_def in p_settings.values():
-                s_name = 'settings.{}.{}'.format(name, s_def.name)
+                s_name = f'settings.{name}.{s_def.name}'
                 s_data = data.get(s_name)
 
                 if instance.type not in s_def.project_types:
@@ -1018,8 +1085,23 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         return project_settings
 
     def _get_project_update_data(
-        self, old_data, project, old_sites, sites, project_settings
-    ):
+        self,
+        old_data: dict,
+        project: Project,
+        old_sites: list[RemoteSite],
+        sites: list[RemoteSite],
+        project_settings: dict,
+    ) -> tuple[dict, list]:
+        """
+        Return update data for project. Lists changed fields in upd_fields.
+
+        :param old_data: Dict
+        :param project: Project object
+        :param old_sites: Old remote sites (list)
+        :param sites: Current remote sites (list)
+        :param project_settings: Project settings (dict)
+        :return: extra_data (dict), upd_fields (list)
+        """
         extra_data = {}
         upd_fields = []
         if old_data['title'] != project.title:
@@ -1034,14 +1116,16 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['readme'] != project.readme.raw:
             extra_data['readme'] = project.readme.raw
             upd_fields.append('readme')
-        if old_data['public_guest_access'] != project.public_guest_access:
-            extra_data['public_guest_access'] = project.public_guest_access
-            upd_fields.append('public_guest_access')
+        if old_data['public_access'] != project.public_access:
+            extra_data['public_access'] = (
+                project.public_access.name if project.public_access else None
+            )
+            upd_fields.append('public_access')
 
         # Remote projects
         if (
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
-            and project.type == PROJECT_TYPE_PROJECT
+            and project.is_project()
         ):
             for s in [f.split('.')[1] for f in self.site_fields]:
                 if 'remote_sites' not in upd_fields and (
@@ -1067,15 +1151,21 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         return extra_data, upd_fields
 
     @staticmethod
-    def _get_timeline_ok_status():
-        timeline = get_backend_api('timeline_backend')
+    def _get_timeline_ok_status() -> str:
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             raise ImproperlyConfigured('Timeline backend not found')
         else:
             return timeline.TL_STATUS_OK
 
-    def _update_remote_sites(self, project, data):
-        """Update project for remote sites"""
+    def _update_remote_sites(self, project: Project, data: dict) -> dict:
+        """
+        Update project remote sites.
+
+        :param project: Project object
+        :param data: Dict
+        :return: Dict
+        """
         ret = {}
         for f in self.site_fields:
             site_uuid = f.split('.')[1]
@@ -1105,15 +1195,14 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 modify = 'Created'
             if modify:
                 logger.debug(
-                    '{} RemoteProject for site "{}" ({}): {}'.format(
-                        modify, site.name, site.sodar_uuid, rp.level
-                    )
+                    f'{modify} RemoteProject for site "{site.name}" '
+                    f'({site.sodar_uuid}): {rp.level}'
                 )
             ret[site_uuid] = rp and rp.level == REMOTE_LEVEL_READ_ROLES
         return ret
 
     @classmethod
-    def _update_settings(cls, project, project_settings):
+    def _update_settings(cls, project: Project, project_settings: dict):
         """Update project settings"""
         is_remote = project.is_remote()
         for k, v in project_settings.items():
@@ -1136,16 +1225,17 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
     def _create_timeline_event(
         self,
-        project,
-        action,
-        owner,
-        old_data,
-        old_sites,
-        sites,
-        project_settings,
-        request,
-    ):
-        timeline = get_backend_api('timeline_backend')
+        project: Project,
+        action: str,
+        owner: SODARUser,
+        old_data: dict,
+        old_sites: list,
+        sites: list,
+        project_settings: dict,
+        request: HttpRequest,
+    ) -> Any:  # Actually TimelineEvent but not declared here
+        """Create timeline event for action"""
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return None
         type_str = project.type.capitalize()
@@ -1181,7 +1271,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             project=project,
             app_name=APP_NAME,
             user=request.user,
-            event_name='project_{}'.format(action.lower()),
+            event_name=f'project_{action.lower()}',
             description=tl_desc,
             extra_data=extra_data,
         )
@@ -1190,7 +1280,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         return tl_event
 
     @classmethod
-    def _get_notify_recipients(cls, project, request):
+    def _get_notify_recipients(
+        cls, project: Project, request: HttpRequest
+    ) -> list[SODARUser]:
         """
         Return list of owner and delegate users to send notification alerts or
         emails to. Omits request user. This list can be further filtered down to
@@ -1209,12 +1301,19 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         ]
 
     @classmethod
-    def _notify_users(cls, project, action, owner, old_parent, request):
+    def _notify_users(
+        cls,
+        project: Project,
+        action: str,
+        owner: SODARUser,
+        old_parent: Optional[Project],
+        request: HttpRequest,
+    ):
         """
         Notify users about project creation and update. Displays app alerts
         and/or sends emails depending on the site configuration.
         """
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         # Create alerts and send emails
         owner_as = RoleAssignment.objects.filter(
             project=project, user=owner
@@ -1225,7 +1324,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             and action == PROJECT_ACTION_CREATE
             and owner.is_active
         ):
-            if app_alerts:
+            if app_alerts and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=owner
+            ):
                 app_alerts.add_alert(
                     app_name=APP_NAME,
                     alert_name='role_create',
@@ -1249,54 +1350,61 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                     owner_as.role,
                     request,
                 )
-        # Project creation/moving for parent category owners and delegates
-        if project.parent:
-            recipients = cls._get_notify_recipients(project, request)
-            if action == PROJECT_ACTION_CREATE and recipients:
-                if app_alerts:
-                    for r in recipients:
-                        app_alerts.add_alert(
-                            app_name=APP_NAME,
-                            alert_name='project_create_parent',
-                            user=r,
-                            message='New {} created under category '
-                            '"{}": "{}".'.format(
-                                project.type.lower(),
-                                project.parent.title,
-                                project.title,
-                            ),
-                            url=reverse(
-                                'projectroles:detail',
-                                kwargs={'project': project.sodar_uuid},
-                            ),
-                            project=project,
-                        )
-                if SEND_EMAIL:
-                    email.send_project_create_mail(project, recipients, request)
 
-            elif old_parent and recipients:
+        # Project creation/moving for parent category owners and delegates
+        if not project.parent:
+            return
+        recipients = cls._get_notify_recipients(project, request)
+        # TODO: Could optimize this by pre-retrieving notify settings
+        if action == PROJECT_ACTION_CREATE and recipients:
+            if app_alerts:
                 for r in recipients:
+                    if not app_settings.get(
+                        APP_NAME, 'notify_alert_project', user=r
+                    ):
+                        continue
                     app_alerts.add_alert(
                         app_name=APP_NAME,
-                        alert_name='project_move_parent',
+                        alert_name='project_create_parent',
                         user=r,
-                        message='{} moved under category '
-                        '"{}": "{}".'.format(
-                            project.type.capitalize(),
-                            project.parent.title,
-                            project.title,
-                        ),
+                        message=f'New {project.type.lower()} created under '
+                        f'category "{project.parent.title}": {project.title}".',
                         url=reverse(
                             'projectroles:detail',
                             kwargs={'project': project.sodar_uuid},
                         ),
                         project=project,
                     )
-                if SEND_EMAIL:
-                    email.send_project_move_mail(project, recipients, request)
+            if SEND_EMAIL:
+                email.send_project_create_mail(project, recipients, request)
+        elif old_parent and recipients:
+            for r in recipients:
+                if not app_settings.get(
+                    APP_NAME, 'notify_alert_project', user=r
+                ):
+                    continue
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='project_move_parent',
+                    user=r,
+                    message=f'{project.type.capitalize()} moved under category '
+                    f'"{project.parent.title}": {project.title}".',
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_project_move_mail(project, recipients, request)
 
     @transaction.atomic
-    def modify_project(self, data, request, instance=None):
+    def modify_project(
+        self,
+        data: dict,
+        request: HttpRequest,
+        instance: Optional[Project] = None,
+    ) -> Project:
         """
         Create or update a Project. This method should be called either in
         form_valid() in a Django form view or save() in a DRF serializer.
@@ -1326,9 +1434,10 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             project.parent = (
                 data['parent'] if 'parent' in data else old_project.parent
             )
+            project.public_access = data.get('public_access')
             project.public_guest_access = (
-                data.get('public_guest_access') or False
-            )
+                data.get('public_access') is not None
+            )  # DEPRECATED
         else:
             project = Project(
                 title=data.get('title'),
@@ -1336,7 +1445,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 type=data.get('type'),
                 readme=data.get('readme'),
                 parent=data.get('parent'),
-                public_guest_access=data.get('public_guest_access') or False,
+                public_access=data.get('public_access'),
+                public_guest_access=data.get('public_access')
+                is not None,  # DEPRECATED
             )
             project.save()
 
@@ -1349,7 +1460,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         sites = {}
         if (
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
-            and project.type == PROJECT_TYPE_PROJECT
+            and project.is_project()
         ):
             self.site_fields = [f for f in data if f.startswith('remote_site.')]
             old_sites = self._get_remote_project_data(project)
@@ -1407,13 +1518,13 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if (
             old_project
             and project.parent
-            and old_project.public_guest_access != project.public_guest_access
+            and old_project.public_access != project.public_access
         ):
             try:
                 project._update_public_children()
             except Exception as ex:
                 logger.error(
-                    'Exception in updating has_public_children(): {}'.format(ex)
+                    f'Exception in updating has_public_children(): {ex}'
                 )
 
         # Once all is done, update timeline event, create alerts and emails
@@ -1477,19 +1588,33 @@ class ProjectDeleteAccessMixin:
     superuser access if needed, hence we're not implementing this in rules.
     """
 
-    @classmethod
-    def check_delete_permission(cls, project):
+    def check_delete_permission(
+        self, project: Project
+    ) -> tuple[bool, Optional[str]]:
         """
         Check delete permission. Also applies to superusers.
 
         :param project: Project object
         :return: Boolean, string (in case of error) or None
         """
-        p_type = get_display_name(project.type)
+        # Prohibit access if project_access_block is set
         if (
-            project.type == PROJECT_TYPE_CATEGORY
-            and project.get_children().count() > 0
+            not self.request.user.is_superuser
+            and project.is_project()
+            and app_settings.get(
+                APP_NAME, 'project_access_block', project=project
+            )
         ):
+            return (
+                False,
+                PROJECT_BLOCK_MSG.format(
+                    project_type=get_display_name(project.type)
+                )
+                + '.',
+            )
+
+        p_type = get_display_name(project.type)
+        if project.is_category() and project.get_children().count() > 0:
             return False, PROJECT_DELETE_CAT_ERR_MSG.format(project_type=p_type)
         # Disallow for remote projects which haven't been revoked
         if project.is_remote():
@@ -1504,7 +1629,7 @@ class ProjectDeleteAccessMixin:
                 )
         # Disallow for source projects with non-revoked remote projects
         # NOTE: Categories can be deleted
-        elif project.type == PROJECT_TYPE_PROJECT:
+        elif project.is_project():
             rps = RemoteProject.objects.filter(
                 project_uuid=project.sodar_uuid, site__mode=SITE_MODE_TARGET
             ).exclude(level__in=[REMOTE_LEVEL_NONE, REMOTE_LEVEL_REVOKED])
@@ -1520,7 +1645,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
     """Mixin for Project deletion in UI and API views"""
 
     @classmethod
-    def _create_timeline_event(cls, project, request):
+    def _create_timeline_event(cls, project: Project, request: HttpRequest):
         """
         Create timeline summary event for project deletion. Created as a
         classified site-wide event only viewable by superusers.
@@ -1528,7 +1653,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         :param project: Project object
         :param request: HttpRequest object
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return
         local_users = {
@@ -1544,7 +1669,9 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             'parent': parent,
             'description': project.description,
             'readme': project.readme.raw,
-            'public_guest_access': project.public_guest_access,
+            'public_access': (
+                project.public_access.name if project.public_access else None
+            ),
             'archive': project.archive,
             'full_title': project.full_title,
             'sodar_uuid': str(project.sodar_uuid),
@@ -1563,7 +1690,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         )
 
     @classmethod
-    def get_redirect_url(cls, project):
+    def get_redirect_url(cls, project: Project) -> str:
         if project.parent:
             return reverse(
                 'projectroles:detail',
@@ -1572,7 +1699,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         else:
             return reverse('home')
 
-    def handle_delete(self, project, request):
+    def handle_delete(self, project: Project, request: HttpRequest):
         """
         Handle project deletion. Deletes the object, creates a summary timeline
         event and sends out alerts and emails to project members.
@@ -1580,7 +1707,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         :param project: Project object of project to be deleted
         :param request: HttpRequest object
         """
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         # Call project modify API plugin
         if getattr(settings, 'PROJECTROLES_ENABLE_MODIFY_API', False):
             self.call_project_modify_api(
@@ -1595,10 +1722,15 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
         ]
         # Create app alerts
         if app_alerts and recipients:
+            alert_users = [
+                u
+                for u in users
+                if app_settings.get(APP_NAME, 'notify_alert_project', user=u)
+            ]
             app_alerts.add_alerts(
                 app_name=APP_NAME,
                 alert_name='project_delete',
-                users=users,
+                users=alert_users,
                 message=PROJECT_DELETE_MSG.format(
                     project_type=get_display_name(project.type, title=True),
                     project_title=project.title,
@@ -1678,7 +1810,7 @@ class ProjectCreateView(
         """Override get() to limit project creation under other projects"""
         if 'project' in self.kwargs:
             project = Project.objects.get(sodar_uuid=self.kwargs['project'])
-            if project.type != PROJECT_TYPE_CATEGORY:
+            if project.is_project():
                 messages.error(
                     self.request,
                     'Creating nested {} is not allowed.'.format(
@@ -1733,7 +1865,7 @@ class ProjectArchiveView(
     template_name = 'projectroles/project_archive_confirm.html'
     permission_required = 'projectroles.update_project'
 
-    def _alert_users(self, project, action, user):
+    def _alert_users(self, project: Project, action: str, user: SODARUser):
         """
         Alert users on project archiving/unarchiving.
 
@@ -1741,29 +1873,30 @@ class ProjectArchiveView(
         :param action: String ("archive" or "unarchive")
         :param user: User initiating project archiving/unarchiving
         """
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         if not app_alerts:
             return
         alert_p = get_display_name(PROJECT_TYPE_PROJECT, title=True)
         if action == 'archive':
-            alert_msg = '{} data is now read-only.'.format(alert_p)
+            alert_msg = f'{alert_p} data is now read-only.'
         else:
-            alert_msg = '{} data can be modified.'.format(alert_p)
+            alert_msg = f'{alert_p} data can be modified.'
         users = [
             a.user
             for a in project.get_roles()
-            if a.user.is_active and a.user != user
+            if a.user.is_active
+            and a.user != user
+            and app_settings.get(APP_NAME, 'notify_alert_project', user=a.user)
         ]
         if not users:
             return
         else:
             app_alerts.add_alerts(
                 app_name=APP_NAME,
-                alert_name='project_{}'.format(action),
+                alert_name=f'project_{action}',
                 users=users,
-                message='{} {}d by {}. {}'.format(
-                    alert_p, action, user.get_full_name(), alert_msg
-                ),
+                message=f'{alert_p} {action}d by {user.get_full_name()}. '
+                f'{alert_msg}',
                 url=reverse(
                     'projectroles:detail',
                     kwargs={'project': project.sodar_uuid},
@@ -1774,7 +1907,7 @@ class ProjectArchiveView(
     def get(self, request, *args, **kwargs):
         """Override get() to check project type"""
         project = self.get_project()
-        if project.type != PROJECT_TYPE_PROJECT:
+        if project.is_category():
             messages.error(request, CAT_ARCHIVE_ERR_MSG)
             return redirect(
                 reverse(
@@ -1788,12 +1921,12 @@ class ProjectArchiveView(
 
     def post(self, request, **kwargs):
         """Override post() to handle POST from confirmation template"""
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         project = self.get_project()
         redirect_url = reverse(
             'projectroles:detail', kwargs={'project': project.sodar_uuid}
         )
-        if project.type == PROJECT_TYPE_CATEGORY:
+        if project.is_category():
             messages.error(request, CAT_ARCHIVE_ERR_MSG)
             return redirect(redirect_url)
 
@@ -1842,8 +1975,8 @@ class ProjectArchiveView(
                     project=project,
                     app_name=APP_NAME,
                     user=request.user,
-                    event_name='project_{}'.format(action),
-                    description='{} project'.format(action),
+                    event_name=f'project_{action}',
+                    description=f'{action} project',
                     status_type=timeline.TL_STATUS_OK,
                 )
             # Alert users and send email
@@ -1851,7 +1984,7 @@ class ProjectArchiveView(
             if SEND_EMAIL:  # NOTE: Opt-out settings checked in email method
                 email.send_project_archive_mail(project, action, request)
         except Exception as ex:
-            messages.error(request, 'Failed to alert users: {}'.format(ex))
+            messages.error(request, f'Failed to alert users: {ex}')
         return redirect(redirect_url)
 
 
@@ -1896,7 +2029,7 @@ class ProjectDeleteView(
                 f'Incorrect host name for confirming sheet deletion: '
                 f'"{host_confirm}"'
             )
-            logger.error(msg + ' (correct={})'.format(actual_host))
+            logger.error(msg + f' (correct={actual_host})')
             messages.error(
                 self.request, 'Host name input incorrect, deletion cancelled.'
             )
@@ -1940,6 +2073,7 @@ class ProjectRoleView(
         context['roles'] = sorted(
             project.get_roles(), key=lambda x: [x.role.rank, x.user.username]
         )
+        context['role_pagination'] = settings.PROJECTROLES_ROLE_PAGINATION
         owner_rank = ROLE_RANKING[PROJECT_ROLE_OWNER]
         context['enable_owner_transfer'] = any(
             [r.role.rank >= owner_rank for r in context['roles']]
@@ -1956,8 +2090,10 @@ class ProjectRoleView(
         )
         context['site_read_only'] = app_settings.get(APP_NAME, 'site_read_only')
         if self.request.user.is_authenticated:
-            # In case of superuser who may not have role despite accessing view
-            context['user_has_role'] = project.has_role(self.request.user)
+            # In case of superuser or public access project
+            context['user_has_role'] = project.has_role(
+                self.request.user, public=False
+            )
             own_local_as = RoleAssignment.objects.filter(
                 project=project, user=self.request.user
             ).first()
@@ -1991,8 +2127,13 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
 
     @transaction.atomic
     def modify_assignment(
-        self, data, request, project, instance=None, promote=False
-    ):
+        self,
+        data: dict,
+        request: HttpRequest,
+        project: Project,
+        instance: Optional[RoleAssignment] = None,
+        promote: bool = False,
+    ) -> RoleAssignment:
         """
         Create or update a RoleAssignment. This method should be called either
         in form_valid() in a Django form view or save() in a DRF serializer.
@@ -2006,8 +2147,8 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         :param promote: Promoting an inherited user (boolean, default=False)
         :return: Created or updated RoleAssignment object
         """
-        app_alerts = get_backend_api('appalerts_backend')
-        timeline = get_backend_api('timeline_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         tl_event = None
         action = PROJECT_ACTION_UPDATE if instance else PROJECT_ACTION_CREATE
         user = data.get('user')
@@ -2025,7 +2166,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
                 project=project,
                 app_name=APP_NAME,
                 user=request.user,
-                event_name='role_{}'.format(action.lower()),
+                event_name=f'role_{action.lower()}',
                 description=tl_desc,
             )
             tl_event.add_object(user, 'user', user.username)
@@ -2050,7 +2191,9 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             tl_event.set_status('OK')
 
         if request.user != user:
-            if app_alerts:
+            if app_alerts and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=user
+            ):
                 if action == PROJECT_ACTION_CREATE:
                     alert_msg = ROLE_CREATE_MSG
                 else:  # Update
@@ -2127,9 +2270,7 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
                 ),
             )
         except Exception as ex:
-            messages.error(
-                self.request, 'Membership updating failed: {}'.format(ex)
-            )
+            messages.error(self.request, f'Membership updating failed: {ex}')
         return redirect(
             reverse(
                 'projectroles:roles',
@@ -2142,7 +2283,13 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
     @classmethod
-    def _add_user_alert(cls, app_alerts, project, user, inh_as=None):
+    def _add_user_alert(
+        cls,
+        app_alerts: BackendPluginPoint,
+        project: Project,
+        user: SODARUser,
+        inh_as: Optional[RoleAssignment] = None,
+    ):
         """
         Create app alert for user on role assignment deletion. Creates a new
         alert as appropriate and dismisses alerts in projects the user can no
@@ -2170,7 +2317,9 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         )
 
     @classmethod
-    def _add_leave_alerts(cls, app_alerts, project, user):
+    def _add_leave_alerts(
+        cls, app_alerts: BackendPluginPoint, project: Project, user: SODARUser
+    ):
         """
         Send alerts to project owners and delegates about user leaving.
 
@@ -2183,7 +2332,9 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             for a in project.get_roles(
                 max_rank=ROLE_RANKING[PROJECT_ROLE_DELEGATE]
             )
-            if a.user.is_active and a.user != user
+            if a.user.is_active
+            and a.user != user
+            and app_settings.get(APP_NAME, 'notify_alert_role', user=user)
         ]
         for r in recipients:
             app_alerts.add_alert(
@@ -2199,7 +2350,9 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
 
     @classmethod
     @transaction.atomic
-    def _dismiss_user_alerts(cls, app_alerts, project, user):
+    def _dismiss_user_alerts(
+        cls, app_alerts: BackendPluginPoint, project: Project, user: SODARUser
+    ):
         """
         Dismiss user alerts in project and children without local role.
 
@@ -2209,7 +2362,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         """
         AppAlert = app_alerts.get_model()
         dis_projects = [project]
-        if project.type == PROJECT_TYPE_CATEGORY:
+        if project.is_category():
             for c in project.get_children(flat=True):
                 if not c.has_role(user):
                     dis_projects.append(c)
@@ -2219,7 +2372,12 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             a.active = False
             a.save()
 
-    def delete_assignment(self, role_as, request=None, notify=True):
+    def delete_assignment(
+        self,
+        role_as: RoleAssignment,
+        request: Optional[HttpRequest] = None,
+        notify: bool = True,
+    ):
         """
         Delete RoleAssignment. Calls the modify API for additional actions,
         raises app alerts and sends email notifications about the deletion.
@@ -2228,8 +2386,8 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         :param request: HttpRequest object or None
         :param notify: Add app alerts and send email if True
         """
-        app_alerts = get_backend_api('appalerts_backend')
-        timeline = get_backend_api('timeline_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         tl_event = None
         project = role_as.project
         user = role_as.user
@@ -2259,7 +2417,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         # Delete corresponding PROJECT_USER settings
         if (
             not project.get_role(user)
-            and project.type == PROJECT_TYPE_CATEGORY
+            and project.is_category()
             and not RoleAssignment.objects.filter(
                 project__in=project.get_children(flat=True), user=user
             ).exists()
@@ -2277,7 +2435,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         if app_alerts:
             if request and request.user == user:
                 self._add_leave_alerts(app_alerts, project, user)
-            else:
+            elif app_settings.get(APP_NAME, 'notify_alert_role', user=user):
                 self._add_user_alert(app_alerts, project, user, inh_as)
             if not inh_as:
                 self._dismiss_user_alerts(app_alerts, project, user)
@@ -2349,8 +2507,8 @@ class RoleAssignmentCreateView(
             ):
                 messages.warning(
                     request,
-                    'Local delegate limit ({}) reached, no available roles for '
-                    'promotion.'.format(del_limit),
+                    f'Local delegate limit ({del_limit}) reached, no available '
+                    f'roles for promotion.',
                 )
                 return redirect(redirect_url)
 
@@ -2402,7 +2560,9 @@ class RoleAssignmentDeleteView(
     slug_url_kwarg = 'roleassignment'
     slug_field = 'sodar_uuid'
 
-    def _get_inherited_children(self, project, user, ret):
+    def _get_inherited_children(
+        self, project: Project, user: SODARUser, ret: list
+    ) -> list:
         for child in project.get_children():
             if not RoleAssignment.objects.filter(project=child, user=user):
                 ret.append(child)
@@ -2440,8 +2600,8 @@ class RoleAssignmentDeleteView(
         ):
             messages.error(
                 self.request,
-                'You do not have permission to remove the '
-                'membership of {}.'.format(self.object.role.name),
+                f'You do not have permission to remove the membership of '
+                f'{self.object.role.name}.',
             )
         else:
             try:
@@ -2450,14 +2610,12 @@ class RoleAssignmentDeleteView(
                 )
                 messages.success(
                     self.request,
-                    'Membership of {} removed.'.format(user.username),
+                    f'Membership of {user.username} removed.',
                 )
             except Exception as ex:
                 messages.error(
                     self.request,
-                    'Failed to remove membership of {}: {}'.format(
-                        user.username, ex
-                    ),
+                    f'Failed to remove membership of {user.username}: {ex}',
                 )
         return redirect(
             reverse(
@@ -2489,10 +2647,15 @@ class RoleAssignmentOwnDeleteView(
         NOTE: Single use case so we're not writing a common rules perm
         """
         role_as = self.get_object()
+        if role_as.project.is_project() and app_settings.get(
+            APP_NAME, 'project_access_block', project=role_as.project
+        ):
+            return False
+        if app_settings.get(APP_NAME, 'site_read_only'):
+            return False
         user = self.request.user
         if (
-            app_settings.get(APP_NAME, 'site_read_only')
-            or role_as.user != user
+            role_as.user != user
             or role_as.role.rank < ROLE_RANKING[PROJECT_ROLE_DELEGATE]
         ):
             return False
@@ -2522,12 +2685,12 @@ class RoleAssignmentOwnDeleteView(
                 role_as=role_as, request=self.request
             )
             messages.success(
-                self.request, 'Successfully left {}.'.format(project.title)
+                self.request, f'Successfully left {project.title}.'
             )
             return redirect(reverse('home'))
         except Exception as ex:
             messages.error(
-                self.request, 'Failed to leave {}: {}'.format(project.title, ex)
+                self.request, f'Failed to leave {project.title}: {ex}'
             )
             return redirect(
                 reverse(
@@ -2542,16 +2705,21 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     #: Owner role object
     role_owner = None
 
-    def _get_timeline_ok_status(self):
-        timeline = get_backend_api('timeline_backend')
+    def _get_timeline_ok_status(self) -> Optional[str]:
+        timeline = plugin_api.get_backend_api('timeline_backend')
         return timeline.TL_STATUS_OK if timeline else None
 
-    def _get_timeline_failed_status(self):
-        timeline = get_backend_api('timeline_backend')
+    def _get_timeline_failed_status(self) -> Optional[str]:
+        timeline = plugin_api.get_backend_api('timeline_backend')
         return timeline.TL_STATUS_FAILED if timeline else None
 
     def _create_timeline_event(
-        self, project, old_owner, new_owner, old_owner_role=None, issuer=None
+        self,
+        project: Project,
+        old_owner: SODARUser,
+        new_owner: SODARUser,
+        old_owner_role: Optional[Role] = None,
+        issuer: Optional[SODARUser] = None,
     ):
         """
         Create timeline event for ownership transfer.
@@ -2562,12 +2730,12 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :param old_owner_role: Role object for old owner's new role or None
         :param issuer: User who initiated ownership transfer or None
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return None
         tl_desc = 'transfer ownership from {prev_owner} to {new_owner}, '
         if old_owner_role:
-            tl_desc += 'set old owner as "{}"'.format(old_owner_role.name)
+            tl_desc += f'set old owner as "{old_owner_role.name}"'
         else:
             tl_desc += 'remove old owner role'
         tl_event = timeline.add_event(
@@ -2591,13 +2759,13 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     @transaction.atomic
     def _handle_transfer(
         self,
-        project,
-        old_owner_as,
-        new_owner,
-        old_inh_owner,
-        old_owner_role=None,
-        request=None,
-    ):
+        project: Project,
+        old_owner_as: RoleAssignment,
+        new_owner: SODARUser,
+        old_inh_owner: bool,
+        old_owner_role: Optional[RoleAssignment] = None,
+        request: Optional[HttpRequest] = None,
+    ) -> bool:
         """
         Handle ownership transfer with atomic rollback.
 
@@ -2642,12 +2810,12 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
 
     def transfer_owner(
         self,
-        project,
-        new_owner,
-        old_owner_as,
-        old_owner_role=None,
-        request=None,
-        notify_old=True,
+        project: Project,
+        new_owner: SODARUser,
+        old_owner_as: RoleAssignment,
+        old_owner_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
+        notify_old: bool = True,
     ):
         """
         Transfer project ownership to a new user and assign a new role to the
@@ -2660,7 +2828,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         :param request: HttpRequest object or None
         :param notify_old: Notify old owner (boolean, default=True)
         """
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
         old_owner = old_owner_as.user
         # Old owner inheritance
@@ -2701,7 +2869,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
             and issuer != old_owner
             and old_owner.is_active
         ):
-            if app_alerts:
+            if app_alerts and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=old_owner
+            ):
                 if old_owner_role:
                     alert_name = 'role_update'
                     message = ROLE_UPDATE_MSG.format(
@@ -2742,7 +2912,9 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
                 )
         # Notify new owner
         if not new_inh_owner and issuer != new_owner:
-            if app_alerts:
+            if app_alerts and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=new_owner
+            ):
                 app_alerts.add_alert(
                     app_name=APP_NAME,
                     alert_name='role_update',
@@ -2806,7 +2978,7 @@ class RoleAssignmentOwnerTransferView(
         return context
 
     def form_valid(self, form):
-        project = form.project
+        project = self.get_project()
         old_owner = form.current_owner
         old_owner_as = project.get_owner()
         new_owner = form.cleaned_data['new_owner']
@@ -2824,16 +2996,14 @@ class RoleAssignmentOwnerTransferView(
             )
         except Exception as ex:
             # TODO: Add logging
-            messages.error(
-                self.request, 'Unable to transfer ownership: {}'.format(ex)
-            )
+            messages.error(self.request, f'Unable to transfer ownership: {ex}')
             if settings.DEBUG:
                 raise ex
             return redirect(redirect_url)
         if old_owner.username != new_owner.username:
             success_msg = (
-                'Successfully transferred ownership from '
-                '{} to {}.'.format(old_owner.username, new_owner.username)
+                f'Successfully transferred ownership from {old_owner.username} '
+                f'to {new_owner.username}.'
             )
             old_owner_email = app_settings.get(
                 APP_NAME, 'notify_email_role', user=old_owner
@@ -2854,16 +3024,22 @@ class ProjectInviteMixin:
     """Mixin for ProjectInvite helpers"""
 
     @classmethod
-    def handle_invite(cls, invite, request, resend=False, add_message=True):
+    def handle_invite(
+        cls,
+        invite: ProjectInvite,
+        request: HttpRequest,
+        resend: bool = False,
+        add_message: bool = True,
+    ):
         """
         Handle invite creation, email sending/resending and logging to timeline.
 
         :param invite: ProjectInvite object
-        :param request: Django request object
+        :param request: HttpRequest object
         :param resend: Send or resend (bool)
         :param add_message: Add Django message on success/failure (bool)
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         send_str = 'resend' if resend else 'send'
         status_type = timeline.TL_STATUS_OK
         status_desc = None
@@ -2885,10 +3061,9 @@ class ProjectInviteMixin:
                 project=invite.project,
                 app_name=APP_NAME,
                 user=request.user,
-                event_name='invite_{}'.format(send_str),
-                description='{} project invite with role "{}" to {}'.format(
-                    send_str, invite.role.name, invite.email
-                ),
+                event_name=f'invite_{send_str}',
+                description=f'{send_str} project invite with role '
+                f'"{invite.role.name}" to {invite.email}',
                 status_type=status_type,
                 status_desc=status_desc,
             )
@@ -2910,8 +3085,18 @@ class ProjectInviteMixin:
             messages.error(request, status_desc)
 
     @classmethod
-    def revoke_invite(cls, invite, project, request):
-        timeline = get_backend_api('timeline_backend')
+    def revoke_invite(
+        cls, invite: ProjectInvite, project: Project, request: HttpRequest
+    ) -> ProjectInvite:
+        """
+        Revoke invite.
+
+        :param invite: ProjectInvite object
+        :param project: Project object
+        :param request: HttpRequest object
+        :return: ProjectInvite object
+        """
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if invite:
             invite.active = False
             invite.save()
@@ -3016,7 +3201,12 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
 
     @classmethod
     def revoke_invite(
-        cls, invite, user=None, failed=True, fail_desc='', timeline=None
+        cls,
+        invite: ProjectInvite,
+        user: Optional[SODARUser] = None,
+        failed: bool = True,
+        fail_desc: str = '',
+        timeline: BackendPluginPoint = None,
     ):
         """Set invite.active to False and save the invite"""
         invite.active = False
@@ -3033,14 +3223,15 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 status_desc=fail_desc,
             )
 
-    def get_invite(self, secret):
+    def get_invite(self, secret: str) -> Optional[ProjectInvite]:
         """Get invite, display message if not found"""
         try:
             return ProjectInvite.objects.get(secret=secret)
         except ProjectInvite.DoesNotExist:
             messages.error(self.request, 'Invite does not exist.')
+        return None
 
-    def user_role_exists(self, invite, user):
+    def user_role_exists(self, invite: ProjectInvite, user: SODARUser) -> bool:
         """
         Display message if user already has roles in project. Also revoke the
         invite if necessary.
@@ -3065,13 +3256,15 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             return True
         return False
 
-    def is_invite_expired(self, invite, user=None):
+    def is_invite_expired(
+        self, invite: ProjectInvite, user: Optional[SODARUser] = None
+    ) -> bool:
         """Display message and send email to issuer if invite is expired"""
         if invite.date_expire < timezone.now():
             messages.error(
                 self.request,
-                'Your invite has expired. Please contact the inviter: '
-                '{} ({})'.format(invite.issuer.name, invite.issuer.email),
+                f'Your invite has expired. Please contact the inviter: '
+                f'{invite.issuer.name} ({invite.issuer.email})',
             )
             # Send notification of expiry to issuer
             if SEND_EMAIL and app_settings.get(
@@ -3090,9 +3283,14 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
 
     # TODO: Combine with RoleAssignmentModifyMixin.modify_assignment?
     @transaction.atomic
-    def create_assignment(self, invite, user, timeline=None):
+    def create_assignment(
+        self,
+        invite: ProjectInvite,
+        user: SODARUser,
+        timeline: Optional[BackendPluginPoint] = None,
+    ):
         """Create role assignment for invited user"""
-        app_alerts = get_backend_api('appalerts_backend')
+        app_alerts = plugin_api.get_backend_api('appalerts_backend')
         tl_event = None
         if timeline:
             tl_event = timeline.add_event(
@@ -3100,9 +3298,8 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
                 app_name=APP_NAME,
                 user=user,
                 event_name='invite_accept',
-                description='accept project invite with role of "{}"'.format(
-                    invite.role.name
-                ),
+                description=f'accept project invite with role of '
+                f'"{invite.role.name}"',
             )
 
         # Create the assignment
@@ -3120,15 +3317,20 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             tl_event.set_status(timeline.TL_STATUS_OK)
 
         # Notify the issuer by alert and email
-        if app_alerts and invite.issuer.is_active:
+        if (
+            app_alerts
+            and invite.issuer.is_active
+            and app_settings.get(
+                APP_NAME, 'notify_alert_role', user=invite.issuer
+            )
+        ):
             app_alerts.add_alert(
                 app_name=APP_NAME,
                 alert_name='invite_accept',
                 user=invite.issuer,
-                message='Invitation sent to "{}" for project "{}" with the '
-                'role "{}" was accepted.'.format(
-                    user.email, invite.project.title, invite.role.name
-                ),
+                message=f'Invitation sent to "{user.email}" for project '
+                f'"{invite.project.title}" with the role "{invite.role.name}" '
+                f'was accepted.',
                 url=reverse(
                     'projectroles:detail',
                     kwargs={'project': invite.project.sodar_uuid},
@@ -3156,7 +3358,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             ),
         )
 
-    def redirect_error(self, msg=None):
+    def redirect_error(self, msg: str = None) -> HttpResponseRedirect:
         if msg:
             messages.error(self.request, msg)
         return redirect(reverse('home'))
@@ -3165,7 +3367,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
 class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
     """View to handle accepting a project invite"""
 
-    def _redirect_process(self, login=True):
+    def _redirect_process(self, login: bool = True) -> HttpResponseRedirect:
         """Redirect to the proper process view"""
         url = 'projectroles:invite_process_{}'.format(
             'login' if login else 'new_user'
@@ -3213,7 +3415,7 @@ class ProjectInviteProcessLoginView(
         invite = self.get_invite(kwargs['secret'])
         if not invite:
             return self.redirect_error(INVITE_NOT_FOUND_MSG)
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         # Check if user has already accepted the invite
         if self.user_role_exists(invite, self.request.user):
             # NOTE: No message, simply redirect
@@ -3258,7 +3460,7 @@ class ProjectInviteProcessNewUserView(ProjectInviteProcessMixin, FormView):
         invite = self.get_invite(self.kwargs['secret'])
         if not invite:
             return self.redirect_error(INVITE_NOT_FOUND_MSG)
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         # Redirect to login process view if OIDC is enabled but local isn't
         if settings.ENABLE_OIDC and not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             return redirect(
@@ -3338,7 +3540,7 @@ class ProjectInviteProcessNewUserView(ProjectInviteProcessMixin, FormView):
         invite = self.get_invite(self.kwargs['secret'])
         if not invite:
             return redirect(reverse('home'))
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
 
         # Check if local users are allowed
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
@@ -3565,7 +3767,9 @@ class RemoteSiteListView(
 class RemoteSiteModifyMixin(ModelFormMixin):
     """Helpers for remote site modification"""
 
-    def _create_timeline_event(self, remote_site, user, form_action):
+    def _create_timeline_event(
+        self, remote_site: RemoteSite, user: SODARUser, form_action: str
+    ):
         """
         Create timeline event for remote site creation/update.
 
@@ -3574,14 +3778,14 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         :param form_action: String
         :param form_action:
         """
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if not timeline:
             return
         status = form_action if form_action == 'set' else form_action[0:-1]
         if remote_site.mode == SITE_MODE_SOURCE:
-            event_name = 'source_site_{}'.format(status)
+            event_name = f'source_site_{status}'
         else:
-            event_name = 'target_site_{}'.format(status)
+            event_name = f'target_site_{status}'
 
         tl_desc = '{} remote {} site {{{}}}'.format(
             status,
@@ -3622,9 +3826,8 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         self._create_timeline_event(self.object, self.request.user, form_action)
         messages.success(
             self.request,
-            '{} site "{}" {}.'.format(
-                self.object.mode.capitalize(), self.object.name, form_action
-            ),
+            f'{self.object.mode.capitalize()} site "{self.object.name}" '
+            f'{form_action}.',
         )
         return redirect(reverse('projectroles:remote_sites'))
 
@@ -3690,7 +3893,7 @@ class RemoteSiteDeleteView(
     slug_field = 'sodar_uuid'
 
     def get_success_url(self):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         if timeline:
             event_name = '{}_site_delete'.format(
                 'source' if self.object.mode == SITE_MODE_SOURCE else 'target'
@@ -3710,9 +3913,8 @@ class RemoteSiteDeleteView(
             )
         messages.success(
             self.request,
-            '{} site "{}" deleted'.format(
-                self.object.mode.capitalize(), self.object.name
-            ),
+            f'{self.object.mode.capitalize()} site "{self.object.name}" '
+            f'deleted',
         )
         return reverse('projectroles:remote_sites')
 
@@ -3763,7 +3965,7 @@ class RemoteProjectBatchUpdateView(
         return context
 
     def post(self, request, *args, **kwargs):
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         post_data = request.POST
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
@@ -3923,7 +4125,7 @@ class RemoteProjectSyncView(
             )
             return redirect(redirect_url)
 
-        timeline = get_backend_api('timeline_backend')
+        timeline = plugin_api.get_backend_api('timeline_backend')
         remote_api = RemoteProjectAPI()
         context = self.get_context_data(*args, **kwargs)
         source_site = context['site']
@@ -3946,7 +4148,7 @@ class RemoteProjectSyncView(
             )
         except Exception as ex:
             messages.error(
-                request, 'Remote sync cancelled with exception: {}'.format(ex)
+                request, f'Remote sync cancelled with exception: {ex}'
             )
             if settings.DEBUG:
                 raise ex

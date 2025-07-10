@@ -4,7 +4,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.tests.test_permissions_api import ProjectAPIPermissionTestBase
 
 from sodarcache.tests.test_views_api import (
@@ -19,6 +19,9 @@ from sodarcache.views_api import (
 )
 
 
+plugin_api = PluginAPI()
+
+
 class SodarcacheAPIPermissionTestBase(ProjectAPIPermissionTestBase):
     """Base class for sodarcache REST API view permission tests"""
 
@@ -27,7 +30,7 @@ class SodarcacheAPIPermissionTestBase(ProjectAPIPermissionTestBase):
 
     def setUp(self):
         super().setUp()
-        self.cache_backend = get_backend_api('sodar_cache')
+        self.cache_backend = plugin_api.get_backend_api('sodar_cache')
 
 
 class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):
@@ -62,7 +65,12 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test CacheItemRetrieveAPIView GET"""
@@ -70,13 +78,13 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.anonymous, 200)
 
     def test_get_archive(self):
@@ -86,7 +94,7 @@ class TestCacheItemRetrieveAPIView(SodarcacheAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
     def test_get_read_only(self):
@@ -129,7 +137,12 @@ class TestCacheItemDateRetrieveAPIView(SodarcacheAPIPermissionTestBase):
             self.user_contributor,
             self.user_guest,
         ]
-        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.bad_users = [
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
 
     def test_get(self):
         """Test CacheItemDateRetrieveAPIView GET"""
@@ -137,13 +150,13 @@ class TestCacheItemDateRetrieveAPIView(SodarcacheAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.anonymous, 200)
 
     def test_get_archive(self):
@@ -153,7 +166,7 @@ class TestCacheItemDateRetrieveAPIView(SodarcacheAPIPermissionTestBase):
         self.assert_response_api(self.url, self.bad_users, 403)
         self.assert_response_api(self.url, self.anonymous, 401)
         self.assert_response_api(self.url, self.good_users, 200, knox=True)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(self.url, self.user_no_roles, 200)
 
     def test_get_read_only(self):
@@ -189,8 +202,10 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
         ]
         self.bad_users = [
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
         ]
 
@@ -213,7 +228,7 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
             data=self.post_data,
             knox=True,
         )
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(
             self.url,
             self.user_no_roles,
@@ -225,7 +240,7 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(
             self.url, self.anonymous, 401, method='POST', data=self.post_data
         )
@@ -250,7 +265,7 @@ class TestCacheItemSetAPIView(SodarcacheAPIPermissionTestBase):
             data=self.post_data,
             knox=True,
         )
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response_api(
             self.url,
             self.user_no_roles,

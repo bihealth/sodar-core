@@ -8,7 +8,7 @@ from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Role, AppSetting, SODAR_CONSTANTS
-from projectroles.plugins import PluginAppSettingDef, get_app_plugin
+from projectroles.plugins import PluginAppSettingDef, PluginAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -19,6 +19,7 @@ from projectroles.tests.test_models import (
 
 
 app_settings = AppSettingAPI()
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -293,7 +294,7 @@ class TestAppSettingAPI(
         )
         # Init test data
         self.settings = self.init_app_settings()
-        example_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        example_plugin = plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
         self.example_defs = example_plugin.app_settings
 
     def test_get(self):
@@ -564,7 +565,7 @@ class TestAppSettingAPI(
     def test_set_new(self):
         """Test set() with new but defined setting"""
         val = AppSetting.objects.get(
-            app_plugin=get_app_plugin(EXAMPLE_APP_NAME).get_model(),
+            app_plugin=plugin_api.get_app_plugin(EXAMPLE_APP_NAME).get_model(),
             project=self.project,
             name=EXISTING_SETTING,
         ).value
@@ -584,7 +585,7 @@ class TestAppSettingAPI(
         )
         self.assertEqual(True, val)
         setting = AppSetting.objects.get(
-            app_plugin=get_app_plugin(EXAMPLE_APP_NAME).get_model(),
+            app_plugin=plugin_api.get_app_plugin(EXAMPLE_APP_NAME).get_model(),
             project=self.project,
             name=EXISTING_SETTING,
         )
@@ -750,7 +751,7 @@ class TestAppSettingAPI(
 
     def test_get_definition_plugin(self):
         """Test get_definition() with plugin"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        app_plugin = plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'name': 'project_str_setting',
             'scope': APP_SETTING_SCOPE_PROJECT,
@@ -914,7 +915,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_project(self):
         """Test get_defaults() with PROJECT scope"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT)
         self.assertEqual(defaults[prefix + 'project_str_setting'], '')
         self.assertEqual(defaults[prefix + 'project_int_setting'], 0)
@@ -926,7 +927,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_project_post_safe(self):
         """Test get_defaults() with PROJECT scope and post_safe=True"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(
             APP_SETTING_SCOPE_PROJECT, post_safe=True
         )
@@ -942,7 +943,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_user(self):
         """Test get_defaults() with USER scope"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_USER)
         self.assertEqual(defaults[prefix + 'user_str_setting'], '')
         self.assertEqual(defaults[prefix + 'user_int_setting'], 0)
@@ -954,7 +955,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_project_user(self):
         """Test get_defaults() with PROJECT_USER scope"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT_USER)
         self.assertEqual(defaults[prefix + 'project_user_str_setting'], '')
         self.assertEqual(defaults[prefix + 'project_user_int_setting'], 0)
@@ -966,7 +967,7 @@ class TestAppSettingAPI(
 
     def test_get_defaults_site(self):
         """Test get_defaults() with SITE scope"""
-        prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
+        prefix = f'settings.{EXAMPLE_APP_NAME}.'
         defaults = app_settings.get_defaults(APP_SETTING_SCOPE_SITE)
         self.assertEqual(defaults[prefix + 'site_bool_setting'], False)
 
@@ -1127,7 +1128,7 @@ class TestAppSettingAPI(
 
     def test_validate_form_app_settings(self):
         """Test validate_form_app_settings() with valid project setting value"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        app_plugin = plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
         app_settings = {'project_str_setting': 'String'}
         errors = app_plugin.validate_form_app_settings(
             app_settings, project=self.project
@@ -1136,7 +1137,7 @@ class TestAppSettingAPI(
 
     def test_validate_form_app_settings_invalid(self):
         """Test validate_form_app_settings() with invalid project setting value"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        app_plugin = plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
         app_settings = {'project_str_setting': INVALID_SETTING_VALUE}
         errors = app_plugin.validate_form_app_settings(
             app_settings, project=self.project
@@ -1145,7 +1146,7 @@ class TestAppSettingAPI(
 
     def test_validate_form_app_settings_user(self):
         """Test validate_form_app_settings() with valid user setting value"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        app_plugin = plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
         app_settings = {'user_str_setting': 'String'}
         errors = app_plugin.validate_form_app_settings(
             app_settings, user=self.user
@@ -1154,7 +1155,7 @@ class TestAppSettingAPI(
 
     def test_validate_form_app_settings_user_invalid(self):
         """Test validate_form_app_settings() with invalid user setting value"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        app_plugin = plugin_api.get_app_plugin(EXAMPLE_APP_NAME)
         app_settings = {'user_str_setting': INVALID_SETTING_VALUE}
         errors = app_plugin.validate_form_app_settings(
             app_settings, user=self.user

@@ -1,8 +1,16 @@
 """Template tags for role management views in projectroles"""
 
+from typing import Optional
+
 from django import template
 
-from projectroles.models import RoleAssignment, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    SODARUser,
+    Role,
+    RoleAssignment,
+    SODAR_CONSTANTS,
+)
 
 
 register = template.Library()
@@ -23,7 +31,7 @@ ROLE_RANK_ICONS = {
 
 
 @register.simple_tag
-def get_role_icon(role):
+def get_role_icon(role: Role) -> str:
     """Return the icon class for a Role"""
     keys = list(ROLE_RANK_ICONS.keys())
     key_idx = min(range(len(keys)), key=lambda i: abs(keys[i] - role.rank))
@@ -31,7 +39,7 @@ def get_role_icon(role):
 
 
 @register.simple_tag
-def get_role_class(user):
+def get_role_class(user: SODARUser) -> str:
     """
     Return class string for user role based on user status.
 
@@ -40,10 +48,11 @@ def get_role_class(user):
     """
     if not user.is_active:
         return 'text-secondary'
+    return ''
 
 
 @register.simple_tag
-def get_role_perms(project, user):
+def get_role_perms(project: Project, user: SODARUser) -> dict:
     """
     Return role perms to template as dict.
 
@@ -66,7 +75,9 @@ def get_role_perms(project, user):
 
 
 @register.simple_tag
-def display_role_buttons(project, role_as, perms):
+def display_role_buttons(
+    project: Project, role_as: RoleAssignment, perms: dict
+) -> bool:
     """Return True/False on whether role buttons can be displayed for role"""
     if (
         role_as.role.name == PROJECT_ROLE_OWNER
@@ -89,7 +100,9 @@ def display_role_buttons(project, role_as, perms):
 
 
 @register.simple_tag
-def get_inactive_role(project, inherited_as):
+def get_inactive_role(
+    project: Project, inherited_as: RoleAssignment
+) -> Optional[RoleAssignment]:
     """
     Return inactive role assignment for inherited user if it exists.
 

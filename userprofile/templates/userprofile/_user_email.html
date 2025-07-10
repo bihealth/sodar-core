@@ -1,0 +1,75 @@
+<div class="card" id="sodar-user-email-card">
+  <div class="card-header">
+    <h4>
+      <i class="iconify" data-icon="mdi:email-multiple"></i>
+      Additional Email Addresses
+      {% if site_mode == 'SOURCE' %}
+        {% if request.user.is_superuser or not site_read_only %}
+          <span class="sodar-header-input-group pull-right">
+            <a role="button"
+               class="btn btn-primary"
+               id="sodar-user-btn-email-add"
+               href="{% url 'userprofile:email_create' %}">
+              <i class="iconify" data-icon="mdi:plus-thick"></i> Add Email
+            </a>
+          </span>
+        {% endif %}
+      {% endif %}
+    </h4>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-striped sodar-card-table"
+           id="sodar-user-email-table">
+      <thead>
+        <tr>
+          <th>Address</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Modified</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if add_emails.count > 0 %}
+          {% for email in add_emails %}
+            <tr class="sodar-user-email-table-row">
+              <td><a href="mailto:{{ email.email }}">{{ email.email }}</a></td>
+              <td class="text-nowrap text-{% if email.verified %}success{% else %}danger{% endif %}">
+                {% if email.verified %}Verified{% else %}Unverified{% endif %}
+              </td>
+              <td class="text-nowrap">{{ email.date_created | date:'Y-m-d H:i'}}</td>
+              <td class="text-nowrap">{{ email.date_modified | date:'Y-m-d H:i'}}</td>
+              <td class="text-right">
+                {% if site_mode == 'SOURCE' %}
+                  {% if request.user.is_superuser or not site_read_only %}
+                    <button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
+                            type="button" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                      <i class="iconify" data-icon="mdi:gear"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right sodar-user-email-dropdown">
+                      <a class="dropdown-item sodar-user-email-resend {% if email.verified %}disabled{% endif %}"
+                         href="{% url 'userprofile:email_verify_resend' sodaruseradditionalemail=email.sodar_uuid %}">
+                        <i class="iconify" data-icon="mdi:send"></i> Resend Verification Mail
+                      </a>
+                      <a class="dropdown-item sodar-user-email-delete text-danger"
+                         href="{% url 'userprofile:email_delete' sodaruseradditionalemail=email.sodar_uuid %}">
+                        <i class="iconify" data-icon="mdi:close-thick"></i> Delete Address
+                      </a>
+                    </div>
+                  {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr id="sodar-user-email-table-not-found">
+            <td class="bg-faded font-italic text-center" colspan="5">
+              No additional email addresses set.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>

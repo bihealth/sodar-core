@@ -42,13 +42,22 @@ Before submitting a pull request for review, ensure the following:
   :ref:`dev_core_guide_test`).
 - You have updated documentation if your pull requests adds or modifies features
   (see :ref:`dev_core_guide_doc`).
-- ``make black`` has been run for the latest commit.
-- ``flake8 .`` produces no errors.
 - All tests pass with ``make test``.
+- ``make black`` has been run for the latest commit.
+- ``make flake8`` produces no errors.
+- ``make js-beautify arg=$filename`` has been run for any updated JQuery files.
 
 Your pull request should work on the Python versions currently supported by the
 SODAR Core dev version. These will be checked by GitHub Actions CI upon pushing
 your commit(s).
+
+Regarding the use of tools based on large language models (LLM) or "AI", please
+note the following:
+
+- Pull requests containing obvious nonsensical LLM slop in code, comments,
+  documentation, pull request descriptions or commit messages will not be
+  reviewed or merged.
+- Issues and pull requests generated using LLM bots will be deleted.
 
 
 .. _dev_core_guide_code:
@@ -71,9 +80,13 @@ The following conventions should be adhered to in SODAR Core development:
     * Black does not enforce this, so they have to be ensured manually.
 - Do not use RST syntax in docstrings or comments.
     * Exception: Docstrings for REST API endpoint methods.
-- No type hints should be used at the moment.
-    * Possibility to expand the entire project into using type hints will be
-      looked into.
+- Provide type hints for functions you declare.
+    * Make sure the syntax corresponds to the currently supported Python
+      versions.
+    * Exception: Inherited methods from e.g. Django or Django Rest Framework
+      where the signature is already defined and expected to be static. This
+      concerns e.g. Django class-based view methods such as ``get()``,
+      ``get_context_data()`` etc.
 
 Module Imports
 --------------
@@ -92,10 +105,10 @@ of the groups.
       requirements
     * E.g. ``from rest_framework import serializers``
 - SODAR Core ``projectroles`` imports
-    * E.g. ``from projectroles.plugins import get_backend_api``
+    * E.g. ``from projectroles.plugins import PluginAPI``
     * Prefix these with ``# Projectroles dependency``
     * Hardcoded imports from other SODAR Core apps should be avoided, use
-      ``get_backend_api()`` instead.
+      ``PluginAPI.get_backend_api()`` instead.
 - Imports from within the current app
     * E.g. ``from yourapp.forms import YourForm``
     * For consistency and clarity, give the full module path for imports. E.g.

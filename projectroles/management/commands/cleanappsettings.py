@@ -41,7 +41,7 @@ class Command(BaseCommand):
     )
 
     @classmethod
-    def _get_log_msg(cls, s, msg, check):
+    def _get_log_msg(cls, s: AppSetting, msg: str, check: bool) -> str:
         """Return delete/check message for logging"""
         prefix_msg = CHECK_PREFIX_MSG if check else DELETE_PREFIX_MSG
         s_name = '.'.join(

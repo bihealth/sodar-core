@@ -1,68 +1,76 @@
 // Set up DataTables for search tables
-$(document).ready(function() {
-    /*****************
-     Set up DataTables
-     *****************/
+$(document).ready(function () {
+  /*****************
+   Set up DataTables
+   *****************/
 
-    $.fn.dataTable.ext.classes.sPageButton =
-        'btn sodar-list-btn ml-1 sodar-paginate-button btn-outline-light text-primary';
+  $.fn.dataTable.ext.classes.sPageButton =
+    'btn sodar-list-btn ml-1 sodar-paginate-button btn-outline-light text-primary'
 
-    $('.sodar-search-table').each(function() {
-        $(this).DataTable({
-            scrollX: false,
-            paging: true,
-            pageLength: window.searchPagination,
-            lengthChange: true,
-            scrollCollapse: true,
-            info: false,
-            language: {
-                paginate: {
-                    previous: '<i class="iconify text-primary" ' +
-                        'data-icon="mdi:arrow-left-circle"></i> Prev',
-                    next: '<i class="iconify text-primary" ' +
-                        'data-icon="mdi:arrow-right-circle"></i> Next'
-                }
-            },
-            dom: 'tp',
-            fnDrawCallback: function() {
-                modifyCellOverflow();
-            }
-        });
-
-        // Hide pagination and disable page dropdown if only one page
-        if ($(this).DataTable().page.info().pages === 1) {
-            $(this).closest('.sodar-search-card')
-                .find('.sodar-search-page-length').prop('disabled', 'disabled');
-            $(this).next('.dataTables_paginate').hide();
+  $('.sodar-search-table').each(function () {
+    $(this).DataTable({
+      order: [], // Disable default ordering
+      scrollX: false,
+      paging: true,
+      pagingType: 'full_numbers',
+      pageLength: window.searchPagination,
+      lengthChange: true,
+      scrollCollapse: true,
+      info: false,
+      language: {
+        paginate: {
+          first: '<i class="iconify text-primary" ' +
+            'data-icon="mdi:arrow-left-circle-outline"></i> First',
+          previous: '<i class="iconify text-primary" ' +
+            'data-icon="mdi:arrow-left-circle"></i> Prev',
+          next: 'Next <i class="iconify text-primary" ' +
+            'data-icon="mdi:arrow-right-circle"></i>',
+          last: 'Last <i class="iconify text-primary" ' +
+            'data-icon="mdi:arrow-right-circle-outline"></i>',
         }
+      },
+      dom: 'tp',
+      fnDrawCallback: function () {
+        modifyCellOverflow()
+      }
+    })
 
-        // Display card once table has been initialized
-        $(this).closest('div.sodar-search-card').show();
-    });
+    // Hide pagination and disable page dropdown if only one page
+    if ($(this).DataTable().page.info().pages === 1) {
+      $(this).closest('.sodar-search-card')
+        .find('.sodar-search-page-length').prop('disabled', 'disabled')
+      $(this).next('.dataTables_paginate').hide()
+    }
 
-    // Display not found once all DataTables have been initialized
-    $('div#sodar-search-not-found-alert').removeClass('d-none');
+    // Display card once table has been initialized
+    $(this).closest('div.sodar-search-card').show()
+  })
 
-    // Update overflow status
-    modifyCellOverflow();
+  // Display not found once all DataTables have been initialized
+  $('div#sodar-search-not-found-alert').removeClass('d-none')
 
-    /**********
-     Pagination
-     **********/
+  // Update overflow status
+  modifyCellOverflow()
 
-    $('.sodar-search-page-length').change(function () {
-        var dt = $(this).closest('.sodar-search-card').find('table').DataTable();
-        var value = parseInt($(this).val());
-        dt.page.len(value).draw();
-    });
+  /**********
+   Pagination
+   **********/
 
-    /*********
-     Filtering
-     *********/
+  $('.sodar-search-page-length').change(function () {
+    let dt = $(this).closest('.sodar-search-card').find('table')
+      .DataTable()
+    let value = parseInt($(this).val())
+    dt.page.len(value).draw()
+  })
 
-    $('.sodar-search-filter').keyup(function () {
-        var dt = $(this).closest('.sodar-search-card').find('table').dataTable();
-        var v = $(this).val();
-        dt.fnFilter(v);
-    });
-});
+  /*********
+   Filtering
+   *********/
+
+  $('.sodar-search-filter').keyup(function () {
+    let dt = $(this).closest('.sodar-search-card').find('table')
+      .dataTable()
+    let v = $(this).val()
+    dt.fnFilter(v)
+  })
+})

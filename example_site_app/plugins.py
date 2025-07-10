@@ -1,4 +1,9 @@
+"""Plugins for the example_site_app Django app"""
+
+from typing import Optional
+
 # Projectroles dependency
+from projectroles.models import SODARUser
 from projectroles.plugins import SiteAppPluginPoint
 
 from example_site_app.urls import urlpatterns
@@ -28,7 +33,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: Required permission for displaying the app
     app_permission = 'example_site_app.view_data'
 
-    def get_messages(self, user=None):
+    def get_messages(self, user: Optional[SODARUser] = None) -> list[dict]:
         """
         Return a list of messages to be shown to users.
         :param user: User object (optional)

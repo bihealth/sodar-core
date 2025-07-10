@@ -137,34 +137,32 @@
   {{ block.super }}
   <script>
     function toogleBtnState(button, is_active) {
-        if (is_active) {
-            button.classList.add("btn-success");
-            button.classList.remove("btn-warning");
-            button.innerText = 'ACTIVE';
-        } else {
-            button.innerText = 'INACTIVE';
-            button.classList.remove("btn-success");
-            button.classList.add("btn-warning");
-        }
+      if (is_active) {
+        button.classList.add("btn-success")
+        button.classList.remove("btn-warning")
+        button.innerText = 'ACTIVE'
+      } else {
+        button.innerText = 'INACTIVE'
+        button.classList.remove("btn-success")
+        button.classList.add("btn-warning")
+      }
     }
-
     $('.js-change-alert-state-button').each(function () {
-        this.addEventListener("click", function (event) {
-            // We change the buttons color and text, before getting a response,
-            // to improve responsiveness
-            const is_active_guess = event.target.innerText = 'ACTIVE';
-            toogleBtnState(event.target, is_active_guess);
-            $.ajax({
-                type: 'POST',
-                url: event.target.dataset.url,
-                success: function (data) {
-                    // Check if we guessed correctly
-                    if (data.is_active === is_active_guess)
-                        return;
-                    toogleBtnState(event.target, data.is_active);
-                }
-            })
-        });
-    });
+      this.addEventListener("click", function (event) {
+        // We change the buttons color and text, before getting a response,
+        // to improve responsiveness
+        const is_active_guess = event.target.innerText = 'ACTIVE'
+        toogleBtnState(event.target, is_active_guess)
+        $.ajax({
+          type: 'POST',
+          url: event.target.dataset.url,
+          success: function (data) {
+            // Check if we guessed correctly
+            if (data.is_active === is_active_guess) return
+            toogleBtnState(event.target, data.is_active)
+          }
+        })
+      })
+    })
   </script>
 {% endblock javascript %}

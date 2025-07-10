@@ -3,13 +3,16 @@
 from django.views.generic import TemplateView
 
 # Projectroles dependency
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.views import (
     LoginRequiredMixin,
     LoggedInPermissionMixin,
     ProjectContextMixin,
     ProjectPermissionMixin,
 )
+
+
+plugin_api = PluginAPI()
 
 
 class ExampleView(
@@ -29,7 +32,7 @@ class ExampleView(
         """Override get_context_data() to demonstrate using a backend app"""
         context = super().get_context_data(*args, **kwargs)
         # Get API and data from backend into context
-        example_api = get_backend_api(
+        example_api = plugin_api.get_backend_api(
             'example_backend_app', **{'hello': 'world'}
         )
         context['backend_data'] = example_api.hello() if example_api else ''

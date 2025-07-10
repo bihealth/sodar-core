@@ -1,6 +1,7 @@
 {% extends 'projectroles/project_base.html' %}
 
 {% load rules %}
+{% load static %}
 {% load projectroles_tags %}
 {% load projectroles_role_tags %}
 {% load projectroles_common_tags %}
@@ -9,9 +10,29 @@
 
 {% block css %}
   {{ block.super }}
+  <!-- DataTables -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.css" />
+
   <style type="text/css">
+    div#sodar-pr-role-list-input-group {
+      max-width: 200px;
+    }
+    table#sodar-pr-role-list-table {
+        margin: 0 !important;
+    }
     table#sodar-pr-role-list-table tbody td:nth-child(5) {
       width: 3em;
+    }
+    /* DataTables modifications */
+    th.sorting {
+      padding-left: 10px !important;
+      border-bottom: 0 !important;
+    }
+    th.sorting::after {
+      padding-top: 7px !important;
+    }
+    .previous::before, .next::after {
+      display: none !important;
     }
     /* Responsive modifications */
     @media screen and (max-width: 1000px) {
@@ -80,6 +101,19 @@
   {% endif %}
 
   <div class="card" id="sodar-pr-role-list">
+    <div class="card-header">
+      <h4>
+        <i class="iconify" data-icon="mdi:account-multiple"></i> Members
+        <div class="input-group sodar-header-input-group pull-right"
+             id="sodar-pr-role-list-input-group">
+          <input class="form-control"
+                 type="text"
+                 placeholder="Filter"
+                 aria-label="Filter roles"
+                 id="sodar-pr-role-list-filter" />
+        </div>
+      </h4>
+    </div>
     <div class="card-body p-0">
       <table class="table table-striped sodar-card-table"
              id="sodar-pr-role-list-table">
@@ -106,78 +140,94 @@
 
 {% block javascript %}
   {{ block.super }}
+  <!-- Variables -->
+  <script type="text/javascript">
+    window.roleListPagination = {{ role_pagination }};
+  </script>
+  <!-- DataTables -->
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
+  <!-- Project list -->
+  <script type="text/javascript" src="{% static 'projectroles/js/role_list.js' %}"></script>
+
   <!-- Tour content -->
   <script type="text/javascript">
-    tourEnabled = true;
+    tourEnabled = true
     tour.addStep('role_list', {
-        title: 'Member List',
-        text: 'List of users given access for this ' +
+      title: 'Member List',
+      text: 'List of users given access for this ' +
             '{% get_display_name 'PROJECT' %} can be seen here.',
-        attachTo: '#sodar-pr-role-list top',
+      attachTo: '#sodar-pr-role-list top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    tour.addStep('role_filter', {
+      title: 'Filter Members',
+      text: 'You can filter the member list by entering text here.',
+      attachTo: '#sodar-pr-role-list-filter left',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    if ($('.sodar-pr-role-item-role').length) {
+      tour.addStep('role_item_role', {
+        title: 'Member Role',
+        text: 'The role of each member is displayed in this column. A member ' +
+              'can have one role in a project. Roles can be inherited ' +
+              'from parent ' +
+              '{% get_display_name 'CATEGORY' plural=True %}. In that case, ' +
+              'the role label links to from where it was inherited. To learn ' +
+              'more about different roles, see the user manual of this site ' +
+              'or the SODAR Core documentation.',
+        attachTo: '.sodar-pr-role-item-role top',
         advanceOn: '.docs-link click',
         showCancelLink: true
-    });
-    if ($('.sodar-pr-role-item-role').length) {
-        tour.addStep('role_item_role', {
-            title: 'Member Role',
-            text: 'The role of each member is displayed in this column. A ' +
-                  'member can have one role in a project. Roles can be ' +
-                  'inherited from parent ' +
-                  '{% get_display_name 'CATEGORY' plural=True %}. In that ' +
-                  'case, the role label links to from where it was ' +
-                  'Inherited. To learn more about different roles, see the ' +
-                  'user manual of this site or the SODAR Core documentation.',
-            attachTo: '.sodar-pr-role-item-role top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      })
     }
     if ($('.sodar-pr-role-btn-owner').length) {
-        tour.addStep('role_dropdown_owner', {
-            title: 'Owner Dropdown',
-            text: 'Ownership can be transferred to another user from this ' +
-                  'dropdown.',
-            attachTo: '.sodar-pr-role-btn-owner left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true,
-        });
+      tour.addStep('role_dropdown_owner', {
+        title: 'Owner Dropdown',
+        text: 'Ownership can be transferred to another user from this ' +
+              'dropdown.',
+        attachTo: '.sodar-pr-role-btn-owner left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true,
+      })
     }
     if ($('.sodar-pr-role-btn').length) {
-        tour.addStep('role_dropdown', {
-            title: 'Member Dropdown',
-            text: 'For a non-owner member, you can update or remove the ' +
-                  'member role through this dropdown. Note that for ' +
-                  'inherited users, only promoting the inherited role is ' +
-                  'allowed. To remove such a role, navigate to the parent ' +
-                  '{% get_display_name 'CATEGORY' %} and remove the ' +
-                  'membership there.',
-            attachTo: '.sodar-pr-role-btn left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true,
-        });
+      tour.addStep('role_dropdown', {
+        title: 'Member Dropdown',
+        text: 'For a non-owner member, you can update or remove the member ' +
+              'role through this dropdown. Note that for inherited users, ' +
+              'only promoting the inherited role is allowed. To remove such ' +
+              'a role, navigate to the parent ' +
+              '{% get_display_name 'CATEGORY' %} and remove the membership ' +
+              'there.',
+        attachTo: '.sodar-pr-role-btn left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true,
+      })
     }
     if ($('#sodar-pr-role-ops-btn').length) {
-        tour.addStep('role_ops', {
-            title: 'Member Operations Dropdown',
-            text: 'From this dropdown you can access operations for adding ' +
-                  'new members to the {% get_display_name 'PROJECT' %} and ' +
-                  'inviting users not yet on the site.',
-            attachTo: '#sodar-pr-role-ops-btn left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      tour.addStep('role_ops', {
+        title: 'Member Operations Dropdown',
+        text: 'From this dropdown you can access operations for adding new ' +
+              'members to the {% get_display_name 'PROJECT' %} and inviting ' +
+              'users not yet on the site.',
+        attachTo: '#sodar-pr-role-ops-btn left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
     }
     if ($('#sodar-pr-btn-leave-project').length) {
-        tour.addStep('role_ops', {
-            title: 'Leave Project',
-            text: 'Click this button to leave this ' +
-                  '{% get_display_name 'PROJECT' %} or ' +
-                  '{% get_display_name 'CATEGORY' %}. In case of the latter, ' +
-                  'leaving will also remove your inherited roles its children.',
-            attachTo: '#sodar-pr-btn-leave-project left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      tour.addStep('role_ops', {
+        title: 'Leave Project',
+        text: 'Click this button to leave this ' +
+              '{% get_display_name 'PROJECT' %} or ' +
+              '{% get_display_name 'CATEGORY' %}. In case of the latter, ' +
+              'leaving will also remove your inherited roles its children.',
+        attachTo: '#sodar-pr-btn-leave-project left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
     }
   </script>
 {% endblock javascript %}

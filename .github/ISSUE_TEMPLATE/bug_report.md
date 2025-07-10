@@ -26,8 +26,8 @@ publicly viewable.
 
 ### System Information
 
- - OS: [e.g. Ubuntu 20.04]
- - Browser [Supported browsers: Chrome, Firefox]
+ - OS: [e.g. Ubuntu 24.04]
+ - Browser [Supported browsers: Firefox, Chrome]
  - Browser version [e.g. 100]
 
 **Additional Context**

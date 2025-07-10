@@ -81,15 +81,21 @@ app plugins.
 User settings defined in the ``projectroles`` app, available for all SODAR Core
 using sites:
 
-Receive Email for Admin Alerts
+Receive email for admin alerts
     Receive email for :ref:`admin alerts <app_adminalerts>`.
-Display Project UUID Copying Link
+Display project UUID copying link
     If set true, display a link in the project title bar for copying the project
     UUID into the clipboard.
-Receive Email for Project Updates
+Receive alerts for project updates
+    Receive app alerts in the SODAR UI for project or category creation,
+    updating, moving and archiving.
+Receive email for project updates
     Receive email notifications for project or category creation, updating,
     moving and archiving.
-Receive Email for Project Membership Updates
+Receive alerts for project membership updates
+    Receive app alerts in the SODAR UI for project or category membership
+    updates and invitation activity.
+Receive email for project membership updates
     Receive email notifications for project or category membership updates and
     invitation activity.
 Project list title highlight

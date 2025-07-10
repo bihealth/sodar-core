@@ -43,7 +43,9 @@ class TestProjectEventDetailAjaxView(
             self.user_guest,
         ]
         self.bad_users = [
+            self.user_viewer_cat,
             self.user_finder_cat,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -52,14 +54,14 @@ class TestProjectEventDetailAjaxView(
         """Test ProjectEventDetailAjaxView GET"""
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 403)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 200)
 
     def test_get_archive(self):
@@ -67,9 +69,15 @@ class TestProjectEventDetailAjaxView(
         self.project.set_archive()
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 403)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.user_no_roles, 200)
         self.assert_response(self.url, self.anonymous, 403)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 403)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -91,15 +99,17 @@ class TestProjectEventDetailAjaxView(
         bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 403)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -107,7 +117,7 @@ class TestProjectEventDetailAjaxView(
         """Test GET with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 403)
 
 
@@ -187,9 +197,11 @@ class TestProjectEventExtraAjaxView(
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -198,13 +210,13 @@ class TestProjectEventExtraAjaxView(
         """Test ProjectEventExtraAjaxView GET"""
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 403)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test SiteEventDetailAjaxView permissions with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 403)
 
     def test_get_archive(self):
@@ -212,8 +224,14 @@ class TestProjectEventExtraAjaxView(
         self.project.set_archive()
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 403)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 403)
+
+    def test_get_block(self):
+        """Test GET with project access block"""
+        self.set_access_block(self.project)
+        self.assert_response(self.url, self.superuser, 200)
+        self.assert_response(self.url, self.non_superusers, 403)
 
     def test_get_read_only(self):
         """Test GET with site read-only mode"""
@@ -227,7 +245,7 @@ class TestProjectEventExtraAjaxView(
         self.event.save()
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 403)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -235,7 +253,7 @@ class TestProjectEventExtraAjaxView(
         """Test GET with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 403)
 
 
@@ -313,9 +331,11 @@ class TestEventStatusExtraAjaxViewProject(
         self.bad_users = [
             self.user_contributor_cat,
             self.user_guest_cat,
+            self.user_viewer_cat,
             self.user_finder_cat,
             self.user_contributor,
             self.user_guest,
+            self.user_viewer,
             self.user_no_roles,
             self.anonymous,
         ]
@@ -324,13 +344,13 @@ class TestEventStatusExtraAjaxViewProject(
         """Test EventStatusExtraAjaxView GET"""
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 403)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 403)
 
     def test_get_read_only(self):
@@ -345,7 +365,7 @@ class TestEventStatusExtraAjaxViewProject(
         self.event.save()
         self.assert_response(self.url, self.good_users, 200)
         self.assert_response(self.url, self.bad_users, 403)
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.no_role_users, 403)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
@@ -353,7 +373,7 @@ class TestEventStatusExtraAjaxViewProject(
         """Test GET with classified event and anonymous access"""
         self.event.classified = True
         self.event.save()
-        self.project.set_public()
+        self.project.set_public_access(self.role_guest)
         self.assert_response(self.url, self.anonymous, 403)
 
 

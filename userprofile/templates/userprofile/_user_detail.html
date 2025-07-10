@@ -1,0 +1,39 @@
+<div class="card" id="sodar-user-details-card">
+  <div class="card-header">
+    <h4>
+      <i class="iconify" data-icon="mdi:account-details"></i> Details
+      {% if request.user.is_local and not site_read_only %}
+        <span class="sodar-header-input-group pull-right">
+          <a role="button"
+             class="btn btn-primary"
+             id="sodar-user-btn-update"
+             href="{% url 'projectroles:user_update' %}">
+            <i class="iconify" data-icon="mdi:lead-pencil"></i> Update User
+          </a>
+        </span>
+      {% endif %}
+    </h4>
+  </div>
+  <div class="card-body">
+    <dl class="row">
+      {% if request.user.get_full_name != request.user.username %}
+        <dt class="col-md-2">Full Name</dt>
+        <dd class="col-md-10">{{ request.user.get_full_name }}</dd>
+      {% endif %}
+      <dt class="col-md-2">Username</dt>
+      <dd class="col-md-10">{{ request.user.username }}</dd>
+      {% if request.user.email %}
+        <dt class="col-md-2">Email</dt>
+        <dd class="col-md-10">
+          <a href="mailto:{{ request.user.email }}">{{ request.user.email }}</a>
+        </dd>
+      {% endif %}
+      <dt class="col-md-2">UUID</dt>
+      <dd class="col-md-10"><code>{{ request.user.sodar_uuid }}</code></dd>
+      <dt class="col-md-2">Date Joined</dt>
+      <dd class="col-md-10">{{ request.user.date_joined | date:'Y-m-d H:i' }}</dd>
+      <dt class="col-md-2">Authentication</dt>
+      <dd class="col-md-10">{{ request.user.get_auth_type }}</dd>
+    </dl>
+  </div>
+</div>

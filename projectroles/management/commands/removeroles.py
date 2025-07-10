@@ -9,7 +9,12 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from projectroles.management.logging import ManagementCommandLogger
-from projectroles.models import RoleAssignment, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    RoleAssignment,
+    SODARUser,
+    SODAR_CONSTANTS,
+)
 from projectroles.views import (
     RoleAssignmentOwnerTransferMixin,
     RoleAssignmentDeleteMixin,
@@ -36,7 +41,9 @@ class Command(
     )
 
     @classmethod
-    def _get_parent_owner(cls, project, prev_owner):
+    def _get_parent_owner(
+        cls, project: Project, prev_owner: SODARUser
+    ) -> SODARUser:
         """Return assignment for first parent owner who is not previous owner"""
         if not project.parent:
             return None
@@ -45,13 +52,21 @@ class Command(
             return parent_owner_as.user
         return cls._get_parent_owner(project.parent, prev_owner)
 
-    def _reassign_owner(self, project, user, owner, role_as, p_title, check):
+    def _reassign_owner(
+        self,
+        project: Project,
+        user: SODARUser,
+        owner: SODARUser,
+        role_as: RoleAssignment,
+        p_title: str,
+        check: bool,
+    ) -> bool:
         """Reassign owner role"""
         # Fail top category if no new owner is specified
         if not owner and not project.parent:
             logger.warning(
-                'Unable to transfer ownership for top level {} {}: no '
-                'new owner provided'.format(project.type.lower(), p_title)
+                f'Unable to transfer ownership for top level '
+                f'{project.type.lower()} {p_title}: no new owner provided'
             )
             return False
         # Get parent owner if not set
@@ -60,15 +75,14 @@ class Command(
         # Fail if alternate parent owner is not found
         if not owner:
             logger.warning(
-                'Unable to transfer ownership in {}: no parent owner '
-                'found'.format(p_title)
+                f'Unable to transfer ownership in {p_title}: no parent owner '
+                f'found'
             )
             return False
         if check:
             logger.info(
-                'Found role "{}" in {}: transfer to user {}'.format(
-                    PROJECT_ROLE_OWNER, p_title, owner.username
-                )
+                f'Found role "{PROJECT_ROLE_OWNER}" in {p_title}: transfer to '
+                f'user {owner.username}'
             )
             return True
         try:
@@ -81,36 +95,32 @@ class Command(
                     notify_old=False,
                 )
                 logger.info(
-                    'Transferred ownership in {} to {}'.format(
-                        p_title, owner.username
-                    )
+                    f'Transferred ownership in {p_title} to {owner.username}'
                 )
                 return True
         except Exception as ex:
             logger.error(
-                'Failed to transfer ownership in {} to {}: {}'.format(
-                    p_title, owner.username, ex
-                )
+                f'Failed to transfer ownership in {p_title} to '
+                f'{owner.username}: {ex}'
             )
             return False
 
-    def _remove_role(self, role_as, p_title, check):
+    def _remove_role(
+        self, role_as: RoleAssignment, p_title: str, check: bool
+    ) -> bool:
         """Remove non-owner role"""
         r_name = role_as.role.name
         if check:
-            logger.info(
-                'Found role "{}" in {}: to be removed'.format(r_name, p_title)
-            )
+            logger.info(f'Found role "{r_name}" in {p_title}: to be removed')
             return True
         try:
             with transaction.atomic():
                 self.delete_assignment(role_as, None, False)
-            logger.info('Deleted role "{}" from {}'.format(r_name, p_title))
+            logger.info(f'Deleted role "{r_name}" from {p_title}')
             return True
         except Exception as ex:
             logger.error(
-                'Failed to delete assignment "{}" from {}: '
-                '{}'.format(r_name, p_title, ex)
+                f'Failed to delete assignment "{r_name}" from {p_title}: {ex}'
             )
             return False
 
@@ -184,7 +194,7 @@ class Command(
         )
         if owner:
             logger.info(
-                'New owner for replacing owner roles: {}'.format(owner.username)
+                f'New owner for replacing owner roles: {owner.username}'
             )
         role_count = 0
         fail_count = 0
@@ -199,7 +209,7 @@ class Command(
             project = role_as.project
             p_title = project.get_log_title()
             if project.is_remote():  # Skip remote projects
-                logger.debug('Skipping remote project: {}'.format(p_title))
+                logger.debug(f'Skipping remote project: {p_title}')
                 continue
             # Owner role reassignment
             if role_as.role.name == PROJECT_ROLE_OWNER:
@@ -223,7 +233,6 @@ class Command(
             logger.info('Check done')
         else:
             logger.info(
-                'Removed roles from user "{}" ({} OK, {} failed)'.format(
-                    user.username, role_count, fail_count
-                )
+                f'Removed roles from user "{user.username}" ({role_count} OK, '
+                f'{fail_count} failed)'
             )

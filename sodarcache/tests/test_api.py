@@ -4,7 +4,7 @@ from django.forms.models import model_to_dict
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 
 
 from sodarcache.models import JSONCacheItem
@@ -12,6 +12,9 @@ from sodarcache.tests.test_models import (
     JSONCacheItemTestBase,
     JSONCacheItemMixin,
 )
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -32,7 +35,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
 
     def setUp(self):
         super().setUp()
-        self.cache_backend = get_backend_api('sodar_cache')
+        self.cache_backend = plugin_api.get_backend_api('sodar_cache')
 
     def test_add_cache_item(self):
         """Test creating a cache item"""

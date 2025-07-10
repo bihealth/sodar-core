@@ -26,7 +26,7 @@ def handle_ldap_login(sender, user, **kwargs):
             user.update_ldap_username()
             user.update_full_name()
     except Exception as ex:
-        logger.error('Exception in handle_ldap_login(): {}'.format(ex))
+        logger.error(f'Exception in handle_ldap_login(): {ex}')
         if settings.DEBUG:
             raise ex
 
@@ -42,7 +42,7 @@ def handle_oidc_login(sender, user, **kwargs):
             logger.debug('Updating OIDC user..')
             user.update_full_name()
     except Exception as ex:
-        logger.error('Exception in handle_oidc_login(): {}'.format(ex))
+        logger.error(f'Exception in handle_oidc_login(): {ex}')
         if settings.DEBUG:
             raise ex
 
@@ -52,20 +52,20 @@ def assign_user_group(sender, user, **kwargs):
     try:
         user.set_group()
     except Exception as ex:
-        logger.error('Exception in assign_user_group(): {}'.format(ex))
+        logger.error(f'Exception in assign_user_group(): {ex}')
         if settings.DEBUG:
             raise ex
 
 
 def log_user_login(sender, user, **kwargs):
     """Signal for logging user login"""
-    logger.info('User logged in: {}'.format(user.username))
+    logger.info(f'User logged in: {user.username}')
 
 
 def log_user_logout(sender, user, **kwargs):
     """Signal for logging user logout"""
     if user:
-        logger.info('User logged out: {}'.format(user.username))
+        logger.info(f'User logged out: {user.username}')
 
 
 def log_user_login_failure(sender, credentials, **kwargs):

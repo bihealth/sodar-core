@@ -39,7 +39,7 @@ class Command(ProjectModifyPluginViewMixin, BaseCommand):
         project_uuid = options.get('project')
         if project_uuid:
             logger.info(
-                'Limiting sync to project with UUID "{}"..'.format(project_uuid)
+                f'Limiting sync to project with UUID "{project_uuid}"..'
             )
             project = Project.objects.filter(sodar_uuid=project_uuid).first()
             if not project:
@@ -50,18 +50,18 @@ class Command(ProjectModifyPluginViewMixin, BaseCommand):
             logger.info('Synchronizing all projects..')
             project_list = Project.objects.all().order_by('full_title')
             logger.debug(
-                'Found {} projects and categories'.format(project_list.count())
+                f'Found {project_list.count()} projects and categories'
             )
         sync_count = 0
         err_count = 0
         for p in project_list:
             p_title = p.get_log_title(full_title=True)
-            logger.debug('Synchronizing project {}'.format(p_title))
+            logger.debug(f'Synchronizing project {p_title}')
             try:
                 self.call_project_modify_api('perform_project_sync', None, [p])
                 sync_count += 1
             except Exception as ex:
-                logger.error('Exception for project {}: {}'.format(p_title, ex))
+                logger.error(f'Exception for project {p_title}: {ex}')
                 err_count += 1
         logger.info(
             'Project data synchronized ({} OK, {} error{})'.format(

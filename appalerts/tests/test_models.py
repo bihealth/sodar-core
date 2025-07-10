@@ -1,14 +1,16 @@
 """Model tests for the appalerts app"""
 
+from typing import Optional
+
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.urls import reverse
 
-from djangoplugins.models import Plugin
+from djangoplugins.models import Plugin, PluginPoint
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin
 
 from appalerts.models import AppAlert
@@ -30,15 +32,16 @@ class AppAlertMixin:
     @classmethod
     def make_app_alert(
         cls,
-        app_plugin=None,
-        alert_name=ALERT_NAME,
-        user=None,
-        message=ALERT_MSG,
-        level=ALERT_LEVEL,
-        active=True,
-        url=None,
-        project=None,
-    ):
+        app_plugin: Optional[PluginPoint] = None,
+        alert_name: str = ALERT_NAME,
+        user: Optional[SODARUser] = None,
+        message: str = ALERT_MSG,
+        level: str = ALERT_LEVEL,
+        active: bool = True,
+        url: Optional[str] = None,
+        project: Optional[Project] = None,
+    ) -> AppAlert:
+        """Create AppAlert object"""
         return AppAlert.objects.create(
             app_plugin=app_plugin,
             alert_name=alert_name,
@@ -117,9 +120,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
             url=self.project_url,
             project=self.project,
         )
-        expected = 'projectroles / {} / {}'.format(
-            ALERT_NAME, self.user.username
-        )
+        expected = f'projectroles / {ALERT_NAME} / {self.user.username}'
         self.assertEqual(str(alert), expected)
 
     def test_str_plugin(self):
@@ -131,9 +132,7 @@ class TestAppAlert(AppAlertMixin, ProjectMixin, TestCase):
             url=self.project_url,
             project=self.project,
         )
-        expected = 'filesfolders / {} / {}'.format(
-            ALERT_NAME, self.user.username
-        )
+        expected = f'filesfolders / {ALERT_NAME} / {self.user.username}'
         self.assertEqual(str(alert), expected)
 
     def test_repr(self):

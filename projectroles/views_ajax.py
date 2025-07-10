@@ -2,7 +2,7 @@
 
 import logging
 
-from dal import autocomplete
+from typing import Optional
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -11,6 +11,8 @@ from django.db.models import Q
 from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 
+from dal import autocomplete
+
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -18,18 +20,24 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rules.contrib.views import PermissionRequiredMixin
 
+from projectroles.app_links import AppLinkAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     RoleAssignment,
     RemoteProject,
     AppSetting,
+    SODARUser,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import get_active_plugins
-from projectroles.utils import get_display_name, AppLinkContent
+from projectroles.plugins import (
+    ProjectAppPluginPoint,
+    PluginAPI,
+    PluginCategoryStatistic,
+)
+from projectroles.utils import get_display_name
 from projectroles.views import ProjectAccessMixin, User
 from projectroles.views_api import (
     SODARAPIProjectPermission,
@@ -37,8 +45,9 @@ from projectroles.views_api import (
 )
 
 
-logger = logging.getLogger(__name__)
 app_settings = AppSettingAPI()
+logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
 
 
 # SODAR consants
@@ -51,6 +60,7 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 # Local constants
 APP_NAME = 'projectroles'
+CAT_STAT_ATTRS = ['title', 'value', 'unit', 'description', 'icon']
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -118,11 +128,18 @@ class ProjectListAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_projects(cls, user, parent=None):
+    def _get_projects(
+        cls,
+        user: SODARUser,
+        public_stat_cats: list[Project],
+        parent: Optional[Project] = None,
+    ) -> list[Project]:
         """
         Return a flat list of categories and projects the user can view.
 
         :param user: User for which the projects are visible
+        :param public_stat_cats: List of Project objects with
+                                 category_public_stats enabled
         :param parent: Project object of type CATEGORY or None
         """
         project_list = (
@@ -136,9 +153,14 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             project_list = project_list.filter(
                 full_title__startswith=parent_prefix
             )
+        # Get public stats cat UUIDs
+        stats_uuids = [p.sodar_uuid for p in public_stat_cats]
+        # Filter by user type
         if user.is_anonymous:
             project_list = project_list.filter(
-                Q(public_guest_access=True) | Q(has_public_children=True)
+                Q(public_access__isnull=False)
+                | Q(has_public_children=True)
+                | Q(sodar_uuid__in=stats_uuids)
             )
         elif not user.is_superuser:
             # Quick and dirty filtering for inheritance using full_title
@@ -154,10 +176,11 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             project_list = [
                 p
                 for p in project_list
-                if p.public_guest_access
+                if p.public_access
                 or p.has_public_children
                 or any(p.full_title.startswith(c) for c in role_cats)
                 or p.local_roles.filter(user=user).count() > 0
+                or p in public_stat_cats
             ]
         if user.is_superuser:
             return project_list  # No further querying needed for superuser
@@ -179,7 +202,15 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         return sorted(ret, key=lambda x: x.full_title.lower())
 
     @classmethod
-    def _get_access(cls, project, user, finder_cats, depth):
+    def _get_access(
+        cls,
+        project: Project,
+        user: SODARUser,
+        finder_cats: list[str],
+        depth: int,
+        blocked_projects: list[Project],
+        public_stat_cats: list[Project],
+    ) -> bool:
         """
         Return whether user has access to a project for the project list.
 
@@ -187,16 +218,24 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         :param user: SODARUser object
         :param finder_cats: List of category names where user has finder role
         :param depth: Project depth in category structure (int)
+        :param blocked_projects: List of projects with blocked access
+        :param public_stat_cats: List of categories with public stats access
         :return: Boolean
         """
+        # Top level categories with public stats are shown to everybody
+        if project.is_category() and project in public_stat_cats:
+            return True
         # Disable categories for anonymous users if anonymous access is enabled
-        if not user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY:
+        if project.is_category() and not user.is_authenticated:
+            return False
+        # Disable access for non-superuser in blocked project
+        if project in blocked_projects and not user.is_superuser:
             return False
         # Cases which are always true if we get this far
         if (
             user.is_superuser
-            or (user.is_authenticated and project.type == PROJECT_TYPE_CATEGORY)
-            or project.public_guest_access
+            or (user.is_authenticated and project.is_category())
+            or project.public_access
         ):
             return True
         # If user has finder role in a parent category, we need to check role
@@ -224,7 +263,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         parent = (
             Project.objects.get(sodar_uuid=parent_uuid) if parent_uuid else None
         )
-        if parent and parent.type != PROJECT_TYPE_CATEGORY:
+        if parent and parent.is_project():
             return Response(
                 {
                     'detail': 'Querying for a project list under a project is '
@@ -232,12 +271,27 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 },
                 status=400,
             )
+        public_stat_cats = [
+            s.project
+            for s in AppSetting.objects.filter(
+                app_plugin=None, name='category_public_stats', value='1'
+            )
+        ]
 
-        projects = self._get_projects(request.user, parent)
+        projects = self._get_projects(request.user, public_stat_cats, parent)
+        # NOTE: Generally, manipulating AppSetting objects directly is not
+        #       advised, but in this case it's pertinent for optimization :)
+        blocked_projects = [
+            s.project
+            for s in AppSetting.objects.filter(
+                app_plugin=None,
+                name='project_access_block',
+                value='1',
+            )
+        ]
         starred_projects = []
+        finder_cats = []
         if request.user.is_authenticated:
-            # NOTE: Generally, manipulating AppSetting objects directly is not
-            #       advised, but in this case it's pertinent for optimization :)
             starred_projects = [
                 s.project
                 for s in AppSetting.objects.filter(
@@ -247,8 +301,6 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     value='1',
                 )
             ]
-        finder_cats = []
-        if request.user.is_authenticated:
             finder_cats = [
                 a.project.full_title
                 for a in RoleAssignment.objects.filter(
@@ -264,17 +316,26 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         ret_projects = []
         for p in projects:
             p_depth = p.get_depth()
-            p_access = self._get_access(p, request.user, finder_cats, p_depth)
+            p_access = self._get_access(
+                p,
+                request.user,
+                finder_cats,
+                p_depth,
+                blocked_projects,
+                public_stat_cats,
+            )
             p_finder_url = None
             if not p_access and p.parent:
                 p_finder_url = reverse(
                     'projectroles:roles',
                     kwargs={'project': p.parent.sodar_uuid},
                 )
+            p_stats = p.is_category() and p in public_stat_cats
             rp = {
                 'type': p.type,
                 'full_title': p.full_title[full_title_idx:],
-                'public_guest_access': p.public_guest_access,
+                'public_access': p.public_access is not None,
+                'public_stats': p_stats,
                 'archive': p.archive,
                 'remote': p.is_remote(),
                 'revoked': p.is_revoked(),
@@ -283,6 +344,8 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 'finder_url': p_finder_url,
                 'uuid': str(p.sodar_uuid),
             }
+            if p.is_project():
+                rp['blocked'] = p in blocked_projects
             ret_projects.append(rp)
         ret = {
             'projects': ret_projects,
@@ -322,7 +385,13 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_column_value(cls, app_plugin, column_id, project, user):
+    def _get_column_value(
+        cls,
+        app_plugin: ProjectAppPluginPoint,
+        column_id: str,
+        project: Project,
+        user: SODARUser,
+    ) -> dict:
         """
         Return project list extra column value for a specific project and
         column.
@@ -332,7 +401,7 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
                           plugin.project_list_columns (string)
         :param project: Project object
         :param user: SODARUser object
-        :return: String (may contain HTML)
+        :return: Dict
         """
         try:
             val = app_plugin.get_project_list_value(column_id, project, user)
@@ -358,7 +427,7 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
         )
         plugins = [
             ap
-            for ap in get_active_plugins(plugin_type='project_app')
+            for ap in plugin_api.get_active_plugins(plugin_type='project_app')
             if ap.project_list_columns
             and (
                 ap.name != 'filesfolders'
@@ -369,10 +438,8 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
             # Only provide results for projects in which user has access
             if not request.user.has_perm('projectroles.view_project', project):
                 logger.error(
-                    'ProjectListColumnAjaxView: User {} not authorized to view '
-                    'project {}'.format(
-                        request.user.username, project.get_log_title()
-                    )
+                    f'ProjectListColumnAjaxView: User {request.user.username} '
+                    f'not authorized to view project {project.get_log_title()}'
                 )
                 continue
             p_uuid = str(project.sodar_uuid)
@@ -392,7 +459,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_user_role(cls, project, user):
+    def _get_user_role(cls, project: Project, user: SODARUser) -> dict:
         """Return user role for project"""
         ret = {'name': None, 'class': None}
         role_as = None
@@ -400,8 +467,8 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
             role_as = project.get_role(user)
             if role_as:
                 ret['name'] = role_as.role.name.split(' ')[1].capitalize()
-        if project.public_guest_access and not role_as:
-            ret['name'] = 'Guest'
+        if project.public_access and not role_as:
+            ret['name'] = project.public_access.name.split(' ')[1].capitalize()
         if not ret['name']:
             ret['name'] = 'N/A'
             ret['class'] = 'text-muted'
@@ -416,16 +483,119 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
             # Only provide results for projects in which user has access
             if not request.user.has_perm('projectroles.view_project', project):
                 logger.error(
-                    'ProjectListRoleAjaxView: User {} not authorized to view '
-                    'project {}'.format(
-                        request.user.username, project.get_log_title()
-                    )
+                    f'ProjectListRoleAjaxView: User {request.user.username} '
+                    f'not authorized to view project {project.get_log_title()}'
                 )
                 continue
             ret[str(project.sodar_uuid)] = self._get_user_role(
                 project, request.user
             )
         return Response(ret, status=200)
+
+
+class CategoryStatisticsAjaxView(SODARBaseAjaxView):
+    """View for retrieving category statistics"""
+
+    allow_anonymous = True
+
+    @classmethod
+    def _get_pr_category_stats(
+        cls, category: Project
+    ) -> list[PluginCategoryStatistic]:
+        """
+        Return projectroles stats for category.
+
+        :param category: Project object of CATEGORY type
+        :return: List of PluginCategoryStatistic objects
+        """
+        ret = []
+        # Project count
+        title = get_display_name(PROJECT_TYPE_PROJECT, title=True, plural=True)
+        val = Project.objects.filter(
+            type=PROJECT_TYPE_PROJECT,
+            full_title__startswith=category.full_title + CAT_DELIMITER,
+        ).count()
+        desc = '{} in this {}'.format(
+            get_display_name(PROJECT_TYPE_PROJECT, plural=True, title=True),
+            get_display_name(PROJECT_TYPE_CATEGORY),
+        )
+        ret.append(
+            PluginCategoryStatistic(
+                plugin=None,
+                title=title,
+                value=val,
+                description=desc,
+                icon='mdi:cube',
+            )
+        )
+        # User count
+        children = Project.objects.filter(
+            full_title__startswith=category.full_title + CAT_DELIMITER,
+        )
+        title = 'Members'
+        # NOTE: We need order_by() for distinct() to work
+        val = (
+            RoleAssignment.objects.filter(
+                project__in=[category] + list(children)
+            )
+            .values_list('user', flat=True)
+            .distinct()
+            .order_by()
+            .count()
+        )
+        desc = 'Users with roles in this {}'.format(
+            get_display_name(PROJECT_TYPE_CATEGORY)
+        )
+        ret.append(
+            PluginCategoryStatistic(
+                plugin=None,
+                title=title,
+                value=val,
+                description=desc,
+                icon='mdi:account-multiple',
+            )
+        )
+        return ret
+
+    def get(self, request, *args, **kwargs):
+        project = Project.objects.filter(
+            sodar_uuid=kwargs.get('project')
+        ).first()
+        if not project:
+            return Response({'detail': 'Project not found'}, status=404)
+        if project.is_project():
+            return Response(
+                {'detail': 'Only allowed for categories'}, status=403
+            )
+        if (
+            not request.user.is_superuser
+            and request.user.is_authenticated
+            and not request.user.has_perm('projectroles.view_project', project)
+        ):
+            return Response({'detail': 'Not authorized'}, status=403)
+        if (
+            request.user.is_anonymous
+            and not project.has_public_children
+            and not app_settings.get(
+                APP_NAME, 'category_public_stats', project=project
+            )
+        ):
+            return Response({'detail': 'Anonymous access denied'}, status=401)
+
+        cat_stats = self._get_pr_category_stats(project)
+        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
+        for p in plugins:
+            try:
+                cat_stats += p.get_category_stats(project)
+            except Exception as ex:
+                logger.error(
+                    f'Exception calling get_category_stats() for plugin '
+                    f'"{p.name}": {ex}'
+                )
+        ret = []
+        for s in cat_stats:  # Convert objects to dicts
+            ret.append({a: getattr(s, a) for a in CAT_STAT_ATTRS})
+        return Response({'stats': ret}, status=200)
 
 
 class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
@@ -449,6 +619,30 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
             user=user,
             validate=False,
         )
+        return Response(1 if value else 0, status=200)
+
+
+class HomeStarringAjaxView(SODARBaseAjaxView):
+    """
+    View to set default starred setting for user in HomeView project list.
+
+    NOTE: Separate view needed as user is not allwoed to modify this setting
+          via UserSettingSetAPIView
+    """
+
+    def post(self, request, *args, **kwargs):
+        value = bool(int(request.data.get('value')))
+        user = request.user
+        starred_default = app_settings.get(
+            APP_NAME, 'project_list_home_starred', user=user
+        )
+        if value != starred_default:
+            app_settings.set(
+                plugin_name=APP_NAME,
+                setting_name='project_list_home_starred',
+                value=value,
+                user=user,
+            )
         return Response(1 if value else 0, status=200)
 
 
@@ -502,7 +696,7 @@ class SidebarContentAjaxView(SODARBaseProjectAjaxView):
         project = self.get_project()
         app_name = request.GET.get('app_name')
         # Get the content for the sidebar
-        app_links = AppLinkContent()
+        app_links = AppLinkAPI()
         sidebar_links = app_links.get_project_links(
             request.user, project, app_name=app_name
         )
@@ -557,7 +751,7 @@ class UserDropdownContentAjaxView(SODARBaseAjaxView):
     def get(self, request, *args, **kwargs):
         app_name = request.GET.get('app_name')
         # Get the content for the user dropdown
-        app_links = AppLinkContent()
+        app_links = AppLinkAPI()
         user_dropdown_links = app_links.get_user_links(
             request.user, app_name=app_name
         )
@@ -661,7 +855,7 @@ class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
         if display_create_option:
             create_option = {
                 'id': q,
-                'text': 'Send an invite to "{}"'.format(q),
+                'text': f'Send an invite to "{q}"',
                 'create_id': True,
             }
             return [create_option]

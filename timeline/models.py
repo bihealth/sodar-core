@@ -3,9 +3,12 @@
 import logging
 import uuid
 
+from datetime import datetime
+from typing import Any, Optional, Union
+
 from django.conf import settings
 from django.db import models
-from django.db.models import Q, Max
+from django.db.models import Max, Q, QuerySet
 
 # Projectroles dependency
 from projectroles.models import Project
@@ -45,8 +48,12 @@ class TimelineEventManager(models.Manager):
     """Manager for custom table-level TimelineEvent queries"""
 
     def get_object_events(
-        self, project, object_model, object_uuid, order_by='-pk'
-    ):
+        self,
+        project: Optional[Project],
+        object_model: str,
+        object_uuid: Union[str, uuid.UUID],
+        order_by: str = '-pk',
+    ) -> QuerySet:
         """
         Return events which are linked to an object reference.
 
@@ -62,7 +69,9 @@ class TimelineEventManager(models.Manager):
             event_objects__object_uuid=object_uuid,
         ).order_by(order_by)
 
-    def find(self, search_terms, keywords=None):
+    def find(
+        self, search_terms: list[str], keywords: Optional[dict] = None
+    ) -> QuerySet:
         """
         Return events matching the query.
 
@@ -77,6 +86,8 @@ class TimelineEventManager(models.Manager):
             term_query.add(Q(event_name__icontains=t.replace(' ', '_')), Q.OR)
             term_query.add(Q(description__icontains=t), Q.OR)
             term_query.add(Q(event_objects__name__icontains=t), Q.OR)
+            term_query.add(Q(user__name__icontains=t), Q.OR)
+            term_query.add(Q(user__username__icontains=t), Q.OR)
         items = (
             super()
             .get_queryset()
@@ -165,32 +176,34 @@ class TimelineEvent(models.Model):
             ', '.join(repr(v) for v in self.get_repr_values())
         )
 
-    def get_repr_values(self):
+    def get_repr_values(self) -> list[str]:
         return [
             self.project.title if self.project else 'N/A',
             self.event_name,
             self.user.username if self.user else 'N/A',
         ]
 
-    def get_status(self):
+    def get_status(self) -> Optional['TimelineEventStatus']:
         """Return the current event status"""
         return self.status_changes.order_by('-timestamp').first()
 
-    def get_timestamp(self):
+    def get_timestamp(self) -> datetime:
         """Return the timestamp of current status"""
         return self.status_changes.order_by('-timestamp').first().timestamp
 
-    def get_status_changes(self, reverse=False):
+    def get_status_changes(self, reverse: bool = False) -> QuerySet:
         """Return all status changes for the event"""
         return self.status_changes.order_by(
             '{}pk'.format('-' if reverse else '')
         )
 
-    def get_project(self):
+    def get_project(self) -> Project:
         """Return the project for the event"""
         return self.project
 
-    def add_object(self, obj, label, name, extra_data=None):
+    def add_object(
+        self, obj: Any, label: str, name: str, extra_data: Optional[dict] = None
+    ) -> 'TimelineEventObjectRef':
         """
         Add object reference to an event.
 
@@ -218,7 +231,12 @@ class TimelineEvent(models.Model):
         ref.save()
         return ref
 
-    def set_status(self, status_type, status_desc=None, extra_data=None):
+    def set_status(
+        self,
+        status_type: str,
+        status_desc: Optional[str] = None,
+        extra_data: Optional[dict] = None,
+    ) -> 'TimelineEventStatus':
         """
         Set event status.
 
@@ -234,7 +252,6 @@ class TimelineEvent(models.Model):
                     ', '.join(v for v in EVENT_STATUS_TYPES)
                 )
             )
-
         status = TimelineEventStatus()
         status.event = self
         status.status_type = status_type
@@ -312,7 +329,7 @@ class TimelineEventObjectRef(models.Model):
             ', '.join(repr(v) for v in values)
         )
 
-    def get_project(self):
+    def get_project(self) -> Project:
         """Return the project for the event"""
         return self.event.project
 
@@ -368,6 +385,6 @@ class TimelineEventStatus(models.Model):
             ', '.join(repr(v) for v in values)
         )
 
-    def get_project(self):
+    def get_project(self) -> Project:
         """Return the project for the event"""
         return self.event.project

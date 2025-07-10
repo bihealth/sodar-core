@@ -38,9 +38,7 @@ def sync_remote_site_task(_self):
             logger.debug(remote_data)
             remote_api.sync_remote_data(source_site, remote_data)
         except Exception as ex:
-            logger.error(
-                'Unable to synchronize {}: {}'.format(source_site.name, ex),
-            )
+            logger.error(f'Unable to synchronize {source_site.name}: {ex}')
 
 
 @app.on_after_finalize.connect

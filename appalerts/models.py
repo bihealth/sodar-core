@@ -116,7 +116,6 @@ class AppAlert(models.Model):
         """Validate level"""
         if self.level not in ALERT_LEVELS:
             raise ValidationError(
-                'Invalid level "{}", valid levels: {}'.format(
-                    self.level, ', '.join(ALERT_LEVELS)
-                )
+                f'Invalid level "{self.level}", valid levels: '
+                f'{", ".join(ALERT_LEVELS)}'
             )

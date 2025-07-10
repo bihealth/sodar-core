@@ -1,5 +1,9 @@
+"""Plugins for the userprofile app"""
+
+from typing import Optional
+
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import SODARUser, SODAR_CONSTANTS
 from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
 
 from userprofile.urls import urlpatterns
@@ -47,7 +51,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
         )
     ]
 
-    def get_messages(self, user=None):
+    def get_messages(self, user: Optional[SODARUser] = None) -> list[dict]:
         """
         Return a list of messages to be shown to users.
         :param user: User object (optional)

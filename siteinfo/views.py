@@ -14,8 +14,13 @@ from projectroles.models import (
     AUTH_TYPE_LOCAL,
     AUTH_TYPE_OIDC,
 )
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import PluginAPI
 from projectroles.views import LoggedInPermissionMixin
+
+
+logger = logging.getLogger(__name__)
+plugin_api = PluginAPI()
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -106,12 +111,6 @@ CORE_SETTINGS = [
 ]
 
 
-# Access Django user model
-User = auth.get_user_model()
-
-logger = logging.getLogger(__name__)
-
-
 class SiteInfoView(LoggedInPermissionMixin, TemplateView):
     """Site info view"""
 
@@ -119,7 +118,7 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
     template_name = 'siteinfo/site_info.html'
 
     @classmethod
-    def _get_settings(cls, keys):
+    def _get_settings(cls, keys: list[str]) -> dict:
         ret = {}
         for k in keys:
             if hasattr(settings, k):
@@ -132,24 +131,20 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         return ret
 
     @classmethod
-    def _get_plugin_stats(cls, p_list):
+    def _get_plugin_stats(cls, p_list: list) -> dict:
         ret = {}
         for p in p_list:
             try:
                 ret[p] = {'stats': p.get_statistics(), 'settings': {}}
             except Exception as ex:
                 ret[p] = {'error': str(ex)}
-                logger.error(
-                    'Exception in {}.get_statistics(): {}'.format(p.name, ex)
-                )
+                logger.error(f'Exception in {p.name}.get_statistics(): {ex}')
             if p.info_settings:
                 try:
                     ret[p]['settings'] = cls._get_settings(p.info_settings)
                 except Exception as ex:
                     logger.error(
-                        'Exception in _get_settings() for {}: {}'.format(
-                            p.name, ex
-                        )
+                        f'Exception in _get_settings() for {p.name}: {ex}'
                     )
         return ret
 
@@ -190,9 +185,9 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         ).count()
 
         # App plugins
-        project_plugins = get_active_plugins('project_app')
-        backend_plugins = get_active_plugins('backend')
-        site_plugins = get_active_plugins('site_app')
+        project_plugins = plugin_api.get_active_plugins('project_app')
+        backend_plugins = plugin_api.get_active_plugins('backend')
+        site_plugins = plugin_api.get_active_plugins('site_app')
 
         # Plugin statistics
         context['project_plugins'] = self._get_plugin_stats(project_plugins)

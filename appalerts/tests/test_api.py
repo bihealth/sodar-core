@@ -8,7 +8,7 @@ from test_plus.test import TestCase
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import PluginAPI
 from projectroles.tests.test_models import ProjectMixin
 
 from appalerts.models import AppAlert
@@ -18,6 +18,9 @@ from appalerts.tests.test_models import (
     ALERT_MSG,
     ALERT_LEVEL,
 )
+
+
+plugin_api = PluginAPI()
 
 
 # SODAR constants
@@ -44,7 +47,7 @@ class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
             kwargs={'project': str(self.project.sodar_uuid)},
         )
         # Get backend
-        self.app_alerts = get_backend_api('appalerts_backend')
+        self.app_alerts = plugin_api.get_backend_api('appalerts_backend')
 
     def test_get_model(self):
         """Test get_model()"""

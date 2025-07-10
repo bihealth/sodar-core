@@ -64,25 +64,25 @@
   {{ block.super }}
   <script type="text/javascript">
     $(document).ready(function() {
-        $('#sodar-pr-email-preview-link').click(function () {
-            $('.modal-title').text('Email Preview');
-            var body = '{{ preview_body }}';
-            var userName = $('#id_user').find('option:selected').text();
-            if (!userName) {
-                userName = "{{ promote_as.user.get_full_name }}";
-            } else {
-              userName = userName.substr(0, userName.indexOf('(') - 1);
-            }
-            var roleName = $('#id_role').find('option:selected').text();
-            body = body.replace('{role_name}', roleName);
-            body = body.replace('{user_name}', userName);
-            var htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>';
-            htmlData += '<strong>Body:</strong>';
-            htmlData += '<pre id="sodar-email-body">' + body;
-            htmlData += '</pre>';
-            $('.modal-body').html(htmlData);
-        });
-    });
+      $('#sodar-pr-email-preview-link').click(function () {
+        $('.modal-title').text('Email Preview')
+        let body = '{{ preview_body }}'
+        let userName = $('#id_user').find('option:selected').text()
+        if (!userName) {
+            userName = '{{ promote_as.user.get_full_name }}'
+        } else {
+          userName = userName.substr(0, userName.indexOf('(') - 1)
+        }
+        let roleName = $('#id_role').find('option:selected').text()
+        body = body.replace('{role_name}', roleName)
+        body = body.replace('{user_name}', userName)
+        let htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>'
+        htmlData += '<strong>Body:</strong>'
+        htmlData += '<pre id="sodar-email-body">' + body
+        htmlData += '</pre>'
+        $('.modal-body').html(htmlData)
+      })
+    })
   </script>
   <!-- DAL redirect event listener -->
   <script type="text/javascript" src="{% static 'projectroles/js/autocomplete_redirect.js' %}"></script>

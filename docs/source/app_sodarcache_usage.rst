@@ -20,12 +20,14 @@ The API is accessed through a backend plugin. This means you can write calls to
 the API without any hard-coded imports and your code should work even if the
 sodarcache app has not been installed on the site.
 
-Initialize the API using ``projectroles.plugins.get_backend_api()`` as follows:
+Initialize the API using ``PluginAPI.get_backend_api()`` as follows:
 
 .. code-block:: python
 
-    from projectroles.plugins import get_backend_api
-    cache_backend = get_backend_api('sodar_cache')
+    from projectroles.plugins import PluginAPI
+
+    plugin_api = PluginAPI()
+    cache_backend = plugin_api.get_backend_api('sodar_cache')
 
 Setting and Getting Cache Items
 -------------------------------

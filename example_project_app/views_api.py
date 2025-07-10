@@ -53,6 +53,6 @@ class HelloExampleProjectAPIView(
     def get(self, request, *args, **kwargs):
         project = self.get_project()
         return Response(
-            {'detail': 'Hello world from project: {}'.format(project.title)},
+            {'detail': f'Hello world from project: {project.title}'},
             status=status.HTTP_200_OK,
         )
