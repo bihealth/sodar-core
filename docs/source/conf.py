@@ -29,7 +29,7 @@ author = 'BIH Core Unit Bioinformatics'
 # The short X.Y version
 version = '1.2'
 # The full version, including alpha/beta/rc tags
-release = '1.2.0-WIP'
+release = '1.2.0'
 
 
 # -- General configuration ---------------------------------------------------

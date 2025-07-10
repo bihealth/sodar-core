@@ -26,8 +26,8 @@ LABEL_MAX_WIDTH = 32
 CACHE_TYPES = ['json']
 
 
-class SodarCacheAPI:
-    """SodarCache backend API to be used by Django apps."""
+class SODARCacheAPI:
+    """SODARCache backend API to be used by Django apps."""
 
     # TODO: Make model selection dynamic once we introduce types other than JSON
 

@@ -1847,6 +1847,10 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         self.url_cat = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
         )
+        self.wait_kw = {
+            'wait_elem': 'sodar-pr-project-title',
+            'wait_loc': 'CLASS_NAME',
+        }
         self.cat_stat_wait_kw = {
             'wait_elem': 'sodar-pr-dashboard-card-stats',
             'wait_loc': 'CLASS_NAME',
@@ -2370,12 +2374,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             ),
             True,
         )
-        self.login_and_redirect(self.user_owner, self.url_cat)
-        WebDriverWait(self.selenium, 10).until(
-            ec.visibility_of_element_located(
-                (By.CLASS_NAME, 'sodar-pr-project-title')
-            )
-        )
+        self.login_and_redirect(self.user_owner, self.url_cat, **self.wait_kw)
         elem = self.selenium.find_element(
             By.CLASS_NAME, 'sodar-pr-project-link'
         )
@@ -2389,12 +2388,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         app_settings.set(
             APP_NAME, 'project_list_highlight', False, user=self.user_owner
         )
-        self.login_and_redirect(self.user_owner, self.url_cat)
-        WebDriverWait(self.selenium, 10).until(
-            ec.visibility_of_element_located(
-                (By.CLASS_NAME, 'sodar-pr-project-title')
-            )
-        )
+        self.login_and_redirect(self.user_owner, self.url_cat, **self.wait_kw)
         elem = self.selenium.find_element(
             By.CLASS_NAME, 'sodar-pr-project-link'
         )
@@ -2410,12 +2404,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         # Move project under subcategory
         self.project.parent = sub_cat
         self.project.save()
-        self.login_and_redirect(self.user_owner, self.url_cat)
-        WebDriverWait(self.selenium, 10).until(
-            ec.visibility_of_element_located(
-                (By.CLASS_NAME, 'sodar-pr-project-title')
-            )
-        )
+        self.login_and_redirect(self.user_owner, self.url_cat, **self.wait_kw)
         elems = self.selenium.find_elements(
             By.CLASS_NAME, 'sodar-pr-project-link'
         )
@@ -2449,12 +2438,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
             project=new_project,
             user=self.user_owner,
         )
-        self.login_and_redirect(self.user_owner, self.url_cat)
-        WebDriverWait(self.selenium, 10).until(
-            ec.visibility_of_element_located(
-                (By.CLASS_NAME, 'sodar-pr-project-title')
-            )
-        )
+        self.login_and_redirect(self.user_owner, self.url_cat, **self.wait_kw)
         self.assertEqual(self._get_pr_item_vis_count(), 2)
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-link-star'

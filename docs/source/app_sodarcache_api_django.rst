@@ -24,7 +24,7 @@ The backend API can be retrieved as follows.
 Make sure to also enable ``sodar_cache`` in the ``ENABLED_BACKEND_PLUGINS``
 Django setting.
 
-.. autoclass:: sodarcache.api.SodarCacheAPI
+.. autoclass:: sodarcache.api.SODARCacheAPI
     :members:
 
 

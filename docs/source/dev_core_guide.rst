@@ -51,6 +51,14 @@ Your pull request should work on the Python versions currently supported by the
 SODAR Core dev version. These will be checked by GitHub Actions CI upon pushing
 your commit(s).
 
+Regarding the use of tools based on large language models (LLM) or "AI", please
+note the following:
+
+- Pull requests containing obvious nonsensical LLM slop in code, comments,
+  documentation, pull request descriptions or commit messages will not be
+  reviewed or merged.
+- Issues and pull requests generated using LLM bots will be deleted.
+
 
 .. _dev_core_guide_code:
 

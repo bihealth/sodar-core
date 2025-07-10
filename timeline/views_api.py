@@ -142,7 +142,7 @@ class TimelineEventRetrieveAPIView(TimelineAPIVersioningMixin, RetrieveAPIView):
         - ``sodar_uuid``: Object reference UUID (string)
     - ``sodar_uuid``: TimelineEvent UUID (string)
 
-    **Version Changes**:
+    **Version Changes:**
 
     - ``2.0``: Return ``user`` as UUID instead of ``SODARUserSerializer`` dict
     """

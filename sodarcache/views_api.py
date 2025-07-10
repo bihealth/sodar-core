@@ -95,7 +95,7 @@ class CacheItemRetrieveAPIView(
     - ``date_modified``: Item modification datetime (YYYY-MM-DDThh:mm:ssZ)
     - ``user``: UUID of user who created the item (string)
 
-    **Version Changes**:
+    **Version Changes:**
 
     - ``2.0``: Return ``user`` as UUID instead of ``SODARUserSerializer`` dict
     """

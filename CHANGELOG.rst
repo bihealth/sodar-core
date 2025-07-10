@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.2.0 (2025-07-10)
+===================
 
 Added
 -----
@@ -95,6 +95,8 @@ Changed
     - Refactor project type checks to use new helpers (#1727)
     - Improve project header and description layout (#1731)
     - Update remote sync user status on additional email change (#1480)
+- **Sodarcache**
+    - Rename ``SODARCacheAPI`` (#1683)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

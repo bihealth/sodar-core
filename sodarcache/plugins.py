@@ -3,7 +3,7 @@
 # Projectroles dependency
 from projectroles.plugins import BackendPluginPoint
 
-from sodarcache.api import SodarCacheAPI
+from sodarcache.api import SODARCacheAPI
 
 
 class BackendPlugin(BackendPluginPoint):
@@ -13,17 +13,17 @@ class BackendPlugin(BackendPluginPoint):
     name = 'sodar_cache'
 
     #: Title (used in templates)
-    title = 'Sodar Cache Backend'
+    title = 'SODAR Cache Backend'
 
     #: Iconify icon
     icon = 'mdi:basket-outline'
 
     #: Description string
     description = (
-        'Sodar Cache backend for caching and aggregating data from '
-        'external databases'
+        'SODAR Cache backend for caching and aggregating data from external '
+        'databases'
     )
 
-    def get_api(self, **kwargs) -> SodarCacheAPI:
+    def get_api(self, **kwargs) -> SODARCacheAPI:
         """Return API entry point object."""
-        return SodarCacheAPI()
+        return SODARCacheAPI()

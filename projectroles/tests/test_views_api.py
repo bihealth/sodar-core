@@ -522,7 +522,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
         self.assertEqual(response_data, expected)
 
     def test_get_v1_1(self):
-        """Test GET with API version v1.1"""
+        """Test GET with API v1.1"""
         response = self.request_knox(self.url, version='1.1')
         self.assertEqual(response.status_code, 200)
         rd = json.loads(response.content)
@@ -545,7 +545,7 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
         self.assertEqual(rd[1]['public_guest_access'], False)
 
     def test_get_v1_0(self):
-        """Test GET with API version v1.0"""
+        """Test GET with API v1.0"""
         response = self.request_knox(self.url, version='1.0')
         self.assertEqual(response.status_code, 200)
         rd = json.loads(response.content)
@@ -2778,7 +2778,7 @@ class TestProjectInviteListAPIView(
         self.assertEqual(response_data, expected)
 
     def test_get_v1_1(self):
-        """Test GET with API version v1.1"""
+        """Test GET with API v1.1"""
         response = self.request_knox(self.url, version='1.1')
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
@@ -2849,7 +2849,7 @@ class TestProjectInviteRetrieveAPIView(
         self.assertEqual(response_data, expected)
 
     def test_get_v1_1(self):
-        """Test GET with API version v1.1"""
+        """Test GET with API v1.1"""
         response = self.request_knox(self.url, version='1.1')
         self.assertEqual(response.status_code, 406)
 
@@ -3398,7 +3398,7 @@ class TestProjectSettingRetrieveAPIView(
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_get_project_user_v1_1(self):
-        """Test GET with PROJECT_USER scope setting and API version v1.1"""
+        """Test GET with PROJECT_USER scope setting and API v1.1"""
         setting_name = 'project_user_str_setting'
         get_data = {
             'plugin_name': EX_APP_NAME,
@@ -3814,7 +3814,7 @@ class TestUserSettingRetrievePIView(
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_get_v1_1(self):
-        """Test GET with API version v1.1"""
+        """Test GET with API v1.1"""
         setting_name = 'user_str_setting'
         get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data, version='1.1')
