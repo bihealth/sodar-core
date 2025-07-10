@@ -16,7 +16,8 @@ $(document).ready(function () {
         let value = stats[i].value
         if (stats[i].unit) {
           value +=
-            '<span class="sodar-pr-dashboard-card-stats-unit"> {{ s.unit }}</span>'
+            '<span class="sodar-pr-dashboard-card-stats-unit">' + stats[
+              i].unit + '</span>'
         }
         deck.append(
           $('<div>')
@@ -39,10 +40,9 @@ $(document).ready(function () {
             )
             .append($('<div>')
               .attr('class', 'text-center')
-              .append($('<h1>')
-                .append($('<strong>')
-                  .html(value)
-                )
+              .append($('<span>')
+                .attr('class', 'sodar-pr-dashboard-card-stats-value')
+                .html(value)
               )
             )
           )
