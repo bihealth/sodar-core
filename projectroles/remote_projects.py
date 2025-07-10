@@ -568,11 +568,13 @@ class RemoteProjectAPI:
         deleted_emails = SODARUserAdditionalEmail.objects.filter(
             user=user
         ).exclude(email__in=add_emails)
+        email_update = False
         for e in deleted_emails:
             e.delete()
             logger.info(
                 f'Deleted user {user.username} additional email "{e.email}"'
             )
+            email_update = True
         for e in add_emails:
             if SODARUserAdditionalEmail.objects.filter(
                 user=user, email=e
@@ -585,8 +587,12 @@ class RemoteProjectAPI:
                 f'Created user {user.username} additional email '
                 f'"{email_obj.email}"'
             )
+            email_update = True
         # HACK: Re-add additional emails
         user_data['additional_emails'] = add_emails
+        # Set user to updated if additional emails were changed
+        if email_update and user_data['status'] not in ['created', 'updated']:
+            user_data['status'] = 'updated'
 
     def _handle_user_error(
         self, error_msg: str, project: Project, role_uuid: str

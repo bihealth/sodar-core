@@ -93,6 +93,7 @@ Changed
     - Refactor remote sync API tests (#1323, #1723)
     - Refactor project type checks to use new helpers (#1727)
     - Improve project header and description layout (#1731)
+    - Update remote sync user status on additional email change (#1480)
 - **Timeline**
     - Display user as badge instead of separate column (#1622, #1698)
     - Display event status in search results (#1678)

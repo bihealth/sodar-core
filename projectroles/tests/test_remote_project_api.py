@@ -1773,6 +1773,9 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         self.assertEqual(email.user, target_user)
         self.assertEqual(email.email, ADD_EMAIL)
         self.assertEqual(email.verified, True)
+        self.assertEqual(
+            self.remote_data['users'][SOURCE_USER_UUID]['status'], 'created'
+        )
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -2635,6 +2638,9 @@ class TestSyncRemoteDataUpdate(
         self.assertEqual(email.user, target_user)
         self.assertEqual(email.email, ADD_EMAIL)
         self.assertEqual(email.verified, True)
+        self.assertEqual(
+            self.remote_data['users'][SOURCE_USER_UUID]['status'], 'updated'
+        )
 
     def test_update_user_add_email_exists(self):
         """Test sync with existing additional email on user"""
