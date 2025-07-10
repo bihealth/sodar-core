@@ -39,7 +39,7 @@
   {{ block.super }}
   <!-- Variables -->
   <script type="text/javascript">
-    window.projectListPagination = {{ page_options_default }};
+    window.projectListPagination = {{ page_options_default }}
   </script>
   <!-- DataTables -->
   <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
@@ -48,43 +48,43 @@
 
   <!-- Tour content -->
   <script type="text/javascript">
-    tourEnabled = true;
+    tourEnabled = true
     tour.addStep('home_project', {
-        title: 'Available ' +
-               '{% get_display_name 'PROJECT' title=True plural=True %}',
-        text: '{% get_display_name 'PROJECT' title=True plural=True %} and ' +
-              '{% get_display_name 'CATEGORY' plural=True %} ' +
-              'available to you are listed in this table.',
-        attachTo: '#sodar-pr-project-list-header top',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'Available ' +
+             '{% get_display_name 'PROJECT' title=True plural=True %}',
+      text: '{% get_display_name 'PROJECT' title=True plural=True %} and ' +
+            '{% get_display_name 'CATEGORY' plural=True %} ' +
+            'available to you are listed in this table.',
+      attachTo: '#sodar-pr-project-list-header top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     tour.addStep('home_filter', {
-        title: 'Filter ' +
-               '{% get_display_name 'PROJECT' title=True plural=True %} List',
-        text: 'Type here to filter the {% get_display_name 'PROJECT' %} list ' +
-              'according to a search term.',
-        attachTo: '#sodar-pr-project-list-filter left',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'Filter ' +
+             '{% get_display_name 'PROJECT' title=True plural=True %} List',
+      text: 'Type here to filter the {% get_display_name 'PROJECT' %} list ' +
+            'according to a search term.',
+      attachTo: '#sodar-pr-project-list-filter left',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     tour.addStep('home_pagination', {
-        title: 'List Pagination',
-        text: 'Set the list of entries shown on each page. This value will ' +
-              'be saved in your user settings.',
-        attachTo: '#sodar-pr-project-list-page-length left',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'List Pagination',
+      text: 'Set the list of entries shown on each page. This value will be ' +
+            'saved in your user settings.',
+      attachTo: '#sodar-pr-project-list-page-length left',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     tour.addStep('home_star', {
-        title: 'View Starred ' +
-               '{% get_display_name 'PROJECT' title=True plural=True %}',
-        text: 'Click here to enable/disable viewing only ' +
-              '{% get_display_name 'PROJECT' plural=True %} you have ' +
-              '"starred" for your favourites in the project view header. ',
-        attachTo: '#sodar-pr-project-list-link-star bottom',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'View Starred ' +
+             '{% get_display_name 'PROJECT' title=True plural=True %}',
+      text: 'Click here to enable/disable viewing only ' +
+            '{% get_display_name 'PROJECT' plural=True %} you have ' +
+            '"starred" for your favourites in the project view header. ',
+      attachTo: '#sodar-pr-project-list-link-star bottom',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
   </script>
 {% endblock javascript %}

@@ -101,7 +101,6 @@
 
 {% block javascript %}
   {{ block.super }}
-
   <!-- Projectroles Javascript -->
   <script type="text/javascript" src="{% static 'projectroles/js/projectroles.js' %}"></script>
 
@@ -109,29 +108,28 @@
   {% if request.user.is_superuser %}
     {% get_admin_warning as admin_warning %}
     <script type="text/javascript">
-        $(document).ready(function() {
-            $('#sodar-navbar-link-admin-warning').click(function () {
-                $('#sodar-modal').find('.modal-dialog').addClass('w-50');
-                $('.modal-title').text('Warning!');
-                var htmlData = '{{ admin_warning|safe }}';
-                $('.modal-body').html(htmlData);
-                $('#sodar-pr-btn-admin-continue').click(function () {
-                    $('#sodar-modal').modal('hide');
-                });
-           });
-        });
+      $(document).ready(function() {
+        $('#sodar-navbar-link-admin-warning').click(function () {
+          $('#sodar-modal').find('.modal-dialog').addClass('w-50')
+          $('.modal-title').text('Warning!')
+          let htmlData = '{{ admin_warning|safe }}'
+          $('.modal-body').html(htmlData)
+          $('#sodar-pr-btn-admin-continue').click(function () {
+              $('#sodar-modal').modal('hide')
+          })
+        })
+      })
     </script>
   {% endif %}
 
   <script type="text/javascript">
-      tour.addStep('tour_intro', {
-          title: 'Welcome to the Tour Help!',
-          text: 'The tour help describes key elements on the currently ' +
-                'opened page and aids you in using available features. ' +
-                'Advance on the tour by clicking "Next".',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
+    tour.addStep('tour_intro', {
+      title: 'Welcome to the Tour Help!',
+      text: 'The tour help describes key elements on the currently opened ' +
+            'page and aids you in using available features. Advance on the ' +
+            'tour by clicking "Next".',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
   </script>
-
 {% endblock javascript %}

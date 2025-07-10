@@ -155,8 +155,8 @@
   {{ block.super }}
     <!-- Variables -->
   <script type="text/javascript">
-    window.projectListPagination = {{ page_options_default }};
-    window.remoteLinkUrl = "{% url 'projectroles:ajax_remote_access' project=object.sodar_uuid %}";
+    window.projectListPagination = {{ page_options_default }}
+    window.remoteLinkUrl = "{% url 'projectroles:ajax_remote_access' project=object.sodar_uuid %}"
   </script>
   {% if object.is_category %}
     <!-- DataTables -->
@@ -173,107 +173,108 @@
 
   <!-- Tour content -->
   <script type="text/javascript">
-    tourEnabled = true;
-    if ($('#sodar-pr-page-container-detail').attr('data-project-type') === 'CATEGORY') {
-        tour.addStep('project_type_note', {
-            title: 'Note on ' +
-                   '{% get_display_name 'CATEGORY' plural=True title=True %} ',
-            text: '{% get_display_name 'CATEGORY' plural=True title=True %} ' +
-                  'are limited versions of ' +
-                  '{% get_display_name 'PROJECT' plural=True %} with fewer ' +
-                  'but similar features. The latter term may be used in the ' +
-                  'tour help for both types when applicable. Important ' +
-                  'differences between the two will be noted. ',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+    tourEnabled = true
+    if ($('#sodar-pr-page-container-detail').attr(
+      'data-project-type') === 'CATEGORY') {
+      tour.addStep('project_type_note', {
+        title: 'Note on ' +
+               '{% get_display_name 'CATEGORY' plural=True title=True %} ',
+        text: '{% get_display_name 'CATEGORY' plural=True title=True %} ' +
+              'are limited versions of ' +
+              '{% get_display_name 'PROJECT' plural=True %} with fewer but ' +
+              'similar features. The latter term may be used in tour help for ' +
+              'both types when applicable. Important differences between the ' +
+              'two will be noted. ',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
     }
     tour.addStep('project_nav', {
-        title: '{% get_display_name 'PROJECT' title=True %} Sidebar',
-        text: 'From this sidebar you can access apps and actions of the ' +
-              'currently selected {% get_display_name 'PROJECT' %}.',
-        attachTo: '#sodar-pr-sidebar right',
+      title: '{% get_display_name 'PROJECT' title=True %} Sidebar',
+      text: 'From this sidebar you can access apps and actions of the ' +
+            'currently selected {% get_display_name 'PROJECT' %}.',
+      attachTo: '#sodar-pr-sidebar right',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    if ($('#sodar-pr-details-card-remote').length) {
+      tour.addStep('project_remote_card', {
+        title: 'Links to {% get_display_name 'PROJECT' title=True %} on ' +
+               'Remote Sites',
+        text: 'If the {% get_display_name 'PROJECT' %} is also ' +
+              'available on other sites, links to it on those sites can be ' +
+              'found here.',
+        attachTo: '#sodar-pr-details-card-remote top',
         advanceOn: '.docs-link click',
         showCancelLink: true
-    });
-    if ($('#sodar-pr-details-card-remote').length) {
-        tour.addStep('project_remote_card', {
-            title: 'Links to {% get_display_name 'PROJECT' title=True %} on ' +
-                   'Remote Sites',
-            text: 'If the {% get_display_name 'PROJECT' %} is also ' +
-                  'available on other sites, links to it on those sites can ' +
-                  'be found here.',
-            attachTo: '#sodar-pr-details-card-remote top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      })
     }
     if ($('#sodar-pr-details-card-readme').length) {
-        tour.addStep('project_readme_card', {
-            title: '{% get_display_name 'PROJECT' title=True %} ReadMe',
-            text: 'The {% get_display_name 'PROJECT' %} ReadMe document ' +
-                  'is displayed here. It can be used for e.g. pinning ' +
-                  'important links and updates for members.',
-            attachTo: '#sodar-pr-details-card-readme top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-    }
-    if ($('#sodar-pr-details-card-stats').length) {
-        tour.addStep('category_stats', {
-            title: '{% get_display_name 'CATEGORY' title=True %} Statistics',
-            text: 'This card displays statistics of data in this ' +
-                  '{% get_display_name 'CATEGORY' %}. Different apps on the ' +
-                  'site may display different statistics.',
-            advanceOn: '.docs-link click',
-            attachTo: '#sodar-pr-details-card-stats top',
-            showCancelLink: true
-        });
-    }
-    if ($('#sodar-pr-project-list').length) {
-        tour.addStep('project_list', {
-            title: '{% get_display_name 'PROJECT' title=True %} List',
-            text: 'The list of {% get_display_name 'CATEGORY' plural=True %} ' +
-                  'and {% get_display_name 'PROJECT' plural=True %} under ' +
-                  'this {% get_display_name 'CATEGORY' %} is presented here. ' +
-                  'It works similarly to the list in your home view.',
-            advanceOn: '.docs-link click',
-            attachTo: '#sodar-pr-project-list top',
-            showCancelLink: true
-        });
-    }
-    if ($('.sodar-pr-app-card').length) {
-        tour.addStep('project_app_cards', {
-            title: '{% get_display_name 'PROJECT' title=True %} App Overviews',
-            text: 'Overviews of {% get_display_name 'PROJECT' %} apps and ' +
-                  'data are presented here.',
-            attachTo: '.sodar-pr-app-card top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-    }
-    tour.addStep('project_star', {
-        title: '{% get_display_name 'PROJECT' title=True %} Starring',
-        text: 'Using this link you can "star" a ' +
-              '{% get_display_name 'PROJECT' %} to add it in your ' +
-              'favourites. Starred ' +
-              '{% get_display_name 'PROJECT' plural=True %} are highlighted ' +
-              'and can be listed on the home page with a shortcut. To ' +
-              '"unstar" a {% get_display_name 'PROJECT' %}, click on the ' +
-              'link again.',
-        attachTo: '#sodar-pr-link-project-star bottom',
+      tour.addStep('project_readme_card', {
+        title: '{% get_display_name 'PROJECT' title=True %} ReadMe',
+        text: 'The {% get_display_name 'PROJECT' %} ReadMe document is ' +
+              'displayed here. It can be used for e.g. pinning important ' +
+              'links and updates for members.',
+        attachTo: '#sodar-pr-details-card-readme top',
         advanceOn: '.docs-link click',
         showCancelLink: true
-    });
+      })
+    }
+    if ($('#sodar-pr-details-card-stats').length) {
+      tour.addStep('category_stats', {
+        title: '{% get_display_name 'CATEGORY' title=True %} Statistics',
+        text: 'This card displays statistics of data in this ' +
+              '{% get_display_name 'CATEGORY' %}. Different apps on the site ' +
+              'may display different statistics.',
+        advanceOn: '.docs-link click',
+        attachTo: '#sodar-pr-details-card-stats top',
+        showCancelLink: true
+      })
+    }
+    if ($('#sodar-pr-project-list').length) {
+      tour.addStep('project_list', {
+        title: '{% get_display_name 'PROJECT' title=True %} List',
+        text: 'The list of {% get_display_name 'CATEGORY' plural=True %} ' +
+              'and {% get_display_name 'PROJECT' plural=True %} under this ' +
+              '{% get_display_name 'CATEGORY' %} is presented here. It works ' +
+              'similarly to the list in your home view.',
+        advanceOn: '.docs-link click',
+        attachTo: '#sodar-pr-project-list top',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-pr-app-card').length) {
+      tour.addStep('project_app_cards', {
+        title: '{% get_display_name 'PROJECT' title=True %} App Overviews',
+        text: 'Overviews of {% get_display_name 'PROJECT' %} apps and data ' +
+              'are presented here.',
+        attachTo: '.sodar-pr-app-card top',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    tour.addStep('project_star', {
+      title: '{% get_display_name 'PROJECT' title=True %} Starring',
+      text: 'Using this link you can "star" a ' +
+            '{% get_display_name 'PROJECT' %} to add it in your ' +
+            'favourites. Starred ' +
+            '{% get_display_name 'PROJECT' plural=True %} are highlighted ' +
+            'and can be listed on the home page with a shortcut. To ' +
+            '"unstar" a {% get_display_name 'PROJECT' %}, click on the link ' +
+            'again.',
+      attachTo: '#sodar-pr-link-project-star bottom',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     if ($('#sodar-pr-btn-copy-uuid').length) {
-        tour.addStep('project_copy_uuid', {
-            title: 'Copy {% get_display_name 'PROJECT' title=True %} UUID',
-            text: 'Click on this link to copy the ' +
-                  '{% get_display_name 'PROJECT' %} UUID into your clipboard.',
-            attachTo: '#sodar-pr-btn-copy-uuid bottom',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      tour.addStep('project_copy_uuid', {
+        title: 'Copy {% get_display_name 'PROJECT' title=True %} UUID',
+        text: 'Click on this link to copy the ' +
+              '{% get_display_name 'PROJECT' %} UUID into your clipboard.',
+        attachTo: '#sodar-pr-btn-copy-uuid bottom',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
     }
   </script>
 {% endblock javascript %}

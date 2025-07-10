@@ -75,37 +75,35 @@
   {% get_django_setting 'ENABLE_LDAP' as enable_ldap %}
   {% get_django_setting 'PROJECTROLES_ALLOW_LOCAL_USERS' as allow_local_users %}
   <script type="text/javascript">
-    tourEnabled = true;
+    tourEnabled = true
     tour.addStep('login_account', {
-        title: 'Log in to {{ site_title }}',
-        text: 'To use {{ site_title }}, you must log in. For ' +
-              'this, you need to use an existing account.',
+      title: 'Log in to {{ site_title }}',
+      text: 'To use {{ site_title }}, you must log in. For this, you need to ' +
+            'use an existing account.',
         attachTo: '#sodar-login-username bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
-    });
+    })
     {% if enable_ldap %}
-    tour.addStep('login_domain', {
-        title: 'User Name and Domain',
-        text: 'For external accounts via LDAP, the user name must be ' +
-              'supplied in the format of "username@DOMAIN" when using an ' +
-              'external account.',
-        attachTo: '#sodar-login-username bottom',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      tour.addStep('login_domain', {
+      title: 'User Name and Domain',
+      text: 'For external accounts via LDAP, the user name must be supplied ' +
+            'in the format of "username@DOMAIN" when using an external ' +
+            'account.',
+      attachTo: '#sodar-login-username bottom',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     tour.addStep('login_multiple', {
-        title: 'Note on Multiple Accounts',
-        text: 'IMPORTANT: If you have external accounts for multiple ' +
-              'domains, note that these user accounts will not be ' +
-              'connected. Please choose one of your accounts and always ' +
-              'use the same one to log in to {{ site_title }}. Also note ' +
-              'that you will receive email notifications to the address ' +
-              'specified for the account used.',
-        attachTo: '#sodar-login-username bottom',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'Note on Multiple Accounts',
+      text: 'IMPORTANT: If you have external accounts for multiple domains, ' +
+            'note that these user accounts will not be connected. Please ' +
+            'choose one of your accounts and always use the same one to log ' +
+            'in to {{ site_title }}.',
+      attachTo: '#sodar-login-username bottom',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     {% endif %} {# if enable_ldap #}
     {% if allow_local_users %}
     tour.addStep('login_local', {
@@ -116,7 +114,7 @@
         attachTo: '#sodar-login-username bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
-    });
+    })
     {% endif %}
   </script>
 {% endblock javascript %}

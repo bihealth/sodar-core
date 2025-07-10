@@ -202,93 +202,93 @@
 
   <!-- Tour content -->
   <script type="text/javascript">
-    tourEnabled = true;
+    tourEnabled = true
     tour.addStep('files', {
-        title: 'The Files App',
-        text: 'In this app you can browse and manage files and hyperlinks in ' +
-              'a folder structure. The files are stored in the database of ' +
-              'the site.',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'The Files App',
+      text: 'In this app you can browse and manage files and hyperlinks in ' +
+            'a folder structure. The files are stored in the database of the ' +
+            'site.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     tour.addStep('files_breadcrumb', {
-        title: 'Files Breadcrumb',
-        text: 'This element displays the path breadcrumb for the current ' +
-              'folder for quick navigation. Click on parent folders to ' +
-              'navigate to them.',
-        attachTo: '#sodar-ff-breadcrumb-card top',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'Files Breadcrumb',
+      text: 'This element displays the path breadcrumb for the current ' +
+            'folder for quick navigation. Click on parent folders to ' +
+            'navigate to them.',
+      attachTo: '#sodar-ff-breadcrumb-card top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     tour.addStep('files_table', {
-        title: 'Files Table',
-        text: 'In this table you see the files, hyperlinks and folders ' +
-              'contained in the current folder. Through this table you can ' +
-              'browse between categories, access files and hyperlinks and ' +
-              'manage them.',
-        attachTo: '#sodar-ff-list-table top',
-        advanceOn: '.docs-link click',
-        showCancelLink: true
-    });
+      title: 'Files Table',
+      text: 'In this table you see the files, hyperlinks and folders ' +
+            'contained in the current folder. Through this table you can ' +
+            'browse between categories, access files and hyperlinks and ' +
+            'manage them.',
+      attachTo: '#sodar-ff-list-table top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
     tour.addStep('file_item', {
-        title: 'File Items',
-        text: 'This column contains the folders, files and hyperlinks ' +
-              'contained in the current folder. To access the file, open the ' +
-              'hyperlink or navigate to the subfolder, click on the item link.',
-        attachTo: '.sodar-ff-header-item top',
+      title: 'File Items',
+      text: 'This column contains the folders, files and hyperlinks ' +
+            'contained in the current folder. To access the file, open the ' +
+            'hyperlink or navigate to the subfolder, click on the item link.',
+      attachTo: '.sodar-ff-header-item top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    if ($('.sodar-ff-link-public').length) {
+      tour.addStep('item_public', {
+        title: 'Public File Link',
+        text: 'A public link for this file has been enabled. Through this ' +
+              'link, anyone with access to the site can retrieve this file ' +
+              'regardress of their {% get_display_name 'PROJECT' %} ' +
+              'membership.',
+        attachTo: '.sodar-ff-link-public right',
         advanceOn: '.docs-link click',
         showCancelLink: true
-    });
-    if ($('.sodar-ff-link-public').length) {
-        tour.addStep('item_public', {
-            title: 'Public File Link',
-            text: 'A public link for this file has been enabled. Through ' +
-                  'this link, anyone with access to the site can retrieve ' +
-                  'this file regardress of their ' +
-                  '{% get_display_name 'PROJECT' %} membership.',
-            attachTo: '.sodar-ff-link-public right',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
+      })
     }
     if ($('.sodar-ff-flag-icon').length) {
-        tour.addStep('item_flag', {
-            title: 'Item Flag',
-            text: 'An optional flag set for an item is displayed here.',
-            attachTo: '.sodar-ff-flag-icon right',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-    }
-    if ($('td.sodar-ff-item-dropdown').length) {
-        tour.addStep('item_dropdown', {
-            title: 'Item Dropdown',
-            text: 'For each file, folder or hyperlink you are allowed to ' +
-                  'edit, functions for updating and deleting the specific ' +
-                  'item can be found in this dropdown.',
-            attachTo: '.sodar-ff-item-dropdown left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-    }
-    if ($('.sodar-ff-checkbox-item').length) {
-        tour.addStep('item_select', {
-            title: 'Item Selecting',
-            text: 'Select files, folders and hyperlinks in this column for ' +
-                  'batch operations in the File Operations dropdown.',
-            attachTo: '.sodar-ff-checkbox-item left',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-    }
-    tour.addStep('file_ops', {
-        title: 'File Operations Dropdown',
-        text: 'In this dropdown you can upload files, create new folders ' +
-              'under the current folder and define hyperlinks to external ' +
-              'resources. It also allows batch moving or deletion.',
-        attachTo: '#sodar-ff-file-ops-btn left',
+      tour.addStep('item_flag', {
+        title: 'Item Flag',
+        text: 'An optional flag set for an item is displayed here.',
+        attachTo: '.sodar-ff-flag-icon right',
         advanceOn: '.docs-link click',
         showCancelLink: true
-    });
+      })
+    }
+    if ($('td.sodar-ff-item-dropdown').length) {
+      tour.addStep('item_dropdown', {
+        title: 'Item Dropdown',
+        text: 'For each file, folder or hyperlink you are allowed to edit ' +
+              'functions for updating and deleting the specific item can be ' +
+              'found in this dropdown.',
+        attachTo: '.sodar-ff-item-dropdown left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    if ($('.sodar-ff-checkbox-item').length) {
+      tour.addStep('item_select', {
+        title: 'Item Selecting',
+        text: 'Select files, folders and hyperlinks in this column for batch ' +
+              'operations in the File Operations dropdown.',
+        attachTo: '.sodar-ff-checkbox-item left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    tour.addStep('file_ops', {
+      title: 'File Operations Dropdown',
+      text: 'In this dropdown you can upload files, create new folders under ' +
+            'the current folder and define hyperlinks to external resources ' +
+            'It also allows batch moving or deletion.',
+      attachTo: '#sodar-ff-file-ops-btn left',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
   </script>
 {% endblock javascript %}

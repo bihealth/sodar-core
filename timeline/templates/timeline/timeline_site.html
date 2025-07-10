@@ -79,23 +79,23 @@
 
   <!-- Tour content -->
   <script type="text/javascript">
-      tourEnabled = true;
-      {% if timeline_mode == 'site' %}
-        tour.addStep('timeline_events', {
-            title: 'Site-Wide Timeline Events',
-            text: 'This view displays site-wide events not linked to any ' +
-                  '{% get_display_name 'PROJECT' %}.',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-      {% elif timeline_mode == 'admin' %}
-        tour.addStep('timeline_events', {
-            title: 'All Timeline Events',
-            text: 'This view displays all the timeline events on the site ' +
-                  'and can only be accessed by superusers.',
-            showCancelLink: true
-        });
-      {% endif %}
-    </script>
-    {% include 'timeline/_list_tour.html' %} {# Common tour help items #}
+    tourEnabled = true
+    {% if timeline_mode == 'site' %}
+    tour.addStep('timeline_events', {
+      title: 'Site-Wide Timeline Events',
+      text: 'This view displays site-wide events not linked to any ' +
+            '{% get_display_name 'PROJECT' %}.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    {% elif timeline_mode == 'admin' %}
+    tour.addStep('timeline_events', {
+      title: 'All Timeline Events',
+      text: 'This view displays all the timeline events on the site and can ' +
+            'only be accessed by superusers.',
+      showCancelLink: true
+    })
+    {% endif %}
+  </script>
+  {% include 'timeline/_list_tour.html' %} {# Common tour help items #}
 {% endblock javascript %}

@@ -157,8 +157,8 @@
   <!-- Settings for Javascript -->
   <script type="text/javascript">
     {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' default=5 as search_pagination %}
-    window.searchPagination = {{ search_pagination }};
-    window.refreshCellOverflow = true;
+    window.searchPagination = {{ search_pagination }}
+    window.refreshCellOverflow = true
   </script>
   <!-- DataTables -->
   <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
@@ -167,85 +167,85 @@
 
   <!-- Tour content -->
   <script type="text/javascript">
-    tourEnabled = true;
+    tourEnabled = true
     $(document).ready(function() {
-        tour.addStep('search_results', {
-            title: 'Search Results',
-            text: 'Search results are displayed in this view. Found search ' +
-                  'items are displayed in cards specific to different ' +
-                  'applications and data types.',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-        if ($('.sodar-search-card-body').length) {
-            tour.addStep('search_card', {
-                title: 'Search Results Card',
-                text: 'This is a search results card for specific data types ' +
-                      'from an application.',
-                attachTo: '.sodar-search-card-body top',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-        if ($('.sodar-search-page-length').length) {
-            tour.addStep('search_card_page_length', {
-                title: 'Search Results Display Amount',
-                text: 'The maximum results to be displayed on each page of ' +
-                      'the results card can be set here.',
-                attachTo: '.sodar-search-page-length left',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-        if ($('.sodar-search-filter').length) {
-            tour.addStep('search_card_filter', {
-                title: 'Search Results Filtering',
-                text: 'The search results displayed in this results card can ' +
-                      'be filtered by typing into this input box.',
-                attachTo: '.sodar-search-filter left',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-        if ($('th.sorting').length) {
-            tour.addStep('search_card_sort', {
-                title: 'Search Result Sorting',
-                text: 'Results can be sorted by each column in an ascending ' +
-                      'or descending order by clicking on these icons.',
-                attachTo: 'th.sorting right',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-        if ($('.sodar-search-highlight').length) {
-            tour.addStep('search_highlight', {
-                title: 'Search Highlight',
-                text: 'Search terms are highlighted for each found object.',
-                attachTo: '.sodar-search-highlight right',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-        if ($('.sodar-paginate-button').length) {
-            tour.addStep('search_paginate', {
-                title: 'Search Pagination',
-                text: 'In case of a large number of results, they can be ' +
-                      'browsed using this sub-page navigation.',
-                attachTo: '.sodar-paginate-button left',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-        if ($('#sodar-search-not-found-alert').length) {
-            tour.addStep('search_not_found', {
-                title: 'Data Not Found',
-                text: 'Data types in which we could not find anything are ' +
-                      'listed here.',
-                attachTo: '#sodar-search-not-found-alert top',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-    });
+      tour.addStep('search_results', {
+        title: 'Search Results',
+        text: 'Search results are displayed in this view. Found search items ' +
+              'are displayed in cards specific to different applications and ' +
+              'data types.',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+      if ($('.sodar-search-card-body').length) {
+        tour.addStep('search_card', {
+          title: 'Search Results Card',
+          text: 'This is a search results card for specific data types from ' +
+                'an application.',
+          attachTo: '.sodar-search-card-body top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+        })
+      }
+      if ($('.sodar-search-page-length').length) {
+        tour.addStep('search_card_page_length', {
+          title: 'Search Results Display Amount',
+          text: 'The maximum results to be displayed on each page of the ' +
+                'results card can be set here.',
+          attachTo: '.sodar-search-page-length left',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+        })
+      }
+      if ($('.sodar-search-filter').length) {
+        tour.addStep('search_card_filter', {
+          title: 'Search Results Filtering',
+          text: 'The search results displayed in this results card can be ' +
+                'filtered by typing into this input box.',
+          attachTo: '.sodar-search-filter left',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+        })
+      }
+      if ($('th.sorting').length) {
+        tour.addStep('search_card_sort', {
+          title: 'Search Result Sorting',
+          text: 'Results can be sorted by each column in an ascending or ' +
+                'descending order by clicking on these icons.',
+          attachTo: 'th.sorting right',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+        })
+      }
+      if ($('.sodar-search-highlight').length) {
+        tour.addStep('search_highlight', {
+          title: 'Search Highlight',
+          text: 'Search terms are highlighted for each found object.',
+          attachTo: '.sodar-search-highlight right',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+        })
+      }
+      if ($('.sodar-paginate-button').length) {
+        tour.addStep('search_paginate', {
+          title: 'Search Pagination',
+          text: 'In case of a large number of results, they can be browsed ' +
+                'using this sub-page navigation.',
+          attachTo: '.sodar-paginate-button left',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+        })
+      }
+      if ($('#sodar-search-not-found-alert').length) {
+        tour.addStep('search_not_found', {
+          title: 'Data Not Found',
+          text: 'Data types in which we could not find anything are listed ' +
+                'here.',
+          attachTo: '#sodar-search-not-found-alert top',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+        })
+      }
+    })
   </script>
 {% endblock javascript %}

@@ -77,15 +77,15 @@
 
   <!-- Tour content -->
   <script type="text/javascript">
-      tourEnabled = true;
-      tour.addStep('timeline_events', {
-          title: '{% get_display_name 'PROJECT' title=True %} Timeline',
-          text: 'In this view you can browse the timeline events for this ' +
-              '{% get_display_name 'PROJECT' %}, ' +
-              '{% get_display_name 'CATEGORY' %} or object.',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
+    tourEnabled = true
+    tour.addStep('timeline_events', {
+      title: '{% get_display_name 'PROJECT' title=True %} Timeline',
+      text: 'In this view you can browse the timeline events for this ' +
+            '{% get_display_name 'PROJECT' %}, ' +
+            '{% get_display_name 'CATEGORY' %} or object.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
   </script>
   {% include 'timeline/_list_tour.html' %} {# Common tour help items #}
 {% endblock javascript %}

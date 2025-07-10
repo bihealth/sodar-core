@@ -55,67 +55,67 @@
   {{ block.super }}
   <!-- Tour content -->
   <script type="text/javascript">
-      tourEnabled = true;
-      tour.addStep('user_profile', {
-          title: 'User Profile',
-          text: 'In this app you can see your user profile and alter user ' +
-                'settings.',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-      tour.addStep('user_details', {
-          title: 'User Details Card',
-          text: 'This card displays details of your user account.',
-          attachTo: '#sodar-user-details-card top',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-      if ($('#sodar-user-btn-update').length) {
-          tour.addStep('user_details_update', {
-              title: 'Update User Details',
-              text: 'Click on this button to open a form to edit your user ' +
-                    'details. This feature is only available for local user ' +
-                    'accounts.',
-              attachTo: '#sodar-user-btn-update left',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      tour.addStep('user_settings', {
-          title: 'User Settings Card',
-          text: 'This card displays site-wide user level settings and how ' +
-                'they are currently set for your user account.',
-          attachTo: '#sodar-user-settings-card top',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-      if ($('#sodar-user-btn-settings').length) {
-          tour.addStep('user_settings_update', {
-              title: 'Update User Settings',
-              text: 'Click on this button to open a form for editing your ' +
-                    'user settings.',
-              attachTo: '#sodar-user-btn-settings left',
-              advanceOn: '.docs-link click',
-              showCancelLink: true
-          });
-      }
-      tour.addStep('additional_email', {
-          title: 'Additional Email Addresses Card',
-          text: 'This card displays additional email addresses set for the ' +
-                'user and the ability to manage those addresses.',
-          attachTo: '#sodar-user-email-card top',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
-      tour.addStep('additional_email_add', {
-          title: 'Add Email',
-          text: 'If you want email notifications sent to one or more ' +
-                'addresses other than your primary address, add those here. ' +
-                'Addresses must be validated by following a link received in ' +
-                'the initial email.',
-          attachTo: '#sodar-user-btn-email-add left',
-          advanceOn: '.docs-link click',
-          showCancelLink: true
-      });
+    tourEnabled = true
+    tour.addStep('user_profile', {
+      title: 'User Profile',
+      text: 'In this app you can see your user profile and alter user ' +
+            'settings.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    tour.addStep('user_details', {
+      title: 'User Details Card',
+      text: 'This card displays details of your user account.',
+      attachTo: '#sodar-user-details-card top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    if ($('#sodar-user-btn-update').length) {
+      tour.addStep('user_details_update', {
+        title: 'Update User Details',
+        text: 'Click on this button to open a form to edit your user ' +
+              'details. This feature is only available for local user ' +
+              'accounts.',
+        attachTo: '#sodar-user-btn-update left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    tour.addStep('user_settings', {
+      title: 'User Settings Card',
+      text: 'This card displays site-wide user level settings and how they ' +
+            'are currently set for your user account.',
+      attachTo: '#sodar-user-settings-card top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    if ($('#sodar-user-btn-settings').length) {
+      tour.addStep('user_settings_update', {
+        title: 'Update User Settings',
+        text: 'Click on this button to open a form for editing your user ' +
+              'settings.',
+        attachTo: '#sodar-user-btn-settings left',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
+    tour.addStep('additional_email', {
+      title: 'Additional Email Addresses Card',
+      text: 'This card displays additional email addresses set for the user ' +
+            'and the ability to manage those addresses.',
+      attachTo: '#sodar-user-email-card top',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    tour.addStep('additional_email_add', {
+      title: 'Add Email',
+      text: 'If you want email notifications sent to one or more ' +
+            'addresses other than your primary address, add those here. ' +
+            'Addresses must be validated by following a link received in ' +
+            'the initial email.',
+      attachTo: '#sodar-user-btn-email-add left',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
   </script>
 {% endblock javascript %}
