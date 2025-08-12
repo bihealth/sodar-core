@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.2.1 (WIP)
+************
+
+Release Highlights
+==================
+
+- Add Project.get_public_access_name() helper
+
+
 v1.2.0 (2025-07-10)
 *******************
 

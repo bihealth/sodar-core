@@ -57,7 +57,7 @@ def is_project_guest(user, obj):
     Whether or not the user has the role of project guest. Also returns true if
     project has public guest access.
     """
-    if obj.public_access and obj.public_access.name == PROJECT_ROLE_GUEST:
+    if obj.get_public_access_name() == PROJECT_ROLE_GUEST:
         return True
     if not obj or not user or not user.is_authenticated:
         return False
@@ -70,7 +70,7 @@ def is_project_viewer(user, obj):
     """
     Whether or not the user has the role of project viewer.
     """
-    if obj.public_access and obj.public_access.name == PROJECT_ROLE_VIEWER:
+    if obj.get_public_access_name() == PROJECT_ROLE_VIEWER:
         return True
     if not obj or not user or not user.is_authenticated:
         return False

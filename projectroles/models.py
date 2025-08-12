@@ -402,6 +402,14 @@ class Project(models.Model):
         """Return depth of project in the project tree structure (root=0)"""
         return len(self.full_title.split(CAT_DELIMITER)) - 1
 
+    def get_public_access_name(self) -> Optional[str]:
+        """
+        Return public_access role name or None if public_access is not set.
+
+        :return: String or None
+        """
+        return self.public_access.name if self.public_access else None
+
     def get_role(
         self, user: 'SODARUser', inherited_only: bool = False
     ) -> Optional['RoleAssignment']:

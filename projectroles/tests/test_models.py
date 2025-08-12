@@ -490,6 +490,17 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         """Test get_depth() with sub project"""
         self.assertEqual(self.project.get_depth(), 1)
 
+    def test_get_public_access_name_unset(self):
+        """Test get_public_access_name() with public_access unset"""
+        self.assertEqual(self.project.get_public_access_name(), None)
+
+    def test_get_public_access_name_set(self):
+        """Test get_public_access_name() with public_access set"""
+        self.project.public_access = self.role_guest
+        self.assertEqual(
+            self.project.get_public_access_name(), PROJECT_ROLE_GUEST
+        )
+
     def test_get_parents_category(self):
         """Test get_parents() with top category"""
         self.assertEqual(self.category.get_parents(), [])
