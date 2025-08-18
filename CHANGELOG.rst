@@ -22,6 +22,7 @@ Fixed
 - **Projectroles**
     - ``project_detail.html`` limited access alert typo (#1745)
     - Missing ``Project`` arg in ``is_project_accessible()`` (#1744)
+    - Card header title and input group alignment (#1741)
 
 
 v1.2.0 (2025-07-10)

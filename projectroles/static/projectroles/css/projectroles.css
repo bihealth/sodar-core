@@ -195,6 +195,8 @@ h2.sodar-pr-content-title {
 }
 
 .card-header h4 {
+  height: 30px;
+  margin-top: 3px;
   margin-bottom: 0;
 }
 
@@ -323,10 +325,14 @@ table.sodar-card-table-bordered tbody tr:last-child td {
   max-width: 450px !important;
 }
 
+button#sodar-pr-project-list-link-star {
+  padding-top: 2px;
+}
+
 select#sodar-pr-project-list-page-length {
   max-width: 100px !important;
-  height: 32px;
-  padding-top: 5px;
+  height: 30px;
+  padding-top: 4px;
 }
 
 table.sodar-pr-project-list-table tbody tr {
@@ -637,12 +643,12 @@ a.sodar-nav-link-last {
 .sodar-header-button,
 .sodar-header-input-group button,
 .sodar-header-input-group a {
-  height: 32px;
+  height: 30px;
   padding-top: 3px;
 }
 
 .sodar-header-input-group input.form-control {
-  height: 32px;
+  height: 30px;
 }
 
 .sodar-form-control-table {
