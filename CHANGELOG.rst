@@ -14,6 +14,12 @@ Added
 - **Projectroles**
     - ``Project.get_public_access_name()`` helper (#1736)
 
+Fixed
+-----
+
+- **Projectroles**
+    - ``project_detail.html`` limited access alert typo (#1745)
+
 
 v1.2.0 (2025-07-10)
 ===================
