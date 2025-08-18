@@ -199,7 +199,7 @@ def is_site_writable():
 
 
 @rules.predicate
-def is_project_accessible():
+def is_project_accessible(user, obj):
     """
     Return True if project access has not been temporarily blocked by
     administrator.
@@ -207,7 +207,7 @@ def is_project_accessible():
     NOTE: Only needed if the view is not using ProjectPermissionMixin or
     SODARAPIProjectPermission.
     """
-    return not app_settings.get(APP_NAME, 'project_access_block')
+    return not app_settings.get(APP_NAME, 'project_access_block', project=obj)
 
 
 # Combined predicates ----------------------------------------------------------

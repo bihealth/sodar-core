@@ -21,6 +21,7 @@ Fixed
     - Incorrect API version information in ``app_timeline_api_rest.rst`` (#1740)
 - **Projectroles**
     - ``project_detail.html`` limited access alert typo (#1745)
+    - Missing ``Project`` arg in ``is_project_accessible()`` (#1744)
 
 
 v1.2.0 (2025-07-10)
