@@ -14,6 +14,11 @@ Added
 - **Projectroles**
     - ``Project.get_public_access_name()`` helper (#1736)
 
+Changed
+-------
+- **Projectroles**
+    - Log missing app setting definitions as warning in remote sync (#1737)
+
 Fixed
 -----
 

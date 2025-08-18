@@ -651,6 +651,37 @@ class TestGetSourceData(
         self.assertIn(str(user_no_roles.sodar_uuid), sync_data['users'])
         self.assertEqual(len(sync_data['app_settings']), 2)
 
+    def test_get_settings_no_def(self):
+        """Test getting app setting with no definition"""
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        set_ip_restrict = self.make_setting(
+            plugin_name=APP_NAME,
+            name='ip_restrict',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
+            value=True,
+            project=self.project,
+        )
+        set_no_def = self.make_setting(
+            plugin_name=APP_NAME,
+            name='NO_DEFINITION',
+            setting_type=APP_SETTING_TYPE_BOOLEAN,
+            value=True,
+            project=self.project,
+        )
+        self.assertEqual(
+            AppSetting.objects.filter(project=self.project).count(), 2
+        )
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
+        self.assertEqual(len(sync_data['app_settings']), 1)
+        self.assertIn(
+            str(set_ip_restrict.sodar_uuid), sync_data['app_settings']
+        )
+        self.assertNotIn(str(set_no_def.sodar_uuid), sync_data['app_settings'])
+
     def test_get_settings_v1_0(self):
         """Test get_source_data() with app settings and API v1.0"""
         self.make_remote_project(
