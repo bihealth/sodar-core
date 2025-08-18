@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add Project.get_public_access_name() helper
+- General bug fixes and minor updates
 
 
 v1.2.0 (2025-07-10)

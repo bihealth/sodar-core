@@ -17,6 +17,8 @@ Added
 Fixed
 -----
 
+- **General**
+    - Incorrect API version information in ``app_timeline_api_rest.rst`` (#1740)
 - **Projectroles**
     - ``project_detail.html`` limited access alert typo (#1745)
 
