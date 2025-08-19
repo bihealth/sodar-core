@@ -41,6 +41,9 @@ the token in the ``Authorization`` header of your HTTP request as follows:
 
     Authorization: token 90c2483172515bc8f6d52fd608e5031db3fcdc06d5a83b24bec1688f39b72bcd
 
+
+.. _rest_api_overview_version:
+
 Versioning
 ----------
 
@@ -49,14 +52,25 @@ desired API version in your HTTP requests is optional, it is
 **strongly recommended**. This ensures you will get the appropriate return data
 and avoid running into unexpected incompatibility issues.
 
-From SODAR Core v1.0 onwards, each application is expected to use its own media
-type and version numbering. To enable versioning, add the ``Accept`` header to
-your request with the app's respective media type and version number. Example
-for the projectroles API:
+Each application is expected to use its own media type and version numbering. To
+enable versioning, add the ``Accept`` header to your request with the app's
+respective media type and version number. Example for the projectroles API:
 
 .. code-block:: console
 
     Accept: application/vnd.bihealth.sodar-core.projectroles+json; version=x.y
+
+SODAR Core REST APIs **must** conform to semantic versioning. Breaking changes
+require a major ``1.*`` update, while non-breaking new features can be tagged
+with a minor ``*.1``. Patch updates should be reserved for bug fixes.
+
+APIs should be kept backwards compatible as feasible, with support for previous
+versions maintained and ensured in API view tests.
+
+Removing support for old API versions should be done by announcing them as
+deprecated in a major SODAR Core version ``*.1.*`` or greater (see
+:ref:`SODAR Core Versioning <dev_core_guide_version>`), followed by removing
+support in the next major version.
 
 Return Data
 -----------
@@ -74,10 +88,9 @@ with other object fields.
 Pagination
 ----------
 
-From SODAR Core V1.0 onwards, list views support pagination unless otherwise
-specified. Pagination can be enabled by providing the ``?page=x`` query string
-in the API request. This will change the return data into a paginated format.
-Example:
+List views support pagination unless otherwise specified. Pagination can be
+enabled by providing the ``?page=x`` query string in the API request. This will
+change the return data into a paginated format. Example:
 
 .. code-block:: python
 

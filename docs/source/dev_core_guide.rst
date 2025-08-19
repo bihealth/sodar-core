@@ -195,3 +195,29 @@ followed:
   otherwise use *General*.
 - Write brief but descriptive descriptions followed by issue ID(s). Previous
   entries serve as examples.
+
+
+.. _dev_core_guide_version:
+
+Versioning
+==========
+
+The following versioning scheme is used for the SODAR Core repository:
+
+``1.*.*``
+    "Marketing version", reserved for milestones with very significant changes
+    or major overhauls.
+``*.1.*``
+    Major update. Contains major new features, deprecations and removed
+    features. Can be expected to contain breaking changes.
+``*.*.1``
+    Maintenance and bug fix release. Minor updates and fixes go here. Minor
+    non-breaking features may be introduced. Dependencies may be upgraded, but
+    preferably only for critical updates. Breaking changes should be avoided
+    if possible.
+
+Regardless of the version, breaking changes and steps required for upgrading
+to them must be clearly documented in the :ref:`major_changes` section.
+
+SODAR Core REST APIs follow a different versioning scheme. For more information,
+see :ref:`REST API Versioning <rest_api_overview_version>`.
