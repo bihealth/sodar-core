@@ -57,6 +57,15 @@ class SODARCacheAPI:
     # API functions ------------------------------------------------------------
 
     @classmethod
+    def get_model(cls) -> type[JSONCacheItem]:
+        """
+        Return JSONCacheItem model for direct model access.
+
+        :returns: JSONCacheItem class
+        """
+        return JSONCacheItem
+
+    @classmethod
     def get_project_cache(
         cls, project: Project, data_type: str = 'json'
     ) -> QuerySet:

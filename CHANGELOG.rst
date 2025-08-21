@@ -13,6 +13,8 @@ Added
 
 - **Projectroles**
     - ``Project.get_public_access_name()`` helper (#1736)
+- **Sodarcache**
+    - ``SODARCacheAPI.get_model()`` helper (#1746)
 
 Changed
 -------

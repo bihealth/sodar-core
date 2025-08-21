@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add Project.get_public_access_name() helper
+- Add SODARCacheAPI.get_model() helper
 - Fix is_project_accessible() rule predicate implementation
 - General bug fixes and minor updates
 
