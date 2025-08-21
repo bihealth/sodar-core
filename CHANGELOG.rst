@@ -18,8 +18,10 @@ Added
 
 Changed
 -------
+
 - **Projectroles**
     - Log missing app setting definitions as warning in remote sync (#1737)
+    - Improve category stats card unit spacing (#1747)
 
 Fixed
 -----

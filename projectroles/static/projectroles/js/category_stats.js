@@ -16,7 +16,7 @@ $(document).ready(function () {
         let value = stats[i].value
         if (stats[i].unit) {
           value +=
-            '<span class="sodar-pr-dashboard-card-stats-unit">' + stats[
+            '<span class="sodar-pr-dashboard-card-stats-unit ml-1">' + stats[
               i].unit + '</span>'
         }
         deck.append(
