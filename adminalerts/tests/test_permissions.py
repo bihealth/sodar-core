@@ -1,4 +1,4 @@
-"""Test for UI view permissions in the adminalerts app"""
+"""Tests for UI view permissions in the adminalerts app"""
 
 from django.test import override_settings
 from django.urls import reverse

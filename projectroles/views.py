@@ -1117,9 +1117,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             extra_data['readme'] = project.readme.raw
             upd_fields.append('readme')
         if old_data['public_access'] != project.public_access:
-            extra_data['public_access'] = (
-                project.public_access.name if project.public_access else None
-            )
+            extra_data['public_access'] = project.get_public_access_name()
             upd_fields.append('public_access')
 
         # Remote projects
@@ -1669,9 +1667,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             'parent': parent,
             'description': project.description,
             'readme': project.readme.raw,
-            'public_access': (
-                project.public_access.name if project.public_access else None
-            ),
+            'public_access': project.get_public_access_name(),
             'archive': project.archive,
             'full_title': project.full_title,
             'sodar_uuid': str(project.sodar_uuid),

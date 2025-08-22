@@ -37,8 +37,12 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         super().setUp()
         self.cache_backend = plugin_api.get_backend_api('sodar_cache')
 
-    def test_add_cache_item(self):
-        """Test creating a cache item"""
+    def test_get_model(self):
+        """Test get_model()"""
+        self.assertEqual(self.cache_backend.get_model(), JSONCacheItem)
+
+    def test_set_cache_item(self):
+        """Test set_cache_item() to create item"""
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
         item = self.cache_backend.set_cache_item(
             project=self.project,
@@ -59,8 +63,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         }
         self.assertEqual(model_to_dict(item), expected)
 
-    def test_add_cache_item_invalid_app(self):
-        """Test adding an event with an invalid app name"""
+    def test_set_cache_item_invalid_app_name(self):
+        """Test set_cache_item() with invalid app name"""
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
         with self.assertRaises(ValueError):
             self.cache_backend.set_cache_item(
@@ -72,8 +76,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
             )
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
-    def test_add_cache_item_invalid_data(self):
-        """Test adding an event with an invalid app name"""
+    def test_set_cache_item_invalid_data_type(self):
+        """Test set_cache_item() with invalid data type"""
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
         with self.assertRaises(ValueError):
             self.cache_backend.set_cache_item(
@@ -86,8 +90,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
             )
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
-    def test_set_cache_value(self):
-        """Test updating a cache item"""
+    def test_set_cache_item_update(self):
+        """Test set_cache_item() to update existing event"""
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
         item = self.cache_backend.set_cache_item(
             project=self.project,
@@ -115,8 +119,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         }
         self.assertEqual(model_to_dict(update_item), expected)
 
-    def test_set_cache_value_no_user(self):
-        """Test updating a cache with no user"""
+    def test_set_cache_item_update_no_user(self):
+        """Test set_cache_item() to update item with no user"""
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
         item = self.cache_backend.set_cache_item(
             project=self.project,
@@ -143,9 +147,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(model_to_dict(update_item), expected)
 
     def test_get_cache_item(self):
-        """Test getting a cache item"""
+        """Test get_cache_item()"""
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
-
         item = self.cache_backend.set_cache_item(
             project=self.project,
             app_name=APP_NAME,
@@ -168,8 +171,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         }
         self.assertEqual(model_to_dict(get_item), expected)
 
-    def delete_cache_item(self):
-        """Test for deleting a cache item"""
+    def test_delete_cache_item(self):
+        """Test delete_cache_item()"""
         self.cache_backend.set_cache_item(
             project=self.project,
             app_name=APP_NAME,
@@ -194,7 +197,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         )
 
     def test_get_project_cache(self):
-        """Test getting all cache item of a project"""
+        """Test get_project_cache()"""
         first_item = self.cache_backend.set_cache_item(
             project=self.project,
             app_name=APP_NAME,
@@ -217,7 +220,7 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertIn(second_item, project_items)
 
     def test_get_update_time(self):
-        """Test getting the time of the latest update of a cache item"""
+        """Test get_update_time()"""
         item = self.cache_backend.set_cache_item(
             project=self.project,
             app_name=APP_NAME,
@@ -230,8 +233,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         )
         self.assertEqual(update_time, item.date_modified.timestamp())
 
-    def test_delete(self):
-        """Test delete_cache() with no arguments"""
+    def test_delete_cache(self):
+        """Test delete_cache()"""
         self.cache_backend.set_cache_item(
             project=self.project,
             app_name=APP_NAME,
@@ -244,8 +247,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(delete_status, 1)
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
-    def test_delete_app(self):
-        """Test delete_cache() with app name argument"""
+    def test_delete_cache_app_name(self):
+        """Test delete_cache() with app name"""
         self.cache_backend.set_cache_item(
             project=self.project,
             app_name=APP_NAME,
@@ -258,8 +261,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(delete_status, 1)
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
-    def test_delete_app_empty(self):
-        """Test delete_cache() on an app name without created items"""
+    def test_delete_cache_app_name_no_items(self):
+        """Test delete_cache() with app name and no created items"""
         self.cache_backend.set_cache_item(
             project=self.project,
             app_name=APP_NAME,
@@ -274,8 +277,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(delete_status, 0)
         self.assertEqual(JSONCacheItem.objects.all().count(), 1)
 
-    def test_delete_project(self):
-        """Test delete_cache() with project argument"""
+    def test_delete_cache_project(self):
+        """Test delete_cache() with project"""
         self.cache_backend.set_cache_item(
             project=self.project,
             app_name=APP_NAME,
@@ -288,8 +291,8 @@ class TestSodarCacheAPI(JSONCacheItemMixin, JSONCacheItemTestBase):
         self.assertEqual(delete_status, 1)
         self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
-    def test_delete_project_empty(self):
-        """Test delete_cache() on a project without created items"""
+    def test_delete_cache_project_no_items(self):
+        """Test delete_cache() with project and no created items"""
         new_project = self.make_project(
             'NewProject', PROJECT_TYPE_PROJECT, None
         )

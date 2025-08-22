@@ -10,6 +10,18 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.2.1 (2025-08-22)
+*******************
+
+Release Highlights
+==================
+
+- Add Project.get_public_access_name() helper
+- Add SODARCacheAPI.get_model() helper
+- Fix is_project_accessible() rule predicate implementation
+- General bug fixes and minor updates
+
+
 v1.2.0 (2025-07-10)
 *******************
 
@@ -93,7 +105,6 @@ Settings API. Example:
     from projectroles.app_settings import AppSettingAPI
     app_settings = AppSettingAPI()
     app_settings.get('projectroles', 'project_access_block', project=project)
-
 
 REST API View Changes
 ---------------------

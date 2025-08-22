@@ -1,4 +1,4 @@
-"""Test for UI view permissions in example_project_app"""
+"""Tests for UI view permissions in example_project_app"""
 
 from django.test import override_settings
 from django.urls import reverse

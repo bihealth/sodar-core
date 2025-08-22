@@ -4,9 +4,10 @@ Development Installation
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Instructions on how to install a local development version of SODAR Core are
-detailed here. Ubuntu 24.04 LTS is the supported OS for both development and
-deployment at this time. Other Linux variants can be used, but  some system
-dependencies may vary for different OS versions or distributions.
+detailed here. Ubuntu 24.04 LTS is the supported OS for development. For
+deployment, the same Ubuntu version or a corresponding Debian release are
+recommended. Other Linux variants can be used, but some system dependencies may
+vary for different OS versions or distributions.
 
 Installation and development should be possible on most recent versions of
 Linux, Mac and Windows (WSL2 recommended). However, this may require extra work

@@ -1,4 +1,4 @@
-"""Test for view permissions in the appalerts app"""
+"""Tests for view permissions in the appalerts app"""
 
 from django.test import override_settings
 from django.urls import reverse

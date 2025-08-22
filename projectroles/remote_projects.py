@@ -7,7 +7,7 @@ import urllib
 
 from copy import deepcopy
 from packaging.version import parse as parse_version
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from django.conf import settings
 from django.contrib import auth
@@ -202,10 +202,15 @@ class RemoteProjectAPI:
         else:
             plugin_name = APP_NAME
         s_def = all_defs.get(plugin_name, {}).get(app_setting.name, {})
-        if not s_def:  # This should not be able to happen, but just in case
-            raise Exception(
-                f'Definition not found for setting: {app_setting.name}'
+        if not s_def:
+            # Missing def can happen if admin forgot to run cleanappsettings
+            # NOTE: We don't raise this, instead log as warning
+            log_msg = (
+                'Definition not found for setting, skipping (run '
+                'cleanappsettings)'
             )
+            logger.warning(cls._get_app_setting_error(app_setting, log_msg))
+            return sync_data
 
         # Return old-style ip_allowlist if request version <2.0
         if (
@@ -253,13 +258,13 @@ class RemoteProjectAPI:
 
     @classmethod
     def _get_app_setting_error(
-        cls, app_setting: AppSetting, exception: Exception
+        cls, app_setting: AppSetting, exception: Union[Exception, str]
     ) -> str:
         """
         Return app setting error message to be logged.
 
         :param app_setting: AppSetting object
-        :param exception: Exception object
+        :param exception: Exception object or string
         :return: String
         """
         return (
