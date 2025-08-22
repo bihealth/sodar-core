@@ -100,7 +100,7 @@ class TemplateTagTestBase(
 
 
 class TestProjectrolesCommonTags(TemplateTagTestBase):
-    """Test for template tags in projectroles_common_tags"""
+    """Tests for template tags in projectroles_common_tags"""
 
     def test_site_version(self):
         """Test site_version()"""
@@ -645,7 +645,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
 
 
 class TestProjectrolesRoleTags(TemplateTagTestBase):
-    """Test for template tags in projectroles_role_tags"""
+    """Tests for template tags in projectroles_role_tags"""
 
     def test_get_role_icon(self):
         """Test get_role_icon()"""
@@ -745,7 +745,7 @@ class TestProjectrolesRoleTags(TemplateTagTestBase):
 
 
 class TestProjectrolesTags(TemplateTagTestBase):
-    """Test for template tags in projectroles_tags"""
+    """Tests for template tags in projectroles_tags"""
 
     def test_sodar_constant(self):
         """Test sodar_constant()"""

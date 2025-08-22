@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.2.1 (WIP)
-************
+v1.2.1 (2025-08-22)
+*******************
 
 Release Highlights
 ==================
@@ -105,7 +105,6 @@ Settings API. Example:
     from projectroles.app_settings import AppSettingAPI
     app_settings = AppSettingAPI()
     app_settings.get('projectroles', 'project_access_block', project=project)
-
 
 REST API View Changes
 ---------------------

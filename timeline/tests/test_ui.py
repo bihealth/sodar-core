@@ -247,10 +247,10 @@ class TestSiteListView(
         )
 
 
-class TestAdminListView(
+class TestAdminTimelineView(
     TimelineEventMixin, TimelineEventStatusMixin, UITestBase
 ):
-    """Test for the timeline view of all events in UI"""
+    """Tests for AdminTimelineView"""
 
     def setUp(self):
         super().setUp()
@@ -411,7 +411,7 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         )
 
     def test_copy_button(self):
-        """Test for copy button"""
+        """Test copy button"""
         self.login_and_redirect(
             self.superuser, self.url, wait_elem=None, wait_loc='ID'
         )

@@ -547,7 +547,7 @@ class Project(models.Model):
     ) -> list['RoleAssignment']:
         """
         Return RoleAssignments for project owner as well as possible inherited
-        owners from parent projects.
+        owners from parent categories.
 
         :param inherited: Include inherited roles (bool)
         :param inherited_only: Return only inherited roles (bool)
@@ -565,8 +565,8 @@ class Project(models.Model):
         self, inherited: bool = True, inherited_only: bool = False
     ) -> list['RoleAssignment']:
         """
-        Return RoleAssignments for delegates. Excludes delegates with an
-        inherited owner role.
+        Return RoleAssignments for delegates including inherited delegates from
+        parent categories.
 
         :param inherited: Include inherited roles (bool)
         :param inherited_only: Return only inherited roles (bool)

@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.2.1 (2025-08-22)
+===================
 
 Added
 -----
@@ -19,16 +19,17 @@ Added
 Changed
 -------
 
+- **General**
+    - Update versioning docs (#1739)
 - **Projectroles**
     - Log missing app setting definitions as warning in remote sync (#1737)
-    - Improve category stats card unit spacing (#1747)
+    - Improve category stats card layout unit spacing (#1747)
 
 Fixed
 -----
 
 - **General**
     - Incorrect API version information in ``app_timeline_api_rest.rst`` (#1740)
-    - Update versioning docs (#1739)
 - **Projectroles**
     - ``project_detail.html`` limited access alert typo (#1745)
     - Missing ``Project`` arg in ``is_project_accessible()`` (#1744)

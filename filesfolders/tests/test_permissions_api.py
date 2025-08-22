@@ -1,4 +1,4 @@
-"""Test for REST API view permissions in the filesfolders app"""
+"""Tests for REST API view permissions in the filesfolders app"""
 
 import os
 import uuid
