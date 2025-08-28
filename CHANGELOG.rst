@@ -5,6 +5,22 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **General**
+    - Local settings used for ``geticons`` and ``collectstatic`` in CI (#1753)
+
+Removed
+-------
+
+- **General**
+    - Local python dependencies from CI (#1752)
+
+
 v1.2.1 (2025-08-22)
 ===================
 
