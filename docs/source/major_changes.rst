@@ -16,6 +16,7 @@ v1.2.2 (WIP)
 Release Highlights
 ==================
 
+- Fix project list pagination display on page size change
 - General bug fixes and minor updates
 - Upgrade critical dependencies
 

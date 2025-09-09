@@ -74,6 +74,7 @@ PROJECT_LINK_IDS = [
     'sodar-pr-link-project-star',
 ]
 DEFAULT_WAIT_LOC = 'ID'
+PAGINATE_CLASS = 'dataTables_paginate'
 HEAD_INCLUDE = '<meta name="keywords" content="SODAR Core">'
 REMOTE_SITE_NAME = 'Remote Site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
@@ -1182,6 +1183,38 @@ class TestHomeView(UITestBase):
             ),
             25,
         )
+
+    def test_project_list_paginate_re_enable(self):
+        """Test project list pagination re-enabling on page size change"""
+        app_settings.set(
+            APP_NAME, 'project_list_pagination', 25, user=self.user_owner
+        )
+        for i in range(1, 10):
+            c = self.make_project(
+                f'Additional Category {i}', PROJECT_TYPE_CATEGORY, None
+            )
+            self.make_assignment(c, self.user_owner, self.role_owner)
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        project_elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(project_elems), 11)
+        page_elem = self.selenium.find_element(By.CLASS_NAME, PAGINATE_CLASS)
+        self.assertEqual(page_elem.get_attribute('style'), 'display: none;')
+
+        elem = Select(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-page-length'
+            )
+        )
+        elem.select_by_value('10')
+        WebDriverWait(self.selenium, 15).until(
+            ec.visibility_of_element_located((By.CLASS_NAME, PAGINATE_CLASS))
+        )
+        project_elems = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(project_elems), 10)
 
     def test_link_create_toplevel(self):
         """Test project creation link visibility"""

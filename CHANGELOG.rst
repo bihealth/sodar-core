@@ -21,6 +21,8 @@ Fixed
 
 - **General**
     - Local settings used for ``geticons`` and ``collectstatic`` in CI (#1753)
+- **Projectroles**
+    - Hidden project list pagination not re-enabled on page size change (#1755)
 
 Removed
 -------
