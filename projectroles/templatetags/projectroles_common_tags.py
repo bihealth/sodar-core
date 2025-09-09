@@ -264,7 +264,7 @@ def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
         user_class = 'inactive'
     elif user.is_superuser:
         icon = 'mdi:shield-account'
-        variant = 'info'
+        variant = 'primary'
         user_class = 'superuser'
     else:
         icon = 'mdi:account'

@@ -375,7 +375,7 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
     def test_get_user_badge_superuser(self):
         """Test get_user_badge() with superuser"""
         expected = (
-            f'<span class="badge badge-info sodar-obj-badge '
+            f'<span class="badge badge-primary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-superuser" '
             f'title="{self.superuser.get_full_name()}" '
             f'data-toggle="tooltip" '

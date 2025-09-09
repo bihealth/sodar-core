@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - General bug fixes and minor updates
+- Upgrade critical dependencies
 
 Breaking Changes
 ================

@@ -13,6 +13,8 @@ Changed
 
 - **General**
     - Upgrade minimum Django version to v4.2.24 (#1751)
+- **Projectroles**
+    - Set ``get_user_badge()`` superuser variant to ``primary`` (#1757)
 
 Fixed
 -----
