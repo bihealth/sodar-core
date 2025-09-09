@@ -16,7 +16,16 @@ v1.2.2 (WIP)
 Release Highlights
 ==================
 
-TODO
+- General bug fixes and minor updates
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v4.2.24.
 
 
 v1.2.1 (2025-08-22)

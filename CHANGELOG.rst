@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v4.2.24 (#1751)
+
 Fixed
 -----
 
