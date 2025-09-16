@@ -1045,7 +1045,7 @@ class PluginAPI:
     @classmethod
     def get_active_plugins(
         cls, plugin_type: str = 'project_app', custom_order: bool = False
-    ) -> Optional[list[PluginPoint]]:
+    ) -> Optional[list]:
         """
         Return active plugins of a specific type.
 
@@ -1116,7 +1116,7 @@ class PluginAPI:
     @classmethod
     def get_app_plugin(
         cls, plugin_name: str, plugin_type: Optional[str] = None
-    ) -> Optional[PluginPoint]:
+    ) -> Any:
         """
         Return active app plugin.
 
@@ -1138,7 +1138,7 @@ class PluginAPI:
     @classmethod
     def get_backend_api(
         cls, plugin_name: str, force: bool = False, **kwargs
-    ) -> Optional[BackendPluginPoint]:
+    ) -> Any:
         """
         Return backend API object.
         NOTE: May raise an exception from plugin.get_api().
@@ -1198,9 +1198,7 @@ def change_plugin_status(name: str, status: int, plugin_type: str = 'app'):
 
 
 # TODO: Remove in v1.3 (see #1718)
-def get_app_plugin(
-    plugin_name: str, plugin_type: Optional[str] = None
-) -> Optional[PluginPoint]:
+def get_app_plugin(plugin_name: str, plugin_type: Optional[str] = None) -> Any:
     """
     Return active app plugin.
 
@@ -1216,9 +1214,7 @@ def get_app_plugin(
 
 
 # TODO: Remove in v1.3 (see #1718)
-def get_backend_api(
-    plugin_name: str, force: bool = False, **kwargs
-) -> Optional[BackendPluginPoint]:
+def get_backend_api(plugin_name: str, force: bool = False, **kwargs) -> Any:
     """
     Return backend API object.
     NOTE: May raise an exception from plugin.get_api().

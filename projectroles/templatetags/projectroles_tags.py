@@ -1,14 +1,12 @@
 """Template tags for internal use within the projectroles app"""
 
-from typing import Optional
+from typing import Any, Optional
 
 from django import template
 from django.conf import settings
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils import timezone
-
-from djangoplugins.models import PluginPoint
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
@@ -91,9 +89,7 @@ def allow_project_creation() -> bool:
 
 
 @register.simple_tag
-def is_app_visible(
-    plugin: PluginPoint, project: Project, user: SODARUser
-) -> bool:
+def is_app_visible(plugin: Any, project: Project, user: SODARUser) -> bool:
     """Check if app should be visible for user in a specific project"""
     can_view_app = user.has_perm(plugin.app_permission, project)
     app_hidden = False
@@ -112,9 +108,7 @@ def is_app_visible(
 
 
 @register.simple_tag
-def get_app_link_state(
-    app_plugin: PluginPoint, app_name: str, url_name: str
-) -> str:
+def get_app_link_state(app_plugin: Any, app_name: str, url_name: str) -> str:
     """
     Return "active" if plugin matches app_name and url_name is found in
     app_plugin.urls.

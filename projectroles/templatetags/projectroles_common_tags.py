@@ -170,7 +170,7 @@ def get_project_title_html(project: Project) -> str:
 
 @register.simple_tag
 def get_project_link(
-    project: str,
+    project: Project,
     full_title: bool = False,
     request: Optional[HttpRequest] = None,
 ) -> str:
@@ -466,7 +466,7 @@ def force_wrap(s: str, length: int) -> str:
 
 
 @register.simple_tag
-def get_class(obj: any, lower: bool = False) -> str:
+def get_class(obj: Any, lower: bool = False) -> str:
     """Return object class as string"""
     c = obj.__class__.__name__
     return c.lower() if lower else c
