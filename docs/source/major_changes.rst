@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Fix project list pagination display on page size change
+- Update modal template
 - General bug fixes and minor updates
 - Upgrade critical dependencies
 

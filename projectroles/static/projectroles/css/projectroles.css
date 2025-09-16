@@ -753,9 +753,13 @@ a.sodar-alert-full-text-link:hover {
   padding-left: 16px;
 }
 
-div#sodar-modal div.modal-dialog{
+div#sodar-modal div.modal-dialog {
   min-width: 600px;
   max-width: 75%;
+}
+
+div#sodar-modal span.modal-header-extra {
+  line-height: 30px;
 }
 
 .sodar-breadcrumb-table {

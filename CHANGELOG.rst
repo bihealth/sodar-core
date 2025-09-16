@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``modal-header-extra`` element in ``_modal.html`` (#1760)
+
 Changed
 -------
 
@@ -15,6 +21,7 @@ Changed
     - Upgrade minimum Django version to v4.2.24 (#1751)
 - **Projectroles**
     - Set ``get_user_badge()`` superuser variant to ``primary`` (#1757)
+    - Update ``_modal.html`` close button icon (#1761)
 
 Fixed
 -----
