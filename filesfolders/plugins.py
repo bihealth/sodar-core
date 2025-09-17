@@ -263,6 +263,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :param user: User object (current user)
         :return: String (may contain HTML), integer or None
         """
+        count = 0
         if column_id == 'files':
             count = File.objects.filter(project=project).count()
         elif column_id == 'links':
@@ -272,4 +273,4 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'filesfolders:list', kwargs={'project': project.sodar_uuid}
             )
             return f'<a href="{url}">{count}</a>'
-        return 0
+        return count

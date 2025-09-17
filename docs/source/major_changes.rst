@@ -10,14 +10,14 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.2.2 (WIP)
-************
+v1.2.2 (2025-09-17)
+*******************
 
 Release Highlights
 ==================
 
-- Fix project list pagination display on page size change
 - Update modal template
+- Fix project list pagination display on page size change
 - General bug fixes and minor updates
 - Upgrade critical dependencies
 
@@ -79,8 +79,8 @@ System Prerequisites
 --------------------
 
 OS Version
-    **Ubuntu v24.04** is now the recommended OS version, both for development
-    and deployment. Older versions are no longer supported.
+    **Ubuntu v24.04** is now the recommended OS version for development. Older
+    versions are no longer supported.
 Django Version
     The minimum Django version has been bumped to v4.2.23.
 General Python Dependencies
