@@ -418,6 +418,12 @@ $(document).ready(function () {
         '#sodar-pr-project-list').find('table').DataTable()
       let value = parseInt($(this).val())
       dt.page.len(value).draw()
+      // Update pagination
+      if (dt.page.info().pages === 1) {
+        $('.dataTables_paginate').hide()
+      } else {
+        $('.dataTables_paginate').show()
+      }
       // Update user setting
       $.ajax({
         url: 'project/api/settings/set/user',

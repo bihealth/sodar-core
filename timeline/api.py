@@ -12,8 +12,6 @@ from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.text import Truncator
 
-from djangoplugins.models import PluginPoint
-
 # Projectroles dependency
 from projectroles.models import Project, RemoteSite, SODARUser
 from projectroles.plugins import PluginAPI
@@ -147,7 +145,7 @@ class TimelineAPI:
         cls,
         event: TimelineEvent,
         ref_label: str,
-        app_plugin: Optional[PluginPoint] = None,
+        app_plugin: Any,
         request: Optional[HttpRequest] = None,
     ) -> str:
         """

@@ -806,7 +806,7 @@ class AppSettingAPI:
         name: str,
         plugin: Optional[PluginPoint] = None,
         plugin_name: Optional[str] = None,
-    ) -> dict:
+    ) -> PluginAppSettingDef:
         """
         Return definition for a single app setting, either based on an app name
         or the plugin object.
@@ -814,7 +814,7 @@ class AppSettingAPI:
         :param name: Setting name (string)
         :param plugin: Plugin object or None
         :param plugin_name: Name of the app plugin (string or None)
-        :return: Dict
+        :return: PluginAppSettingDef
         :raise: ValueError if neither plugin_name nor plugin are set, or if
                 setting is not found in plugin
         """

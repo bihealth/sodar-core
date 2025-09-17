@@ -381,7 +381,8 @@ class Project(models.Model):
         while parent:
             ret.append(parent)
             parent = parent.parent
-        return reversed(ret)
+        ret.reverse()
+        return ret
 
     def get_children(self, flat: bool = False) -> QuerySet:
         """

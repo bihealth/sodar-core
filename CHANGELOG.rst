@@ -5,6 +5,40 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.2.2 (2025-09-17)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``modal-header-extra`` element in ``_modal.html`` (#1760)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v4.2.24 (#1751)
+- **Projectroles**
+    - Set ``get_user_badge()`` superuser variant to ``primary`` (#1757)
+    - Update ``_modal.html`` close button icon (#1761)
+
+Fixed
+-----
+
+- **General**
+    - Local settings used for ``geticons`` and ``collectstatic`` in CI (#1753)
+    - Type hint issues (#1759)
+- **Projectroles**
+    - Hidden project list pagination not re-enabled on page size change (#1755)
+
+Removed
+-------
+
+- **General**
+    - Local python dependencies from CI (#1752)
+
+
 v1.2.1 (2025-08-22)
 ===================
 

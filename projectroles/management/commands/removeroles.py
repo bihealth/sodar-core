@@ -4,6 +4,8 @@ Removeroles management command for removing all roles from a user.
 
 import sys
 
+from typing import Optional
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -43,7 +45,7 @@ class Command(
     @classmethod
     def _get_parent_owner(
         cls, project: Project, prev_owner: SODARUser
-    ) -> SODARUser:
+    ) -> Optional[SODARUser]:
         """Return assignment for first parent owner who is not previous owner"""
         if not project.parent:
             return None
@@ -56,7 +58,7 @@ class Command(
         self,
         project: Project,
         user: SODARUser,
-        owner: SODARUser,
+        owner: Optional[SODARUser],
         role_as: RoleAssignment,
         p_title: str,
         check: bool,

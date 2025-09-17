@@ -1,6 +1,6 @@
 """REST API views for the sodarcache app"""
 
-from typing import Optional
+from typing import Any
 
 from rest_framework import serializers
 from rest_framework.exceptions import APIException, NotFound, ParseError
@@ -14,7 +14,7 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import BackendPluginPoint, PluginAPI
+from projectroles.plugins import PluginAPI
 from projectroles.views_api import SODARAPIGenericProjectMixin
 
 from sodarcache.serializers import JSONCacheItemSerializer
@@ -60,7 +60,7 @@ class SodarcacheAPIViewMixin:
     versioning_class = SodarcacheAPIVersioning
 
     @classmethod
-    def get_backend(cls) -> Optional[BackendPluginPoint]:
+    def get_backend(cls) -> Any:
         """
         Return sodarcache backend or raise 503 if not enabled.
 
