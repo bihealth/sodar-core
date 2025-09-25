@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **General**
+    - Documentation section in ``release_cleanup.md`` issue template (#1776)
+
 Changed
 -------
 
