@@ -31,6 +31,7 @@ Fixed
 - **Projectroles**
     - ``_modal.html`` close button padding (#1764)
     - Uncaught exception in ``ProjectForm`` with empty ``title`` field (#1778)
+    - ``ProjectCreateView`` fields not correctly displayed on field error reload (#1770)
 
 
 v1.2.2 (2025-09-17)
