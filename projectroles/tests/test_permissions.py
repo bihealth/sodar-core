@@ -3,6 +3,7 @@
 from typing import Optional, Union
 from urllib.parse import urlencode, quote
 
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.test import override_settings
 from django.urls import reverse
@@ -10,7 +11,7 @@ from django.urls import reverse
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.utils import build_secret
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -24,6 +25,7 @@ from projectroles.tests.test_models import (
 
 
 app_settings = AppSettingAPI()
+User = get_user_model()
 
 
 # SODAR constants
@@ -118,7 +120,7 @@ class PermissionTestMixin:
     def assert_response(
         self,
         url: str,
-        users: Union[list, tuple, SODARUser],
+        users: Union[list, tuple, User],
         status_code: int,
         redirect_user: Optional[str] = None,
         redirect_anon: Optional[str] = None,

@@ -3,14 +3,16 @@
 from typing import Any, Optional
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
 from projectroles.utils import get_display_name
 
 
 plugin_api = PluginAPI()
+User = get_user_model()
 
 
 # SODAR constants
@@ -93,9 +95,7 @@ class AppLinkAPI:
         return False
 
     @classmethod
-    def _is_app_visible(
-        cls, plugin: Any, project: Project, user: SODARUser
-    ) -> bool:
+    def _is_app_visible(cls, plugin: Any, project: Project, user: User) -> bool:
         """Check if app should be visible for user in a specific project"""
         can_view_app = user.has_perm(plugin.app_permission, project)
         app_hidden = False
@@ -124,7 +124,7 @@ class AppLinkAPI:
 
     def get_project_links(
         self,
-        user: SODARUser,
+        user: User,
         project: Optional[Project] = None,
         app_name: Optional[str] = None,
         url_name: Optional[str] = None,
@@ -134,7 +134,7 @@ class AppLinkAPI:
 
         :param user: User object
         :param project: Project object or None
-        :param app_name: App name string or None
+        :param app_name: App name string or None4
         :param url_name: URL name string or None
         :return: List of dicts
         """
@@ -264,14 +264,14 @@ class AppLinkAPI:
 
     def get_user_links(
         self,
-        user: SODARUser,
+        user: User,
         app_name: Optional[str] = None,
         url_name: Optional[str] = None,
     ) -> list[dict]:
         """
         Return user links for the user dropdown.
 
-        :param user: SODARUser object
+        :param user: User object
         :param app_name: App name string or None
         :param url_name: URL name string or None
         """

@@ -11,7 +11,6 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db.models import Q, QuerySet
 
-from projectroles.models import SODARUser
 from projectroles.management.logging import ManagementCommandLogger
 
 
@@ -49,7 +48,7 @@ class Command(BaseCommand):
     )
 
     @classmethod
-    def _print_result(cls, django_user: SODARUser, msg: str):
+    def _print_result(cls, django_user: User, msg: str):
         print(
             f'{django_user.username};{django_user.get_full_name()};'
             f'{django_user.email};{msg}'
@@ -68,7 +67,7 @@ class Command(BaseCommand):
 
     def _check_ldap_users(
         self,
-        users: QuerySet[SODARUser],
+        users: QuerySet[User],
         primary: bool,
         all_users: bool,
         deactivate: bool,
@@ -76,7 +75,7 @@ class Command(BaseCommand):
         """
         Check and print out user status for a specific LDAP server.
 
-        :param users: QuerySet of SODARUser objects
+        :param users: QuerySet of User objects
         :param primary: Whether to check for primary or secondary server (bool)
         :param all_users: Display status for all users (bool)
         :param deactivate: Set disabled users to inactive if True (bool)

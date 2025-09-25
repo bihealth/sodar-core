@@ -2,12 +2,13 @@
 
 from typing import Union
 
+from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -15,6 +16,9 @@ from projectroles.tests.test_models import (
 )
 
 from sodarcache.models import JSONCacheItem
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -38,7 +42,7 @@ class JSONCacheItemMixin:
         project: Project,
         app_name: str,
         name: str,
-        user: SODARUser,
+        user: User,
         data: Union[dict, list],
     ) -> JSONCacheItem:
         """Create JSONCacheItem object"""

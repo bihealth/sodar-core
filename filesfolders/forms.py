@@ -5,6 +5,7 @@ from zipfile import ZipFile
 
 from django import forms
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.template.defaultfilters import filesizeformat
 
 from db_file_storage.form_widgets import DBClearableFileInput
@@ -12,13 +13,14 @@ from db_file_storage.form_widgets import DBClearableFileInput
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import SODARModelForm
-from projectroles.models import Project, SODARUser
+from projectroles.models import Project
 from projectroles.utils import build_secret
 
 from filesfolders.models import File, Folder, HyperLink
 
 
 app_settings = AppSettingAPI()
+User = get_user_model()
 
 
 # Settings
@@ -61,7 +63,7 @@ class FolderForm(FilesfoldersItemForm):
 
     def __init__(
         self,
-        current_user: Optional[SODARUser] = None,
+        current_user: Optional[User] = None,
         folder: Optional[Folder] = None,
         project: Optional[Project] = None,
         *args,
@@ -200,7 +202,7 @@ class FileForm(FilesfoldersItemForm):
 
     def __init__(
         self,
-        current_user: Optional[SODARUser] = None,
+        current_user: Optional[User] = None,
         folder: Optional[Folder] = None,
         project: Optional[Project] = None,
         *args,
@@ -399,7 +401,7 @@ class HyperLinkForm(FilesfoldersItemForm):
 
     def __init__(
         self,
-        current_user: Optional[SODARUser] = None,
+        current_user: Optional[User] = None,
         folder: Optional[Folder] = None,
         project: Optional[Project] = None,
         *args,

@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils.text import Truncator
 
 # Projectroles dependency
-from projectroles.models import Project, RemoteSite, SODARUser
+from projectroles.models import Project, RemoteSite
 from projectroles.plugins import PluginAPI
 from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
@@ -227,7 +227,7 @@ class TimelineAPI:
         cls,
         project: Project,
         app_name: str,
-        user: Optional[SODARUser],
+        user: Optional[User],
         event_name: str,
         description: str,
         classified: bool = False,

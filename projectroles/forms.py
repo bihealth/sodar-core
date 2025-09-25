@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 from django import forms
 from django.conf import settings
-from django.contrib import auth
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
@@ -16,7 +16,7 @@ from django.utils.html import format_html
 
 from dal import autocomplete, forward as dal_forward
 from pagedown.widgets import PagedownWidget
-from djangoplugins.models import PluginPoint
+from djangoplugins.models import Plugin
 
 from projectroles.models import (
     Project,
@@ -25,7 +25,6 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
-    SODARUser,
     SODAR_CONSTANTS,
     ROLE_RANKING,
     CAT_DELIMITER,
@@ -39,7 +38,7 @@ from projectroles.app_settings import AppSettingAPI
 
 app_settings = AppSettingAPI()
 plugin_api = PluginAPI()
-User = auth.get_user_model()
+User = get_user_model()
 
 
 # SODAR constants
@@ -214,7 +213,7 @@ class SODARAppSettingFormMixin:
         self.initial[s_field] = value
 
     def set_app_setting_notes(
-        self, plugin: PluginPoint, s_field: str, s_def: PluginAppSettingDef
+        self, plugin: Plugin, s_field: str, s_def: PluginAppSettingDef
     ):
         """
         Helper for setting app setting label notes.
@@ -240,7 +239,7 @@ class SODARAppSettingFormMixin:
             plugin, self.fields[s_field].label
         )
 
-    def get_app_setting_label(self, plugin: PluginPoint, label: str) -> str:
+    def get_app_setting_label(self, plugin: Any, label: str) -> str:
         """Return label for app setting key"""
         if plugin:
             return format_html(
@@ -256,7 +255,9 @@ class SODARAppSettingFormMixin:
             label,
         )
 
-    def init_app_settings(self, app_plugins: list, scope: str, user_mod: bool):
+    def init_app_settings(
+        self, app_plugins: list[Plugin], scope: str, user_mod: bool
+    ):
         """
         Initialize app settings in form. Also sets up self.app_plugins.
 
@@ -290,11 +291,11 @@ class SODARAppSettingFormMixin:
     def clean_app_settings(
         cls,
         cleaned_data: dict,
-        app_plugins: list,
+        app_plugins: list[Plugin],
         scope: str,
         user_modifiable: bool,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ):
         """Validate and clean app settings form fields"""
         scope_kw = {}
@@ -530,9 +531,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         ]
 
     @classmethod
-    def _get_parent_choices(
-        cls, instance: Project, user: SODARUser
-    ) -> list[tuple]:
+    def _get_parent_choices(cls, instance: Project, user: User) -> list[tuple]:
         """
         Return valid choices of parent categories for moving a project.
 
@@ -638,7 +637,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
     def __init__(
         self,
         project: Optional[Project] = None,
-        current_user: Optional[SODARUser] = None,
+        current_user: Optional[User] = None,
         *args,
         **kwargs,
     ):
@@ -905,7 +904,7 @@ class RoleAssignmentForm(SODARModelForm):
     def __init__(
         self,
         project: Optional[Project] = None,
-        current_user: Optional[SODARUser] = None,
+        current_user: Optional[User] = None,
         promote_as: Optional[RoleAssignment] = None,
         *args,
         **kwargs,
@@ -1071,8 +1070,8 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
     def __init__(
         self,
         project: Project,
-        current_user: SODARUser,
-        current_owner: SODARUser,
+        current_user: User,
+        current_owner: User,
         *args,
         **kwargs,
     ):
@@ -1108,7 +1107,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             disabled=True if len(self.selectable_roles) == 1 else False,
         )
 
-    def clean_old_owner_role(self) -> Role:
+    def clean_old_owner_role(self) -> Optional[Role]:
         field_val = int(self.cleaned_data.get('old_owner_role'))
         if not field_val:
             return None  # Remove old owner role
@@ -1143,7 +1142,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
                 )
         return role
 
-    def clean_new_owner(self) -> SODARUser:
+    def clean_new_owner(self) -> User:
         user = self.cleaned_data['new_owner']
         if user == self.current_owner:
             raise forms.ValidationError(
@@ -1171,7 +1170,7 @@ class ProjectInviteForm(SODARModelForm):
     def __init__(
         self,
         project: Optional[Project] = None,
-        current_user: Optional[SODARUser] = None,
+        current_user: Optional[User] = None,
         mail: Optional[str] = None,
         role: Optional[Role] = None,
         *args,
@@ -1350,9 +1349,7 @@ class RemoteSiteForm(SODARModelForm):
             'secret',
         ]
 
-    def __init__(
-        self, current_user: Optional[SODARUser] = None, *args, **kwargs
-    ):
+    def __init__(self, current_user: Optional[User] = None, *args, **kwargs):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
         self.current_user = current_user
@@ -1452,7 +1449,7 @@ def get_role_option(project_type: str, role: Role) -> tuple:
 
 def get_role_choices(
     project: Project,
-    current_user: SODARUser,
+    current_user: User,
     promote_as: Optional[RoleAssignment] = None,
     allow_delegate: bool = True,
 ) -> list[tuple]:

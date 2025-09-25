@@ -5,7 +5,7 @@ import sys
 from email.utils import parseaddr
 
 from django.conf import settings
-from django.contrib import auth
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.http import HttpRequest
 from django.utils import timezone
@@ -15,7 +15,6 @@ from projectroles.models import (
     Project,
     Role,
     ProjectInvite,
-    SODARUser,
     SODAR_CONSTANTS,
 )
 from projectroles.views import RoleAssignmentModifyMixin, ProjectInviteMixin
@@ -23,7 +22,7 @@ from projectroles.utils import build_secret
 
 
 logger = ManagementCommandLogger(__name__)
-User = auth.get_user_model()
+User = get_user_model()
 
 
 # SODAR constants
@@ -69,12 +68,12 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         request.user = self.issuer
         return request
 
-    def _update_role(self, project: Project, user: SODARUser, role: Role):
+    def _update_role(self, project: Project, user: User, role: Role):
         """
         Handle role update for an existing user.
 
         :param project: Project object
-        ;param user: SODARUser object
+        ;param user: User object
         :param role: Role object
         """
         logger.info(f'Updating role of user {user.username} to {role.name}..')

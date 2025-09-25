@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 from django import template
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils import timezone
@@ -11,7 +12,6 @@ from django.utils import timezone
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
-    SODARUser,
     RemoteSite,
     RemoteProject,
     SODAR_CONSTANTS,
@@ -24,6 +24,7 @@ app_links = AppLinkAPI()
 app_settings = AppSettingAPI()
 plugin_api = PluginAPI()
 register = template.Library()
+User = get_user_model()
 
 
 # SODAR constants
@@ -58,7 +59,7 @@ def get_backend_plugins() -> list:
 
 
 @register.simple_tag
-def get_site_app_messages(user: SODARUser) -> list:
+def get_site_app_messages(user: User) -> list:
     """Get messages from site apps"""
     plugins = plugin_api.get_active_plugins('site_app')
     ret = []
@@ -89,7 +90,7 @@ def allow_project_creation() -> bool:
 
 
 @register.simple_tag
-def is_app_visible(plugin: Any, project: Project, user: SODARUser) -> bool:
+def is_app_visible(plugin: Any, project: Project, user: User) -> bool:
     """Check if app should be visible for user in a specific project"""
     can_view_app = user.has_perm(plugin.app_permission, project)
     app_hidden = False
@@ -150,7 +151,7 @@ def get_pr_link_state(
 
 
 @register.simple_tag
-def get_help_highlight(user: SODARUser) -> str:
+def get_help_highlight(user: User) -> str:
     """
     Return classes to highlight navbar help link if user has recently signed in
     """

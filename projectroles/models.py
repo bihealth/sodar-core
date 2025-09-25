@@ -412,7 +412,7 @@ class Project(models.Model):
         return self.public_access.name if self.public_access else None
 
     def get_role(
-        self, user: 'SODARUser', inherited_only: bool = False
+        self, user: AbstractUser, inherited_only: bool = False
     ) -> Optional['RoleAssignment']:
         """
         Return the currently active role for user, or None if not available.
@@ -441,7 +441,7 @@ class Project(models.Model):
 
     def get_roles(
         self,
-        user: Optional['SODARUser'] = None,
+        user: Optional[AbstractUser] = None,
         inherited: bool = True,
         inherited_only: bool = False,
         min_rank: Optional[int] = None,
@@ -581,12 +581,12 @@ class Project(models.Model):
             max_rank=rank,
         )
 
-    def is_owner(self, user: 'SODARUser') -> bool:
+    def is_owner(self, user: AbstractUser) -> bool:
         """
         Return True if user is owner in this project or inherits ownership from
         a parent category.
 
-        :param user: SODARUser object
+        :param user: User object
         :return: Boolean
         """
         if not user.is_authenticated:
@@ -596,12 +596,12 @@ class Project(models.Model):
             return True
         return False
 
-    def is_delegate(self, user: 'SODARUser') -> bool:
+    def is_delegate(self, user: AbstractUser) -> bool:
         """
         Return True if user is delegate in this project or inherits delegate
         status from a parent category.
 
-        :param user: SODARUser object
+        :param user: User object
         :return: Boolean
         """
         if not user.is_authenticated:
@@ -611,12 +611,12 @@ class Project(models.Model):
             return True
         return False
 
-    def is_owner_or_delegate(self, user: 'SODARUser') -> bool:
+    def is_owner_or_delegate(self, user: AbstractUser) -> bool:
         """
         Return True if user is either an owner or a delegate in this project.
         Includes inherited assignments.
 
-        :param user: SODARUser object
+        :param user: User object
         :return: Boolean
         """
         if not user.is_authenticated:
@@ -642,7 +642,7 @@ class Project(models.Model):
             min_rank=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).rank,
         )
 
-    def has_role(self, user: 'SODARUser', public: bool = True) -> bool:
+    def has_role(self, user: AbstractUser, public: bool = True) -> bool:
         """
         Return whether user has roles in Project. Returns True if user has local
         role, inherits a role from a parent category, or if public access is
@@ -657,7 +657,7 @@ class Project(models.Model):
             return True
         return False
 
-    def has_role_in_children(self, user: 'SODARUser') -> bool:
+    def has_role_in_children(self, user: AbstractUser) -> bool:
         """
         Return True if user has a role in any of the children in the project.
         Also returns true if public guest access is true for any child.
@@ -970,7 +970,7 @@ class AppSettingManager(models.Manager):
         plugin_name: str,
         setting_name: str,
         project: Optional[Project] = None,
-        user: Optional['SODARUser'] = None,
+        user: Optional[AbstractUser] = None,
     ) -> Any:
         """
         Return value of setting_name for plugin_name in project or for user.

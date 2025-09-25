@@ -2,18 +2,22 @@
 
 from typing import Optional
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.urls import reverse
 
-from djangoplugins.models import Plugin, PluginPoint
+from djangoplugins.models import Plugin
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin
 
 from appalerts.models import AppAlert
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -32,9 +36,9 @@ class AppAlertMixin:
     @classmethod
     def make_app_alert(
         cls,
-        app_plugin: Optional[PluginPoint] = None,
+        app_plugin: Optional[Plugin] = None,
         alert_name: str = ALERT_NAME,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
         message: str = ALERT_MSG,
         level: str = ALERT_LEVEL,
         active: bool = True,

@@ -4,15 +4,11 @@ from typing import Optional, Union
 from uuid import UUID
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import (
-    Project,
-    SODARUser,
-    SODAR_CONSTANTS,
-    CAT_DELIMITER,
-)
+from projectroles.models import Project, SODAR_CONSTANTS, CAT_DELIMITER
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     PluginAppSettingDef,
@@ -24,6 +20,9 @@ from projectroles.utils import get_display_name
 
 from filesfolders.models import File, Folder, HyperLink
 from filesfolders.urls import urlpatterns
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -161,7 +160,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     def search(
         self,
         search_terms: list[str],
-        user: SODARUser,
+        user: User,
         search_type: Optional[str] = None,
         keywords: Optional[list[str]] = None,
     ) -> list[PluginSearchResult]:
@@ -252,7 +251,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         ]
 
     def get_project_list_value(
-        self, column_id: str, project: Project, user: SODARUser
+        self, column_id: str, project: Project, user: User
     ) -> Union[str, int, None]:
         """
         Return a value for the optional additional project list column specific

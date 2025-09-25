@@ -1,14 +1,15 @@
 """Tests for models in the adminalerts app"""
 
+from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 from django.utils import timezone
 
 from test_plus.test import TestCase
 
-# Projectroles dependency
-from projectroles.models import SODARUser
-
 from adminalerts.models import AdminAlert
+
+
+User = get_user_model()
 
 
 class AdminAlertMixin:
@@ -18,7 +19,7 @@ class AdminAlertMixin:
     def make_alert(
         cls,
         message: str,
-        user: SODARUser,
+        user: User,
         description: str,
         active: bool = True,
         require_auth: bool = True,

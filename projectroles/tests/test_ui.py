@@ -8,8 +8,8 @@ from typing import Optional, Union
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib import auth
 from django.contrib.auth import (
+    get_user_model,
     SESSION_KEY,
     BACKEND_SESSION_KEY,
     HASH_SESSION_KEY,
@@ -30,7 +30,6 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
-    SODARUser,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
@@ -49,7 +48,7 @@ from projectroles.utils import build_secret
 
 app_settings = AppSettingAPI()
 plugin_api = PluginAPI()
-User = auth.get_user_model()
+User = get_user_model()
 
 
 # SODAR constants
@@ -128,7 +127,7 @@ class LiveUserMixin:
     """Mixin for creating users to work with LiveServerTestCase"""
 
     @classmethod
-    def make_user(cls, user_name: str, superuser: bool = False) -> SODARUser:
+    def make_user(cls, user_name: str, superuser: bool = False) -> User:
         """Make user, superuser if superuser=True"""
         kwargs = {
             'username': user_name,
@@ -156,7 +155,7 @@ class UITestMixin:
 
     def login_and_redirect(
         self,
-        user: SODARUser,
+        user: User,
         url: str,
         wait_elem: Optional[str] = None,
         wait_loc: str = DEFAULT_WAIT_LOC,
@@ -166,7 +165,7 @@ class UITestMixin:
 
         If PROJECTROLES_TEST_UI_LEGACY_LOGIN=True, use legacy UI login method.
 
-        :param user: SODARUser object
+        :param user: User object
         :param url: URL to redirect to (string)
         :param wait_elem: Wait for existence of an element (string, optional)
         :param wait_loc: Locator of optional wait element (string, corresponds
@@ -215,7 +214,7 @@ class UITestMixin:
     # NOTE: Used if PROJECTROLES_TEST_UI_LEGACY_LOGIN is set True
     def login_and_redirect_with_ui(
         self,
-        user: SODARUser,
+        user: User,
         url: str,
         wait_elem: Optional[str] = None,
         wait_loc: str = DEFAULT_WAIT_LOC,
@@ -282,7 +281,7 @@ class UITestMixin:
 
     def assert_element_exists(
         self,
-        users: Union[list[SODARUser], QuerySet[SODARUser]],
+        users: Union[list[User], QuerySet[User]],
         url: str,
         element_id: str,
         exists: bool,
@@ -390,7 +389,7 @@ class UITestMixin:
 
     def assert_element_active(
         self,
-        user: SODARUser,
+        user: User,
         element_id: str,
         all_elements: list[str],
         url: str,
@@ -401,7 +400,7 @@ class UITestMixin:
         Assert the "active" status of an element based on logged user as well
         as unset status of other elements.
 
-        :param user: SODARUser for logging in
+        :param user: User for logging in
         :param element_id: ID of element to test (string)
         :param all_elements: All possible elements in the set (list of strings)
         :param url: URL to test (string)
@@ -2881,9 +2880,7 @@ class TestProjectDeleteView(UITestBase):
 class TestProjectRoleView(RemoteTargetMixin, UITestBase):
     """Tests for ProjectRoleView UI"""
 
-    def _get_role_dropdown(
-        self, user: SODARUser, owner: bool = False
-    ) -> WebElement:
+    def _get_role_dropdown(self, user: User, owner: bool = False) -> WebElement:
         """Return role dropdown for a role"""
         row = self.selenium.find_element(
             By.XPATH,
@@ -2895,7 +2892,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             class_name += '-owner'
         return row.find_element(By.CLASS_NAME, class_name)
 
-    def _get_role_items(self, user: SODARUser) -> list[WebElement]:
+    def _get_role_items(self, user: User) -> list[WebElement]:
         """Return role dropdown items for a role"""
         dropdown = self._get_role_dropdown(user)
         return dropdown.find_elements(By.CLASS_NAME, 'dropdown-item')

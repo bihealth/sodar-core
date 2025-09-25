@@ -149,6 +149,7 @@ class UserEmailMixin:
         Send verification message to additional email address.
 
         :param email: SODARUserAdditionalEmail object
+        :param resend: Email is being resent if True (bool, default=False)
         """
         subject = VERIFY_EMAIL_SUBJECT.format(site=settings.SITE_INSTANCE_TITLE)
         body = VERIFY_EMAIL_BODY.format(

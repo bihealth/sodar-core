@@ -1,5 +1,6 @@
 """API tests for the timeline app"""
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest
 from django.forms.models import model_to_dict
@@ -7,7 +8,7 @@ from django.test import RequestFactory
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
 from projectroles.tests.test_models import (
     RemoteSiteMixin,
@@ -34,6 +35,7 @@ from timeline.tests.test_models import (
 
 
 plugin_api = PluginAPI()
+User = get_user_model()
 
 
 # SODAR constants
@@ -53,7 +55,7 @@ class TimelineAPIMixin:
     """Helpers for timeline API use"""
 
     @classmethod
-    def get_request(cls, user: SODARUser, project: Project) -> HttpRequest:
+    def get_request(cls, user: User, project: Project) -> HttpRequest:
         """Return mock request"""
         request = RequestFactory().get(
             'timeline:list', kwargs={'project': project}

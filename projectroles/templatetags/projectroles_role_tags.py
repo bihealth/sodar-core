@@ -3,17 +3,13 @@
 from typing import Optional
 
 from django import template
+from django.contrib.auth import get_user_model
 
-from projectroles.models import (
-    Project,
-    SODARUser,
-    Role,
-    RoleAssignment,
-    SODAR_CONSTANTS,
-)
+from projectroles.models import Project, Role, RoleAssignment, SODAR_CONSTANTS
 
 
 register = template.Library()
+User = get_user_model()
 
 
 # SODAR constants
@@ -39,11 +35,11 @@ def get_role_icon(role: Role) -> str:
 
 
 @register.simple_tag
-def get_role_class(user: SODARUser) -> str:
+def get_role_class(user: User) -> str:
     """
     Return class string for user role based on user status.
 
-    :param user: SODARUser object
+    :param user: User object
     :return: String
     """
     if not user.is_active:
@@ -52,12 +48,12 @@ def get_role_class(user: SODARUser) -> str:
 
 
 @register.simple_tag
-def get_role_perms(project: Project, user: SODARUser) -> dict:
+def get_role_perms(project: Project, user: User) -> dict:
     """
     Return role perms to template as dict.
 
     :param project: Project object
-    :param user: SODARUser object
+    :param user: User object
     :return: Dict
     """
     return {

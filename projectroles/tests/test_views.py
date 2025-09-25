@@ -7,7 +7,7 @@ from typing import Optional
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib import auth
+from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.core import mail
 from django.db.models import QuerySet
@@ -53,7 +53,6 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
-    SODARUser,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
 )
@@ -99,7 +98,7 @@ from projectroles.context_processors import (
 
 app_settings = AppSettingAPI()
 plugin_api = PluginAPI()
-User = auth.get_user_model()
+User = get_user_model()
 
 
 # SODAR constants
@@ -771,7 +770,7 @@ class TestProjectCreateView(
         title: str,
         project_type: str,
         parent: Optional[Project],
-        owner: SODARUser,
+        owner: User,
     ) -> dict:
         """Return POST data for project creation"""
         ret = {
@@ -1428,7 +1427,7 @@ class TestProjectUpdateView(
     """Tests for ProjectUpdateView"""
 
     @classmethod
-    def _get_post_app_settings(cls, project: Project, user: SODARUser) -> dict:
+    def _get_post_app_settings(cls, project: Project, user: User) -> dict:
         """Get postable app settings for project of type PROJECT"""
         if project.is_category():
             raise ValueError('Can only be called for a project')

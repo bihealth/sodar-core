@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **General**
+    - Type hint issues (#1769)
+
+
 v1.2.2 (2025-09-17)
 ===================
 

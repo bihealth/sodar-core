@@ -71,13 +71,13 @@ def get_project_by_uuid(sodar_uuid: Union[str, UUID]) -> Optional[Project]:
 
 
 @register.simple_tag
-def get_user_by_uuid(sodar_uuid: Union[str, UUID]) -> Optional[SODARUser]:
-    """Return SODARUser by sodar_uuid"""
+def get_user_by_uuid(sodar_uuid: Union[str, UUID]) -> Optional[User]:
+    """Return User by sodar_uuid"""
     return User.objects.filter(sodar_uuid=sodar_uuid).first()
 
 
 @register.simple_tag
-def get_user_by_username(username: str) -> Optional[SODARUser]:
+def get_user_by_username(username: str) -> Optional[User]:
     """Return User by username"""
     return User.objects.filter(username=username).first()
 
@@ -102,7 +102,7 @@ def get_app_setting(
     plugin_name: str,
     setting_name: str,
     project: Optional[Project] = None,
-    user: Optional[SODARUser] = None,
+    user: Optional[User] = None,
 ) -> Any:
     """Get a project/user specific app setting value from AppSettingAPI"""
     return app_settings.get(plugin_name, setting_name, project, user)
@@ -222,7 +222,7 @@ def get_user_inactive_icon(tooltip: bool = True) -> str:
 
 
 @register.simple_tag
-def get_user_html(user: SODARUser) -> str:
+def get_user_html(user: User) -> str:
     """Return HTML representation of a User object"""
     email_link = True if user.is_active and user.email else False
     title = user.get_full_name()

@@ -2,11 +2,16 @@
 
 from typing import Optional
 
+from django.contrib.auth import get_user_model
+
 # Projectroles dependency
-from projectroles.models import SODARUser, SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
 
 from userprofile.urls import urlpatterns
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -51,7 +56,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
         )
     ]
 
-    def get_messages(self, user: Optional[SODARUser] = None) -> list[dict]:
+    def get_messages(self, user: Optional[User] = None) -> list[dict]:
         """
         Return a list of messages to be shown to users.
         :param user: User object (optional)
