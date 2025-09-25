@@ -674,13 +674,16 @@ if PROJECTROLES_ENABLE_PROFILING:
     MIDDLEWARE += ['projectroles.middleware.ProfilerMiddleware']
 
 
+# Adminalerts app settings
+ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
+
+
+# Appalerts app settings
+APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
+
+
 # Bgjobs app settings
 BGJOBS_PAGINATION = env.int('BGJOBS_PAGINATION', 15)
-
-
-# Timeline app settings
-TIMELINE_PAGINATION = env.int('TIMELINE_PAGINATION', 15)
-TIMELINE_SEARCH_LIMIT = env.int('TIMELINE_SEARCH_LIMIT', 250)
 
 
 # Filesfolders app settings
@@ -700,12 +703,9 @@ FILESFOLDERS_SHOW_LIST_COLUMNS = env.bool(
 )
 
 
-# Adminalerts app settings
-ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
-
-
-# Appalerts app settings
-APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
+# Timeline app settings
+TIMELINE_PAGINATION = env.int('TIMELINE_PAGINATION', 15)
+TIMELINE_SEARCH_LIMIT = env.int('TIMELINE_SEARCH_LIMIT', 250)
 
 
 # Tokens app settings

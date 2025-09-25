@@ -16,6 +16,7 @@ v1.2.3 (WIP)
 Release Highlights
 ==================
 
+- Fix test settings issues in development environments
 - General bug fixes and minor updates
 
 

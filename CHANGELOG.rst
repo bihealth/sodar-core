@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Update ``test.py`` settings hardcoding (#1768)
+
 Fixed
 -----
 
