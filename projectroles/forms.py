@@ -805,7 +805,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 )
 
         # Ensure prohibited substrings are not found in title
-        if (
+        if title and (
             CAT_DELIMITER in title
             or title.startswith(CAT_DELIMITER.strip())
             or title.endswith(CAT_DELIMITER.strip())

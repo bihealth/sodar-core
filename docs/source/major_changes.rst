@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add get_sodar_constant() common template tag
+- Fix project creation and update form issues
 - Fix test settings issues in development environments
 - General bug fixes and minor updates
 

@@ -1312,6 +1312,19 @@ class TestProjectCreateView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Project.objects.all().count(), 1)
 
+    def test_post_project_empty_title(self):
+        """Test POST with empty title (should fail)"""
+        data = self._get_post_data(
+            title='',
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Project.objects.count(), 1)
+
     def test_post_top_category_public_stats(self):
         """Test POST for top level category with category_public_stats"""
         self.assertEqual(Project.objects.count(), 1)

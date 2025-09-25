@@ -30,6 +30,7 @@ Fixed
     - UI tests failing with ``ENABLE_LDAP=0`` and ``ENABLE_OIDC=1`` (#1767)
 - **Projectroles**
     - ``_modal.html`` close button padding (#1764)
+    - Uncaught exception in ``ProjectForm`` with empty ``title`` field (#1778)
 
 
 v1.2.2 (2025-09-17)
