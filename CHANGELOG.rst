@@ -13,6 +13,7 @@ Fixed
 
 - **General**
     - Type hint issues (#1769)
+    - UI tests failing with ``ENABLE_LDAP=0`` and ``ENABLE_OIDC=1`` (#1767)
 
 
 v1.2.2 (2025-09-17)

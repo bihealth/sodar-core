@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import environ
-import itertools
 import os
 
 from projectroles.constants import get_sodar_constants
@@ -412,12 +411,9 @@ if ENABLE_LDAP:
     AUTH_LDAP_DOMAIN_PRINTABLE = env.str(
         'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN
     )
-    AUTHENTICATION_BACKENDS = tuple(
-        itertools.chain(
-            ('projectroles.auth_backends.PrimaryLDAPBackend',),
-            AUTHENTICATION_BACKENDS,
-        )
-    )
+    AUTHENTICATION_BACKENDS = [
+        'projectroles.auth_backends.PrimaryLDAPBackend'
+    ] + AUTHENTICATION_BACKENDS
 
     # Secondary LDAP server (optional)
     if ENABLE_LDAP_SECONDARY:
@@ -448,12 +444,9 @@ if ENABLE_LDAP:
         AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
             'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP2_USERNAME_DOMAIN
         )
-        AUTHENTICATION_BACKENDS = tuple(
-            itertools.chain(
-                ('projectroles.auth_backends.SecondaryLDAPBackend',),
-                AUTHENTICATION_BACKENDS,
-            )
-        )
+        AUTHENTICATION_BACKENDS = [
+            'projectroles.auth_backends.SecondaryLDAPBackend'
+        ] + AUTHENTICATION_BACKENDS
 
 
 # OpenID Connect (OIDC) configuration
@@ -462,12 +455,9 @@ if ENABLE_LDAP:
 ENABLE_OIDC = env.bool('ENABLE_OIDC', False)
 
 if ENABLE_OIDC:
-    AUTHENTICATION_BACKENDS = tuple(
-        itertools.chain(
-            ('social_core.backends.open_id_connect.OpenIdConnectAuth',),
-            AUTHENTICATION_BACKENDS,
-        )
-    )
+    AUTHENTICATION_BACKENDS = [
+        'social_core.backends.open_id_connect.OpenIdConnectAuth'
+    ] + AUTHENTICATION_BACKENDS
     TEMPLATES[0]['OPTIONS']['context_processors'] += [
         'social_django.context_processors.backends',
         'social_django.context_processors.login_redirect',

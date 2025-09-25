@@ -76,18 +76,22 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
 # Set pagination page size to 1 for easy testing
 REST_FRAMEWORK['PAGE_SIZE'] = 1
 
+# AUTHENTICATION CONFIGURATION
+# ------------------------------------------------------------------------------
+AUTHENTICATION_BACKENDS = [
+    'rules.permissions.ObjectPermissionBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]  # NOTE: Hardcoded due to issue #1767
 
 # LDAP configuration
 # ------------------------------------------------------------------------------
 
 ENABLE_LDAP = False
 
-
 # OpenID Connect (OIDC) configuration
 # ------------------------------------------------------------------------------
 
 ENABLE_OIDC = False
-
 
 # Logging
 # ------------------------------------------------------------------------------
@@ -96,10 +100,8 @@ LOGGING_LEVEL = env.str('LOGGING_LEVEL', 'CRITICAL')
 LOGGING = set_logging(LOGGING_LEVEL)
 LOGGING_DISABLE_CMD_OUTPUT = True
 
-
 # Local App Settings
 # ------------------------------------------------------------------------------
-
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = [
@@ -167,5 +169,4 @@ PROJECTROLES_TEST_UI_WAIT_TIME = 30
 PROJECTROLES_TEST_UI_LEGACY_LOGIN = env.bool(
     'PROJECTROLES_TEST_UI_LEGACY_LOGIN', False
 )
-
 PROJECTROLES_APP_SETTINGS_TEST = None
