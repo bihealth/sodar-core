@@ -109,6 +109,17 @@ def get_app_setting(
 
 
 @register.simple_tag
+def get_sodar_constant(key: str) -> Union[dict, list, str, None]:
+    """
+    Return a constant from SODAR_CONSTANTS by key. Returns None if not found.
+
+    :param key: Key for the constant (string)
+    :return: Dict, str, list or None
+    """
+    return SODAR_CONSTANTS.get(key, None)
+
+
+@register.simple_tag
 def static_file_exists(path: str) -> bool:
     """Return True/False based on whether a static file exists"""
     return True if finders.find(path) else False

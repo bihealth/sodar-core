@@ -16,6 +16,7 @@ v1.2.3 (WIP)
 Release Highlights
 ==================
 
+- Add get_sodar_constant() common template tag
 - Fix test settings issues in development environments
 - General bug fixes and minor updates
 

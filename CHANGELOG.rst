@@ -13,6 +13,8 @@ Added
 
 - **General**
     - Documentation section in ``release_cleanup.md`` issue template (#1776)
+- **Projectroles**
+    - ``get_sodar_constant()`` common template tag (#1772)
 
 Changed
 -------

@@ -171,6 +171,20 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             False,
         )
 
+    def test_get_sodar_constant(self):
+        """Test get_sodar_constant()"""
+        self.assertEqual(
+            c_tags.get_sodar_constant('PROJECT_ROLE_OWNER'), PROJECT_ROLE_OWNER
+        )
+        self.assertEqual(type(c_tags.get_sodar_constant('SITE_MODES')), list)
+        self.assertEqual(
+            type(c_tags.get_sodar_constant('REMOTE_ACCESS_LEVELS')), dict
+        )
+        # Non-existing constant
+        self.assertEqual(
+            c_tags.get_sodar_constant('NON_EXISTING_CONSTANT'), None
+        )
+
     def test_static_file_exists(self):
         """Test static_file_exists()"""
         self.assertEqual(c_tags.static_file_exists(STATIC_FILE_PATH), True)
