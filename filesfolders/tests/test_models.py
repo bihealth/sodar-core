@@ -4,16 +4,20 @@ import base64
 
 from typing import Optional
 
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms.models import model_to_dict
 
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin
 
 from filesfolders.models import File, FileData, Folder, HyperLink
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -39,7 +43,7 @@ class FileMixin:
         file_content: bytes,
         project: Project,
         folder: Optional[Folder],
-        owner: SODARUser,
+        owner: User,
         description: str,
         public_url: bool,
         secret: str,
@@ -69,7 +73,7 @@ class FolderMixin:
         name: str,
         project: Project,
         folder: Optional[Folder],
-        owner: SODARUser,
+        owner: User,
         description: str,
         flag: Optional[str] = None,
     ) -> Folder:
@@ -95,7 +99,7 @@ class HyperLinkMixin:
         url: str,
         project: Project,
         folder: Optional[Folder],
-        owner: SODARUser,
+        owner: User,
         description: str,
         flag: Optional[str] = None,
     ) -> HyperLink:

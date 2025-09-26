@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Optional, Union
 from uuid import UUID
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
@@ -24,7 +25,6 @@ from projectroles.models import (
     AppSetting,
     RemoteSite,
     RemoteProject,
-    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ROLE_RANKING,
@@ -35,6 +35,7 @@ from projectroles.utils import build_secret
 
 
 plugin_api = PluginAPI()
+User = get_user_model()
 
 
 # SODAR constants
@@ -143,7 +144,7 @@ class RoleAssignmentMixin:
 
     @classmethod
     def make_assignment(
-        cls, project: Project, user: SODARUser, role: Role
+        cls, project: Project, user: User, role: Role
     ) -> RoleAssignment:
         """Create a RoleAssignment object"""
         values = {'project': project, 'user': user, 'role': role}
@@ -159,7 +160,7 @@ class ProjectInviteMixin:
         email: str,
         project: Project,
         role: Role,
-        issuer: SODARUser,
+        issuer: User,
         message: str = '',
         date_expire: datetime = None,
         secret: Optional[str] = None,
@@ -192,7 +193,7 @@ class AppSettingMixin:
         value_json: Union[dict, list, None] = {},
         user_modifiable: bool = True,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
         sodar_uuid: Union[str, UUID, None] = None,
     ) -> AppSetting:
         """Create AppSetting object"""
@@ -313,7 +314,7 @@ class SODARUserMixin:
         email: Optional[str] = None,
         sodar_uuid: Union[str, UUID, None] = None,
         password: str = 'password',
-    ) -> SODARUser:
+    ) -> User:
         """Create SODARUser object"""
         user = self.make_user(username, password)
         user.name = name
@@ -333,7 +334,7 @@ class SODARUserAdditionalEmailMixin:
     @classmethod
     def make_email(
         cls,
-        user: SODARUser,
+        user: User,
         email: str,
         verified: bool = True,
         secret: Optional[str] = None,

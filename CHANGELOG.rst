@@ -5,6 +5,35 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.2.3 (2025-09-26)
+===================
+
+Added
+-----
+
+- **General**
+    - Documentation section in ``release_cleanup.md`` issue template (#1776)
+- **Projectroles**
+    - ``get_sodar_constant()`` common template tag (#1772)
+
+Changed
+-------
+
+- **General**
+    - Update ``test.py`` settings hardcoding (#1768)
+
+Fixed
+-----
+
+- **General**
+    - Type hint issues (#1769)
+    - UI tests failing with ``ENABLE_LDAP=0`` and ``ENABLE_OIDC=1`` (#1767)
+- **Projectroles**
+    - ``_modal.html`` close button padding (#1764)
+    - Uncaught exception in ``ProjectForm`` with empty ``title`` field (#1778)
+    - ``ProjectCreateView`` fields not correctly displayed on field error reload (#1770)
+
+
 v1.2.2 (2025-09-17)
 ===================
 

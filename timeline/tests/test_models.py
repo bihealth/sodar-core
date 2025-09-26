@@ -3,12 +3,13 @@
 from typing import Any, Optional, Union
 from uuid import UUID
 
+from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -25,6 +26,9 @@ from timeline.models import (
 )
 
 
+User = get_user_model()
+
+
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
@@ -32,7 +36,6 @@ PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-
 
 # Local constants
 APP_NAME_PR = 'projectroles'
@@ -47,7 +50,7 @@ class TimelineEventMixin:
         cls,
         project: Optional[Project],
         app: str,
-        user: Optional[SODARUser],
+        user: Optional[User],
         event_name: str,
         description: str = '',
         classified: bool = False,

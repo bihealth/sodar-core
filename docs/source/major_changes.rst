@@ -10,6 +10,18 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.2.3 (2025-09-26)
+*******************
+
+Release Highlights
+==================
+
+- Add get_sodar_constant() common template tag
+- Fix project creation and update form issues
+- Fix test settings issues in development environments
+- General bug fixes and minor updates
+
+
 v1.2.2 (2025-09-17)
 *******************
 

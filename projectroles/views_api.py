@@ -49,7 +49,6 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     AppSetting,
-    SODARUser,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
     ROLE_RANKING,
@@ -1082,7 +1081,7 @@ class AppSettingMixin:
         setting_def: PluginAppSettingDef,
         project: Project,
         request: HttpRequest,
-        setting_user: Optional[SODARUser],
+        setting_user: Optional[User],
     ):
         """
         Check permissions for project settings.
@@ -1126,7 +1125,7 @@ class AppSettingMixin:
         plugin_name: Optional[str],
         setting_name: str,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ) -> AppSetting:
         """
         Return the database object for a setting. Returns None if not available.
@@ -1156,7 +1155,7 @@ class AppSettingMixin:
         plugin_name: Optional[str],
         setting_name: str,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ) -> AppSetting:
         """
         Return the database object for a setting for API serving. Will create

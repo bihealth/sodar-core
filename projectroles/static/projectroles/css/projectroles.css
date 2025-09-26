@@ -762,6 +762,10 @@ div#sodar-modal span.modal-header-extra {
   line-height: 30px;
 }
 
+div.modal-header button.close {
+  line-height: 32px;
+}
+
 .sodar-breadcrumb-table {
   padding: 12px;
   margin: 0;

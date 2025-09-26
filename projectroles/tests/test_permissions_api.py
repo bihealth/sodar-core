@@ -4,6 +4,7 @@ import uuid
 
 from typing import Optional, Union
 
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.test import override_settings
 from django.urls import reverse
@@ -12,7 +13,6 @@ from projectroles.models import (
     Project,
     RoleAssignment,
     ProjectInvite,
-    SODARUser,
     SODAR_CONSTANTS,
 )
 from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
@@ -25,6 +25,9 @@ from projectroles.views_api import (
 )
 
 from rest_framework.test import APITestCase
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -52,7 +55,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
     def assert_response_api(
         self,
         url: str,
-        users: Union[list, tuple, SODARUser],
+        users: Union[list, tuple, User],
         status_code: int,
         method: str = 'GET',
         format: str = 'json',

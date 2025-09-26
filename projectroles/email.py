@@ -6,7 +6,8 @@ import re
 from typing import Optional
 
 from django.conf import settings
-from django.contrib import auth, messages
+from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.http import HttpRequest
 from django.urls import reverse
@@ -17,7 +18,6 @@ from projectroles.models import (
     Project,
     Role,
     ProjectInvite,
-    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ROLE_RANKING,
@@ -29,7 +29,7 @@ from projectroles.utils import get_display_name
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
 plugin_api = PluginAPI()
-User = auth.get_user_model()
+User = get_user_model()
 
 
 # Settings
@@ -256,11 +256,11 @@ longer be accessed.
 # Email composing helpers ------------------------------------------------------
 
 
-def get_email_user(user: SODARUser) -> str:
+def get_email_user(user: User) -> str:
     """
     Return a string representation of a user object for emails.
 
-    :param user: SODARUser object
+    :param user: User object
     :return: string
     """
     ret = user.get_full_name()
@@ -271,7 +271,7 @@ def get_email_user(user: SODARUser) -> str:
 
 def get_invite_body(
     project: Project,
-    issuer: SODARUser,
+    issuer: User,
     role_name: str,
     invite_url: str,
     date_expire_str: str,
@@ -398,7 +398,7 @@ def get_role_change_body(
     project: Project,
     user_name: str,
     role_name: str,
-    issuer: SODARUser,
+    issuer: User,
     request: HttpRequest,
 ) -> str:
     """
@@ -450,7 +450,7 @@ def get_role_change_body(
     return body
 
 
-def get_user_addr(user: SODARUser) -> list[str]:
+def get_user_addr(user: User) -> list[str]:
     """
     Return all the email addresses for a user as a list. Verified emails set as
     SODARUserAdditionalEmail objects are included. If a user has no main email
@@ -470,14 +470,14 @@ def get_user_addr(user: SODARUser) -> list[str]:
 
 
 def get_project_modify_recipients(
-    recipients: list[SODARUser],
-) -> list[SODARUser]:
+    recipients: list[User],
+) -> list[User]:
     """
     Filter recipient list for project modify emails. Excludes users with
     notify_email_project set False.
 
-    :param recipients: List of SODARUser objects
-    :return: List of SODARUser objects
+    :param recipients: List of User objects
+    :return: List of User objects
     """
     return [
         u
@@ -540,8 +540,8 @@ def send_mail(
 def send_role_change_mail(
     change_type: str,
     project: Project,
-    user: SODARUser,
-    role: Role,
+    user: User,
+    role: Optional[Role],
     request: HttpRequest,
 ) -> int:
     """
@@ -570,7 +570,7 @@ def send_role_change_mail(
 
 
 def send_project_leave_mail(
-    project: Project, user: SODARUser, request: Optional[HttpRequest] = None
+    project: Project, user: User, request: Optional[HttpRequest] = None
 ) -> int:
     """
     Send email to project owners and delegates when a user leaves a project.
@@ -625,7 +625,7 @@ def send_invite_mail(invite: ProjectInvite, request: HttpRequest) -> int:
 
 
 def send_invite_accept_mail(
-    invite: ProjectInvite, request: HttpRequest, user: SODARUser
+    invite: ProjectInvite, request: HttpRequest, user: User
 ) -> int:
     """
     Send a notification email to the issuer of an invitation when a user
@@ -697,7 +697,7 @@ def send_invite_expiry_mail(
 
 
 def send_project_create_mail(
-    project: Project, recipients: list[SODARUser], request: HttpRequest
+    project: Project, recipients: list[User], request: HttpRequest
 ) -> int:
     """
     Send email about project creation to owners and delegates of the parent
@@ -707,7 +707,7 @@ def send_project_create_mail(
     Received recipient list must be filtered for email preferences.
 
     :param project: Project object
-    :param recipients: List of SODARUser objects
+    :param recipients: List of User objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
@@ -756,7 +756,7 @@ def send_project_create_mail(
 
 
 def send_project_move_mail(
-    project: Project, recipients: list[SODARUser], request: HttpRequest
+    project: Project, recipients: list[User], request: HttpRequest
 ) -> int:
     """
     Send email about project being moved to the owners and delegates of the
@@ -766,7 +766,7 @@ def send_project_move_mail(
     Received recipient list must be filtered for email preferences.
 
     :param project: Project object
-    :param recipients: List of SODARUser objects
+    :param recipients: List of User objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """
@@ -874,7 +874,7 @@ def send_project_archive_mail(
 
 
 def send_project_delete_mail(
-    project: Project, recipients: list[SODARUser], request: HttpRequest
+    project: Project, recipients: list[User], request: HttpRequest
 ) -> int:
     """
     Send a notification email on project deletion.
@@ -882,7 +882,7 @@ def send_project_delete_mail(
     Received recipient list must be filtered for email preferences.
 
     :param project: Project object
-    :param recipients: List of SODARUser objects
+    :param recipients: List of User objects
     :param request: HttpRequest object
     :return: Amount of sent email (int)
     """

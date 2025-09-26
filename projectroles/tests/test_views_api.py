@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Optional, Union
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.db.models import QuerySet
@@ -31,7 +32,6 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     AppSetting,
-    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     AUTH_TYPE_LDAP,
@@ -65,6 +65,7 @@ from projectroles.views import PROJECT_BLOCK_MSG
 
 app_settings = AppSettingAPI()
 plugin_api = PluginAPI()
+User = get_user_model()
 
 
 # SODAR constants
@@ -117,9 +118,7 @@ class SerializedObjectMixin:
     """
 
     @classmethod
-    def get_serialized_user(
-        cls, user: SODARUser, auth_type: bool = True
-    ) -> dict:
+    def get_serialized_user(cls, user: User, auth_type: bool = True) -> dict:
         """
         Return serialization for a user.
 
@@ -161,7 +160,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
 
     @classmethod
     def get_token(
-        cls, user: SODARUser, full_result: bool = False
+        cls, user: User, full_result: bool = False
     ) -> Union[str, tuple]:
         """
         Get or create a knox token for a user.

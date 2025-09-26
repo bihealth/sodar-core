@@ -2,11 +2,15 @@
 
 from typing import Optional
 
+from django.contrib.auth import get_user_model
+
 # Projectroles dependency
-from projectroles.models import SODARUser
 from projectroles.plugins import SiteAppPluginPoint
 
 from example_site_app.urls import urlpatterns
+
+
+User = get_user_model()
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -33,7 +37,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: Required permission for displaying the app
     app_permission = 'example_site_app.view_data'
 
-    def get_messages(self, user: Optional[SODARUser] = None) -> list[dict]:
+    def get_messages(self, user: Optional[User] = None) -> list[dict]:
         """
         Return a list of messages to be shown to users.
         :param user: User object (optional)

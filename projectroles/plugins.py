@@ -7,6 +7,7 @@ from typing import Any, Optional, Union
 from uuid import UUID
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db.models import Model, QuerySet
 from django.http import HttpRequest
 from djangoplugins.point import PluginPoint
@@ -15,13 +16,13 @@ from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
-    SODARUser,
     APP_SETTING_TYPES,
     SODAR_CONSTANTS,
 )
 
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 # SODAR constants
@@ -184,8 +185,8 @@ class ProjectModifyPluginMixin:
     def perform_owner_transfer(
         self,
         project: Project,
-        new_owner: SODARUser,
-        old_owner: SODARUser,
+        new_owner: User,
+        old_owner: User,
         old_owner_role: Optional[Role] = None,
         request: Optional[HttpRequest] = None,
     ):
@@ -193,8 +194,8 @@ class ProjectModifyPluginMixin:
         Perform additional actions to finalize project ownership transfer.
 
         :param project: Project object
-        :param new_owner: SODARUser object for new owner
-        :param old_owner: SODARUser object for previous owner
+        :param new_owner: User object for new owner
+        :param old_owner: User object for previous owner
         :param old_owner_role: Role object for new role of old owner or None
         :param request: Request object or None
         """
@@ -203,8 +204,8 @@ class ProjectModifyPluginMixin:
     def revert_owner_transfer(
         self,
         project: Project,
-        new_owner: SODARUser,
-        old_owner: SODARUser,
+        new_owner: User,
+        old_owner: User,
         old_owner_role: Optional[Role] = None,
         request: Optional[HttpRequest] = None,
     ):
@@ -212,8 +213,8 @@ class ProjectModifyPluginMixin:
         Revert project ownership transfer if errors have occurred in other apps.
 
         :param project: Project object
-        :param new_owner: SODARUser object for new owner
-        :param old_owner: SODARUser object for previous owner
+        :param new_owner: User object for new owner
+        :param old_owner: User object for previous owner
         :param old_owner_role: Role object for new role of old owner or None
         :param request: Request object or None
         """
@@ -237,7 +238,7 @@ class ProjectModifyPluginMixin:
         value: Any,
         old_value: Any,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ):
         """
         Perform additional actions when updating a single app setting with
@@ -260,7 +261,7 @@ class ProjectModifyPluginMixin:
         value: Any,
         old_value: Any,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ):
         """
         Revert updating a single app setting with PROJECT scope if errors have
@@ -393,9 +394,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #: Names of plugin specific Django settings to display in siteinfo
     info_settings = []
 
-    def get_object(
-        self, model: type[Model], uuid: Union[str, UUID]
-    ) -> Optional[Model]:
+    def get_object(self, model: type[Model], uuid: Union[str, UUID]) -> Any:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -434,7 +433,7 @@ class ProjectAppPluginPoint(PluginPoint):
     def search(
         self,
         search_terms: list[str],
-        user: SODARUser,
+        user: User,
         search_type: Optional[str] = None,
         keywords: Optional[list[str]] = None,
     ) -> list['PluginSearchResult']:
@@ -457,7 +456,7 @@ class ProjectAppPluginPoint(PluginPoint):
         self,
         name: Optional[str] = None,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ):
         """
         Update cached data for this app, limitable to item ID and/or project.
@@ -491,7 +490,7 @@ class ProjectAppPluginPoint(PluginPoint):
         return []
 
     def get_project_list_value(
-        self, column_id: str, project: Project, user: SODARUser
+        self, column_id: str, project: Project, user: User
     ) -> Union[str, int, None]:
         """
         Return a value for the optional additional project list column specific
@@ -508,7 +507,7 @@ class ProjectAppPluginPoint(PluginPoint):
         self,
         app_settings: dict,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ) -> Optional[dict]:
         """
         Validate app settings form data and return a dict of errors.
@@ -552,9 +551,7 @@ class BackendPluginPoint(PluginPoint):
         """
         return {}
 
-    def get_object(
-        self, model: type[Model], uuid: Union[str, UUID]
-    ) -> Optional[Model]:
+    def get_object(self, model: type[Model], uuid: Union[str, UUID]) -> Any:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -641,7 +638,7 @@ class SiteAppPluginPoint(PluginPoint):
         """
         return {}
 
-    def get_messages(self, user: Optional[SODARUser] = None) -> list[dict]:
+    def get_messages(self, user: Optional[User] = None) -> list[dict]:
         """
         Return a list of messages to be shown to users.
 
@@ -658,9 +655,7 @@ class SiteAppPluginPoint(PluginPoint):
         '''
         return []
 
-    def get_object(
-        self, model: type[Model], uuid: Union[str, UUID]
-    ) -> Optional[Model]:
+    def get_object(self, model: type[Model], uuid: Union[str, UUID]) -> Any:
         """
         Return object based on a model class and the object's SODAR UUID.
 
@@ -699,7 +694,7 @@ class SiteAppPluginPoint(PluginPoint):
     def validate_form_app_settings(
         self,
         app_settings: dict,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ) -> Optional[dict]:
         """
         Validate app settings form data and return a dict of errors.
@@ -1161,7 +1156,7 @@ class PluginAPI:
 # TODO: Remove in v1.3 (see #1718)
 def get_active_plugins(
     plugin_type: str = 'project_app', custom_order: bool = False
-) -> Optional[list[PluginPoint]]:
+) -> Optional[list]:
     """
     Return active plugins of a specific type.
 

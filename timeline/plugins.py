@@ -2,8 +2,10 @@
 
 from typing import Optional
 
+from django.contrib.auth import get_user_model
+
 # Projectroles dependency
-from projectroles.models import SODARUser, SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     BackendPluginPoint,
@@ -15,6 +17,9 @@ from projectroles.utils import get_display_name
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
+
+
+User = get_user_model()
 
 
 # Local constants
@@ -76,7 +81,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     info_settings = ['TIMELINE_PAGINATION', 'TIMELINE_SEARCH_LIMIT']
 
     @classmethod
-    def _check_permission(cls, user: SODARUser, event: TimelineEvent) -> bool:
+    def _check_permission(cls, user: User, event: TimelineEvent) -> bool:
         """Check if user has permission to view event"""
         if event.project and event.classified:
             return user.has_perm(
@@ -107,7 +112,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     def search(
         self,
         search_terms: list[str],
-        user: SODARUser,
+        user: User,
         search_type: Optional[str] = None,
         keywords: Optional[list[str]] = None,
     ) -> list[PluginSearchResult]:

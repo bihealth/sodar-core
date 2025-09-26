@@ -10,7 +10,7 @@ from packaging.version import parse as parse_version
 from typing import Any, Optional, Union
 
 from django.conf import settings
-from django.contrib import auth
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -39,7 +39,7 @@ from projectroles.plugins import PluginAPI
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
 plugin_api = PluginAPI()
-User = auth.get_user_model()
+User = get_user_model()
 
 
 # SODAR constants

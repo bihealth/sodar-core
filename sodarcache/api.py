@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
 # Projectroles dependency
-from projectroles.models import Project, SODARUser
+from projectroles.models import Project
 from projectroles.plugins import PluginAPI
 from projectroles.utils import get_app_names
 
@@ -85,7 +85,7 @@ class SODARCacheAPI:
         cls,
         name: Optional[str] = None,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ):
         """
         Update items by certain name within a project by calling implemented
@@ -171,7 +171,7 @@ class SODARCacheAPI:
         data: dict,
         data_type: str = 'json',
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ) -> JSONCacheItem:
         """
         Create or update and save a cache item.

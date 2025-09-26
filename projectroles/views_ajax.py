@@ -2,9 +2,10 @@
 
 import logging
 
-from typing import Optional
+from typing import Any, Optional
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.db.models import Q
@@ -27,18 +28,13 @@ from projectroles.models import (
     RoleAssignment,
     RemoteProject,
     AppSetting,
-    SODARUser,
     SODAR_CONSTANTS,
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import (
-    ProjectAppPluginPoint,
-    PluginAPI,
-    PluginCategoryStatistic,
-)
+from projectroles.plugins import PluginAPI, PluginCategoryStatistic
 from projectroles.utils import get_display_name
-from projectroles.views import ProjectAccessMixin, User
+from projectroles.views import ProjectAccessMixin
 from projectroles.views_api import (
     SODARAPIProjectPermission,
     CurrentUserRetrieveAPIView,
@@ -48,6 +44,7 @@ from projectroles.views_api import (
 app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
 plugin_api = PluginAPI()
+User = get_user_model()
 
 
 # SODAR consants
@@ -130,7 +127,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
     @classmethod
     def _get_projects(
         cls,
-        user: SODARUser,
+        user: User,
         public_stat_cats: list[Project],
         parent: Optional[Project] = None,
     ) -> list[Project]:
@@ -205,7 +202,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
     def _get_access(
         cls,
         project: Project,
-        user: SODARUser,
+        user: User,
         finder_cats: list[str],
         depth: int,
         blocked_projects: list[Project],
@@ -215,7 +212,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         Return whether user has access to a project for the project list.
 
         :param project: Project object
-        :param user: SODARUser object
+        :param user: User object
         :param finder_cats: List of category names where user has finder role
         :param depth: Project depth in category structure (int)
         :param blocked_projects: List of projects with blocked access
@@ -387,10 +384,10 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
     @classmethod
     def _get_column_value(
         cls,
-        app_plugin: ProjectAppPluginPoint,
+        app_plugin: Any,
         column_id: str,
         project: Project,
-        user: SODARUser,
+        user: User,
     ) -> dict:
         """
         Return project list extra column value for a specific project and
@@ -400,7 +397,7 @@ class ProjectListColumnAjaxView(SODARBaseAjaxView):
         :param column_id: Column ID string corresponding to
                           plugin.project_list_columns (string)
         :param project: Project object
-        :param user: SODARUser object
+        :param user: User object
         :return: Dict
         """
         try:
@@ -459,7 +456,7 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
     allow_anonymous = True
 
     @classmethod
-    def _get_user_role(cls, project: Project, user: SODARUser) -> dict:
+    def _get_user_role(cls, project: Project, user: User) -> dict:
         """Return user role for project"""
         ret = {'name': None, 'class': None}
         role_as = None

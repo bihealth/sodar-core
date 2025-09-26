@@ -2,15 +2,19 @@
 
 from typing import Optional
 
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 
 # Projectroles dependency
-from projectroles.models import SODARUser, SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
 
 from adminalerts.models import AdminAlert
 from adminalerts.urls import urlpatterns
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -71,7 +75,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
             }
         }
 
-    def get_messages(self, user: Optional[SODARUser] = None) -> list[dict]:
+    def get_messages(self, user: Optional[User] = None) -> list[dict]:
         """
         Return a list of messages to be shown to users.
 

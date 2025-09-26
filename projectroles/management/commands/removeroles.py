@@ -11,12 +11,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from projectroles.management.logging import ManagementCommandLogger
-from projectroles.models import (
-    Project,
-    RoleAssignment,
-    SODARUser,
-    SODAR_CONSTANTS,
-)
+from projectroles.models import Project, RoleAssignment, SODAR_CONSTANTS
 from projectroles.views import (
     RoleAssignmentOwnerTransferMixin,
     RoleAssignmentDeleteMixin,
@@ -44,8 +39,8 @@ class Command(
 
     @classmethod
     def _get_parent_owner(
-        cls, project: Project, prev_owner: SODARUser
-    ) -> Optional[SODARUser]:
+        cls, project: Project, prev_owner: User
+    ) -> Optional[User]:
         """Return assignment for first parent owner who is not previous owner"""
         if not project.parent:
             return None
@@ -57,8 +52,8 @@ class Command(
     def _reassign_owner(
         self,
         project: Project,
-        user: SODARUser,
-        owner: Optional[SODARUser],
+        user: User,
+        owner: Optional[User],
         role_as: RoleAssignment,
         p_title: str,
         check: bool,

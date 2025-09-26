@@ -3,6 +3,7 @@
 from typing import Optional
 
 from django import forms
+from django.contrib.auth import get_user_model
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
@@ -12,7 +13,6 @@ from projectroles.forms import (
     SODARAppSettingFormMixin,
 )
 from projectroles.models import (
-    SODARUser,
     SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     ADD_EMAIL_ALREADY_SET_MSG,
@@ -23,6 +23,7 @@ from projectroles.utils import build_secret
 
 app_settings = AppSettingAPI()
 plugin_api = PluginAPI()
+User = get_user_model()
 
 
 # SODAR Constants
@@ -73,9 +74,7 @@ class UserEmailForm(SODARModelForm):
         model = SODARUserAdditionalEmail
         fields = ['email', 'user', 'secret']
 
-    def __init__(
-        self, current_user: Optional[SODARUser] = None, *args, **kwargs
-    ):
+    def __init__(self, current_user: Optional[User] = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if current_user:
             self.current_user = current_user

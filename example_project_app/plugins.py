@@ -3,6 +3,7 @@
 from typing import Optional
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.urls import reverse
 
@@ -11,7 +12,7 @@ from projectroles.app_settings import (
     get_example_setting_default,
     get_example_setting_options,
 )
-from projectroles.models import Project, SODARUser, SODAR_CONSTANTS
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     ProjectModifyPluginMixin,
@@ -20,6 +21,9 @@ from projectroles.plugins import (
 from projectroles.utils import get_display_name
 
 from example_project_app.urls import urlpatterns
+
+
+User = get_user_model()
 
 
 # SODAR constants
@@ -385,7 +389,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
         self,
         app_settings: dict,
         project: Optional[Project] = None,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
     ) -> dict:
         """Example implementation for custom form app setting validation"""
         ret = {}

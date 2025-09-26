@@ -76,18 +76,22 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
 # Set pagination page size to 1 for easy testing
 REST_FRAMEWORK['PAGE_SIZE'] = 1
 
+# AUTHENTICATION CONFIGURATION
+# ------------------------------------------------------------------------------
+AUTHENTICATION_BACKENDS = [
+    'rules.permissions.ObjectPermissionBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]  # NOTE: Hardcoded due to issue #1767
 
 # LDAP configuration
 # ------------------------------------------------------------------------------
 
 ENABLE_LDAP = False
 
-
 # OpenID Connect (OIDC) configuration
 # ------------------------------------------------------------------------------
 
 ENABLE_OIDC = False
-
 
 # Logging
 # ------------------------------------------------------------------------------
@@ -96,10 +100,8 @@ LOGGING_LEVEL = env.str('LOGGING_LEVEL', 'CRITICAL')
 LOGGING = set_logging(LOGGING_LEVEL)
 LOGGING_DISABLE_CMD_OUTPUT = True
 
-
 # Local App Settings
 # ------------------------------------------------------------------------------
-
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = [
@@ -120,9 +122,22 @@ PROJECTROLES_DISABLE_CATEGORIES = False
 PROJECTROLES_INVITE_EXPIRY_DAYS = 14
 PROJECTROLES_SEND_EMAIL = True
 PROJECTROLES_EMAIL_SENDER_REPLY = False
+PROJECTROLES_EMAIL_HEADER = None
+PROJECTROLES_EMAIL_FOOTER = None
+PROJECTROLES_ENABLE_SEARCH = True
+PROJECTROLES_SEARCH_OMIT_APPS = []
+PROJECTROLES_TARGET_SYNC_ENABLE = False
+PROJECTROLES_TARGET_SYNC_INTERVAL = 5
+PROJECTROLES_SIDEBAR_ICON_SIZE = 36
+PROJECTROLES_SECRET_LENGTH = 32
+PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
 PROJECTROLES_SEARCH_PAGINATION = 10
 PROJECTROLES_ROLE_PAGINATION = 15
 PROJECTROLES_KIOSK_MODE = False
+PROJECTROLES_BREADCRUMB_STICKY = False
+PROJECTROLES_READ_ONLY_MSG = None
+PROJECTROLES_API_USER_DETAIL_RESTRICT = False
+PROJECTROLES_SUPPORT_CONTACT = 'Site Support:support@example.com'
 PROJECTROLES_HIDE_PROJECT_APPS = []
 PROJECTROLES_DELEGATE_LIMIT = 1
 PROJECTROLES_BROWSER_WARNING = True
@@ -130,18 +145,16 @@ PROJECTROLES_DISABLE_CDN_INCLUDES = False
 PROJECTROLES_INLINE_HEAD_INCLUDE = None
 PROJECTROLES_CUSTOM_JS_INCLUDES = []
 PROJECTROLES_CUSTOM_CSS_INCLUDES = []
-PROJECTROLES_SIDEBAR_ICON_SIZE = 36
-PROJECTROLES_API_USER_DETAIL_RESTRICT = False
-PROJECTROLES_SUPPORT_CONTACT = 'Site Support:support@example.com'
-
-# Bgjobs app settings
-BGJOBS_PAGINATION = 15
+PROJECTROLES_ENABLE_PROFILING = False
 
 # Adminalerts app settings
 ADMINALERTS_PAGINATION = 15
 
 # Appalerts app settings
 APPALERTS_STATUS_INTERVAL = 3
+
+# Bgjobs app settings
+BGJOBS_PAGINATION = 15
 
 # Filesfolders app settings
 FILESFOLDERS_MAX_UPLOAD_SIZE = 10485760
@@ -152,6 +165,7 @@ FILESFOLDERS_SHOW_LIST_COLUMNS = True
 
 # Timeline app settings
 TIMELINE_PAGINATION = 15
+TIMELINE_SEARCH_LIMIT = 250
 
 # Tokens app settings
 TOKENS_CREATE_PROJECT_USER_RESTRICT = False
@@ -167,5 +181,4 @@ PROJECTROLES_TEST_UI_WAIT_TIME = 30
 PROJECTROLES_TEST_UI_LEGACY_LOGIN = env.bool(
     'PROJECTROLES_TEST_UI_LEGACY_LOGIN', False
 )
-
 PROJECTROLES_APP_SETTINGS_TEST = None

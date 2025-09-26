@@ -67,9 +67,13 @@
         </span>
       </div>
     {% elif parent.pk %}
-      <h2>Create {{ project_display }} or {{ category_display }} Under {{ parent.title }}</h2>
+      <h2 id="sodar-pr-project-form-title" data-project-type="{{ form.type.value }}">
+        Create {{ project_display }} or {{ category_display }} Under {{ parent.title }}
+      </h2>
     {% elif disable_categories %}
-      <h2>Create {{ project_display }}</h2>
+      <h2 id="sodar-pr-project-form-title" data-project-type="PROJECT">
+        Create {{ project_display }}
+      </h2>
     {% else %}
       <h2 id="sodar-pr-project-form-title" data-project-type="CATEGORY">
         Create Top Level {{ category_display }}

@@ -1,6 +1,7 @@
 """Tests for email sending in the projectroles Django app"""
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import override_settings
 from django.urls import reverse
@@ -8,12 +9,7 @@ from django.urls import reverse
 from test_plus.test import TestCase, RequestFactory
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import (
-    Project,
-    SODARUser,
-    SODAR_CONSTANTS,
-    ROLE_RANKING,
-)
+from projectroles.models import Project, SODAR_CONSTANTS, ROLE_RANKING
 from projectroles.email import (
     send_role_change_mail,
     send_project_leave_mail,
@@ -41,6 +37,7 @@ from projectroles.tests.test_models import (
 
 
 app_settings = AppSettingAPI()
+User = get_user_model()
 
 
 # SODAR constants
@@ -83,8 +80,8 @@ class TestEmailSending(
 
     @classmethod
     def _get_project_modify_recipients(
-        cls, project: Project, request_user: SODARUser
-    ) -> list[SODARUser]:
+        cls, project: Project, request_user: User
+    ) -> list[User]:
         """
         Return owner and delegate users for project omitting request_user.
         Exclude inactive users but does NOT exclude app settings.
@@ -99,8 +96,8 @@ class TestEmailSending(
 
     @classmethod
     def _get_project_delete_recipients(
-        cls, project: Project, request_user: SODARUser
-    ) -> list[SODARUser]:
+        cls, project: Project, request_user: User
+    ) -> list[User]:
         """
         Return project users for project omitting request_user. Exclude inactive
         users but does NOT exclude app settings.

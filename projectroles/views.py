@@ -5,7 +5,7 @@ import logging
 import re
 
 from ipaddress import ip_address, ip_network
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from urllib.parse import unquote_plus, urlparse
 
 from django.apps import apps
@@ -51,11 +51,10 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
-    SODARUser,
     SODAR_CONSTANTS,
     ROLE_RANKING,
 )
-from projectroles.plugins import BackendPluginPoint, PluginAPI
+from projectroles.plugins import PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_display_name
 
@@ -561,7 +560,7 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
 class ProjectListContextMixin:
     """Mixin for adding context data for displaying the project list."""
 
-    def _get_custom_cols(self, user: SODARUser) -> list[dict]:
+    def _get_custom_cols(self, user: User) -> list[dict]:
         """
         Return list of custom columns for projects including project data.
 
@@ -730,7 +729,7 @@ class ProjectSearchMixin:
 
     def _get_app_results(
         self,
-        user: SODARUser,
+        user: User,
         search_terms: list[str],
         search_type: Optional[str],
         search_keywords: Optional[list[str]],
@@ -1037,7 +1036,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
     @staticmethod
     def _get_app_settings(
-        data, instance: Optional[Project], user: SODARUser
+        data, instance: Optional[Project], user: User
     ) -> dict:
         """
         Return a dictionary of project app settings and their values.
@@ -1225,7 +1224,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         self,
         project: Project,
         action: str,
-        owner: SODARUser,
+        owner: User,
         old_data: dict,
         old_sites: list,
         sites: list,
@@ -1280,7 +1279,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
     @classmethod
     def _get_notify_recipients(
         cls, project: Project, request: HttpRequest
-    ) -> list[SODARUser]:
+    ) -> list[User]:
         """
         Return list of owner and delegate users to send notification alerts or
         emails to. Omits request user. This list can be further filtered down to
@@ -1288,7 +1287,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
 
         :param project: Project object
         :param request: Request object
-        :return: List of SODARUser objects
+        :return: List of User objects
         """
         return [
             a.user
@@ -1303,7 +1302,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         cls,
         project: Project,
         action: str,
-        owner: SODARUser,
+        owner: User,
         old_parent: Optional[Project],
         request: HttpRequest,
     ):
@@ -1861,7 +1860,7 @@ class ProjectArchiveView(
     template_name = 'projectroles/project_archive_confirm.html'
     permission_required = 'projectroles.update_project'
 
-    def _alert_users(self, project: Project, action: str, user: SODARUser):
+    def _alert_users(self, project: Project, action: str, user: User):
         """
         Alert users on project archiving/unarchiving.
 
@@ -2281,9 +2280,9 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
     @classmethod
     def _add_user_alert(
         cls,
-        app_alerts: BackendPluginPoint,
+        app_alerts: Any,
         project: Project,
-        user: SODARUser,
+        user: User,
         inh_as: Optional[RoleAssignment] = None,
     ):
         """
@@ -2293,7 +2292,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
 
         :param app_alerts: AppAlertAPI object
         :param project: Project object
-        :param user: SODARUser object
+        :param user: User object
         :param inh_as: RoleAssignment object for inherited assignment or None
         """
         if inh_as:
@@ -2313,15 +2312,13 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         )
 
     @classmethod
-    def _add_leave_alerts(
-        cls, app_alerts: BackendPluginPoint, project: Project, user: SODARUser
-    ):
+    def _add_leave_alerts(cls, app_alerts: Any, project: Project, user: User):
         """
         Send alerts to project owners and delegates about user leaving.
 
         :param app_alerts: AppAlertAPI object
         :param project: Project object
-        :param user: SODARUser object
+        :param user: User object
         """
         recipients = [
             a.user
@@ -2347,14 +2344,14 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
     @classmethod
     @transaction.atomic
     def _dismiss_user_alerts(
-        cls, app_alerts: BackendPluginPoint, project: Project, user: SODARUser
+        cls, app_alerts: Any, project: Project, user: User
     ):
         """
         Dismiss user alerts in project and children without local role.
 
         :param app_alerts: AppAlertAPI object
         :param project: Project object
-        :param user: SODARUser object
+        :param user: User object
         """
         AppAlert = app_alerts.get_model()
         dis_projects = [project]
@@ -2557,7 +2554,7 @@ class RoleAssignmentDeleteView(
     slug_field = 'sodar_uuid'
 
     def _get_inherited_children(
-        self, project: Project, user: SODARUser, ret: list
+        self, project: Project, user: User, ret: list
     ) -> list:
         for child in project.get_children():
             if not RoleAssignment.objects.filter(project=child, user=user):
@@ -2712,10 +2709,10 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     def _create_timeline_event(
         self,
         project: Project,
-        old_owner: SODARUser,
-        new_owner: SODARUser,
+        old_owner: User,
+        new_owner: User,
         old_owner_role: Optional[Role] = None,
-        issuer: Optional[SODARUser] = None,
+        issuer: Optional[User] = None,
     ):
         """
         Create timeline event for ownership transfer.
@@ -2757,7 +2754,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         self,
         project: Project,
         old_owner_as: RoleAssignment,
-        new_owner: SODARUser,
+        new_owner: User,
         old_inh_owner: bool,
         old_owner_role: Optional[RoleAssignment] = None,
         request: Optional[HttpRequest] = None,
@@ -2807,7 +2804,7 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
     def transfer_owner(
         self,
         project: Project,
-        new_owner: SODARUser,
+        new_owner: User,
         old_owner_as: RoleAssignment,
         old_owner_role: Optional[Role] = None,
         request: Optional[HttpRequest] = None,
@@ -3199,10 +3196,10 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
     def revoke_invite(
         cls,
         invite: ProjectInvite,
-        user: Optional[SODARUser] = None,
+        user: Optional[User] = None,
         failed: bool = True,
         fail_desc: str = '',
-        timeline: BackendPluginPoint = None,
+        timeline: Any = None,
     ):
         """Set invite.active to False and save the invite"""
         invite.active = False
@@ -3227,7 +3224,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             messages.error(self.request, 'Invite does not exist.')
         return None
 
-    def user_role_exists(self, invite: ProjectInvite, user: SODARUser) -> bool:
+    def user_role_exists(self, invite: ProjectInvite, user: User) -> bool:
         """
         Display message if user already has roles in project. Also revoke the
         invite if necessary.
@@ -3253,7 +3250,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
         return False
 
     def is_invite_expired(
-        self, invite: ProjectInvite, user: Optional[SODARUser] = None
+        self, invite: ProjectInvite, user: Optional[User] = None
     ) -> bool:
         """Display message and send email to issuer if invite is expired"""
         if invite.date_expire < timezone.now():
@@ -3282,8 +3279,8 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
     def create_assignment(
         self,
         invite: ProjectInvite,
-        user: SODARUser,
-        timeline: Optional[BackendPluginPoint] = None,
+        user: User,
+        timeline: Any = None,
     ):
         """Create role assignment for invited user"""
         app_alerts = plugin_api.get_backend_api('appalerts_backend')
@@ -3354,7 +3351,9 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
             ),
         )
 
-    def redirect_error(self, msg: str = None) -> HttpResponseRedirect:
+    def redirect_error(
+        self, msg: Union[str, Exception, None] = None
+    ) -> HttpResponseRedirect:
         if msg:
             messages.error(self.request, msg)
         return redirect(reverse('home'))
@@ -3764,13 +3763,13 @@ class RemoteSiteModifyMixin(ModelFormMixin):
     """Helpers for remote site modification"""
 
     def _create_timeline_event(
-        self, remote_site: RemoteSite, user: SODARUser, form_action: str
+        self, remote_site: RemoteSite, user: User, form_action: str
     ):
         """
         Create timeline event for remote site creation/update.
 
         :param remote_site: RemoteSite object
-        :param user: SODARUser object
+        :param user: User object
         :param form_action: String
         :param form_action:
         """
@@ -3924,7 +3923,7 @@ class RemoteProjectListView(
     template_name = 'projectroles/remote_projects.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+        context = super().get_context_data(**kwargs)
         site = RemoteSite.objects.get(sodar_uuid=self.kwargs['remotesite'])
         context['site'] = site
         # Projects in SOURCE mode: all local projects of type PROJECT
@@ -3953,7 +3952,7 @@ class RemoteProjectBatchUpdateView(
     template_name = 'projectroles/remoteproject_update.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+        context = super().get_context_data(**kwargs)
         # Current site
         context['site'] = RemoteSite.objects.filter(
             sodar_uuid=kwargs['remotesite']
@@ -4105,7 +4104,7 @@ class RemoteProjectSyncView(
     template_name = 'projectroles/remoteproject_sync.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+        context = super().get_context_data(**kwargs)
         # Current site
         context['site'] = RemoteSite.objects.filter(
             sodar_uuid=kwargs['remotesite']

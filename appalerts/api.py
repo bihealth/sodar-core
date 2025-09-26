@@ -2,12 +2,17 @@
 
 from typing import Optional
 
+from django.contrib.auth import get_user_model
+
 from djangoplugins.models import Plugin
 
 from appalerts.models import AppAlert, ALERT_LEVELS
 
 # Projectroles dependency
-from projectroles.models import Project, SODARUser
+from projectroles.models import Project
+
+
+User = get_user_model()
 
 
 class AppAlertAPI:
@@ -27,7 +32,7 @@ class AppAlertAPI:
         cls,
         app_name: str,
         alert_name: str,
-        user: SODARUser,
+        user: User,
         message: str,
         level: str = 'INFO',
         url: Optional[str] = None,
@@ -72,7 +77,7 @@ class AppAlertAPI:
         cls,
         app_name: str,
         alert_name: str,
-        users: list[SODARUser],
+        users: list[User],
         message: str,
         level: str = 'INFO',
         url: Optional[str] = None,
