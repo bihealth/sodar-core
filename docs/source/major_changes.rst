@@ -10,6 +10,21 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.2.4 (WIP)
+************
+
+Release Highlights
+==================
+
+TODO
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v4.2.25.
+
+
 v1.2.3 (2025-09-26)
 *******************
 
