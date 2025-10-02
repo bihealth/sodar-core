@@ -16,7 +16,7 @@ v1.2.4 (WIP)
 Release Highlights
 ==================
 
-TODO
+- Fix UI test setup window size
 
 System Prerequisites
 --------------------

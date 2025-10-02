@@ -14,6 +14,12 @@ Changed
 - **General**
     - Upgrade minimum Django version to v4.2.25 (#1774)
 
+Fixed
+-----
+
+- **General**
+    - UI test window size not correctly set (#1783)
+
 
 v1.2.3 (2025-09-26)
 ===================
