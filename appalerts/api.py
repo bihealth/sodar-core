@@ -16,7 +16,16 @@ User = get_user_model()
 
 
 class AppAlertAPI:
-    """App Alerts backend API"""
+    """
+    App Alerts backend API.
+
+    Provides alert levels as constants accessible by self.ALERT_LEVEL_{type}.
+    """
+
+    def __init__(self):
+        # Provide access to alert levels as constants
+        for a in ALERT_LEVELS:
+            setattr(self, f'ALERT_LEVEL_{a}', a)
 
     @classmethod
     def get_model(cls) -> type[AppAlert]:

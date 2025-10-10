@@ -8,6 +8,13 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Appalerts**
+    - Alert level constants as ``AppAlertAPI`` attributes (#1787)
+
+
 Changed
 -------
 

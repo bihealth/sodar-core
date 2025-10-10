@@ -16,6 +16,7 @@ v1.2.4 (WIP)
 Release Highlights
 ==================
 
+- Add alert level constants as AppAlertAPI attributes
 - Fix app setting deletion debug logging
 - Fix UI test setup window size
 

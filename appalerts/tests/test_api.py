@@ -11,7 +11,7 @@ from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
 from projectroles.tests.test_models import ProjectMixin
 
-from appalerts.models import AppAlert
+from appalerts.models import AppAlert, ALERT_LEVELS
 from appalerts.tests.test_models import (
     AppAlertMixin,
     ALERT_NAME,
@@ -48,6 +48,11 @@ class TestAppAlertAPI(AppAlertMixin, ProjectMixin, TestCase):
         )
         # Get backend
         self.app_alerts = plugin_api.get_backend_api('appalerts_backend')
+
+    def test_constants(self):
+        """Test AppAlertAPI constants"""
+        for a in ALERT_LEVELS:
+            self.assertEqual(getattr(self.app_alerts, f'ALERT_LEVEL_{a}'), a)
 
     def test_get_model(self):
         """Test get_model()"""
