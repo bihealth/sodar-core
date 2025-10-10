@@ -359,17 +359,17 @@ class AppSettingAPI:
             raise ValueError(f'Value is not valid JSON: {value}')
 
     @classmethod
-    def _log_set_debug(
+    def _log_debug(
         cls,
         action: str,
         plugin_name: str,
         setting_name: str,
-        value: str,
+        value: Optional[str],
         project: Optional[Project] = None,
         user: Optional[User] = None,
     ):
         """
-        Helper method for logging setting changes in set() method.
+        Helper method for logging setting changes in set() and delete() methods.
 
         :param action: Action string (string)
         :param plugin_name: App plugin name (string)
@@ -378,19 +378,16 @@ class AppSettingAPI:
         :param project: Project object or None
         :param user: User object or None
         """
-        extra_data = []
+        args = []
         if project:
-            extra_data.append(f'project={project.sodar_uuid}')
+            args.append(f'project={project.sodar_uuid}')
         if user:
-            extra_data.append(f'user={user.username}')
+            args.append(f'user={user.username}')
+        log_args = ' ({})'.format('; '.join(args)) if args else ''
+        log_value = f' = {value}' if action.lower() != 'delete' else ''
         logger.debug(
-            '{} app setting: {}.{} = "{}"{}'.format(
-                action,
-                plugin_name,
-                setting_name,
-                value,
-                ' ({})'.format('; '.join(extra_data)) if extra_data else '',
-            )
+            f'{action.capitalize()} app setting: {plugin_name}.{setting_name}'
+            f'{log_value}{log_args}'
         )
 
     @classmethod
@@ -633,8 +630,8 @@ class AppSettingAPI:
             else:
                 setting.value = v
             setting.save()
-            cls._log_set_debug(
-                'Set', plugin_name, setting_name, value, project, user
+            cls._log_debug(
+                'set', plugin_name, setting_name, value, project, user
             )
             return True
 
@@ -672,8 +669,8 @@ class AppSettingAPI:
             else:
                 s_vals['value'] = value
             AppSetting.objects.create(**s_vals)
-            cls._log_set_debug(
-                'Create', plugin_name, setting_name, value, project, user
+            cls._log_debug(
+                'create', plugin_name, setting_name, value, project, user
             )
             return True
 
@@ -734,15 +731,11 @@ class AppSettingAPI:
                 )
             )
         q_kwargs = {'name': setting_name}
-        if user:
-            q_kwargs['user'] = user
         if project:
             q_kwargs['project'] = project
-        logger.debug(
-            'Delete app setting: {}.{} ({})'.format(
-                plugin_name, setting_name, '; '.join(q_kwargs)
-            )
-        )
+        if user:
+            q_kwargs['user'] = user
+        cls._log_debug('delete', plugin_name, setting_name, None, project, user)
         app_settings = AppSetting.objects.filter(**q_kwargs)
         sc = app_settings.count()
         app_settings.delete()

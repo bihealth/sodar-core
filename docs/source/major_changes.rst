@@ -16,6 +16,7 @@ v1.2.4 (WIP)
 Release Highlights
 ==================
 
+- Fix app setting deletion debug logging
 - Fix UI test setup window size
 
 System Prerequisites

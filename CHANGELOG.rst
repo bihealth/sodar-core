@@ -13,12 +13,16 @@ Changed
 
 - **General**
     - Upgrade minimum Django version to v4.2.25 (#1774)
+- **Projectroles**
+    - Refactor debug logging (#1786)
 
 Fixed
 -----
 
 - **General**
     - UI test window size not correctly set (#1783)
+- **Projectroles**
+    - ``AppSettingAPI.delete()`` malformed debug log messages (#1786)
 
 
 v1.2.3 (2025-09-26)
