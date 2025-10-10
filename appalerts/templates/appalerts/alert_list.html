@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load rules %}
+{% load appalerts_tags %}
 {% load projectroles_common_tags %}
 
 {% block title %}{% if dismissed %}Dismissed{% else %}Active{% endif %} App Alerts{% endblock title %}
@@ -89,7 +90,8 @@
             {% get_project_badge a.project a.level can_view_project 'mr-1' as project_badge %}
             {{ project_badge | safe }}
           {% endif %}
-          {{ a.message | safe }}
+          {% get_alert_message a as alert_msg %}
+          {{ alert_msg | safe }}
         </div>
         <div>
           <span class="sodar-app-alert-buttons pull-right">

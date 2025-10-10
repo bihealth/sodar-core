@@ -16,6 +16,7 @@ v1.2.4 (WIP)
 Release Highlights
 ==================
 
+- Add support for line breaks app alert messages
 - Add alert level constants as AppAlertAPI attributes
 - Fix app setting deletion debug logging
 - Fix UI test setup window size

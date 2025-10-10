@@ -13,7 +13,8 @@ Added
 
 - **Appalerts**
     - Alert level constants as ``AppAlertAPI`` attributes (#1787)
-
+    - ``get_alert_message()`` template tag (#1788)
+    - Line break support for alert messages (#1788)
 
 Changed
 -------
