@@ -23,6 +23,7 @@ Changed
     - Upgrade minimum Django version to v4.2.25 (#1774)
 - **Projectroles**
     - Refactor debug logging (#1786)
+    - Improve project title word breaking (#1789)
 
 Fixed
 -----
