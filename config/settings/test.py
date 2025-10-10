@@ -173,7 +173,7 @@ TOKENS_CREATE_PROJECT_USER_RESTRICT = False
 # UI test settings
 PROJECTROLES_TEST_UI_CHROME_OPTIONS = [
     'headless=new',
-    'no-sandbox',  # For Gitlab-CI compatibility
+    'no-sandbox',  # For CI compatibility
     'disable-dev-shm-usage',  # For testing stability
 ]
 PROJECTROLES_TEST_UI_WINDOW_SIZE = (1400, 1000)

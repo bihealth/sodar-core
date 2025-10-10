@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.2.4 (2025-10-10)
+===================
 
 Added
 -----
@@ -28,9 +28,8 @@ Changed
 Fixed
 -----
 
-- **General**
-    - UI test window size not correctly set (#1783)
 - **Projectroles**
+    - UI test window size not correctly set (#1783)
     - ``AppSettingAPI.delete()`` malformed debug log messages (#1786)
     - Malformed app alert mesage in project creation (#1791)
 

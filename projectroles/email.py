@@ -323,11 +323,13 @@ def get_email_header(header: str) -> str:
     return getattr(settings, 'PROJECTROLES_EMAIL_HEADER', None) or header
 
 
-def get_email_footer(request: HttpRequest, settings_link: bool = True) -> str:
+def get_email_footer(
+    request: Optional[HttpRequest], settings_link: bool = True
+) -> str:
     """
     Return the email footer.
 
-    :param request: HttpRequest object
+    :param request: HttpRequest object or None
     :param settings_link: Include link to user settings if True (optional)
     :return: string
     """
