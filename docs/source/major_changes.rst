@@ -20,6 +20,7 @@ Release Highlights
 - Add alert level constants as AppAlertAPI attributes
 - Fix app setting deletion debug logging
 - Fix UI test setup window size
+- General bug fixes and minor updates
 
 System Prerequisites
 --------------------

@@ -1365,7 +1365,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                         alert_name='project_create_parent',
                         user=r,
                         message=f'New {project.type.lower()} created under '
-                        f'category "{project.parent.title}": {project.title}".',
+                        f'category "{project.parent.title}": '
+                        f'"{project.title}".',
                         url=reverse(
                             'projectroles:detail',
                             kwargs={'project': project.sodar_uuid},

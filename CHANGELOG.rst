@@ -31,6 +31,7 @@ Fixed
     - UI test window size not correctly set (#1783)
 - **Projectroles**
     - ``AppSettingAPI.delete()`` malformed debug log messages (#1786)
+    - Malformed app alert mesage in project creation (#1791)
 
 
 v1.2.3 (2025-09-26)
