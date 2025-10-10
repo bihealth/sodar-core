@@ -151,6 +151,7 @@ div.sodar-pr-content-title {
   vertical-align: bottom;
   margin-bottom: 6px;
   border-bottom: 1px solid #dfdfdf;
+  word-break: break-word;
 }
 
 div.sodar-page-container {

@@ -10,6 +10,25 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.2.4 (2025-10-10)
+*******************
+
+Release Highlights
+==================
+
+- Add support for line breaks app alert messages
+- Add alert level constants as AppAlertAPI attributes
+- Fix app setting deletion debug logging
+- Fix UI test setup window size
+- General bug fixes and minor updates
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v4.2.25.
+
+
 v1.2.3 (2025-09-26)
 *******************
 

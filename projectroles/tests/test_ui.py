@@ -118,9 +118,10 @@ class SeleniumSetupMixin:
         options = webdriver.ChromeOptions()
         for arg in self.chrome_options:
             options.add_argument(arg)
+        options.add_argument(
+            f'--window-size={self.window_size[0]},{self.window_size[1]}'
+        )
         self.selenium = webdriver.Chrome(options=options)
-        # Prevent ElementNotVisibleException
-        self.selenium.set_window_size(self.window_size[0], self.window_size[1])
 
 
 class LiveUserMixin:

@@ -5,6 +5,35 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.2.4 (2025-10-10)
+===================
+
+Added
+-----
+
+- **Appalerts**
+    - Alert level constants as ``AppAlertAPI`` attributes (#1787)
+    - ``get_alert_message()`` template tag (#1788)
+    - Line break support for alert messages (#1788)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v4.2.25 (#1774)
+- **Projectroles**
+    - Refactor debug logging (#1786)
+    - Improve project title word breaking (#1789)
+
+Fixed
+-----
+
+- **Projectroles**
+    - UI test window size not correctly set (#1783)
+    - ``AppSettingAPI.delete()`` malformed debug log messages (#1786)
+    - Malformed app alert mesage in project creation (#1791)
+
+
 v1.2.3 (2025-09-26)
 ===================
 
