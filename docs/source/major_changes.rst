@@ -33,6 +33,12 @@ Python v3.12 and v3.13 Support Added
     3.13 is now the recommended Python version.
 Python v3.9 Support Dropped
     This release no longer supports Python v3.9.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project. Note that in this release, several dependencies were also dropped.
+    Unless your repository explicitly requires them, we recommend dropping those
+    packages from your SODAR Core based repository as well.
 
 Django v5.2 Upgrade
 -------------------
