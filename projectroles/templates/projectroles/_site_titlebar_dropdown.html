@@ -5,8 +5,8 @@
 {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 
 {# Responsive replacement for user dropdown #}
-{% get_user_links request as dropdown_links %}
-{% for link in dropdown_links %}
+{% get_user_links request as user_links %}
+{% for link in user_links %}
   <li class="nav-item sodar-navbar-alt-item {% if link.active %}active{% endif %}">
     {# HACK to wrap logout link in POST form, see issue #1798 #}
     {% if link.name == 'sign-out' %}
@@ -52,8 +52,7 @@
     </div>
     <div class="dropdown-divider"></div>
 
-    {% get_user_links request as dropdown_links %}
-    {% for link in dropdown_links %}
+    {% for link in user_links %}
       {% if link.name == 'admin' or link.name == 'sign-out' or link.name == 'sign-in' %}
         <div class="dropdown-divider"></div>
       {% endif %}

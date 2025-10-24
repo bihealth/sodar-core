@@ -26,6 +26,12 @@ Changed
 - **Projectroles**
     - Update logout links for ``POST`` method (#1557)
 
+Fixed
+-----
+
+- **Projectroles**
+    - ``get_user_links()`` called twice in ``_site_titlebar_dropdown.html`` (#1800)
+
 Removed
 -------
 
