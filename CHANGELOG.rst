@@ -25,6 +25,7 @@ Changed
     - Use ``zoneinfo`` instead of ``pytz`` (#1557)
 - **Projectroles**
     - Update logout links for ``POST`` method (#1557)
+    - Use DRF API client in ``SODARAPIViewTestMixin`` (#1801)
 
 Fixed
 -----

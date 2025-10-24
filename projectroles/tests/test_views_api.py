@@ -18,6 +18,8 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from rest_framework.test import APIClient
+
 from knox.models import AuthToken
 
 from test_plus.test import APITestCase
@@ -148,6 +150,9 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
     authorization and general helper methods.
     """
 
+    # Set client class to drf API client to work with PUT, see #1801
+    client_class = APIClient
+
     # Copied from Knox tests
     @classmethod
     def get_basic_auth_header(cls, username: str, password: str) -> str:
@@ -228,7 +233,6 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         media_type: Optional[str] = None,
         version: Optional[str] = None,
         header: Optional[dict] = None,
-        content_type: Optional[str] = 'application/json',
     ) -> HttpResponse:
         """
         Perform a HTTP request with Knox token auth.
@@ -241,15 +245,12 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         :param media_type: String (default = cls.media_type)
         :param version: String (default = cls.api_version)
         :param header: Optional header data (dict)
-        :param content_type: Optional content type (string or None,
-                             default='application/json')
         :return: Response object
         """
         if not token:
             token = self.knox_token
         req_kwargs = {
             'format': format,
-            'content_type': content_type,
             **self.get_accept_header(media_type, version),
             **self.get_token_header(token),
         }

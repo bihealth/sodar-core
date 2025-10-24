@@ -58,14 +58,17 @@ Common known issues:
 - Support for ``pytz`` has been removed in Django and we should also stop using
   it. Use `zoneinfo <https://docs.python.org/3/library/zoneinfo.html>`_ instead.
 
-Testing Changes
----------------
+REST API View Test Client Changed
+---------------------------------
 
-Some breaking changes have been made to testing using the default helpers.
+``SODARAPIViewTestMixin`` now uses ``rest_framework.test.APIClient`` as the
+client for requests, instead of the ``test_plus`` client which was in use
+before. This naturally also applies to all base API test classes using the
+mixin.
 
-- ``request_knox()`` in API tests has been modified to add the optional
-  ``content_type`` argument. By default this is set to ``application/json``. If
-  a different content type is needed, supply it in the ``content_type`` kwarg.
+This should not require any changes on your site. However, if you need to use
+another client for some API view tests while still using SODAR Core helpers, you
+can override it by changing the ``client_class`` class member variable.
 
 
 v1.2.4 (2025-10-10)

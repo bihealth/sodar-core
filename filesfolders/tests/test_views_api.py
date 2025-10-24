@@ -2,10 +2,7 @@
 
 import json
 
-from django.test.client import MULTIPART_CONTENT
 from django.urls import reverse
-
-from rest_framework.test import APIClient
 
 from test_plus.test import APITestCase
 
@@ -303,11 +300,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
     def test_post_create_root(self):
         """Test POST to create file in root"""
         response = self.request_knox(
-            self.url,
-            method='POST',
-            format='multipart',
-            data=self.file_data,
-            content_type=MULTIPART_CONTENT,
+            self.url, method='POST', format='multipart', data=self.file_data
         )
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_file = File.objects.filter(
@@ -332,11 +325,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
         """Test POST to create file under folder"""
         file_data = {**self.file_data, 'folder': str(self.folder.sodar_uuid)}
         response = self.request_knox(
-            self.url,
-            method='POST',
-            format='multipart',
-            data=file_data,
-            content_type=MULTIPART_CONTENT,
+            self.url, method='POST', format='multipart', data=file_data
         )
         self.assertEqual(response.status_code, 201, msg=response.data)
         new_file = File.objects.filter(
@@ -370,7 +359,6 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
             method='POST',
             format='multipart',
             data=self.file_data,
-            content_type=MULTIPART_CONTENT,
         )
         self.assertEqual(response.status_code, 403, msg=response.data)
         self.assertEqual(
@@ -381,9 +369,6 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
 
 class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
     """Tests for FileRetrieveUpdateDestroyAPIView"""
-
-    # Set client class to drf API client to work with PUT, see #1801
-    client_class = APIClient
 
     def setUp(self):
         super().setUp()
@@ -399,7 +384,6 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
             'filesfolders:api_file_retrieve_update_destroy',
             kwargs={'file': self.file.sodar_uuid},
         )
-        # self.client_class = APIClient
 
     def tearDown(self):
         self.file_data['file'].close()
@@ -436,11 +420,7 @@ class TestFileRetrieveUpdateDestroyAPIView(FilesfoldersAPIViewTestBase):
     def test_put_update(self):
         """Test PUT to update file"""
         response = self.request_knox(
-            self.url,
-            method='PUT',
-            format='multipart',
-            data=self.file_data,
-            content_type=None,  # Here format is actually used
+            self.url, method='PUT', format='multipart', data=self.file_data
         )
         self.assertEqual(response.status_code, 200, msg=response.data)
         old_secret = self.file.secret
