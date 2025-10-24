@@ -64,7 +64,7 @@ drf-keyed-list-bihealth>=0.2.1, <0.3
 
 # Token authentication
 # NOTE: v5.0+ is a breaking change, see #1568
-django-rest-knox>=4.2.0, <4.3
+django-rest-knox>=5.0.2, <5.1
 
 # Markdown field support
 markdown==3.9

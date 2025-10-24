@@ -23,6 +23,7 @@ Changed
 
 - **General**
     - Upgrade to Django v5.2.7 (#1557)
+    - Upgrade to django-rest-knox v5.0 (#1568)
     - Upgrade general Python dependencies (#1790)
     - Use ``zoneinfo`` instead of ``pytz`` (#1557)
 - **Projectroles**

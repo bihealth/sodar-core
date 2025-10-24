@@ -18,6 +18,7 @@ Release Highlights
 
 - Add Python v3.12 and v3.13 support
 - Upgrade to Django v5.2
+- Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
 - Remove Python v3.9 support
 
 Breaking Changes
@@ -63,6 +64,13 @@ Common known issues:
   ``config/settings/base.py``.
 - Support for ``pytz`` has been removed in Django and we should also stop using
   it. Use `zoneinfo <https://docs.python.org/3/library/zoneinfo.html>`_ instead.
+
+Breaking Knox Upgrade
+---------------------
+
+This release upgrades ``django-rest-knox`` to v5.0. API tokens previously
+generated will no longer work. Uses will have to generate new API tokens. It is
+recommended to communicate this change to your users.
 
 AppLinkAPI Changes
 ------------------
