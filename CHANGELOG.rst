@@ -5,6 +5,37 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **General**
+    - Python v3.12 and v3.13 support (#1558)
+    - ``STORAGES`` Django setting for filesfolders (#1557)
+- **Projectroles**
+    - ``request_knox()`` test helper ``content_type`` arg (#1557)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v5.2.7 (#1557)
+    - Use ``zoneinfo`` instead of ``pytz`` (#1557)
+- **Projectroles**
+    - Update logout links for ``POST`` method (#1557)
+
+Removed
+-------
+
+- **General**
+    - Python v3.9 support (#1558)
+    - ``DEFAULT_FILE_STORAGE`` Django setting (#1557)
+    - ``USE_L10N`` Django setting (#1557)
+    - ``pytz`` dependency (#1557)
+
+
 v1.2.4 (2025-10-10)
 ===================
 

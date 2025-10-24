@@ -2,10 +2,10 @@
 
 import base64
 import json
-import pytz
 
 from datetime import datetime
 from typing import Optional, Union
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -184,7 +184,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         :return: String
         """
         return timezone.localtime(
-            obj_dt, pytz.timezone(settings.TIME_ZONE)
+            obj_dt, ZoneInfo(settings.TIME_ZONE)
         ).isoformat()
 
     @classmethod
@@ -228,6 +228,7 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         media_type: Optional[str] = None,
         version: Optional[str] = None,
         header: Optional[dict] = None,
+        content_type: Optional[str] = 'application/json',
     ) -> HttpResponse:
         """
         Perform a HTTP request with Knox token auth.
@@ -240,12 +241,15 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         :param media_type: String (default = cls.media_type)
         :param version: String (default = cls.api_version)
         :param header: Optional header data (dict)
+        :param content_type: Optional content type (string or None,
+                             default='application/json')
         :return: Response object
         """
         if not token:
             token = self.knox_token
         req_kwargs = {
             'format': format,
+            'content_type': content_type,
             **self.get_accept_header(media_type, version),
             **self.get_token_header(token),
         }

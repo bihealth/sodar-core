@@ -379,13 +379,14 @@ class TestGeneralViews(ProjectPermissionTestBase):
         url = reverse('login')
         self.assert_response(url, self.all_users, 200)
 
-    def test_get_logout(self):
-        """Test logout view GET"""
+    def test_post_logout(self):
+        """Test logout view POST"""
         url = reverse('logout')
         self.assert_response(
             url,
             self.auth_users,
             302,
+            method='POST',
             redirect_user='/login/',
             redirect_anon='/login/',
         )

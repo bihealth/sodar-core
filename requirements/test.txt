@@ -2,7 +2,7 @@
 -r base.txt
 
 flake8==7.2.0
-django-test-plus==2.2.4
+django-test-plus==2.3.0
 factory-boy==3.3.3
 coverage==7.8.2
 django-coverage-plugin==3.1.0
@@ -24,7 +24,8 @@ beautifulsoup4==4.13.4
 black==25.1.0
 
 # Coveralls for coverage reporting
-coveralls==4.0.1
+# Dependency removed, see issue #1797
+# coveralls==4.0.1
 
 # JQuery beautifying
 jsbeautifier==1.15.4

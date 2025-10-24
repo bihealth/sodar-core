@@ -139,6 +139,15 @@ div.sodar-subtitle-shadow {
   display: inline-block;
 }
 
+/* Nav item class for when a POST submit is needed in nav menu */
+.sodar-nav-item-submit {
+  background: none;
+  border: none;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 0;
+}
+
 .sodar-pr-sidebar {
   width: 90px;
   padding-top: 2px;

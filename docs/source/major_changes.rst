@@ -10,6 +10,64 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.3.0 (WIP)
+************
+
+Release Highlights
+==================
+
+- Add Python v3.12 and v3.13 support
+- Upgrade to Django v5.2
+- Remove Python v3.9 support
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.7.
+Python v3.12 and v3.13 Support Added
+    Python v3.12 and v3.13 support has been officially added in this version.
+    3.13 is now the recommended Python version.
+Python v3.9 Support Dropped
+    This release no longer supports Python v3.9.
+
+Django v5.2 Upgrade
+-------------------
+
+This release updates SODAR Core from Django v4.2 to v5.2. This is a breaking
+change which causes many updates and also requires updating several
+dependencies.
+
+Please update the Django requirement along with your site's other Python
+requirements to match ones in ``requirements/*.txt``. See
+`Django deprecation documentation <https://docs.djangoproject.com/en/dev/internals/deprecation/>`_
+for details about what has been deprecated in Django and which changes are
+mandatory.
+
+Common known issues:
+
+- Logout view must be called with a ``POST`` request. If you are using the base
+  templates, this should require no changes.
+- ``DEFAULT_FILE_STORAGE`` Django setting has been removed. If you need to set
+  storages for the :ref:`filesfolders <app_filesfolders>` app or other reasons,
+  set up a ``STORAGES`` dict instead. You can find an example in
+  ``config/settings/base.py``.
+- Support for ``pytz`` has been removed in Django and we should also stop using
+  it. Use `zoneinfo <https://docs.python.org/3/library/zoneinfo.html>`_ instead.
+
+Testing Changes
+---------------
+
+Some breaking changes have been made to testing using the default helpers.
+
+- ``request_knox()`` in API tests has been modified to add the optional
+  ``content_type`` argument. By default this is set to ``application/json``. If
+  a different content type is needed, supply it in the ``content_type`` kwarg.
+
+
 v1.2.4 (2025-10-10)
 *******************
 
@@ -21,6 +79,9 @@ Release Highlights
 - Fix app setting deletion debug logging
 - Fix UI test setup window size
 - General bug fixes and minor updates
+
+Breaking Changes
+================
 
 System Prerequisites
 --------------------

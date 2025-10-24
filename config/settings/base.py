@@ -2,10 +2,10 @@
 Django settings for the SODAR Core Example Site project.
 
 For more information on this file, see
-https://docs.djangoproject.com/en/4.2/topics/settings/
+https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/4.2/ref/settings/
+https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import environ
@@ -145,22 +145,19 @@ ADMINS = [
     for x in env.list('ADMINS', default=['Admin User:admin@example.com'])
 ]
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#managers
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#managers
 MANAGERS = ADMINS
 
 # DATABASE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Uses django-environ to accept uri format
 # See: https://django-environ.readthedocs.io/en/latest/#supported-types
 DATABASES = {'default': env.db('DATABASE_URL', 'postgres:///sodar_core')}
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
-# Set default auto field (for Django 3.2+)
+# Set default auto field
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
-
-# Set django-db-file-storage as the default storage (for filesfolders)
-DEFAULT_FILE_STORAGE = 'db_file_storage.storage.DatabaseFileStorage'
 
 
 # GENERAL CONFIGURATION
@@ -171,24 +168,21 @@ DEFAULT_FILE_STORAGE = 'db_file_storage.storage.DatabaseFileStorage'
 # In a Windows environment this must be set to your system time zone.
 TIME_ZONE = 'Europe/Berlin'
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#language-code
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#site-id
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#site-id
 SITE_ID = 1
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-i18n
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#use-i18n
 USE_I18N = False
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-l10n
-USE_L10N = True
-
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-tz
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#use-tz
 USE_TZ = True
 
 # TEMPLATE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#templates
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -239,6 +233,18 @@ ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
 # ------------------------------------------------------------------------------
 MEDIA_ROOT = str(APPS_DIR('media'))
 MEDIA_URL = '/media/'
+
+# STORAGE CONFIGURATION
+# ------------------------------------------------------------------------------
+# Set django-db-file-storage as the default storage (for filesfolders)
+STORAGES = {
+    'default': {
+        'BACKEND': 'db_file_storage.storage.DatabaseFileStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    },
+}
 
 # URL Configuration
 # ------------------------------------------------------------------------------

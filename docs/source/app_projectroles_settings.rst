@@ -587,20 +587,6 @@ ensure it works in all views.
     </a>
 
 
-SAML SSO Configuration (Removed in v1.0)
-========================================
-
-.. note::
-
-    SAML support has been removed in SODAR Core v1.0. It has been replaced with
-    the possibility to set up OpenID Connect (OIDC) authentication. The library
-    previously used for SAML in SODAR Core is incompatible with Django v4.x. We
-    are unaware of SODAR Core based projects requiring SAML at this time. If
-    there are specific needs to use SAML on a SODAR Core based site, we are
-    happy to review pull requests to reintroduce it. Please note the
-    implementation has to support Django v4.2+.
-
-
 Global JS/CSS Include Modifications (Optional)
 ==============================================
 

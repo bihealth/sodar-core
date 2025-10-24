@@ -8,14 +8,14 @@ setuptools>=80.9.0, <80.10
 packaging>=25.0, <26.0
 
 # Django
-django>=4.2.25, <5.0
+django>=5.2.7, <6.0
 
 # Configuration
 django-environ>=0.12.0, <0.13
 
 # Forms
 django-crispy-forms>=2.4, <2.5
-crispy-bootstrap4==2024.10
+crispy-bootstrap4==2025.6
 
 # Models
 django-model-utils>=5.0.0, <5.1
@@ -30,11 +30,8 @@ psycopg2-binary>=2.9.10, <2.10
 # NOTE: Replaces awesome-slugify, see #1547
 python-slugify>=8.0.4, <8.1
 
-# Time zones support
-pytz>=2025.2
-
 # SVG icon support
-django-iconify==0.3  # NOTE: v0.4 requires Python>=3.10
+django-iconify==0.4.1
 
 # OpenID Connect (OIDC) authentication support
 # NOTE: >=5.6.0 requires Django 5.2
