@@ -8,17 +8,17 @@
 {% get_user_links request as user_links %}
 {% for link in user_links %}
   <li class="nav-item sodar-navbar-alt-item {% if link.active %}active{% endif %}">
-    {# HACK to wrap logout link in POST form, see issue #1798 #}
-    {% if link.name == 'sign-out' %}
+    {% if link.method == 'POST' %}
       <form action="{{ link.url }}" method="POST">
+        {% csrf_token %}
         <button type="submit"
-                class="nav-item sodar-nav-item-submit text-danger">
-          {% csrf_token %}
+                class="nav-item sodar-nav-item-submit
+                       {% if link.name == 'logout' %}text-danger{% endif %}">
           <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
         </button>
       </form>
     {% else %}
-    <a class="nav-link {% if link.name == 'sign-in' %}text-white{% endif %}"
+    <a class="nav-link {% if link.name == 'login' %}text-white{% endif %}"
        href="{{ link.url }}"
        id="sodar-navbar-nav-link-{{ link.name }}">
       <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
@@ -53,23 +53,20 @@
     <div class="dropdown-divider"></div>
 
     {% for link in user_links %}
-      {% if link.name == 'admin' or link.name == 'sign-out' or link.name == 'sign-in' %}
+      {% if link.name == 'admin' or link.name == 'logout' or link.name == 'login' %}
         <div class="dropdown-divider"></div>
       {% endif %}
-      {# HACK to wrap logout link in POST form, see issue #1798 #}
-      {% if link.name == 'sign-out' %}
+      {% if link.method == 'POST' %}
         <form action="{{ link.url }}" method="POST">
-          <button type="submit" class="dropdown-item text-danger">
-            {% csrf_token %}
+          {% csrf_token %}
+          <button type="submit"
+                  class="dropdown-item {% if link.name == 'logout' %}text-danger{% endif %}">
             <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
           </button>
         </form>
       {% else %}
         <a class="dropdown-item {% if link.active %}active{% endif %}
-                  {% comment %}
-                  {% if link.name == 'sign-out' %}text-danger{% endif %}
-                  {% endcomment %}
-                  {% if link.name == 'sign-in' %}text-primary{% endif %}"
+                  {% if link.name == 'login' %}text-primary{% endif %}"
            {% if link.url %}href="{{ link.url }}"{% endif %}
            id="sodar-navbar-link-{{ link.name }}">
           <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}

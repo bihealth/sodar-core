@@ -58,6 +58,23 @@ Common known issues:
 - Support for ``pytz`` has been removed in Django and we should also stop using
   it. Use `zoneinfo <https://docs.python.org/3/library/zoneinfo.html>`_ instead.
 
+AppLinkAPI Changes
+------------------
+
+The following potentially breaking changes have been made to ``AppLinkAPI``.
+They are relevant if you use the API or related Ajax views for custom displaying
+of SODAR Core links in your UI.
+
+Optional method field added
+    If a link must be provided as a form submitted via ``POST``, the
+    ``method='POST'`` field may be included. This is required for e.g. the
+    logout view due to Django v5.2 changes. Don't forget to include the CSRF
+    token in the form submission.
+Login and logout links renamed
+    The ``name`` values for ``sign-in`` and ``sign-out`` have been renamed to
+    ``login`` and ``logout``, respectively. This has been done to maintain
+    consistent naming of actions in the repository.
+
 REST API View Test Client Changed
 ---------------------------------
 

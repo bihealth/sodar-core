@@ -16,6 +16,7 @@ Added
     - ``STORAGES`` Django setting for filesfolders (#1557)
 - **Projectroles**
     - ``request_knox()`` test helper ``content_type`` arg (#1557)
+    - ``get_user_links()`` optional ``method`` field (#1798)
 
 Changed
 -------
@@ -24,8 +25,9 @@ Changed
     - Upgrade to Django v5.2.7 (#1557)
     - Use ``zoneinfo`` instead of ``pytz`` (#1557)
 - **Projectroles**
-    - Update logout links for ``POST`` method (#1557)
+    - Update logout links for ``POST`` method (#1557, #1798)
     - Use DRF API client in ``SODARAPIViewTestMixin`` (#1801)
+    - Rename ``get_user_links()`` ``login`` and ``logout`` links (#1799)
 
 Fixed
 -----

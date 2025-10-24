@@ -403,11 +403,12 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 'active': False,
             },
             {
-                'name': 'sign-out',
+                'name': 'logout',
                 'url': reverse('logout'),
                 'label': 'Logout',
                 'icon': 'mdi:logout-variant',
                 'active': False,
+                'method': 'POST',
             },
         ]
         self.assertEqual(app_links.get_user_links(self.user_owner), expected)
@@ -500,11 +501,12 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
                 'active': False,
             },
             {
-                'name': 'sign-out',
+                'name': 'logout',
                 'url': reverse('logout'),
                 'label': 'Logout',
                 'icon': 'mdi:logout-variant',
                 'active': False,
+                'method': 'POST',
             },
         ]
         self.assertEqual(app_links.get_user_links(self.user), expected)
@@ -563,7 +565,7 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         """Test get_user_links() as anonymous user"""
         links = app_links.get_user_links(AnonymousUser())
         self.assertEqual(len(links), 1)
-        self.assertEqual(links[0]['name'], 'sign-in')
+        self.assertEqual(links[0]['name'], 'login')
 
     @override_settings(PROJECTROLES_KIOSK_MODE=True)
     def test_get_user_links_anon_kiosk_mode(self):

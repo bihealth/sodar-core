@@ -1008,11 +1008,12 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'active': False,
                 },
                 {
-                    'name': 'sign-out',
+                    'name': 'logout',
                     'url': '/logout/',
                     'label': 'Logout',
                     'icon': 'mdi:logout-variant',
                     'active': False,
+                    'method': 'POST',
                 },
             ],
         )
@@ -1111,11 +1112,12 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'active': False,
                 },
                 {
-                    'name': 'sign-out',
+                    'name': 'logout',
                     'url': '/logout/',
                     'label': 'Logout',
                     'icon': 'mdi:logout-variant',
                     'active': False,
+                    'method': 'POST',
                 },
             ],
         )
