@@ -19,7 +19,7 @@ Release Highlights
 - Add Python v3.12 and v3.13 support
 - Upgrade to Django v5.2
 - Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
-- Remove Python v3.9 support
+- Remove Python v3.9 and v3.10 support
 
 Breaking Changes
 ================
@@ -32,8 +32,8 @@ Django Version
 Python v3.12 and v3.13 Support Added
     Python v3.12 and v3.13 support has been officially added in this version.
     3.13 is now the recommended Python version.
-Python v3.9 Support Dropped
-    This release no longer supports Python v3.9.
+Python v3.9 and v3.10 Support Dropped
+    This release no longer supports Python <v3.11.
 General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your

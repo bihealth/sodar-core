@@ -57,7 +57,7 @@ your Django site are listed below. For a complete requirement list, see the
 - Ubuntu/Debian (Ubuntu 24.04 LTS recommended and supported for development)
 - System library requirements (see the ``utility`` directory and/or your own
   Django project)
-- Python 3.10-3.13 (3.13 recommended)
+- Python 3.11-3.13 (3.13 recommended)
 - Django 5.2
 - PostgreSQL >=12 (16 recommended) and psycopg2-binary
 - Bootstrap 4.x

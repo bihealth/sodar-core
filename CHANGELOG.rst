@@ -41,7 +41,7 @@ Removed
 -------
 
 - **General**
-    - Python v3.9 support (#1558)
+    - Python v3.9 and v3.10 support (#1558, #1802)
     - ``DEFAULT_FILE_STORAGE`` Django setting (#1557)
     - ``USE_L10N`` Django setting (#1557)
     - ``pytz`` dependency (#1557)
