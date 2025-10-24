@@ -23,9 +23,5 @@ beautifulsoup4==4.13.4
 # Black for formatting
 black==25.1.0
 
-# Coveralls for coverage reporting
-# Dependency removed, see issue #1797
-# coveralls==4.0.1
-
 # JQuery beautifying
 jsbeautifier==1.15.4

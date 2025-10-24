@@ -34,6 +34,7 @@ Removed
     - ``DEFAULT_FILE_STORAGE`` Django setting (#1557)
     - ``USE_L10N`` Django setting (#1557)
     - ``pytz`` dependency (#1557)
+    - ``coveralls`` dependency (#1797)
 
 
 v1.2.4 (2025-10-10)
