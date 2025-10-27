@@ -39,7 +39,7 @@ social-auth-app-django>=5.6.0, <5.7
 # Online documentation via django-docs
 docutils==0.21.2
 # NOTE: Sphinx 8.0 requires Python 3.10+, Sphinx 8.2 requires 3.11+
-Sphinx==7.4.7
+Sphinx==8.2.3
 django-docs==0.3.3
 sphinx-rtd-theme==3.0.2
 
