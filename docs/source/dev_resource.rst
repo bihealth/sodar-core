@@ -195,27 +195,6 @@ used. An example can be seen below:
 
     {% include 'projectroles/_pagination.html' with pg_small=True %}
 
-Project Badge
--------------
-
-Projectroles provides a project badge which can be used to display a fixed-size
-link to a category or a project among text. It can be included in your template
-as follows:
-
-.. code-block:: django
-
-    {% include 'projectroles/_project_badge.html' with project=project color='info' can_view=True %}
-
-The following arguments are expected:
-
-``project``
-    Project object for the related project or category.
-``color``
-    String for the badge color (must correspond to bootstrap classes, e.g.
-    "info" or "success").
-``can_view``
-    Boolean for whether the current user should have access to view the project.
-
 Tour Help
 ---------
 

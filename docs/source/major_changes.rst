@@ -22,6 +22,7 @@ Release Highlights
 - Remove Python v3.9 and v3.10 support
 - Remove deprecated projectroles plugin helper methods
 - Remove deprecated Project model public_guest_access field
+- Remove deprecated project badge template
 
 Breaking Changes
 ================
@@ -115,6 +116,9 @@ Root-Level Projectroles Plugin Helpers
     This field has been removed. Use ``Project.public_access`` instead.
 ``Project.set_public()``
     This helper has been removed. Use ``Project.set_public_access()`` instead.
+``_project_badge.html``
+    This template has been removed. Instead, use the ``get_project_badge()``
+    template tag in ``projectroles_common_tags``.
 
 
 v1.2.4 (2025-10-10)
