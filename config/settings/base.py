@@ -681,6 +681,11 @@ if PROJECTROLES_ENABLE_PROFILING:
 
 
 # Adminalerts app settings
+# Set alert email sending default in alert form
+ADMINALERTS_EMAIL_SENDING_DEFAULT = env.bool(
+    'ADMINALERTS_EMAIL_SENDING_DEFAULT', True
+)
+# Number of alerts to be shown on one page
 ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
 
 

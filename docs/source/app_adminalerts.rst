@@ -53,7 +53,10 @@ variables with values of your choosing:
 .. code-block:: python
 
     # Adminalerts app settings
-    ADMINALERTS_PAGINATION = 15    # Number of alerts to be shown on one page (int)
+    # Set alert email sending default in alert form (boolean)
+    ADMINALERTS_EMAIL_SENDING_DEFAULT = True
+    # Number of alerts to be shown on one page (int)
+    ADMINALERTS_PAGINATION = 15
 
 URL Configuration
 -----------------

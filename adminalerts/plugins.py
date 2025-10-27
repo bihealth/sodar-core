@@ -35,6 +35,10 @@ ADMINALERTS_APP_SETTINGS = [
         ),
     )
 ]
+ADMINALERTS_INFO_SETTINGS = [
+    'ADMINALERTS_EMAIL_SENDING_DEFAULT',
+    'ADMINALERTS_PAGINATION',
+]
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -65,7 +69,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     app_permission = 'adminalerts.create_alert'
 
     #: Names of plugin specific Django settings to display in siteinfo
-    info_settings = ['ADMINALERTS_PAGINATION']
+    info_settings = ADMINALERTS_INFO_SETTINGS
 
     def get_statistics(self) -> dict:
         return {

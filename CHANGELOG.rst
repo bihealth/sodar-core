@@ -14,6 +14,8 @@ Added
 - **General**
     - Python v3.12 and v3.13 support (#1558, #1803)
     - ``STORAGES`` Django setting for filesfolders (#1557)
+- **Adminalerts**
+    - ``ADMINALERTS_EMAIL_SENDING_DEFAULT`` Django setting (#1796)
 - **Projectroles**
     - ``request_knox()`` test helper ``content_type`` arg (#1557)
     - ``get_user_links()`` optional ``method`` field (#1798)

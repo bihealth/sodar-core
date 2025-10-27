@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from django.core import mail
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -117,8 +118,20 @@ class TestAdminAlertCreateView(AdminalertsViewTestBase):
 
     def test_get(self):
         """Test AdminAlertCreateView GET"""
+        self.assertEqual(settings.ADMINALERTS_EMAIL_SENDING_DEFAULT, True)
         with self.login(self.superuser):
             response = self.client.get(self.url)
+        form = response.context['form']
+        self.assertEqual(form.initial['send_email'], True)
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(ADMINALERTS_EMAIL_SENDING_DEFAULT=False)
+    def test_get_email_default_disable(self):
+        """Test GET with disabled default email sending"""
+        with self.login(self.superuser):
+            response = self.client.get(self.url)
+        form = response.context['form']
+        self.assertEqual(form.initial['send_email'], False)
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
