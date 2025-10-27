@@ -17,6 +17,8 @@ Added
 - **Projectroles**
     - ``request_knox()`` test helper ``content_type`` arg (#1557)
     - ``get_user_links()`` optional ``method`` field (#1798)
+- **Timeline**
+    - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
 
 Changed
 -------

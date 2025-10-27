@@ -603,3 +603,8 @@ class TestTimelineAPI(
         )
         self.assertNotIn(folder.name, desc)
         self.assertIn('sodar-tl-plugin-error', desc)
+
+    def test_get_models(self):
+        """Test get_models()"""
+        expected = (TimelineEvent, TimelineEventObjectRef, TimelineEventStatus)
+        self.assertEqual(self.timeline.get_models(), expected)

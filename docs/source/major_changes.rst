@@ -16,6 +16,7 @@ v1.3.0 (WIP)
 Release Highlights
 ==================
 
+- Add TimelineEventStatus in TimelineAPI.get_models() return data
 - Add Python v3.12 and v3.13 support
 - Upgrade to Django v5.2
 - Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
@@ -103,6 +104,13 @@ mixin.
 This should not require any changes on your site. However, if you need to use
 another client for some API view tests while still using SODAR Core helpers, you
 can override it by changing the ``client_class`` class member variable.
+
+Timeline API Model Retrieval Changed
+------------------------------------
+
+``TimelineAPI.get_models()`` now returns the ``TimelineEventStatus`` class in
+addition to the previously returned classes. You should expect a three-element
+tuple as its return data.
 
 Previously Deprecated Features Removed
 --------------------------------------

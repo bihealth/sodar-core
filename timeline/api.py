@@ -21,6 +21,7 @@ from projectroles.utils import get_app_names
 from timeline.models import (
     TimelineEvent,
     TimelineEventObjectRef,
+    TimelineEventStatus,
     EVENT_STATUS_TYPES,
     OBJ_REF_UNNAMED,
     TL_STATUS_OK,
@@ -398,10 +399,14 @@ class TimelineAPI:
     @classmethod
     def get_models(
         cls,
-    ) -> tuple[type[TimelineEvent], type[TimelineEventObjectRef]]:
+    ) -> tuple[
+        type[TimelineEvent],
+        type[TimelineEventObjectRef],
+        type[TimelineEventStatus],
+    ]:
         """
         Return timeline event model classes for custom/advanced queries.
 
-        :return: TimelineEvent, TimelineEventObjectRef
+        :return: TimelineEvent, TimelineEventObjectRef, TimelineEventStatus
         """
-        return TimelineEvent, TimelineEventObjectRef
+        return TimelineEvent, TimelineEventObjectRef, TimelineEventStatus
