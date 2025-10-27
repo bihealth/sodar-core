@@ -766,7 +766,6 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': new_category.title,
             'has_public_children': False,
@@ -820,7 +819,6 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': self.category.title
             + CAT_DELIMITER
@@ -891,7 +889,6 @@ class TestProjectCreateAPIView(
             'description': new_project.description,
             'readme': new_project.readme.raw,
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': self.category.title
             + CAT_DELIMITER
@@ -1046,7 +1043,6 @@ class TestProjectCreateAPIView(
         self.assertEqual(response.status_code, 201, msg=response.content)
         new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
         self.assertEqual(new_project.public_access, self.role_guest)
-        self.assertEqual(new_project.public_guest_access, True)  # DEPRECATED
 
     def test_post_project_no_public_access_field(self):
         """Test POST for project without public access field (should fail)"""
@@ -1167,7 +1163,6 @@ class TestProjectCreateAPIView(
         self.assertEqual(response.status_code, 201, msg=response.content)
         new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
         self.assertEqual(new_project.public_access, self.role_guest)
-        self.assertEqual(new_project.public_guest_access, True)  # DEPRECATED
 
     def test_post_project_v1_1_no_public_guest_access_field(self):
         """Test POST for project with API v1.1 and no public_guest_access field"""
@@ -1228,7 +1223,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': None,
-            'public_guest_access': False,
             'archive': False,
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
@@ -1298,7 +1292,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': self.role_guest.pk,
-            'public_guest_access': True,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
             'has_public_children': False,
@@ -1359,7 +1352,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
@@ -1415,7 +1407,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': self.role_guest.pk,
-            'public_guest_access': True,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
             'has_public_children': False,
@@ -1553,16 +1544,13 @@ class TestProjectUpdateAPIView(
 
     def test_patch_project_public(self):
         """Test PATCH with changed public access"""
-        self.assertEqual(self.project.public_guest_access, False)
         self.assertEqual(self.category.has_public_children, False)
         patch_data = {'public_access': PROJECT_ROLE_GUEST}
         response = self.request_knox(self.url, method='PATCH', data=patch_data)
-
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.project.refresh_from_db()
         self.category.refresh_from_db()
         self.assertEqual(self.project.public_access, self.role_guest)
-        self.assertEqual(self.project.public_guest_access, True)
         # Assert the parent category has_public_children is set true
         self.assertEqual(self.category.has_public_children, True)
 
@@ -1617,7 +1605,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': self.role_guest.pk,
-            'public_guest_access': True,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
             'has_public_children': False,

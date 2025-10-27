@@ -417,12 +417,17 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         queryset=Project.objects.filter(type=PROJECT_TYPE_CATEGORY),
     )
     readme = serializers.CharField(required=False, allow_blank=True)
-    # NOTE: public_access or public_guest_access presence checked in validate()
+    # NOTE: public_access presence checked in validate()
     public_access = serializers.SlugRelatedField(
         slug_field='name',
         allow_null=True,
         required=False,
         queryset=Role.objects.all(),
+    )
+    # Legacy public_guest access field
+    # TODO: Remove once removing API <v2.0 support (see #1691)
+    public_guest_access = serializers.BooleanField(
+        required=False, write_only=True
     )
     archive = serializers.BooleanField(read_only=True)
     roles = RoleAssignmentNestedListSerializer(
@@ -599,10 +604,8 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                     name=PROJECT_ROLE_GUEST
                 ).first()
                 attrs['public_access'] = role_guest
-                attrs['public_guest_access'] = True  # DEPRECATED
             else:
                 attrs['public_access'] = None
-                attrs['public_guest_access'] = False  # DEPRECATED
 
     def validate(self, attrs):
         site_mode = getattr(
@@ -636,7 +639,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         self._validate_type(attrs)
         # Validate and set owner
         self._validate_owner(attrs)
-        # Validate and update public_access and public_guest_access
+        # Validate and update public_access
         self._validate_public_access(attrs)
 
         # Set readme

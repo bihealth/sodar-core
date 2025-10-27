@@ -1433,9 +1433,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 data['parent'] if 'parent' in data else old_project.parent
             )
             project.public_access = data.get('public_access')
-            project.public_guest_access = (
-                data.get('public_access') is not None
-            )  # DEPRECATED
         else:
             project = Project(
                 title=data.get('title'),
@@ -1444,8 +1441,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 readme=data.get('readme'),
                 parent=data.get('parent'),
                 public_access=data.get('public_access'),
-                public_guest_access=data.get('public_access')
-                is not None,  # DEPRECATED
             )
             project.save()
 

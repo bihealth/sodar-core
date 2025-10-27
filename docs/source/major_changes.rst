@@ -21,6 +21,7 @@ Release Highlights
 - Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
 - Remove Python v3.9 and v3.10 support
 - Remove deprecated projectroles plugin helper methods
+- Remove deprecated Project model public_guest_access field
 
 Breaking Changes
 ================
@@ -110,6 +111,10 @@ These features were deprecated in v1.2 and have been removed in v1.3.
 Root-Level Projectroles Plugin Helpers
     The plugin retrieval helper methods in ``projectroles.plugins`` have been
     removed. Use ``PluginAPI`` instead.
+``Project.public_guest_access``
+    This field has been removed. Use ``Project.public_access`` instead.
+``Project.set_public()``
+    This helper has been removed. Use ``Project.set_public_access()`` instead.
 
 
 v1.2.4 (2025-10-10)

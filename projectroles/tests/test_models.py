@@ -100,9 +100,6 @@ class ProjectMixin:
             'readme': readme,
             'archive': archive,
             'public_access': public_access,
-            'public_guest_access': (
-                True if public_access else False
-            ),  # DEPRECATED
         }
         if sodar_uuid:
             values['sodar_uuid'] = sodar_uuid
@@ -387,7 +384,6 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
             'sodar_uuid': self.project.sodar_uuid,
             'description': '',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'has_public_children': False,
         }
@@ -531,20 +527,6 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         self.assertEqual(self.project.public_access, self.role_viewer)
         self.project.set_public_access(None)
         self.assertEqual(self.project.public_access, None)
-
-    def test_set_public(self):
-        """Test set_public()"""
-        # TODO: Deprecated, remove in v1.3 (#1703)
-        self.assertEqual(self.project.public_access, None)
-        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
-        self.project.set_public()  # Default = True
-        self.assertEqual(self.project.public_access, self.role_guest)
-        self.assertEqual(self.project.public_guest_access, True)  # DEPRECATED
-        self.project.set_public(False)
-        self.assertEqual(self.project.public_access, None)
-        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
-        with self.assertRaises(ValidationError):
-            self.category.set_public()
 
     def test_set_archive(self):
         """Test set_archive()"""

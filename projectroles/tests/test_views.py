@@ -998,7 +998,6 @@ class TestProjectCreateView(
             'parent': None,
             'description': 'description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': NEW_CAT_TITLE,
             'has_public_children': False,
@@ -1058,7 +1057,6 @@ class TestProjectCreateView(
             'parent': self.category.pk,
             'description': 'description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': 'TestCategory / TestProject',
             'has_public_children': False,
@@ -1780,7 +1778,6 @@ class TestProjectUpdateView(
             'parent': category_new.pk,
             'description': 'updated description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': category_new.title + CAT_DELIMITER + 'updated title',
             'has_public_children': False,
@@ -1870,7 +1867,6 @@ class TestProjectUpdateView(
             'parent': category_new.pk,
             'description': 'updated description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': category_new.title + CAT_DELIMITER + 'updated title',
             'has_public_children': False,
@@ -1929,7 +1925,6 @@ class TestProjectUpdateView(
     def test_post_project_public_access(self):
         """Test POST with public access"""
         self.assertEqual(self.project.public_access, None)
-        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
         self.assertEqual(self.category.has_public_children, False)
 
         self.post_data['public_access'] = self.role_guest.pk
@@ -1942,14 +1937,12 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         self.category.refresh_from_db()
         self.assertEqual(self.project.public_access, self.role_guest)
-        self.assertEqual(self.project.public_guest_access, True)  # DEPRECATED
         # Assert the parent category has_public_children is set true
         self.assertEqual(self.category.has_public_children, True)
 
     def test_post_project_public_access_viewer(self):
         """Test POST with public access and viewer role"""
         self.assertEqual(self.project.public_access, None)
-        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
         self.assertEqual(self.category.has_public_children, False)
 
         self.post_data['public_access'] = self.role_viewer.pk
@@ -1962,7 +1955,6 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         self.category.refresh_from_db()
         self.assertEqual(self.project.public_access, self.role_viewer)
-        self.assertEqual(self.project.public_guest_access, True)  # DEPRECATED
         self.assertEqual(self.category.has_public_children, True)
 
     def test_post_project_public_stats(self):
@@ -1996,7 +1988,6 @@ class TestProjectUpdateView(
             'parent': None,
             'description': 'updated description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': 'updated title',
             'has_public_children': False,

@@ -266,7 +266,7 @@ The following projectroles settings are **optional**:
     Assumed true if not set (bool)
 ``PROJECTROLES_ALLOW_ANONYMOUS``
     If true, allow anonymous users to access the site and all projects where
-    ``public_guest_access`` is set true (bool)
+    ``public_access`` is set to a role (bool)
 ``PROJECTROLES_SIDEBAR_ICON_SIZE``
     Set the icon size for the project sidebar. Minimum=18, maximum=42,
     default=36 (int)

@@ -48,6 +48,8 @@ Removed
     - ``coveralls`` dependency (#1797)
 - **Projectroles**
     - Deprecated plugin helper methods in ``plugins`` root (#1718)
+    - ``Project.public_guest_access`` field (#1703)
+    - ``Project.set_public()`` helper (#1703)
 
 
 v1.2.4 (2025-10-10)
