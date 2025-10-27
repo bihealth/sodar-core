@@ -12,7 +12,7 @@ Added
 -----
 
 - **General**
-    - Python v3.12 and v3.13 support (#1558)
+    - Python v3.12 and v3.13 support (#1558, #1803)
     - ``STORAGES`` Django setting for filesfolders (#1557)
 - **Projectroles**
     - ``request_knox()`` test helper ``content_type`` arg (#1557)
