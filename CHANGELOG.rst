@@ -46,6 +46,8 @@ Removed
     - ``USE_L10N`` Django setting (#1557)
     - ``pytz`` dependency (#1557)
     - ``coveralls`` dependency (#1797)
+- **Projectroles**
+    - Deprecated plugin helper methods in ``plugins`` root (#1718)
 
 
 v1.2.4 (2025-10-10)

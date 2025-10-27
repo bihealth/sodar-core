@@ -20,6 +20,7 @@ Release Highlights
 - Upgrade to Django v5.2
 - Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
 - Remove Python v3.9 and v3.10 support
+- Remove deprecated projectroles plugin helper methods
 
 Breaking Changes
 ================
@@ -100,6 +101,15 @@ mixin.
 This should not require any changes on your site. However, if you need to use
 another client for some API view tests while still using SODAR Core helpers, you
 can override it by changing the ``client_class`` class member variable.
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.2 and have been removed in v1.3.
+
+Root-Level Projectroles Plugin Helpers
+    The plugin retrieval helper methods in ``projectroles.plugins`` have been
+    removed. Use ``PluginAPI`` instead.
 
 
 v1.2.4 (2025-10-10)
