@@ -87,6 +87,7 @@ APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_NAME = 'projectroles'
+APP_NAME_EX = 'example_project_app'
 CORE_API_MEDIA_TYPE_LEGACY = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION_LEGACY = '0.13.4'
 CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
@@ -2248,15 +2249,15 @@ class TestRoleAssignmentDestroyAPIView(
         self.update_as = self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
+        self.url = reverse(
+            'projectroles:api_role_destroy',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
 
     def test_delete(self):
         """Test RoleAssignmentDestroyAPIView DELETE"""
         self.assertEqual(RoleAssignment.objects.count(), 3)
-        url = reverse(
-            'projectroles:api_role_destroy',
-            kwargs={'roleassignment': self.update_as.sodar_uuid},
-        )
-        response = self.request_knox(url, method='DELETE')
+        response = self.request_knox(self.url, method='DELETE')
         self.assertEqual(response.status_code, 204, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 2)
         self.assertEqual(
@@ -2265,6 +2266,27 @@ class TestRoleAssignmentDestroyAPIView(
             ).count(),
             0,
         )
+
+    def test_delete_app_setting(self):
+        """Test DELETE with PROJECT_USER app setting"""
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.assign_user,
+        }
+        app_settings.set(value=True, **s_kw)
+        response = self.request_knox(self.url, method='DELETE')
+        self.assertEqual(response.status_code, 204, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 2)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.assign_user
+            ).count(),
+            0,
+        )
+        self.assertEqual(app_settings.get(**s_kw), False)
 
     def test_delete_delegate_unauthorized(self):
         """Test DELETE with delegate role without perms (should fail)"""
@@ -2312,11 +2334,7 @@ class TestRoleAssignmentDestroyAPIView(
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
         self.assertEqual(RoleAssignment.objects.count(), 3)
-        url = reverse(
-            'projectroles:api_role_destroy',
-            kwargs={'roleassignment': self.update_as.sodar_uuid},
-        )
-        response = self.request_knox(url, method='DELETE')
+        response = self.request_knox(self.url, method='DELETE')
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 

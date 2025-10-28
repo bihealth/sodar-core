@@ -2274,6 +2274,39 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
     @classmethod
+    def _delete_app_settings(cls, project: Project, user: User):
+        """
+        Delete PROJECT_USER scope app settings for user in the project from
+        which a role assignment was removed. Deletes app settings from inherited
+        roles in category children. Leaves settings for categories if child roles
+        exist.
+
+        NOTE: Assumes the RoleAssignment object has already been deleted.
+
+        :param project: Project object
+        :param user: User object
+        """
+        # If user still has an inherited role in project, skip
+        if project.has_role(user):
+            return
+        # Delete settings for current project if project or no children
+        if not project.is_category() or not project.has_role_in_children(user):
+            app_settings.delete_by_scope(
+                APP_SETTING_SCOPE_PROJECT_USER, project, user
+            )
+        # Delete for children in case of a category
+        children = (
+            project.get_children(flat=True) if project.is_category() else []
+        )
+        for c in children:
+            if not c.has_role(user) and (
+                not c.is_category() or not c.has_role_in_children(user)
+            ):
+                app_settings.delete_by_scope(
+                    APP_SETTING_SCOPE_PROJECT_USER, c, user
+                )
+
+    @classmethod
     def _add_user_alert(
         cls,
         app_alerts: Any,
@@ -2402,18 +2435,8 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             )
         # Delete object itself
         role_as.delete()
-
         # Delete corresponding PROJECT_USER settings
-        if (
-            not project.get_role(user)
-            and project.is_category()
-            and not RoleAssignment.objects.filter(
-                project__in=project.get_children(flat=True), user=user
-            ).exists()
-        ):
-            app_settings.delete_by_scope(
-                APP_SETTING_SCOPE_PROJECT_USER, project, user
-            )
+        self._delete_app_settings(project, user)
 
         if tl_event:
             tl_event.set_status(timeline.TL_STATUS_OK)

@@ -42,6 +42,7 @@ Fixed
 
 - **Projectroles**
     - ``get_user_links()`` called twice in ``_site_titlebar_dropdown.html`` (#1800)
+    - ``RoleAssignmentDeleteMixin`` not deleting all ``PROJECT_USER`` app settings (#1738)
 
 Removed
 -------

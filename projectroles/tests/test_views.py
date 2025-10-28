@@ -4310,6 +4310,18 @@ class TestRoleAssignmentDeleteView(
 ):
     """Tests for RoleAssignmentDeleteView"""
 
+    def _assert_app_alerts(self, count: int, alert_name: str = 'role_delete'):
+        """
+        Assert AppAlert object count.
+
+        :param count: Integer
+        :param alert_name: Alert name (string, default = "role_delete"
+        """
+        self.assertEqual(
+            self.app_alert_model.objects.filter(alert_name=alert_name).count(),
+            count,
+        )
+
     def setUp(self):
         super().setUp()
         self.category = self.make_project(
@@ -4419,12 +4431,7 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(
             TimelineEvent.objects.filter(event_name='role_delete').count(), 0
         )
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            0,
-        )
+        self._assert_app_alerts(0)
         self.assertEqual(len(mail.outbox), 0)
         with self.login(self.user):
             response = self.client.post(self.url)
@@ -4439,12 +4446,7 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(
             TimelineEvent.objects.filter(event_name='role_delete').count(), 1
         )
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            1,
-        )
+        self._assert_app_alerts(1)
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
         self.assertEqual(len(mail.outbox), 1)
@@ -4471,12 +4473,7 @@ class TestRoleAssignmentDeleteView(
         with self.login(self.user):
             response = self.client.post(self.url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            0,
-        )
+        self._assert_app_alerts(0)
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
         self.assertEqual(len(mail.outbox), 1)
@@ -4497,12 +4494,7 @@ class TestRoleAssignmentDeleteView(
         with self.login(self.user):
             response = self.client.post(self.url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            1,
-        )
+        self._assert_app_alerts(1)
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
         self.assertEqual(len(mail.outbox), 0)
@@ -4548,18 +4540,8 @@ class TestRoleAssignmentDeleteView(
         with self.login(self.user):
             self.client.post(self.url)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_update'
-            ).count(),
-            1,
-        )
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            0,
-        )
+        self._assert_app_alerts(1, 'role_update')
+        self._assert_app_alerts(0)
         alert.refresh_from_db()
         self.assertEqual(alert.active, True)
 
@@ -4585,18 +4567,8 @@ class TestRoleAssignmentDeleteView(
                 )
             )
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_update'
-            ).count(),
-            0,
-        )
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            1,
-        )
+        self._assert_app_alerts(0, 'role_update')
+        self._assert_app_alerts(1)
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
 
@@ -4635,90 +4607,52 @@ class TestRoleAssignmentDeleteView(
         alert.refresh_from_db()
         self.assertEqual(alert.active, True)  # Alert should remain active
 
-    def test_post_app_settings_contributor(self):
+    def test_post_app_setting_contributor(self):
         """Test post with PROJECT_USER app settings after contributor deletion"""
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        app_settings.set(
-            plugin_name=APP_NAME_EX,
-            setting_name='project_user_bool_setting',
-            project=self.project,
-            user=self.user,
-            value=True,
-        )
-        self.assertIsNotNone(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_contrib,
-            )
-        )
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_contrib,
+        }
+        app_settings.set(value=True, **s_kw)
+        self.assertEqual(app_settings.get(**s_kw), True)
         with self.login(self.user):
             self.client.post(self.url)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_contrib,
-            ),
-            False,
-        )
+        self.assertEqual(app_settings.get(**s_kw), False)
 
-    def test_post_app_settings_inherit(self):
-        """Test POST with PROJECT_USER app setting with inherited role"""
+    def test_post_app_setting_inherit(self):
+        """Test POST with PROJECT_USER app setting and inherited role after deletion"""
         self.make_assignment(self.category, self.user_contrib, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
-        app_settings.set(
-            plugin_name=APP_NAME_EX,
-            setting_name='project_user_bool_setting',
-            project=self.project,
-            user=self.user,
-            value=True,
-        )
-        self.assertIsNotNone(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_contrib,
-            )
-        )
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_contrib,
+        }
+        app_settings.set(value=True, **s_kw)
         with self.login(self.user):
             self.client.post(self.url)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_contrib,
-            ),
-            False,
-        )
+        # User still has role, setting should remain
+        self.assertEqual(app_settings.get(**s_kw), True)
 
-    def test_post_app_settings_children(self):
-        """Test POST with PROJECT_USER app setting with child categories or projects"""
+    def test_post_app_setting_child_no_role(self):
+        """Test POST with app setting in child with no role"""
         new_as = self.make_assignment(
             self.category, self.user_new, self.role_guest
         )
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
-        app_settings.set(
-            plugin_name=APP_NAME_EX,
-            setting_name='project_user_bool_setting',
-            project=self.project,
-            user=self.user,
-            value=True,
-        )
-        self.assertIsNotNone(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_new,
-            )
-        )
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_new,
+        }
+        app_settings.set(value=True, **s_kw)
         with self.login(self.user):
             self.client.post(
                 reverse(
@@ -4727,15 +4661,7 @@ class TestRoleAssignmentDeleteView(
                 )
             )
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_new,
-            ),
-            False,
-        )
+        self.assertEqual(app_settings.get(**s_kw), False)
 
 
 class TestRoleAssignmentOwnDeleteView(
