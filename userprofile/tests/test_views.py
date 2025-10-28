@@ -79,7 +79,6 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         with self.login(self.user):
             response = self.client.get(reverse('userprofile:detail'))
         self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(response.context['user_settings'])
         self.assertEqual(response.context['add_emails'].count(), 0)
         self.assertEqual(response.context['site_read_only'], False)
         self.assertEqual(response.context['send_email'], True)
@@ -92,7 +91,6 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         with self.login(self.user):
             response = self.client.get(reverse('userprofile:detail'))
         self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(response.context['user_settings'])
         self.assertEqual(response.context['add_emails'].count(), 2)
 
 

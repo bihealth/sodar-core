@@ -18,6 +18,7 @@ Release Highlights
 
 - Add TimelineEventStatus in TimelineAPI.get_models() return data
 - Add Python v3.12 and v3.13 support
+- Update userprofile user details layout
 - Upgrade to Django v5.2
 - Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
 - Remove Python v3.9 and v3.10 support

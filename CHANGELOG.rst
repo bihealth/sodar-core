@@ -34,6 +34,8 @@ Changed
     - Update logout links for ``POST`` method (#1557, #1798)
     - Use DRF API client in ``SODARAPIViewTestMixin`` (#1801)
     - Rename ``get_user_links()`` ``login`` and ``logout`` links (#1799)
+- **Userprofile**
+    - Remove user app settings card from ``UserDetailView`` (#1742)
 
 Fixed
 -----

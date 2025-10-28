@@ -41,8 +41,6 @@
 <div class="container-fluid sodar-page-container">
   {# User detail card #}
   {% include 'userprofile/_user_detail.html' %}
-  {# User settings card #}
-  {% include 'userprofile/_user_settings.html' %}
   {# User additional emails card #}
   {% if send_email %}
     {% include 'userprofile/_user_email.html' %}
@@ -81,14 +79,6 @@
         showCancelLink: true
       })
     }
-    tour.addStep('user_settings', {
-      title: 'User Settings Card',
-      text: 'This card displays site-wide user level settings and how they ' +
-            'are currently set for your user account.',
-      attachTo: '#sodar-user-settings-card top',
-      advanceOn: '.docs-link click',
-      showCancelLink: true
-    })
     if ($('#sodar-user-btn-settings').length) {
       tour.addStep('user_settings_update', {
         title: 'Update User Settings',
