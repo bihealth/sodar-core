@@ -2270,11 +2270,11 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         )
 
 
-class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
-    """Mixin for RoleAssignment deletion/destroying in UI and API views"""
+class AppSettingCleanupMixin:
+    """Mixin for helping with app setting cleanup in RoleAssignment removal"""
 
     @classmethod
-    def _delete_app_settings(cls, project: Project, user: User):
+    def cleanup_app_settings(cls, project: Project, user: User):
         """
         Delete PROJECT_USER scope app settings for user in the project from
         which a role assignment was removed. Deletes app settings from inherited
@@ -2305,6 +2305,12 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
                 app_settings.delete_by_scope(
                     APP_SETTING_SCOPE_PROJECT_USER, c, user
                 )
+
+
+class RoleAssignmentDeleteMixin(
+    AppSettingCleanupMixin, ProjectModifyPluginViewMixin
+):
+    """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
     @classmethod
     def _add_user_alert(
@@ -2436,7 +2442,7 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
         # Delete object itself
         role_as.delete()
         # Delete corresponding PROJECT_USER settings
-        self._delete_app_settings(project, user)
+        self.cleanup_app_settings(project, user)
 
         if tl_event:
             tl_event.set_status(timeline.TL_STATUS_OK)
@@ -2711,7 +2717,9 @@ class RoleAssignmentOwnDeleteView(
             )
 
 
-class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
+class RoleAssignmentOwnerTransferMixin(
+    AppSettingCleanupMixin, ProjectModifyPluginViewMixin
+):
     """Mixin for owner RoleAssignment transfer in UI and API views"""
 
     #: Owner role object
@@ -2791,6 +2799,8 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         # Inherited owner or no new role for old owner: delete local role
         if old_inh_owner or not old_owner_role:
             old_owner_as.delete()
+            if not old_inh_owner:  # Cleanup PROJECT_USER app settings
+                self.cleanup_app_settings(project, old_owner_as.user)
         # Update old owner role
         else:
             old_owner_as.role = old_owner_role

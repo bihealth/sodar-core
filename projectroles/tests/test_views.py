@@ -5023,6 +5023,35 @@ class TestRoleAssignmentOwnerTransferView(
 
     # TODO: Test with disabled alerts!
 
+    def test_post_app_setting(self):
+        """Test POST with app setting"""
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        self.assertEqual(app_settings.get(**s_kw), True)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': self.role_guest.pk,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_guest,
+        )
+        # Setting should still exist
+        self.assertEqual(app_settings.get(**s_kw), True)
+
     def test_post_inactive_user(self):
         """Test POST with inactive user"""
         self.user_owner.is_active = False
@@ -5243,6 +5272,32 @@ class TestRoleAssignmentOwnerTransferView(
             mail.outbox[1].subject,
         )
 
+    def test_post_no_old_role_app_setting(self):
+        """Test POST with no old owner role and app setting"""
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': 0,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_owner
+            ).first()
+        )
+        self.assertEqual(app_settings.get(**s_kw), False)
+
     def test_post_old_inherited_member_no_old_role(self):
         """Test POST with old inherited member and no old owner role"""
         inh_as = self.make_assignment(
@@ -5267,6 +5322,32 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(self.project.get_role(self.user_owner), inh_as)
         self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
+
+    def test_post_old_inherited_member_no_old_role_app_setting(self):
+        """Test POST with old inherited member, no old owner role and app setting"""
+        inh_as = self.make_assignment(
+            self.category, self.user_owner, self.role_contributor
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': 0,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_role(self.user_owner), inh_as)
+        # Setting should still exist
+        self.assertEqual(app_settings.get(**s_kw), True)
 
 
 class TestProjectInviteCreateView(

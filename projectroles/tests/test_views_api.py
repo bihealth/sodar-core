@@ -2373,6 +2373,28 @@ class TestRoleAssignmentOwnerTransferAPIView(
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.user_new)
 
+    def test_post_app_setting(self):
+        """Test POST with app setting"""
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        self.assertEqual(app_settings.get(**s_kw), True)
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        # Setting should still exist
+        self.assertEqual(app_settings.get(**s_kw), True)
+
     def test_post_category(self):
         """Test POST with category"""
         self.make_assignment(
@@ -2643,6 +2665,31 @@ class TestRoleAssignmentOwnerTransferAPIView(
                 project=self.project, user=self.user_owner
             ).first()
         )
+
+    def test_post_no_old_role_app_setting(self):
+        """Test POST with no old user role and app setting"""
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': None,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_owner
+            ).first()
+        )
+        self.assertEqual(app_settings.get(**s_kw), False)
 
     def test_post_no_old_role_v1_0(self):
         """Test POST with no old user role and v1.0 (should fail)"""

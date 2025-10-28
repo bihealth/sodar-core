@@ -19,6 +19,8 @@ Added
 - **Projectroles**
     - ``request_knox()`` test helper ``content_type`` arg (#1557)
     - ``get_user_links()`` optional ``method`` field (#1798)
+    - ``AppSettingCleanupMixin`` helper mixin (#1804)
+    - ``PROJECT_USER`` app setting cleanup in ownership transfer (#1804)
 - **Timeline**
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
 
@@ -42,7 +44,7 @@ Fixed
 
 - **Projectroles**
     - ``get_user_links()`` called twice in ``_site_titlebar_dropdown.html`` (#1800)
-    - ``RoleAssignmentDeleteMixin`` not deleting all ``PROJECT_USER`` app settings (#1738)
+    - Role assignment deletion not deleting all ``PROJECT_USER`` app settings (#1738)
 
 Removed
 -------
