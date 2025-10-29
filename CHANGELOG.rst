@@ -37,6 +37,7 @@ Changed
     - Use DRF API client in ``SODARAPIViewTestMixin`` (#1801)
     - Rename ``get_user_links()`` ``login`` and ``logout`` links (#1799)
     - Remove redundant JSON app setting value conversions in ``ProjectModifyMixin`` (#1590)
+    - Refactor ``AppSettingAPI.set()`` to reduce repetition (#1590)
 - **Userprofile**
     - Remove user app settings card from ``UserDetailView`` (#1742)
 
