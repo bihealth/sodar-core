@@ -113,6 +113,15 @@ Timeline API Model Retrieval Changed
 addition to the previously returned classes. You should expect a three-element
 tuple as its return data.
 
+JSON App Setting Values in perform_project_modify()
+---------------------------------------------------
+
+In the project modify API, JSON app setting values were accidentally provided to
+the ``perform_project_modify()`` implementation in the ``project_settings``
+kwarg as a string converted from the original dict value. These are now provided
+as a dict as intended. This may require modifications in your implementation of
+the API.
+
 Previously Deprecated Features Removed
 --------------------------------------
 

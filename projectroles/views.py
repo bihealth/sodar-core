@@ -1078,7 +1078,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 if s_def.type == APP_SETTING_TYPE_JSON:
                     if s_data is None:
                         s_data = {}
-                    project_settings[s_name] = json.dumps(s_data)
+                    project_settings[s_name] = s_data
                 elif s_data is not None:
                     project_settings[s_name] = s_data
         return project_settings
@@ -1138,10 +1138,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         for k, v in project_settings.items():
             p_name = k.split('.')[1]
             s_name = k.split('.')[2]
-            s_def = app_settings.get_definition(s_name, plugin_name=p_name)
             old_v = app_settings.get(p_name, s_name, project)
-            if s_def.type == APP_SETTING_TYPE_JSON:
-                v = json.loads(v)
             if old_v != v:
                 extra_data[k] = v
                 upd_fields.append(k)
@@ -1247,11 +1244,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             }
             # Add settings to extra data
             for k, v in project_settings.items():
-                p_name = k.split('.')[1]
-                s_name = k.split('.')[2]
-                s_def = app_settings.get_definition(s_name, plugin_name=p_name)
-                if s_def.type == APP_SETTING_TYPE_JSON:
-                    v = json.loads(v)
                 extra_data[k] = v
 
         else:  # Update

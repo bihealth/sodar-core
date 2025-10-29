@@ -36,6 +36,7 @@ Changed
     - Update logout links for ``POST`` method (#1557, #1798)
     - Use DRF API client in ``SODARAPIViewTestMixin`` (#1801)
     - Rename ``get_user_links()`` ``login`` and ``logout`` links (#1799)
+    - Remove redundant JSON app setting value conversions in ``ProjectModifyMixin`` (#1590)
 - **Userprofile**
     - Remove user app settings card from ``UserDetailView`` (#1742)
 
@@ -45,6 +46,7 @@ Fixed
 - **Projectroles**
     - ``get_user_links()`` called twice in ``_site_titlebar_dropdown.html`` (#1800)
     - Role assignment deletion not deleting all ``PROJECT_USER`` app settings (#1738)
+    - JSON app setting values provided to ``perform_project_modify()`` as string (#1590)
 
 Removed
 -------
