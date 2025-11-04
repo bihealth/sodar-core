@@ -595,6 +595,10 @@ PROJECTROLES_ALLOW_LOCAL_USERS = env.bool(
 )
 # Allow unauthenticated users to access public projects if set true
 PROJECTROLES_ALLOW_ANONYMOUS = env.bool('PROJECTROLES_ALLOW_ANONYMOUS', False)
+# Allow non-admin updating of local user accounts
+PROJECTROLES_LOCAL_USER_UPDATE = env.bool(
+    'PROJECTROLES_LOCAL_USER_UPDATE', True
+)
 
 # Enable project modify API
 PROJECTROLES_ENABLE_MODIFY_API = False

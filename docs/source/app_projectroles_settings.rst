@@ -256,6 +256,10 @@ The following projectroles settings are **optional**:
     during remote project sync if they exist on the target site. Similarly,
     local users will be selectable in member dropdowns when selecting users
     (bool)
+``PROJECTROLES_LOCAL_USER_UPDATE``
+    If true, allow non-admin local users to update their user account details.
+    This can also be be set False per each user by modifying the
+    ``enable_update`` field in the user model (bool, default=True)
 ``PROJECTROLES_KIOSK_MODE``
     If true, allow accessing certain project views *without* user authentication
     in order to e.g. demonstrate features in a kiosk-style deployment. Also

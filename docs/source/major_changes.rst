@@ -16,6 +16,8 @@ v1.3.0 (WIP)
 Release Highlights
 ==================
 
+- Add local user update disabling
+- Add custom user model admin class
 - Add TimelineEventStatus in TimelineAPI.get_models() return data
 - Add Python v3.12 and v3.13 support
 - Update userprofile user details layout
@@ -76,6 +78,41 @@ Breaking Knox Upgrade
 This release upgrades ``django-rest-knox`` to v5.0. API tokens previously
 generated will no longer work. Uses will have to generate new API tokens. It is
 recommended to communicate this change to your users.
+
+SODARUser Model Updates
+-----------------------
+
+This release introduces a new field to the ``SODARUser`` model. Because user
+model migrations are handled in ``$SITE/users``, you should ensure the database
+migrations in your repository are up to date. When upgrading to SODAR Core v1.3,
+make sure to run the ``makemigrations`` command, followed by ``migrate`` to
+bring your dev environment up to speed. Example:
+
+.. code-block:: console
+
+    $ ./manage.py makemigrations
+    $ ./manage.py migrate
+
+This release also includes a custom ``UserAdmin`` class to ensure all relevant
+fields for the user model. If you want to manage your users in the admin
+interface in addition to the Django shell, it is strongly recommended to use or
+extend the ``SODARUserAdmin`` class on your site. You can do this by e.g.
+setting up ``$SITE/users/admin.py`` as follows:
+
+.. code-block:: django
+
+    from django.contrib import admin
+    from projectroles.admin import SODARUserAdmin
+    from .models import User
+
+    # ...
+
+    @admin.register(User)
+    class MyUserAdmin(SODARUserAdmin):
+        form = MyUserChangeForm
+        add_form = MyUserCreationForm
+        # Add other overrides here as needed
+
 
 AppLinkAPI Changes
 ------------------

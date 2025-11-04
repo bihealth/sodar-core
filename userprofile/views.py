@@ -68,6 +68,7 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
         context['add_emails'] = SODARUserAdditionalEmail.objects.filter(
             user=self.request.user
         ).order_by('email')
@@ -76,6 +77,9 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         )
         context['send_email'] = settings.PROJECTROLES_SEND_EMAIL
         context['site_mode'] = settings.PROJECTROLES_SITE_MODE
+        context['can_update_user'] = user.has_perm(
+            'projectroles.update_local_user'
+        )
         return context
 
 

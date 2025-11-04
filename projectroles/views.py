@@ -109,7 +109,6 @@ CAT_ARCHIVE_ERR_MSG = 'Setting archival is not allowed for {}.'.format(
     get_display_name(PROJECT_TYPE_CATEGORY, plural=True)
 )
 USER_PROFILE_UPDATE_MSG = 'User profile updated, please log in again.'
-USER_PROFILE_LDAP_MSG = 'Profile editing not allowed for LDAP users.'
 INVITE_NOT_FOUND_MSG = 'Invite not found.'
 INVITE_LDAP_LOCAL_VIEW_MSG = (
     'Invite was issued for LDAP user, but local invite view was requested.'
@@ -3691,23 +3690,22 @@ class ProjectInviteRevokeView(
 # User management views --------------------------------------------------------
 
 
-class UserUpdateView(
-    LoginRequiredMixin, HTTPRefererMixin, InvalidFormMixin, UpdateView
+class LocalUserUpdateView(
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+    HTTPRefererMixin,
+    InvalidFormMixin,
+    UpdateView,
 ):
     """Display and process the user update view"""
 
     form_class = LocalUserForm
+    permission_required = 'projectroles.update_local_user'
     template_name = 'projectroles/user_form.html'
     success_url = reverse_lazy('home')
 
     def get_object(self, **kwargs):
         return self.request.user
-
-    def get(self, *args, **kwargs):
-        if not self.request.user.is_local():
-            messages.error(self.request, USER_PROFILE_LDAP_MSG)
-            return redirect(reverse('home'))
-        return super().get(*args, **kwargs)
 
     def get_success_url(self):
         messages.success(self.request, USER_PROFILE_UPDATE_MSG)

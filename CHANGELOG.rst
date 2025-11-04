@@ -21,8 +21,16 @@ Added
     - ``get_user_links()`` optional ``method`` field (#1798)
     - ``AppSettingCleanupMixin`` helper mixin (#1804)
     - ``PROJECT_USER`` app setting cleanup in ownership transfer (#1804)
+    - ``PROJECTROLES_LOCAL_USER_UPDATE`` Django setting (#1805)
+    - ``is_local_user()`` and ``is_local_user_update_allowed()`` rule predicates (#1805)
+    - ``update_local_user`` rule permission (#1805)
+    - ``SODARUser.enable_update`` field (#1805)
+    - ``SODARUserAdmin`` user model administrator class (#1805)
+    - Local user update disabling (#1805)
 - **Timeline**
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
+- **Userprofile**
+    - Support for local user update disabling (#1805)
 
 Changed
 -------
@@ -38,6 +46,8 @@ Changed
     - Rename ``get_user_links()`` ``login`` and ``logout`` links (#1799)
     - Remove redundant JSON app setting value conversions in ``ProjectModifyMixin`` (#1590)
     - Refactor ``AppSettingAPI.set()`` to reduce repetition (#1590)
+    - Rename ``UserUpdateView`` to ``LocalUserUpdateView`` (#1805)
+    - Update ``UserUpdateView`` permission handling (#1805)
 - **Userprofile**
     - Remove user app settings card from ``UserDetailView`` (#1742)
 

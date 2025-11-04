@@ -1441,6 +1441,12 @@ class SODARUser(AbstractUser):
     # around the globe.
     name = models.CharField(_('Name of User'), blank=True, max_length=255)
 
+    #: Enable user updating
+    enable_update = models.BooleanField(
+        default=True,
+        help_text='Enable user profile updating for local user.',
+    )
+
     #: User SODAR UUID
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4, unique=True, help_text='User SODAR UUID'

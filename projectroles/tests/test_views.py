@@ -72,7 +72,6 @@ from projectroles.views import (
     ProjectInviteProcessMixin,
     FORM_INVALID_MSG,
     PROJECT_WELCOME_MSG,
-    USER_PROFILE_LDAP_MSG,
     PROJECT_BLOCK_MSG,
     ROLE_LEAVE_INHERIT_MSG,
     ROLE_LEAVE_OWNER_MSG,
@@ -6792,8 +6791,8 @@ class TestRemoteProjectBatchUpdateView(
 # SODAR User view tests --------------------------------------------------------
 
 
-class TestUserUpdateView(TestCase):
-    """Tests for UserUpdateView"""
+class TestLocalUserUpdateView(TestCase):
+    """Tests for LocalUserUpdateView"""
 
     def setUp(self):
         self.user_local = self.make_user('local_user')
@@ -6801,21 +6800,43 @@ class TestUserUpdateView(TestCase):
         self.url = reverse('projectroles:user_update')
 
     def test_get_local_user(self):
-        """Test TestUserUpdateView GET with local user"""
+        """Test LocalUserUpdateView GET with local user"""
         with self.login(self.user_local):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertEqual(form.fields['email'].widget.attrs['readonly'], True)
+        self.assertEqual(form.fields['username'].widget.attrs['readonly'], True)
+        self.assertNotIn('enable_update', form.fields)
+
+    def test_get_local_user_read_only(self):
+        """Test GET with site read only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        with self.login(self.user_local):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(PROJECTROLES_LOCAL_USER_UPDATE=False)
+    def test_get_local_user_update_disabled_site(self):
+        """Test GET with disabled site-wide local user updating"""
+        with self.login(self.user_local):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_local_user_update_disabled_user(self):
+        """Test GET with disabled user level local user updating"""
+        self.user_local.enable_update = False
+        self.user_local.save()
+        with self.login(self.user_local):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
 
     @override_settings(AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
     def test_get_ldap_user(self):
         """Test GET with LDAP user"""
         with self.login(self.user_ldap):
             response = self.client.get(self.url, follow=True)
-        self.assertRedirects(response, reverse('home'))
-        self.assertEqual(
-            list(get_messages(response.wsgi_request))[0].message,
-            USER_PROFILE_LDAP_MSG,
-        )
+        self.assertEqual(response.status_code, 403)
 
     def test_post_local_user(self):
         """Test POST with local user"""

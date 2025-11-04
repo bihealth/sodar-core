@@ -1696,6 +1696,10 @@ class TestSODARUser(TestCase):
     def setUp(self):
         self.user = self.make_user()
 
+    def test_enable_update(self):
+        """Test default enable_update value"""
+        self.assertEqual(self.user.enable_update, True)
+
     def test__str__(self):
         """Test SODARUser __str__()"""
         self.assertEqual(

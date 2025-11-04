@@ -3,7 +3,7 @@
     <h4>
       <i class="iconify" data-icon="mdi:account-details"></i> User Details
       <span class="sodar-header-input-group pull-right">
-        {% if request.user.is_local and not site_read_only %}
+        {% if can_update_user %}
           <a role="button"
              class="btn btn-primary"
              id="sodar-user-btn-update"
