@@ -13,7 +13,8 @@
         {% csrf_token %}
         <button type="submit"
                 class="nav-item sodar-nav-item-submit
-                       {% if link.name == 'logout' %}text-danger{% endif %}">
+                       {% if link.name == 'logout' %}text-danger{% endif %}"
+                id="sodar-navbar-nav-link-{{ link.name }}">
           <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
         </button>
       </form>
@@ -60,7 +61,8 @@
         <form action="{{ link.url }}" method="POST">
           {% csrf_token %}
           <button type="submit"
-                  class="dropdown-item {% if link.name == 'logout' %}text-danger{% endif %}">
+                  class="dropdown-item {% if link.name == 'logout' %}text-danger{% endif %}"
+                  id="sodar-navbar-link-{{ link.name }}">
             <i class="iconify" data-icon="{{ link.icon }}"></i> {{ link.label }}
           </button>
         </form>

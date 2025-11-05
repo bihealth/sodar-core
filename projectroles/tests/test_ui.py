@@ -21,7 +21,11 @@ from django.urls import reverse
 from django.utils import timezone
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    TimeoutException,
+    StaleElementReferenceException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
@@ -120,6 +124,10 @@ class SeleniumSetupMixin:
             options.add_argument(arg)
         options.add_argument(
             f'--window-size={self.window_size[0]},{self.window_size[1]}'
+        )
+        # Disable password warnings which make certain tests fail
+        options.add_experimental_option(
+            'prefs', {'profile.password_manager_leak_detection': False}
         )
         self.selenium = webdriver.Chrome(options=options)
 
@@ -236,6 +244,9 @@ class UITestMixin:
             user_button = self.selenium.find_element(
                 By.ID, 'sodar-navbar-user-dropdown'
             )
+            WebDriverWait(self.selenium, self.wait_time).until(
+                ec.element_to_be_clickable(user_button)
+            )
             user_button.click()
             # Wait for element to be visible
             WebDriverWait(self.selenium, self.wait_time).until(
@@ -244,10 +255,13 @@ class UITestMixin:
                 )
             )
             try:
-                signout_button = self.selenium.find_element(
+                logout_btn = self.selenium.find_element(
                     By.ID, 'sodar-navbar-link-logout'
                 )
-                signout_button.click()
+                WebDriverWait(self.selenium, self.wait_time).until(
+                    ec.element_to_be_clickable(logout_btn)
+                )
+                logout_btn.click()
                 # Wait for redirect
                 WebDriverWait(self.selenium, self.wait_time).until(
                     ec.presence_of_element_located((By.ID, 'sodar-form-login'))
@@ -271,6 +285,13 @@ class UITestMixin:
             ec.presence_of_element_located(
                 (By.ID, 'sodar-navbar-user-dropdown')
             )
+        )
+        WebDriverWait(
+            self.selenium,
+            self.wait_time,
+            ignored_exceptions=(StaleElementReferenceException),
+        ).until(
+            ec.element_to_be_clickable((By.ID, 'sodar-navbar-user-dropdown'))
         )
         # Wait for optional element
         if wait_elem:
@@ -2744,6 +2765,8 @@ class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
         self.assertIsNone(elem.get_attribute('disabled'))
 
+    # TODO: Enable tests once remote project access is restored (see #1808)
+    '''
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_delete_button_remote_target(self):
         """Test rendering delete button with non-revoked remote project as target site"""
@@ -2773,6 +2796,7 @@ class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         self.login_and_redirect(self.superuser, self.url)
         elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
         self.assertIsNone(elem.get_attribute('disabled'))
+    '''
 
     def test_fields_project(self):
         """Test field visibility for project update"""
