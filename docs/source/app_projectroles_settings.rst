@@ -591,6 +591,74 @@ ensure it works in all views.
     </a>
 
 
+.. _app_projectroles_settings_axes:
+
+Django-Axes Configuration (Optional)
+====================================
+
+The django-axes package is used in SODAR Core for login security. It can be
+configured to e.g. block access from users after N unsuccessful login attempts.
+
+This part of the setup is **optional**. However, it is highly recommended to
+enable these features, especially on public-facing instances of SODAR Core based
+site.
+
+.. note::
+
+    Axes is used to secure local/superuser accounts, LDAP accounts and views
+    using basic authentication. For OIDC, the authentication provider controls
+    possible lockouts. Token authentication for REST API views is not supported
+    by django-axes at the time of writing, so API views are currently omitted
+    from these protections.
+
+You first need to add the ``axes`` app, middleware and authentication backend to
+relevant settings in ``base.py``. Note that the ordering matters in certain
+settings:
+
+.. code-block:: python
+
+    THIRD_PARTY_APPS = [
+        # ...
+        'axes',  # Django-axes for login security
+    ]
+
+    MIDDLEWARE = [
+        # ...
+        'axes.middleware.AxesMiddleware',  # Should be the last one on the list
+    ]
+
+    AUTHENTICATION_BACKENDS = [
+        # NOTE: AxesBackend must be the first backend in the list
+        'axes.backends.AxesBackend',
+        # ...
+    ]
+
+You also need to add the following Django settings in ``base.py``, along with
+possible other Axes settings required by your site's configuration:
+
+``AXES_ENABLED``
+    Enable django-axes on the site (boolean).
+``AXES_FAILURE_LIMIT``
+    Number of login attempts allowed before a record is created for failed
+    logins (integer).
+``AXES_LOCK_OUT_AT_FAILURE``
+    Lock out user at failure if True (boolean).
+``AXES_COOLOFF_TIME``
+    Cooloff time for failure lock-out in hours (integer).
+``AXES_LOCKOUT_PARAMETERS``
+    Lockout parameters. by default, block by username only for GRPR compliance
+    (list)
+``AXES_ONLY_ADMIN_SITE``
+    Only enable lock for admin site if True (boolean).
+``AXES_DISABLE_CLIENT_IP_STORAGE``
+    Disable storing IP addresses for GDPR compliance if True (boolean).
+    **NOTE:** Not a built-in Axes setting but a SODAR Core specific workaround,
+    see ``base.py`` in this repo for an example of its use.
+
+For more information on using and configuring Axes, see the
+`django-axes documentation <https://django-axes.readthedocs.io/>`_.
+
+
 Global JS/CSS Include Modifications (Optional)
 ==============================================
 

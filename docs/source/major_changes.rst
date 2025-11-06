@@ -16,6 +16,7 @@ v1.3.0 (WIP)
 Release Highlights
 ==================
 
+- Add django-axes support for login security
 - Add local user update disabling
 - Add custom user model admin class
 - Add TimelineEventStatus in TimelineAPI.get_models() return data

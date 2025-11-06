@@ -62,6 +62,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',  # For API views
     'knox',  # For token auth
     'social_django',  # For OIDC authentication
+    'axes',  # Django-axes for login security
     'docs',  # For the online user documentation/manual
     'db_file_storage',  # For filesfolders
     'dal',  # For user search combo box
@@ -114,6 +115,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',  # Should be the last one on the list
 ]
 
 # MIGRATIONS CONFIGURATION
@@ -287,7 +289,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     'rules.permissions.ObjectPermissionBackend',  # For rules
     'django.contrib.auth.backends.ModelBackend',
-]
+]  # NOTE: django-axes added after LDAP/OIDC setup
 
 # Custom user app defaults
 AUTH_USER_MODEL = 'users.User'
@@ -486,6 +488,39 @@ if ENABLE_OIDC:
     SOCIAL_AUTH_OIDC_USERNAME_KEY = env.str(
         'SOCIAL_AUTH_OIDC_USERNAME_KEY', 'username'
     )
+
+
+# Django-Axes
+# ------------------------------------------------------------------------------
+
+# NOTE: Axes backend should be the first backend in the list
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend'
+] + AUTHENTICATION_BACKENDS
+
+# Enable django-axes
+AXES_ENABLED = env.bool('AXES_ENABLED', False)
+
+if AXES_ENABLED:
+    # Number of login attempts allowed before a record is created
+    AXES_FAILURE_LIMIT = env.int('AXES_FAILURE_LIMIT', 5)
+    # Lock out user at failure if True
+    AXES_LOCK_OUT_AT_FAILURE = env.bool('AXES_LOCK_OUT_AT_FAILURE', False)
+    # Cooloff time for failure lock-out in hours
+    AXES_COOLOFF_TIME = env.int('AXES_COOLOFF_TIME', None)
+    # Lockout parameters. by default, block by username only (GRPR compliance)
+    AXES_LOCKOUT_PARAMETERS = env.list(
+        'AXES_LOCKOUT_PARAMETERS', default=['username']
+    )
+    # Only enable lock for admin site if True
+    AXES_ONLY_ADMIN_SITE = env.bool('AXES_ONLY_ADMIN_SITE', False)
+    # For GDPR compliance, disable storing IP addresses
+    # NOTE: We make this setting up, not a real Axes Django setting
+    AXES_DISABLE_CLIENT_IP_STORAGE = env.bool(
+        'AXES_DISABLE_CLIENT_IP_STORAGE', True
+    )
+    if AXES_DISABLE_CLIENT_IP_STORAGE:
+        AXES_CLIENT_IP_CALLABLE = lambda x: None  # noqa: E731
 
 
 # Logging

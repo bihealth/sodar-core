@@ -14,6 +14,7 @@ Added
 - **General**
     - Python v3.12 and v3.13 support (#1558, #1803)
     - ``STORAGES`` Django setting for filesfolders (#1557)
+    - ``django-axes`` support for login security (#1750)
 - **Adminalerts**
     - ``ADMINALERTS_EMAIL_SENDING_DEFAULT`` Django setting (#1796)
 - **Projectroles**

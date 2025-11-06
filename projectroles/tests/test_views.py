@@ -149,13 +149,19 @@ LDAP_DOMAIN = 'EXAMPLE'
 NEW_CAT_TITLE = 'NewCategory'
 PROJECT_TITLE = 'TestProject'
 
+LOGIN_PASSWORD = 'loginpassword'
+INVALID_PASSWORD = 'INVALID_PASSWORD'
+AUTHENTICATION_BACKENDS_AXES = [
+    'axes.backends.AxesBackend'
+] + settings.AUTHENTICATION_BACKENDS
+AXES_LOCK_MSG = 'Account locked: too many login attempts.'
+
 HIDDEN_PROJECT_SETTINGS = [
     'settings.example_project_app.project_hidden_setting',
     'settings.example_project_app.project_hidden_json_setting',
 ]
 UPDATED_HIDDEN_SETTING = 'Updated value'
 UPDATED_HIDDEN_JSON_SETTING = {'updated': 'value'}
-
 APP_SETTINGS_TEST = [
     PluginAppSettingDef(
         name='test_setting',
@@ -201,7 +207,6 @@ APP_SETTINGS_TEST = [
         global_edit=True,
     ),
 ]
-
 EX_PROJECT_UI_SETTINGS = [
     'project_str_setting',
     'project_int_setting',
@@ -337,6 +342,51 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
         with self.login(self.user):
             response = self.client.get(self.url)
             self.assertEqual(response.context['sidebar_padding'], 4)
+
+
+@override_settings(
+    AUTHENTICATION_BACKENDS=AUTHENTICATION_BACKENDS_AXES, AXES_ENABLED=True
+)
+class TestLoginViewAxes(ViewTestBase):
+    """Tests for LoginView with django-axes"""
+
+    def setUp(self):
+        super().setUp()
+        self.user_login = self.make_user('user_login', LOGIN_PASSWORD)
+        self.url = reverse('login')
+
+    def test_post(self):
+        """Test LoginView POST with correct credentials"""
+        post_data = {
+            'username': self.user_login.username,
+            'password': LOGIN_PASSWORD,
+        }
+        response = self.client.post(self.url, post_data, follow=True)
+        self.assertEqual(response.context['user'].is_authenticated, True)
+
+    def test_post_invalid(self):
+        """Test LoginView POST with invalid credentials"""
+        post_data = {
+            'username': self.user_login.username,
+            'password': INVALID_PASSWORD,
+        }
+        response = self.client.post(self.url, post_data, follow=True)
+        self.assertEqual(response.context['user'].is_authenticated, False)
+
+    def test_post_lock(self):
+        """Test LoginView POST with invalid credentials"""
+        post_data = {
+            'username': self.user_login.username,
+            'password': INVALID_PASSWORD,
+        }
+        for i in range(0, settings.AXES_FAILURE_LIMIT - 1):
+            response = self.client.post(self.url, post_data, follow=True)
+            self.assertEqual(response.context['user'].is_authenticated, False)
+            self.assertNotContains(response, AXES_LOCK_MSG, status_code=200)
+        # User should now be locked, attempt login one more time
+        response = self.client.post(self.url, post_data, follow=True)
+        self.assertEqual(response.context['user'].is_authenticated, False)
+        self.assertContains(response, AXES_LOCK_MSG, status_code=429)
 
 
 class TestProjectSearchResultsView(
