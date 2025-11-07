@@ -70,6 +70,7 @@ Removed
     - ``USE_L10N`` Django setting (#1557)
     - ``pytz`` dependency (#1557)
     - ``coveralls`` dependency (#1797)
+    - ``django-auth-knox`` URL routes (#1812)
 - **Projectroles**
     - Deprecated plugin helper methods in ``plugins`` root (#1718)
     - ``Project.public_guest_access`` field (#1703)
