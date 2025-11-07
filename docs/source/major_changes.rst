@@ -36,7 +36,7 @@ System Prerequisites
 --------------------
 
 Django Version
-    The minimum Django version has been bumped to v5.2.7.
+    The minimum Django version has been bumped to v5.2.8.
 Python v3.12 and v3.13 Support Added
     Python v3.12 and v3.13 support has been officially added in this version.
     3.13 is now the recommended Python version.
