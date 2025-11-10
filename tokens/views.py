@@ -1,3 +1,5 @@
+"""UI views for the tokens app"""
+
 import datetime
 
 from django.conf import settings
@@ -7,6 +9,7 @@ from django.shortcuts import render
 from django.views.generic.edit import DeleteView, FormView
 from django.views.generic.list import ListView
 from django.urls import reverse
+
 from knox.models import AuthToken
 
 # Projectroles dependency

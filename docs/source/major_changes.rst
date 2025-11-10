@@ -16,6 +16,8 @@ v1.3.0 (WIP)
 Release Highlights
 ==================
 
+- Add tokens REST API
+- Add user token creation REST API view
 - Add django-axes support for login security
 - Add local user update disabling
 - Add custom user model admin class

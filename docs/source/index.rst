@@ -139,6 +139,7 @@ HTML / Javascript / CSS / Bootstrap 4
     Filesfolders <app_filesfolders_api_rest>
     Sodarcache <app_sodarcache_api_rest>
     Timeline <app_timeline_api_rest>
+    Tokens <app_tokens_api_rest>
 
 .. toctree::
     :maxdepth: 2

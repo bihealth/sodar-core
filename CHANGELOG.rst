@@ -14,7 +14,7 @@ Added
 - **General**
     - Python v3.12 and v3.13 support (#1558, #1803)
     - ``STORAGES`` Django setting for filesfolders (#1557)
-    - ``django-axes`` support for login security (#1750)
+    - ``django-axes`` support for login security (#1750, #1814)
 - **Adminalerts**
     - ``ADMINALERTS_EMAIL_SENDING_DEFAULT`` Django setting (#1796)
 - **Projectroles**
@@ -28,8 +28,12 @@ Added
     - ``SODARUser.enable_update`` field (#1805)
     - ``SODARUserAdmin`` user model administrator class (#1805)
     - Local user update disabling (#1805)
+    - ``raise_axes_permission_denied()`` signal (#1814)
 - **Timeline**
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
+- **Tokens**
+    - Tokens REST API v1.0 (#1773)
+    - ``UserTokenCreateAPIView`` REST API view (#1773)
 - **Userprofile**
     - Support for local user update disabling (#1805)
 

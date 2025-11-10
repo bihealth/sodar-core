@@ -1,6 +1,6 @@
 from django.urls import path
 
-from tokens import views
+from tokens import views, views_api
 
 app_name = 'tokens'
 
@@ -19,5 +19,10 @@ urlpatterns = [
         route='delete/<str:pk>',
         view=views.UserTokenDeleteView.as_view(),
         name='delete',
+    ),
+    path(
+        route='api/create/',
+        view=views_api.UserTokenCreateAPIView.as_view(),
+        name='api_create',
     ),
 ]

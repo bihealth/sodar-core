@@ -2,17 +2,25 @@
 
 import logging
 
+from axes.signals import user_locked_out
 from django.conf import settings
 from django.contrib.auth.signals import (
     user_logged_in,
     user_logged_out,
     user_login_failed,
 )
+from django.dispatch import receiver
+
+from rest_framework.exceptions import PermissionDenied
 
 from projectroles.models import AUTH_PROVIDER_OIDC
 
 
 logger = logging.getLogger(__name__)
+
+
+# Local constants
+ACCOUNT_LOCKED_MSG = 'Account locked, too many failed login attempts'
 
 
 # User signals -----------------------------------------------------------------
@@ -79,3 +87,17 @@ user_logged_in.connect(assign_user_group)
 user_logged_in.connect(log_user_login)
 user_logged_out.connect(log_user_logout)
 user_login_failed.connect(log_user_login_failure)
+
+
+# Axes signals -----------------------------------------------------------------
+
+
+@receiver(user_locked_out)
+def raise_axes_permission_denied(request, *args, **kwargs):
+    """Raise permission denied for API views if axes has locked out user"""
+    # TODO: This detection of API calls is somewhat hacky, better ideas?
+    if (
+        'json' in request.META.get('HTTP_ACCEPT', '').lower()
+        or '/api/' in request.get_full_path()
+    ):
+        raise PermissionDenied(ACCOUNT_LOCKED_MSG)
