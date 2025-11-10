@@ -22,8 +22,8 @@ USER_PW = 'testpassword'
 INVALID_PW = 'INVALID_PASSWORD'
 
 
-class UserTokenCreateAPIViewTestBase(SODARAPIViewTestMixin, APITestCase):
-    """Base class for UserTokenCreateAPIView tests"""
+class TokenCreateLoginAPIViewTestBase(SODARAPIViewTestMixin, APITestCase):
+    """Base class for TokenCreateLoginAPIView tests"""
 
     media_type = TOKENS_API_MEDIA_TYPE
     api_version = TOKENS_API_DEFAULT_VERSION
@@ -39,18 +39,18 @@ class UserTokenCreateAPIViewTestBase(SODARAPIViewTestMixin, APITestCase):
 
     def setUp(self):
         self.user = self.make_user(USER_NAME, password=USER_PW)
-        self.url = reverse('tokens:api_create')
+        self.url = reverse('tokens:api_login')
 
 
-class TestUserTokenCreateAPIView(UserTokenCreateAPIViewTestBase):
-    """Tests for UserTokenCreateAPIView"""
+class TestTokenCreateLoginAPIView(TokenCreateLoginAPIViewTestBase):
+    """Tests for TokenCreateLoginAPIView"""
 
     def setUp(self):
         super().setUp()
         self.req_header = self._get_header(USER_NAME, USER_PW)
 
     def test_post(self):
-        """Test UserTokenCreateAPIView POST"""
+        """Test TokenCreateLoginAPIView POST"""
         self.assertEqual(AuthToken.objects.filter(user=self.user).count(), 0)
         response = self.client.post(self.url, **self.req_header)
         self.assertEqual(response.status_code, 201)
@@ -98,11 +98,11 @@ class TestUserTokenCreateAPIView(UserTokenCreateAPIViewTestBase):
 @override_settings(
     AUTHENTICATION_BACKENDS=AUTHENTICATION_BACKENDS_AXES, AXES_ENABLED=True
 )
-class TestUserTokenCreateAPIViewAxes(UserTokenCreateAPIViewTestBase):
-    """Tests for UserTokenCreateAPIView with django-axes"""
+class TestTokenCreateLoginAPIViewAxes(TokenCreateLoginAPIViewTestBase):
+    """Tests for TokenCreateLoginAPIView with django-axes"""
 
     def test_post(self):
-        """Test UserTokenCreateAPIView POST with correct credentials"""
+        """Test TokenCreateLoginAPIView POST with correct credentials"""
         response = self.client.post(
             self.url, **self._get_header(USER_NAME, USER_PW)
         )

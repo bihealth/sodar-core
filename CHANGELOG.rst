@@ -33,7 +33,7 @@ Added
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
 - **Tokens**
     - Tokens REST API v1.0 (#1773)
-    - ``UserTokenCreateAPIView`` REST API view (#1773)
+    - ``TokenCreateLoginAPIView`` REST API view (#1773, #1815)
 - **Userprofile**
     - Support for local user update disabling (#1805)
 

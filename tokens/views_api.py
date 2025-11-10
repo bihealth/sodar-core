@@ -55,7 +55,7 @@ class TokensAPIVersioningMixin:
 @extend_schema(
     responses={
         '201': inline_serializer(
-            'UserTokenCreate',
+            'TokenCreateLoginResponse',
             fields={
                 'delete_count': serializers.IntegerField(),
                 'expiry': serializers.CharField(),
@@ -65,7 +65,7 @@ class TokensAPIVersioningMixin:
         ),
     }
 )
-class UserTokenCreateAPIView(TokensAPIVersioningMixin, APIView):
+class TokenCreateLoginAPIView(TokensAPIVersioningMixin, APIView):
     """
     Create and return an API access token for a user logging in with basic
     authentication. Deletes any previously existing tokens for the user.
@@ -73,13 +73,13 @@ class UserTokenCreateAPIView(TokensAPIVersioningMixin, APIView):
     The returned token string is only visible once and should be stored upon
     retrieval.
 
-    **URL:** ``/tokens/api/create``
+    **URL:** ``/tokens/api/login``
 
     **Methods:** ``POST``
 
     **Parameters:**
 
-    - ``expiry``: Token expiry in hours (integer, optional)
+    - ``expiry``: Token expiration time in hours (integer, optional)
 
     **Returns:**
 

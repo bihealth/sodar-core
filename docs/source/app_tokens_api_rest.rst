@@ -27,4 +27,4 @@ Tokens REST API Views
 
 .. currentmodule:: tokens.views_api
 
-.. autoclass:: UserTokenCreateAPIView
+.. autoclass:: TokenCreateLoginAPIView

@@ -21,8 +21,8 @@ urlpatterns = [
         name='delete',
     ),
     path(
-        route='api/create/',
-        view=views_api.UserTokenCreateAPIView.as_view(),
-        name='api_create',
+        route='api/login',
+        view=views_api.TokenCreateLoginAPIView.as_view(),
+        name='api_login',
     ),
 ]
