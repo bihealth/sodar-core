@@ -31,9 +31,7 @@ class TokenCreateLoginAPIViewTestBase(SODARAPIViewTestMixin, APITestCase):
     def _get_header(self, username: str, password: str) -> dict:
         """Return request header with basic authentication and accept header"""
         return {
-            'HTTP_AUTHORIZATION': self.get_basic_auth_header(
-                username, password
-            ),
+            **self.get_basic_auth_header(username, password),
             **self.get_accept_header(self.media_type, self.api_version),
         }
 

@@ -155,15 +155,17 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
     # Set client class to drf API client to work with PUT, see #1801
     client_class = APIClient
 
-    # Copied from Knox tests
     @classmethod
-    def get_basic_auth_header(cls, username: str, password: str) -> str:
-        return (
-            'Basic %s'
-            % base64.b64encode(
-                ('%s:%s' % (username, password)).encode('ascii')
-            ).decode()
-        )
+    def get_basic_auth_header(cls, username: str, password: str) -> dict:
+        """
+        Return basic authorization header for requests.
+
+        :param username: String
+        :param password: String
+        :return: Dict
+        """
+        v = base64.b64encode(f'{username}:{password}'.encode('ascii')).decode()
+        return {'HTTP_AUTHORIZATION': f'Basic {v}'}
 
     @classmethod
     def get_token(

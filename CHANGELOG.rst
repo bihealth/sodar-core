@@ -54,6 +54,7 @@ Changed
     - Refactor ``AppSettingAPI.set()`` to reduce repetition (#1590)
     - Rename ``UserUpdateView`` to ``LocalUserUpdateView`` (#1805)
     - Update ``UserUpdateView`` permission handling (#1805)
+    - Return ``get_basic_auth_header()`` as dict (#1813)
 - **Tokens**
     - Improve ``TokenListView`` layout (#1817)
     - Rename UI views (#1816)

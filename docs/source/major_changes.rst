@@ -175,6 +175,15 @@ kwarg as a string converted from the original dict value. These are now provided
 as a dict as intended. This may require modifications in your implementation of
 the API.
 
+Test Helper Updates
+-------------------
+
+Some potentially breaking changes have been made to testing helpers.
+
+``get_basic_auth_header()`` Returns Dict
+    This REST API view test helper now returns the full header as dictionary
+    instead of just the value.
+
 Previously Deprecated Features Removed
 --------------------------------------
 
