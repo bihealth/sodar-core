@@ -10,13 +10,12 @@ from django.views.generic.edit import DeleteView, FormView
 from django.views.generic.list import ListView
 from django.urls import reverse
 
-from knox.models import AuthToken
-
 # Projectroles dependency
 from projectroles.models import RoleAssignment
 from projectroles.views import LoggedInPermissionMixin
 
-from tokens.forms import UserTokenCreateForm
+from tokens.forms import TokenCreateForm
+from tokens.models import SODARAuthToken
 
 
 # Local constants
@@ -30,13 +29,15 @@ TOKEN_CREATE_RESTRICT_MSG = (
 class UserTokenListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
     """View for listing and accessing user API tokens"""
 
-    model = AuthToken
+    model = SODARAuthToken
     permission_required = 'tokens.view_list'
     template_name = 'tokens/token_list.html'
 
     def get_queryset(self):
         """Only allow access to this user's query set"""
-        return AuthToken.objects.filter(user=self.request.user).order_by('-pk')
+        return SODARAuthToken.objects.filter(user=self.request.user).order_by(
+            '-pk'
+        )
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -58,14 +59,19 @@ class UserTokenCreateView(
 ):
     """View for API token creation"""
 
-    form_class = UserTokenCreateForm
+    form_class = TokenCreateForm
     permission_required = 'tokens.create'
     template_name = 'tokens/token_create.html'
 
     def form_valid(self, form):
-        ttl = datetime.timedelta(hours=form.clean().get('ttl')) or None
+        form_data = form.clean()
+        expiry = datetime.timedelta(hours=form_data.get('expiry')) or None
         context = self.get_context_data()
-        _, context['token'] = AuthToken.objects.create(self.request.user, ttl)
+        _, context['token'] = SODARAuthToken.objects.create(
+            user=self.request.user,
+            expiry=expiry,
+            sodar_label=form_data.get('sodar_label'),
+        )
         messages.success(self.request, TOKEN_CREATE_MSG)
         return render(self.request, 'tokens/token_create_success.html', context)
 
@@ -75,7 +81,7 @@ class UserTokenDeleteView(
 ):
     """View for API token deletion"""
 
-    model = AuthToken
+    model = SODARAuthToken
     permission_required = 'tokens.delete'
     template_name = 'tokens/token_confirm_delete.html'
 
@@ -85,4 +91,4 @@ class UserTokenDeleteView(
 
     def get_queryset(self):
         """Only allow access to this user's query set"""
-        return AuthToken.objects.filter(user=self.request.user)
+        return SODARAuthToken.objects.filter(user=self.request.user)

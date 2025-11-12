@@ -5,8 +5,6 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from knox.models import AuthToken
-
 from test_plus.test import APITestCase
 
 # Projectroles dependency
@@ -14,12 +12,14 @@ from projectroles.signals import ACCOUNT_LOCKED_MSG
 from projectroles.tests.test_views import AUTHENTICATION_BACKENDS_AXES
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
 
+from tokens.models import SODARAuthToken, TOKEN_LABEL_MAX_LENGTH
 from tokens.views_api import TOKENS_API_MEDIA_TYPE, TOKENS_API_DEFAULT_VERSION
 
 
 USER_NAME = 'user'
 USER_PW = 'testpassword'
 INVALID_PW = 'INVALID_PASSWORD'
+TOKEN_LABEL = 'Test label'
 
 
 class TokenCreateLoginAPIViewTestBase(SODARAPIViewTestMixin, APITestCase):
@@ -51,48 +51,70 @@ class TestTokenCreateLoginAPIView(TokenCreateLoginAPIViewTestBase):
 
     def test_post(self):
         """Test TokenCreateLoginAPIView POST"""
-        self.assertEqual(AuthToken.objects.filter(user=self.user).count(), 0)
+        self.assertEqual(
+            SODARAuthToken.objects.filter(user=self.user).count(), 0
+        )
         response = self.client.post(self.url, **self.req_header)
         self.assertEqual(response.status_code, 201)
-        tokens = AuthToken.objects.filter(user=self.user)
+        tokens = SODARAuthToken.objects.filter(user=self.user)
         self.assertEqual(tokens.count(), 1)
         self.assertEqual(tokens.first().expiry, None)
-        self.assertIsNotNone(response.data)
-        self.assertEqual(response.data['expiry'], None)
         self.assertEqual(response.data['delete_count'], 0)
+        self.assertEqual(response.data['expiry'], None)
+        self.assertEqual(response.data['sodar_label'], '')
+        self.assertEqual(len(response.data['token']), 64)
         self.assertEqual(response.data['user_uuid'], str(self.user.sodar_uuid))
 
     def test_post_existing(self):
         """Test POST with existing token for user"""
-        token = AuthToken.objects.create(user=self.user)[0]
-        self.assertEqual(AuthToken.objects.filter(user=self.user).count(), 1)
+        token = SODARAuthToken.objects.create(user=self.user)[0]
+        self.assertEqual(
+            SODARAuthToken.objects.filter(user=self.user).count(), 1
+        )
         response = self.client.post(self.url, **self.req_header)
         self.assertEqual(response.status_code, 201)
         # We should only have the newly created token
-        self.assertEqual(AuthToken.objects.filter(user=self.user).count(), 1)
-        self.assertIsNone(AuthToken.objects.filter(pk=token.pk).first())
+        self.assertEqual(
+            SODARAuthToken.objects.filter(user=self.user).count(), 1
+        )
+        self.assertIsNone(SODARAuthToken.objects.filter(pk=token.pk).first())
         self.assertEqual(response.data['delete_count'], 1)
 
     def test_post_expiry(self):
-        """Test POST with expiry time set"""
-        self.assertEqual(AuthToken.objects.filter(user=self.user).count(), 0)
+        """Test POST with expiry"""
         post_data = {'expiry': 10}
         response = self.client.post(self.url, data=post_data, **self.req_header)
         self.assertEqual(response.status_code, 201)
-        tokens = AuthToken.objects.filter(user=self.user)
-        self.assertEqual(tokens.count(), 1)
-        token = tokens.first()
+        token = SODARAuthToken.objects.filter(user=self.user).first()
         self.assertEqual(
             token.expiry.replace(minute=0, second=0, microsecond=0),
             (timezone.now() + timezone.timedelta(hours=10)).replace(
                 minute=0, second=0, microsecond=0
             ),
         )
-        self.assertIsNotNone(response.data)
         self.assertEqual(
             response.data['expiry'], self.get_drf_datetime(token.expiry)
         )
         self.assertEqual(response.data['user_uuid'], str(self.user.sodar_uuid))
+
+    def test_post_label(self):
+        """Test POST with label"""
+        post_data = {'sodar_label': TOKEN_LABEL}
+        response = self.client.post(self.url, data=post_data, **self.req_header)
+        self.assertEqual(response.status_code, 201)
+        token = SODARAuthToken.objects.filter(user=self.user).first()
+        self.assertEqual(token.sodar_label, TOKEN_LABEL)
+        self.assertEqual(response.data['sodar_label'], TOKEN_LABEL)
+
+    def test_post_label_max_length(self):
+        """Test POST with label exceeding maximum label length"""
+        label = 'a' * (TOKEN_LABEL_MAX_LENGTH + 1)
+        post_data = {'sodar_label': label}
+        response = self.client.post(self.url, data=post_data, **self.req_header)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            SODARAuthToken.objects.filter(user=self.user).count(), 0
+        )
 
 
 @override_settings(

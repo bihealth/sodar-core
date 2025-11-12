@@ -5,8 +5,6 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from knox.models import AuthToken
-
 from test_plus.test import TestCase
 
 # Projectroles dependency
@@ -17,6 +15,8 @@ from projectroles.tests.test_models import (
     RoleAssignmentMixin,
 )
 
+from tokens.models import SODARAuthToken
+from tokens.tests.test_models import SODARAuthTokenMixin
 from tokens.views import (
     TOKEN_CREATE_MSG,
     TOKEN_DELETE_MSG,
@@ -27,14 +27,17 @@ from tokens.views import (
 # SODAR constants
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
+# Local constants
+TOKEN_LABEL = 'Test label'
+
 
 class TestUserTokenListView(
-    ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase
+    ProjectMixin, RoleMixin, RoleAssignmentMixin, SODARAuthTokenMixin, TestCase
 ):
     """Tests for UserTokenListView"""
 
     def _make_token(self):
-        self.tokens = [AuthToken.objects.create(self.regular_user, None)]
+        self.tokens = [self.make_token(self.regular_user)]
 
     def setUp(self):
         self.regular_user = self.make_user('regular_user')
@@ -109,34 +112,45 @@ class TestUserTokenCreateView(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.context['form'])
 
-    def test_post_no_ttl(self):
-        """Test POST with TTL=0"""
-        self.assertEqual(AuthToken.objects.count(), 0)
+    def test_post(self):
+        """Test POST"""
+        self.assertEqual(SODARAuthToken.objects.count(), 0)
         with self.login(self.user):
-            response = self.post(self.url, data={'ttl': 0})
+            response = self.post(self.url, data={'expiry': 0})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             TOKEN_CREATE_MSG,
         )
-        self.assertEqual(AuthToken.objects.count(), 1)
-        self.assertEqual(AuthToken.objects.first().expiry, None)
+        self.assertEqual(SODARAuthToken.objects.count(), 1)
+        token = SODARAuthToken.objects.first()
+        self.assertEqual(token.sodar_label, '')
+        self.assertEqual(token.expiry, None)
 
-    def test_post_ttl(self):
-        """Test POST with TTL != 0"""
-        self.assertEqual(AuthToken.objects.count(), 0)
+    def test_post_label(self):
+        """Test POST with label"""
+        self.assertEqual(SODARAuthToken.objects.count(), 0)
         with self.login(self.user):
-            response = self.post(self.url, data={'ttl': 10})
+            response = self.post(
+                self.url, data={'expiry': 0, 'sodar_label': TOKEN_LABEL}
+            )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(SODARAuthToken.objects.count(), 1)
+        token = SODARAuthToken.objects.first()
+        self.assertEqual(token.sodar_label, TOKEN_LABEL)
+        self.assertEqual(token.expiry, None)
+
+    def test_post_expiry(self):
+        """Test POST with expiry"""
+        self.assertEqual(SODARAuthToken.objects.count(), 0)
+        with self.login(self.user):
+            response = self.post(self.url, data={'expiry': 10})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SODARAuthToken.objects.count(), 1)
+        token = SODARAuthToken.objects.first()
+        self.assertEqual(token.sodar_label, '')
         self.assertEqual(
-            list(get_messages(response.wsgi_request))[0].message,
-            TOKEN_CREATE_MSG,
-        )
-        self.assertEqual(AuthToken.objects.count(), 1)
-        self.assertEqual(
-            AuthToken.objects.first().expiry.replace(
-                minute=0, second=0, microsecond=0
-            ),
+            token.expiry.replace(minute=0, second=0, microsecond=0),
             (timezone.now() + timezone.timedelta(hours=10)).replace(
                 minute=0, second=0, microsecond=0
             ),
@@ -148,7 +162,7 @@ class TestUserTokenDeleteView(TestCase):
 
     def setUp(self):
         self.user = self.make_user()
-        self.token = AuthToken.objects.create(user=self.user)[0]
+        self.token = SODARAuthToken.objects.create(user=self.user)[0]
         self.url = reverse('tokens:delete', kwargs={'pk': self.token.pk})
 
     def test_get(self):
@@ -159,7 +173,7 @@ class TestUserTokenDeleteView(TestCase):
 
     def test_post(self):
         """Test token deletion"""
-        self.assertEqual(AuthToken.objects.count(), 1)
+        self.assertEqual(SODARAuthToken.objects.count(), 1)
         with self.login(self.user):
             response = self.post(self.url)
             self.assertRedirects(
@@ -169,4 +183,4 @@ class TestUserTokenDeleteView(TestCase):
             list(get_messages(response.wsgi_request))[0].message,
             TOKEN_DELETE_MSG,
         )
-        self.assertEqual(AuthToken.objects.count(), 0)
+        self.assertEqual(SODARAuthToken.objects.count(), 0)

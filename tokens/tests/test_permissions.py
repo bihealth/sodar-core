@@ -3,18 +3,19 @@
 from django.test import override_settings
 from django.urls import reverse
 
-from knox.models import AuthToken
-
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_permissions import SiteAppPermissionTestBase
+
+from tokens.models import SODARAuthToken
+from tokens.tests.test_models import SODARAuthTokenMixin
 
 
 # SODAR constants
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 
-class TestTokenPermissions(SiteAppPermissionTestBase):
+class TestTokensPermissions(SODARAuthTokenMixin, SiteAppPermissionTestBase):
     """Tests for token view permissions"""
 
     def test_get_list(self):
@@ -72,7 +73,7 @@ class TestTokenPermissions(SiteAppPermissionTestBase):
 
     def test_get_delete(self):
         """Test UserTokenDeleteView GET"""
-        token = AuthToken.objects.create(self.regular_user, None)
+        token = SODARAuthToken.objects.create(self.regular_user, None)
         url = reverse('tokens:delete', kwargs={'pk': token[0].pk})
         self.assert_response(url, self.regular_user, 200)
         self.assert_response(url, self.anonymous, 302)
@@ -80,6 +81,6 @@ class TestTokenPermissions(SiteAppPermissionTestBase):
     def test_get_delete_read_only(self):
         """Test UserTokenDeleteView GET with site read-only mode"""
         self.set_site_read_only()
-        token = AuthToken.objects.create(self.regular_user, None)
+        token = SODARAuthToken.objects.create(self.regular_user, None)
         url = reverse('tokens:delete', kwargs={'pk': token[0].pk})
         self.assert_response(url, [self.regular_user, self.anonymous], 302)

@@ -33,7 +33,8 @@ Added
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
 - **Tokens**
     - Tokens REST API v1.0 (#1773)
-    - ``TokenCreateLoginAPIView`` REST API view (#1773, #1815)
+    - ``TokenCreateLoginAPIView`` REST API view (#1549, #1773, #1815)
+    - ``SODARAuthToken`` model with ``sodar_label`` field (#1549)
 - **Userprofile**
     - Support for local user update disabling (#1805)
 
@@ -53,6 +54,8 @@ Changed
     - Refactor ``AppSettingAPI.set()`` to reduce repetition (#1590)
     - Rename ``UserUpdateView`` to ``LocalUserUpdateView`` (#1805)
     - Update ``UserUpdateView`` permission handling (#1805)
+- **Tokens**
+    - Improve ``TokenListView`` layout (#1817)
 - **Userprofile**
     - Remove user app settings card from ``UserDetailView`` (#1742)
 
@@ -80,6 +83,8 @@ Removed
     - ``Project.public_guest_access`` field (#1703)
     - ``Project.set_public()`` helper (#1703)
     - ``_project_badge.html`` include template (#1696)
+- **Tokens**
+    - Support for ``knox.models.AuthToken`` API tokens (#1549)
 
 
 v1.2.4 (2025-10-10)

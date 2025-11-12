@@ -15,9 +15,9 @@ from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
-from knox.models import AuthToken
-
 from drf_spectacular.utils import extend_schema, inline_serializer
+
+from tokens.models import SODARAuthToken, TOKEN_LABEL_MAX_LENGTH
 
 
 logger = logging.getLogger(__name__)
@@ -80,12 +80,14 @@ class TokenCreateLoginAPIView(TokensAPIVersioningMixin, APIView):
     **Parameters:**
 
     - ``expiry``: Token expiration time in hours (integer, optional)
+    - ``sodar_label``: Token text label (string, optional, max. 256 characters)
 
     **Returns:**
 
     - ``delete_count``: Number of deleted previous tokens for the user (integer)
     - ``expiry``: Expiry datetime for token (YYYY-MM-DDThh:mm:ssZ or None)
-    - ``token``: API token (string)
+    - ``sodar_label``: Token text label (string)
+    - ``token``: One-time visible API token (string)
     - ``user_uuid`` User ``sodar_uuid`` value (string)
     """
 
@@ -103,11 +105,21 @@ class TokenCreateLoginAPIView(TokensAPIVersioningMixin, APIView):
                     tc, 's' if tc != 1 else '', user.username
                 )
             )
-        expiry = request.data.get('expiry')
+
+        expiry = request.data.get('expiry', 0)
         e_delta = datetime.timedelta(hours=int(expiry)) if expiry else None
-        instance, token = AuthToken.objects.create(self.request.user, e_delta)
+        sodar_label = request.data.get('sodar_label', '')
+        if len(sodar_label) > TOKEN_LABEL_MAX_LENGTH:
+            raise serializers.ValidationError(
+                f'Maximum sodar_label length of {TOKEN_LABEL_MAX_LENGTH} '
+                f'exceeded (length={len(sodar_label)})'
+            )
+
+        instance, token = SODARAuthToken.objects.create(
+            user=self.request.user, expiry=e_delta, sodar_label=sodar_label
+        )
         ret = {
-            'token': token,
+            'delete_count': tc,
             'expiry': (
                 timezone.localtime(
                     instance.expiry, ZoneInfo(settings.TIME_ZONE)
@@ -115,7 +127,8 @@ class TokenCreateLoginAPIView(TokensAPIVersioningMixin, APIView):
                 if instance.expiry
                 else None
             ),
-            'delete_count': tc,
+            'sodar_label': instance.sodar_label,
+            'token': token,
             'user_uuid': str(user.sodar_uuid),
         }
         return Response(ret, status=201)

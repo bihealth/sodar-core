@@ -18,6 +18,8 @@ Release Highlights
 
 - Add tokens REST API
 - Add user token creation REST API view
+- Add custom API token model
+- Add optional API token label
 - Add django-axes support for login security
 - Add local user update disabling
 - Add custom user model admin class
@@ -75,12 +77,24 @@ Common known issues:
 - Support for ``pytz`` has been removed in Django and we should also stop using
   it. Use `zoneinfo <https://docs.python.org/3/library/zoneinfo.html>`_ instead.
 
-Breaking Knox Upgrade
----------------------
+Knox Upgrade and Custom API Token Model
+---------------------------------------
 
 This release upgrades ``django-rest-knox`` to v5.0. API tokens previously
 generated will no longer work. Uses will have to generate new API tokens. It is
 recommended to communicate this change to your users.
+
+Furthermore, the knox token model has been extended by a custom model. SODAR
+Core v1.3 expects ``tokens.models.SODARAuthToken``, or some extension of it, to
+be used as the access token. To enable this, add the following line to
+``base.py``:
+
+.. code-block:: python
+
+    KNOX_TOKEN_MODEL = 'tokens.SODARAuthToken'
+
+If you refer to ``knox.models.AuthToken`` directly in e.g. test cases, you
+should replace references to it with the new ``SODARAuthToken`` model.
 
 SODARUser Model Updates
 -----------------------
@@ -115,7 +129,6 @@ setting up ``$SITE/users/admin.py`` as follows:
         form = MyUserChangeForm
         add_form = MyUserCreationForm
         # Add other overrides here as needed
-
 
 AppLinkAPI Changes
 ------------------

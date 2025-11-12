@@ -20,12 +20,13 @@ from django.utils import timezone
 
 from rest_framework.test import APIClient
 
-from knox.models import AuthToken
-
 from test_plus.test import APITestCase
 
 # Timeline dependency
 from timeline.models import TimelineEvent
+
+# Tokens dependency
+from tokens.models import SODARAuthToken
 
 from projectroles import views_api
 from projectroles.app_settings import AppSettingAPI
@@ -169,16 +170,16 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         cls, user: User, full_result: bool = False
     ) -> Union[str, tuple]:
         """
-        Get or create a knox token for a user.
+        Get or create a SODARAuthToken authentication token for a user.
 
         :param user: User object
-        :param full_result: Return full result of AuthToken creation if True
-        :return: Token string or AuthToken creation tuple (EMPTY_KNOX_TOKEN if
-                 user is None)
+        :param full_result: Return full result of token creation if True
+        :return: Token string or SODARAuthToken creation tuple (EMPTY_KNOX_TOKEN
+                 if user is None)
         """
         if user is None:
             return EMPTY_KNOX_TOKEN
-        result = AuthToken.objects.create(user=user)
+        result = SODARAuthToken.objects.create(user=user)
         return result if full_result else result[1]
 
     @classmethod
