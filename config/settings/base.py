@@ -363,7 +363,6 @@ SPECTACULAR_SETTINGS = {
 
 # Knox settings
 KNOX_TOKEN_MODEL = 'tokens.SODARAuthToken'
-TOKEN_TTL = None
 
 # Settings for HTTP AuthBasic
 BASICAUTH_REALM = 'Log in with user@DOMAIN and your password.'

@@ -26,8 +26,8 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 APP_NAME_PR = 'projectroles'
 
 
-class TestUserTokenListView(SODARAuthTokenMixin, UITestBase):
-    """Tests for UserTokenListView"""
+class TestTokenListView(SODARAuthTokenMixin, UITestBase):
+    """Tests for TokenListView UI"""
 
     def setUp(self):
         super().setUp()

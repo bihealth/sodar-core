@@ -31,10 +31,10 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 TOKEN_LABEL = 'Test label'
 
 
-class TestUserTokenListView(
+class TestTokenListView(
     ProjectMixin, RoleMixin, RoleAssignmentMixin, SODARAuthTokenMixin, TestCase
 ):
-    """Tests for UserTokenListView"""
+    """Tests for TokenListView"""
 
     def _make_token(self):
         self.tokens = [self.make_token(self.regular_user)]
@@ -44,7 +44,7 @@ class TestUserTokenListView(
         self.url = reverse('tokens:list')
 
     def test_get(self):
-        """Test UserTokenListView GET with token"""
+        """Test TokenListView GET with token"""
         self._make_token()
         with self.login(self.regular_user):
             response = self.get(self.url)
@@ -98,15 +98,15 @@ class TestUserTokenListView(
         self.assertEqual(response.context['token_create_msg'], '')
 
 
-class TestUserTokenCreateView(TestCase):
-    """Tests for UserTokenCreateView"""
+class TestTokenCreateView(TestCase):
+    """Tests for TokenCreateView"""
 
     def setUp(self):
         self.user = self.make_user()
         self.url = reverse('tokens:create')
 
     def test_get(self):
-        """Test UserTokenCreateView GET"""
+        """Test TokenCreateView GET"""
         with self.login(self.user):
             response = self.get(self.url)
         self.assertEqual(response.status_code, 200)
@@ -157,8 +157,8 @@ class TestUserTokenCreateView(TestCase):
         )
 
 
-class TestUserTokenDeleteView(TestCase):
-    """Tests for UserTokenDeleteView"""
+class TestTokenDeleteView(TestCase):
+    """Tests for TokenDeleteView"""
 
     def setUp(self):
         self.user = self.make_user()
@@ -166,13 +166,13 @@ class TestUserTokenDeleteView(TestCase):
         self.url = reverse('tokens:delete', kwargs={'pk': self.token.pk})
 
     def test_get(self):
-        """Test UserTokenDeleteView GET"""
+        """Test TokenDeleteView GET"""
         with self.login(self.user):
             response = self.get(self.url)
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        """Test token deletion"""
+        """Test POST"""
         self.assertEqual(SODARAuthToken.objects.count(), 1)
         with self.login(self.user):
             response = self.post(self.url)

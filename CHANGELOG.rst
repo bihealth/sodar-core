@@ -56,6 +56,8 @@ Changed
     - Update ``UserUpdateView`` permission handling (#1805)
 - **Tokens**
     - Improve ``TokenListView`` layout (#1817)
+    - Rename UI views (#1816)
+    - Update URL routes to match conventions (#1820)
 - **Userprofile**
     - Remove user app settings card from ``UserDetailView`` (#1742)
 
@@ -78,6 +80,7 @@ Removed
     - ``pytz`` dependency (#1557)
     - ``coveralls`` dependency (#1797)
     - ``django-auth-knox`` URL routes (#1812)
+    - Unused ``TOKENS_TTL`` Django setting (#1819)
 - **Projectroles**
     - Deprecated plugin helper methods in ``plugins`` root (#1718)
     - ``Project.public_guest_access`` field (#1703)

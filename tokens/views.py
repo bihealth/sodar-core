@@ -26,7 +26,7 @@ TOKEN_CREATE_RESTRICT_MSG = (
 )
 
 
-class UserTokenListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
+class TokenListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
     """View for listing and accessing user API tokens"""
 
     model = SODARAuthToken
@@ -54,9 +54,7 @@ class UserTokenListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
         return context
 
 
-class UserTokenCreateView(
-    LoginRequiredMixin, LoggedInPermissionMixin, FormView
-):
+class TokenCreateView(LoginRequiredMixin, LoggedInPermissionMixin, FormView):
     """View for API token creation"""
 
     form_class = TokenCreateForm
@@ -76,9 +74,7 @@ class UserTokenCreateView(
         return render(self.request, 'tokens/token_create_success.html', context)
 
 
-class UserTokenDeleteView(
-    LoginRequiredMixin, LoggedInPermissionMixin, DeleteView
-):
+class TokenDeleteView(LoginRequiredMixin, LoggedInPermissionMixin, DeleteView):
     """View for API token deletion"""
 
     model = SODARAuthToken
