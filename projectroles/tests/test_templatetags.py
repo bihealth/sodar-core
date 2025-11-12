@@ -995,7 +995,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
                 },
                 {
                     'name': 'tokens',
-                    'url': '/tokens/',
+                    'url': '/tokens/list',
                     'label': 'API Tokens',
                     'icon': 'mdi:key-chain-variant',
                     'active': False,
@@ -1092,7 +1092,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
                 },
                 {
                     'name': 'tokens',
-                    'url': '/tokens/',
+                    'url': '/tokens/list',
                     'label': 'API Tokens',
                     'icon': 'mdi:key-chain-variant',
                     'active': False,
