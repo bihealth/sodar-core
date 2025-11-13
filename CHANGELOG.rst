@@ -48,7 +48,7 @@ Changed
     - Upgrade to django-rest-knox v5.0 (#1568)
     - Upgrade general Python dependencies (#1790)
     - Upgrade to jQuery v3.7 and Clipboard v2.0.11 (#1821)
-    - Upgrade to DataTables v2.3.4 (#1582)
+    - Upgrade to DataTables v2.3 (#1582, #1826, #1827)
     - Use ``zoneinfo`` instead of ``pytz`` (#1557)
 - **Projectroles**
     - Update logout links for ``POST`` method (#1557, #1798, #1807)

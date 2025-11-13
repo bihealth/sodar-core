@@ -376,6 +376,7 @@ $(document).ready(function () {
     let dt = $('#sodar-pr-project-list-table').DataTable({
       ordering: false,
       scrollX: false,
+      autoWidth: false,
       paging: true,
       pagingType: 'full_numbers',
       pageLength: window.projectListPagination,

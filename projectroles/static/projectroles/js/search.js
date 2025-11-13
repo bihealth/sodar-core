@@ -11,6 +11,7 @@ $(document).ready(function () {
     $(this).DataTable({
       order: [], // Disable default ordering
       scrollX: false,
+      autoWidth: false,
       paging: true,
       pagingType: 'full_numbers',
       pageLength: window.searchPagination,

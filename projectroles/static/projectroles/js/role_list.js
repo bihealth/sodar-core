@@ -7,6 +7,7 @@ $(document).ready(function () {
     ordering: true,
     order: [], // Disable default ordering
     scrollX: false,
+    autoWidth: false,
     paging: true,
     pagingType: 'full_numbers',
     pageLength: window.roleListPagination,
