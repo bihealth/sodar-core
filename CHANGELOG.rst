@@ -60,6 +60,7 @@ Changed
     - Update ``UserUpdateView`` permission handling (#1805)
     - Return ``get_basic_auth_header()`` as dict (#1813)
     - Unify server side and DataTables pagination layouts (#1825)
+    - Update ``sodar-list-*`` button class heights to match default line height (#1818)
 - **Tokens**
     - Improve ``TokenListView`` layout (#1817)
     - Rename UI views (#1816)

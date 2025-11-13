@@ -498,15 +498,15 @@ a.btn[disabled='disabled'] {
 }
 
 .sodar-list-btn-group {
-  height: 1.65em;
+  height: 1.55em;
 }
 
 .sodar-list-btn {
   white-space: nowrap !important;
   padding-top: 1px;
-  padding-left: 5px;
-  padding-right: 5px;
-  height: 1.65em;
+  padding-left: 4px;
+  padding-right: 4px;
+  height: 1.55em;
 }
 
 a.sodar-pr-btn-title {
@@ -542,7 +542,7 @@ a.sodar-pr-btn-copy-secret i {
 
 .sodar-list-dropdown {
   white-space: nowrap !important;
-  height: 26px;
+  height: 1.55em;
   width: 50px !important;
   padding: 1px !important;
 }
