@@ -19,14 +19,10 @@ $(document).ready(function () {
       info: false,
       language: {
         paginate: {
-          first: '<i class="iconify text-primary" ' +
-            'data-icon="mdi:arrow-left-circle-outline"></i> First',
-          previous: '<i class="iconify text-primary" ' +
-            'data-icon="mdi:arrow-left-circle"></i> Prev',
-          next: 'Next <i class="iconify text-primary" ' +
-            'data-icon="mdi:arrow-right-circle"></i>',
-          last: 'Last <i class="iconify text-primary" ' +
-            'data-icon="mdi:arrow-right-circle-outline"></i>',
+          first: 'First',
+          previous: 'Prev',
+          next: 'Next',
+          last: 'Last',
         }
       },
       dom: 'tp',
@@ -39,7 +35,7 @@ $(document).ready(function () {
     if ($(this).DataTable().page.info().pages === 1) {
       $(this).closest('.sodar-search-card')
         .find('.sodar-search-page-length').prop('disabled', 'disabled')
-      $(this).next('.dataTables_paginate').hide()
+      $(this).next('.dt-paging').hide()
     }
 
     // Display card once table has been initialized
@@ -69,8 +65,9 @@ $(document).ready(function () {
 
   $('.sodar-search-filter').keyup(function () {
     let dt = $(this).closest('.sodar-search-card').find('table')
-      .dataTable()
+      .dataTable().api()
     let v = $(this).val()
-    dt.fnFilter(v)
+    dt.search(v)
+    dt.draw()
   })
 })

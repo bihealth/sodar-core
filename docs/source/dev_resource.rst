@@ -195,6 +195,31 @@ used. An example can be seen below:
 
     {% include 'projectroles/_pagination.html' with pg_small=True %}
 
+DataTables Includes
+-------------------
+
+If you want to use the `DataTables <https://datatables.net/>`_ interactive
+table package on your server-side templates, it is recommended to use the
+version supported by the current SODAR Core release. This ensures that e.g. the
+layout behaves consistently with the rest of the site.
+
+The easiest way to do this is by including the CSS and JS dependencies from
+supplied include templates in your own template file. Example:
+
+.. code-block:: django
+
+    {% block css %}
+      {{ block.super }}
+      {% include 'projectroles/_datatables_css.html' %}
+      {# ... #}
+    {% endblock css %}
+
+    {% block javascript %}
+      {{ block.super }}
+      {% include 'projectroles/_datatables_js.html' %}
+      {# ... #}
+    {% endblock javascript %}
+
 Tour Help
 ---------
 

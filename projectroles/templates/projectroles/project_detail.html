@@ -8,30 +8,30 @@
 {% block title %}Project {{ object.title }}{% endblock title %}
 
 {% block css %}
-    {{ block.super }}
-    <style type="text/css">
-      div#sodar-pr-details-card-stats-loading {
-        height: 110px;
-      }
-      div#sodar-pr-details-card-stats-loading svg {
-        margin-top: 32px;
-      }
-      div#sodar-pr-details-card-stats-body {
-        min-height: 126px;
-      }
-      div.sodar-pr-dashboard-card-stats {
-        max-width: 200px;
-        min-width: 150px;
-      }
-      span.sodar-pr-dashboard-card-stats-value {
-        font-size: 36px;
-        font-weight: bold;
-        white-space: nowrap;
-      }
-      span.sodar-pr-dashboard-card-stats-unit {
-        font-size: 16px;
-      }
-    </style>
+  {{ block.super }}
+  <style type="text/css">
+    div#sodar-pr-details-card-stats-loading {
+      height: 110px;
+    }
+    div#sodar-pr-details-card-stats-loading svg {
+      margin-top: 32px;
+    }
+    div#sodar-pr-details-card-stats-body {
+      min-height: 126px;
+    }
+    div.sodar-pr-dashboard-card-stats {
+      max-width: 200px;
+      min-width: 150px;
+    }
+    span.sodar-pr-dashboard-card-stats-value {
+      font-size: 36px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    span.sodar-pr-dashboard-card-stats-unit {
+      font-size: 16px;
+    }
+  </style>
 {% endblock css %}
 
 {% block projectroles %}
@@ -165,7 +165,7 @@
   </script>
   {% if object.is_category %}
     <!-- DataTables -->
-    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
+    {% include 'projectroles/_datatables_js.html' %}
     <!-- Category stats -->
     <script type="text/javascript" src="{% static 'projectroles/js/category_stats.js' %}"></script>
     <!-- Project list -->

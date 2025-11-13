@@ -23,11 +23,13 @@ Release Highlights
 - Add django-axes support for login security
 - Add local user update disabling
 - Add custom user model admin class
+- Add DataTables include templates
 - Add TimelineEventStatus in TimelineAPI.get_models() return data
 - Add Python v3.12 and v3.13 support
 - Update userprofile user details layout
 - Upgrade to Django v5.2
 - Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
+- Upgrade to jQuery v3.7
 - Remove Python v3.9 and v3.10 support
 - Remove deprecated projectroles plugin helper methods
 - Remove deprecated Project model public_guest_access field
@@ -52,6 +54,10 @@ General Python Dependencies
     project. Note that in this release, several dependencies were also dropped.
     Unless your repository explicitly requires them, we recommend dropping those
     packages from your SODAR Core based repository as well.
+Javascript Dependencies
+    Javascript libraries have been upgraded to jQuery v3.7, DataTables v2.3.4
+    and Clipboard v2.0.11. If you include any of these dependencies manually in
+    the templates on your site, you should ensure they are up to date.
 
 Django v5.2 Upgrade
 -------------------

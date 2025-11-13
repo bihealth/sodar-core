@@ -77,7 +77,7 @@ PROJECT_LINK_IDS = [
     'sodar-pr-link-project-star',
 ]
 DEFAULT_WAIT_LOC = 'ID'
-PAGINATE_CLASS = 'dataTables_paginate'
+DT_PAGINATE_CLASS = 'dt-paging'
 HEAD_INCLUDE = '<meta name="keywords" content="SODAR Core">'
 REMOTE_SITE_NAME = 'Remote Site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
@@ -1107,7 +1107,7 @@ class TestHomeView(UITestBase):
     def test_project_list_paginate_disabled(self):
         """Test project list pagination with pagination disabled"""
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
-        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(elem.is_displayed(), False)
 
     def test_project_list_paginate_enabled(self):
@@ -1119,7 +1119,7 @@ class TestHomeView(UITestBase):
             )
             self.make_assignment(c, self.user_owner, self.role_owner)
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
-        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(elem.is_displayed(), True)
 
     def test_project_list_paginate_update(self):
@@ -1137,7 +1137,7 @@ class TestHomeView(UITestBase):
             self._get_project_row(self.project)
 
         # Navigate to page 2
-        btn = self.selenium.find_element(By.XPATH, '//a[@data-dt-idx="3"]')
+        btn = self.selenium.find_element(By.XPATH, '//a[@data-dt-idx="1"]')
         btn.click()
         WebDriverWait(self.selenium, 15).until(
             ec.presence_of_element_located(
@@ -1220,7 +1220,7 @@ class TestHomeView(UITestBase):
             By.CLASS_NAME, 'sodar-pr-project-list-item'
         )
         self.assertEqual(len(project_elems), 11)
-        page_elem = self.selenium.find_element(By.CLASS_NAME, PAGINATE_CLASS)
+        page_elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(page_elem.get_attribute('style'), 'display: none;')
 
         elem = Select(
@@ -1230,7 +1230,7 @@ class TestHomeView(UITestBase):
         )
         elem.select_by_value('10')
         WebDriverWait(self.selenium, 15).until(
-            ec.visibility_of_element_located((By.CLASS_NAME, PAGINATE_CLASS))
+            ec.visibility_of_element_located((By.CLASS_NAME, DT_PAGINATE_CLASS))
         )
         project_elems = self.selenium.find_elements(
             By.CLASS_NAME, 'sodar-pr-project-list-item'
@@ -3248,7 +3248,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             By.CLASS_NAME, 'sodar-pr-role-list-row'
         )
         self.assertEqual(len(elems), 10)
-        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(elem.is_displayed(), False)
 
     @override_settings(PROJECTROLES_ROLE_PAGINATION=2)
@@ -3259,7 +3259,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             By.CLASS_NAME, 'sodar-pr-role-list-row'
         )
         self.assertEqual(len(elems), 2)
-        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(elem.is_displayed(), True)
 
     def test_filter(self):

@@ -29,6 +29,7 @@ Added
     - ``SODARUserAdmin`` user model administrator class (#1805)
     - Local user update disabling (#1805)
     - ``raise_axes_permission_denied()`` signal (#1814)
+    - ``_datatables_js.html`` and ``_datatables_css.html`` include templates (#1823)
 - **Timeline**
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
 - **Tokens**
@@ -45,6 +46,8 @@ Changed
     - Upgrade to Django v5.2.8 (#1557, #1790)
     - Upgrade to django-rest-knox v5.0 (#1568)
     - Upgrade general Python dependencies (#1790)
+    - Upgrade to jQuery v3.7 and Clipboard v2.0.11 (#1821)
+    - Upgrade to DataTables v2.3.4 (#1582)
     - Use ``zoneinfo`` instead of ``pytz`` (#1557)
 - **Projectroles**
     - Update logout links for ``POST`` method (#1557, #1798, #1807)
@@ -82,6 +85,7 @@ Removed
     - ``coveralls`` dependency (#1797)
     - ``django-auth-knox`` URL routes (#1812)
     - Unused ``TOKENS_TTL`` Django setting (#1819)
+    - Unsupported IE compatibility includes (#1821)
 - **Projectroles**
     - Deprecated plugin helper methods in ``plugins`` root (#1718)
     - ``Project.public_guest_access`` field (#1703)

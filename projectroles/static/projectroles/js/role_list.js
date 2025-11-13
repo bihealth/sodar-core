@@ -20,28 +20,25 @@ $(document).ready(function () {
     info: false,
     language: {
       paginate: {
-        first: '<i class="iconify text-primary" ' +
-          'data-icon="mdi:arrow-left-circle-outline"></i> First',
-        previous: '<i class="iconify text-primary" ' +
-          'data-icon="mdi:arrow-left-circle"></i> Prev',
-        next: 'Next <i class="iconify text-primary" ' +
-          'data-icon="mdi:arrow-right-circle"></i>',
-        last: 'Last <i class="iconify text-primary" ' +
-          'data-icon="mdi:arrow-right-circle-outline"></i>',
+        first: 'First',
+        previous: 'Prev',
+        next: 'Next',
+        last: 'Last',
       }
     },
     dom: 'tp'
   })
   // Hide pagination if only one page
   if (dt.page.info().pages === 1) {
-    $('.dataTables_paginate').hide()
+    $('.dt-paging').hide()
   }
 
   // Filter input
   $('#sodar-pr-role-list-filter').keyup(function () {
     let dt = $(this).closest(
-      '#sodar-pr-role-list').find('table').dataTable()
+      '#sodar-pr-role-list').find('table').dataTable().api()
     let v = $(this).val()
-    dt.fnFilter(v)
+    dt.search(v)
+    dt.draw()
   })
 })
