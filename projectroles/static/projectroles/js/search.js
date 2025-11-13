@@ -17,14 +17,7 @@ $(document).ready(function () {
       lengthChange: true,
       scrollCollapse: true,
       info: false,
-      language: {
-        paginate: {
-          first: 'First',
-          previous: 'Prev',
-          next: 'Next',
-          last: 'Last',
-        }
-      },
+      language: {paginate: sodarDataTablesPaginate},
       dom: 'tp',
       fnDrawCallback: function () {
         modifyCellOverflow()

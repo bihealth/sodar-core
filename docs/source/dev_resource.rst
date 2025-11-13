@@ -220,6 +220,11 @@ supplied include templates in your own template file. Example:
       {# ... #}
     {% endblock javascript %}
 
+.. hint::
+
+    Using the Javascript includes also includes common helpers found in
+    ``projectroles/_datatables.js`` for maintaining a common layout.
+
 Tour Help
 ---------
 

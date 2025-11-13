@@ -18,14 +18,7 @@ $(document).ready(function () {
       targets: [4]
     }, ], // Disable ordering and filtering for ops column
     info: false,
-    language: {
-      paginate: {
-        first: 'First',
-        previous: 'Prev',
-        next: 'Next',
-        last: 'Last',
-      }
-    },
+    language: {paginate: sodarDataTablesPaginate},
     dom: 'tp'
   })
   // Hide pagination if only one page

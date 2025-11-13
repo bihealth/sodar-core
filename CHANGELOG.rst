@@ -30,6 +30,7 @@ Added
     - Local user update disabling (#1805)
     - ``raise_axes_permission_denied()`` signal (#1814)
     - ``_datatables_js.html`` and ``_datatables_css.html`` include templates (#1823)
+    - ``_datatables.js`` common DataTables helpers (#1824)
 - **Timeline**
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
 - **Tokens**
@@ -58,6 +59,7 @@ Changed
     - Rename ``UserUpdateView`` to ``LocalUserUpdateView`` (#1805)
     - Update ``UserUpdateView`` permission handling (#1805)
     - Return ``get_basic_auth_header()`` as dict (#1813)
+    - Unify server side and DataTables pagination layouts (#1825)
 - **Tokens**
     - Improve ``TokenListView`` layout (#1817)
     - Rename UI views (#1816)
@@ -73,6 +75,7 @@ Fixed
     - Role assignment deletion not deleting all ``PROJECT_USER`` app settings (#1738)
     - JSON app setting values provided to ``perform_project_modify()`` as string (#1590)
     - Password change popup breaking UI test legacy UI login (#1808)
+    - Icon refeshing in DataTables pagination controls (#1763)
 
 Removed
 -------
