@@ -92,6 +92,10 @@ PUBLIC_ACCESS_ID = 'id_public_access'
 REMOTE_SITE_UUID = uuid.uuid4()
 REMOTE_SITE_ID = f'id_remote_site.{REMOTE_SITE_UUID}'
 CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
+UI_TEST_BASE_DEPRECATE_MSG = (
+    'The UITestBase class is deprecated and will be removed in SODAR Core v.4. '
+    'Use ProjectUITestBase or SiteUITestBase instead.'
+)  # TODO: Remove in v1.4 (see #1829)
 
 
 class SeleniumSetupMixin:
@@ -457,25 +461,41 @@ class UITestMixin:
         self.assertEqual(elem.is_displayed(), expected)
 
 
-class UITestBase(
-    SeleniumSetupMixin,
-    LiveUserMixin,
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
-    UITestMixin,
-    LiveServerTestCase,
+class CommonUITestBase(
+    SeleniumSetupMixin, LiveUserMixin, UITestMixin, LiveServerTestCase
 ):
-    """Base class for UI tests"""
+    """Common base class for view specific UI test base classes"""
 
     def setUp(self):
         # Set up Selenium
         self.set_up_selenium()
+        # Init superuser
+        self.superuser = self.make_user('superuser', superuser=True)
+
+    def tearDown(self):
+        # Shut down Selenium
+        self.selenium.quit()
+        super().tearDown()
+
+
+class SiteUITestBase(CommonUITestBase):
+    """Base class for site app view UI tests"""
+
+    def setUp(self):
+        super().setUp()
+        self.regular_user = self.make_user('regular_user')
+
+
+class ProjectUITestBase(
+    ProjectMixin, RoleMixin, RoleAssignmentMixin, CommonUITestBase
+):
+    """Base class for project app view UI tests"""
+
+    def setUp(self):
+        super().setUp()
         # Init roles
         self.init_roles()
-
         # Init users
-        self.superuser = self.make_user('admin', True)
         self.user_owner_cat = self.make_user('user_owner_cat')
         self.user_delegate_cat = self.make_user('user_delegate_cat')
         self.user_contributor_cat = self.make_user('user_contributor_cat')
@@ -534,13 +554,22 @@ class UITestBase(
             self.category, self.user_viewer, self.role_viewer
         )
 
-    def tearDown(self):
-        # Shut down Selenium
-        self.selenium.quit()
-        super().tearDown()
+
+# TODO: Remove in v1.4 (see #1829)
+class UITestBase(ProjectUITestBase):
+    """
+    Base class for UI tests.
+
+    DEPRECATED: To be removed in v1.4. Use ProjectUITestBase or SiteUITestBase
+    insteaad.
+    """
+
+    def setUp(self):
+        super().setUp()
+        print(f'\n{UI_TEST_BASE_DEPRECATE_MSG}')
 
 
-class TestBaseTemplate(UITestBase):
+class TestBaseTemplate(ProjectUITestBase):
     """Tests for the base project template"""
 
     def test_admin_link(self):
@@ -585,7 +614,7 @@ class TestBaseTemplate(UITestBase):
         self.assertEqual(modal.is_displayed(), True)
 
 
-class TestHomeView(UITestBase):
+class TestHomeView(ProjectUITestBase):
     """Tests for the home view and project list UI"""
 
     #: Home view URL
@@ -1321,7 +1350,9 @@ class TestHomeView(UITestBase):
         self.assertIsNotNone(elem.find_element(By.TAG_NAME, 'a'))
 
 
-class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
+class TestProjectSidebar(
+    ProjectInviteMixin, RemoteTargetMixin, ProjectUITestBase
+):
     """Tests for the project sidebar"""
 
     def setUp(self):
@@ -1739,7 +1770,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
         )
 
 
-class TestProjectSearchResultsView(UITestBase):
+class TestProjectSearchResultsView(ProjectUITestBase):
     """Tests for ProjectSearchResultsView UI"""
 
     def setUp(self):
@@ -1851,7 +1882,9 @@ class TestProjectSearchResultsView(UITestBase):
         )
 
 
-class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
+class TestProjectDetailView(
+    RemoteSiteMixin, RemoteProjectMixin, ProjectUITestBase
+):
     """Tests for ProjectDetailView UI"""
 
     @classmethod
@@ -2561,7 +2594,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         )
 
 
-class TestProjectCreateView(RemoteSiteMixin, UITestBase):
+class TestProjectCreateView(RemoteSiteMixin, ProjectUITestBase):
     """Tests for ProjectCreateView UI"""
 
     def setUp(self):
@@ -2684,7 +2717,9 @@ class TestProjectCreateView(RemoteSiteMixin, UITestBase):
         self.assertTrue(elem.is_enabled())
 
 
-class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
+class TestProjectUpdateView(
+    RemoteSiteMixin, RemoteProjectMixin, ProjectUITestBase
+):
     """Tests for ProjectUpdateView UI"""
 
     def setUp(self):
@@ -2765,8 +2800,6 @@ class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
         self.assertIsNone(elem.get_attribute('disabled'))
 
-    # TODO: Enable tests once remote project access is restored (see #1808)
-    '''
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_delete_button_remote_target(self):
         """Test rendering delete button with non-revoked remote project as target site"""
@@ -2796,7 +2829,6 @@ class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         self.login_and_redirect(self.superuser, self.url)
         elem = self.selenium.find_element(By.ID, 'sodar-pr-btn-delete')
         self.assertIsNone(elem.get_attribute('disabled'))
-    '''
 
     def test_fields_project(self):
         """Test field visibility for project update"""
@@ -2862,7 +2894,7 @@ class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         self.assertEqual(elem.is_selected(), True)
 
 
-class TestProjectArchiveView(UITestBase):
+class TestProjectArchiveView(ProjectUITestBase):
     """Tests for ProjectArchiveView UI"""
 
     def test_archive_button(self):
@@ -2885,7 +2917,7 @@ class TestProjectArchiveView(UITestBase):
         )
 
 
-class TestProjectDeleteView(UITestBase):
+class TestProjectDeleteView(ProjectUITestBase):
     """Tests for ProjectDeleteView UI"""
 
     def test_render(self):
@@ -2902,7 +2934,7 @@ class TestProjectDeleteView(UITestBase):
         )
 
 
-class TestProjectRoleView(RemoteTargetMixin, UITestBase):
+class TestProjectRoleView(RemoteTargetMixin, ProjectUITestBase):
     """Tests for ProjectRoleView UI"""
 
     def _get_role_dropdown(self, user: User, owner: bool = False) -> WebElement:
@@ -3277,7 +3309,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         self.assertEqual(len(elems), 2)  # Category and project owner
 
 
-class TestRoleAssignmentCreateView(UITestBase):
+class TestRoleAssignmentCreateView(ProjectUITestBase):
     """Tests for RoleAssignmentCreateView UI"""
 
     def test_role_preview(self):
@@ -3329,7 +3361,7 @@ class TestRoleAssignmentCreateView(UITestBase):
         )
 
 
-class TestRoleAssignmentDeleteView(UITestBase):
+class TestRoleAssignmentDeleteView(ProjectUITestBase):
     """Tests for RoleAssignmentDeleteView UI"""
 
     def test_render(self):
@@ -3408,7 +3440,7 @@ class TestRoleAssignmentDeleteView(UITestBase):
             )
 
 
-class TestProjectInviteView(ProjectInviteMixin, UITestBase):
+class TestProjectInviteView(ProjectInviteMixin, ProjectUITestBase):
     """Tests for ProjectInviteView UI"""
 
     def test_invite_ops(self):
@@ -3483,7 +3515,7 @@ class TestProjectInviteView(ProjectInviteMixin, UITestBase):
         )
 
 
-class TestProjectInviteCreateView(UITestBase):
+class TestProjectInviteCreateView(ProjectUITestBase):
     """Tests for ProjectInviteCreateView UI"""
 
     def test_invite_preview(self):
@@ -3506,7 +3538,7 @@ class TestProjectInviteCreateView(UITestBase):
         )
 
 
-class TestProjectInviteProcessLocalView(ProjectInviteMixin, UITestBase):
+class TestProjectInviteProcessLocalView(ProjectInviteMixin, ProjectUITestBase):
     """Tests for ProjectInviteProcessLocalView UI"""
 
     def setUp(self):
@@ -3549,7 +3581,7 @@ class TestProjectInviteProcessLocalView(ProjectInviteMixin, UITestBase):
         self.assertEqual(elem.text, 'Create')
 
 
-class TestRemoteSiteListView(RemoteSiteMixin, UITestBase):
+class TestRemoteSiteListView(RemoteSiteMixin, ProjectUITestBase):
     """Tests for RemoteSiteListView UI"""
 
     def test_source_user_display(self):
@@ -3616,7 +3648,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, UITestBase):
             )
 
 
-class TestRemoteSiteCreateView(RemoteSiteMixin, UITestBase):
+class TestRemoteSiteCreateView(RemoteSiteMixin, ProjectUITestBase):
     """Tests for RemoteSiteCreateView UI"""
 
     def test_source_user_toggle(self):

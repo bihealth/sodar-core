@@ -27,6 +27,7 @@ Release Highlights
 - Add TimelineEventStatus in TimelineAPI.get_models() return data
 - Add Python v3.12 and v3.13 support
 - Update userprofile user details layout
+- Update UI test base classes
 - Upgrade to Django v5.2
 - Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
 - Upgrade to jQuery v3.7
@@ -189,6 +190,16 @@ Some potentially breaking changes have been made to testing helpers.
 ``get_basic_auth_header()`` Returns Dict
     This REST API view test helper now returns the full header as dictionary
     instead of just the value.
+
+Deprecated Features
+-------------------
+
+These features have been deprecated in v1.3 and will be removed in v1.4.
+
+``UITestBase``
+    This UI test base class has been deprecated. Instead, use
+    ``ProjectUITestBase`` or ``SiteUITestBase``, depending on the type of app
+    being tested.
 
 Previously Deprecated Features Removed
 --------------------------------------

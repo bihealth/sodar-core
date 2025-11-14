@@ -31,6 +31,7 @@ Added
     - ``raise_axes_permission_denied()`` signal (#1814)
     - ``_datatables_js.html`` and ``_datatables_css.html`` include templates (#1823)
     - ``_datatables.js`` common DataTables helpers (#1824)
+    - ``ProjectUITestBase`` and ``SiteUITestBase`` UI test base classes (#1460)
 - **Timeline**
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
 - **Tokens**
@@ -50,6 +51,7 @@ Changed
     - Upgrade to jQuery v3.7 and Clipboard v2.0.11 (#1821)
     - Upgrade to DataTables v2.3 (#1582, #1826, #1827)
     - Use ``zoneinfo`` instead of ``pytz`` (#1557)
+    - Refactor ``UITestBase`` use (#1460)
 - **Projectroles**
     - Update logout links for ``POST`` method (#1557, #1798, #1807)
     - Use DRF API client in ``SODARAPIViewTestMixin`` (#1801)
@@ -61,6 +63,7 @@ Changed
     - Return ``get_basic_auth_header()`` as dict (#1813)
     - Unify server side and DataTables pagination layouts (#1825)
     - Update ``sodar-list-*`` button class heights to match default line height (#1818)
+    - Deprecate ``UITestBase`` class (#1460)
 - **Tokens**
     - Improve ``TokenListView`` layout (#1817)
     - Rename UI views (#1816)

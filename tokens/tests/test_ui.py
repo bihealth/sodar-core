@@ -11,7 +11,12 @@ from selenium.webdriver.common.by import By
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_ui import UITestBase
+from projectroles.tests.test_models import (
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+)
+from projectroles.tests.test_ui import SiteUITestBase
 
 from tokens.tests.test_models import SODARAuthTokenMixin
 
@@ -26,18 +31,17 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 APP_NAME_PR = 'projectroles'
 
 
-class TestTokenListView(SODARAuthTokenMixin, UITestBase):
+class TestTokenListView(
+    SODARAuthTokenMixin,
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    SiteUITestBase,
+):
     """Tests for TokenListView UI"""
 
     def setUp(self):
         super().setUp()
-        # Create users
-        self.superuser = self.make_user('superuser', True)
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user', False)
-
         # Create tokens
         self.token = self.make_token(
             self.regular_user, expiry=timedelta(days=5)
@@ -75,6 +79,7 @@ class TestTokenListView(SODARAuthTokenMixin, UITestBase):
     @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
     def test_create_button_restrict_role(self):
         """Test create button with restriction as user with role"""
+        self.init_roles()  # Init roles which we don't have for site tests
         category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )

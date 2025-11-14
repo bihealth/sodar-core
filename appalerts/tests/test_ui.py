@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.tests.test_ui import UITestBase
+from projectroles.tests.test_ui import ProjectUITestBase
 
 from appalerts.models import AppAlert
 from appalerts.tests.test_models import AppAlertMixin
@@ -25,14 +25,16 @@ app_settings = AppSettingAPI()
 APP_NAME_PR = 'projectroles'
 
 
-class AlertUITestBase(AppAlertMixin, UITestBase):
+class AlertUITestBase(AppAlertMixin, ProjectUITestBase):
+    """
+    Base class for appalerts UI tests.
+
+    NOTE: Using ProjectUITestBase as we test with project scope alerts.
+    """
+
     def setUp(self):
         super().setUp()
         # Create users
-        self.superuser = self.make_user('superuser', superuser=True)
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
         self.regular_user = self.make_user('regular_user')
         self.no_alert_user = self.make_user('no_alert_user')
         # No user
