@@ -9,6 +9,7 @@ from typing import Optional, Union
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import (
     get_user_model,
@@ -34,9 +35,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from test_plus.test import TestCase, APITestCase
-
-# Tokens dependency
-from tokens.models import SODARAuthToken
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
@@ -71,13 +69,9 @@ AUTHENTICATION_BACKENDS_AXES = [
     'axes.backends.AxesBackend'
 ] + settings.AUTHENTICATION_BACKENDS
 AXES_LOCK_MSG = 'Account locked: too many login attempts.'
-
-# Special value to use for empty knox token
 EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
 TEST_SERVER_URL = 'http://testserver'
-
 DEFAULT_WAIT_LOC = 'ID'
-
 TEST_BASE_CLASS_DEPRECATE_MSG = (
     '\nWARNING: {old} has been deprecated and will be removed in v1.4. Use '
     'projectroles.tests.base.{new} instead.'
@@ -159,16 +153,20 @@ class SODARAPIViewTestMixin(SerializedObjectMixin):
         cls, user: User, full_result: bool = False
     ) -> Union[str, tuple]:
         """
-        Get or create a SODARAuthToken authentication token for a user.
+        Get or create an authentication token for a user.
+
+        NOTE: Requires KNOX_AUTH_TOKEN to be set.
 
         :param user: User object
         :param full_result: Return full result of token creation if True
-        :return: Token string or SODARAuthToken creation tuple (EMPTY_KNOX_TOKEN
-                 if user is None)
+        :return: Token string or knox-compatible token creation tuple
+                 (EMPTY_KNOX_TOKEN if user is None)
         """
         if user is None:
             return EMPTY_KNOX_TOKEN
-        result = SODARAuthToken.objects.create(user=user)
+        model_split = settings.KNOX_TOKEN_MODEL.split('.')
+        token_model = apps.get_model(model_split[0], model_split[1])
+        result = token_model.objects.create(user=user)
         return result if full_result else result[1]
 
     @classmethod
