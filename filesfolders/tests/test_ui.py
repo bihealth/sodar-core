@@ -7,7 +7,7 @@ from django.urls import reverse
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
-from projectroles.tests.test_ui import ProjectUITestBase
+from projectroles.tests.base import ProjectUITestBase
 from projectroles.utils import build_secret
 
 from filesfolders.tests.test_models import (

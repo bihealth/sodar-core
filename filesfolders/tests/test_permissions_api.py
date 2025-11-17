@@ -7,7 +7,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions_api import ProjectAPIPermissionTestBase
+from projectroles.tests.base import ProjectAPIPermissionTestBase
 
 from filesfolders.models import File, Folder, HyperLink
 from filesfolders.tests.test_permissions import FilesfoldersPermissionTestMixin

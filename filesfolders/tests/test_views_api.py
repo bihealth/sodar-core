@@ -8,7 +8,7 @@ from test_plus.test import APITestCase
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_views_api import SODARAPIViewTestMixin
+from projectroles.tests.base import SODARAPIViewTestMixin
 from projectroles.views_api import INVALID_PROJECT_TYPE_MSG
 
 from filesfolders.tests.test_views import (

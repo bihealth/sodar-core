@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
-from projectroles.tests.test_ui import ProjectUITestBase
+from projectroles.tests.base import ProjectUITestBase
 
 from appalerts.models import AppAlert
 from appalerts.tests.test_models import AppAlertMixin

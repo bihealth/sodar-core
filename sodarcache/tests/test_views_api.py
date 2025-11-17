@@ -12,12 +12,12 @@ from test_plus.test import APITestCase
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
+from projectroles.tests.base import SODARAPIViewTestMixin
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
     RoleAssignmentMixin,
 )
-from projectroles.tests.test_views_api import SODARAPIViewTestMixin
 
 from sodarcache.models import JSONCacheItem
 from sodarcache.views_api import (

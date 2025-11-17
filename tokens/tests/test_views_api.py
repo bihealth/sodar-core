@@ -9,8 +9,10 @@ from test_plus.test import APITestCase
 
 # Projectroles dependency
 from projectroles.signals import ACCOUNT_LOCKED_MSG
-from projectroles.tests.test_views import AUTHENTICATION_BACKENDS_AXES
-from projectroles.tests.test_views_api import SODARAPIViewTestMixin
+from projectroles.tests.base import (
+    SODARAPIViewTestMixin,
+    AUTHENTICATION_BACKENDS_AXES,
+)
 
 from tokens.models import SODARAuthToken, TOKEN_LABEL_MAX_LENGTH
 from tokens.views_api import TOKENS_API_MEDIA_TYPE, TOKENS_API_DEFAULT_VERSION

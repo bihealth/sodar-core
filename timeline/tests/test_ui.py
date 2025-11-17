@@ -14,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
-from projectroles.tests.test_ui import ProjectUITestBase
+from projectroles.tests.base import ProjectUITestBase
 
 from timeline.models import TL_STATUS_OK
 from timeline.tests.test_models import (

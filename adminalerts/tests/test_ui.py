@@ -7,7 +7,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 
 # Projectroles dependency
-from projectroles.tests.test_ui import SiteUITestBase
+from projectroles.tests.base import SiteUITestBase
 
 from adminalerts.tests.test_models import AdminAlertMixin
 

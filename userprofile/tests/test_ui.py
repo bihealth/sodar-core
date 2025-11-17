@@ -11,7 +11,7 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import APP_SETTING_DISABLE_LABEL
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import SODARUserAdditionalEmailMixin
-from projectroles.tests.test_ui import UITestBase
+from projectroles.tests.base import SiteUITestBase
 
 
 app_settings = AppSettingAPI()
@@ -28,7 +28,7 @@ EMAIL_ADD_BTN_ID = 'sodar-user-btn-email-add'
 
 
 @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
-class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
+class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
     """Tests for UserDetailView"""
 
     def setUp(self):
@@ -249,7 +249,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
         )
 
 
-class TestUserAppSettingsView(UITestBase):
+class TestUserAppSettingsView(SiteUITestBase):
     """Tests for UserAppSettingsView"""
 
     def setUp(self):

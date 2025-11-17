@@ -7,8 +7,8 @@ from django.urls import reverse
 from projectroles.app_links import AppLinkAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
+from projectroles.tests.base import UIViewTestBase
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
-from projectroles.tests.test_views import ViewTestBase
 
 
 app_links = AppLinkAPI()
@@ -25,7 +25,7 @@ APP_NAME = 'projectroles'
 APP_NAME_FF = 'filesfolders'
 
 
-class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
+class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
     """Tests for API"""
 
     def setUp(self):

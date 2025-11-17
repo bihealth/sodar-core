@@ -9,7 +9,7 @@ from projectroles.tests.test_models import (
     SODARUserAdditionalEmailMixin,
     ADD_EMAIL,
 )
-from projectroles.tests.test_permissions import SiteAppPermissionTestBase
+from projectroles.tests.base import SiteAppPermissionTestBase
 
 
 # SODAR constants

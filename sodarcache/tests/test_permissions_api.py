@@ -5,7 +5,7 @@ from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.plugins import PluginAPI
-from projectroles.tests.test_permissions_api import ProjectAPIPermissionTestBase
+from projectroles.tests.base import ProjectAPIPermissionTestBase
 
 from sodarcache.tests.test_views_api import (
     TEST_APP_NAME,

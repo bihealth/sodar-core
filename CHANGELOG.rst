@@ -64,6 +64,8 @@ Changed
     - Unify server side and DataTables pagination layouts (#1825)
     - Update ``sodar-list-*`` button class heights to match default line height (#1818)
     - Deprecate ``UITestBase`` class (#1460)
+    - Move base test classes to ``tests.base`` (#1431)
+    - Deprecate old base test classes (#1431)
 - **Tokens**
     - Improve ``TokenListView`` layout (#1817)
     - Rename UI views (#1816)

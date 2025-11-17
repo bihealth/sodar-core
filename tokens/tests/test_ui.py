@@ -16,7 +16,7 @@ from projectroles.tests.test_models import (
     RoleMixin,
     RoleAssignmentMixin,
 )
-from projectroles.tests.test_ui import SiteUITestBase
+from projectroles.tests.base import SiteUITestBase
 
 from tokens.tests.test_models import SODARAuthTokenMixin
 

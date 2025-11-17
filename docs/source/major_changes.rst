@@ -27,7 +27,7 @@ Release Highlights
 - Add TimelineEventStatus in TimelineAPI.get_models() return data
 - Add Python v3.12 and v3.13 support
 - Update userprofile user details layout
-- Update UI test base classes
+- Update base test classes, deprecate old ones
 - Upgrade to Django v5.2
 - Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
 - Upgrade to jQuery v3.7
@@ -190,16 +190,39 @@ Some potentially breaking changes have been made to testing helpers.
 ``get_basic_auth_header()`` Returns Dict
     This REST API view test helper now returns the full header as dictionary
     instead of just the value.
+Projectroles Test Module Constants
+    The constants in projectroles ``tests`` modules have been cleaned up. If you
+    were importing some constants from these modules, you may need to relocate
+    certain constants or manually declare them in your own tests.
 
 Deprecated Features
 -------------------
 
 These features have been deprecated in v1.3 and will be removed in v1.4.
 
-``UITestBase``
-    This UI test base class has been deprecated. Instead, use
-    ``ProjectUITestBase`` or ``SiteUITestBase``, depending on the type of app
-    being tested.
+Base Test Classes Moved
+    The following base test classes have been moved to
+    ``projectroles.tests.base``. Imports from the original locations will stop
+    working in v1.4.
+
+    - ``projectroles.tests.test_permissions.IPAllowMixin``
+    - ``projectroles.tests.test_permissions.PermissionTestBase``
+    - ``projectroles.tests.test_permissions.PermissionTestMixin``
+    - ``projectroles.tests.test_permissions.ProjectPermissionTestBase``
+    - ``projectroles.tests.test_permissions.SiteAppPermissionTestBase``
+    - ``projectroles.tests.test_permissions_api.ProjectAPIPermissionTestBase``
+    - ``projectroles.tests.test_permissions_api.SODARAPIPermissionTestMixin``
+    - ``projectroles.tests.test_ui.UITestMixin``
+    - ``projectroles.tests.test_ui.SeleniumSetupMixin``
+    - ``projectroles.tests.test_ui.LiveUserMixin``
+    - ``projectroles.tests.test_views.api.APIViewTestBase``
+    - ``projectroles.tests.test_views.api.SerializedObjectMixin``
+    - ``projectroles.tests.test_views.api.SODARAPIViewTestMixin``
+``projectroles.tests.test_ui.UITestBase`` Moved and Renamed
+    Use ``projectroles.tests.base.ProjectUITestBase`` or ``SiteUITestBase``
+    depending on the type of app being tested.
+``projectroles.tests.test_views.ViewTestBase`` Moved and Renamed
+    Use ``projectroles.tests.base.UIViewTestBase``.
 
 Previously Deprecated Features Removed
 --------------------------------------

@@ -5,7 +5,7 @@ from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_permissions import SiteAppPermissionTestBase
+from projectroles.tests.base import SiteAppPermissionTestBase
 
 from tokens.models import SODARAuthToken
 from tokens.tests.test_models import SODARAuthTokenMixin
