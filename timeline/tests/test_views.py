@@ -1,11 +1,13 @@
 """View tests for the timeline app"""
 
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
 
+from timeline.models import TimelineEvent
 from timeline.tests.test_models import (
     TimelineEventTestBase,
     TimelineEventMixin,
@@ -15,6 +17,7 @@ from timeline.tests.test_models import (
 
 
 plugin_api = PluginAPI()
+User = get_user_model()
 
 
 # SODAR constants
@@ -29,7 +32,31 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 APP_NAME_PR = 'projectroles'
 
 
-class ViewTestBase(
+# Base Classes -----------------------------------------------------------------
+
+
+class TimelineTestMixin:
+    """General helpers for Timeline testing"""
+
+    def assert_tl_event_count(
+        self,
+        event_name: str,
+        count: int,
+        **kwargs,
+    ):
+        """
+        Assert count of TimelineEvent objects by given arguments.
+
+        :param event_name: Event name (string)
+        :param count: Expected count (int)
+        :param kwargs: Additional TimelineEvent kwargs to limit query
+        :raise: AssertionError if expected amount of events not found
+        """
+        q_kw = {'event_name': event_name, **kwargs}
+        self.assertEqual(TimelineEvent.objects.filter(**q_kw).count(), count)
+
+
+class TimelineViewTestBase(
     TimelineEventMixin, TimelineEventStatusMixin, TimelineEventTestBase
 ):
     """Base class for timeline view testing"""
@@ -68,7 +95,10 @@ class ViewTestBase(
         )
 
 
-class TestProjectTimelineView(ViewTestBase):
+# Tests ------------------------------------------------------------------------
+
+
+class TestProjectTimelineView(TimelineViewTestBase):
     """Tests for ProjectTimelineView"""
 
     def test_get(self):
@@ -96,7 +126,7 @@ class TestProjectTimelineView(ViewTestBase):
         self.assertEqual(response.status_code, 200)
 
 
-class TestProjectObjectTimelineView(ViewTestBase):
+class TestProjectObjectTimelineView(TimelineViewTestBase):
     """Tests for ProjectObjectTimelineView"""
 
     def setUp(self):
@@ -122,7 +152,7 @@ class TestProjectObjectTimelineView(ViewTestBase):
         self.assertEqual(response.status_code, 200)
 
 
-class TestSiteTimelineView(ViewTestBase):
+class TestSiteTimelineView(TimelineViewTestBase):
     """Tests for SiteTimelineView"""
 
     def setUp(self):
@@ -147,7 +177,7 @@ class TestSiteTimelineView(ViewTestBase):
         )
 
 
-class TestSiteObjectTimelineView(ViewTestBase):
+class TestSiteObjectTimelineView(TimelineViewTestBase):
     """Tests for SiteObjectTimelineView"""
 
     def setUp(self):
@@ -183,7 +213,7 @@ class TestSiteObjectTimelineView(ViewTestBase):
         )
 
 
-class TestAdminTimelineView(ViewTestBase):
+class TestAdminTimelineView(TimelineViewTestBase):
     """Tests for AdminTimelineView"""
 
     def setUp(self):

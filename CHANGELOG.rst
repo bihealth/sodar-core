@@ -17,6 +17,8 @@ Added
     - ``django-axes`` support for login security (#1750, #1814)
 - **Adminalerts**
     - ``ADMINALERTS_EMAIL_SENDING_DEFAULT`` Django setting (#1796)
+- **Appalerts**
+    - ``AppalertsTestMixin`` class and ``assert_app_alert_count()`` helper (#1243)
 - **Projectroles**
     - ``request_knox()`` test helper ``content_type`` arg (#1557)
     - ``get_user_links()`` optional ``method`` field (#1798)
@@ -34,6 +36,7 @@ Added
     - ``ProjectUITestBase`` and ``SiteUITestBase`` UI test base classes (#1460)
 - **Timeline**
     - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
+    - ``TimelineTestMixin`` class and ``assert_tl_event_count()`` helper (#1243)
 - **Tokens**
     - Tokens REST API v1.0 (#1773)
     - ``TokenCreateLoginAPIView`` REST API view (#1549, #1773, #1815)

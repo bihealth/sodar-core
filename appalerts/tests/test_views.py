@@ -7,6 +7,7 @@ from test_plus.test import TestCase
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 
+from appalerts.models import AppAlert
 from appalerts.tests.test_models import AppAlertMixin
 
 
@@ -17,7 +18,26 @@ app_settings = AppSettingAPI()
 APP_NAME_PR = 'projectroles'
 
 
-class ViewTestBase(AppAlertMixin, TestCase):
+# Base Classes -----------------------------------------------------------------
+
+
+class AppalertsTestMixin:
+    """General helpers for Appalerts testing"""
+
+    def assert_app_alert_count(self, alert_name: str, count: int, **kwargs):
+        """
+        Assert AppAlert object count.
+
+        :param alert_name: Alert name (string)
+        :param count: Expected count (int)
+        :param kwargs: Additional AppAlert kwargs to limit query
+        :raise: AssertionError if expected amount of alerts not found
+        """
+        q_kw = {'alert_name': alert_name, **kwargs}
+        self.assertEqual(AppAlert.objects.filter(**q_kw).count(), count)
+
+
+class AppalertsViewTestBase(AppAlertMixin, TestCase):
     """Base class for appalerts view testing"""
 
     def setUp(self):
@@ -36,7 +56,10 @@ class ViewTestBase(AppAlertMixin, TestCase):
         )
 
 
-class TestAppAlertListView(ViewTestBase):
+# Tests ------------------------------------------------------------------------
+
+
+class TestAppAlertListView(AppalertsViewTestBase):
     """Tests for AppAlertListView"""
 
     def setUp(self):
@@ -85,7 +108,7 @@ class TestAppAlertListView(ViewTestBase):
         self.assertEqual(response.context['read_only_disable'], True)
 
 
-class TestAppAlertRedirectView(ViewTestBase):
+class TestAppAlertRedirectView(AppalertsViewTestBase):
     """Tests for AppAlertLinkRedirectView"""
 
     def setUp(self):
@@ -124,7 +147,7 @@ class TestAppAlertRedirectView(ViewTestBase):
         self.assertEqual(self.alert.active, True)
 
 
-class TestAppAlertStatusAjaxView(ViewTestBase):
+class TestAppAlertStatusAjaxView(AppalertsViewTestBase):
     """Tests for AppAlertStatusAjaxView"""
 
     def test_get_user_with_alerts(self):
@@ -142,7 +165,7 @@ class TestAppAlertStatusAjaxView(ViewTestBase):
         self.assertEqual(response.data['alerts'], 0)
 
 
-class TestAppAlertDismissAjaxView(ViewTestBase):
+class TestAppAlertDismissAjaxView(AppalertsViewTestBase):
     """Tests for AppAlertDismissAjaxView"""
 
     def test_post_superuser(self):

@@ -25,6 +25,7 @@ Release Highlights
 - Add custom user model admin class
 - Add DataTables include templates
 - Add TimelineEventStatus in TimelineAPI.get_models() return data
+- Add AppAlert and TimelineEvent object test helpers
 - Add Python v3.12 and v3.13 support
 - Update userprofile user details layout
 - Update base test classes, deprecate old ones
