@@ -55,6 +55,7 @@ Changed
     - Upgrade to DataTables v2.3 (#1582, #1826, #1827)
     - Use ``zoneinfo`` instead of ``pytz`` (#1557)
     - Refactor ``UITestBase`` use (#1460)
+    - Update ``env.example`` (#1806)
 - **Projectroles**
     - Update logout links for ``POST`` method (#1557, #1798, #1807)
     - Use DRF API client in ``SODARAPIViewTestMixin`` (#1801)
