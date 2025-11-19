@@ -4,7 +4,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.tests.test_permissions import ProjectPermissionTestBase
+from projectroles.tests.base import ProjectPermissionTestBase
 
 from timeline.tests.test_models import (
     TimelineEventMixin,

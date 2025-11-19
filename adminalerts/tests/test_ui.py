@@ -7,20 +7,14 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 
 # Projectroles dependency
-from projectroles.tests.test_ui import UITestBase
+from projectroles.tests.base import SiteUITestBase
 
 from adminalerts.tests.test_models import AdminAlertMixin
 
 
-class AdminAlertUITestBase(AdminAlertMixin, UITestBase):
+class AdminAlertUITestBase(AdminAlertMixin, SiteUITestBase):
     def setUp(self):
         super().setUp()
-        # Create users
-        self.superuser = self.make_user('superuser', True)
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user', False)
         # Create alert
         self.alert = self.make_alert(
             message='alert',

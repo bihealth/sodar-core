@@ -11,7 +11,7 @@
 {% block css %}
   {{ block.super }}
   <!-- DataTables -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.css" />
+  {% include 'projectroles/_datatables_css.html' %}
 
   <style type="text/css">
     div#sodar-pr-role-list-input-group {
@@ -145,7 +145,7 @@
     window.roleListPagination = {{ role_pagination }};
   </script>
   <!-- DataTables -->
-  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
+  {% include 'projectroles/_datatables_js.html' %}
   <!-- Project list -->
   <script type="text/javascript" src="{% static 'projectroles/js/role_list.js' %}"></script>
 

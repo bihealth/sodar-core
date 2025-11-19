@@ -1,26 +1,20 @@
-<div class="pt-3 d-flex justify-content-center sodar-pr-pagination">
+<div class="pt-1 d-flex justify-content-center sodar-pr-pagination">
   <ul class="pagination {% if pg_small %}pagination-sm{% endif %}">
     {% if page_obj.has_previous %}
       <li class="page-item">
-        <a class="page-link" href="?page=1">
-          <i class="iconify" data-icon="mdi:arrow-left-circle-outline"></i> First
-        </a>
+        <a class="page-link" href="?page=1">&laquo; First</a>
       </li>
       <li class="page-item">
         <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-          <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Prev
+          &lsaquo; Prev
         </a>
       </li>
     {% else %}
       <li class="page-item disabled">
-        <a class="page-link">
-          <i class="iconify" data-icon="mdi:arrow-left-circle-outline"></i> First
-        </a>
+        <a class="page-link">&laquo; First</a>
       </li>
       <li class="page-item disabled">
-        <a class="page-link">
-          <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Prev
-        </a>
+        <a class="page-link">&lsaquo; Prev</a>
       </li>
     {% endif %}
     {% if page_obj.number > 6 %}
@@ -47,24 +41,20 @@
     {% if page_obj.has_next %}
       <li class="page-item">
         <a class="page-link" href="?page={{ page_obj.next_page_number }}">
-          Next <i class="iconify" data-icon="mdi:arrow-right-circle"></i>
+          Next &rsaquo;
         </a>
       </li>
       <li class="page-item">
         <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
-          Last <i class="iconify" data-icon="mdi:arrow-right-circle-outline"></i>
+          Last &raquo;
         </a>
       </li>
     {% else %}
       <li class="page-item disabled">
-        <a class="page-link">
-          Next <i class="iconify" data-icon="mdi:arrow-right-circle"></i>
-        </a>
+        <a class="page-link">Next &rsaquo;</a>
       </li>
       <li class="page-item disabled">
-        <a class="page-link">
-          Last <i class="iconify" data-icon="mdi:arrow-right-circle-outline"></i>
-        </a>
+        <a class="page-link">Last &raquo;</a>
       </li>
     {% endif %}
   </ul>

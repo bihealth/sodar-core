@@ -71,6 +71,16 @@ After successful installation, the link for "User Profile" should be available
 in the user dropdown menu in the top-right corner of the website UI after you
 have logged in.
 
+The user detail view displays user account details and additional emails, along
+with links to update user settings, add additional email addresses or update
+user details. The last option is only available for local Django user accounts.
+
+.. figure:: _static/app_userprofile/sodar_user_detail.png
+    :align: center
+    :scale: 60%
+
+    User details view
+
 
 User Settings
 =============

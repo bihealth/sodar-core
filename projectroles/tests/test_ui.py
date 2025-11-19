@@ -1,26 +1,16 @@
 """UI tests for the projectroles app"""
 
-import socket
 import time
 import uuid
 
-from typing import Optional, Union
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.auth import (
-    get_user_model,
-    SESSION_KEY,
-    BACKEND_SESSION_KEY,
-    HASH_SESSION_KEY,
-)
-from django.contrib.sessions.backends.db import SessionStore
-from django.db.models import QuerySet
-from django.test import LiveServerTestCase, override_settings
+from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -28,16 +18,16 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait, Select
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import (
-    Project,
-    SODAR_CONSTANTS,
-    CAT_DELIMITER,
-)
+from projectroles.models import Project, SODAR_CONSTANTS, CAT_DELIMITER
 from projectroles.plugins import PluginAPI
+from projectroles.tests.base import (
+    SeleniumSetupMixin as MovedSeleniumSetupMixin,
+    LiveUserMixin as MovedLiveUserMixin,
+    UITestMixin as MovedUITestMixin,
+    ProjectUITestBase,
+    TEST_BASE_CLASS_DEPRECATE_MSG,
+)
 from projectroles.tests.test_models import (
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
     ProjectInviteMixin,
     RemoteTargetMixin,
     RemoteSiteMixin,
@@ -52,10 +42,6 @@ User = get_user_model()
 
 
 # SODAR constants
-PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -72,12 +58,10 @@ PROJECT_LINK_IDS = [
     'sodar-pr-link-project-create',
     'sodar-pr-link-project-star',
 ]
-DEFAULT_WAIT_LOC = 'ID'
-PAGINATE_CLASS = 'dataTables_paginate'
+DT_PAGINATE_CLASS = 'dt-paging'
 HEAD_INCLUDE = '<meta name="keywords" content="SODAR Core">'
 REMOTE_SITE_NAME = 'Remote Site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
-REMOTE_SITE_DESC = 'New description'
 REMOTE_SITE_SECRET = build_secret()
 PROJECT_SELECT_CSS = 'div[id="div_id_type"] div select[id="id_type"]'
 PROJECT_SETTING_ID = 'div_id_settings.example_project_app.project_int_setting'
@@ -90,436 +74,55 @@ REMOTE_SITE_ID = f'id_remote_site.{REMOTE_SITE_UUID}'
 CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
 
 
-class SeleniumSetupMixin:
-    """Mixin for setting up selenium for a test class"""
+# TODO: Remove in v1.4 (see #1830)
+class SeleniumSetupMixin(MovedSeleniumSetupMixin):
+    """
+    Mixin for setting up selenium for a test class.
 
-    #: Selenium Chrome options from settings
-    chrome_options = getattr(
-        settings,
-        'PROJECTROLES_TEST_UI_CHROME_OPTIONS',
-        [
-            'headless=new',
-            'no-sandbox',  # For Gitlab-CI compatibility
-            'disable-dev-shm-usage',  # For testing stability
-        ],
-    )
-
-    #: Selenium window size from settings
-    window_size = getattr(
-        settings, 'PROJECTROLES_TEST_UI_WINDOW_SIZE', (1400, 1000)
-    )
-
-    #: UI test wait time from settings
-    wait_time = getattr(settings, 'PROJECTROLES_TEST_UI_WAIT_TIME', 30)
-
-    def set_up_selenium(self):
-        socket.setdefaulttimeout(60)  # To get around Selenium hangups
-        # Init Chrome
-        options = webdriver.ChromeOptions()
-        for arg in self.chrome_options:
-            options.add_argument(arg)
-        options.add_argument(
-            f'--window-size={self.window_size[0]},{self.window_size[1]}'
-        )
-        self.selenium = webdriver.Chrome(options=options)
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.x instead.
+    """
 
 
-class LiveUserMixin:
-    """Mixin for creating users to work with LiveServerTestCase"""
+# TODO: Remove in v1.4 (see #1830)
+class LiveUserMixin(MovedLiveUserMixin):
+    """
+    Mixin for creating users to work with LiveServerTestCase.
 
-    @classmethod
-    def make_user(cls, user_name: str, superuser: bool = False) -> User:
-        """Make user, superuser if superuser=True"""
-        kwargs = {
-            'username': user_name,
-            'password': 'password',
-            'email': f'{user_name}@example.com',
-            'is_active': True,
-        }
-        if superuser:
-            user = User.objects.create_superuser(**kwargs)
-        else:
-            user = User.objects.create_user(**kwargs)
-        user.save()
-        return user
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.x instead.
+    """
 
 
-class UITestMixin:
-    """Helper mixin for UI tests"""
+# TODO: Remove in v1.4 (see #1830)
+class UITestMixin(MovedUITestMixin):
+    """
+    Helper mixin for UI tests.
 
-    def build_selenium_url(self, url: str = '') -> str:
-        """Build absolute URL to work with Selenium"""
-        # NOTE: Chrome v77 refuses to accept cookies for "localhost" (see #337)
-        return '{}{}'.format(
-            self.live_server_url.replace('localhost', '127.0.0.1'), url
-        )
-
-    def login_and_redirect(
-        self,
-        user: User,
-        url: str,
-        wait_elem: Optional[str] = None,
-        wait_loc: str = DEFAULT_WAIT_LOC,
-    ):
-        """
-        Login with Selenium by setting a cookie, wait for redirect to given URL.
-
-        If PROJECTROLES_TEST_UI_LEGACY_LOGIN=True, use legacy UI login method.
-
-        :param user: User object
-        :param url: URL to redirect to (string)
-        :param wait_elem: Wait for existence of an element (string, optional)
-        :param wait_loc: Locator of optional wait element (string, corresponds
-                         to selenium "By" class members)
-        """
-        # Legacy login mode
-        if getattr(settings, 'PROJECTROLES_TEST_UI_LEGACY_LOGIN', False):
-            return self.login_and_redirect_with_ui(
-                user, url, wait_elem, wait_loc
-            )
-        # Cookie login mode
-        self.selenium.get(self.build_selenium_url(reverse('login')))
-        # Wait for page load to prevent RemoteDisconnected
-        WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located((By.ID, 'sodar-content-container'))
-        )
-
-        session = SessionStore()
-        session[SESSION_KEY] = user.id
-        session[BACKEND_SESSION_KEY] = settings.AUTHENTICATION_BACKENDS[1]
-        session[HASH_SESSION_KEY] = user.get_session_auth_hash()
-        session.save()
-        cookie = {
-            'name': settings.SESSION_COOKIE_NAME,
-            'value': session.session_key,
-            'path': '/',
-            'domain': self.build_selenium_url().split('//')[1].split(':')[0],
-        }
-        self.selenium.add_cookie(cookie)
-        self.selenium.get(self.build_selenium_url(url))
-
-        # Wait for redirect
-        WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located(
-                (By.ID, 'sodar-navbar-user-dropdown')
-            )
-        )
-        # Wait for optional element
-        if wait_elem:
-            WebDriverWait(self.selenium, self.wait_time).until(
-                ec.presence_of_element_located(
-                    (getattr(By, wait_loc), wait_elem)
-                )
-            )
-
-    # NOTE: Used if PROJECTROLES_TEST_UI_LEGACY_LOGIN is set True
-    def login_and_redirect_with_ui(
-        self,
-        user: User,
-        url: str,
-        wait_elem: Optional[str] = None,
-        wait_loc: str = DEFAULT_WAIT_LOC,
-    ):
-        """
-        Login with Selenium and wait for redirect to given URL.
-
-        :param user: User object
-        :param url: URL to redirect to (string)
-        :param wait_elem: Wait for existence of an element (string, optional)
-        :param wait_loc: Locator of optional wait element (string, corresponds
-                         to selenium "By" class members)
-        """
-        self.selenium.get(self.build_selenium_url('/'))
-
-        # Logout (if logged in)
-        try:
-            user_button = self.selenium.find_element(
-                By.ID, 'sodar-navbar-user-dropdown'
-            )
-            user_button.click()
-            # Wait for element to be visible
-            WebDriverWait(self.selenium, self.wait_time).until(
-                ec.presence_of_element_located(
-                    (By.ID, 'sodar-navbar-user-legend')
-                )
-            )
-            try:
-                signout_button = self.selenium.find_element(
-                    By.ID, 'sodar-navbar-link-logout'
-                )
-                signout_button.click()
-                # Wait for redirect
-                WebDriverWait(self.selenium, self.wait_time).until(
-                    ec.presence_of_element_located((By.ID, 'sodar-form-login'))
-                )
-            except NoSuchElementException:
-                pass
-        except NoSuchElementException:
-            pass
-
-        # Login
-        self.selenium.get(self.build_selenium_url(url))
-        # Submit user data into form
-        field_user = self.selenium.find_element(By.ID, 'sodar-login-username')
-        # field_user.send_keys(user.username)
-        field_user.send_keys(user.username)
-        field_pass = self.selenium.find_element(By.ID, 'sodar-login-password')
-        field_pass.send_keys('password')
-        self.selenium.find_element(By.ID, 'sodar-login-submit').click()
-        # Wait for redirect
-        WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located(
-                (By.ID, 'sodar-navbar-user-dropdown')
-            )
-        )
-        # Wait for optional element
-        if wait_elem:
-            WebDriverWait(self.selenium, self.wait_time).until(
-                ec.presence_of_element_located(
-                    (getattr(By, wait_loc), wait_elem)
-                )
-            )
-
-    def assert_element_exists(
-        self,
-        users: Union[list[User], QuerySet[User]],
-        url: str,
-        element_id: str,
-        exists: bool,
-        wait_elem: Optional[str] = None,
-        wait_loc: str = DEFAULT_WAIT_LOC,
-    ):
-        """
-        Assert existence of element on webpage based on logged user.
-
-        :param users: User objects to test (list)
-        :param url: URL to test (string)
-        :param element_id: ID of element (string)
-        :param exists: Whether element should or should not exist (boolean)
-        :param wait_elem: Wait for existence of an element (string, optional)
-        :param wait_loc: Locator of optional wait element (string, corresponds
-                         to selenium "By" class members)
-        """
-        for user in users:
-            self.login_and_redirect(user, url, wait_elem, wait_loc)
-            if exists:
-                self.assertIsNotNone(
-                    self.selenium.find_element(By.ID, element_id)
-                )
-            else:
-                with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element(By.ID, element_id)
-
-    def assert_element_count(
-        self,
-        expected: list[tuple],
-        url: str,
-        search_string: str,
-        attribute: str = 'id',
-        path: str = '//',
-        exact: bool = False,
-        wait_elem: Optional[str] = None,
-        wait_loc: str = DEFAULT_WAIT_LOC,
-    ):
-        """
-        Assert count of elements containing specified id or class based on
-        the logged user.
-
-        :param expected: List of tuples with user (string), count (int)
-        :param url: URL to test (string)
-        :param search_string: ID substring of element (string)
-        :param attribute: Attribute to search for (string, default=id)
-        :param path: Path for searching (string, default="//")
-        :param exact: Exact match if True (boolean, default=False)
-        :param wait_elem: Wait for existence of an element (string, optional)
-        :param wait_loc: Locator of optional wait element (string, corresponds
-                         to selenium "By" class members)
-        """
-        for e in expected:
-            expected_user = e[0]  # Just to clarify code
-            self.login_and_redirect(expected_user, url, wait_elem, wait_loc)
-            xpath = '{}*[@{}="{}"]' if exact else '{}*[contains(@{}, "{}")]'
-            expected_count = e[1]
-            if expected_count > 0:
-                self.assertEqual(
-                    len(
-                        self.selenium.find_elements(
-                            By.XPATH,
-                            xpath.format(path, attribute, search_string),
-                        )
-                    ),
-                    expected_count,
-                    f'expected_user={expected_user}',
-                )
-            else:
-                with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element(
-                        By.XPATH,
-                        xpath.format(path, attribute, search_string),
-                    )
-
-    def assert_element_set(
-        self,
-        expected: list[tuple],
-        all_elements: list[str],
-        url: str,
-        wait_elem: Optional[str] = None,
-        wait_loc: str = DEFAULT_WAIT_LOC,
-    ):
-        """
-        Assert existence of expected elements webpage based on logged user, as
-        well as non-existence non-expected elements.
-
-        :param expected: List of tuples with user (string), elements (list)
-        :param all_elements: All possible elements in the set (list of strings)
-        :param url: URL to test (string)
-        :param wait_elem: Wait for existence of an element (string, optional)
-        :param wait_loc: Locator of optional wait element (string, corresponds
-                         to selenium "By" class members)
-        """
-        for e in expected:
-            user = e[0]
-            elements = e[1]
-            self.login_and_redirect(user, url, wait_elem, wait_loc)
-            for element in elements:
-                self.assertIsNotNone(self.selenium.find_element(By.ID, element))
-            not_expected = list(set(all_elements) ^ set(elements))
-            for n in not_expected:
-                with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element(By.ID, n)
-
-    def assert_element_active(
-        self,
-        user: User,
-        element_id: str,
-        all_elements: list[str],
-        url: str,
-        wait_elem: Optional[str] = None,
-        wait_loc: str = DEFAULT_WAIT_LOC,
-    ):
-        """
-        Assert the "active" status of an element based on logged user as well
-        as unset status of other elements.
-
-        :param user: User for logging in
-        :param element_id: ID of element to test (string)
-        :param all_elements: All possible elements in the set (list of strings)
-        :param url: URL to test (string)
-        :param wait_elem: Wait for existence of an element (string, optional)
-        :param wait_loc: Locator of optional wait element (string, corresponds
-                         to selenium "By" class members)
-        """
-        self.login_and_redirect(user, url, wait_elem, wait_loc)
-        # Wait for element to be present (sometimes this is too slow)
-        WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located((By.ID, element_id))
-        )
-
-        element = self.selenium.find_element(By.ID, element_id)
-        self.assertIsNotNone(element)
-        self.assertIn('active', element.get_attribute('class'))
-        not_expected = [e for e in all_elements if e != element_id]
-        for n in not_expected:
-            element = self.selenium.find_element(By.ID, n)
-            self.assertIsNotNone(element)
-            self.assertNotIn('active', element.get_attribute('class'))
-
-    def assert_displayed(self, by: str, value: str, expected: bool):
-        """
-        Assert element is or isn't displayed. Assumes user to be logged in.
-
-        :param by: Selenium By selector
-        :param value: Value for selecting element
-        :param expected: Boolean
-        """
-        elem = self.selenium.find_element(by, value)
-        self.assertEqual(elem.is_displayed(), expected)
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.x instead.
+    """
 
 
-class UITestBase(
-    SeleniumSetupMixin,
-    LiveUserMixin,
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
-    UITestMixin,
-    LiveServerTestCase,
-):
-    """Base class for UI tests"""
+# TODO: Remove in v1.4 (see #1830)
+class UITestBase(ProjectUITestBase):
+    """
+    Base class for UI tests.
+
+    DEPRECATED: To be removed in v1.4. Use ProjectUITestBase or SiteUITestBase
+    from projectroles.tests.base insteaad.
+    """
 
     def setUp(self):
-        # Set up Selenium
-        self.set_up_selenium()
-        # Init roles
-        self.init_roles()
-
-        # Init users
-        self.superuser = self.make_user('admin', True)
-        self.user_owner_cat = self.make_user('user_owner_cat')
-        self.user_delegate_cat = self.make_user('user_delegate_cat')
-        self.user_contributor_cat = self.make_user('user_contributor_cat')
-        self.user_guest_cat = self.make_user('user_guest_cat')
-        self.user_viewer_cat = self.make_user('user_viewer_cat')
-        self.user_finder_cat = self.make_user('user_finder_cat')
-        self.user_owner = self.make_user('user_owner')
-        self.user_delegate = self.make_user('user_delegate')
-        self.user_contributor = self.make_user('user_contributor')
-        self.user_guest = self.make_user('user_guest')
-        self.user_viewer = self.make_user('user_viewer')
-        self.user_no_roles = self.make_user('user_no_roles')
-
-        # Init category and project
-        self.category = self.make_project(
-            title='TestCategory', type=PROJECT_TYPE_CATEGORY, parent=None
-        )
-        self.project = self.make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=self.category,
+        super().setUp()
+        print(
+            TEST_BASE_CLASS_DEPRECATE_MSG.format(
+                old='UITestBase', new='ProjectUITestBase or SiteUITestBase'
+            )
         )
 
-        # Init role assignments
-        self.owner_as_cat = self.make_assignment(
-            self.category, self.user_owner_cat, self.role_owner
-        )
-        self.delegate_as_cat = self.make_assignment(
-            self.category, self.user_delegate_cat, self.role_delegate
-        )
-        self.contributor_as_cat = self.make_assignment(
-            self.category, self.user_contributor_cat, self.role_contributor
-        )
-        self.guest_as_cat = self.make_assignment(
-            self.category, self.user_guest_cat, self.role_guest
-        )
-        self.viewer_as_cat = self.make_assignment(
-            self.category, self.user_viewer_cat, self.role_viewer
-        )
-        self.finder_as_cat = self.make_assignment(
-            self.category, self.user_finder_cat, self.role_finder
-        )
-        self.owner_as = self.make_assignment(
-            self.project, self.user_owner, self.role_owner
-        )
-        self.delegate_as = self.make_assignment(
-            self.project, self.user_delegate, self.role_delegate
-        )
-        self.contributor_as = self.make_assignment(
-            self.project, self.user_contributor, self.role_contributor
-        )
-        self.guest_as = self.make_assignment(
-            self.project, self.user_guest, self.role_guest
-        )
-        self.viewer_as = self.make_assignment(
-            self.category, self.user_viewer, self.role_viewer
-        )
 
-    def tearDown(self):
-        # Shut down Selenium
-        self.selenium.quit()
-        super().tearDown()
-
-
-class TestBaseTemplate(UITestBase):
+class TestBaseTemplate(ProjectUITestBase):
     """Tests for the base project template"""
 
     def test_admin_link(self):
@@ -564,7 +167,7 @@ class TestBaseTemplate(UITestBase):
         self.assertEqual(modal.is_displayed(), True)
 
 
-class TestHomeView(UITestBase):
+class TestHomeView(ProjectUITestBase):
     """Tests for the home view and project list UI"""
 
     #: Home view URL
@@ -1086,7 +689,7 @@ class TestHomeView(UITestBase):
     def test_project_list_paginate_disabled(self):
         """Test project list pagination with pagination disabled"""
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
-        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(elem.is_displayed(), False)
 
     def test_project_list_paginate_enabled(self):
@@ -1098,7 +701,7 @@ class TestHomeView(UITestBase):
             )
             self.make_assignment(c, self.user_owner, self.role_owner)
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
-        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(elem.is_displayed(), True)
 
     def test_project_list_paginate_update(self):
@@ -1116,7 +719,7 @@ class TestHomeView(UITestBase):
             self._get_project_row(self.project)
 
         # Navigate to page 2
-        btn = self.selenium.find_element(By.XPATH, '//a[@data-dt-idx="3"]')
+        btn = self.selenium.find_element(By.XPATH, '//a[@data-dt-idx="1"]')
         btn.click()
         WebDriverWait(self.selenium, 15).until(
             ec.presence_of_element_located(
@@ -1199,7 +802,7 @@ class TestHomeView(UITestBase):
             By.CLASS_NAME, 'sodar-pr-project-list-item'
         )
         self.assertEqual(len(project_elems), 11)
-        page_elem = self.selenium.find_element(By.CLASS_NAME, PAGINATE_CLASS)
+        page_elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(page_elem.get_attribute('style'), 'display: none;')
 
         elem = Select(
@@ -1209,7 +812,7 @@ class TestHomeView(UITestBase):
         )
         elem.select_by_value('10')
         WebDriverWait(self.selenium, 15).until(
-            ec.visibility_of_element_located((By.CLASS_NAME, PAGINATE_CLASS))
+            ec.visibility_of_element_located((By.CLASS_NAME, DT_PAGINATE_CLASS))
         )
         project_elems = self.selenium.find_elements(
             By.CLASS_NAME, 'sodar-pr-project-list-item'
@@ -1300,7 +903,9 @@ class TestHomeView(UITestBase):
         self.assertIsNotNone(elem.find_element(By.TAG_NAME, 'a'))
 
 
-class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
+class TestProjectSidebar(
+    ProjectInviteMixin, RemoteTargetMixin, ProjectUITestBase
+):
     """Tests for the project sidebar"""
 
     def setUp(self):
@@ -1718,7 +1323,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, UITestBase):
         )
 
 
-class TestProjectSearchResultsView(UITestBase):
+class TestProjectSearchResultsView(ProjectUITestBase):
     """Tests for ProjectSearchResultsView UI"""
 
     def setUp(self):
@@ -1830,7 +1435,9 @@ class TestProjectSearchResultsView(UITestBase):
         )
 
 
-class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
+class TestProjectDetailView(
+    RemoteSiteMixin, RemoteProjectMixin, ProjectUITestBase
+):
     """Tests for ProjectDetailView UI"""
 
     @classmethod
@@ -2540,7 +2147,7 @@ class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         )
 
 
-class TestProjectCreateView(RemoteSiteMixin, UITestBase):
+class TestProjectCreateView(RemoteSiteMixin, ProjectUITestBase):
     """Tests for ProjectCreateView UI"""
 
     def setUp(self):
@@ -2663,7 +2270,9 @@ class TestProjectCreateView(RemoteSiteMixin, UITestBase):
         self.assertTrue(elem.is_enabled())
 
 
-class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
+class TestProjectUpdateView(
+    RemoteSiteMixin, RemoteProjectMixin, ProjectUITestBase
+):
     """Tests for ProjectUpdateView UI"""
 
     def setUp(self):
@@ -2838,30 +2447,30 @@ class TestProjectUpdateView(RemoteSiteMixin, RemoteProjectMixin, UITestBase):
         self.assertEqual(elem.is_selected(), True)
 
 
-class TestProjectArchiveView(UITestBase):
+class TestProjectArchiveView(ProjectUITestBase):
     """Tests for ProjectArchiveView UI"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'projectroles:archive', kwargs={'project': self.project.sodar_uuid}
+        )
 
     def test_archive_button(self):
         """Test rendering of archive button"""
-        url = reverse(
-            'projectroles:archive', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-btn-confirm-archive', True
+            [self.superuser], self.url, 'sodar-pr-btn-confirm-archive', True
         )
 
     def test_archive_button_archived(self):
         """Test rendering of archive button with archived project"""
         self.project.set_archive()
-        url = reverse(
-            'projectroles:archive', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-btn-confirm-unarchive', True
+            [self.superuser], self.url, 'sodar-pr-btn-confirm-unarchive', True
         )
 
 
-class TestProjectDeleteView(UITestBase):
+class TestProjectDeleteView(ProjectUITestBase):
     """Tests for ProjectDeleteView UI"""
 
     def test_render(self):
@@ -2878,7 +2487,7 @@ class TestProjectDeleteView(UITestBase):
         )
 
 
-class TestProjectRoleView(RemoteTargetMixin, UITestBase):
+class TestProjectRoleView(RemoteTargetMixin, ProjectUITestBase):
     """Tests for ProjectRoleView UI"""
 
     def _get_role_dropdown(self, user: User, owner: bool = False) -> WebElement:
@@ -3224,7 +2833,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             By.CLASS_NAME, 'sodar-pr-role-list-row'
         )
         self.assertEqual(len(elems), 10)
-        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(elem.is_displayed(), False)
 
     @override_settings(PROJECTROLES_ROLE_PAGINATION=2)
@@ -3235,7 +2844,7 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
             By.CLASS_NAME, 'sodar-pr-role-list-row'
         )
         self.assertEqual(len(elems), 2)
-        elem = self.selenium.find_element(By.CLASS_NAME, 'dataTables_paginate')
+        elem = self.selenium.find_element(By.CLASS_NAME, DT_PAGINATE_CLASS)
         self.assertEqual(elem.is_displayed(), True)
 
     def test_filter(self):
@@ -3253,17 +2862,19 @@ class TestProjectRoleView(RemoteTargetMixin, UITestBase):
         self.assertEqual(len(elems), 2)  # Category and project owner
 
 
-class TestRoleAssignmentCreateView(UITestBase):
+class TestRoleAssignmentCreateView(ProjectUITestBase):
     """Tests for RoleAssignmentCreateView UI"""
 
-    def test_role_preview(self):
-        """Test visibility of role preview popup"""
-        url = reverse(
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
             'projectroles:role_create',
             kwargs={'project': self.project.sodar_uuid},
         )
-        self.login_and_redirect(self.user_owner, url)
 
+    def test_role_preview(self):
+        """Test visibility of role preview popup"""
+        self.login_and_redirect(self.user_owner, self.url)
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-email-preview-link'
         )
@@ -3277,12 +2888,7 @@ class TestRoleAssignmentCreateView(UITestBase):
 
     def test_widget_user_options(self):
         """Test visibility of user options given by the autocomplete widget"""
-        url = reverse(
-            'projectroles:role_create',
-            kwargs={'project': self.project.sodar_uuid},
-        )
-        self.login_and_redirect(self.user_owner, url)
-
+        self.login_and_redirect(self.user_owner, self.url)
         widget = self.selenium.find_element(
             By.CLASS_NAME, 'select2-container--default'
         )
@@ -3290,7 +2896,6 @@ class TestRoleAssignmentCreateView(UITestBase):
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, 'select2-id_user-results'))
         )
-
         # Assert that options are displayed
         self.assertIsNotNone(
             self.selenium.find_element(By.CLASS_NAME, 'select2-results__option')
@@ -3305,7 +2910,7 @@ class TestRoleAssignmentCreateView(UITestBase):
         )
 
 
-class TestRoleAssignmentDeleteView(UITestBase):
+class TestRoleAssignmentDeleteView(ProjectUITestBase):
     """Tests for RoleAssignmentDeleteView UI"""
 
     def test_render(self):
@@ -3384,8 +2989,14 @@ class TestRoleAssignmentDeleteView(UITestBase):
             )
 
 
-class TestProjectInviteView(ProjectInviteMixin, UITestBase):
+class TestProjectInviteView(ProjectInviteMixin, ProjectUITestBase):
     """Tests for ProjectInviteView UI"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
+        )
 
     def test_invite_ops(self):
         """Test visibility of invite operations dropdown"""
@@ -3396,11 +3007,8 @@ class TestProjectInviteView(ProjectInviteMixin, UITestBase):
             self.user_owner,
             self.user_delegate,
         ]
-        url = reverse(
-            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-role-ops-dropdown', True
+            expected_true, self.url, 'sodar-pr-role-ops-dropdown', True
         )
 
     def test_invite_ops_invite(self):
@@ -3412,11 +3020,8 @@ class TestProjectInviteView(ProjectInviteMixin, UITestBase):
             self.user_owner,
             self.user_delegate,
         ]
-        url = reverse(
-            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-role-ops-invite', True
+            expected_true, self.url, 'sodar-pr-role-ops-invite', True
         )
 
     def test_invite_ops_create(self):
@@ -3428,11 +3033,8 @@ class TestProjectInviteView(ProjectInviteMixin, UITestBase):
             self.user_owner,
             self.user_delegate,
         ]
-        url = reverse(
-            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-role-ops-create', True
+            expected_true, self.url, 'sodar-pr-role-ops-create', True
         )
 
     def test_invite_dropdown(self):
@@ -3451,15 +3053,12 @@ class TestProjectInviteView(ProjectInviteMixin, UITestBase):
             (self.user_owner, 1),
             (self.user_delegate, 1),
         ]
-        url = reverse(
-            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_count(
-            expected, url, 'sodar-pr-invite-dropdown', attribute='class'
+            expected, self.url, 'sodar-pr-invite-dropdown', attribute='class'
         )
 
 
-class TestProjectInviteCreateView(UITestBase):
+class TestProjectInviteCreateView(ProjectUITestBase):
     """Tests for ProjectInviteCreateView UI"""
 
     def test_invite_preview(self):
@@ -3482,7 +3081,7 @@ class TestProjectInviteCreateView(UITestBase):
         )
 
 
-class TestProjectInviteProcessLocalView(ProjectInviteMixin, UITestBase):
+class TestProjectInviteProcessLocalView(ProjectInviteMixin, ProjectUITestBase):
     """Tests for ProjectInviteProcessLocalView UI"""
 
     def setUp(self):
@@ -3525,8 +3124,12 @@ class TestProjectInviteProcessLocalView(ProjectInviteMixin, UITestBase):
         self.assertEqual(elem.text, 'Create')
 
 
-class TestRemoteSiteListView(RemoteSiteMixin, UITestBase):
+class TestRemoteSiteListView(RemoteSiteMixin, ProjectUITestBase):
     """Tests for RemoteSiteListView UI"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:remote_sites')
 
     def test_source_user_display(self):
         """Test site list user display elements on source site"""
@@ -3538,8 +3141,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, UITestBase):
             secret=REMOTE_SITE_SECRET,
             user_display=True,
         )
-        url = reverse('projectroles:remote_sites')
-        self.login_and_redirect(self.superuser, url)
+        self.login_and_redirect(self.superuser, self.url)
 
         # Check Visible to User column visibility
         remote_site_table = self.selenium.find_element(
@@ -3575,10 +3177,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, UITestBase):
             secret=REMOTE_SITE_SECRET,
             user_display=True,
         )
-        url = reverse('projectroles:remote_sites')
-        self.login_and_redirect(self.superuser, url)
-
-        # Check Visible to User column visibility
+        self.login_and_redirect(self.superuser, self.url)
         remote_site_table = self.selenium.find_element(
             By.ID, 'sodar-pr-remote-site-table'
         )
@@ -3592,19 +3191,21 @@ class TestRemoteSiteListView(RemoteSiteMixin, UITestBase):
             )
 
 
-class TestRemoteSiteCreateView(RemoteSiteMixin, UITestBase):
+class TestRemoteSiteCreateView(RemoteSiteMixin, ProjectUITestBase):
     """Tests for RemoteSiteCreateView UI"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:remote_site_create')
 
     def test_source_user_toggle(self):
         """Test site create form user display toggle on source site"""
-        url = reverse('projectroles:remote_site_create')
-        self.login_and_redirect(self.superuser, url)
+        self.login_and_redirect(self.superuser, self.url)
         element = self.selenium.find_element(By.ID, 'div_id_user_display')
         self.assertIsNotNone(element)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_target_user_toggle(self):
         """Test site create form user display toggle on target site"""
-        url = reverse('projectroles:remote_site_create')
-        self.login_and_redirect(self.superuser, url)
+        self.login_and_redirect(self.superuser, self.url)
         self.assert_displayed(By.ID, 'id_user_display', False)

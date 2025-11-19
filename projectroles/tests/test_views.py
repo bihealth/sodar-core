@@ -58,9 +58,14 @@ from projectroles.models import (
 )
 from projectroles.plugins import PluginAppSettingDef, PluginAPI
 from projectroles.utils import build_secret, get_display_name
+from projectroles.tests.base import (
+    UIViewTestBase,
+    AUTHENTICATION_BACKENDS_AXES,
+    AXES_LOCK_MSG,
+    TEST_BASE_CLASS_DEPRECATE_MSG,
+)
 from projectroles.tests.test_models import (
     ProjectMixin,
-    RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
     RemoteSiteMixin,
@@ -72,7 +77,6 @@ from projectroles.views import (
     ProjectInviteProcessMixin,
     FORM_INVALID_MSG,
     PROJECT_WELCOME_MSG,
-    USER_PROFILE_LDAP_MSG,
     PROJECT_BLOCK_MSG,
     ROLE_LEAVE_INHERIT_MSG,
     ROLE_LEAVE_OWNER_MSG,
@@ -102,10 +106,6 @@ User = get_user_model()
 
 
 # SODAR constants
-PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
@@ -123,15 +123,12 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
 APP_SETTING_SCOPE_SITE = SODAR_CONSTANTS['APP_SETTING_SCOPE_SITE']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
-APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
-APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_NAME = 'projectroles'
 APP_NAME_EX = 'example_project_app'
 INVITE_EMAIL = 'test@example.com'
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
-TASKFLOW_SECRET_INVALID = 'Not a valid secret'
 REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_DESC = 'description'
@@ -150,13 +147,15 @@ LDAP_DOMAIN = 'EXAMPLE'
 NEW_CAT_TITLE = 'NewCategory'
 PROJECT_TITLE = 'TestProject'
 
+LOGIN_PASSWORD = 'loginpassword'
+INVALID_PASSWORD = 'INVALID_PASSWORD'
+
 HIDDEN_PROJECT_SETTINGS = [
     'settings.example_project_app.project_hidden_setting',
     'settings.example_project_app.project_hidden_json_setting',
 ]
 UPDATED_HIDDEN_SETTING = 'Updated value'
 UPDATED_HIDDEN_JSON_SETTING = {'updated': 'value'}
-
 APP_SETTINGS_TEST = [
     PluginAppSettingDef(
         name='test_setting',
@@ -202,7 +201,6 @@ APP_SETTINGS_TEST = [
         global_edit=True,
     ),
 ]
-
 EX_PROJECT_UI_SETTINGS = [
     'project_str_setting',
     'project_int_setting',
@@ -215,23 +213,27 @@ EX_PROJECT_UI_SETTINGS = [
 ]
 
 
-class ViewTestBase(RoleMixin, TestCase):
-    """Base class for view testing"""
+class ViewTestBase(UIViewTestBase):
+    """
+    Base class for view testing.
+
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.UIViewTestBase instead.
+    """
 
     def setUp(self):
-        # Init roles
-        self.init_roles()
-        # Init superuser
-        self.user = self.make_user('superuser')
-        self.user.is_staff = True
-        self.user.is_superuser = True
-        self.user.save()
+        super().setUp()
+        print(
+            TEST_BASE_CLASS_DEPRECATE_MSG.format(
+                old='ViewTestBase', new='UIViewTestBase'
+            )
+        )
 
 
 # General view tests -----------------------------------------------------------
 
 
-class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
+class TestHomeView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
     """Tests for HomeView"""
 
     def setUp(self):
@@ -340,12 +342,57 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
             self.assertEqual(response.context['sidebar_padding'], 4)
 
 
+@override_settings(
+    AUTHENTICATION_BACKENDS=AUTHENTICATION_BACKENDS_AXES, AXES_ENABLED=True
+)
+class TestLoginViewAxes(UIViewTestBase):
+    """Tests for LoginView with django-axes"""
+
+    def setUp(self):
+        super().setUp()
+        self.user_login = self.make_user('user_login', LOGIN_PASSWORD)
+        self.url = reverse('login')
+
+    def test_post(self):
+        """Test LoginView POST with correct credentials"""
+        post_data = {
+            'username': self.user_login.username,
+            'password': LOGIN_PASSWORD,
+        }
+        response = self.client.post(self.url, post_data, follow=True)
+        self.assertEqual(response.context['user'].is_authenticated, True)
+
+    def test_post_invalid(self):
+        """Test POST with invalid credentials"""
+        post_data = {
+            'username': self.user_login.username,
+            'password': INVALID_PASSWORD,
+        }
+        response = self.client.post(self.url, post_data, follow=True)
+        self.assertEqual(response.context['user'].is_authenticated, False)
+
+    def test_post_lock(self):
+        """Test POST with account locking"""
+        post_data = {
+            'username': self.user_login.username,
+            'password': INVALID_PASSWORD,
+        }
+        for i in range(0, settings.AXES_FAILURE_LIMIT - 1):
+            response = self.client.post(self.url, post_data, follow=True)
+            self.assertEqual(response.context['user'].is_authenticated, False)
+            self.assertNotContains(response, AXES_LOCK_MSG, status_code=200)
+        # User should now be locked, attempt login one more time
+        response = self.client.post(self.url, post_data, follow=True)
+        self.assertEqual(response.context['user'].is_authenticated, False)
+        self.assertContains(response, AXES_LOCK_MSG, status_code=429)
+
+
 class TestProjectSearchResultsView(
     ProjectMixin,
     RoleAssignmentMixin,
-    ViewTestBase,
     TimelineEventMixin,
     TimelineEventStatusMixin,
+    UIViewTestBase,
 ):
     """Tests for ProjectSearchResultsView"""
 
@@ -553,7 +600,7 @@ class TestProjectSearchResultsView(
 
 
 class TestProjectAdvancedSearchView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for ProjectAdvancedSearchView"""
 
@@ -571,7 +618,7 @@ class TestProjectAdvancedSearchView(
             self.assertRedirects(response, reverse('home'))
 
 
-class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
+class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
     """Tests for ProjectDetailView"""
 
     def setUp(self):
@@ -760,7 +807,7 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
 
 class TestProjectCreateView(
-    ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, UIViewTestBase
 ):
     """Tests for ProjectCreateView"""
 
@@ -998,7 +1045,6 @@ class TestProjectCreateView(
             'parent': None,
             'description': 'description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': NEW_CAT_TITLE,
             'has_public_children': False,
@@ -1058,7 +1104,6 @@ class TestProjectCreateView(
             'parent': self.category.pk,
             'description': 'description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': 'TestCategory / TestProject',
             'has_public_children': False,
@@ -1435,7 +1480,7 @@ class TestProjectCreateView(
 
 
 class TestProjectUpdateView(
-    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, UIViewTestBase
 ):
     """Tests for ProjectUpdateView"""
 
@@ -1780,7 +1825,6 @@ class TestProjectUpdateView(
             'parent': category_new.pk,
             'description': 'updated description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': category_new.title + CAT_DELIMITER + 'updated title',
             'has_public_children': False,
@@ -1870,7 +1914,6 @@ class TestProjectUpdateView(
             'parent': category_new.pk,
             'description': 'updated description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': category_new.title + CAT_DELIMITER + 'updated title',
             'has_public_children': False,
@@ -1929,7 +1972,6 @@ class TestProjectUpdateView(
     def test_post_project_public_access(self):
         """Test POST with public access"""
         self.assertEqual(self.project.public_access, None)
-        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
         self.assertEqual(self.category.has_public_children, False)
 
         self.post_data['public_access'] = self.role_guest.pk
@@ -1942,14 +1984,12 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         self.category.refresh_from_db()
         self.assertEqual(self.project.public_access, self.role_guest)
-        self.assertEqual(self.project.public_guest_access, True)  # DEPRECATED
         # Assert the parent category has_public_children is set true
         self.assertEqual(self.category.has_public_children, True)
 
     def test_post_project_public_access_viewer(self):
         """Test POST with public access and viewer role"""
         self.assertEqual(self.project.public_access, None)
-        self.assertEqual(self.project.public_guest_access, False)  # DEPRECATED
         self.assertEqual(self.category.has_public_children, False)
 
         self.post_data['public_access'] = self.role_viewer.pk
@@ -1962,7 +2002,6 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         self.category.refresh_from_db()
         self.assertEqual(self.project.public_access, self.role_viewer)
-        self.assertEqual(self.project.public_guest_access, True)  # DEPRECATED
         self.assertEqual(self.category.has_public_children, True)
 
     def test_post_project_public_stats(self):
@@ -1996,7 +2035,6 @@ class TestProjectUpdateView(
             'parent': None,
             'description': 'updated description',
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': 'updated title',
             'has_public_children': False,
@@ -2315,7 +2353,7 @@ class TestProjectUpdateView(
 
 
 class TestProjectForm(
-    AppSettingMixin, ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    AppSettingMixin, ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for ProjectForm"""
 
@@ -2534,7 +2572,7 @@ class TestProjectFormTarget(
     AppSettingMixin,
     ProjectMixin,
     RoleAssignmentMixin,
-    ViewTestBase,
+    UIViewTestBase,
 ):
     """Tests for project create/update form on a target site"""
 
@@ -2719,7 +2757,7 @@ class TestProjectFormTargetLocal(
     AppSettingMixin,
     ProjectMixin,
     RoleAssignmentMixin,
-    ViewTestBase,
+    UIViewTestBase,
 ):
     """
     Tests for project create/update form on target site with local settings
@@ -2914,7 +2952,7 @@ class TestProjectFormTargetLocal(
 
 
 class TestProjectArchiveView(
-    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, UIViewTestBase
 ):
     """Tests for ProjectArchiveView"""
 
@@ -3140,7 +3178,7 @@ class TestProjectArchiveView(
 
 
 class TestProjectDeleteView(
-    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, UIViewTestBase
 ):
     """Tests for ProjectDeleteView"""
 
@@ -3349,7 +3387,7 @@ class TestProjectDeleteView(
 
 
 class TestProjectRoleView(
-    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, UIViewTestBase
 ):
     """Tests for ProjectRoleView"""
 
@@ -3513,7 +3551,7 @@ class TestProjectRoleView(
 
 
 class TestRoleAssignmentCreateView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for RoleAssignmentCreateView and related helper views"""
 
@@ -3997,7 +4035,7 @@ class TestRoleAssignmentCreateView(
 
 
 class TestRoleAssignmentUpdateView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for RoleAssignmentUpdateView"""
 
@@ -4315,9 +4353,21 @@ class TestRoleAssignmentUpdateView(
 
 
 class TestRoleAssignmentDeleteView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for RoleAssignmentDeleteView"""
+
+    def _assert_app_alerts(self, count: int, alert_name: str = 'role_delete'):
+        """
+        Assert AppAlert object count.
+
+        :param count: Integer
+        :param alert_name: Alert name (string, default = "role_delete"
+        """
+        self.assertEqual(
+            self.app_alert_model.objects.filter(alert_name=alert_name).count(),
+            count,
+        )
 
     def setUp(self):
         super().setUp()
@@ -4428,12 +4478,7 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(
             TimelineEvent.objects.filter(event_name='role_delete').count(), 0
         )
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            0,
-        )
+        self._assert_app_alerts(0)
         self.assertEqual(len(mail.outbox), 0)
         with self.login(self.user):
             response = self.client.post(self.url)
@@ -4448,12 +4493,7 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(
             TimelineEvent.objects.filter(event_name='role_delete').count(), 1
         )
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            1,
-        )
+        self._assert_app_alerts(1)
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
         self.assertEqual(len(mail.outbox), 1)
@@ -4480,12 +4520,7 @@ class TestRoleAssignmentDeleteView(
         with self.login(self.user):
             response = self.client.post(self.url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            0,
-        )
+        self._assert_app_alerts(0)
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
         self.assertEqual(len(mail.outbox), 1)
@@ -4506,12 +4541,7 @@ class TestRoleAssignmentDeleteView(
         with self.login(self.user):
             response = self.client.post(self.url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            1,
-        )
+        self._assert_app_alerts(1)
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
         self.assertEqual(len(mail.outbox), 0)
@@ -4557,18 +4587,8 @@ class TestRoleAssignmentDeleteView(
         with self.login(self.user):
             self.client.post(self.url)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_update'
-            ).count(),
-            1,
-        )
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            0,
-        )
+        self._assert_app_alerts(1, 'role_update')
+        self._assert_app_alerts(0)
         alert.refresh_from_db()
         self.assertEqual(alert.active, True)
 
@@ -4594,18 +4614,8 @@ class TestRoleAssignmentDeleteView(
                 )
             )
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_update'
-            ).count(),
-            0,
-        )
-        self.assertEqual(
-            self.app_alert_model.objects.filter(
-                alert_name='role_delete'
-            ).count(),
-            1,
-        )
+        self._assert_app_alerts(0, 'role_update')
+        self._assert_app_alerts(1)
         alert.refresh_from_db()
         self.assertEqual(alert.active, False)
 
@@ -4644,90 +4654,52 @@ class TestRoleAssignmentDeleteView(
         alert.refresh_from_db()
         self.assertEqual(alert.active, True)  # Alert should remain active
 
-    def test_post_app_settings_contributor(self):
+    def test_post_app_setting_contributor(self):
         """Test post with PROJECT_USER app settings after contributor deletion"""
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        app_settings.set(
-            plugin_name=APP_NAME_EX,
-            setting_name='project_user_bool_setting',
-            project=self.project,
-            user=self.user,
-            value=True,
-        )
-        self.assertIsNotNone(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_contrib,
-            )
-        )
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_contrib,
+        }
+        app_settings.set(value=True, **s_kw)
+        self.assertEqual(app_settings.get(**s_kw), True)
         with self.login(self.user):
             self.client.post(self.url)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_contrib,
-            ),
-            False,
-        )
+        self.assertEqual(app_settings.get(**s_kw), False)
 
-    def test_post_app_settings_inherit(self):
-        """Test POST with PROJECT_USER app setting with inherited role"""
+    def test_post_app_setting_inherit(self):
+        """Test POST with PROJECT_USER app setting and inherited role after deletion"""
         self.make_assignment(self.category, self.user_contrib, self.role_guest)
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
-        app_settings.set(
-            plugin_name=APP_NAME_EX,
-            setting_name='project_user_bool_setting',
-            project=self.project,
-            user=self.user,
-            value=True,
-        )
-        self.assertIsNotNone(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_contrib,
-            )
-        )
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_contrib,
+        }
+        app_settings.set(value=True, **s_kw)
         with self.login(self.user):
             self.client.post(self.url)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_contrib,
-            ),
-            False,
-        )
+        # User still has role, setting should remain
+        self.assertEqual(app_settings.get(**s_kw), True)
 
-    def test_post_app_settings_children(self):
-        """Test POST with PROJECT_USER app setting with child categories or projects"""
+    def test_post_app_setting_child_no_role(self):
+        """Test POST with app setting in child with no role"""
         new_as = self.make_assignment(
             self.category, self.user_new, self.role_guest
         )
         self.assertEqual(RoleAssignment.objects.all().count(), 4)
-        app_settings.set(
-            plugin_name=APP_NAME_EX,
-            setting_name='project_user_bool_setting',
-            project=self.project,
-            user=self.user,
-            value=True,
-        )
-        self.assertIsNotNone(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_new,
-            )
-        )
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_new,
+        }
+        app_settings.set(value=True, **s_kw)
         with self.login(self.user):
             self.client.post(
                 reverse(
@@ -4736,19 +4708,11 @@ class TestRoleAssignmentDeleteView(
                 )
             )
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(
-            app_settings.get(
-                APP_NAME_EX,
-                'project_user_bool_setting',
-                self.project,
-                self.user_new,
-            ),
-            False,
-        )
+        self.assertEqual(app_settings.get(**s_kw), False)
 
 
 class TestRoleAssignmentOwnDeleteView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for RoleAssignmentOwnDeleteView"""
 
@@ -4918,7 +4882,7 @@ class TestRoleAssignmentOwnDeleteView(
 
 
 class TestRoleAssignmentOwnerTransferView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for RoleAssignmentOwnerTransferView"""
 
@@ -5105,6 +5069,35 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(len(mail.outbox), 1)
 
     # TODO: Test with disabled alerts!
+
+    def test_post_app_setting(self):
+        """Test POST with app setting"""
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        self.assertEqual(app_settings.get(**s_kw), True)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': self.role_guest.pk,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_guest,
+        )
+        # Setting should still exist
+        self.assertEqual(app_settings.get(**s_kw), True)
 
     def test_post_inactive_user(self):
         """Test POST with inactive user"""
@@ -5326,6 +5319,32 @@ class TestRoleAssignmentOwnerTransferView(
             mail.outbox[1].subject,
         )
 
+    def test_post_no_old_role_app_setting(self):
+        """Test POST with no old owner role and app setting"""
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': 0,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_guest)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_owner
+            ).first()
+        )
+        self.assertEqual(app_settings.get(**s_kw), False)
+
     def test_post_old_inherited_member_no_old_role(self):
         """Test POST with old inherited member and no old owner role"""
         inh_as = self.make_assignment(
@@ -5351,9 +5370,35 @@ class TestRoleAssignmentOwnerTransferView(
         self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
 
+    def test_post_old_inherited_member_no_old_role_app_setting(self):
+        """Test POST with old inherited member, no old owner role and app setting"""
+        inh_as = self.make_assignment(
+            self.category, self.user_owner, self.role_contributor
+        )
+        self.assertEqual(self.project.get_role(self.user_owner), self.owner_as)
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'new_owner': self.user_guest.sodar_uuid,
+                    'old_owner_role': 0,
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_role(self.user_owner), inh_as)
+        # Setting should still exist
+        self.assertEqual(app_settings.get(**s_kw), True)
+
 
 class TestProjectInviteCreateView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, UIViewTestBase
 ):
     """Tests for ProjectInviteCreateView"""
 
@@ -5591,7 +5636,7 @@ class TestProjectInviteAcceptView(
     RoleAssignmentMixin,
     ProjectInviteMixin,
     ProjectInviteProcessMixin,
-    ViewTestBase,
+    UIViewTestBase,
 ):
     """Tests for ProjectInviteAcceptView and related helper views"""
 
@@ -5910,7 +5955,7 @@ class TestProjectInviteAcceptView(
 
 
 class TestProjectInviteProcessLoginView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, UIViewTestBase
 ):
     """Tests for ProjectInviteProcessLoginView"""
 
@@ -5951,7 +5996,7 @@ class TestProjectInviteProcessLoginView(
 
 
 class TestProjectInviteProcessNewUserView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, UIViewTestBase
 ):
     """Tests for ProjectInviteProcessNewUserView"""
 
@@ -6119,7 +6164,7 @@ class TestProjectInviteProcessNewUserView(
 
 
 class TestProjectInviteListView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, UIViewTestBase
 ):
     """Tests for ProjectInviteListView"""
 
@@ -6163,7 +6208,7 @@ class TestProjectInviteListView(
 
 
 class TestProjectInviteRevokeView(
-    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, UIViewTestBase
 ):
     """Tests for ProjectInviteRevokeView"""
 
@@ -6234,7 +6279,7 @@ class TestProjectInviteRevokeView(
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
 
 
-class TestSiteAppSettingsView(ViewTestBase):
+class TestSiteAppSettingsView(UIViewTestBase):
     """Tests for SiteAppSettingsView"""
 
     def setUp(self):
@@ -6286,7 +6331,7 @@ class TestSiteAppSettingsView(ViewTestBase):
 # Remote view tests ------------------------------------------------------------
 
 
-class TestRemoteSiteListView(RemoteSiteMixin, ViewTestBase):
+class TestRemoteSiteListView(RemoteSiteMixin, UIViewTestBase):
     """Tests for RemoteSiteListView"""
 
     def setUp(self):
@@ -6325,7 +6370,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, ViewTestBase):
             self.assertRedirects(response, reverse('home'))
 
 
-class TestRemoteSiteCreateView(RemoteSiteMixin, ViewTestBase):
+class TestRemoteSiteCreateView(RemoteSiteMixin, UIViewTestBase):
     """Tests for RemoteSiteCreateView"""
 
     def setUp(self):
@@ -6476,7 +6521,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, ViewTestBase):
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
 
-class TestRemoteSiteUpdateView(RemoteSiteMixin, ViewTestBase):
+class TestRemoteSiteUpdateView(RemoteSiteMixin, UIViewTestBase):
     """Tests for RemoteSiteUpdateView"""
 
     def setUp(self):
@@ -6591,7 +6636,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, ViewTestBase):
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
 
-class TestRemoteSiteDeleteView(RemoteSiteMixin, ViewTestBase):
+class TestRemoteSiteDeleteView(RemoteSiteMixin, UIViewTestBase):
     """Tests for RemoteSiteDeleteView"""
 
     def setUp(self):
@@ -6650,7 +6695,7 @@ class TestRemoteProjectBatchUpdateView(
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
-    ViewTestBase,
+    UIViewTestBase,
 ):
     """Tests for RemoteProjectBatchUpdateView"""
 
@@ -6794,8 +6839,8 @@ class TestRemoteProjectBatchUpdateView(
 # SODAR User view tests --------------------------------------------------------
 
 
-class TestUserUpdateView(TestCase):
-    """Tests for UserUpdateView"""
+class TestLocalUserUpdateView(TestCase):
+    """Tests for LocalUserUpdateView"""
 
     def setUp(self):
         self.user_local = self.make_user('local_user')
@@ -6803,21 +6848,43 @@ class TestUserUpdateView(TestCase):
         self.url = reverse('projectroles:user_update')
 
     def test_get_local_user(self):
-        """Test TestUserUpdateView GET with local user"""
+        """Test LocalUserUpdateView GET with local user"""
         with self.login(self.user_local):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertEqual(form.fields['email'].widget.attrs['readonly'], True)
+        self.assertEqual(form.fields['username'].widget.attrs['readonly'], True)
+        self.assertNotIn('enable_update', form.fields)
+
+    def test_get_local_user_read_only(self):
+        """Test GET with site read only mode"""
+        app_settings.set(APP_NAME, 'site_read_only', True)
+        with self.login(self.user_local):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(PROJECTROLES_LOCAL_USER_UPDATE=False)
+    def test_get_local_user_update_disabled_site(self):
+        """Test GET with disabled site-wide local user updating"""
+        with self.login(self.user_local):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_local_user_update_disabled_user(self):
+        """Test GET with disabled user level local user updating"""
+        self.user_local.enable_update = False
+        self.user_local.save()
+        with self.login(self.user_local):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
 
     @override_settings(AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN)
     def test_get_ldap_user(self):
         """Test GET with LDAP user"""
         with self.login(self.user_ldap):
             response = self.client.get(self.url, follow=True)
-        self.assertRedirects(response, reverse('home'))
-        self.assertEqual(
-            list(get_messages(response.wsgi_request))[0].message,
-            USER_PROFILE_LDAP_MSG,
-        )
+        self.assertEqual(response.status_code, 403)
 
     def test_post_local_user(self):
         """Test POST with local user"""

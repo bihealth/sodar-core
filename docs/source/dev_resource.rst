@@ -195,26 +195,35 @@ used. An example can be seen below:
 
     {% include 'projectroles/_pagination.html' with pg_small=True %}
 
-Project Badge
--------------
+DataTables Includes
+-------------------
 
-Projectroles provides a project badge which can be used to display a fixed-size
-link to a category or a project among text. It can be included in your template
-as follows:
+If you want to use the `DataTables <https://datatables.net/>`_ interactive
+table package on your server-side templates, it is recommended to use the
+version supported by the current SODAR Core release. This ensures that e.g. the
+layout behaves consistently with the rest of the site.
+
+The easiest way to do this is by including the CSS and JS dependencies from
+supplied include templates in your own template file. Example:
 
 .. code-block:: django
 
-    {% include 'projectroles/_project_badge.html' with project=project color='info' can_view=True %}
+    {% block css %}
+      {{ block.super }}
+      {% include 'projectroles/_datatables_css.html' %}
+      {# ... #}
+    {% endblock css %}
 
-The following arguments are expected:
+    {% block javascript %}
+      {{ block.super }}
+      {% include 'projectroles/_datatables_js.html' %}
+      {# ... #}
+    {% endblock javascript %}
 
-``project``
-    Project object for the related project or category.
-``color``
-    String for the badge color (must correspond to bootstrap classes, e.g.
-    "info" or "success").
-``can_view``
-    Boolean for whether the current user should have access to view the project.
+.. hint::
+
+    Using the Javascript includes also includes common helpers found in
+    ``projectroles/_datatables.js`` for maintaining a common layout.
 
 Tour Help
 ---------

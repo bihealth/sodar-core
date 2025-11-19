@@ -51,12 +51,6 @@ APP_SETTING_SCOPES = [
     APP_SETTING_SCOPE_SITE,
 ]
 APP_SETTING_OPTION_TYPES = [APP_SETTING_TYPE_INTEGER, APP_SETTING_TYPE_STRING]
-# TODO: Remove in v1.3 (see #1718)
-PLUGIN_API_DEPRECATE_MSG = (
-    'Importing and calling {method}() directly from projectroles.plugins has '
-    'been deprecated and will be removed in v1.3. Use '
-    'projectroles.plugins.PluginAPI instead.'
-)
 
 # From djangoplugins
 ENABLED = 0
@@ -1151,79 +1145,6 @@ class PluginAPI:
                 return None
             return plugin.get_api(**kwargs) if plugin.is_active() else None
         return None
-
-
-# TODO: Remove in v1.3 (see #1718)
-def get_active_plugins(
-    plugin_type: str = 'project_app', custom_order: bool = False
-) -> Optional[list]:
-    """
-    Return active plugins of a specific type.
-
-    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
-
-    :param plugin_type: "project_app", "site_app" or "backend" (string)
-    :param custom_order: Order by plugin_ordering for project apps (boolean)
-    :return: List or None
-    :raise: ValueError if plugin_type is not recognized
-    """
-    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_active_plugins'))
-    plugin_api = PluginAPI()
-    return plugin_api.get_active_plugins(plugin_type, custom_order)
-
-
-# TODO: Remove in v1.3 (see #1718)
-def change_plugin_status(name: str, status: int, plugin_type: str = 'app'):
-    """
-    Change the status of a selected plugin in the database.
-
-    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
-
-    :param name: Plugin name (string)
-    :param status: Status (int, see djangoplugins)
-    :param plugin_type: Type of plugin ("app", "backend" or "site")
-    :raise: ValueError if plugin_type is invalid or plugin with name not found
-    """
-    # NOTE: Used to forge plugin to a specific status for e.g. testing
-    logger.warning(
-        PLUGIN_API_DEPRECATE_MSG.format(method='change_plugin_status')
-    )
-    plugin_api = PluginAPI()
-    plugin_api.change_plugin_status(name, status, plugin_type)
-
-
-# TODO: Remove in v1.3 (see #1718)
-def get_app_plugin(plugin_name: str, plugin_type: Optional[str] = None) -> Any:
-    """
-    Return active app plugin.
-
-    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
-
-    :param plugin_name: Plugin name (string)
-    :param plugin_type: Plugin type (string or None for all types)
-    :return: Plugin object or None if not found or inactive
-    """
-    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_app_plugin'))
-    plugin_api = PluginAPI()
-    return plugin_api.get_app_plugin(plugin_name, plugin_type)
-
-
-# TODO: Remove in v1.3 (see #1718)
-def get_backend_api(plugin_name: str, force: bool = False, **kwargs) -> Any:
-    """
-    Return backend API object.
-    NOTE: May raise an exception from plugin.get_api().
-
-    DEPRECATED: To be removed in v1.3. Use method in PluginAPI instead.
-
-    :param plugin_name: Plugin name (string)
-    :param force: Return plugin regardless of status in ENABLED_BACKEND_PLUGINS
-    :param kwargs: Optional kwargs for API
-    :return: Plugin object or None if not found
-    """
-    logger.warning(PLUGIN_API_DEPRECATE_MSG.format(method='get_backend_api'))
-    plugin_api = PluginAPI()
-    return plugin_api.get_backend_api(plugin_name, force, **kwargs)
 
 
 # Plugins within projectroles --------------------------------------------------

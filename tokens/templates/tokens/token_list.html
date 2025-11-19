@@ -9,13 +9,33 @@
 {% block css %}
   {{ block.super }}
   <style type="text/css">
-    table#sodar-tk-list-table thead tr th:first-child,
-    table#sodar-tk-list-table tbody tr td:first-child {
-      width: 60px !important;
+    table#sodar-tk-list-table thead tr th:nth-child(1),
+    table#sodar-tk-list-table tbody tr td:nth-child(1) {
+      width: 60px;
     }
-    @media screen and (max-width: 650px) {
+    table#sodar-tk-list-table thead tr th:nth-child(2),
+    table#sodar-tk-list-table tbody tr td:nth-child(2),
+    table#sodar-tk-list-table thead tr th:nth-child(3),
+    table#sodar-tk-list-table tbody tr td:nth-child(3) {
+      width: 120px;
+    }
+    table#sodar-tk-list-table thead tr th:nth-child(4),
+    table#sodar-tk-list-table tbody tr td:nth-child(4) {
+      width: 170px;
+    }
+    table#sodar-tk-list-table thead tr th:nth-child(6),
+    table#sodar-tk-list-table tbody tr td:nth-child(6) {
+      width: 32px;
+    }
+    @media screen and (max-width: 900px) {
       table#sodar-tk-list-table thead tr th:nth-child(2),
       table#sodar-tk-list-table tbody tr td:nth-child(2) {
+        display: none;
+      }
+    }
+    @media screen and (max-width: 750px) {
+      table#sodar-tk-list-table thead tr th:nth-child(4),
+      table#sodar-tk-list-table tbody tr td:nth-child(4) {
         display: none;
       }
     }
@@ -45,24 +65,25 @@
   <div class="card" id="sodar-tk-token-list">
     <div class="card-body p-0">
       <table class="table table-striped sodar-card-table"
-             id="sodar-tk-table">
+             id="sodar-tk-list-table">
         <thead>
           <tr>
             <th class="text-right">#</th>
             <th>Created</th>
             <th>Expires</th>
             <th>Key</th>
+            <th>Label</th>
           </tr>
         </thead>
         <tbody>
           {% if object_list.count > 0 %}
             {% for token in object_list %}
-              {% include 'tokens/_token_item.html' with item=token %}
+              {% include 'tokens/_token_item.html' %}
             {% endfor %}
           {% else %}
             <tr>
               <td class="bg-faded font-italic text-center" colspan="5">
-                No API tokens
+                No API tokens created.
               </td>
             </tr>
           {% endif %}
@@ -83,7 +104,8 @@
       title: 'API Tokens App',
       text: 'In this application you can create and manage API tokens to be ' +
             'used with the REST API endpoints of the site. Tokens are user ' +
-            'specific and may have an expiry date.',
+            'specific and may have an expiry date. You can also set an ' +
+            'optional text label for each token.',
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
@@ -97,16 +119,17 @@
     })
     tour.addStep('token_list', {
       title: 'Token List',
-      text: 'Tokens assigned to you can be seen in this list.',
-      attachTo: '#sodar-tk-table top',
+      text: 'Tokens you have created can be seen in this list.',
+      attachTo: '#sodar-tk-list-table top',
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
-    if ($('.sodar-tk-item-dropdown').length) {
-      tour.addStep('token_dropdown', {
-        title: 'Token Dropdown',
-        text: 'Through this dropdown you can delete the corresponding token.',
-        attachTo: '.sodar-tk-item-dropdown left',
+    if ($('.sodar-tk-delete-btn').length) {
+      tour.addStep('delete_token', {
+        title: 'Delete Token',
+        text: 'You can delete a token by clicking on the corresponding ' +
+              'delete button.',
+        attachTo: '.sodar-tk-delete-btn left',
         advanceOn: '.docs-link click',
         showCancelLink: true
       })

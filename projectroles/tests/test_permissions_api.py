@@ -2,10 +2,7 @@
 
 import uuid
 
-from typing import Optional, Union
-
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
 from django.test import override_settings
 from django.urls import reverse
 
@@ -16,15 +13,15 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
-from projectroles.tests.test_permissions import ProjectPermissionTestBase
-from projectroles.tests.test_views_api import SODARAPIViewTestMixin
+from projectroles.tests.base import (
+    SODARAPIPermissionTestMixin as MovedSODARAPIPermissionTestMixin,
+    ProjectAPIPermissionTestBase as MovedProjectAPIPermissionTestBase,
+)
 from projectroles.utils import build_secret
 from projectroles.views_api import (
     PROJECTROLES_API_MEDIA_TYPE,
     PROJECTROLES_API_DEFAULT_VERSION,
 )
-
-from rest_framework.test import APITestCase
 
 
 User = get_user_model()
@@ -49,89 +46,24 @@ REMOTE_SITE_SECRET = build_secret()
 # Base Classes and Mixins ------------------------------------------------------
 
 
-class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
-    """Mixin for permission testing with knox auth"""
+# TODO: Remove in v1.4 (see #1830)
+class SODARAPIPermissionTestMixin(MovedSODARAPIPermissionTestMixin):
+    """
+    Mixin for permission testing with knox auth.
 
-    def assert_response_api(
-        self,
-        url: str,
-        users: Union[list, tuple, User],
-        status_code: int,
-        method: str = 'GET',
-        format: str = 'json',
-        data: Optional[dict] = None,
-        media_type: Optional[str] = None,
-        version: Optional[str] = None,
-        knox: bool = False,
-        cleanup_method: Optional[callable] = None,
-        cleanup_kwargs: Optional[dict] = None,
-        req_kwargs: Optional[dict] = None,
-    ):
-        """
-        Assert a response status code for url with API headers and optional
-        Knox token authentication. Creates a Knox token for each user where
-        needed.
-
-        :param url: Target URL for the request
-        :param users: Users to test (single user, list or tuple)
-        :param status_code: Status code
-        :param method: Method for request (default="GET")
-        :param format: Request format (string, default="json")
-        :param data: Optional data for request (dict)
-        :param media_type: String (default = cls.media_type)
-        :param version: String (default = cls.api_version)
-        :param knox: Use Knox token auth instead of Django login (boolean)
-        :param cleanup_method: Callable method to clean up data after a
-               successful request
-        :param cleanup_kwargs: Optional cleanup method kwargs (dict or None)
-        :param req_kwargs: Optional request kwargs override (dict or None)
-        """
-        if cleanup_method and not callable(cleanup_method):
-            raise ValueError('cleanup_method is not callable')
-
-        def _send_request() -> HttpResponse:
-            req_method = getattr(self.client, method.lower(), None)
-            if not req_method:
-                raise ValueError(f'Invalid method "{method}"')
-            if req_kwargs:  # Override request kwargs if set
-                r_kwargs.update(req_kwargs)
-            return req_method(url, **r_kwargs)
-
-        if not isinstance(users, (list, tuple)):
-            users = [users]
-
-        for user in users:
-            r_kwargs = {'format': format}
-            if data:
-                r_kwargs['data'] = data
-            if knox and not user:  # Anonymous
-                raise ValueError(
-                    'Unable to test Knox token auth with anonymous user'
-                )
-            r_kwargs.update(self.get_accept_header(media_type, version))
-
-            if knox:
-                r_kwargs.update(self.get_token_header(self.get_token(user)))
-                response = _send_request()
-            elif user:
-                with self.login(user):
-                    response = _send_request()
-            else:  # Anonymous, no knox
-                response = _send_request()
-
-            msg = f'user={user}; content="{response.content}"'
-            self.assertEqual(response.status_code, status_code, msg=msg)
-
-            if cleanup_method:
-                if cleanup_kwargs is None:
-                    cleanup_kwargs = {}
-                cleanup_method(**cleanup_kwargs)
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.SODARAPIPermissionTestMixin instead.
+    """
 
 
-class ProjectAPIPermissionTestBase(
-    SODARAPIPermissionTestMixin, APITestCase, ProjectPermissionTestBase
-):
-    """Base class for testing project permissions in SODAR API views"""
+# TODO: Remove in v1.4 (see #1830)
+class ProjectAPIPermissionTestBase(MovedProjectAPIPermissionTestBase):
+    """
+    Base class for testing project permissions in SODAR API views.
+
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.ProjectAPIPermissionTestBase instead.
+    """
 
 
 class ProjectrolesAPIPermissionTestBase(ProjectAPIPermissionTestBase):

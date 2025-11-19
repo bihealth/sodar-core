@@ -132,7 +132,7 @@ urls_ui = [
     ),
     path(
         route='user/update',
-        view=views.UserUpdateView.as_view(),
+        view=views.LocalUserUpdateView.as_view(),
         name='user_update',
     ),
     path(

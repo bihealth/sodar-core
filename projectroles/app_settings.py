@@ -602,7 +602,21 @@ class AppSettingAPI:
             ):
                 raise ValueError(GLOBAL_USER_ERR_MSG)
 
-        # TODO: Refactor and remove repetition
+        # Validate
+        v = (
+            cls._get_json_value(value)
+            if s_def.type == APP_SETTING_TYPE_JSON
+            else value
+        )
+        if validate:
+            cls.validate(
+                s_def.type,
+                v,
+                s_def.options,
+                project=project,
+                user=user,
+            )
+
         try:  # Update existing setting
             q_kwargs = {'name': setting_name, 'project': project, 'user': user}
             if not plugin_name == APP_NAME:
@@ -612,19 +626,6 @@ class AppSettingAPI:
             setting = AppSetting.objects.get(**q_kwargs)
             if cls.compare_value(setting, value):
                 return False
-            v = (
-                cls._get_json_value(value)
-                if setting.type == APP_SETTING_TYPE_JSON
-                else value
-            )
-            if validate:
-                cls.validate(
-                    setting.type,
-                    v,
-                    s_def.options,
-                    project=project,
-                    user=user,
-                )
             if setting.type == APP_SETTING_TYPE_JSON:
                 setting.value_json = v
             else:
@@ -642,19 +643,6 @@ class AppSettingAPI:
             else:
                 app_plugin = cls._get_app_plugin(plugin_name)
                 app_plugin_model = app_plugin.get_model()
-            if validate:
-                v = (
-                    cls._get_json_value(value)
-                    if s_type == APP_SETTING_TYPE_JSON
-                    else value
-                )
-                cls.validate(
-                    s_type,
-                    v,
-                    s_def.options,
-                    project=project,
-                    user=user,
-                )
             s_mod = bool(s_def.user_modifiable)
             s_vals = {
                 'app_plugin': app_plugin_model,

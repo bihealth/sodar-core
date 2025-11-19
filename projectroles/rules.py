@@ -181,6 +181,12 @@ def is_allowed_anonymous(user):
 
 
 @rules.predicate
+def is_local_user(user):
+    """Return True if user is local"""
+    return user.is_local()
+
+
+@rules.predicate
 def is_source_site():
     """Return True if PROJECTROLES_SITE_MODE is set to SITE_MODE_PROJECT"""
     return settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
@@ -196,6 +202,15 @@ def is_target_site():
 def is_site_writable():
     """Return True if site has not been set in read-only mode"""
     return not app_settings.get(APP_NAME, 'site_read_only')
+
+
+@rules.predicate
+def is_local_user_update_allowed(user):
+    """Return True if local user update is allowed on site"""
+    return (
+        getattr(settings, 'PROJECTROLES_LOCAL_USER_UPDATE', True)
+        and user.enable_update
+    )
 
 
 @rules.predicate
@@ -317,3 +332,9 @@ rules.add_perm(
 
 # Allow updating site app settings
 rules.add_perm('projectroles.update_site_settings', rules.is_superuser)
+
+# Allow updating local user
+rules.add_perm(
+    'projectroles.update_local_user',
+    is_local_user & is_local_user_update_allowed & is_site_writable,
+)

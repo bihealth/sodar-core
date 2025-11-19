@@ -112,7 +112,7 @@ function updateRoleColumn(uuids) {
 // Method for toggling starred
 function toggleStarring(initial) {
   let link = $('#sodar-pr-project-list-link-star')
-  let dt = $('#sodar-pr-project-list-table').DataTable()
+  let dt = $('#sodar-pr-project-list-table').dataTable().api()
   $('#sodar-pr-project-list-filter').val('')
   if (link.attr('data-star-enabled') === '0') {
     link.attr('data-star-enabled', '1')
@@ -376,30 +376,19 @@ $(document).ready(function () {
     let dt = $('#sodar-pr-project-list-table').DataTable({
       ordering: false,
       scrollX: false,
+      autoWidth: false,
       paging: true,
       pagingType: 'full_numbers',
       pageLength: window.projectListPagination,
       lengthChange: true,
       scrollCollapse: true,
       info: false,
-      language: {
-        paginate: {
-          first: '<i class="iconify text-primary" ' +
-            'data-icon="mdi:arrow-left-circle-outline"></i> First',
-          previous: '<i class="iconify text-primary" ' +
-            'data-icon="mdi:arrow-left-circle"></i> Prev',
-          next: 'Next <i class="iconify text-primary" ' +
-            'data-icon="mdi:arrow-right-circle"></i>',
-          last: 'Last <i class="iconify text-primary" ' +
-            'data-icon="mdi:arrow-right-circle-outline"></i>',
-        }
-      },
+      language: {paginate: sodarDataTablesPaginate},
       dom: 'tp'
     })
     // Hide pagination if only one page
     if (dt.page.info().pages === 1) {
-      // TODO: Disable pagination control once implemented
-      $('.dataTables_paginate').hide()
+      $('.dt-paging').hide()
     }
     // Add star filter
     $.fn.dataTable.ext.search.push(
@@ -420,9 +409,9 @@ $(document).ready(function () {
       dt.page.len(value).draw()
       // Update pagination
       if (dt.page.info().pages === 1) {
-        $('.dataTables_paginate').hide()
+        $('.dt-paging').hide()
       } else {
-        $('.dataTables_paginate').show()
+        $('.dt-paging').show()
       }
       // Update user setting
       $.ajax({
@@ -465,9 +454,10 @@ $(document).ready(function () {
         )
     }
     let dt = $(this).closest(
-      '#sodar-pr-project-list').find('table').dataTable()
+      '#sodar-pr-project-list').find('table').dataTable().api()
     let v = $(this).val()
-    dt.fnFilter(v, 0) // Limit filter to title column
+    dt.column(0).search(v) // Limit filter to title column
+    dt.draw()
   })
 
   // Filter by starred
@@ -475,8 +465,8 @@ $(document).ready(function () {
     // Clear filter and toggle starring
     $('#sodar-pr-project-list-link-star').value = ''
     let dt = $(this).closest(
-      '#sodar-pr-project-list').find('table').dataTable()
-    dt.fnFilter('', 0)
+      '#sodar-pr-project-list').find('table').dataTable().api()
+    dt.column(0).search('').draw()
     toggleStarring(false)
   })
 })

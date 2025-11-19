@@ -14,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
-from projectroles.tests.test_ui import UITestBase
+from projectroles.tests.base import ProjectUITestBase
 
 from timeline.models import TL_STATUS_OK
 from timeline.tests.test_models import (
@@ -40,7 +40,7 @@ APP_NAME_PR = 'projectroles'
 
 
 class TestProjectListView(
-    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectUITestBase
 ):
     """Tests for the timeline project list view UI"""
 
@@ -155,7 +155,7 @@ class TestProjectListView(
 
 
 class TestSiteListView(
-    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectUITestBase
 ):
     """Tests for the timeline site-wide list view UI"""
 
@@ -248,7 +248,7 @@ class TestSiteListView(
 
 
 class TestAdminTimelineView(
-    TimelineEventMixin, TimelineEventStatusMixin, UITestBase
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectUITestBase
 ):
     """Tests for AdminTimelineView"""
 
@@ -300,7 +300,9 @@ class TestAdminTimelineView(
         self.assertIsNotNone(self.selenium.find_element(By.CLASS_NAME, 'badge'))
 
 
-class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
+class TestModals(
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectUITestBase
+):
     """Test UI of modals in timeline event list"""
 
     def setUp(self):
@@ -426,8 +428,10 @@ class TestModals(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
         button.click()
 
 
-class TestSearch(TimelineEventMixin, TimelineEventStatusMixin, UITestBase):
-    """Tests for the project search UI functionalities"""
+class TestSearch(
+    TimelineEventMixin, TimelineEventStatusMixin, ProjectUITestBase
+):
+    """Tests for the project search UI functionality"""
 
     def setUp(self):
         super().setUp()

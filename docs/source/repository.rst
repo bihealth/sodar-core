@@ -58,15 +58,23 @@ Relevant files in the root of the repository are detailed here.
 
 ``.gitlab-ci.yml``
     GitLab CI configuration, used on the internal CUBI GitLab server.
+``.readthedocs.yaml``
+    Readthedocs documentation building configuration.
 ``CHANGELOG.rst``
     :ref:`Full changelog <changelog>` for the project.
+``CODE_OF_CONDUCT.rst``
+    Project code of conduct.
 ``env.example``
     Example ``.env`` file for development.
+``LICENSE``
+    Project license.
 ``Makefile``
     Makefile used to run the server and tests during development along with
     other shortcuts.
 ``manage.py``
     The Django file for running management commands.
+``pyproject.toml``
+    Settings for building and Black.
 ``README.rst``
     The project readme.
 ``requirements.txt``

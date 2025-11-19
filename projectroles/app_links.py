@@ -271,9 +271,18 @@ class AppLinkAPI:
         """
         Return user links for the user dropdown.
 
+        Each link dict contains the following fields:
+        - name: Code-friendly identifier for link
+        - url: URL for link
+        - label: Label to be displayed in URL
+        - icon: Icon namespace and name
+        - active: Whether link should be rendered as active (boolean)
+        - method: Optional string for HTTP method (default=GET)
+
         :param user: User object
         :param app_name: App name string or None
         :param url_name: URL name string or None
+        :return: List of dicts
         """
         ret = []
         # Add site-wide apps links
@@ -302,21 +311,22 @@ class AppLinkAPI:
                     'active': False,
                 }
             )
-        # Add log out / sign in link
+        # Add log out / log in link
         if user.is_authenticated:
             ret.append(
                 {
-                    'name': 'sign-out',
+                    'name': 'logout',
                     'url': reverse('logout'),
                     'label': 'Logout',
                     'icon': 'mdi:logout-variant',
                     'active': False,
+                    'method': 'POST',
                 }
             )
         elif not getattr(settings, 'PROJECTROLES_KIOSK_MODE', False):
             ret.append(
                 {
-                    'name': 'sign-in',
+                    'name': 'login',
                     'url': reverse('login'),
                     'label': 'Login',
                     'icon': 'mdi:login-variant',

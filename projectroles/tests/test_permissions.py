@@ -1,27 +1,23 @@
 """Tests for UI view permissions in the projectroles app"""
 
-from typing import Optional, Union
-from urllib.parse import urlencode, quote
+from urllib.parse import urlencode
 
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
 from django.test import override_settings
 from django.urls import reverse
 
-from test_plus.test import TestCase
-
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import Project, SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.utils import build_secret
-from projectroles.tests.test_models import (
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
-    ProjectInviteMixin,
-    RemoteSiteMixin,
-    RemoteProjectMixin,
-    AppSettingMixin,
+from projectroles.tests.base import (
+    PermissionTestMixin as MovedPermissionTestMixin,
+    IPAllowMixin as MovedIPAllowMixin,
+    PermissionTestBase as MovedPermissionTestBase,
+    ProjectPermissionTestBase as MovedProjectPermissionTestBase,
+    SiteAppPermissionTestBase as MovedSiteAppPermissionTestBase,
+    TEST_BASE_CLASS_DEPRECATE_MSG,
 )
+from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
 
 
 app_settings = AppSettingAPI()
@@ -43,285 +39,71 @@ REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_SECRET = build_secret()
 
 
-class PermissionTestMixin:
-    """Helper class for permission tests"""
+# TODO: Remove in v1.4 (see #1830)
+class PermissionTestMixin(MovedPermissionTestMixin):
+    """
+    Helper class for permission tests.
 
-    def setup_user_helpers(self):
-        """
-        Set up user helpers for easy reference to specific groups.
-
-        NOTE: Expects the users having set up in the class beforehand.
-        """
-        self.all_users = [
-            self.superuser,
-            self.user_owner_cat,
-            self.user_delegate_cat,
-            self.user_contributor_cat,
-            self.user_guest_cat,
-            self.user_viewer_cat,
-            self.user_finder_cat,
-            self.user_owner,
-            self.user_delegate,
-            self.user_contributor,
-            self.user_guest,
-            self.user_viewer,
-            self.user_no_roles,
-            self.anonymous,
-        ]  # All users
-        # All authenticated users
-        self.auth_users = self.all_users[:-1]
-        # All users except for superuser
-        self.non_superusers = self.all_users[1:]
-        # All authenticated non-superusers
-        self.auth_non_superusers = self.non_superusers[:-1]
-        # No roles user and anonymous user
-        self.no_role_users = [self.user_no_roles, self.anonymous]
-
-    def set_site_read_only(self, value: bool = True):
-        """
-        Set site read only mode to the desired value.
-
-        :param value: Boolean
-        """
-        app_settings.set(APP_NAME, 'site_read_only', value)
-
-    def set_access_block(self, project: Project, value: bool = True):
-        """
-        Set project access block to the desired value.
-
-        :param project: Project object
-        :param value: Boolean
-        """
-        app_settings.set(
-            APP_NAME, 'project_access_block', value, project=project
-        )
-
-    def set_category_public_stats(self, category: Project, value: bool = True):
-        """
-        Set category_public_stats app setting value for top level category.
-
-        :param category: Project object (must be top level category)
-        :param value: Boolean
-        """
-        if category.is_project() or category.parent:
-            raise ValueError('This is only allowed for top level categories')
-        app_settings.set(
-            APP_NAME, 'category_public_stats', value, project=category
-        )
-
-    def send_request(
-        self, url: str, method: str, req_kwargs: dict
-    ) -> HttpResponse:
-        req_method = getattr(self.client, method.lower(), None)
-        if not req_method:
-            raise ValueError(f'Invalid method "{method}"')
-        return req_method(url, **req_kwargs)
-
-    def assert_response(
-        self,
-        url: str,
-        users: Union[list, tuple, User],
-        status_code: int,
-        redirect_user: Optional[str] = None,
-        redirect_anon: Optional[str] = None,
-        method: str = 'GET',
-        data: Optional[dict] = None,
-        header: Optional[dict] = None,
-        cleanup_method: Optional[callable] = None,
-        req_kwargs: Optional[dict] = None,
-    ):
-        """
-        Assert a response status code for url with a list of users. Also checks
-        for redirection URL where applicable.
-
-        :param url: Target URL for the request
-        :param users: Users to test (single user, list or tuple)
-        :param status_code: Status code
-        :param redirect_user: Redirect URL for signed in user (optional)
-        :param redirect_anon: Redirect URL for anonymous (optional)
-        :param method: Method for request (string, optional, default='GET')
-        :param data: Optional data for request (dict, optional)
-        :param header: Request header (dict, optional)
-        :param cleanup_method: Callable method to clean up data after a
-               successful request
-        :param req_kwargs: Optional request kwargs override (dict or None)
-        """
-        if header is None:
-            header = {}
-        if not isinstance(users, (list, tuple)):
-            users = [users]
-
-        for user in users:
-            req_kwargs = req_kwargs if req_kwargs else {}
-            if data:
-                req_kwargs.update({'data': data})
-            if header:
-                req_kwargs.update(header)
-
-            if user:  # Authenticated user
-                re_url = redirect_user if redirect_user else reverse('home')
-                with self.login(user):
-                    response = self.send_request(url, method, req_kwargs)
-            else:  # Anonymous
-                if redirect_anon:
-                    re_url = redirect_anon
-                else:
-                    url_split = url.split('?')
-                    if len(url_split) > 1:
-                        next_url = url_split[0] + quote('?' + url_split[1])
-                    else:
-                        next_url = url
-                    re_url = reverse('login') + '?next=' + next_url
-                response = self.send_request(url, method, req_kwargs)
-
-            msg = f'user={user}'
-            self.assertEqual(response.status_code, status_code, msg=msg)
-            if status_code == 302:
-                self.assertEqual(response.url, re_url, msg=msg)
-            if cleanup_method:
-                cleanup_method()
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.PermissionTestMixin instead.
+    """
 
 
-class IPAllowMixin(AppSettingMixin):
-    """Mixin for IP allowing test helpers"""
+# TODO: Remove in v1.4 (see #1830)
+class IPAllowMixin(MovedIPAllowMixin):
+    """
+    Mixin for IP allowing test helpers.
 
-    def setup_ip_allowing(self, ip_list: list[str] = []):
-        # Init IP restrict setting
-        self.make_setting(
-            plugin_name=APP_NAME,
-            name='ip_restrict',
-            setting_type=APP_SETTING_TYPE_BOOLEAN,
-            value=True,
-            project=self.project,
-        )
-        # Init IP allowlist setting
-        self.make_setting(
-            plugin_name=APP_NAME,
-            name='ip_allow_list',
-            setting_type=APP_SETTING_TYPE_STRING,
-            value=','.join(ip_list),
-            value_json=None,
-            project=self.project,
-        )
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.IPAllowMixin instead.
+    """
 
 
-class PermissionTestBase(PermissionTestMixin, TestCase):
+# TODO: Remove in v1.4 (see #1830)
+class PermissionTestBase(MovedPermissionTestBase):
     """
     Base class for permission tests for UI views.
 
-    NOTE: For REST API views, you need to use APITestCase
+    NOTE: For REST API views, you need to use APITestCase.
+
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.PermissionTestBase instead.
     """
 
 
-class ProjectPermissionTestBase(
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
-    ProjectInviteMixin,
-    PermissionTestBase,
-):
+# TODO: Remove in v1.4 (see #1830)
+class ProjectPermissionTestBase(MovedProjectPermissionTestBase):
     """
     Base class for testing project permissions.
 
     NOTE: For REST API views, you need to use APITestCase.
+
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.ProjectPermissionTestBase instead.
     """
 
     def setUp(self):
-        # Init roles
-        self.init_roles()
-        # Init users
-        # Superuser
-        self.superuser = self.make_user('superuser')
-        self.superuser.is_staff = True
-        self.superuser.is_superuser = True
-        self.superuser.save()
-        # No user
-        self.anonymous = None
-        # Users with role assignments
-        self.user_owner_cat = self.make_user('user_owner_cat')
-        self.user_delegate_cat = self.make_user('user_delegate_cat')
-        self.user_contributor_cat = self.make_user('user_contributor_cat')
-        self.user_viewer_cat = self.make_user('user_viewer_cat')
-        self.user_guest_cat = self.make_user('user_guest_cat')
-        self.user_finder_cat = self.make_user('user_finder_cat')
-        self.user_owner = self.make_user('user_owner')
-        self.user_delegate = self.make_user('user_delegate')
-        self.user_contributor = self.make_user('user_contributor')
-        self.user_guest = self.make_user('user_guest')
-        self.user_viewer = self.make_user('user_viewer')
-        # User without role assignments
-        self.user_no_roles = self.make_user('user_no_roles')
-
-        # Init projects
-        # Top level category
-        self.category = self.make_project(
-            title='TestCategory', type=PROJECT_TYPE_CATEGORY, parent=None
-        )
-        # Subproject under category
-        self.project = self.make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=self.category,
-        )
-        # Init role assignments
-        self.owner_as_cat = self.make_assignment(
-            self.category, self.user_owner_cat, self.role_owner
-        )
-        self.delegate_as_cat = self.make_assignment(
-            self.category, self.user_delegate_cat, self.role_delegate
-        )
-        self.contributor_as_cat = self.make_assignment(
-            self.category, self.user_contributor_cat, self.role_contributor
-        )
-        self.viewer_as_cat = self.make_assignment(
-            self.category, self.user_viewer_cat, self.role_viewer
-        )
-        self.guest_as_cat = self.make_assignment(
-            self.category, self.user_guest_cat, self.role_guest
-        )
-        self.finder_as_cat = self.make_assignment(
-            self.category, self.user_finder_cat, self.role_finder
-        )
-        self.owner_as = self.make_assignment(
-            self.project, self.user_owner, self.role_owner
-        )
-        self.delegate_as = self.make_assignment(
-            self.project, self.user_delegate, self.role_delegate
-        )
-        self.contributor_as = self.make_assignment(
-            self.project, self.user_contributor, self.role_contributor
-        )
-        self.guest_as = self.make_assignment(
-            self.project, self.user_guest, self.role_guest
-        )
-        self.viewer_as = self.make_assignment(
-            self.project, self.user_viewer, self.role_viewer
-        )
-        # Set up user helpers
-        self.setup_user_helpers()
+        super().setUp()
+        c = 'ProjectPermissionTestBase'
+        print(TEST_BASE_CLASS_DEPRECATE_MSG.format(old=c, new=c))
 
 
-class SiteAppPermissionTestBase(
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
-    ProjectInviteMixin,
-    PermissionTestBase,
-):
-    """Base class for testing site app permissions"""
+# TODO: Remove in v1.4 (see #1830)
+class SiteAppPermissionTestBase(MovedSiteAppPermissionTestBase):
+    """
+    Base class for testing site app permissions.
+
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.SiteAppPermissionTestBase instead.
+    """
 
     def setUp(self):
-        # Create users
-        self.superuser = self.make_user('superuser')
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user')
-        # No user
-        self.anonymous = None
+        super().setUp()
+        c = 'SiteAppPermissionTestBase'
+        print(TEST_BASE_CLASS_DEPRECATE_MSG.format(old=c, new=c))
 
 
-class TestGeneralViews(ProjectPermissionTestBase):
+class TestGeneralViews(MovedProjectPermissionTestBase):
     """Tests for general non-project UI view permissions"""
 
     def test_get_home(self):
@@ -379,13 +161,14 @@ class TestGeneralViews(ProjectPermissionTestBase):
         url = reverse('login')
         self.assert_response(url, self.all_users, 200)
 
-    def test_get_logout(self):
-        """Test logout view GET"""
+    def test_post_logout(self):
+        """Test logout view POST"""
         url = reverse('logout')
         self.assert_response(
             url,
             self.auth_users,
             302,
+            method='POST',
             redirect_user='/login/',
             redirect_anon='/login/',
         )
@@ -416,7 +199,7 @@ class TestGeneralViews(ProjectPermissionTestBase):
         )
 
 
-class TestProjectDetailView(ProjectPermissionTestBase):
+class TestProjectDetailView(MovedProjectPermissionTestBase):
     """Tests for ProjectDetailView permissions"""
 
     def setUp(self):
@@ -554,7 +337,7 @@ class TestProjectDetailView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.anonymous, 200)
 
 
-class TestProjectCreateView(ProjectPermissionTestBase):
+class TestProjectCreateView(MovedProjectPermissionTestBase):
     """Tests for ProjectCreateView permissions"""
 
     def setUp(self):
@@ -647,7 +430,7 @@ class TestProjectCreateView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectUpdateView(ProjectPermissionTestBase):
+class TestProjectUpdateView(MovedProjectPermissionTestBase):
     """Tests for ProjectUpdateView permissions"""
 
     def setUp(self):
@@ -768,7 +551,7 @@ class TestProjectUpdateView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectArchiveView(ProjectPermissionTestBase):
+class TestProjectArchiveView(MovedProjectPermissionTestBase):
     """Tests for ProjectArchiveView permissions"""
 
     def setUp(self):
@@ -908,7 +691,7 @@ class TestProjectArchiveView(ProjectPermissionTestBase):
 
 
 class TestProjectDeleteView(
-    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
+    RemoteSiteMixin, RemoteProjectMixin, MovedProjectPermissionTestBase
 ):
     """Tests for ProjectDeleteView permissions"""
 
@@ -1188,7 +971,7 @@ class TestProjectDeleteView(
             self.assert_response(self.url, self.no_role_users, 302)
 
 
-class TestProjectRoleView(ProjectPermissionTestBase):
+class TestProjectRoleView(MovedProjectPermissionTestBase):
     """Tests for ProjectRoleView permissions"""
 
     def setUp(self):
@@ -1311,7 +1094,7 @@ class TestProjectRoleView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestRoleAssignmentCreateView(ProjectPermissionTestBase):
+class TestRoleAssignmentCreateView(MovedProjectPermissionTestBase):
     """Tests for RoleAssignmentCreateView permissions"""
 
     def setUp(self):
@@ -1423,7 +1206,7 @@ class TestRoleAssignmentCreateView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestRoleAssignmentUpdateView(ProjectPermissionTestBase):
+class TestRoleAssignmentUpdateView(MovedProjectPermissionTestBase):
     """Tests for RoleAssignmentUpdateView permissions"""
 
     def setUp(self):
@@ -1597,7 +1380,7 @@ class TestRoleAssignmentUpdateView(ProjectPermissionTestBase):
             self.assert_response(url, self.no_role_users, 302)
 
 
-class TestRoleAssignmentDeleteView(ProjectPermissionTestBase):
+class TestRoleAssignmentDeleteView(MovedProjectPermissionTestBase):
     """Tests for RoleAssignmentDeleteView permissions"""
 
     def setUp(self):
@@ -1772,7 +1555,7 @@ class TestRoleAssignmentDeleteView(ProjectPermissionTestBase):
             self.assert_response(url, self.no_role_users, 302)
 
 
-class TestRoleAssignmentOwnDeleteView(ProjectPermissionTestBase):
+class TestRoleAssignmentOwnDeleteView(MovedProjectPermissionTestBase):
     """Tests for RoleAssignmentOwnDeleteView permissions"""
 
     def setUp(self):
@@ -1879,7 +1662,7 @@ class TestRoleAssignmentOwnDeleteView(ProjectPermissionTestBase):
             self.assert_response(url, self.no_role_users, 302)
 
 
-class TestRoleAssignmentOwnerTransferView(ProjectPermissionTestBase):
+class TestRoleAssignmentOwnerTransferView(MovedProjectPermissionTestBase):
     """Tests for RoleAssignmentOwnerTransferView permissions"""
 
     def setUp(self):
@@ -1995,7 +1778,7 @@ class TestRoleAssignmentOwnerTransferView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectInviteView(ProjectPermissionTestBase):
+class TestProjectInviteView(MovedProjectPermissionTestBase):
     """Tests for ProjectInviteView permissions"""
 
     def setUp(self):
@@ -2106,7 +1889,7 @@ class TestProjectInviteView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectInviteCreateView(ProjectPermissionTestBase):
+class TestProjectInviteCreateView(MovedProjectPermissionTestBase):
     """Tests for ProjectInviteCreateView permissions"""
 
     def setUp(self):
@@ -2219,7 +2002,7 @@ class TestProjectInviteCreateView(ProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectInviteResendView(ProjectPermissionTestBase):
+class TestProjectInviteResendView(MovedProjectPermissionTestBase):
     """Tests for ProjectInviteResendView permissions"""
 
     def setUp(self):
@@ -2338,7 +2121,7 @@ class TestProjectInviteResendView(ProjectPermissionTestBase):
             )
 
 
-class TestProjectInviteRevokeView(ProjectPermissionTestBase):
+class TestProjectInviteRevokeView(MovedProjectPermissionTestBase):
     """Tests for ProjectInviteRevokeView permissions"""
 
     def setUp(self):
@@ -2414,7 +2197,7 @@ class TestProjectInviteRevokeView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.non_superusers, 302)
 
 
-class TestSiteAppSettingsFormView(ProjectPermissionTestBase):
+class TestSiteAppSettingsFormView(MovedProjectPermissionTestBase):
     """Tests for SiteAppSettingsFormView permissions"""
 
     def setUp(self):
@@ -2438,7 +2221,7 @@ class TestSiteAppSettingsFormView(ProjectPermissionTestBase):
         self.assert_response(self.url, self.non_superusers, 302)
 
 
-class TestRemoteSiteViews(RemoteSiteMixin, SiteAppPermissionTestBase):
+class TestRemoteSiteViews(RemoteSiteMixin, MovedSiteAppPermissionTestBase):
     """Tests for UI view permissions in remote site views"""
 
     def setUp(self):
@@ -2514,7 +2297,7 @@ class TestRemoteSiteViews(RemoteSiteMixin, SiteAppPermissionTestBase):
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestTargetSiteViews(
-    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
+    RemoteSiteMixin, RemoteProjectMixin, MovedProjectPermissionTestBase
 ):
     """Tests for UI view permissions on target site"""
 
@@ -2716,7 +2499,7 @@ class TestTargetSiteViews(
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestRevokedRemoteProjectViews(
-    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
+    RemoteSiteMixin, RemoteProjectMixin, MovedProjectPermissionTestBase
 ):
     """
     Tests for UI view permissions with revoked remote project on target site.
@@ -2797,7 +2580,7 @@ class TestRevokedRemoteProjectViews(
         self.assert_response(url, bad_users, 302)
 
 
-class TestIPAllowing(IPAllowMixin, ProjectPermissionTestBase):
+class TestIPAllowing(IPAllowMixin, MovedProjectPermissionTestBase):
     """Tests for IP allow list permissions with ProjectDetailView"""
 
     def setUp(self):
@@ -3144,7 +2927,10 @@ class TestIPAllowing(IPAllowMixin, ProjectPermissionTestBase):
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestIPAllowingTargetSite(
-    IPAllowMixin, RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
+    IPAllowMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    MovedProjectPermissionTestBase,
 ):
     """Tests for IP allow list permissions on target site"""
 

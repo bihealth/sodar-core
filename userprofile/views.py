@@ -57,6 +57,10 @@ If this was not requested by you, this message can be ignored.
 EMAIL_NOT_FOUND_MSG = 'No email found.'
 EMAIL_ALREADY_VERIFIED_MSG = 'Email already verified.'
 EMAIL_VERIFIED_MSG = 'Email "{email}" verified.'
+EMAIL_VERIFY_SEND_MSG = (
+    'Email added. A verification message has been sent to the address. Follow '
+    'the received verification link to activate the address.'
+)
 EMAIL_VERIFY_RESEND_MSG = 'Verification message to "{email}" resent.'
 
 
@@ -66,36 +70,9 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     template_name = 'userprofile/detail.html'
     permission_required = 'userprofile.view_detail'
 
-    def _get_user_settings(self):
-        """Return user setting values"""
-        plugins = plugin_api.get_active_plugins(
-            plugin_type='project_app'
-        ) + plugin_api.get_active_plugins(plugin_type='site_app')
-        for plugin in plugins + [None]:
-            if plugin:
-                name = plugin.name
-                s_defs = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
-                )
-            else:
-                name = 'projectroles'
-                s_defs = app_settings.get_definitions(
-                    APP_SETTING_SCOPE_USER,
-                    plugin_name=name,
-                    user_modifiable=True,
-                )
-            for s_def in s_defs.values():
-                yield {
-                    'label': s_def.label or f'{name}.{s_def.name}',
-                    'value': app_settings.get(
-                        name, s_def.name, user=self.request.user
-                    ),
-                    'description': s_def.description,
-                }
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user_settings'] = list(self._get_user_settings())
+        user = self.request.user
         context['add_emails'] = SODARUserAdditionalEmail.objects.filter(
             user=self.request.user
         ).order_by('email')
@@ -104,6 +81,9 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         )
         context['send_email'] = settings.PROJECTROLES_SEND_EMAIL
         context['site_mode'] = settings.PROJECTROLES_SITE_MODE
+        context['can_update_user'] = user.has_perm(
+            'projectroles.update_local_user'
+        )
         return context
 
 
@@ -169,12 +149,7 @@ class UserEmailMixin:
                     EMAIL_VERIFY_RESEND_MSG.format(email=email.email),
                 )
             else:
-                messages.success(
-                    self.request,
-                    'Email added. A verification message has been sent to the '
-                    'address. Follow the received verification link to '
-                    'activate the address.',
-                )
+                messages.success(self.request, EMAIL_VERIFY_SEND_MSG)
         except Exception as ex:
             messages.error(
                 self.request, f'Failed to send verification mail: {ex}'

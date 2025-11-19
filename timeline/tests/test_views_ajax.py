@@ -6,12 +6,9 @@ from django.urls import reverse
 from django.utils.timezone import localtime
 
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
+from projectroles.tests.base import UIViewTestBase
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
-from projectroles.tests.test_views import (
-    ViewTestBase,
-    PROJECT_TYPE_CATEGORY,
-    PROJECT_TYPE_PROJECT,
-)
 
 from timeline.models import DEFAULT_MESSAGES
 from timeline.views_ajax import EventExtraDataMixin
@@ -19,12 +16,16 @@ from timeline.templatetags.timeline_tags import get_status_style
 from timeline.tests.test_models import TimelineEventMixin
 
 
+# SODAR constants
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+
 # Local constants
 APP_NAME_PR = 'projectroles'
 
 
 class TimelineAjaxViewTestBase(
-    ProjectMixin, RoleAssignmentMixin, TimelineEventMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, TimelineEventMixin, UIViewTestBase
 ):
     """Base class for timeline Ajax API view tests"""
 

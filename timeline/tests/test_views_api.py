@@ -9,14 +9,11 @@ from test_plus.test import APITestCase
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
+from projectroles.tests.base import SODARAPIViewTestMixin, TEST_SERVER_URL
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
     RoleAssignmentMixin,
-)
-from projectroles.tests.test_views_api import (
-    SODARAPIViewTestMixin,
-    TEST_SERVER_URL,
 )
 
 from timeline.tests.test_models import (

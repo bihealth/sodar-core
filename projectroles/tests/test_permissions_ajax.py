@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
-from projectroles.tests.test_permissions import (
+from projectroles.tests.base import (
     ProjectPermissionTestBase,
     SiteAppPermissionTestBase,
 )

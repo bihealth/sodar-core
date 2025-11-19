@@ -256,6 +256,10 @@ The following projectroles settings are **optional**:
     during remote project sync if they exist on the target site. Similarly,
     local users will be selectable in member dropdowns when selecting users
     (bool)
+``PROJECTROLES_LOCAL_USER_UPDATE``
+    If true, allow non-admin local users to update their user account details.
+    This can also be be set False per each user by modifying the
+    ``enable_update`` field in the user model (bool, default=True)
 ``PROJECTROLES_KIOSK_MODE``
     If true, allow accessing certain project views *without* user authentication
     in order to e.g. demonstrate features in a kiosk-style deployment. Also
@@ -266,7 +270,7 @@ The following projectroles settings are **optional**:
     Assumed true if not set (bool)
 ``PROJECTROLES_ALLOW_ANONYMOUS``
     If true, allow anonymous users to access the site and all projects where
-    ``public_guest_access`` is set true (bool)
+    ``public_access`` is set to a role (bool)
 ``PROJECTROLES_SIDEBAR_ICON_SIZE``
     Set the icon size for the project sidebar. Minimum=18, maximum=42,
     default=36 (int)
@@ -587,18 +591,72 @@ ensure it works in all views.
     </a>
 
 
-SAML SSO Configuration (Removed in v1.0)
-========================================
+.. _app_projectroles_settings_axes:
+
+Django-Axes Configuration (Optional)
+====================================
+
+The django-axes package is used in SODAR Core for login security. It can be
+configured to e.g. block access from users after N unsuccessful login attempts.
+
+This part of the setup is **optional**. However, it is highly recommended to
+enable these features, especially on public-facing instances of SODAR Core based
+site.
 
 .. note::
 
-    SAML support has been removed in SODAR Core v1.0. It has been replaced with
-    the possibility to set up OpenID Connect (OIDC) authentication. The library
-    previously used for SAML in SODAR Core is incompatible with Django v4.x. We
-    are unaware of SODAR Core based projects requiring SAML at this time. If
-    there are specific needs to use SAML on a SODAR Core based site, we are
-    happy to review pull requests to reintroduce it. Please note the
-    implementation has to support Django v4.2+.
+    Axes is used to secure local/superuser accounts, LDAP accounts and views
+    using basic authentication. For OIDC, the authentication provider controls
+    possible lockouts. Token authentication for REST API views is not supported
+    by django-axes at the time of writing, so API views are currently omitted
+    from these protections.
+
+You first need to add the ``axes`` app, middleware and authentication backend to
+relevant settings in ``base.py``. Note that the ordering matters in certain
+settings:
+
+.. code-block:: python
+
+    THIRD_PARTY_APPS = [
+        # ...
+        'axes',  # Django-axes for login security
+    ]
+
+    MIDDLEWARE = [
+        # ...
+        'axes.middleware.AxesMiddleware',  # Should be the last one on the list
+    ]
+
+    AUTHENTICATION_BACKENDS = [
+        # NOTE: AxesBackend must be the first backend in the list
+        'axes.backends.AxesBackend',
+        # ...
+    ]
+
+You also need to add the following Django settings in ``base.py``, along with
+possible other Axes settings required by your site's configuration:
+
+``AXES_ENABLED``
+    Enable django-axes on the site (boolean).
+``AXES_FAILURE_LIMIT``
+    Number of login attempts allowed before a record is created for failed
+    logins (integer).
+``AXES_LOCK_OUT_AT_FAILURE``
+    Lock out user at failure if True (boolean).
+``AXES_COOLOFF_TIME``
+    Cooloff time for failure lock-out in hours (integer).
+``AXES_LOCKOUT_PARAMETERS``
+    Lockout parameters. by default, block by username only for GRPR compliance
+    (list)
+``AXES_ONLY_ADMIN_SITE``
+    Only enable lock for admin site if True (boolean).
+``AXES_DISABLE_CLIENT_IP_STORAGE``
+    Disable storing IP addresses for GDPR compliance if True (boolean).
+    **NOTE:** Not a built-in Axes setting but a SODAR Core specific workaround,
+    see ``base.py`` in this repo for an example of its use.
+
+For more information on using and configuring Axes, see the
+`django-axes documentation <https://django-axes.readthedocs.io/>`_.
 
 
 Global JS/CSS Include Modifications (Optional)

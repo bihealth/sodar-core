@@ -11,16 +11,12 @@ from test_plus.test import TestCase
 from projectroles.app_links import AppLinkAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
+from projectroles.tests.base import UIViewTestBase
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
-)
-from projectroles.tests.test_views import (
-    ViewTestBase,
-    PROJECT_TYPE_CATEGORY,
-    PROJECT_TYPE_PROJECT,
 )
 from projectroles.tests.test_views_api import SerializedObjectMixin
 
@@ -30,6 +26,8 @@ app_settings = AppSettingAPI()
 
 
 # SODAR constants
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
@@ -39,7 +37,9 @@ APP_NAME_FF = 'filesfolders'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
-class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
+class TestProjectListAjaxView(
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
+):
     """Tests for ProjectListAjaxView"""
 
     def setUp(self):
@@ -386,7 +386,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, ViewTestBase):
 
 
 class TestProjectListColumnAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for ProjectListColumnAjaxView"""
 
@@ -465,7 +465,7 @@ class TestProjectListColumnAjaxView(
 
 
 class TestProjectListRoleAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for ProjectListRoleAjaxView"""
 
@@ -554,7 +554,7 @@ class TestProjectListRoleAjaxView(
 
 
 class TestCategoryStatisticsAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for CategoryStatisticsAjaxView"""
 
@@ -640,7 +640,7 @@ class TestCategoryStatisticsAjaxView(
 
 
 class TestProjectStarringAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for ProjectStarringAjaxView"""
 
@@ -695,7 +695,7 @@ class TestProjectStarringAjaxView(
         )
 
 
-class TestHomeStarringAjaxView(ViewTestBase):
+class TestHomeStarringAjaxView(UIViewTestBase):
     """Tests for HomeStarringAjaxView"""
 
     def setUp(self):
@@ -765,7 +765,7 @@ class TestRemoteProjectAccessAjaxView(
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
-    ViewTestBase,
+    UIViewTestBase,
 ):
     """Tests for RemoteProjectAccessAjaxView"""
 
@@ -875,7 +875,7 @@ class TestRemoteProjectAccessAjaxView(
 
 
 class TestSidebarContentAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for SidebarContentAjaxView"""
 
@@ -992,7 +992,7 @@ class TestSiteReadOnlySettingAjaxView(SerializedObjectMixin, TestCase):
         self.assertEqual(response.json(), {'site_read_only': True})
 
 
-class TestUserDropdownContentAjaxView(ViewTestBase):
+class TestUserDropdownContentAjaxView(UIViewTestBase):
     """Tests for UserDropdownContentAjaxView"""
 
     def setUp(self):
@@ -1087,7 +1087,7 @@ class TestCurrentUserRetrieveAjaxView(SerializedObjectMixin, TestCase):
 
 
 class TestUserAutocompleteAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for UserAutocompleteAjaxView"""
 
@@ -1195,7 +1195,7 @@ class TestUserAutocompleteAjaxView(
 
 
 class TestUserAutocompleteRedirectAjaxView(
-    ProjectMixin, RoleAssignmentMixin, ViewTestBase
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
 ):
     """Tests for UserAutocompleteRedirectAjaxView"""
 

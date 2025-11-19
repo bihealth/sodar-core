@@ -6,14 +6,19 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from knox.models import AuthToken
-
 from selenium.webdriver.common.by import By
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_ui import UITestBase
+from projectroles.tests.test_models import (
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+)
+from projectroles.tests.base import SiteUITestBase
+
+from tokens.tests.test_models import SODARAuthTokenMixin
 
 
 app_settings = AppSettingAPI()
@@ -26,25 +31,22 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 APP_NAME_PR = 'projectroles'
 
 
-class TestUserTokenListView(UITestBase):
-    """Tests for UserTokenListView"""
+class TestTokenListView(
+    SODARAuthTokenMixin,
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    SiteUITestBase,
+):
+    """Tests for TokenListView UI"""
 
     def setUp(self):
         super().setUp()
-        # Create users
-        self.superuser = self.make_user('superuser', True)
-        self.superuser.is_superuser = True
-        self.superuser.is_staff = True
-        self.superuser.save()
-        self.regular_user = self.make_user('regular_user', False)
-
         # Create tokens
-        self.token = AuthToken.objects.create(
-            self.regular_user, timedelta(days=5)
+        self.token = self.make_token(
+            self.regular_user, expiry=timedelta(days=5)
         )[0]
-        self.token_no_expiry = AuthToken.objects.create(
-            self.regular_user, None
-        )[0]
+        self.token_no_expiry = self.make_token(self.regular_user)[0]
         self.url = reverse('tokens:list')
 
     def test_create_button(self):
@@ -77,6 +79,7 @@ class TestUserTokenListView(UITestBase):
     @override_settings(TOKENS_CREATE_PROJECT_USER_RESTRICT=True)
     def test_create_button_restrict_role(self):
         """Test create button with restriction as user with role"""
+        self.init_roles()  # Init roles which we don't have for site tests
         category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -99,7 +102,7 @@ class TestUserTokenListView(UITestBase):
             expected, self.url, 'sodar-tk-list-item', 'class'
         )
         self.assert_element_count(
-            expected, self.url, 'sodar-tk-item-dropdown', 'class'
+            expected, self.url, 'sodar-tk-delete-btn', 'class'
         )
 
     def test_list_items_read_only(self):
@@ -111,7 +114,7 @@ class TestUserTokenListView(UITestBase):
         )
         expected = [(self.superuser, 0), (self.regular_user, 0)]
         self.assert_element_count(
-            expected, self.url, 'sodar-tk-item-dropdown', 'class'
+            expected, self.url, 'sodar-tk-delete-btn', 'class'
         )
 
     def test_list_expiry(self):
@@ -119,9 +122,7 @@ class TestUserTokenListView(UITestBase):
         self.login_and_redirect(self.regular_user, self.url)
         items = self.selenium.find_elements(By.CLASS_NAME, 'sodar-tk-list-item')
         self.assertEqual(len(items), 2)
-        expiry_time = timezone.localtime(self.token.expiry).strftime(
-            '%Y-%m-%d %H:%M'
-        )
+        expiry_time = timezone.localtime(self.token.expiry).strftime('%Y-%m-%d')
         values = []
         for item in items:
             values.append(item.find_elements(By.TAG_NAME, 'td')[2].text)

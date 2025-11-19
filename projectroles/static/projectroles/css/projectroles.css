@@ -139,6 +139,15 @@ div.sodar-subtitle-shadow {
   display: inline-block;
 }
 
+/* Nav item class for when a POST submit is needed in nav menu */
+.sodar-nav-item-submit {
+  background: none;
+  border: none;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 0;
+}
+
 .sodar-pr-sidebar {
   width: 90px;
   padding-top: 2px;
@@ -379,20 +388,20 @@ div.sodar-pr-project-title-container {
   }
 }
 
-.dataTables_paginate {
+.dt-paging {
   width: 100%;
   padding: 12px;
   border-top: 1px solid #dfdfdf;
 }
 
-.dataTables_paginate .pagination .active .page-link {
+.dt-paging .pagination .active .page-link {
   background-color: #007bff;
   color: #ffffff;
 }
 
 .pagination {
   justify-content: center !important;
-  margin-bottom: 12px !important;
+  margin-bottom: 0 !important;
 }
 
 li.sodar-paginate-button {
@@ -489,15 +498,15 @@ a.btn[disabled='disabled'] {
 }
 
 .sodar-list-btn-group {
-  height: 1.65em;
+  height: 1.55em;
 }
 
 .sodar-list-btn {
   white-space: nowrap !important;
   padding-top: 1px;
-  padding-left: 5px;
-  padding-right: 5px;
-  height: 1.65em;
+  padding-left: 4px;
+  padding-right: 4px;
+  height: 1.55em;
 }
 
 a.sodar-pr-btn-title {
@@ -533,7 +542,7 @@ a.sodar-pr-btn-copy-secret i {
 
 .sodar-list-dropdown {
   white-space: nowrap !important;
-  height: 26px;
+  height: 1.55em;
   width: 50px !important;
   padding: 1px !important;
 }

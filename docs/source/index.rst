@@ -80,7 +80,7 @@ Python Programming
 
 Django Development
   For learning about Django, head over to the
-  `official Django documentation <https://docs.djangoproject.com/en/4.2/>`_.
+  `official Django documentation <https://docs.djangoproject.com/en/5.2/>`_.
 
 HTML / Javascript / CSS / Bootstrap 4
   Together with Django, SODAR Core provides a framework to plug in your own
@@ -139,6 +139,7 @@ HTML / Javascript / CSS / Bootstrap 4
     Filesfolders <app_filesfolders_api_rest>
     Sodarcache <app_sodarcache_api_rest>
     Timeline <app_timeline_api_rest>
+    Tokens <app_tokens_api_rest>
 
 .. toctree::
     :maxdepth: 2

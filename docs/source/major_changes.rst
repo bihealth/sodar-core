@@ -10,17 +10,252 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.3.0 (2025-11-19)
+*******************
+
+Release Highlights
+==================
+
+- Add tokens REST API
+- Add user token creation REST API view
+- Add custom API token model
+- Add optional API token label
+- Add django-axes support for login security
+- Add local user update disabling
+- Add custom user model admin class
+- Add DataTables include templates
+- Add TimelineEventStatus in TimelineAPI.get_models() return data
+- Add AppAlert and TimelineEvent object test helpers
+- Add Python v3.12 and v3.13 support
+- Update userprofile user details layout
+- Update base test classes, deprecate old ones
+- Upgrade to Django v5.2
+- Upgrade to django-rest-knox v5.0 (requires re-generating API tokens)
+- Upgrade to jQuery v3.7
+- Remove Python v3.9 and v3.10 support
+- Remove deprecated projectroles plugin helper methods
+- Remove deprecated Project model public_guest_access field
+- Remove deprecated project badge template
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.8.
+Python v3.12 and v3.13 Support Added
+    Python v3.12 and v3.13 support has been officially added in this version.
+    3.13 is now the recommended Python version.
+Python v3.9 and v3.10 Support Dropped
+    This release no longer supports Python <v3.11.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project. Note that in this release, several dependencies were also dropped.
+    Unless your repository explicitly requires them, we recommend dropping those
+    packages from your SODAR Core based repository as well.
+Javascript Dependencies
+    Javascript libraries have been upgraded to jQuery v3.7, DataTables v2.3.4
+    and Clipboard v2.0.11. If you include any of these dependencies manually in
+    the templates on your site, you should ensure they are up to date.
+
+Django v5.2 Upgrade
+-------------------
+
+This release updates SODAR Core from Django v4.2 to v5.2. This is a breaking
+change which causes many updates and also requires updating several
+dependencies.
+
+Please update the Django requirement along with your site's other Python
+requirements to match ones in ``requirements/*.txt``. See
+`Django deprecation documentation <https://docs.djangoproject.com/en/dev/internals/deprecation/>`_
+for details about what has been deprecated in Django and which changes are
+mandatory.
+
+Common known issues:
+
+- Logout view must be called with a ``POST`` request. If you are using the base
+  templates, this should require no changes.
+- ``DEFAULT_FILE_STORAGE`` Django setting has been removed. If you need to set
+  storages for the :ref:`filesfolders <app_filesfolders>` app or other reasons,
+  set up a ``STORAGES`` dict instead. You can find an example in
+  ``config/settings/base.py``.
+- Support for ``pytz`` has been removed in Django and we should also stop using
+  it. Use `zoneinfo <https://docs.python.org/3/library/zoneinfo.html>`_ instead.
+
+Knox Upgrade and Custom API Token Model
+---------------------------------------
+
+This release upgrades ``django-rest-knox`` to v5.0. API tokens previously
+generated will no longer work. Uses will have to generate new API tokens. It is
+recommended to communicate this change to your users.
+
+Furthermore, the knox token model has been extended by a custom model. SODAR
+Core v1.3 expects ``tokens.models.SODARAuthToken``, or some extension of it, to
+be used as the access token. To enable this, add the following line to
+``base.py``:
+
+.. code-block:: python
+
+    KNOX_TOKEN_MODEL = 'tokens.SODARAuthToken'
+
+If you refer to ``knox.models.AuthToken`` directly in e.g. test cases, you
+should replace references to it with the new ``SODARAuthToken`` model.
+
+SODARUser Model Updates
+-----------------------
+
+This release introduces a new field to the ``SODARUser`` model. Because user
+model migrations are handled in ``$SITE/users``, you should ensure the database
+migrations in your repository are up to date. When upgrading to SODAR Core v1.3,
+make sure to run the ``makemigrations`` command, followed by ``migrate`` to
+bring your dev environment up to speed. Example:
+
+.. code-block:: console
+
+    $ ./manage.py makemigrations
+    $ ./manage.py migrate
+
+This release introduces a custom ``UserAdmin`` class to ensure all relevant
+fields for the user model. If you want to manage your users in the admin
+interface in addition to the Django shell, it is strongly recommended to use or
+extend the ``SODARUserAdmin`` class on your site. You can do this by e.g.
+setting up ``$SITE/users/admin.py`` as follows:
+
+.. code-block:: django
+
+    from django.contrib import admin
+    from projectroles.admin import SODARUserAdmin
+    from .models import User
+
+    # ...
+
+    @admin.register(User)
+    class MyUserAdmin(SODARUserAdmin):
+        form = MyUserChangeForm
+        add_form = MyUserCreationForm
+        # Add other overrides here as needed
+
+AppLinkAPI Changes
+------------------
+
+The following potentially breaking changes have been made to ``AppLinkAPI``.
+They are relevant if you use the API or related Ajax views for custom displaying
+of SODAR Core links in your UI.
+
+Optional method field added
+    If a link must be provided as a form submitted via ``POST``, the
+    ``method='POST'`` field may be included. This is required for e.g. the
+    logout view due to Django v5.2 changes. Don't forget to include the CSRF
+    token in the form submission.
+Login and logout links renamed
+    The ``name`` values for ``sign-in`` and ``sign-out`` have been renamed to
+    ``login`` and ``logout``, respectively. This has been done to maintain
+    consistent naming of actions in the repository.
+
+REST API View Test Client Changed
+---------------------------------
+
+``SODARAPIViewTestMixin`` now uses ``rest_framework.test.APIClient`` as the
+client for requests, instead of the ``test_plus`` client which was in use
+before. This naturally also applies to all base API test classes using the
+mixin.
+
+This should not require any changes on your site. However, if you need to use
+another client for some API view tests while still using SODAR Core helpers, you
+can override it by changing the ``client_class`` class member variable.
+
+Timeline API Model Retrieval Changed
+------------------------------------
+
+``TimelineAPI.get_models()`` now returns the ``TimelineEventStatus`` class in
+addition to the previously returned classes. You should expect a three-element
+tuple as its return data.
+
+JSON App Setting Values in perform_project_modify()
+---------------------------------------------------
+
+In the project modify API, JSON app setting values were accidentally provided to
+the ``perform_project_modify()`` implementation in the ``project_settings``
+kwarg as a string converted from the original dict value. These are now provided
+as a dict as intended. This may require modifications in your implementation of
+the API.
+
+Test Helper Updates
+-------------------
+
+Some potentially breaking changes have been made to testing helpers.
+
+``get_basic_auth_header()`` Returns Dict
+    This REST API view test helper now returns the full header as dictionary
+    instead of just the value.
+Projectroles Test Module Constants
+    The constants in projectroles ``tests`` modules have been cleaned up. If you
+    were importing some constants from these modules, you may need to relocate
+    certain constants or manually declare them in your own tests.
+
+Deprecated Features
+-------------------
+
+These features have been deprecated in v1.3 and will be removed in v1.4.
+
+Base Test Classes Moved
+    The following base test classes have been moved to
+    ``projectroles.tests.base``. Imports from the original locations will stop
+    working in v1.4.
+
+    - ``projectroles.tests.test_permissions.IPAllowMixin``
+    - ``projectroles.tests.test_permissions.PermissionTestBase``
+    - ``projectroles.tests.test_permissions.PermissionTestMixin``
+    - ``projectroles.tests.test_permissions.ProjectPermissionTestBase``
+    - ``projectroles.tests.test_permissions.SiteAppPermissionTestBase``
+    - ``projectroles.tests.test_permissions_api.ProjectAPIPermissionTestBase``
+    - ``projectroles.tests.test_permissions_api.SODARAPIPermissionTestMixin``
+    - ``projectroles.tests.test_ui.UITestMixin``
+    - ``projectroles.tests.test_ui.SeleniumSetupMixin``
+    - ``projectroles.tests.test_ui.LiveUserMixin``
+    - ``projectroles.tests.test_views.api.APIViewTestBase``
+    - ``projectroles.tests.test_views.api.SerializedObjectMixin``
+    - ``projectroles.tests.test_views.api.SODARAPIViewTestMixin``
+``projectroles.tests.test_ui.UITestBase`` Moved and Renamed
+    Use ``projectroles.tests.base.ProjectUITestBase`` or ``SiteUITestBase``
+    depending on the type of app being tested.
+``projectroles.tests.test_views.ViewTestBase`` Moved and Renamed
+    Use ``projectroles.tests.base.UIViewTestBase``.
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.2 and have been removed in v1.3.
+
+Root-Level Projectroles Plugin Helpers
+    The plugin retrieval helper methods in ``projectroles.plugins`` have been
+    removed. Use ``PluginAPI`` instead.
+``Project.public_guest_access``
+    This field has been removed. Use ``Project.public_access`` instead.
+``Project.set_public()``
+    This helper has been removed. Use ``Project.set_public_access()`` instead.
+``_project_badge.html``
+    This template has been removed. Instead, use the ``get_project_badge()``
+    template tag in ``projectroles_common_tags``.
+
+
 v1.2.4 (2025-10-10)
 *******************
 
 Release Highlights
 ==================
 
-- Add support for line breaks app alert messages
+- Add support for line breaks in app alert messages
 - Add alert level constants as AppAlertAPI attributes
 - Fix app setting deletion debug logging
 - Fix UI test setup window size
 - General bug fixes and minor updates
+
+Breaking Changes
+================
 
 System Prerequisites
 --------------------

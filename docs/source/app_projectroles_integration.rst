@@ -133,9 +133,15 @@ Extending the User Model
 
 In a cookiecutter-django based project, an extended user model should already
 exist in ``{SITE_NAME}/users/models.py``. The abstract model provided by the
-projectroles app provides the same model with critical additions, most notably
-the ``sodar_uuid`` field used as an unique identifier for SODAR objects
-including users.
+projectroles app provides the same model with critical additions.
+
+Notable additions to the ``SODARUser`` model:
+
+``enable_update``
+    Field for enabling or disabling the ability to update the user profile for a
+    local non-superuser account. Currently only affects local user accounts.
+``sodar_uuid``
+    Field used as an unique identifier for SODAR Core objects, including users.
 
 If you have not added any of your own modifications to the model, you can simply
 **replace** the existing model extension with the following code:
@@ -170,6 +176,28 @@ When integrating projectroles into an existing site with existing users, the
 ``sodar_uuid`` field needs to be populated. See
 `instructions in Django documentation <https://docs.djangoproject.com/en/3.1/howto/writing-migrations/#migrations-that-add-unique-fields>`_
 on how to create the required migrations.
+
+Custom User Admin Class
+-----------------------
+
+If you want to manage your users in the admin interface in addition to the
+Django shell, it is strongly recommended to use or extend the ``SODARUserAdmin``
+class on your site. You can do this by e.g. setting up ``$SITE/users/admin.py``
+as follows:
+
+.. code-block:: django
+
+    from django.contrib import admin
+    from projectroles.admin import SODARUserAdmin
+    from .models import User
+
+    # ...
+
+    @admin.register(User)
+    class MyUserAdmin(SODARUserAdmin):
+        form = MyUserChangeForm
+        add_form = MyUserCreationForm
+        # Add other overrides here as needed
 
 Synchronizing User Groups for Existing Users
 --------------------------------------------

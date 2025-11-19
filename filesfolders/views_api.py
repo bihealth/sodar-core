@@ -89,18 +89,14 @@ class RetrieveUpdateDestroyAPITimelineMixin(FilesfoldersTimelineMixin):
         update_attrs = ['name', 'folder', 'description', 'flag']
         old_item = serializer.instance
         old_data = {}
-
         if old_item.__class__.__name__ == 'HyperLink':
             update_attrs.append('url')
         elif old_item.__class__.__name__ == 'File':
             update_attrs.append('public_url')
-
         for a in update_attrs:
             old_data[a] = getattr(old_item, a)
-
         # Actually perform the update
         super().perform_update(serializer)
-
         # Register update with timeline
         self.add_item_modify_event(
             obj=serializer.instance,
@@ -143,8 +139,7 @@ class ListCreatePermissionMixin:
     def get_permission_required(self):
         if self.request.method == 'POST':
             return 'filesfolders.add_data'
-        else:
-            return 'filesfolders.view_data'
+        return 'filesfolders.view_data'
 
 
 class RetrieveUpdateDestroyPermissionMixin:
@@ -156,12 +151,10 @@ class RetrieveUpdateDestroyPermissionMixin:
     def get_permission_required(self):
         if self.request.method == 'GET':
             return 'filesfolders.view_data'
-        else:
-            obj = self.get_object()
-            if obj.owner == self.request.user:
-                return 'filesfolders.update_data_own'
-            else:
-                return 'filesfolders.update_data_all'
+        obj = self.get_object()
+        if obj.owner == self.request.user:
+            return 'filesfolders.update_data_own'
+        return 'filesfolders.update_data_all'
 
 
 # API Views --------------------------------------------------------------------

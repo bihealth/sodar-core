@@ -1,6 +1,7 @@
 """Forms for the adminalerts app"""
 
 from django import forms
+from django.conf import settings
 from django.utils import timezone
 
 # Projectroles dependency
@@ -54,6 +55,9 @@ class AdminAlertForm(SODARModelForm):
         if not self.instance.pk:
             self.initial['date_expire'] = timezone.now() + timezone.timedelta(
                 days=1
+            )
+            self.initial['send_email'] = getattr(
+                settings, 'ADMINALERTS_EMAIL_SENDING_DEFAULT', True
             )
             self.fields['send_email'].help_text = EMAIL_HELP_CREATE
         # Updating

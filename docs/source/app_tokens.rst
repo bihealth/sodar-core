@@ -38,6 +38,13 @@ The siteinfo app is available for your Django site after installing
         'tokens.apps.TokensConfig',
     ]
 
+You also need to set ``KNOX_TOKEN_MODEL`` to ``tokens.SODARAuthToken``.
+Alternatively, you can use your own model which must extend ```SODARAuthToken``:
+
+.. code-block:: python
+
+    KNOX_TOKEN_MODEL = 'tokens.SODARAuthToken'
+
 Optional Settings
 -----------------
 

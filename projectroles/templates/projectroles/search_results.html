@@ -18,7 +18,7 @@
 {% block css %}
   {{ block.super }}
   <!-- DataTables -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.css" />
+  {% include 'projectroles/_datatables_css.html' %}
 
   <style type="text/css">
     div.sodar-search-card {
@@ -50,8 +50,8 @@
     }
     select.sodar-search-page-length {
       max-width: 110px;
-      height: 32px;
-      padding-top: 5px;
+      height: 30px;
+      padding-top: 4px;
     }
 
     /* DataTables modifications */
@@ -161,7 +161,7 @@
     window.refreshCellOverflow = true
   </script>
   <!-- DataTables -->
-  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.3/b-2.0.1/datatables.min.js"></script>
+  {% include 'projectroles/_datatables_js.html' %}
   <!-- Project search -->
   <script type="text/javascript" src="{% static 'projectroles/js/search.js' %}"></script>
 

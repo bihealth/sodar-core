@@ -1,11 +1,23 @@
 <tr class="sodar-tk-list-item">
   <td class="text-right text-muted">{{ forloop.counter }}</td>
-  <td class="text-nowrap">{{ item.created|date:'Y-m-d H:i' }}</td>
-  <td class="text-nowrap">{{ token.expiry|date:'Y-m-d H:i'|default:'Never' }}</td>
-  <td class="text-nowrap"><code>{{ item.token_key }}</code></td>
+  <td class="text-nowrap">{{ token.created|date:'Y-m-d' }}</td>
+  <td class="text-nowrap {% if not token.expiry %}text-muted{% endif %}">
+    {{ token.expiry|date:'Y-m-d'|default:'Never' }}
+  </td>
+  <td class="text-nowrap"><code>{{ token.token_key }}</code></td>
+  {% if token.sodar_label %}
+    <td>{{ token.sodar_label }}</td>
+  {% else %}
+    <td class="text-muted">N/A</td>
+  {% endif %}
   <td class="text-right">
     {% if request.user.is_superuser or not site_read_only %}
-      {% include 'tokens/_token_dropdown.html' %}
+      <a href="{% url 'tokens:delete' pk=token.pk %}"
+         class="btn btn-danger sodar-list-btn sodar-tk-delete-btn"
+         role="button"
+         title="Delete token">
+        <i class="iconify" data-icon="mdi:close-thick"></i>
+      </a>
     {% endif %}
   </td>
 </tr>

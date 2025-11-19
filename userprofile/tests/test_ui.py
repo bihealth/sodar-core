@@ -11,7 +11,7 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import APP_SETTING_DISABLE_LABEL
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_models import SODARUserAdditionalEmailMixin
-from projectroles.tests.test_ui import UITestBase
+from projectroles.tests.base import SiteUITestBase
 
 
 app_settings = AppSettingAPI()
@@ -22,10 +22,13 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 # Local constants
 APP_NAME_PR = 'projectroles'
+UPDATE_BTN_ID = 'sodar-user-btn-update'
+SETTING_BTN_ID = 'sodar-user-btn-settings'
+EMAIL_ADD_BTN_ID = 'sodar-user-btn-email-add'
 
 
 @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
-class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
+class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
     """Tests for UserDetailView"""
 
     def setUp(self):
@@ -37,14 +40,53 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
 
     def test_update_button(self):
         """Test existence of user update button"""
-        expected = [(self.local_user, 1), (self.ldap_user, 0)]
-        self.assert_element_count(expected, self.url, 'sodar-user-btn-update')
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 1),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(expected, self.url, UPDATE_BTN_ID)
 
     def test_update_button_read_only(self):
-        """Test existence of user update button with site read-only mode"""
+        """Test user update button with site read-only mode"""
         app_settings.set(APP_NAME_PR, 'site_read_only', True)
-        expected = [(self.local_user, 0), (self.ldap_user, 0)]
-        self.assert_element_count(expected, self.url, 'sodar-user-btn-update')
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 0),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(expected, self.url, UPDATE_BTN_ID)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_update_button_site_mode_target(self):
+        """Test user update button with target site mode"""
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 1),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(expected, self.url, UPDATE_BTN_ID)
+
+    @override_settings(PROJECTROLES_LOCAL_USER_UPDATE=False)
+    def test_update_button_update_disabled_site(self):
+        """Test update button with site-wide local user update disabled"""
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 0),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(expected, self.url, UPDATE_BTN_ID)
+
+    def test_update_button_update_disabled_user(self):
+        """Test update button with user level local user update disabled"""
+        self.local_user.enable_update = False
+        self.local_user.save()
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 0),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(expected, self.url, UPDATE_BTN_ID)
 
     def test_settings_button(self):
         """Test existence of settings update button"""
@@ -53,17 +95,17 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
             (self.local_user, 1),
             (self.ldap_user, 1),
         ]
-        self.assert_element_count(expected, self.url, 'sodar-user-btn-settings')
+        self.assert_element_count(expected, self.url, SETTING_BTN_ID)
 
     def test_settings_button_read_only(self):
-        """Test existence of settings update button with site read-only mode"""
+        """Test settings update button with site read-only mode"""
         app_settings.set(APP_NAME_PR, 'site_read_only', True)
         expected = [
             (self.superuser, 1),
             (self.local_user, 0),
             (self.ldap_user, 0),
         ]
-        self.assert_element_count(expected, self.url, 'sodar-user-btn-settings')
+        self.assert_element_count(expected, self.url, SETTING_BTN_ID)
 
     def test_add_email_button(self):
         """Test existence of add email button"""
@@ -72,24 +114,20 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
             (self.local_user, 1),
             (self.ldap_user, 1),
         ]
-        self.assert_element_count(
-            expected, self.url, 'sodar-user-btn-email-add'
-        )
+        self.assert_element_count(expected, self.url, EMAIL_ADD_BTN_ID)
 
     def test_add_email_button_read_only(self):
-        """Test existence of add email button with site read-only mode"""
+        """Test add email button with site read-only mode"""
         app_settings.set(APP_NAME_PR, 'site_read_only', True)
         expected = [
             (self.superuser, 1),
             (self.local_user, 0),
             (self.ldap_user, 0),
         ]
-        self.assert_element_count(
-            expected, self.url, 'sodar-user-btn-email-add'
-        )
+        self.assert_element_count(expected, self.url, EMAIL_ADD_BTN_ID)
 
     def test_additional_email_unset(self):
-        """Test existence of additional email elements without email"""
+        """Test additional email elements without email"""
         self.assert_element_count(
             [(self.local_user, 0)],
             self.url,
@@ -110,7 +148,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
         )
 
     def test_additional_email_set(self):
-        """Test existence of additional email elements with email"""
+        """Test additional email elements with email"""
         self.make_email(self.local_user, 'add1@example.com')
         self.make_email(self.local_user, 'add2@example.com', verified=False)
         # Another user, should not be visible
@@ -172,7 +210,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
 
     @override_settings(PROJECTROLES_SEND_EMAIL=False)
     def test_additional_email_disabled(self):
-        """Test existence of email card with PROJECTROLES_SEND_EMAIL=False"""
+        """Test email card with PROJECTROLES_SEND_EMAIL=False"""
         self.assert_element_exists(
             [self.local_user],
             self.url,
@@ -182,13 +220,13 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_additional_email_target(self):
-        """Test existence of additional email elements as target site"""
+        """Test additional email elements as target site"""
         self.make_email(self.local_user, 'add1@example.com')
         self.make_email(self.local_user, 'add2@example.com', verified=False)
         self.assert_element_exists(
             [self.local_user],
             self.url,
-            'sodar-user-btn-email-add',
+            EMAIL_ADD_BTN_ID,
             False,
         )
         self.assert_element_count(
@@ -211,7 +249,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UITestBase):
         )
 
 
-class TestUserAppSettingsView(UITestBase):
+class TestUserAppSettingsView(SiteUITestBase):
     """Tests for UserAppSettingsView"""
 
     def setUp(self):

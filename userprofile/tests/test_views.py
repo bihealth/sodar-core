@@ -51,6 +51,7 @@ APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
+APP_NAME_PR = 'projectroles'
 INVALID_VALUE = 'INVALID VALUE'
 ADD_EMAIL = 'add1@example.com'
 ADD_EMAIL2 = 'add2@example.com'
@@ -74,25 +75,82 @@ class UserViewTestBase(TestCase):
 class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
     """Tests for UserDetailView"""
 
+    def setUp(self):
+        super().setUp()
+        self.regular_user = self.make_user('regular_user')
+        self.url = reverse('userprofile:detail')
+
     def test_get(self):
         """Test UserDetailView GET"""
-        with self.login(self.user):
-            response = self.client.get(reverse('userprofile:detail'))
+        with self.login(self.regular_user):
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(response.context['user_settings'])
         self.assertEqual(response.context['add_emails'].count(), 0)
         self.assertEqual(response.context['site_read_only'], False)
         self.assertEqual(response.context['send_email'], True)
         self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
+        self.assertEqual(response.context['can_update_user'], True)
+
+    def test_get_read_only(self):
+        """Test GET with site read only mode"""
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
+        with self.login(self.regular_user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['site_read_only'], True)
+        self.assertEqual(response.context['can_update_user'], False)
+
+    @override_settings(PROJECTROLES_SEND_EMAIL=False)
+    def test_get_send_email_disabled(self):
+        """Test GET with disabled email sending"""
+        with self.login(self.regular_user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['send_email'], False)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_get_site_mode_target(self):
+        """Test GET with target site mode"""
+        with self.login(self.regular_user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['site_mode'], SITE_MODE_TARGET)
+        self.assertEqual(response.context['can_update_user'], True)
+
+    @override_settings(PROJECTROLES_LOCAL_USER_UPDATE=False)
+    def test_get_local_user_update_disabled_site(self):
+        """Test GET with disabled site-wide local user updating"""
+        with self.login(self.regular_user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['can_update_user'], False)
+
+    def test_get_local_user_update_disabled_user(self):
+        """Test GET with disabled user level local user updating"""
+        self.regular_user.enable_update = False
+        self.regular_user.save()
+        with self.login(self.regular_user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['can_update_user'], False)
+
+    @override_settings(PROJECTROLES_LOCAL_USER_UPDATE=False)
+    def test_get_local_user_update_disabled_site_superuser(self):
+        """Test GET with disabled site-wide local user updating as superuser"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['can_update_user'], True)
 
     def test_get_additional_email(self):
         """Test GET with additional email"""
-        self.make_email(self.user, 'add@example.com')
-        self.make_email(self.user, 'add_unverified@example.com', verified=False)
-        with self.login(self.user):
-            response = self.client.get(reverse('userprofile:detail'))
+        self.make_email(self.regular_user, 'add@example.com')
+        self.make_email(
+            self.regular_user, 'add_unverified@example.com', verified=False
+        )
+        with self.login(self.regular_user):
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(response.context['user_settings'])
         self.assertEqual(response.context['add_emails'].count(), 2)
 
 

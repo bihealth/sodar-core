@@ -6,7 +6,7 @@ from django.urls import reverse
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_permissions import ProjectPermissionTestBase
+from projectroles.tests.base import ProjectPermissionTestBase
 
 from filesfolders.models import File, Folder
 from filesfolders.tests.test_models import (

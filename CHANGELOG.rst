@@ -5,6 +5,110 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.3.0 (2025-11-19)
+===================
+
+Added
+-----
+
+- **General**
+    - Python v3.12 and v3.13 support (#1558, #1803)
+    - ``STORAGES`` Django setting for filesfolders (#1557)
+    - ``django-axes`` support for login security (#1750, #1814)
+- **Adminalerts**
+    - ``ADMINALERTS_EMAIL_SENDING_DEFAULT`` Django setting (#1796)
+- **Appalerts**
+    - ``AppalertsTestMixin`` class and ``assert_app_alert_count()`` helper (#1243)
+- **Projectroles**
+    - ``request_knox()`` test helper ``content_type`` arg (#1557)
+    - ``get_user_links()`` optional ``method`` field (#1798)
+    - ``AppSettingCleanupMixin`` helper mixin (#1804)
+    - ``PROJECT_USER`` app setting cleanup in ownership transfer (#1804)
+    - ``PROJECTROLES_LOCAL_USER_UPDATE`` Django setting (#1805)
+    - ``is_local_user()`` and ``is_local_user_update_allowed()`` rule predicates (#1805)
+    - ``update_local_user`` rule permission (#1805)
+    - ``SODARUser.enable_update`` field (#1805)
+    - ``SODARUserAdmin`` user model administrator class (#1805)
+    - Local user update disabling (#1805)
+    - ``raise_axes_permission_denied()`` signal (#1814)
+    - ``_datatables_js.html`` and ``_datatables_css.html`` include templates (#1823)
+    - ``_datatables.js`` common DataTables helpers (#1824)
+    - ``ProjectUITestBase`` and ``SiteUITestBase`` UI test base classes (#1460)
+- **Timeline**
+    - ``TimelineEventStatus`` in ``TimelineAPI.get_models()`` return data (#1777)
+    - ``TimelineTestMixin`` class and ``assert_tl_event_count()`` helper (#1243)
+- **Tokens**
+    - Tokens REST API v1.0 (#1773)
+    - ``TokenCreateLoginAPIView`` REST API view (#1549, #1773, #1815)
+    - ``SODARAuthToken`` model with ``sodar_label`` field (#1549)
+- **Userprofile**
+    - Support for local user update disabling (#1805)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v5.2.8 (#1557, #1790)
+    - Upgrade to django-rest-knox v5.0 (#1568)
+    - Upgrade general Python dependencies (#1790)
+    - Upgrade to jQuery v3.7 and Clipboard v2.0.11 (#1821)
+    - Upgrade to DataTables v2.3 (#1582, #1826, #1827)
+    - Use ``zoneinfo`` instead of ``pytz`` (#1557)
+    - Refactor ``UITestBase`` use (#1460)
+    - Update ``env.example`` (#1806)
+- **Projectroles**
+    - Update logout links for ``POST`` method (#1557, #1798, #1807)
+    - Use DRF API client in ``SODARAPIViewTestMixin`` (#1801)
+    - Rename ``get_user_links()`` ``login`` and ``logout`` links (#1799)
+    - Remove redundant JSON app setting value conversions in ``ProjectModifyMixin`` (#1590)
+    - Refactor ``AppSettingAPI.set()`` to reduce repetition (#1590)
+    - Rename ``UserUpdateView`` to ``LocalUserUpdateView`` (#1805)
+    - Update ``UserUpdateView`` permission handling (#1805)
+    - Return ``get_basic_auth_header()`` as dict (#1813)
+    - Unify server side and DataTables pagination layouts (#1825)
+    - Update ``sodar-list-*`` button class heights to match default line height (#1818)
+    - Deprecate ``UITestBase`` class (#1460)
+    - Move base test classes to ``tests.base`` (#1431)
+    - Deprecate old base test classes (#1431)
+    - Remove dynamic app dependencies from base test classes (#1253, #1431)
+- **Tokens**
+    - Improve ``TokenListView`` layout (#1817)
+    - Rename UI views (#1816)
+    - Update URL routes to match conventions (#1820)
+- **Userprofile**
+    - Remove user app settings card from ``UserDetailView`` (#1742)
+
+Fixed
+-----
+
+- **Projectroles**
+    - ``get_user_links()`` called twice in ``_site_titlebar_dropdown.html`` (#1800)
+    - Role assignment deletion not deleting all ``PROJECT_USER`` app settings (#1738)
+    - JSON app setting values provided to ``perform_project_modify()`` as string (#1590)
+    - Password change popup breaking UI test legacy UI login (#1808)
+    - Icon refeshing in DataTables pagination controls (#1763)
+
+Removed
+-------
+
+- **General**
+    - Python v3.9 and v3.10 support (#1558, #1802)
+    - ``DEFAULT_FILE_STORAGE`` Django setting (#1557)
+    - ``USE_L10N`` Django setting (#1557)
+    - ``pytz`` dependency (#1557)
+    - ``coveralls`` dependency (#1797)
+    - ``django-auth-knox`` URL routes (#1812)
+    - Unused ``TOKENS_TTL`` Django setting (#1819)
+    - Unsupported IE compatibility includes (#1821)
+- **Projectroles**
+    - Deprecated plugin helper methods in ``plugins`` root (#1718)
+    - ``Project.public_guest_access`` field (#1703)
+    - ``Project.set_public()`` helper (#1703)
+    - ``_project_badge.html`` include template (#1696)
+- **Tokens**
+    - Support for ``knox.models.AuthToken`` API tokens (#1549)
+
+
 v1.2.4 (2025-10-10)
 ===================
 

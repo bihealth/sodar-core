@@ -1,26 +1,18 @@
 """REST API view tests for the projectroles app"""
 
-import base64
 import json
-import pytz
 
-from datetime import datetime
-from typing import Optional, Union
+from typing import Optional
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.db.models import QuerySet
 from django.forms.models import model_to_dict
-from django.http import HttpResponse
+
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
-
-from knox.models import AuthToken
-
-from test_plus.test import APITestCase
 
 # Timeline dependency
 from timeline.models import TimelineEvent
@@ -32,7 +24,6 @@ from projectroles.models import (
     RoleAssignment,
     ProjectInvite,
     AppSetting,
-    SODARUserAdditionalEmail,
     SODAR_CONSTANTS,
     AUTH_TYPE_LDAP,
     AUTH_TYPE_LOCAL,
@@ -40,10 +31,17 @@ from projectroles.models import (
 )
 from projectroles.plugins import PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
+from projectroles.tests.base import (
+    UIViewTestBase,
+    SerializedObjectMixin as MovedSerializedObjectMixin,
+    SODARAPIViewTestMixin as MovedSODARAPIViewTestMixin,
+    APIViewTestBase as MovedAPIViewTestBase,
+    TEST_SERVER_URL,
+    TEST_BASE_CLASS_DEPRECATE_MSG,
+)
 from projectroles.tests.test_app_settings import AppSettingInitMixin
 from projectroles.tests.test_models import (
     ProjectMixin,
-    RoleMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
     RemoteSiteMixin,
@@ -53,7 +51,6 @@ from projectroles.tests.test_models import (
     ADD_EMAIL,
 )
 from projectroles.tests.test_views import (
-    ViewTestBase,
     REMOTE_SITE_NAME,
     REMOTE_SITE_URL,
     REMOTE_SITE_DESC,
@@ -79,228 +76,68 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
-APP_SETTING_TYPE_INTEGER = SODAR_CONSTANTS['APP_SETTING_TYPE_INTEGER']
 APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
 APP_NAME = 'projectroles'
+APP_NAME_EX = 'example_project_app'
 CORE_API_MEDIA_TYPE_LEGACY = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION_LEGACY = '0.13.4'
 CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
 CORE_API_VERSION_INVALID = '9.9.9'
-
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 NEW_CATEGORY_TITLE = 'New Category'
 NEW_PROJECT_TITLE = 'New Project'
 UPDATED_TITLE = 'Updated Title'
 UPDATED_DESC = 'Updated description'
 UPDATED_README = 'Updated readme'
-
 INVITE_USER_EMAIL = 'new1@example.com'
 INVITE_USER2_EMAIL = 'new2@example.com'
 INVITE_MESSAGE = 'Message'
-
-# Special value to use for empty knox token
-EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
-
-EX_APP_NAME = 'example_project_app'
-TEST_SERVER_URL = 'http://testserver'
 LDAP_DOMAIN = 'EXAMPLE'
 
 
 # Base Classes -----------------------------------------------------------------
 
 
-class SerializedObjectMixin:
+# TODO: Remove in v1.4 (see #1830)
+class SerializedObjectMixin(MovedSerializedObjectMixin):
     """
     Mixin for helpers with serialized objects.
+
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.SerializedObjectMixin instead.
     """
 
-    @classmethod
-    def get_serialized_user(cls, user: User, auth_type: bool = True) -> dict:
-        """
-        Return serialization for a user.
 
-        :param user: User object
-        :param auth_type: Include user auth type if True (bool)
-        :return: Dict
-        """
-        add_emails = SODARUserAdditionalEmail.objects.filter(
-            user=user, verified=True
-        ).order_by('email')
-        ret = {
-            'additional_emails': [e.email for e in add_emails],
-            'email': user.email,
-            'is_superuser': user.is_superuser,
-            'name': user.name,
-            'sodar_uuid': str(user.sodar_uuid),
-            'username': user.username,
-        }
-        if auth_type:
-            ret['auth_type'] = user.get_auth_type()
-        return ret
-
-
-class SODARAPIViewTestMixin(SerializedObjectMixin):
+# TODO: Remove in v1.4 (see #1830)
+class SODARAPIViewTestMixin(MovedSODARAPIViewTestMixin):
     """
     Mixin for SODAR and SODAR Core API views with accept headers, knox token
     authorization and general helper methods.
+
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.SODARAPIViewTestMixin instead.
     """
 
-    # Copied from Knox tests
-    @classmethod
-    def get_basic_auth_header(cls, username: str, password: str) -> str:
-        return (
-            'Basic %s'
-            % base64.b64encode(
-                ('%s:%s' % (username, password)).encode('ascii')
-            ).decode()
-        )
 
-    @classmethod
-    def get_token(
-        cls, user: User, full_result: bool = False
-    ) -> Union[str, tuple]:
-        """
-        Get or create a knox token for a user.
+# TODO: Remove in v1.4 (see #1830)
+class APIViewTestBase(MovedAPIViewTestBase):
+    """
+    Base API test view with knox authentication.
 
-        :param user: User object
-        :param full_result: Return full result of AuthToken creation if True
-        :return: Token string or AuthToken creation tuple (EMPTY_KNOX_TOKEN if
-                 user is None)
-        """
-        if user is None:
-            return EMPTY_KNOX_TOKEN
-        result = AuthToken.objects.create(user=user)
-        return result if full_result else result[1]
-
-    @classmethod
-    def get_drf_datetime(cls, obj_dt: datetime) -> str:
-        """
-        Return datetime in DRF compatible format.
-
-        :param obj_dt: Object DateTime field
-        :return: String
-        """
-        return timezone.localtime(
-            obj_dt, pytz.timezone(settings.TIME_ZONE)
-        ).isoformat()
-
-    @classmethod
-    def get_accept_header(
-        cls,
-        media_type: Optional[str] = None,
-        version: Optional[str] = None,
-    ) -> dict:
-        """
-        Return version accept header based on the media type and version string.
-
-        :param media_type: String (default = cls.media_type)
-        :param version: String (default = cls.api_version)
-        :return: Dict
-        """
-        if not media_type:
-            media_type = cls.media_type
-        if not version:
-            version = cls.api_version
-        return {'HTTP_ACCEPT': f'{media_type}; version={version}'}
-
-    @classmethod
-    def get_token_header(cls, token: str) -> dict:
-        """
-        Return auth header based on token.
-
-        :param token: Token string
-        :return: Dict, empty if token is None
-        """
-        if token is EMPTY_KNOX_TOKEN:
-            return {}
-        return {'HTTP_AUTHORIZATION': f'token {token}'}
-
-    def request_knox(
-        self,
-        url: str,
-        method: str = 'GET',
-        format: str = 'json',
-        data: Optional[dict] = None,
-        token: Optional[str] = None,
-        media_type: Optional[str] = None,
-        version: Optional[str] = None,
-        header: Optional[dict] = None,
-    ) -> HttpResponse:
-        """
-        Perform a HTTP request with Knox token auth.
-
-        :param url: URL for the request
-        :param method: Request method (string, default="GET")
-        :param format: Request format (string, default="json")
-        :param data: Optional data for request (dict)
-        :param token: Knox token string (if None, use self.knox_token)
-        :param media_type: String (default = cls.media_type)
-        :param version: String (default = cls.api_version)
-        :param header: Optional header data (dict)
-        :return: Response object
-        """
-        if not token:
-            token = self.knox_token
-        req_kwargs = {
-            'format': format,
-            **self.get_accept_header(media_type, version),
-            **self.get_token_header(token),
-        }
-        if data:
-            req_kwargs['data'] = data
-        if header:
-            req_kwargs.update(header)
-        req_method = getattr(self.client, method.lower(), None)
-        if not req_method:
-            raise ValueError(f'Unsupported method "{method}"')
-        return req_method(url, **req_kwargs)
-
-
-class APIViewTestBase(
-    ProjectMixin,
-    RoleMixin,
-    RoleAssignmentMixin,
-    SODARAPIViewTestMixin,
-    APITestCase,
-):
-    """Base API test view with knox authentication"""
+    DEPRECATED: To be removed in v1.4. Use
+    projectroles.tests.base.SODARAPIViewTestMixin instead.
+    """
 
     def setUp(self):
-        # Show complete diff in case of failure
-        self.maxDiff = None
-        # Init roles
-        self.init_roles()
-
-        # Init superuser
-        self.user = self.make_user('superuser')
-        self.user.is_staff = True
-        self.user.is_superuser = True
-        self.user.save()
-        # Init project users
-        self.user_owner_cat = self.make_user('user_owner_cat')
-        self.user_owner = self.make_user('user_owner')
-
-        # Set up category and project with owner role assignments
-        self.category = self.make_project(
-            'TestCategory', PROJECT_TYPE_CATEGORY, None
-        )
-        self.owner_as_cat = self.make_assignment(
-            self.category, self.user_owner_cat, self.role_owner
-        )
-        self.project = self.make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, self.category
-        )
-        self.owner_as = self.make_assignment(
-            self.project, self.user_owner, self.role_owner
-        )
-        # Get knox token for self.user
-        self.knox_token = self.get_token(self.user)
+        super().setUp()
+        c = 'APIViewTestBase'
+        print(TEST_BASE_CLASS_DEPRECATE_MSG.format(old=c, new=c))
 
 
-class ProjectrolesAPIViewTestBase(APIViewTestBase):
+class ProjectrolesAPIViewTestBase(MovedAPIViewTestBase):
     """Override of APIViewTestBase to be used with Projectroles API views"""
 
     media_type = views_api.PROJECTROLES_API_MEDIA_TYPE
@@ -761,7 +598,6 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': new_category.title,
             'has_public_children': False,
@@ -815,7 +651,6 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': self.category.title
             + CAT_DELIMITER
@@ -886,7 +721,6 @@ class TestProjectCreateAPIView(
             'description': new_project.description,
             'readme': new_project.readme.raw,
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': self.category.title
             + CAT_DELIMITER
@@ -1041,7 +875,6 @@ class TestProjectCreateAPIView(
         self.assertEqual(response.status_code, 201, msg=response.content)
         new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
         self.assertEqual(new_project.public_access, self.role_guest)
-        self.assertEqual(new_project.public_guest_access, True)  # DEPRECATED
 
     def test_post_project_no_public_access_field(self):
         """Test POST for project without public access field (should fail)"""
@@ -1162,7 +995,6 @@ class TestProjectCreateAPIView(
         self.assertEqual(response.status_code, 201, msg=response.content)
         new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
         self.assertEqual(new_project.public_access, self.role_guest)
-        self.assertEqual(new_project.public_guest_access, True)  # DEPRECATED
 
     def test_post_project_v1_1_no_public_guest_access_field(self):
         """Test POST for project with API v1.1 and no public_guest_access field"""
@@ -1223,7 +1055,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': None,
-            'public_guest_access': False,
             'archive': False,
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
@@ -1293,7 +1124,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': self.role_guest.pk,
-            'public_guest_access': True,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
             'has_public_children': False,
@@ -1354,7 +1184,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': None,
-            'public_guest_access': False,  # DEPRECATED
             'archive': False,
             'full_title': UPDATED_TITLE,
             'has_public_children': False,
@@ -1410,7 +1239,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': self.role_guest.pk,
-            'public_guest_access': True,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
             'has_public_children': False,
@@ -1548,16 +1376,13 @@ class TestProjectUpdateAPIView(
 
     def test_patch_project_public(self):
         """Test PATCH with changed public access"""
-        self.assertEqual(self.project.public_guest_access, False)
         self.assertEqual(self.category.has_public_children, False)
         patch_data = {'public_access': PROJECT_ROLE_GUEST}
         response = self.request_knox(self.url, method='PATCH', data=patch_data)
-
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.project.refresh_from_db()
         self.category.refresh_from_db()
         self.assertEqual(self.project.public_access, self.role_guest)
-        self.assertEqual(self.project.public_guest_access, True)
         # Assert the parent category has_public_children is set true
         self.assertEqual(self.category.has_public_children, True)
 
@@ -1612,7 +1437,6 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'public_access': self.role_guest.pk,
-            'public_guest_access': True,
             'archive': False,
             'full_title': self.category.title + CAT_DELIMITER + UPDATED_TITLE,
             'has_public_children': False,
@@ -2256,15 +2080,15 @@ class TestRoleAssignmentDestroyAPIView(
         self.update_as = self.make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
+        self.url = reverse(
+            'projectroles:api_role_destroy',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
 
     def test_delete(self):
         """Test RoleAssignmentDestroyAPIView DELETE"""
         self.assertEqual(RoleAssignment.objects.count(), 3)
-        url = reverse(
-            'projectroles:api_role_destroy',
-            kwargs={'roleassignment': self.update_as.sodar_uuid},
-        )
-        response = self.request_knox(url, method='DELETE')
+        response = self.request_knox(self.url, method='DELETE')
         self.assertEqual(response.status_code, 204, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 2)
         self.assertEqual(
@@ -2273,6 +2097,27 @@ class TestRoleAssignmentDestroyAPIView(
             ).count(),
             0,
         )
+
+    def test_delete_app_setting(self):
+        """Test DELETE with PROJECT_USER app setting"""
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.assign_user,
+        }
+        app_settings.set(value=True, **s_kw)
+        response = self.request_knox(self.url, method='DELETE')
+        self.assertEqual(response.status_code, 204, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 2)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.assign_user
+            ).count(),
+            0,
+        )
+        self.assertEqual(app_settings.get(**s_kw), False)
 
     def test_delete_delegate_unauthorized(self):
         """Test DELETE with delegate role without perms (should fail)"""
@@ -2320,11 +2165,7 @@ class TestRoleAssignmentDestroyAPIView(
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
         self.assertEqual(RoleAssignment.objects.count(), 3)
-        url = reverse(
-            'projectroles:api_role_destroy',
-            kwargs={'roleassignment': self.update_as.sodar_uuid},
-        )
-        response = self.request_knox(url, method='DELETE')
+        response = self.request_knox(self.url, method='DELETE')
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
@@ -2362,6 +2203,28 @@ class TestRoleAssignmentOwnerTransferAPIView(
         response = self.request_knox(self.url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.user_new)
+
+    def test_post_app_setting(self):
+        """Test POST with app setting"""
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        self.assertEqual(app_settings.get(**s_kw), True)
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': PROJECT_ROLE_CONTRIBUTOR,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        # Setting should still exist
+        self.assertEqual(app_settings.get(**s_kw), True)
 
     def test_post_category(self):
         """Test POST with category"""
@@ -2633,6 +2496,31 @@ class TestRoleAssignmentOwnerTransferAPIView(
                 project=self.project, user=self.user_owner
             ).first()
         )
+
+    def test_post_no_old_role_app_setting(self):
+        """Test POST with no old user role and app setting"""
+        self.make_assignment(self.project, self.user_new, self.role_contributor)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        s_kw = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'project_user_bool_setting',
+            'project': self.project,
+            'user': self.user_owner,
+        }
+        app_settings.set(value=True, **s_kw)
+        post_data = {
+            'new_owner': self.user_new.username,
+            'old_owner_role': None,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_owner
+            ).first()
+        )
+        self.assertEqual(app_settings.get(**s_kw), False)
 
     def test_post_no_old_role_v1_0(self):
         """Test POST with no old user role and v1.0 (should fail)"""
@@ -3235,12 +3123,12 @@ class TestProjectSettingRetrieveAPIView(
     def test_get_project(self):
         """Test ProjectSettingRetrieveAPIView GET with PROJECT scope setting"""
         setting_name = 'project_str_setting'
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
@@ -3253,20 +3141,20 @@ class TestProjectSettingRetrieveAPIView(
     def test_get_project_unset(self):
         """Test GET with unset PROJECT setting (should return default)"""
         setting_name = 'project_str_setting'
-        default_value = app_settings.get_default(EX_APP_NAME, setting_name)
+        default_value = app_settings.get_default(APP_NAME_EX, setting_name)
         q_kwargs = {
-            'app_plugin__name': EX_APP_NAME,
+            'app_plugin__name': APP_NAME_EX,
             'name': setting_name,
             'project': self.project,
         }
         AppSetting.objects.get(**q_kwargs).delete()
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
 
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
@@ -3281,7 +3169,7 @@ class TestProjectSettingRetrieveAPIView(
         """Test GET with PROJECT_USER scope setting"""
         setting_name = 'project_user_str_setting'
         get_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'user': str(self.user.sodar_uuid),
         }
@@ -3290,7 +3178,7 @@ class TestProjectSettingRetrieveAPIView(
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': str(self.project.sodar_uuid),
             'user': str(self.user.sodar_uuid),
             'name': setting_name,
@@ -3303,16 +3191,16 @@ class TestProjectSettingRetrieveAPIView(
     def test_get_project_user_unset(self):
         """Test GET with unset PROJECT_USER setting"""
         setting_name = 'project_user_str_setting'
-        default_value = app_settings.get_default(EX_APP_NAME, setting_name)
+        default_value = app_settings.get_default(APP_NAME_EX, setting_name)
         q_kwargs = {
-            'app_plugin__name': EX_APP_NAME,
+            'app_plugin__name': APP_NAME_EX,
             'name': setting_name,
             'project': self.project,
             'user': self.user,
         }
         AppSetting.objects.get(**q_kwargs).delete()
         get_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'user': str(self.user.sodar_uuid),
         }
@@ -3321,7 +3209,7 @@ class TestProjectSettingRetrieveAPIView(
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': str(self.project.sodar_uuid),
             'user': str(self.user.sodar_uuid),
             'name': setting_name,
@@ -3335,20 +3223,20 @@ class TestProjectSettingRetrieveAPIView(
     def test_get_project_user_no_user(self):
         """Test GET with PROJECT_USER setting and no user (should fail)"""
         setting_name = 'project_user_str_setting'
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_get_json(self):
         """Test GET with JSON app setting"""
         setting_name = 'project_json_setting'
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
 
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
@@ -3361,12 +3249,12 @@ class TestProjectSettingRetrieveAPIView(
     def test_get_non_modifiable(self):
         """Test GET with non-modifiable app setting"""
         setting_name = 'project_hidden_setting'
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': str(self.project.sodar_uuid),
             'user': None,
             'name': setting_name,
@@ -3400,7 +3288,7 @@ class TestProjectSettingRetrieveAPIView(
         """Test GET with PROJECT_USER scope setting and API v1.1"""
         setting_name = 'project_user_str_setting'
         get_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'user': str(self.user.sodar_uuid),
         }
@@ -3409,7 +3297,7 @@ class TestProjectSettingRetrieveAPIView(
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': str(self.project.sodar_uuid),
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
@@ -3446,7 +3334,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         )
         setting_name = 'project_str_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -3468,7 +3356,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         self.assertEqual(AppSetting.objects.count(), 0)
         setting_name = 'project_user_str_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': 'value',
             'user': str(self.user_owner.sodar_uuid),
@@ -3483,7 +3371,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test setting PROJECT_USER setting with no user (should fail)"""
         setting_name = 'project_user_str_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -3495,7 +3383,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test POST with non-modifiable app setting (should fail)"""
         setting_name = 'project_hidden_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -3519,7 +3407,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test POST with invalid scope (should fail)"""
         setting_name = 'user_str_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -3531,7 +3419,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test POST with unaccepted project type (should fail)"""
         setting_name = 'category_bool_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': True,
         }
@@ -3543,7 +3431,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test POST without value (should fail)"""
         self.assertEqual(AppSetting.objects.count(), 0)
         setting_name = 'project_str_setting'
-        post_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        post_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(AppSetting.objects.count(), 0)
@@ -3552,7 +3440,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test POST with integer value"""
         setting_name = 'project_int_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': '170',
         }
@@ -3565,7 +3453,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test POST with boolean value"""
         setting_name = 'project_bool_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': True,
         }
@@ -3579,7 +3467,7 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         setting_name = 'project_json_setting'
         value = {'key': 'value'}
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': value,
         }
@@ -3735,12 +3623,12 @@ class TestUserSettingRetrievePIView(
     def test_get(self):
         """Test UserSettingRetrieveAPIView GET"""
         setting_name = 'user_str_setting'
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': None,
             'user': str(self.user.sodar_uuid),
             'name': setting_name,
@@ -3753,19 +3641,19 @@ class TestUserSettingRetrievePIView(
     def test_get_unset(self):
         """Test GET with unset setting (should return default)"""
         setting_name = 'user_str_setting'
-        default_value = app_settings.get_default(EX_APP_NAME, setting_name)
+        default_value = app_settings.get_default(APP_NAME_EX, setting_name)
         q_kwargs = {
-            'app_plugin__name': EX_APP_NAME,
+            'app_plugin__name': APP_NAME_EX,
             'name': setting_name,
             'user': self.user,
         }
         AppSetting.objects.get(**q_kwargs).delete()
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': None,
             'user': str(self.user.sodar_uuid),
             'name': setting_name,
@@ -3779,12 +3667,12 @@ class TestUserSettingRetrievePIView(
     def test_get_non_modifiable(self):
         """Test GET with non-modifiable USER app setting"""
         setting_name = 'user_hidden_setting'
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data)
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': None,
             'user': str(self.user.sodar_uuid),
             'name': setting_name,
@@ -3815,12 +3703,12 @@ class TestUserSettingRetrievePIView(
     def test_get_v1_1(self):
         """Test GET with API v1.1"""
         setting_name = 'user_str_setting'
-        get_data = {'plugin_name': EX_APP_NAME, 'setting_name': setting_name}
+        get_data = {'plugin_name': APP_NAME_EX, 'setting_name': setting_name}
         response = self.request_knox(self.url, data=get_data, version='1.1')
         self.assertEqual(response.status_code, 200, msg=response.content)
         response_data = json.loads(response.content)
         expected = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'project': None,
             'user': self.get_serialized_user(self.user),
             'name': setting_name,
@@ -3848,7 +3736,7 @@ class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
         )
         setting_name = 'user_str_setting'
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': setting_name,
             'value': 'value',
         }
@@ -3878,7 +3766,7 @@ class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
     def test_post_invalid_scope_project(self):
         """Test POST with PROJECT scope (should fail)"""
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'project_str_setting',
             'value': 'value',
         }
@@ -3889,7 +3777,7 @@ class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
     def test_post_invalid_scope_project_user(self):
         """Test POST with PROJECT_USER scope (should fail)"""
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'project_user_str_setting',
             'value': 'value',
         }
@@ -3901,7 +3789,7 @@ class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
         """Test POST without value (should fail)"""
         self.assertEqual(AppSetting.objects.count(), 0)
         post_data = {
-            'plugin_name': EX_APP_NAME,
+            'plugin_name': APP_NAME_EX,
             'setting_name': 'user_str_setting',
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
@@ -4160,7 +4048,7 @@ class TestRemoteProjectGetAPIView(
     RemoteProjectMixin,
     AppSettingMixin,
     SODARAPIViewTestMixin,
-    ViewTestBase,
+    UIViewTestBase,
 ):
     """Tests for remote project getting API view"""
 

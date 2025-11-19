@@ -78,10 +78,6 @@ REMOTE_PROJECT_UNIQUE_MSG = (
     'RemoteProject with the same project UUID and site anready exists'
 )
 AUTH_PROVIDER_OIDC = 'oidc'
-SET_PUBLIC_DEPRECATE_MSG = (
-    'Project.set_public() has been deprecated and will be removed in SODAR '
-    'Core v1.3. Use set_public_access() instead'
-)
 
 
 # Project ----------------------------------------------------------------------
@@ -170,13 +166,6 @@ class Project(models.Model):
         help_text='Project README (optional, supports markdown)',
     )
 
-    #: Public guest access (DEPRECATED, to be removed in v1.3. See #1703)
-    public_guest_access = models.BooleanField(
-        default=False,
-        help_text='Allow public guest access for the project, also including '
-        'unauthenticated users if allowed on the site',
-    )
-
     #: Public read-only access
     public_access = models.ForeignKey(
         'Role',
@@ -254,12 +243,9 @@ class Project(models.Model):
         NOTE: Does not prevent saving but forces the value to be None if in
               category, see issue #1404.
         """
-        if self.is_category() and (
-            self.public_access or self.public_guest_access
-        ):
+        if self.is_category() and self.public_access:
             logger.warning(CAT_PUBLIC_ACCESS_MSG + ', setting to None')
             self.public_access = None
-            self.public_guest_access = False  # DEPRECATED
         if self.public_access and self.public_access.name not in [
             PROJECT_ROLE_GUEST,
             PROJECT_ROLE_VIEWER,
@@ -751,28 +737,8 @@ class Project(models.Model):
             role = Role.objects.get(name=role)
         if self.public_access != role:
             self.public_access = role
-            self.public_guest_access = True if role else False  # DEPRECATED
             self.save()
             self._update_public_children()  # Update for parents
-
-    # TODO: Deprecated, remove in v1.3 (#1703)
-    def set_public(self, public: bool = True):
-        """
-        Helper for setting value of public_access.
-
-        DEPRECATED: Will be removed in v1.3. Use set_public_access() instead.
-
-        :param public: Boolean (default=True)
-        """
-        logger.warning(SET_PUBLIC_DEPRECATE_MSG)
-        # NOTE: Validation no longer raises an exception (see #1404)
-        if self.is_category() and public:
-            raise ValidationError(CAT_PUBLIC_ACCESS_MSG)
-        role = Role.objects.get(name=PROJECT_ROLE_GUEST) if public else None
-        self.public_access = role
-        self.public_guest_access = public  # DEPRECATED
-        self.save()
-        self._update_public_children()  # Update for parents
 
     def set_archive(self, status: bool = True):
         """
@@ -1474,6 +1440,12 @@ class SODARUser(AbstractUser):
     # First Name and Last Name do not cover name patterns
     # around the globe.
     name = models.CharField(_('Name of User'), blank=True, max_length=255)
+
+    #: Enable user updating
+    enable_update = models.BooleanField(
+        default=True,
+        help_text='Enable user profile updating for local user.',
+    )
 
     #: User SODAR UUID
     sodar_uuid = models.UUIDField(

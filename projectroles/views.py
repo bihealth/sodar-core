@@ -109,7 +109,6 @@ CAT_ARCHIVE_ERR_MSG = 'Setting archival is not allowed for {}.'.format(
     get_display_name(PROJECT_TYPE_CATEGORY, plural=True)
 )
 USER_PROFILE_UPDATE_MSG = 'User profile updated, please log in again.'
-USER_PROFILE_LDAP_MSG = 'Profile editing not allowed for LDAP users.'
 INVITE_NOT_FOUND_MSG = 'Invite not found.'
 INVITE_LDAP_LOCAL_VIEW_MSG = (
     'Invite was issued for LDAP user, but local invite view was requested.'
@@ -1078,7 +1077,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 if s_def.type == APP_SETTING_TYPE_JSON:
                     if s_data is None:
                         s_data = {}
-                    project_settings[s_name] = json.dumps(s_data)
+                    project_settings[s_name] = s_data
                 elif s_data is not None:
                     project_settings[s_name] = s_data
         return project_settings
@@ -1138,10 +1137,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         for k, v in project_settings.items():
             p_name = k.split('.')[1]
             s_name = k.split('.')[2]
-            s_def = app_settings.get_definition(s_name, plugin_name=p_name)
             old_v = app_settings.get(p_name, s_name, project)
-            if s_def.type == APP_SETTING_TYPE_JSON:
-                v = json.loads(v)
             if old_v != v:
                 extra_data[k] = v
                 upd_fields.append(k)
@@ -1247,11 +1243,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             }
             # Add settings to extra data
             for k, v in project_settings.items():
-                p_name = k.split('.')[1]
-                s_name = k.split('.')[2]
-                s_def = app_settings.get_definition(s_name, plugin_name=p_name)
-                if s_def.type == APP_SETTING_TYPE_JSON:
-                    v = json.loads(v)
                 extra_data[k] = v
 
         else:  # Update
@@ -1433,9 +1424,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 data['parent'] if 'parent' in data else old_project.parent
             )
             project.public_access = data.get('public_access')
-            project.public_guest_access = (
-                data.get('public_access') is not None
-            )  # DEPRECATED
         else:
             project = Project(
                 title=data.get('title'),
@@ -1444,8 +1432,6 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 readme=data.get('readme'),
                 parent=data.get('parent'),
                 public_access=data.get('public_access'),
-                public_guest_access=data.get('public_access')
-                is not None,  # DEPRECATED
             )
             project.save()
 
@@ -2275,7 +2261,46 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         )
 
 
-class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
+class AppSettingCleanupMixin:
+    """Mixin for helping with app setting cleanup in RoleAssignment removal"""
+
+    @classmethod
+    def cleanup_app_settings(cls, project: Project, user: User):
+        """
+        Delete PROJECT_USER scope app settings for user in the project from
+        which a role assignment was removed. Deletes app settings from inherited
+        roles in category children. Leaves settings for categories if child roles
+        exist.
+
+        NOTE: Assumes the RoleAssignment object has already been deleted.
+
+        :param project: Project object
+        :param user: User object
+        """
+        # If user still has an inherited role in project, skip
+        if project.has_role(user):
+            return
+        # Delete settings for current project if project or no children
+        if not project.is_category() or not project.has_role_in_children(user):
+            app_settings.delete_by_scope(
+                APP_SETTING_SCOPE_PROJECT_USER, project, user
+            )
+        # Delete for children in case of a category
+        children = (
+            project.get_children(flat=True) if project.is_category() else []
+        )
+        for c in children:
+            if not c.has_role(user) and (
+                not c.is_category() or not c.has_role_in_children(user)
+            ):
+                app_settings.delete_by_scope(
+                    APP_SETTING_SCOPE_PROJECT_USER, c, user
+                )
+
+
+class RoleAssignmentDeleteMixin(
+    AppSettingCleanupMixin, ProjectModifyPluginViewMixin
+):
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
     @classmethod
@@ -2407,18 +2432,8 @@ class RoleAssignmentDeleteMixin(ProjectModifyPluginViewMixin):
             )
         # Delete object itself
         role_as.delete()
-
         # Delete corresponding PROJECT_USER settings
-        if (
-            not project.get_role(user)
-            and project.is_category()
-            and not RoleAssignment.objects.filter(
-                project__in=project.get_children(flat=True), user=user
-            ).exists()
-        ):
-            app_settings.delete_by_scope(
-                APP_SETTING_SCOPE_PROJECT_USER, project, user
-            )
+        self.cleanup_app_settings(project, user)
 
         if tl_event:
             tl_event.set_status(timeline.TL_STATUS_OK)
@@ -2693,7 +2708,9 @@ class RoleAssignmentOwnDeleteView(
             )
 
 
-class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
+class RoleAssignmentOwnerTransferMixin(
+    AppSettingCleanupMixin, ProjectModifyPluginViewMixin
+):
     """Mixin for owner RoleAssignment transfer in UI and API views"""
 
     #: Owner role object
@@ -2773,6 +2790,8 @@ class RoleAssignmentOwnerTransferMixin(ProjectModifyPluginViewMixin):
         # Inherited owner or no new role for old owner: delete local role
         if old_inh_owner or not old_owner_role:
             old_owner_as.delete()
+            if not old_inh_owner:  # Cleanup PROJECT_USER app settings
+                self.cleanup_app_settings(project, old_owner_as.user)
         # Update old owner role
         else:
             old_owner_as.role = old_owner_role
@@ -3340,9 +3359,8 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
         ):
             email.send_invite_accept_mail(invite, self.request, user)
 
-        # Deactivate the invite
+        # Deactivate the invite and add success message
         self.revoke_invite(invite, user, failed=False, timeline=timeline)
-        # Finally, redirect user to the project front page
         messages.success(
             self.request,
             PROJECT_WELCOME_MSG.format(
@@ -3671,23 +3689,22 @@ class ProjectInviteRevokeView(
 # User management views --------------------------------------------------------
 
 
-class UserUpdateView(
-    LoginRequiredMixin, HTTPRefererMixin, InvalidFormMixin, UpdateView
+class LocalUserUpdateView(
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+    HTTPRefererMixin,
+    InvalidFormMixin,
+    UpdateView,
 ):
     """Display and process the user update view"""
 
     form_class = LocalUserForm
+    permission_required = 'projectroles.update_local_user'
     template_name = 'projectroles/user_form.html'
     success_url = reverse_lazy('home')
 
     def get_object(self, **kwargs):
         return self.request.user
-
-    def get(self, *args, **kwargs):
-        if not self.request.user.is_local():
-            messages.error(self.request, USER_PROFILE_LDAP_MSG)
-            return redirect(reverse('home'))
-        return super().get(*args, **kwargs)
 
     def get_success_url(self):
         messages.success(self.request, USER_PROFILE_UPDATE_MSG)
@@ -3778,11 +3795,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         if not timeline:
             return
         status = form_action if form_action == 'set' else form_action[0:-1]
-        if remote_site.mode == SITE_MODE_SOURCE:
-            event_name = f'source_site_{status}'
-        else:
-            event_name = f'target_site_{status}'
-
+        event_name = f'{remote_site.mode.lower()}_site_{status}'
         tl_desc = '{} remote {} site {{{}}}'.format(
             status,
             remote_site.mode.lower(),

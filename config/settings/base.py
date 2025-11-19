@@ -2,10 +2,10 @@
 Django settings for the SODAR Core Example Site project.
 
 For more information on this file, see
-https://docs.djangoproject.com/en/4.2/topics/settings/
+https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/4.2/ref/settings/
+https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import environ
@@ -62,6 +62,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',  # For API views
     'knox',  # For token auth
     'social_django',  # For OIDC authentication
+    'axes',  # Django-axes for login security
     'docs',  # For the online user documentation/manual
     'db_file_storage',  # For filesfolders
     'dal',  # For user search combo box
@@ -114,6 +115,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',  # Should be the last one on the list
 ]
 
 # MIGRATIONS CONFIGURATION
@@ -145,22 +147,19 @@ ADMINS = [
     for x in env.list('ADMINS', default=['Admin User:admin@example.com'])
 ]
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#managers
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#managers
 MANAGERS = ADMINS
 
 # DATABASE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Uses django-environ to accept uri format
 # See: https://django-environ.readthedocs.io/en/latest/#supported-types
 DATABASES = {'default': env.db('DATABASE_URL', 'postgres:///sodar_core')}
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
-# Set default auto field (for Django 3.2+)
+# Set default auto field
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
-
-# Set django-db-file-storage as the default storage (for filesfolders)
-DEFAULT_FILE_STORAGE = 'db_file_storage.storage.DatabaseFileStorage'
 
 
 # GENERAL CONFIGURATION
@@ -171,24 +170,21 @@ DEFAULT_FILE_STORAGE = 'db_file_storage.storage.DatabaseFileStorage'
 # In a Windows environment this must be set to your system time zone.
 TIME_ZONE = 'Europe/Berlin'
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#language-code
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#site-id
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#site-id
 SITE_ID = 1
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-i18n
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#use-i18n
 USE_I18N = False
 
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-l10n
-USE_L10N = True
-
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#use-tz
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#use-tz
 USE_TZ = True
 
 # TEMPLATE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/4.2/ref/settings/#templates
+# See: https://docs.djangoproject.com/en/5.2/ref/settings/#templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -240,6 +236,18 @@ ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
 MEDIA_ROOT = str(APPS_DIR('media'))
 MEDIA_URL = '/media/'
 
+# STORAGE CONFIGURATION
+# ------------------------------------------------------------------------------
+# Set django-db-file-storage as the default storage (for filesfolders)
+STORAGES = {
+    'default': {
+        'BACKEND': 'db_file_storage.storage.DatabaseFileStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    },
+}
+
 # URL Configuration
 # ------------------------------------------------------------------------------
 ROOT_URLCONF = 'config.urls'
@@ -281,7 +289,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     'rules.permissions.ObjectPermissionBackend',  # For rules
     'django.contrib.auth.backends.ModelBackend',
-]
+]  # NOTE: django-axes added after LDAP/OIDC setup
 
 # Custom user app defaults
 AUTH_USER_MODEL = 'users.User'
@@ -354,7 +362,7 @@ SPECTACULAR_SETTINGS = {
 # ------------------------------------------------------------------------------
 
 # Knox settings
-TOKEN_TTL = None
+KNOX_TOKEN_MODEL = 'tokens.SODARAuthToken'
 
 # Settings for HTTP AuthBasic
 BASICAUTH_REALM = 'Log in with user@DOMAIN and your password.'
@@ -482,6 +490,39 @@ if ENABLE_OIDC:
     )
 
 
+# Django-Axes
+# ------------------------------------------------------------------------------
+
+# NOTE: Axes backend should be the first backend in the list
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend'
+] + AUTHENTICATION_BACKENDS
+
+# Enable django-axes
+AXES_ENABLED = env.bool('AXES_ENABLED', False)
+
+if AXES_ENABLED:
+    # Number of login attempts allowed before a record is created
+    AXES_FAILURE_LIMIT = env.int('AXES_FAILURE_LIMIT', 5)
+    # Lock out user at failure if True
+    AXES_LOCK_OUT_AT_FAILURE = env.bool('AXES_LOCK_OUT_AT_FAILURE', False)
+    # Cooloff time for failure lock-out in hours
+    AXES_COOLOFF_TIME = env.int('AXES_COOLOFF_TIME', None)
+    # Lockout parameters. by default, block by username only (GRPR compliance)
+    AXES_LOCKOUT_PARAMETERS = env.list(
+        'AXES_LOCKOUT_PARAMETERS', default=['username']
+    )
+    # Only enable lock for admin site if True
+    AXES_ONLY_ADMIN_SITE = env.bool('AXES_ONLY_ADMIN_SITE', False)
+    # For GDPR compliance, disable storing IP addresses
+    # NOTE: We make this setting up, not a real Axes Django setting
+    AXES_DISABLE_CLIENT_IP_STORAGE = env.bool(
+        'AXES_DISABLE_CLIENT_IP_STORAGE', True
+    )
+    if AXES_DISABLE_CLIENT_IP_STORAGE:
+        AXES_CLIENT_IP_CALLABLE = lambda x: None  # noqa: E731
+
+
 # Logging
 # ------------------------------------------------------------------------------
 
@@ -589,6 +630,10 @@ PROJECTROLES_ALLOW_LOCAL_USERS = env.bool(
 )
 # Allow unauthenticated users to access public projects if set true
 PROJECTROLES_ALLOW_ANONYMOUS = env.bool('PROJECTROLES_ALLOW_ANONYMOUS', False)
+# Allow non-admin updating of local user accounts
+PROJECTROLES_LOCAL_USER_UPDATE = env.bool(
+    'PROJECTROLES_LOCAL_USER_UPDATE', True
+)
 
 # Enable project modify API
 PROJECTROLES_ENABLE_MODIFY_API = False
@@ -627,7 +672,7 @@ PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 # PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
 # PROJECTROLES_SEARCH_PAGINATION = 5
 # Role list pagination
-PROJECTROLES_ROLE_PAGINATION = 15
+PROJECTROLES_ROLE_PAGINATION = env.int('PROJECTROLES_ROLE_PAGINATION', 15)
 # Support for viewing the site in "kiosk mode" (experimental)
 # PROJECTROLES_KIOSK_MODE = env.bool('PROJECTROLES_KIOSK_MODE', False)
 # Scroll project navigation with page content if set False
@@ -675,6 +720,11 @@ if PROJECTROLES_ENABLE_PROFILING:
 
 
 # Adminalerts app settings
+# Set alert email sending default in alert form
+ADMINALERTS_EMAIL_SENDING_DEFAULT = env.bool(
+    'ADMINALERTS_EMAIL_SENDING_DEFAULT', True
+)
+# Number of alerts to be shown on one page
 ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
 
 
