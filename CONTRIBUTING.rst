@@ -4,7 +4,7 @@ Contributing
 ^^^^^^^^^^^^
 
 Contributions to the SODAR Core package are welcome and they are greatly
-appreciated! Every little bit helps, and credit will always be given.
+appreciated! Every little bit helps and credit will always be given.
 
 Further details and guidelines for contributions can be found in the
 `SODAR Core documentation <https://sodar-core.readthedocs.io/en/dev/contributing.html>`_.

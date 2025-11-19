@@ -83,6 +83,8 @@ The following conventions should be adhered to in SODAR Core development:
 - Provide type hints for functions you declare.
     * Make sure the syntax corresponds to the currently supported Python
       versions.
+    * For clarity, we prefer ``Optional[]`` and ``Union[]`` over the ``x | y``
+      shorthands.
     * Exception: Inherited methods from e.g. Django or Django Rest Framework
       where the signature is already defined and expected to be static. This
       concerns e.g. Django class-based view methods such as ``get()``,

@@ -3359,9 +3359,8 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
         ):
             email.send_invite_accept_mail(invite, self.request, user)
 
-        # Deactivate the invite
+        # Deactivate the invite and add success message
         self.revoke_invite(invite, user, failed=False, timeline=timeline)
-        # Finally, redirect user to the project front page
         messages.success(
             self.request,
             PROJECT_WELCOME_MSG.format(
@@ -3796,11 +3795,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         if not timeline:
             return
         status = form_action if form_action == 'set' else form_action[0:-1]
-        if remote_site.mode == SITE_MODE_SOURCE:
-            event_name = f'source_site_{status}'
-        else:
-            event_name = f'target_site_{status}'
-
+        event_name = f'{remote_site.mode.lower()}_site_{status}'
         tl_desc = '{} remote {} site {{{}}}'.format(
             status,
             remote_site.mode.lower(),

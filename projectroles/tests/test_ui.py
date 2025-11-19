@@ -2450,23 +2450,23 @@ class TestProjectUpdateView(
 class TestProjectArchiveView(ProjectUITestBase):
     """Tests for ProjectArchiveView UI"""
 
-    def test_archive_button(self):
-        """Test rendering of archive button"""
-        url = reverse(
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
             'projectroles:archive', kwargs={'project': self.project.sodar_uuid}
         )
+
+    def test_archive_button(self):
+        """Test rendering of archive button"""
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-btn-confirm-archive', True
+            [self.superuser], self.url, 'sodar-pr-btn-confirm-archive', True
         )
 
     def test_archive_button_archived(self):
         """Test rendering of archive button with archived project"""
         self.project.set_archive()
-        url = reverse(
-            'projectroles:archive', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-btn-confirm-unarchive', True
+            [self.superuser], self.url, 'sodar-pr-btn-confirm-unarchive', True
         )
 
 
@@ -2865,14 +2865,16 @@ class TestProjectRoleView(RemoteTargetMixin, ProjectUITestBase):
 class TestRoleAssignmentCreateView(ProjectUITestBase):
     """Tests for RoleAssignmentCreateView UI"""
 
-    def test_role_preview(self):
-        """Test visibility of role preview popup"""
-        url = reverse(
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
             'projectroles:role_create',
             kwargs={'project': self.project.sodar_uuid},
         )
-        self.login_and_redirect(self.user_owner, url)
 
+    def test_role_preview(self):
+        """Test visibility of role preview popup"""
+        self.login_and_redirect(self.user_owner, self.url)
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-email-preview-link'
         )
@@ -2886,12 +2888,7 @@ class TestRoleAssignmentCreateView(ProjectUITestBase):
 
     def test_widget_user_options(self):
         """Test visibility of user options given by the autocomplete widget"""
-        url = reverse(
-            'projectroles:role_create',
-            kwargs={'project': self.project.sodar_uuid},
-        )
-        self.login_and_redirect(self.user_owner, url)
-
+        self.login_and_redirect(self.user_owner, self.url)
         widget = self.selenium.find_element(
             By.CLASS_NAME, 'select2-container--default'
         )
@@ -2899,7 +2896,6 @@ class TestRoleAssignmentCreateView(ProjectUITestBase):
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, 'select2-id_user-results'))
         )
-
         # Assert that options are displayed
         self.assertIsNotNone(
             self.selenium.find_element(By.CLASS_NAME, 'select2-results__option')
@@ -2996,6 +2992,12 @@ class TestRoleAssignmentDeleteView(ProjectUITestBase):
 class TestProjectInviteView(ProjectInviteMixin, ProjectUITestBase):
     """Tests for ProjectInviteView UI"""
 
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
+        )
+
     def test_invite_ops(self):
         """Test visibility of invite operations dropdown"""
         expected_true = [
@@ -3005,11 +3007,8 @@ class TestProjectInviteView(ProjectInviteMixin, ProjectUITestBase):
             self.user_owner,
             self.user_delegate,
         ]
-        url = reverse(
-            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-role-ops-dropdown', True
+            expected_true, self.url, 'sodar-pr-role-ops-dropdown', True
         )
 
     def test_invite_ops_invite(self):
@@ -3021,11 +3020,8 @@ class TestProjectInviteView(ProjectInviteMixin, ProjectUITestBase):
             self.user_owner,
             self.user_delegate,
         ]
-        url = reverse(
-            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-role-ops-invite', True
+            expected_true, self.url, 'sodar-pr-role-ops-invite', True
         )
 
     def test_invite_ops_create(self):
@@ -3037,11 +3033,8 @@ class TestProjectInviteView(ProjectInviteMixin, ProjectUITestBase):
             self.user_owner,
             self.user_delegate,
         ]
-        url = reverse(
-            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-role-ops-create', True
+            expected_true, self.url, 'sodar-pr-role-ops-create', True
         )
 
     def test_invite_dropdown(self):
@@ -3060,11 +3053,8 @@ class TestProjectInviteView(ProjectInviteMixin, ProjectUITestBase):
             (self.user_owner, 1),
             (self.user_delegate, 1),
         ]
-        url = reverse(
-            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
-        )
         self.assert_element_count(
-            expected, url, 'sodar-pr-invite-dropdown', attribute='class'
+            expected, self.url, 'sodar-pr-invite-dropdown', attribute='class'
         )
 
 
@@ -3137,6 +3127,10 @@ class TestProjectInviteProcessLocalView(ProjectInviteMixin, ProjectUITestBase):
 class TestRemoteSiteListView(RemoteSiteMixin, ProjectUITestBase):
     """Tests for RemoteSiteListView UI"""
 
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:remote_sites')
+
     def test_source_user_display(self):
         """Test site list user display elements on source site"""
         self.make_site(
@@ -3147,8 +3141,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, ProjectUITestBase):
             secret=REMOTE_SITE_SECRET,
             user_display=True,
         )
-        url = reverse('projectroles:remote_sites')
-        self.login_and_redirect(self.superuser, url)
+        self.login_and_redirect(self.superuser, self.url)
 
         # Check Visible to User column visibility
         remote_site_table = self.selenium.find_element(
@@ -3184,10 +3177,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, ProjectUITestBase):
             secret=REMOTE_SITE_SECRET,
             user_display=True,
         )
-        url = reverse('projectroles:remote_sites')
-        self.login_and_redirect(self.superuser, url)
-
-        # Check Visible to User column visibility
+        self.login_and_redirect(self.superuser, self.url)
         remote_site_table = self.selenium.find_element(
             By.ID, 'sodar-pr-remote-site-table'
         )
@@ -3204,16 +3194,18 @@ class TestRemoteSiteListView(RemoteSiteMixin, ProjectUITestBase):
 class TestRemoteSiteCreateView(RemoteSiteMixin, ProjectUITestBase):
     """Tests for RemoteSiteCreateView UI"""
 
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:remote_site_create')
+
     def test_source_user_toggle(self):
         """Test site create form user display toggle on source site"""
-        url = reverse('projectroles:remote_site_create')
-        self.login_and_redirect(self.superuser, url)
+        self.login_and_redirect(self.superuser, self.url)
         element = self.selenium.find_element(By.ID, 'div_id_user_display')
         self.assertIsNotNone(element)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_target_user_toggle(self):
         """Test site create form user display toggle on target site"""
-        url = reverse('projectroles:remote_site_create')
-        self.login_and_redirect(self.superuser, url)
+        self.login_and_redirect(self.superuser, self.url)
         self.assert_displayed(By.ID, 'id_user_display', False)

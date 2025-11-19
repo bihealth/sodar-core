@@ -453,7 +453,7 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
             },
             {
                 'name': 'siteappsettings',
-                'url': '/project/site-app-settings',
+                'url': reverse('projectroles:site_app_settings'),
                 'label': 'Site App Settings',
                 'icon': 'mdi:cog-outline',
                 'active': False,

@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.3.0 (WIP)
-************
+v1.3.0 (2025-11-19)
+*******************
 
 Release Highlights
 ==================
@@ -118,7 +118,7 @@ bring your dev environment up to speed. Example:
     $ ./manage.py makemigrations
     $ ./manage.py migrate
 
-This release also includes a custom ``UserAdmin`` class to ensure all relevant
+This release introduces a custom ``UserAdmin`` class to ensure all relevant
 fields for the user model. If you want to manage your users in the admin
 interface in addition to the Django shell, it is strongly recommended to use or
 extend the ``SODARUserAdmin`` class on your site. You can do this by e.g.
@@ -248,7 +248,7 @@ v1.2.4 (2025-10-10)
 Release Highlights
 ==================
 
-- Add support for line breaks app alert messages
+- Add support for line breaks in app alert messages
 - Add alert level constants as AppAlertAPI attributes
 - Fix app setting deletion debug logging
 - Fix UI test setup window size

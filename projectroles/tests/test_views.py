@@ -105,9 +105,6 @@ plugin_api = PluginAPI()
 User = get_user_model()
 
 
-# TODO: Review and remove unused constants in v1.4 (see #1830)
-
-
 # SODAR constants
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -366,7 +363,7 @@ class TestLoginViewAxes(UIViewTestBase):
         self.assertEqual(response.context['user'].is_authenticated, True)
 
     def test_post_invalid(self):
-        """Test LoginView POST with invalid credentials"""
+        """Test POST with invalid credentials"""
         post_data = {
             'username': self.user_login.username,
             'password': INVALID_PASSWORD,
@@ -375,7 +372,7 @@ class TestLoginViewAxes(UIViewTestBase):
         self.assertEqual(response.context['user'].is_authenticated, False)
 
     def test_post_lock(self):
-        """Test LoginView POST with invalid credentials"""
+        """Test POST with account locking"""
         post_data = {
             'username': self.user_login.username,
             'password': INVALID_PASSWORD,

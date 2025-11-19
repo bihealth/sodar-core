@@ -57,6 +57,10 @@ If this was not requested by you, this message can be ignored.
 EMAIL_NOT_FOUND_MSG = 'No email found.'
 EMAIL_ALREADY_VERIFIED_MSG = 'Email already verified.'
 EMAIL_VERIFIED_MSG = 'Email "{email}" verified.'
+EMAIL_VERIFY_SEND_MSG = (
+    'Email added. A verification message has been sent to the address. Follow '
+    'the received verification link to activate the address.'
+)
 EMAIL_VERIFY_RESEND_MSG = 'Verification message to "{email}" resent.'
 
 
@@ -145,12 +149,7 @@ class UserEmailMixin:
                     EMAIL_VERIFY_RESEND_MSG.format(email=email.email),
                 )
             else:
-                messages.success(
-                    self.request,
-                    'Email added. A verification message has been sent to the '
-                    'address. Follow the received verification link to '
-                    'activate the address.',
-                )
+                messages.success(self.request, EMAIL_VERIFY_SEND_MSG)
         except Exception as ex:
             messages.error(
                 self.request, f'Failed to send verification mail: {ex}'
