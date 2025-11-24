@@ -84,5 +84,5 @@ if [ "$use_existing_user" == "n" ]
 then
     sudo su - postgres -c "psql -c \"CREATE USER $username WITH PASSWORD '$password';\""
 fi
-sudo su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE $db_name to $username;\""
+sudo su - postgres -c "psql -c \"ALTER DATABASE $db_name OWNER TO $username;\""
 sudo su - postgres -c "psql -c \"ALTER USER $username CREATEDB;\""

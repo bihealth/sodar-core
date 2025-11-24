@@ -47,6 +47,16 @@ enter a database name, a username and a password.
 
     $ sudo utility/setup_database.sh
 
+If you want to set up your database manually, you can adapt the following SQL
+example in ``psql``:
+
+.. code-block:: sql
+
+    CREATE DATABASE sodar_core;
+    CREATE USER sodar_core WITH PASSWORD 'sodar_core';
+    ALTER DATABASE sodar_core OWNER TO sodar_core;
+    ALTER USER sodar_core CREATEDB;
+
 You have to set the database URL and credentials for Django in the environment
 variable ``DATABASE_URL``. For development it is recommended to place
 environment variables in file ``.env`` located in your project root. To enable

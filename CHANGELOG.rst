@@ -14,12 +14,19 @@ Added
 - **General**
     - CI documentation building check (#1840)
     - Twine dependencies in ``local.txt`` (#1833)
+    - Manual database setup example in documentation (#1839)
 
 Removed
 -------
 
 - **General**
     - ``wheel`` dependency (#1841)
+
+Fixed
+-----
+
+- **General**
+    - ``setup_database.sh`` grants insufficient perms to user (#1838)
 
 
 v1.3.0 (2025-11-19)

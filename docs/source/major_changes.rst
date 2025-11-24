@@ -16,6 +16,7 @@ v1.3.1 (WIP)
 Release Highlights
 ==================
 
+- Fix insufficient permissions set by setup_database.sh
 - Update development dependencies
 
 
