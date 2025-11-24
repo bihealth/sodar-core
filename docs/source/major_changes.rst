@@ -16,7 +16,7 @@ v1.3.1 (WIP)
 Release Highlights
 ==================
 
-**TBD**
+- Update development dependencies
 
 
 v1.3.0 (2025-11-19)

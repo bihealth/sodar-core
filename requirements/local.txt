@@ -13,3 +13,7 @@ ipdb>=0.13.13, <0.14
 inflection>=0.5.1, <0.6
 pyyaml>=6.0.3, <6.1
 uritemplate>=4.2.0, <4.3
+
+# PyPI building
+pkginfo==1.12.1.2
+twine==6.2.0

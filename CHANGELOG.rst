@@ -13,6 +13,7 @@ Added
 
 - **General**
     - CI documentation building check (#1840)
+    - Twine dependencies in ``local.txt`` (#1833)
 
 Removed
 -------
