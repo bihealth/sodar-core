@@ -44,7 +44,6 @@ jobs:
         run: git fetch --prune --unshallow
       - name: Install project Python dependencies
         run: |
-          pip install "wheel>=0.45.1, <0.46"
           pip install -r requirements/base.txt --use-pep517
           pip install -r requirements/test.txt --use-pep517
       - name: Install local dependencies for docs building

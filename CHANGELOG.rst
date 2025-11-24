@@ -14,6 +14,12 @@ Added
 - **General**
     - CI documentation building check (#1840)
 
+Removed
+-------
+
+- **General**
+    - ``wheel`` dependency (#1841)
+
 
 v1.3.0 (2025-11-19)
 ===================
