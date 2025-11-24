@@ -16,6 +16,12 @@ Added
     - Twine dependencies in ``local.txt`` (#1833)
     - Manual database setup example in documentation (#1839)
 
+Changed
+-------
+
+- **General**
+    - Improve ``rest_api_overview.rst`` REST API examples (#1835)
+
 Removed
 -------
 

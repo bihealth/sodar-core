@@ -41,6 +41,12 @@ the token in the ``Authorization`` header of your HTTP request as follows:
 
     Authorization: token 90c2483172515bc8f6d52fd608e5031db3fcdc06d5a83b24bec1688f39b72bcd
 
+Using the Python ``requests`` API, this would be set up as follows:
+
+.. code-block:: python
+
+    api_token = 'YOUR-API-TOKEN-HERE'
+    auth_header = {'Authorization': f'token {api_token}'}
 
 .. _rest_api_overview_version:
 
@@ -60,6 +66,12 @@ respective media type and version number. Example for the projectroles API:
 
     Accept: application/vnd.bihealth.sodar-core.projectroles+json; version=x.y
 
+In Python ``requests``, this would be formed as follows:
+
+.. code-block:: python
+
+    accept_header = {'Accept': 'application/vnd.bihealth.sodar-core.projectroles+json; version=x.y'}
+
 SODAR Core REST APIs **must** conform to semantic versioning. Breaking changes
 require a major ``1.*`` update, while non-breaking new features can be tagged
 with a minor ``*.1``. Patch updates should be reserved for bug fixes.
@@ -71,6 +83,26 @@ Removing support for old API versions should be done by announcing them as
 deprecated in a major SODAR Core version ``*.1.*`` or greater (see
 :ref:`SODAR Core Versioning <dev_core_guide_version>`), followed by removing
 support in the next major version.
+
+Request Data
+------------
+
+Data provided to ``POST``, ``PUT`` or ``PATCH`` requests should be JSON encoded
+unless otherwise specified. Using Python ``requests``, this can be done by
+providing a Python dictionary in the request ``json`` parameter. Example:
+
+.. code-block:: python
+
+    sodar_url = 'https://your.sodar.core.instance'
+    url = f'{sodar_url}/project/api/create'
+    data = {
+        'title': 'New Project via API',
+        'type': 'PROJECT',
+        'parent': category_uuid,
+        'owner': user_uuid
+    }
+    headers = {}  # Auth and accept headers here
+    response = requests.post(url, json=data, headers=headers).json()
 
 Return Data
 -----------
