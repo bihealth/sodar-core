@@ -45,8 +45,11 @@ jobs:
       - name: Install project Python dependencies
         run: |
           pip install "wheel>=0.45.1, <0.46"
-          pip install -r requirements/base.txt
-          pip install -r requirements/test.txt
+          pip install -r requirements/base.txt --use-pep517
+          pip install -r requirements/test.txt --use-pep517
+      - name: Install local dependencies for docs building
+        run: pip install -r requirements/local.txt --use-pep517
+        if: ${{ matrix.python-version == '3.13' }}
       - name: Download icons
         run: python manage.py geticons --settings=config.settings.test
       - name: Run collectstatic
@@ -62,11 +65,14 @@ jobs:
       - name: Check formatting
         run: make black arg=--check
         if: ${{ matrix.python-version == '3.13' }}
-      # NOTE: Coverage needs to be updated (see issue #1797)
+      - name: Check docs building
+        working-directory: ./docs
+        run: make html
+        if: ${{ matrix.python-version == '3.13' }}
       - name: Report coverage with Coveralls
         uses: coverallsapp/github-action@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: './coverage.lcov'
-          fail-on-error: false
+         github-token: ${{ secrets.GITHUB_TOKEN }}
+         path-to-lcov: './coverage.lcov'
+         fail-on-error: false
         if: ${{ matrix.python-version == '3.13' }}
