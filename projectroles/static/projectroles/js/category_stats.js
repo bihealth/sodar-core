@@ -13,10 +13,18 @@ $(document).ready(function () {
       let deck = $('#sodar-pr-details-card-stats-deck')
       let stats = data.stats
       for (let i = 0; i < stats.length; i++) {
-        let value = stats[i].value
+        let value = ''
+        if (stats[i].prefix) {
+          value +=
+            '<span class="sodar-pr-dashboard-card-stats-prefix mr-1">' +
+            stats[
+              i].prefix + '</span>'
+        }
+        value += stats[i].value
         if (stats[i].unit) {
           value +=
-            '<span class="sodar-pr-dashboard-card-stats-unit ml-1">' + stats[
+            '<span class="sodar-pr-dashboard-card-stats-unit ml-1">' +
+            stats[
               i].unit + '</span>'
         }
         deck.append(

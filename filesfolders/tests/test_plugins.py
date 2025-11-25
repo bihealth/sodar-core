@@ -161,6 +161,9 @@ class TestPlugin(
         self.assertIsInstance(ret[0].plugin, self.plugin.__class__)
         self.assertEqual(ret[0].title, 'Files')
         self.assertEqual(ret[0].value, 1)
+        self.assertEqual(ret[0].unit, None)
+        self.assertEqual(ret[0].icon, 'mdi:file')
+        self.assertEqual(ret[0].prefix, None)
 
     def test_get_category_stats_no_files(self):
         """Test get_category_stats() with no files"""

@@ -57,7 +57,7 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 # Local constants
 APP_NAME = 'projectroles'
-CAT_STAT_ATTRS = ['title', 'value', 'unit', 'description', 'icon']
+CAT_STAT_ATTRS = ['title', 'value', 'unit', 'description', 'icon', 'prefix']
 
 
 # Base Classes and Mixins ------------------------------------------------------

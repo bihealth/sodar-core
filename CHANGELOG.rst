@@ -15,6 +15,9 @@ Added
     - CI documentation building check (#1840)
     - Twine dependencies in ``local.txt`` (#1833)
     - Manual database setup example in documentation (#1839)
+- **Projectroles**
+    - ``PluginCategoryStatistic`` ``prefix`` member variable (#1834)
+    - Prefix support for category statistics (#1834)
 
 Changed
 -------
