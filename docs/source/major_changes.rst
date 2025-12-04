@@ -18,6 +18,7 @@ Release Highlights
 
 - Add prefix support for category statistics
 - Update development dependencies
+- Fix timeline event detail modal description word break
 - Fix insufficient permissions set by setup_database.sh
 - Fix template tag link retrieval exceptions for missing resolver_match (from v1.2.5)
 - Fix app settings form exception with hidden setting and null description (from v1.2.5)
