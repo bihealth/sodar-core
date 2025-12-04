@@ -17,8 +17,10 @@ Release Highlights
 ==================
 
 - Add prefix support for category statistics
-- Fix insufficient permissions set by setup_database.sh
 - Update development dependencies
+- Fix insufficient permissions set by setup_database.sh
+- Fix template tag link retrieval exceptions for missing resolver_match (from v1.2.5)
+- Fix app settings form exception with hidden setting and null description (from v1.2.5)
 
 
 v1.3.0 (2025-11-19)
@@ -251,6 +253,16 @@ Root-Level Projectroles Plugin Helpers
 ``_project_badge.html``
     This template has been removed. Instead, use the ``get_project_badge()``
     template tag in ``projectroles_common_tags``.
+
+
+v1.2.5 (2025-12-04)
+*******************
+
+Release Highlights
+==================
+
+- Fix template tag link retrieval exceptions for missing resolver_match
+- Fix app settings form exception with hidden setting and null description
 
 
 v1.2.4 (2025-10-10)

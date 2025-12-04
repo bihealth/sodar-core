@@ -137,7 +137,10 @@ def get_pr_link_state(
     If link_names is set, only return "active" if url_name is found in
     link_names.
     """
-    if request.resolver_match.app_name != APP_NAME:
+    if (
+        not request.resolver_match
+        or request.resolver_match.app_name != APP_NAME
+    ):
         return ''
     url_name = request.resolver_match.url_name
     if url_name in [u.name for u in app_urls]:
@@ -290,10 +293,11 @@ def get_user_links(request: HttpRequest) -> list:
     """Return user dropdown links"""
     if isinstance(request, str):
         return []
+    rm = request.resolver_match
     return app_links.get_user_links(
         request.user,
-        app_name=request.resolver_match.app_name,
-        url_name=request.resolver_match.url_name,
+        app_name=rm.app_name if rm else None,
+        url_name=rm.url_name if rm else None,
     )
 
 
@@ -304,9 +308,10 @@ def get_project_app_links(
     """Return sidebar links"""
     if isinstance(request, str):
         return []
+    rm = request.resolver_match
     return app_links.get_project_links(
         request.user,
         project,
-        app_name=request.resolver_match.app_name,
-        url_name=request.resolver_match.url_name,
+        app_name=rm.app_name if rm else None,
+        url_name=rm.url_name if rm else None,
     )
