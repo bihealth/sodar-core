@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.2.5 (2025-12-04)
+===================
+
+Fixed
+-----
+
+- **Projectroles**
+    - Template tag link retrieval exceptions for missing ``resolver_match`` (#1845)
+
+
 v1.2.4 (2025-10-10)
 ===================
 
