@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Fix template tag link retrieval exceptions for missing resolver_match
+- Fix app settings form exception with hidden setting and null description
 
 
 v1.2.4 (2025-10-10)

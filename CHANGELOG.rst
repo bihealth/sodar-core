@@ -13,6 +13,7 @@ Fixed
 
 - **Projectroles**
     - Template tag link retrieval exceptions for missing ``resolver_match`` (#1845)
+    - ``set_app_setting_notes()`` exception with hidden app setting and null ``description`` (#1844)
 
 
 v1.2.4 (2025-10-10)
