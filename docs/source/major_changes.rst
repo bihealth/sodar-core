@@ -20,6 +20,7 @@ Release Highlights
 - Update development dependencies
 - Fix timeline event detail modal description word break
 - Fix insufficient permissions set by setup_database.sh
+- Fix list button and dropdown content alignment
 - Fix template tag link retrieval exceptions for missing resolver_match (from v1.2.5)
 - Fix app settings form exception with hidden setting and null description (from v1.2.5)
 

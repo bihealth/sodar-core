@@ -33,6 +33,7 @@ Fixed
 - **Projectroles**
     - ``set_app_setting_notes()`` exception with hidden app setting and null ``description`` (from v1.2.5) (#1844, #1847)
     - Template tag link retrieval exceptions for missing ``resolver_match`` (from v1.2.5) (#1845, #1847)
+    - ``sodar-list-btn`` and ``sodar-list-dropdown`` content alignment (#1849)
 - **Timeline**
     - Long words in description breaking event detail modal layout (#1843)
 

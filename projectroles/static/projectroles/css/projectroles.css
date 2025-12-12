@@ -498,15 +498,15 @@ a.btn[disabled='disabled'] {
 }
 
 .sodar-list-btn-group {
-  height: 1.55em;
+  height: 24px;
 }
 
 .sodar-list-btn {
+  height: 24px !important;
   white-space: nowrap !important;
-  padding-top: 1px;
+  padding-top: 0 !important;
   padding-left: 4px;
   padding-right: 4px;
-  height: 1.55em;
 }
 
 a.sodar-pr-btn-title {
@@ -542,10 +542,12 @@ a.sodar-pr-btn-copy-secret i {
 
 .sodar-list-dropdown {
   white-space: nowrap !important;
-  height: 1.55em;
+  height: 24px !important;
   width: 50px !important;
   padding: 1px !important;
+  padding-top: 0 !important;
 }
+
 
 .sodar-details-app-button {
   padding-top: 4px;
