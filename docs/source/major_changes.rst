@@ -10,6 +10,30 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.3.1 (2025-12-12)
+*******************
+
+Release Highlights
+==================
+
+- Add prefix support for category statistics
+- Update development dependencies
+- Fix timeline event detail modal description word break
+- Fix insufficient permissions set by setup_database.sh
+- Fix list button and dropdown content alignment
+- Fix template tag link retrieval exceptions for missing resolver_match (from v1.2.5)
+- Fix app settings form exception with hidden setting and null description (from v1.2.5)
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.9.
+
+
 v1.3.0 (2025-11-19)
 *******************
 
@@ -240,6 +264,16 @@ Root-Level Projectroles Plugin Helpers
 ``_project_badge.html``
     This template has been removed. Instead, use the ``get_project_badge()``
     template tag in ``projectroles_common_tags``.
+
+
+v1.2.5 (2025-12-04)
+*******************
+
+Release Highlights
+==================
+
+- Fix template tag link retrieval exceptions for missing resolver_match
+- Fix app settings form exception with hidden setting and null description
 
 
 v1.2.4 (2025-10-10)

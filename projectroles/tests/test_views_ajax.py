@@ -591,6 +591,7 @@ class TestCategoryStatisticsAjaxView(
                 'unit': None,
                 'description': 'Projects in this category',
                 'icon': 'mdi:cube',
+                'prefix': None,
             },
             {
                 'title': 'Members',
@@ -598,6 +599,7 @@ class TestCategoryStatisticsAjaxView(
                 'unit': None,
                 'description': 'Users with roles in this category',
                 'icon': 'mdi:account-multiple',
+                'prefix': None,
             },
             {
                 'title': 'Files',
@@ -605,6 +607,7 @@ class TestCategoryStatisticsAjaxView(
                 'unit': None,
                 'description': 'Files uploaded to projects in this category',
                 'icon': 'mdi:file',
+                'prefix': None,
             },
         ]
         self.assertEqual(response.data['stats'], expected)

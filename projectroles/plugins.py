@@ -991,6 +991,9 @@ class PluginCategoryStatistic:
     #: Optional description to be displayed as tooltip (string or None)
     description = None
     #: Optional icon namespace and ID (string or None)
+    icon = None
+    #: Optional prefix to be displayed (string or None)
+    prefix = None
 
     def __init__(
         self,
@@ -1000,16 +1003,18 @@ class PluginCategoryStatistic:
         unit: Optional[str] = None,
         description: Optional[str] = None,
         icon: Optional[str] = None,
+        prefix: Optional[str] = None,
     ):
         """
         Initialize PluginCategoryStatistic.
 
         :param plugin: ProjectAppPluginPoint object (None for projectroles)
-        :param title: String
-        :param value: Integer or float
-        :param unit: String or None
-        :param description: String or None
-        :param icon: String or None
+        :param title: Title to be displayed (str)
+        :param value: Value of the statistic (int or float)
+        :param unit: Optional unit (str or None)
+        :param description: Optional description (str or None)
+        :param icon: Optional icon in namespace:ID format (str or None)
+        :param prefix: Optional prefix (str or None)
         :raises: ValueError if value is not integer or float
         """
         self.plugin = plugin
@@ -1023,6 +1028,7 @@ class PluginCategoryStatistic:
             self.icon = icon
         elif plugin:
             self.icon = getattr(plugin, 'icon')
+        self.prefix = prefix
 
 
 # Plugin API -------------------------------------------------------------------

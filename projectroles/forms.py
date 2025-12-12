@@ -146,7 +146,7 @@ class SODARAppSettingFormMixin:
         setting_kwargs = {
             'required': False,
             'label': s_def.label or f'{plugin_name}.{s_def.name}',
-            'help_text': s_def.description,
+            'help_text': s_def.description or '',
         }
 
         # Option

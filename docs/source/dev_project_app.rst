@@ -266,6 +266,11 @@ Implementing the following is **optional**:
 ``get_statistics()``
     Return statistics for the siteinfo app. See details in
     :ref:`the siteinfo documentation <app_siteinfo>`.
+``get_category_stats()``
+    Return app statistics for the given category. Expected to return
+    cumulative statistics for all projects under the category and its
+    possible subcategories. Returns a list of ``PluginCategoryStatistic``
+    objects.
 ``get_project_list_value()``
     A function which **must** be implemented if ``project_list_columns`` are
     defined, to retrieve a column cell value for a specific project.

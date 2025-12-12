@@ -92,8 +92,9 @@ sites.
 For running a single ``TARGET`` site in addition to the main site, the fastest
 way to get started is the following:
 
-First, set up a second database called ``sodar_core_target`` using
-``utility/setup_database.sh``.
+First, set up a second database called ``sodar_core_target``. Follow the
+:ref:`database install instructions <dev_core_install_database>` and replace the
+database name.
 
 Next, migrate the new database and create a superuser using
 ``make manage_target``. The admin user name is hardcoded into ``admin_target``

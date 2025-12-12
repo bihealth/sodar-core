@@ -2,6 +2,8 @@
 
 echo "***********************************************"
 echo "Setting up Database and User for PostgreSQL"
+echo "NOTE: Assumes PostgreSQL running locally"
+echo "NOTE: Does not work with e.g. Docker"
 echo "***********************************************"
 
 # while loops to ensure input not empty
@@ -84,5 +86,5 @@ if [ "$use_existing_user" == "n" ]
 then
     sudo su - postgres -c "psql -c \"CREATE USER $username WITH PASSWORD '$password';\""
 fi
-sudo su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE $db_name to $username;\""
+sudo su - postgres -c "psql -c \"ALTER DATABASE $db_name OWNER TO $username;\""
 sudo su - postgres -c "psql -c \"ALTER USER $username CREATEDB;\""

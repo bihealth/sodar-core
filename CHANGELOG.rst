@@ -5,6 +5,47 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.3.1 (2025-12-12)
+===================
+
+Added
+-----
+
+- **General**
+    - CI documentation building check (#1840)
+    - Twine dependencies in ``local.txt`` (#1833)
+    - Manual database setup example in documentation (#1839)
+- **Projectroles**
+    - ``PluginCategoryStatistic`` ``prefix`` member variable (#1834)
+    - Prefix support for category statistics (#1834)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v5.2.9 (#1850)
+    - Improve ``rest_api_overview.rst`` REST API examples (#1835)
+    - Database setup docs (#1842)
+
+Fixed
+-----
+
+- **General**
+    - ``setup_database.sh`` grants insufficient perms to user (#1838)
+- **Projectroles**
+    - ``set_app_setting_notes()`` exception with hidden app setting and null ``description`` (from v1.2.5) (#1844, #1847)
+    - Template tag link retrieval exceptions for missing ``resolver_match`` (from v1.2.5) (#1845, #1847)
+    - ``sodar-list-btn`` and ``sodar-list-dropdown`` content alignment (#1849)
+- **Timeline**
+    - Long words in description breaking event detail modal layout (#1843)
+
+Removed
+-------
+
+- **General**
+    - ``wheel`` dependency (#1841)
+
+
 v1.3.0 (2025-11-19)
 ===================
 
@@ -107,6 +148,17 @@ Removed
     - ``_project_badge.html`` include template (#1696)
 - **Tokens**
     - Support for ``knox.models.AuthToken`` API tokens (#1549)
+
+
+v1.2.5 (2025-12-04)
+===================
+
+Fixed
+-----
+
+- **Projectroles**
+    - Template tag link retrieval exceptions for missing ``resolver_match`` (#1845)
+    - ``set_app_setting_notes()`` exception with hidden app setting and null ``description`` (#1844)
 
 
 v1.2.4 (2025-10-10)

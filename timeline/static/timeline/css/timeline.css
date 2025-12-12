@@ -16,6 +16,7 @@ table#sodar-tl-table-detail tbody tr td:nth-child(3) {
 }
 table#sodar-tl-table-detail tbody tr td:nth-child(2) {
   width: 100%;
+  word-break: break-all;
 }
 table#sodar-tl-table-extra-data tbody tr td:nth-child(1) {
   white-space: nowrap;
