@@ -23,6 +23,7 @@ Changed
 -------
 
 - **General**
+    - Upgrade to Django v5.2.9 (#1850)
     - Improve ``rest_api_overview.rst`` REST API examples (#1835)
 
 Fixed

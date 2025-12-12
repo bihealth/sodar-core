@@ -24,6 +24,15 @@ Release Highlights
 - Fix template tag link retrieval exceptions for missing resolver_match (from v1.2.5)
 - Fix app settings form exception with hidden setting and null description (from v1.2.5)
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.9.
+
 
 v1.3.0 (2025-11-19)
 *******************
