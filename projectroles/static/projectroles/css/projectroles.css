@@ -570,7 +570,6 @@ a.sodar-pr-btn-copy-secret i {
   position: relative;
 }
 
-
 /* App alert badge */
 #sodar-app-alert-badge {
   line-height: 36px !important;
@@ -726,7 +725,9 @@ span.select2-selection__rendered {
   text-decoration: underline;
 }
 
+
 /* Misc --------------------------------------------------------------------- */
+
 
 hr {
   border-color: #dfdfdf;
@@ -884,7 +885,9 @@ pre#sodar-email-body {
   padding-right: 5px;
 }
 
+
 /* Responsive modifications ------------------------------------------------- */
+
 
 /* Used to hide/show extra content based on browser window width. */
 

@@ -2,6 +2,8 @@
 
 echo "***********************************************"
 echo "Setting up Database and User for PostgreSQL"
+echo "NOTE: Assumes PostgreSQL running locally"
+echo "NOTE: Does not work with e.g. Docker"
 echo "***********************************************"
 
 # while loops to ensure input not empty

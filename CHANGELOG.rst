@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.3.1 (2025-12-12)
+===================
 
 Added
 -----
@@ -25,6 +25,7 @@ Changed
 - **General**
     - Upgrade to Django v5.2.9 (#1850)
     - Improve ``rest_api_overview.rst`` REST API examples (#1835)
+    - Database setup docs (#1842)
 
 Fixed
 -----

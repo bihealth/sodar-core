@@ -37,18 +37,13 @@ and PostgreSQL >=12 (16 recommended).
     $ sudo utility/install_postgres.sh
 
 
+.. _dev_core_install_database:
+
 Database Setup
 ==============
 
-Next you need to setup the database and postgres user. You'll be prompted to
-enter a database name, a username and a password.
-
-.. code-block:: console
-
-    $ sudo utility/setup_database.sh
-
-If you want to set up your database manually, you can adapt the following SQL
-example in ``psql``:
+Next you need to setup the database and PostgreSQL user. You need to enter the
+following SQL in ``psql``:
 
 .. code-block:: sql
 
@@ -56,6 +51,13 @@ example in ``psql``:
     CREATE USER sodar_core WITH PASSWORD 'sodar_core';
     ALTER DATABASE sodar_core OWNER TO sodar_core;
     ALTER USER sodar_core CREATEDB;
+
+Alternatively, if PostgreSQL is running directly on your development host, you
+can use the following utility script (this does not work with a Docker setup):
+
+.. code-block:: console
+
+    $ sudo utility/setup_database.sh
 
 You have to set the database URL and credentials for Django in the environment
 variable ``DATABASE_URL``. For development it is recommended to place
@@ -69,7 +71,7 @@ Example of the database URL variable as set within an ``.env`` file:
 
 .. code-block:: console
 
-    DATABASE_URL=postgres://your-db:your-db@127.0.0.1/your-db
+    DATABASE_URL="postgres://sodar_core:sodar_core@127.0.0.1/sodar_core"
 
 Asynchronous Celery tasks require running a Redis server. For development, you
 can install it with the following script:
