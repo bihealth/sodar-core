@@ -213,9 +213,6 @@ class TimelineEvent(models.Model):
         :param extra_data: Additional data related to object (dict, optional)
         :return: TimelineEventObjectRef object
         """
-        ref = TimelineEventObjectRef()
-        ref.event = self
-        ref.label = label
         if not name:
             logger.warning(
                 'Adding object reference with no name: "{}" ({})'.format(
@@ -223,11 +220,14 @@ class TimelineEvent(models.Model):
                 )
             )
             name = OBJ_REF_UNNAMED
-        ref.name = name
-        ref.object_model = obj.__class__.__name__
-        ref.object_uuid = obj.sodar_uuid
-        if extra_data:
-            ref.extra_data = extra_data
+        ref = TimelineEventObjectRef(
+            event=self,
+            label=label,
+            name=name,
+            object_model=obj.__class__.__name__,
+            object_uuid=obj.sodar_uuid,
+            extra_data=extra_data or {},
+        )
         ref.save()
         if settings.DEBUG:
             logger.debug(
@@ -259,14 +259,14 @@ class TimelineEvent(models.Model):
                     ', '.join(v for v in EVENT_STATUS_TYPES)
                 )
             )
-        status = TimelineEventStatus()
-        status.event = self
-        status.status_type = status_type
-        status.description = (
-            status_desc if status_desc else DEFAULT_MESSAGES[status_type]
+        status = TimelineEventStatus(
+            event=self,
+            status_type=status_type,
+            description=(
+                status_desc if status_desc else DEFAULT_MESSAGES[status_type]
+            ),
+            extra_data=extra_data or {},
         )
-        if extra_data:
-            status.extra_data = extra_data
         status.save()
         if settings.DEBUG and status_type != TL_STATUS_INIT:
             logger.debug(

@@ -273,16 +273,16 @@ class TimelineAPI:
         if user and user.is_anonymous:
             user = None
 
-        event = TimelineEvent()
-        event.project = project
-        event.app = app_name
-        event.plugin = plugin_name
-        event.user = user
-        event.event_name = event_name
-        event.description = description
-        event.classified = classified
-        if extra_data:
-            event.extra_data = extra_data
+        event = TimelineEvent(
+            project=project,
+            app=app_name,
+            plugin=plugin_name,
+            user=user,
+            event_name=event_name,
+            description=description,
+            classified=classified,
+            extra_data=extra_data or {},
+        )
         event.save()
 
         if settings.DEBUG:
