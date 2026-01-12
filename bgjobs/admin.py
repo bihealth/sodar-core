@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import BackgroundJob, BackgroundJobLogEntry
+from bgjobs.models import BackgroundJob, BackgroundJobLogEntry
 
 # Register your models here.
 admin.site.register(BackgroundJob)

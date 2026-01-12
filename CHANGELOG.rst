@@ -21,6 +21,7 @@ Changed
 
 - **General**
     - Upgrade to Django v5.2.10 (#1857)
+    - Refactor relative imports into absolute imports (#392)
 
 
 v1.3.1 (2025-12-12)
