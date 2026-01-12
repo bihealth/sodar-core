@@ -273,17 +273,28 @@ class TimelineAPI:
         if user and user.is_anonymous:
             user = None
 
-        event = TimelineEvent()
-        event.project = project
-        event.app = app_name
-        event.plugin = plugin_name
-        event.user = user
-        event.event_name = event_name
-        event.description = description
-        event.classified = classified
-        if extra_data:
-            event.extra_data = extra_data
+        event = TimelineEvent(
+            project=project,
+            app=app_name,
+            plugin=plugin_name,
+            user=user,
+            event_name=event_name,
+            description=description,
+            classified=classified,
+            extra_data=extra_data or {},
+        )
         event.save()
+
+        if settings.DEBUG:
+            log_msg = f'Add timeline event {app_name}.{event_name} ('
+            log_details = {'uuid': str(event.sodar_uuid)}
+            if project:
+                log_details['project'] = str(project.sodar_uuid)
+            if user:
+                log_details['user'] = str(user.sodar_uuid)
+            log_msg += '; '.join(f'{k}={v}' for k, v in log_details.items())
+            log_msg += ')'
+            logger.debug(log_msg)
 
         # Always add "INIT" status when creating, except for "INFO"
         if status_type not in [TL_STATUS_INFO, TL_STATUS_INIT]:

@@ -10,6 +10,26 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.3.2 (2026-01-12)
+*******************
+
+Release Highlights
+==================
+
+- Add timeline API debug logging
+- Add depdendency upgrade issue template
+- Upgrade critical dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.10.
+
+
 v1.3.1 (2025-12-12)
 *******************
 

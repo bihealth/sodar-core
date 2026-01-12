@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, views_api
+from filesfolders import views, views_api
 
 # NOTE: file/folder/hyperlink objects can be referred to as 'item', but only if
 #       ObjectPermissionMixin is used in the view

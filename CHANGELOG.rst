@@ -5,6 +5,28 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.3.2 (2026-01-12)
+===================
+
+Added
+-----
+
+- **General**
+    - Dependency upgrade issue template (#1856)
+- **Timeline**
+    - Debug logging for event creation and updating (#449)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v5.2.10 (#1857)
+    - Refactor relative imports into absolute imports (#392)
+    - Update ``dev_core_install.rst`` for ``sodar-core-docker-compose`` (#1852)
+- **Timeline**
+    - Refactor object creation (#1858)
+
+
 v1.3.1 (2025-12-12)
 ===================
 
