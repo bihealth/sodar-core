@@ -6,44 +6,46 @@ Development Installation
 Instructions on how to install a local development version of SODAR Core are
 detailed here. Ubuntu 24.04 LTS is the supported OS for development. For
 deployment, the same Ubuntu version or a corresponding Debian release are
-recommended. Other Linux variants can be used, but some system dependencies may
-vary for different OS versions or distributions.
-
-Installation and development should be possible on most recent versions of
-Linux, Mac and Windows (WSL2 recommended). However, this may require extra work
-and your mileage may vary.
-
-If you need to set up the accompanying example site in Docker, please see online
-for up-to-date Docker setup tutorials for Django related to your operating
-system of choice.
+recommended. Other Linux variants can be used for development or deployment, but
+some system dependencies may vary for different OS versions or distributions.
 
 .. note::
 
-    These instructions are also valid for the
+    These instructions are also valid for developing the
     `sodar-django-site <https://github.com/bihealth/sodar-django-site>`_
     repository.
 
 
-System Dependencies
-===================
+.. _dev_core_install_database:
 
-To get started, install the OS dependencies, Python >=3.11 (3.13 recommended)
-and PostgreSQL >=12 (16 recommended).
+1. Setup Database Servers
+=========================
+
+Developing SODAR Core requires PostgreSQL v12+ (v16 recommended) and Redis.
+There are two options for setting up the databases: bringing up the
+pre-configured Docker Compose network or manual setup.
+
+Setup with Docker Compose (Recommended)
+---------------------------------------
+
+The easiest way to set up the database servers is by cloning
+`sodar-core-docker-compose <https://github.com/bihealth/sodar-core-docker-compose>`_.
+This repository sets up a Docker Compose network with the database servers as
+containers. Follow the instructions in the repository readme to bring up the
+network. The SODAR Core database and user will be set up automatically on
+initial launch.
+
+Manual Setup
+------------
+
+It is also possible to set up a server manually or use an existing server. To
+install PostgreSQL prerequisites, run the following script:
 
 .. code-block:: console
 
-    $ sudo utility/install_os_dependencies.sh
-    $ sudo utility/install_python.sh
     $ sudo utility/install_postgres.sh
 
-
-.. _dev_core_install_database:
-
-Database Setup
-==============
-
-Next you need to setup the database and PostgreSQL user. You need to enter the
-following SQL in ``psql``:
+Once you have a PostgreSQL server running, you'll need to run the following SQL:
 
 .. code-block:: sql
 
@@ -52,41 +54,58 @@ following SQL in ``psql``:
     ALTER DATABASE sodar_core OWNER TO sodar_core;
     ALTER USER sodar_core CREATEDB;
 
-Alternatively, if PostgreSQL is running directly on your development host, you
-can use the following utility script (this does not work with a Docker setup):
+If your PostgreSQL is running directly on your development host, you can also
+use the following utility script:
 
 .. code-block:: console
 
     $ sudo utility/setup_database.sh
 
-You have to set the database URL and credentials for Django in the environment
-variable ``DATABASE_URL``. For development it is recommended to place
-environment variables in file ``.env`` located in your project root. To enable
-loading the file in Django, set ``DJANGO_READ_DOT_ENV_FILE=1`` in your
-environment variables when running SODAR or any of its management commands.
-See ``config/settings/base.py`` for more information and the ``env.example``
-file for an example environment file.
-
-Example of the database URL variable as set within an ``.env`` file:
-
-.. code-block:: console
-
-    DATABASE_URL="postgres://sodar_core:sodar_core@127.0.0.1/sodar_core"
-
-Asynchronous Celery tasks require running a Redis server. For development, you
-can install it with the following script:
+To install Redis manually, run the following script:
 
 .. code-block:: console
 
     $ sudo utility/install_redis.sh
 
 
-Repository and Environment Setup
-================================
+2. Setup Repository
+===================
 
-Clone the repository, setup and activate the virtual environment. Once within
-the repository and an active virtual environment, install Python requirements
-for the project. Example:
+Clone the SODAR Core repository from GitHub and create yourself a ``.env``
+environment configuration file.
+
+.. code-block:: console
+
+    $ git clone https://github.com/bihealth/sodar-core.git
+    $ cd sodar-core
+    $ cp env.example .env
+
+.. important::
+
+    To enable loading environment variables from the ``.env`` file, make sure to
+    set ``DJANGO_READ_DOT_ENV_FILE=1`` in the environment variables of the
+    development host.
+
+
+3. Install OS Dependencies
+==========================
+
+For development, you are expected to run the Django server and possible Celery
+worker locally. To get started, install the OS dependencies and Python >=3.11
+(3.13 recommended).
+
+.. code-block:: console
+
+    $ sudo utility/install_os_dependencies.sh
+    $ sudo utility/install_python.sh
+
+
+4. Install Python Dependencies
+==============================
+
+To set up Python dependencies for the repository, you'll first need to activate
+a virtual environment. Once within an active virtual environment, use the
+provided script to install the Python dependencies for development. Example:
 
 .. code-block:: console
 
@@ -95,10 +114,10 @@ for the project. Example:
     $ utility/install_python_dependencies.sh
 
 
-LDAP Setup (Optional)
-=====================
+5. Install LDAP Dependencies (Optional)
+=======================================
 
-If you will be using LDAP/AD auth on your site, make sure to also run:
+If you will be using LDAP/AD auth when developing, make sure to also run:
 
 .. code-block:: console
 
@@ -106,10 +125,10 @@ If you will be using LDAP/AD auth on your site, make sure to also run:
     $ pip install -r requirements/ldap.txt
 
 
-Final Setup
-===========
+6. Setup Django
+===============
 
-Initialize the database (this will also synchronize django-plugins):
+Initialize the SODAR Core Django database (this will also synchronize plugins):
 
 .. code-block:: console
 
@@ -150,20 +169,20 @@ terminal.
     process is not necessary.
 
 
-Optional Steps
-==============
+7. Create Development Users (Optional)
+======================================
 
-For creating a group of example users for your development site, you can run the
-``createdevusers`` management command. This creates the users "alice", "bob",
-"carol", "dan" and "erin". The users will be created with the password
-"sodarpass", unless a custom password is supplied via the ``-p`` or
+For creating a group of example users for your development site, it is
+recommended to run the ``createdevusers`` management command. This creates the
+users "alice", "bob", "carol", "dan" and "erin". The users will be created with
+the password "sodarpass", unless a custom password is supplied via the ``-p`` or
 ``--password`` argument.
 
 .. code-block:: console
 
     $ ./manage.py createdevusers
 
-.. note::
+.. hint::
 
     Having multiple non-admin user accounts is useful for developing and trying
     out project and member access management features. It is recommended to log
