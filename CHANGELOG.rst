@@ -14,6 +14,12 @@ Added
 - **General**
     - Dependency upgrade issue template (#1856)
 
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v5.2.10 (#1857)
+
 
 v1.3.1 (2025-12-12)
 ===================
