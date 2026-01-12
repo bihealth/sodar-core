@@ -229,6 +229,13 @@ class TimelineEvent(models.Model):
         if extra_data:
             ref.extra_data = extra_data
         ref.save()
+        if settings.DEBUG:
+            logger.debug(
+                f'Add timeline object ref for {ref.object_model} "{name}" '
+                f'(object={str(obj.sodar_uuid)}; '
+                f'event={self.sodar_uuid}; '
+                f'uuid={ref.sodar_uuid})'
+            )
         return ref
 
     def set_status(
@@ -261,6 +268,13 @@ class TimelineEvent(models.Model):
         if extra_data:
             status.extra_data = extra_data
         status.save()
+        if settings.DEBUG and status_type != TL_STATUS_INIT:
+            logger.debug(
+                f'Set timeline event {self.app}.{self.event_name} '
+                f'status to {status_type} '
+                f'(event={self.sodar_uuid}; '
+                f'uuid={status.sodar_uuid})'
+            )
         return status
 
 

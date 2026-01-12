@@ -16,6 +16,7 @@ v1.3.2 (WIP)
 Release Highlights
 ==================
 
+- Add timeline API debug logging
 - Add depdendency upgrade issue template
 - Upgrade critical dependencies
 

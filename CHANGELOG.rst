@@ -13,6 +13,8 @@ Added
 
 - **General**
     - Dependency upgrade issue template (#1856)
+- **Timeline**
+    - Debug logging for event creation and updating (#449)
 
 Changed
 -------

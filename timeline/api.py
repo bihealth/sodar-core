@@ -285,6 +285,17 @@ class TimelineAPI:
             event.extra_data = extra_data
         event.save()
 
+        if settings.DEBUG:
+            log_msg = f'Add timeline event {app_name}.{event_name} ('
+            log_details = {'uuid': str(event.sodar_uuid)}
+            if project:
+                log_details['project'] = str(project.sodar_uuid)
+            if user:
+                log_details['user'] = str(user.sodar_uuid)
+            log_msg += '; '.join(f'{k}={v}' for k, v in log_details.items())
+            log_msg += ')'
+            logger.debug(log_msg)
+
         # Always add "INIT" status when creating, except for "INFO"
         if status_type not in [TL_STATUS_INFO, TL_STATUS_INIT]:
             event.set_status(TL_STATUS_INIT)
