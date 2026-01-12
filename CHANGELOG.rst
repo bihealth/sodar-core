@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **General**
+    - Dependency upgrade issue template (#1856)
+
+
 v1.3.1 (2025-12-12)
 ===================
 
