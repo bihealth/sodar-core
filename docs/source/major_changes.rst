@@ -10,6 +10,26 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.4.0 (WIP)
+************
+
+Release Highlights
+==================
+
+**TODO**
+
+Breaking Changes
+================
+
+AppSetting Model Update
+-----------------------
+
+The ``user_modifiable`` field has been removed from the ``AppSetting`` model. To
+access the ``user_modifiable`` variable of an app setting, you should instead
+use ``AppSettingAPI.get_definition()``. Note that it is not generally
+recommended to manipulate ``AppSetting`` objects directly.
+
+
 v1.3.2 (2026-01-12)
 *******************
 

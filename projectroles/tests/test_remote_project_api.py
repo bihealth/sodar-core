@@ -1279,7 +1279,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
@@ -1290,7 +1289,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
@@ -1301,7 +1299,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'app_plugin': None,
             'project': project_obj.id,
             'user': new_user.id,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_STAR_UUID, expected)
 
@@ -1756,7 +1753,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'user': target_user.pk,
             'value': '0',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': obj.sodar_uuid,
         }
         self.assertEqual(model_to_dict(obj), expected)
@@ -1774,7 +1770,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'user': target_user.pk,
             'value': 'Local value',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': obj.sodar_uuid,
         }
         self.assertEqual(model_to_dict(obj), expected)
@@ -2146,7 +2141,6 @@ class TestSyncRemoteDataUpdate(
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
@@ -2157,7 +2151,6 @@ class TestSyncRemoteDataUpdate(
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
@@ -2168,7 +2161,6 @@ class TestSyncRemoteDataUpdate(
             'app_plugin': None,
             'project': self.project_obj.id,
             'user': self.user_target.id,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_STAR_UUID, expected)
 
@@ -2312,7 +2304,6 @@ class TestSyncRemoteDataUpdate(
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
@@ -2323,7 +2314,6 @@ class TestSyncRemoteDataUpdate(
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
@@ -2334,7 +2324,6 @@ class TestSyncRemoteDataUpdate(
             'app_plugin': None,
             'project': self.project_obj.id,
             'user': self.user_target.id,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_STAR_UUID, expected)
 

@@ -643,14 +643,12 @@ class AppSettingAPI:
             else:
                 app_plugin = cls._get_app_plugin(plugin_name)
                 app_plugin_model = app_plugin.get_model()
-            s_mod = bool(s_def.user_modifiable)
             s_vals = {
                 'app_plugin': app_plugin_model,
                 'project': project,
                 'user': user,
                 'name': setting_name,
                 'type': s_type,
-                'user_modifiable': s_mod,
             }
             if s_type == APP_SETTING_TYPE_JSON:
                 s_vals['value_json'] = cls._get_json_value(value)

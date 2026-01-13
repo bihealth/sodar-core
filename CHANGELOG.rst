@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Removed
+-------
+
+- **Projectroles**
+    - ``AppSetting.user_modifiable`` field (#1721)
+
+
 v1.3.2 (2026-01-12)
 ===================
 

@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import exceptions, serializers
 from drf_keyed_list import KeyedListSerializer
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     Role,
@@ -30,6 +31,7 @@ from projectroles.views import (
 )
 
 
+app_settings = AppSettingAPI()
 User = get_user_model()
 
 
@@ -736,7 +738,6 @@ class AppSettingSerializer(SODARProjectModelSerializer):
             'name',
             'type',
             'value',
-            'user_modifiable',
         ]
         read_only_fields = [*fields]
 
@@ -753,4 +754,10 @@ class AppSettingSerializer(SODARProjectModelSerializer):
             and parse_version(self.context['request'].version) >= VERSION_2_0
         ):
             ret['user'] = ret['user']['sodar_uuid']
+        # Return user_modifiable from definition since it is no longer in model
+        # TODO: Remove this in projectroles API v3.0
+        s_def = app_settings.get_definition(
+            instance.name, plugin_name=ret['plugin_name']
+        )
+        ret['user_modifiable'] = s_def.user_modifiable
         return ret

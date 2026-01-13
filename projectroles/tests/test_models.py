@@ -188,7 +188,6 @@ class AppSettingMixin:
         setting_type: str,
         value: Any,
         value_json: Union[dict, list, None] = {},
-        user_modifiable: bool = True,
         project: Optional[Project] = None,
         user: Optional[User] = None,
         sodar_uuid: Union[str, UUID, None] = None,
@@ -205,7 +204,6 @@ class AppSettingMixin:
             'type': setting_type,
             'value': value,
             'value_json': value_json,
-            'user_modifiable': user_modifiable,
             'user': user,
         }
         if sodar_uuid:
@@ -1229,7 +1227,6 @@ class TestProjectAppSetting(
             'user': None,
             'value': 'test',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_str.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_str), expected)
@@ -1247,7 +1244,6 @@ class TestProjectAppSetting(
             'user': None,
             'value': '170',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_int.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_int), expected)
@@ -1265,7 +1261,6 @@ class TestProjectAppSetting(
             'user': None,
             'value': None,
             'value_json': {'Testing': 'good'},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_json.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_json), expected)
@@ -1360,7 +1355,6 @@ class TestUserAppSetting(
             'user': self.user.pk,
             'value': 'test',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_str.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_str), expected)
@@ -1378,7 +1372,6 @@ class TestUserAppSetting(
             'user': self.user.pk,
             'value': '170',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_int.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_int), expected)
@@ -1396,7 +1389,6 @@ class TestUserAppSetting(
             'user': self.user.pk,
             'value': None,
             'value_json': {'Testing': 'good'},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_json.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_json), expected)

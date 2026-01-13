@@ -1024,11 +1024,6 @@ class AppSetting(models.Model):
         null=True, default=dict, help_text='Optional JSON value for the setting'
     )
 
-    #: Setting visibility in forms
-    user_modifiable = models.BooleanField(
-        default=True, help_text='Setting visibility in forms'
-    )
-
     #: AppSetting SODAR UUID
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4, unique=True, help_text='AppSetting SODAR UUID'

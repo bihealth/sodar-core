@@ -3184,7 +3184,7 @@ class TestProjectSettingRetrieveAPIView(
             'name': setting_name,
             'type': APP_SETTING_TYPE_STRING,
             'value': self.project_user_str_setting['value'],
-            'user_modifiable': True,
+            'user_modifiable': False,
         }
         self.assertEqual(response_data, expected)
 
@@ -3303,7 +3303,7 @@ class TestProjectSettingRetrieveAPIView(
             'name': setting_name,
             'type': APP_SETTING_TYPE_STRING,
             'value': self.project_user_str_setting['value'],
-            'user_modifiable': True,
+            'user_modifiable': False,
         }
         self.assertEqual(response_data, expected)
 
