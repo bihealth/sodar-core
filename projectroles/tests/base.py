@@ -72,10 +72,6 @@ AXES_LOCK_MSG = 'Account locked: too many login attempts.'
 EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
 TEST_SERVER_URL = 'http://testserver'
 DEFAULT_WAIT_LOC = 'ID'
-TEST_BASE_CLASS_DEPRECATE_MSG = (
-    '\nWARNING: {old} has been deprecated and will be removed in v1.4. Use '
-    'projectroles.tests.base.{new} instead.'
-)  # TODO: Remove in v1.4 (see #1830)
 
 
 # UI View Test Base Classes ----------------------------------------------------

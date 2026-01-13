@@ -20,13 +20,7 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project, SODAR_CONSTANTS, CAT_DELIMITER
 from projectroles.plugins import PluginAPI
-from projectroles.tests.base import (
-    SeleniumSetupMixin as MovedSeleniumSetupMixin,
-    LiveUserMixin as MovedLiveUserMixin,
-    UITestMixin as MovedUITestMixin,
-    ProjectUITestBase,
-    TEST_BASE_CLASS_DEPRECATE_MSG,
-)
+from projectroles.tests.base import ProjectUITestBase
 from projectroles.tests.test_models import (
     ProjectInviteMixin,
     RemoteTargetMixin,
@@ -72,54 +66,6 @@ PUBLIC_ACCESS_ID = 'id_public_access'
 REMOTE_SITE_UUID = uuid.uuid4()
 REMOTE_SITE_ID = f'id_remote_site.{REMOTE_SITE_UUID}'
 CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
-
-
-# TODO: Remove in v1.4 (see #1830)
-class SeleniumSetupMixin(MovedSeleniumSetupMixin):
-    """
-    Mixin for setting up selenium for a test class.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.x instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class LiveUserMixin(MovedLiveUserMixin):
-    """
-    Mixin for creating users to work with LiveServerTestCase.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.x instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class UITestMixin(MovedUITestMixin):
-    """
-    Helper mixin for UI tests.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.x instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class UITestBase(ProjectUITestBase):
-    """
-    Base class for UI tests.
-
-    DEPRECATED: To be removed in v1.4. Use ProjectUITestBase or SiteUITestBase
-    from projectroles.tests.base insteaad.
-    """
-
-    def setUp(self):
-        super().setUp()
-        print(
-            TEST_BASE_CLASS_DEPRECATE_MSG.format(
-                old='UITestBase', new='ProjectUITestBase or SiteUITestBase'
-            )
-        )
 
 
 class TestBaseTemplate(ProjectUITestBase):

@@ -16,7 +16,7 @@ v1.4.0 (WIP)
 Release Highlights
 ==================
 
-**TODO**
+- Remove deprecated test base classes and mixins
 
 Breaking Changes
 ================
@@ -28,6 +28,14 @@ The ``user_modifiable`` field has been removed from the ``AppSetting`` model. To
 access the ``user_modifiable`` variable of an app setting, you should instead
 use ``AppSettingAPI.get_definition()``. Note that it is not generally
 recommended to manipulate ``AppSetting`` objects directly.
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.3 and have been removed in v1.4.
+
+Base Test Classes and Mixins
+    The base test classes and mixins deprecated in v1.3 have been removed.
 
 
 v1.3.2 (2026-01-12)

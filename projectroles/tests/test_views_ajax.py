@@ -11,14 +11,13 @@ from test_plus.test import TestCase
 from projectroles.app_links import AppLinkAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
-from projectroles.tests.base import UIViewTestBase
+from projectroles.tests.base import SerializedObjectMixin, UIViewTestBase
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
 )
-from projectroles.tests.test_views_api import SerializedObjectMixin
 
 
 app_links = AppLinkAPI()

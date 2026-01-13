@@ -33,11 +33,9 @@ from projectroles.plugins import PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.base import (
     UIViewTestBase,
-    SerializedObjectMixin as MovedSerializedObjectMixin,
-    SODARAPIViewTestMixin as MovedSODARAPIViewTestMixin,
-    APIViewTestBase as MovedAPIViewTestBase,
+    APIViewTestBase,
+    SODARAPIViewTestMixin,
     TEST_SERVER_URL,
-    TEST_BASE_CLASS_DEPRECATE_MSG,
 )
 from projectroles.tests.test_app_settings import AppSettingInitMixin
 from projectroles.tests.test_models import (
@@ -101,43 +99,7 @@ LDAP_DOMAIN = 'EXAMPLE'
 # Base Classes -----------------------------------------------------------------
 
 
-# TODO: Remove in v1.4 (see #1830)
-class SerializedObjectMixin(MovedSerializedObjectMixin):
-    """
-    Mixin for helpers with serialized objects.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.SerializedObjectMixin instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class SODARAPIViewTestMixin(MovedSODARAPIViewTestMixin):
-    """
-    Mixin for SODAR and SODAR Core API views with accept headers, knox token
-    authorization and general helper methods.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.SODARAPIViewTestMixin instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class APIViewTestBase(MovedAPIViewTestBase):
-    """
-    Base API test view with knox authentication.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.SODARAPIViewTestMixin instead.
-    """
-
-    def setUp(self):
-        super().setUp()
-        c = 'APIViewTestBase'
-        print(TEST_BASE_CLASS_DEPRECATE_MSG.format(old=c, new=c))
-
-
-class ProjectrolesAPIViewTestBase(MovedAPIViewTestBase):
+class ProjectrolesAPIViewTestBase(APIViewTestBase):
     """Override of APIViewTestBase to be used with Projectroles API views"""
 
     media_type = views_api.PROJECTROLES_API_MEDIA_TYPE

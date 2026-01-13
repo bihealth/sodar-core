@@ -62,7 +62,6 @@ from projectroles.tests.base import (
     UIViewTestBase,
     AUTHENTICATION_BACKENDS_AXES,
     AXES_LOCK_MSG,
-    TEST_BASE_CLASS_DEPRECATE_MSG,
 )
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -211,23 +210,6 @@ EX_PROJECT_UI_SETTINGS = [
     'project_callable_setting',
     'project_callable_setting_options',
 ]
-
-
-class ViewTestBase(UIViewTestBase):
-    """
-    Base class for view testing.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.UIViewTestBase instead.
-    """
-
-    def setUp(self):
-        super().setUp()
-        print(
-            TEST_BASE_CLASS_DEPRECATE_MSG.format(
-                old='ViewTestBase', new='UIViewTestBase'
-            )
-        )
 
 
 # General view tests -----------------------------------------------------------

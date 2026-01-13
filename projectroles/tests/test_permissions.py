@@ -10,12 +10,9 @@ from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.utils import build_secret
 from projectroles.tests.base import (
-    PermissionTestMixin as MovedPermissionTestMixin,
-    IPAllowMixin as MovedIPAllowMixin,
-    PermissionTestBase as MovedPermissionTestBase,
-    ProjectPermissionTestBase as MovedProjectPermissionTestBase,
-    SiteAppPermissionTestBase as MovedSiteAppPermissionTestBase,
-    TEST_BASE_CLASS_DEPRECATE_MSG,
+    IPAllowMixin,
+    ProjectPermissionTestBase,
+    SiteAppPermissionTestBase,
 )
 from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
 
@@ -39,71 +36,7 @@ REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_SECRET = build_secret()
 
 
-# TODO: Remove in v1.4 (see #1830)
-class PermissionTestMixin(MovedPermissionTestMixin):
-    """
-    Helper class for permission tests.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.PermissionTestMixin instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class IPAllowMixin(MovedIPAllowMixin):
-    """
-    Mixin for IP allowing test helpers.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.IPAllowMixin instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class PermissionTestBase(MovedPermissionTestBase):
-    """
-    Base class for permission tests for UI views.
-
-    NOTE: For REST API views, you need to use APITestCase.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.PermissionTestBase instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class ProjectPermissionTestBase(MovedProjectPermissionTestBase):
-    """
-    Base class for testing project permissions.
-
-    NOTE: For REST API views, you need to use APITestCase.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.ProjectPermissionTestBase instead.
-    """
-
-    def setUp(self):
-        super().setUp()
-        c = 'ProjectPermissionTestBase'
-        print(TEST_BASE_CLASS_DEPRECATE_MSG.format(old=c, new=c))
-
-
-# TODO: Remove in v1.4 (see #1830)
-class SiteAppPermissionTestBase(MovedSiteAppPermissionTestBase):
-    """
-    Base class for testing site app permissions.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.SiteAppPermissionTestBase instead.
-    """
-
-    def setUp(self):
-        super().setUp()
-        c = 'SiteAppPermissionTestBase'
-        print(TEST_BASE_CLASS_DEPRECATE_MSG.format(old=c, new=c))
-
-
-class TestGeneralViews(MovedProjectPermissionTestBase):
+class TestGeneralViews(ProjectPermissionTestBase):
     """Tests for general non-project UI view permissions"""
 
     def test_get_home(self):
@@ -199,7 +132,7 @@ class TestGeneralViews(MovedProjectPermissionTestBase):
         )
 
 
-class TestProjectDetailView(MovedProjectPermissionTestBase):
+class TestProjectDetailView(ProjectPermissionTestBase):
     """Tests for ProjectDetailView permissions"""
 
     def setUp(self):
@@ -337,7 +270,7 @@ class TestProjectDetailView(MovedProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.anonymous, 200)
 
 
-class TestProjectCreateView(MovedProjectPermissionTestBase):
+class TestProjectCreateView(ProjectPermissionTestBase):
     """Tests for ProjectCreateView permissions"""
 
     def setUp(self):
@@ -430,7 +363,7 @@ class TestProjectCreateView(MovedProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectUpdateView(MovedProjectPermissionTestBase):
+class TestProjectUpdateView(ProjectPermissionTestBase):
     """Tests for ProjectUpdateView permissions"""
 
     def setUp(self):
@@ -551,7 +484,7 @@ class TestProjectUpdateView(MovedProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectArchiveView(MovedProjectPermissionTestBase):
+class TestProjectArchiveView(ProjectPermissionTestBase):
     """Tests for ProjectArchiveView permissions"""
 
     def setUp(self):
@@ -691,7 +624,7 @@ class TestProjectArchiveView(MovedProjectPermissionTestBase):
 
 
 class TestProjectDeleteView(
-    RemoteSiteMixin, RemoteProjectMixin, MovedProjectPermissionTestBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
 ):
     """Tests for ProjectDeleteView permissions"""
 
@@ -971,7 +904,7 @@ class TestProjectDeleteView(
             self.assert_response(self.url, self.no_role_users, 302)
 
 
-class TestProjectRoleView(MovedProjectPermissionTestBase):
+class TestProjectRoleView(ProjectPermissionTestBase):
     """Tests for ProjectRoleView permissions"""
 
     def setUp(self):
@@ -1094,7 +1027,7 @@ class TestProjectRoleView(MovedProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestRoleAssignmentCreateView(MovedProjectPermissionTestBase):
+class TestRoleAssignmentCreateView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentCreateView permissions"""
 
     def setUp(self):
@@ -1206,7 +1139,7 @@ class TestRoleAssignmentCreateView(MovedProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestRoleAssignmentUpdateView(MovedProjectPermissionTestBase):
+class TestRoleAssignmentUpdateView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentUpdateView permissions"""
 
     def setUp(self):
@@ -1380,7 +1313,7 @@ class TestRoleAssignmentUpdateView(MovedProjectPermissionTestBase):
             self.assert_response(url, self.no_role_users, 302)
 
 
-class TestRoleAssignmentDeleteView(MovedProjectPermissionTestBase):
+class TestRoleAssignmentDeleteView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentDeleteView permissions"""
 
     def setUp(self):
@@ -1555,7 +1488,7 @@ class TestRoleAssignmentDeleteView(MovedProjectPermissionTestBase):
             self.assert_response(url, self.no_role_users, 302)
 
 
-class TestRoleAssignmentOwnDeleteView(MovedProjectPermissionTestBase):
+class TestRoleAssignmentOwnDeleteView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentOwnDeleteView permissions"""
 
     def setUp(self):
@@ -1662,7 +1595,7 @@ class TestRoleAssignmentOwnDeleteView(MovedProjectPermissionTestBase):
             self.assert_response(url, self.no_role_users, 302)
 
 
-class TestRoleAssignmentOwnerTransferView(MovedProjectPermissionTestBase):
+class TestRoleAssignmentOwnerTransferView(ProjectPermissionTestBase):
     """Tests for RoleAssignmentOwnerTransferView permissions"""
 
     def setUp(self):
@@ -1778,7 +1711,7 @@ class TestRoleAssignmentOwnerTransferView(MovedProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectInviteView(MovedProjectPermissionTestBase):
+class TestProjectInviteView(ProjectPermissionTestBase):
     """Tests for ProjectInviteView permissions"""
 
     def setUp(self):
@@ -1889,7 +1822,7 @@ class TestProjectInviteView(MovedProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectInviteCreateView(MovedProjectPermissionTestBase):
+class TestProjectInviteCreateView(ProjectPermissionTestBase):
     """Tests for ProjectInviteCreateView permissions"""
 
     def setUp(self):
@@ -2002,7 +1935,7 @@ class TestProjectInviteCreateView(MovedProjectPermissionTestBase):
         self.assert_response(self.url_cat, self.no_role_users, 302)
 
 
-class TestProjectInviteResendView(MovedProjectPermissionTestBase):
+class TestProjectInviteResendView(ProjectPermissionTestBase):
     """Tests for ProjectInviteResendView permissions"""
 
     def setUp(self):
@@ -2121,7 +2054,7 @@ class TestProjectInviteResendView(MovedProjectPermissionTestBase):
             )
 
 
-class TestProjectInviteRevokeView(MovedProjectPermissionTestBase):
+class TestProjectInviteRevokeView(ProjectPermissionTestBase):
     """Tests for ProjectInviteRevokeView permissions"""
 
     def setUp(self):
@@ -2197,7 +2130,7 @@ class TestProjectInviteRevokeView(MovedProjectPermissionTestBase):
         self.assert_response(self.url, self.non_superusers, 302)
 
 
-class TestSiteAppSettingsFormView(MovedProjectPermissionTestBase):
+class TestSiteAppSettingsFormView(ProjectPermissionTestBase):
     """Tests for SiteAppSettingsFormView permissions"""
 
     def setUp(self):
@@ -2221,7 +2154,7 @@ class TestSiteAppSettingsFormView(MovedProjectPermissionTestBase):
         self.assert_response(self.url, self.non_superusers, 302)
 
 
-class TestRemoteSiteViews(RemoteSiteMixin, MovedSiteAppPermissionTestBase):
+class TestRemoteSiteViews(RemoteSiteMixin, SiteAppPermissionTestBase):
     """Tests for UI view permissions in remote site views"""
 
     def setUp(self):
@@ -2297,7 +2230,7 @@ class TestRemoteSiteViews(RemoteSiteMixin, MovedSiteAppPermissionTestBase):
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestTargetSiteViews(
-    RemoteSiteMixin, RemoteProjectMixin, MovedProjectPermissionTestBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
 ):
     """Tests for UI view permissions on target site"""
 
@@ -2499,7 +2432,7 @@ class TestTargetSiteViews(
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestRevokedRemoteProjectViews(
-    RemoteSiteMixin, RemoteProjectMixin, MovedProjectPermissionTestBase
+    RemoteSiteMixin, RemoteProjectMixin, ProjectPermissionTestBase
 ):
     """
     Tests for UI view permissions with revoked remote project on target site.
@@ -2580,7 +2513,7 @@ class TestRevokedRemoteProjectViews(
         self.assert_response(url, bad_users, 302)
 
 
-class TestIPAllowing(IPAllowMixin, MovedProjectPermissionTestBase):
+class TestIPAllowing(IPAllowMixin, ProjectPermissionTestBase):
     """Tests for IP allow list permissions with ProjectDetailView"""
 
     def setUp(self):
@@ -2930,7 +2863,7 @@ class TestIPAllowingTargetSite(
     IPAllowMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
-    MovedProjectPermissionTestBase,
+    ProjectPermissionTestBase,
 ):
     """Tests for IP allow list permissions on target site"""
 

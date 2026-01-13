@@ -13,6 +13,7 @@ Removed
 
 - **Projectroles**
     - ``AppSetting.user_modifiable`` field (#1721)
+    - Deprecated base test classes and mixins (#1830)
 
 
 v1.3.2 (2026-01-12)
