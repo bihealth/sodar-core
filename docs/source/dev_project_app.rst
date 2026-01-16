@@ -769,6 +769,9 @@ The base classes provide permission checks via SODAR Core project objects
 similar to UI view mixins. Base REST API classes without a project context can
 also be used in site apps.
 
+For views which returns ``HTTP 503`` errors, we provide a general purpose
+``APIException`` subclass called ``ServiceUnavailable``.
+
 See the
 :ref:`base REST API class documentation <app_projectroles_api_django_rest>` for
 details on the base REST API classes.
