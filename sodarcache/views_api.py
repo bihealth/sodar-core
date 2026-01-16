@@ -15,7 +15,10 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
-from projectroles.views_api import SODARAPIGenericProjectMixin, ServiceUnavailable
+from projectroles.views_api import (
+    SODARAPIGenericProjectMixin,
+    ServiceUnavailable,
+)
 
 from sodarcache.serializers import JSONCacheItemSerializer
 
