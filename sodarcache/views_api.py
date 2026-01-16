@@ -15,7 +15,7 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
-from projectroles.views_api import SODARAPIGenericProjectMixin
+from projectroles.views_api import SODARAPIGenericProjectMixin, ServiceUnavailable
 
 from sodarcache.serializers import JSONCacheItemSerializer
 
@@ -51,11 +51,6 @@ class SodarcacheAPIViewMixin:
         allowed_versions = SODARCACHE_API_ALLOWED_VERSIONS
         default_version = SODARCACHE_API_DEFAULT_VERSION
 
-    class BackendUnavailable(APIException):
-        status_code = 503
-        default_detail = 'Cache backend not enabled'
-        default_code = 'service_unavailable'
-
     renderer_classes = [SodarcacheAPIRenderer]
     versioning_class = SodarcacheAPIVersioning
 
@@ -68,7 +63,7 @@ class SodarcacheAPIViewMixin:
         """
         cache_backend = plugin_api.get_backend_api('sodar_cache')
         if not cache_backend:
-            raise cls.BackendUnavailable()
+            raise ServiceUnavailable('Cache backend not enabled')
         return cache_backend
 
 
