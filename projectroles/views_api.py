@@ -1671,3 +1671,9 @@ class RemoteProjectGetAPIView(RemoteSyncAPIVersioningMixin, APIView):
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())
         return Response(sync_data, status=200)
+
+
+class ServiceUnavailable(APIException):
+    status_code = 503
+    default_detail = 'The service is not available, please try again later.'
+    default_code = 'service_unavailable'
