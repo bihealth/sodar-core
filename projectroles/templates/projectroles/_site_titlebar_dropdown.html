@@ -35,6 +35,10 @@
     {% if request.user.is_superuser %}
       <i class="iconify" data-icon="mdi:shield-account"></i>
     {% elif request.user.is_authenticated %}
+      {% get_app_setting 'projectroles' 'dropdown_user_name_display' user=request.user as dropdown_user_name_display %}
+      {% if dropdown_user_name_display %}
+        <div id="sodar-navbar-user-dropdown-username" class="badge badge-pill badge-info text-truncate">{{ request.user.username }}</div>
+      {% endif %}
       <i class="iconify" data-icon="mdi:user"></i>
     {% else %}
       <i class="iconify" data-icon="mdi:incognito"></i>

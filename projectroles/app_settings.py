@@ -232,6 +232,16 @@ PROJECTROLES_APP_SETTINGS = [
         global_edit=False,
         project_types=[PROJECT_TYPE_CATEGORY],
     ),
+    PluginAppSettingDef(
+        name='dropdown_user_name_display',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Display user name in user dropdown',
+        description='Display user name of current user in the user dropdown button',
+        user_modifiable=True,
+        global_edit=True,
+    ),
 ]
 
 

@@ -594,6 +594,12 @@ a.sodar-pr-btn-copy-secret i {
   50% { opacity: 0 }
 }
 
+/* User dropdown username */
+#sodar-navbar-user-dropdown-username {
+  max-width: 120px;
+  vertical-align: text-top;
+}
+
 /* Badge group */
 .badge-group {
   padding: 2px;
