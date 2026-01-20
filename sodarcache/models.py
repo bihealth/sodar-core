@@ -15,7 +15,12 @@ class BaseCacheItem(models.Model):
 
     class Meta:
         abstract = True
-        unique_together = (('project', 'app_name', 'name'),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'app_name', 'name'],
+                name='unique_project_app_name_cache',
+            ),
+        ]
         indexes = [models.Index(fields=['project', 'app_name', 'name'])]
 
     #: Project in which the item belongs (optional)
