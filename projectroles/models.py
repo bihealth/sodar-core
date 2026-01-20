@@ -207,7 +207,11 @@ class Project(models.Model):
     objects = ProjectManager()
 
     class Meta:
-        unique_together = ('title', 'parent')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'parent'], name='unique_project_path'
+            ),
+        ]
         ordering = ['parent__title', 'title']
 
     def __str__(self):
@@ -1034,7 +1038,12 @@ class AppSetting(models.Model):
 
     class Meta:
         ordering = ['project__title', 'app_plugin__name', 'name']
-        unique_together = ['project', 'user', 'app_plugin', 'name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'user', 'app_plugin', 'name'],
+                name='unique_app_setting_name',
+            ),
+        ]
 
     def __str__(self):
         plugin_name = self.app_plugin.name if self.app_plugin else APP_NAME
@@ -1301,7 +1310,11 @@ class RemoteSite(models.Model):
 
     class Meta:
         ordering = ['name']
-        unique_together = ['url', 'mode', 'secret']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['url', 'mode', 'secret'], name='unique_remote_site'
+            ),
+        ]
 
     def __str__(self):
         return f'{self.name} ({self.mode})'
@@ -1652,7 +1665,11 @@ class SODARUserAdditionalEmail(models.Model):
 
     class Meta:
         ordering = ['user__username', 'email']
-        unique_together = ['user', 'email']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'email'], name='unique_user_email'
+            ),
+        ]
 
     def __str__(self):
         return f'{self.user.username}: {self.email}'

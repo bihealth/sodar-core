@@ -162,7 +162,12 @@ class Folder(BaseFilesfoldersClass):
 
     class Meta:
         ordering = ['project', 'name']
-        unique_together = ('project', 'folder', 'name')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'folder', 'name'],
+                name='unique_project_folder_name',
+            ),
+        ]
 
     def __str__(self):
         return '{}: {}{}'.format(
@@ -278,7 +283,12 @@ class File(BaseFilesfoldersClass):
 
     class Meta:
         ordering = ['folder', 'name']
-        unique_together = ('project', 'folder', 'name')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'folder', 'name'],
+                name='unique_project_file_name',
+            ),
+        ]
 
     def __str__(self):
         return '{}: {}{}'.format(
@@ -316,7 +326,12 @@ class HyperLink(BaseFilesfoldersClass):
 
     class Meta:
         ordering = ['folder', 'name']
-        unique_together = ('project', 'folder', 'name')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'folder', 'name'],
+                name='unique_project_hyperlink_name',
+            ),
+        ]
 
     def __str__(self):
         return '{}: {}{}'.format(
