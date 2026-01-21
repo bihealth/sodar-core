@@ -36,13 +36,13 @@
       <i class="iconify" data-icon="mdi:shield-account"></i>
     {% elif request.user.is_authenticated %}
       {% get_app_setting 'projectroles' 'dropdown_user_name_display' user=request.user as dropdown_user_name_display %}
+      <i class="iconify" data-icon="mdi:user"></i>
       {% if dropdown_user_name_display %}
-        <div class="badge badge-pill badge-info text-truncate"
+        <div class="badge badge-pill text-truncate"
              id="sodar-navbar-user-dropdown-username">
           {{ request.user.username }}
         </div>
       {% endif %}
-      <i class="iconify" data-icon="mdi:user"></i>
     {% else %}
       <i class="iconify" data-icon="mdi:incognito"></i>
     {% endif %}
