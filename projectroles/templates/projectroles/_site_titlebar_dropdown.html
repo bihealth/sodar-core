@@ -33,16 +33,9 @@
      id="sodar-navbar-user-dropdown"
      data-toggle="dropdown">
     {% if request.user.is_superuser %}
-      <i class="iconify" data-icon="mdi:shield-account"></i>
+      {% include "projectroles/_site_titlebar_dropdown_link.html" with icon="mdi:shield-account" %}
     {% elif request.user.is_authenticated %}
-      {% get_app_setting 'projectroles' 'dropdown_user_name_display' user=request.user as dropdown_user_name_display %}
-      <i class="iconify" data-icon="mdi:user"></i>
-      {% if dropdown_user_name_display %}
-        <div class="badge badge-pill text-truncate"
-             id="sodar-navbar-user-dropdown-username">
-          {{ request.user.username }}
-        </div>
-      {% endif %}
+      {% include "projectroles/_site_titlebar_dropdown_link.html" with icon="mdi:user" %}
     {% else %}
       <i class="iconify" data-icon="mdi:incognito"></i>
     {% endif %}

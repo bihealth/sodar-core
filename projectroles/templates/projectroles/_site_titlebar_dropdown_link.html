@@ -1,0 +1,12 @@
+{% load projectroles_common_tags %}
+{% get_app_setting 'projectroles' 'dropdown_user_name_display' user=request.user as dropdown_user_name_display %}
+
+{% if dropdown_user_name_display %}
+  <div class="badge badge-pill text-truncate"
+       id="sodar-navbar-user-dropdown-username">
+    <i class="iconify" data-icon="{{ icon }}"></i>
+    {{ request.user.username }}
+  </div>
+{% else %}
+  <i class="iconify" data-icon="{{ icon }}"></i>
+{% endif %}
