@@ -196,6 +196,16 @@ PROJECTROLES_APP_SETTINGS = [
         global_edit=False,
     ),
     PluginAppSettingDef(
+        name='dropdown_user_name_display',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Display user name in user dropdown',
+        description='Display your user name in the user dropdown link',
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
         name='project_list_pagination',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_INTEGER,
@@ -231,16 +241,6 @@ PROJECTROLES_APP_SETTINGS = [
         user_modifiable=True,  # Only allow modification by superuser
         global_edit=False,
         project_types=[PROJECT_TYPE_CATEGORY],
-    ),
-    PluginAppSettingDef(
-        name='dropdown_user_name_display',
-        scope=APP_SETTING_SCOPE_USER,
-        type=APP_SETTING_TYPE_BOOLEAN,
-        default=False,
-        label='Display user name in user dropdown',
-        description='Display user name of current user in the user dropdown button',
-        user_modifiable=True,
-        global_edit=True,
     ),
 ]
 
