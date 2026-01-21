@@ -33,9 +33,9 @@
      id="sodar-navbar-user-dropdown"
      data-toggle="dropdown">
     {% if request.user.is_superuser %}
-      {% include "projectroles/_site_titlebar_dropdown_link.html" with icon="mdi:shield-account" %}
+      {% include "projectroles/_site_titlebar_user_dropdown_link.html" with icon="mdi:shield-account" %}
     {% elif request.user.is_authenticated %}
-      {% include "projectroles/_site_titlebar_dropdown_link.html" with icon="mdi:user" %}
+      {% include "projectroles/_site_titlebar_user_dropdown_link.html" with icon="mdi:user" %}
     {% else %}
       <i class="iconify" data-icon="mdi:incognito"></i>
     {% endif %}

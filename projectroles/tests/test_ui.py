@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.template.defaultfilters import truncatechars
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
@@ -158,12 +159,15 @@ class TestBaseTemplate(ProjectUITestBase):
 
     def test_user_dropdown_username_superuser(self):
         """Test visibility with superuser"""
-        # Username should not be visible
+        # Username should be visible
+        app_settings.set(
+            APP_NAME, 'dropdown_user_name_display', True, user=self.superuser
+        )
         self.login_and_redirect(self.superuser, reverse('home'))
-        with self.assertRaises(NoSuchElementException):
-            self.selenium.find_element(
-                By.ID, 'sodar-navbar-user-dropdown-username'
-            )
+        username_element = self.selenium.find_element(
+            By.ID, 'sodar-navbar-user-dropdown-username'
+        )
+        self.assertEqual(username_element.text, 'superuser')
 
     def test_user_dropdown_username_truncated(self):
         """Test visibility and truncation for user with long name"""
@@ -175,13 +179,8 @@ class TestBaseTemplate(ProjectUITestBase):
         username_element = self.selenium.find_element(
             By.ID, 'sodar-navbar-user-dropdown-username'
         )
-        # Based on https://medium.com/@dave_go/testing-text-truncation-effective-strategies-2a589841a22b
-        # We compare offsetWidth (which should be equal to the max-width css
-        # property) to scrollWidth (which is the total width)
-        self.assertTrue(
-            username_element.get_attribute("offsetWidth")
-            < username_element.get_attribute("scrollWidth")
-        )
+        long_name_user_trunc = truncatechars(str(long_name_user), 32)
+        self.assertEqual(username_element.text, long_name_user_trunc)
 
 
 class TestHomeView(ProjectUITestBase):

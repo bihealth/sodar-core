@@ -598,7 +598,6 @@ a.sodar-pr-btn-copy-secret i {
 #sodar-navbar-user-dropdown-username {
   background-color: rgba(255,255,255,.5);
   color: black;
-  max-width: 120px;
   vertical-align: text-top;
   transition: none;
 }
