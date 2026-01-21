@@ -114,7 +114,7 @@ class TestBaseTemplate(ProjectUITestBase):
 
     def test_user_dropdown_username_default(self):
         """Test visibility for user with setting default (False)"""
-        # username should not be visible
+        # Username should not be visible
         self.assertEqual(
             app_settings.get(
                 APP_NAME, 'dropdown_user_name_display', user=self.user_owner
@@ -129,7 +129,7 @@ class TestBaseTemplate(ProjectUITestBase):
 
     def test_user_dropdown_username_visible(self):
         """Test visibility for user with setting set True"""
-        # ensure username is visible
+        # Ensure username is visible
         user = self.user_contributor
         app_settings.set(
             APP_NAME, 'dropdown_user_name_display', True, user=user
@@ -143,7 +143,7 @@ class TestBaseTemplate(ProjectUITestBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_user_dropdown_username_anonymous(self):
         """Test visibility with anonymous user"""
-        # username should not be visible
+        # Username should not be visible
         self.project.set_public_access(self.role_guest)
         self.selenium.get(self.build_selenium_url(reverse('home')))
         WebDriverWait(self.selenium, self.wait_time).until(
@@ -158,7 +158,7 @@ class TestBaseTemplate(ProjectUITestBase):
 
     def test_user_dropdown_username_superuser(self):
         """Test visibility with superuser"""
-        # username should not be visible
+        # Username should not be visible
         self.login_and_redirect(self.superuser, reverse('home'))
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(
