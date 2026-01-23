@@ -35,6 +35,10 @@ Base mixins and classes for building UI views can be found in
     :members:
     :show-inheritance:
 
+.. autoclass:: GenericDeleteView
+    :members:
+    :show-inheritance:
+
 .. autoclass:: ProjectContextMixin
     :members:
     :show-inheritance:
