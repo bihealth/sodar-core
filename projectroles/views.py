@@ -2071,7 +2071,7 @@ class GenericDeleteView(
             return self.on_error(
                 object,
                 self.request,
-                'Host name input incorrect, deletion cancelled.',
+                'Host name input incorrect.',
                 self.get_redirect_url(object),
             )
 
