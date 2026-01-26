@@ -233,6 +233,18 @@ def get_user_inactive_icon(tooltip: bool = True) -> str:
 
 
 @register.simple_tag
+def get_user_icon(user: User) -> str:
+    """Return icon element based on superuser/authenticated/anonymous status"""
+    if user.is_superuser:
+        icon = 'mdi:shield-account'
+    elif user.is_authenticated:
+        icon = 'mdi:user'
+    else:
+        icon = 'mdi:incognito'
+    return f'<i class="iconify" data-icon="{icon}"></i>'
+
+
+@register.simple_tag
 def get_user_html(user: User) -> str:
     """Return HTML representation of a User object"""
     email_link = True if user.is_active and user.email else False
