@@ -2115,6 +2115,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         project: Project,
         instance: Optional[RoleAssignment] = None,
         promote: bool = False,
+        notify: bool = True,
     ) -> RoleAssignment:
         """
         Create or update a RoleAssignment. This method should be called either
@@ -2127,6 +2128,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         :param project: Project object
         :param instance: Existing RoleAssignment object or None
         :param promote: Promoting an inherited user (boolean, default=False)
+        :param notify: Add app alerts and send email if True (default=True)
         :return: Created or updated RoleAssignment object
         """
         app_alerts = plugin_api.get_backend_api('appalerts_backend')
@@ -2172,7 +2174,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         if tl_event:
             tl_event.set_status('OK')
 
-        if request.user != user:
+        if notify and request.user != user:
             if app_alerts and app_settings.get(
                 APP_NAME, 'notify_alert_role', user=user
             ):
@@ -2829,6 +2831,7 @@ class RoleAssignmentOwnerTransferMixin(
         old_owner_role: Optional[Role] = None,
         request: Optional[HttpRequest] = None,
         notify_old: bool = True,
+        notify_new: bool = True,
     ):
         """
         Transfer project ownership to a new user and assign a new role to the
@@ -2840,6 +2843,7 @@ class RoleAssignmentOwnerTransferMixin(
         :param old_owner_role: Role object for old owner's new role or None
         :param request: HttpRequest object or None
         :param notify_old: Notify old owner (boolean, default=True)
+        :param notify_new: Notify new owner (boolean, default=True)
         """
         app_alerts = plugin_api.get_backend_api('appalerts_backend')
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
@@ -2924,7 +2928,7 @@ class RoleAssignmentOwnerTransferMixin(
                     request,
                 )
         # Notify new owner
-        if not new_inh_owner and issuer != new_owner:
+        if notify_new and not new_inh_owner and issuer != new_owner:
             if app_alerts and app_settings.get(
                 APP_NAME, 'notify_alert_role', user=new_owner
             ):
