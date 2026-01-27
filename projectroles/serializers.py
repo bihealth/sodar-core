@@ -303,8 +303,8 @@ class RoleAssignmentSerializer(
         self.instance = self.post_save(
             self.modify_assignment(
                 data=self.validated_data,
-                request=self.context['request'],
                 project=self.context['project'],
+                request=self.context['request'],
                 instance=self.instance,
             )
         )

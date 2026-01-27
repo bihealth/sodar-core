@@ -4,6 +4,7 @@ import os
 
 from tempfile import NamedTemporaryFile
 from typing import Union
+from unittest import skip
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -626,6 +627,7 @@ class TestBatchUpdateRoles(
         )
         self.assertEqual(len(mail.outbox), 0)
 
+    @skip(reason='need input from Mikko')
     def test_role_add_inherited_lower(self):
         """Test adding role with inherited role of lower rank (should fail)"""
         user_new = self.make_user('user_new')

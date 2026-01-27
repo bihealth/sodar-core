@@ -2111,8 +2111,8 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
     def modify_assignment(
         self,
         data: dict,
-        request: HttpRequest,
         project: Project,
+        request: Optional[HttpRequest] = None,
         instance: Optional[RoleAssignment] = None,
         promote: bool = False,
         notify: bool = True,
@@ -2124,8 +2124,8 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         in your plugin.
 
         :param data: Cleaned data from a form or serializer
-        :param request: Request initiating the action
         :param project: Project object
+        :param request: Request initiating the action or None
         :param instance: Existing RoleAssignment object or None
         :param promote: Promoting an inherited user (boolean, default=False)
         :param notify: Add app alerts and send email if True (default=True)
@@ -2149,7 +2149,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
-                user=request.user,
+                user=request.user if request else None,
                 event_name=f'role_{action.lower()}',
                 description=tl_desc,
             )
@@ -2159,7 +2159,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             role_as = RoleAssignment(project=project, user=user, role=role)
             old_role = None
         else:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
+            role_as = instance
             old_role = role_as.role
             role_as.role = role
         role_as.save()
@@ -2174,7 +2174,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         if tl_event:
             tl_event.set_status('OK')
 
-        if notify and request.user != user:
+        if notify and request and request.user != user:
             if app_alerts and app_settings.get(
                 APP_NAME, 'notify_alert_role', user=user
             ):
@@ -2240,8 +2240,8 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         try:
             self.object = self.modify_assignment(
                 data=form.cleaned_data,
-                request=self.request,
                 project=project,
+                request=self.request,
                 instance=form.instance if instance else None,
                 promote=True if form.cleaned_data.get('promote') else False,
             )
