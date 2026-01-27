@@ -29,24 +29,21 @@
 {# Actual user dropdown #}
 
 <li class="nav-item sodar-navbar-user-dropdown">
-  {% get_app_setting 'projectroles' 'dropdown_user_name_display' user=request.user as dropdown_user_name_display %}
-  {% get_user_icon request.user as user_icon %}
-  {% if dropdown_user_name_display and request.user.is_authenticated %}
-    <a class="nav-link badge-pill badge-secondary py-1 my-1 ml-1 dropdown-toggle"
-       id="sodar-navbar-user-dropdown"
-       data-toggle="dropdown">
-      {{ user_icon|safe }}
-      <span id="sodar-navbar-user-dropdown-username">
+  <a class="nav-link sodar-nav-link-last dropdown-toggle"
+     id="sodar-navbar-user-dropdown"
+     data-toggle="dropdown">
+    {% get_app_setting 'projectroles' 'dropdown_user_name_display' user=request.user as dropdown_user_name_display %}
+    {% get_user_icon request.user as user_icon %}
+    {% if dropdown_user_name_display and request.user.is_authenticated %}
+      <div class="badge badge-pill"
+           id="sodar-navbar-user-dropdown-username">
+        {{ user_icon|safe }}
         {{ request.user.username|truncatechars:32 }}
-      </span>
-    </a>
-  {% else %}
-    <a class="nav-link sodar-nav-link-last dropdown-toggle"
-       id="sodar-navbar-user-dropdown"
-       data-toggle="dropdown">
+      </div>
+    {% else %}
       {{ user_icon|safe }}
-    </a>
-  {% endif %}
+    {% endif %}
+  </a>
   <div class="dropdown-menu dropdown-menu-right sodar-navbar-user-dropdown">
     <div class="dropdown-header" id="sodar-navbar-user-legend">
       {% if request.user.is_authenticated %}

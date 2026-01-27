@@ -594,6 +594,20 @@ a.sodar-pr-btn-copy-secret i {
   50% { opacity: 0 }
 }
 
+/* User dropdown username */
+#sodar-navbar-user-dropdown-username {
+  background-color: rgba(255,255,255,.5);
+  color: black;
+  vertical-align: text-top;
+  transition: none;
+}
+#sodar-navbar-user-dropdown:hover #sodar-navbar-user-dropdown-username {
+  background-color: rgba(255,255,255,.75);
+}
+.sodar-navbar-user-dropdown.show #sodar-navbar-user-dropdown-username {
+  background-color: rgba(255,255,255) !important;
+}
+
 /* Badge group */
 .badge-group {
   padding: 2px;
