@@ -7,10 +7,10 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.template.defaultfilters import truncatechars
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django.template.defaultfilters import truncatechars
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
