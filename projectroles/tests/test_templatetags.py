@@ -6,6 +6,7 @@ import uuid
 from importlib import import_module
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.test import override_settings, RequestFactory
 from django.urls import reverse, resolve
 
@@ -293,6 +294,21 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             'data-icon="mdi:account-off"></i>'
         )
         self.assertEqual(c_tags.get_user_inactive_icon(False), expected)
+
+    def test_get_user_icon_superuser(self):
+        """Test get_user_icon() with superuser"""
+        expected = '<i class="iconify" data-icon="mdi:shield-account"></i>'
+        self.assertEqual(c_tags.get_user_icon(self.superuser), expected)
+
+    def test_get_user_icon_authenticated_user(self):
+        """Test get_user_icon() with regular autheticated user"""
+        expected = '<i class="iconify" data-icon="mdi:user"></i>'
+        self.assertEqual(c_tags.get_user_icon(self.user), expected)
+
+    def test_get_user_icon_anonymous_user(self):
+        """Test get_user_icon() with anonymous user"""
+        expected = '<i class="iconify" data-icon="mdi:incognito"></i>'
+        self.assertEqual(c_tags.get_user_icon(AnonymousUser()), expected)
 
     def test_get_user_html(self):
         """Test get_user_html()"""

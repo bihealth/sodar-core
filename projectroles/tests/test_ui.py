@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.template.defaultfilters import truncatechars
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -111,6 +112,75 @@ class TestBaseTemplate(ProjectUITestBase):
             )
         )
         self.assertEqual(modal.is_displayed(), True)
+
+    def test_user_dropdown_username_default(self):
+        """Test visibility for user with setting default (False)"""
+        # Username should not be visible
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'dropdown_user_name_display', user=self.user_owner
+            ),
+            False,
+        )
+        self.login_and_redirect(self.user_owner, reverse('home'))
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.ID, 'sodar-navbar-user-dropdown-username'
+            )
+
+    def test_user_dropdown_username_visible(self):
+        """Test visibility for user with setting set True"""
+        # Ensure username is visible
+        user = self.user_contributor
+        app_settings.set(
+            APP_NAME, 'dropdown_user_name_display', True, user=user
+        )
+        self.login_and_redirect(user, reverse('home'))
+        username_element = self.selenium.find_element(
+            By.ID, 'sodar-navbar-user-dropdown-username'
+        )
+        self.assertEqual(username_element.text, str(user))
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_user_dropdown_username_anonymous(self):
+        """Test visibility with anonymous user"""
+        # Username should not be visible
+        self.project.set_public_access(self.role_guest)
+        self.selenium.get(self.build_selenium_url(reverse('home')))
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-list-item')
+            )
+        )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.ID, 'sodar-navbar-user-dropdown-username'
+            )
+
+    def test_user_dropdown_username_superuser(self):
+        """Test visibility with superuser"""
+        # Username should be visible
+        app_settings.set(
+            APP_NAME, 'dropdown_user_name_display', True, user=self.superuser
+        )
+        self.login_and_redirect(self.superuser, reverse('home'))
+        username_element = self.selenium.find_element(
+            By.ID, 'sodar-navbar-user-dropdown-username'
+        )
+        self.assertEqual(username_element.text, 'superuser')
+
+    def test_user_dropdown_username_truncated(self):
+        """Test visibility and truncation for user with long name"""
+        long_name_user = self.make_user('long_name_which_should_be_truncated')
+        app_settings.set(
+            APP_NAME, 'dropdown_user_name_display', True, user=long_name_user
+        )
+        self.login_and_redirect(long_name_user, reverse('home'))
+        username_element = self.selenium.find_element(
+            By.ID, 'sodar-navbar-user-dropdown-username'
+        )
+        long_name_user_trunc = truncatechars(str(long_name_user), 32)
+        self.assertEqual(username_element.text, long_name_user_trunc)
 
 
 class TestHomeView(ProjectUITestBase):
