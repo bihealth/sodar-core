@@ -1671,62 +1671,6 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             status_type=timeline.TL_STATUS_OK,
         )
 
-    @classmethod
-    def on_success(cls, project: Project, request: HttpRequest):
-        """
-        Called when project deletion is successful. It should print
-        a status message and redirect the user.
-
-        :param project: Project object
-        :param request: HttpRequest object
-        """
-        p_type = get_display_name(project.type, title=True)
-        messages.success(request, f'{p_type} deleted.')
-        if project.parent:
-            redirect_url = reverse(
-                'projectroles:detail',
-                kwargs={'project': project.parent.sodar_uuid},
-            )
-        else:
-            redirect_url = reverse('home')
-        return redirect(redirect_url)
-
-    @classmethod
-    def on_error(
-        cls,
-        project: Project,
-        request: HttpRequest,
-        err: str,
-        redirect_url: Optional[str] = None,
-    ):
-        """
-        Called when project deletion fails. It should print an error message
-        and redirect the user.
-
-        :param project: Project object
-        :param request: HttpRequest object
-        :param err: Error message to be displayed
-        :param redirect_url: Custom redirection URL or, if None (default),
-            redirect to the home page)
-        """
-        p_type = get_display_name(project.type, title=False)
-        messages.error(request, f'Failed to delete {p_type}: {err}')
-        if not redirect_url:
-            redirect_url = reverse('home')
-        return redirect(redirect_url)
-
-    @classmethod
-    def get_redirect_url(cls, project: Project) -> str:
-        """
-        Return the redirection URL used when project deletion is cancelled.
-
-        :param project: Project object
-        """
-        return reverse(
-            'projectroles:update',
-            kwargs={'project': project.sodar_uuid},
-        )
-
     def handle_delete(self, project: Project, request: HttpRequest):
         """
         Handle project deletion. Deletes the object, creates a summary timeline
@@ -2021,69 +1965,43 @@ class HostConfirmDeleteView(
     LoggedInPermissionMixin,
     DeleteView,
 ):
-    """Specialized deletion view with confirmation form"""
+    """Specialized deletion view with confirmation form asking for host name"""
 
-    template_name = 'projectroles/delete_confirmation_form.html'
-
-    def get_warning_alert_message(self) -> Optional[str]:
-        """Define a warning message"""
-        return None
-
-    def get_danger_alert_message(self) -> Optional[str]:
-        """Define a danger message"""
-        return 'Are you sure you want to delete this object?'
+    template_name = 'projectroles/confirm_delete_host.html'
+    custom_alerts_include = 'projectroles/_confirm_delete_host_alerts.html'
+    success_url = reverse_lazy('home')
 
     def get_type_display_name(self) -> str:
         """Define a display name for the type of object"""
-        return 'object'
+        object = self.get_object()
+        return object.__class__.__name__
 
     def get_context_data(self, *args, **kwargs):
         """Override get_context_data()"""
         context = super().get_context_data(*args, **kwargs)
-        context['warning_alert_message'] = self.get_warning_alert_message()
-        context['danger_alert_message'] = self.get_danger_alert_message()
+        context['custom_alerts_include'] = self.custom_alerts_include
         context['type_display_name'] = self.get_type_display_name()
-        context['redirect_url'] = self.get_redirect_url(self.get_object())
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-        object = self.get_object()
-        # Prevent access in certain conditions, even for superusers
-        access, msg = self.check_delete_permission(object)
-        if not access:
-            return self.on_error(object, self.request, msg)
+        """Override dispatch() to check for correct host name before POST"""
+        if request.method == 'POST':
+            # Don't allow deletion unless user has input the host name
+            host_confirm = request.POST.get('delete_host_confirm')
+            actual_host = request.get_host().split(':')[0]
+            if not host_confirm or host_confirm != actual_host:
+                msg = (
+                    f'Incorrect host name for confirming sheet deletion: '
+                    f'"{host_confirm}"'
+                )
+                logger.error(msg + f' (correct={actual_host})')
+                display_name = self.get_type_display_name()
+                messages.error(
+                    request,
+                    f'Failed to delete {display_name}: Host name input incorrect.',
+                )
+                return redirect(request.path)
         return super().dispatch(request, *args, **kwargs)
-
-    def post(self, *args, **kwargs):
-        object = self.get_object()
-
-        # Don't allow deletion unless user has input the host name
-        host_confirm = self.request.POST.get('delete_host_confirm')
-        actual_host = self.request.get_host().split(':')[0]
-        if not host_confirm or host_confirm != actual_host:
-            msg = (
-                f'Incorrect host name for confirming sheet deletion: '
-                f'"{host_confirm}"'
-            )
-            logger.error(msg + f' (correct={actual_host})')
-            return self.on_error(
-                object,
-                self.request,
-                'Host name input incorrect.',
-                self.get_redirect_url(object),
-            )
-
-        # Proceed with deletion
-        try:
-            with transaction.atomic():
-                self.handle_delete(object, self.request)
-            return self.on_success(object, self.request)
-        except Exception as ex:
-            if settings.DEBUG:
-                raise ex
-            return self.on_error(object, self.request, str(ex))
 
 
 class ProjectDeleteView(
@@ -2099,24 +2017,52 @@ class ProjectDeleteView(
     permission_required = 'projectroles.delete_project'
     slug_field = 'sodar_uuid'
     slug_url_kwarg = 'project'
+    custom_alerts_include = (
+        'projectroles/_project_confirm_delete_host_alerts.html'
+    )
 
     def get_type_display_name(self) -> str:
         """Override the display name for project or category objects"""
-        object = self.get_object()
-        return get_display_name(object.type)
+        project = self.get_object()
+        return get_display_name(project.type)
 
-    def get_danger_alert_message(self) -> str:
-        """Override the danger alert message"""
-        object = self.get_object()
-        alert_msg = (
-            'Are you sure you want to delete this '
-            + self.get_type_display_name()
-            + '?'
-        )
-        if object.is_project():
-            alert_msg += ' This will also delete all data within the project.'
-        alert_msg += 'This action can <strong>NOT</strong> be undone!'
-        return alert_msg
+    def dispatch(self, request, *args, **kwargs):
+        """Override dispatch()"""
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        project = self.get_object()
+        # Prevent access in certain conditions, even for superusers
+        access, msg = self.check_delete_permission(project)
+        if not access:
+            messages.error(self.request, msg)
+            return redirect(reverse('home'))
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        """Delete the project and redirect the user"""
+        project = self.get_object()
+        display_name = self.get_type_display_name()
+        try:
+            with transaction.atomic():
+                self.handle_delete(project, self.request)
+            messages.success(self.request, f'{display_name} deleted.')
+            # We cannot put the following in self.get_success_url() since
+            # we need access to the object which has just been deleted
+            if project.parent:
+                redirect_url = reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.parent.sodar_uuid},
+                )
+            else:
+                redirect_url = reverse('home')
+            return redirect(redirect_url)
+        except Exception as ex:
+            if settings.DEBUG:
+                raise ex
+            messages.error(
+                self.request, f'Failed to delete {display_name}: {ex}'
+            )
+            return redirect(reverse('home'))
 
 
 # RoleAssignment Views ---------------------------------------------------------

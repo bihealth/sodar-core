@@ -3369,7 +3369,7 @@ class TestProjectDeleteView(
             self.assertRedirects(
                 response,
                 reverse(
-                    'projectroles:update',
+                    'projectroles:delete',
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
