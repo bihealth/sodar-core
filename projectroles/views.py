@@ -1965,10 +1965,15 @@ class HostConfirmDeleteView(
     LoggedInPermissionMixin,
     DeleteView,
 ):
-    """Specialized deletion view with confirmation form asking for host name"""
+    """Specialized deletion view with confirmation form asking for host name."""
 
+    #: Custom override for this view's template
     template_name = 'projectroles/confirm_delete_host.html'
+
+    #: Custom template with warning messages shown in this view's form
     custom_alerts_include = 'projectroles/_confirm_delete_host_alerts.html'
+
+    #: URL for redirection after a successful deletion
     success_url = reverse_lazy('home')
 
     def get_type_display_name(self) -> str:
