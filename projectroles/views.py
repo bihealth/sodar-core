@@ -2016,12 +2016,12 @@ class ProjectArchiveView(
         return redirect(redirect_url)
 
 
-class GenericDeleteView(
+class HostConfirmDeleteView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
     DeleteView,
 ):
-    """Generic deletion view with confirmation form"""
+    """Specialized deletion view with confirmation form"""
 
     template_name = 'projectroles/delete_confirmation_form.html'
 
@@ -2091,7 +2091,7 @@ class ProjectDeleteView(
     ProjectDeleteMixin,
     ProjectDeleteAccessMixin,
     ProjectModifyPluginViewMixin,
-    GenericDeleteView,
+    HostConfirmDeleteView,
 ):
     """Project deletion view"""
 
