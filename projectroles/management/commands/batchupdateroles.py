@@ -89,9 +89,8 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         elif (
             role_as
             and role_as.project != project
-            and role_as.role.rank > role.rank
+            and role_as.role.rank < role.rank
         ):
-            # QUESTION: If role.rank is lower, doesn't that mean that we are promoting rather than demoting?
             logger.warning(
                 'Skipping as demoting an inherited role is not permitted'
             )
