@@ -193,6 +193,9 @@ class Command(
         for role_as in old_user_roles:
             project = role_as.project
             p_title = project.get_log_title()
+            if project.is_remote():  # Skip remote projects
+                logger.debug(f'Skipping remote project: {p_title}')
+                continue
             # Owner role reassignment
             if role_as.role.name == PROJECT_ROLE_OWNER:
                 update_ok = self._transfer_owner(
