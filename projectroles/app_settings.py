@@ -466,8 +466,11 @@ class AppSettingAPI:
         :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: Value
-        :raise: KeyError if nothing is found with setting_name
+        :raise: ValueError if nothing is found with setting_name, or if neither
+                project nor user are set
         """
+        s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
+        cls._validate_project_and_user(s_def.scope, project, user)
         if not user or user.is_authenticated:
             try:
                 val = AppSetting.objects.get_setting_value(
@@ -591,7 +594,7 @@ class AppSettingAPI:
         :raise: ValueError if validating and value is not accepted for setting
                 type
         :raise: ValueError if neither project nor user are set
-        :raise: KeyError if setting name is not found in plugin specification
+        :raise: ValueError if setting name is not found in plugin specification
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
         cls._validate_project_and_user(s_def.scope, project, user)
