@@ -1963,6 +1963,7 @@ class ProjectArchiveView(
 class HostConfirmDeleteView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
+    HTTPRefererMixin,
     DeleteView,
 ):
     """Specialized deletion view with confirmation form asking for host name."""
@@ -1970,13 +1971,10 @@ class HostConfirmDeleteView(
     #: Custom override for this view's template
     template_name = 'projectroles/confirm_delete_host.html'
 
-    #: Custom template with warning messages shown in this view's form
-    custom_alerts_include = 'projectroles/_confirm_delete_host_alerts.html'
-
     #: URL for redirection after a successful deletion
     success_url = reverse_lazy('home')
 
-    def get_type_display_name(self) -> str:
+    def get_object_display_name(self) -> str:
         """Define a display name for the type of object"""
         object = self.get_object()
         return object.__class__.__name__
@@ -1984,8 +1982,7 @@ class HostConfirmDeleteView(
     def get_context_data(self, *args, **kwargs):
         """Override get_context_data()"""
         context = super().get_context_data(*args, **kwargs)
-        context['custom_alerts_include'] = self.custom_alerts_include
-        context['type_display_name'] = self.get_type_display_name()
+        context['object_display_name'] = self.get_object_display_name()
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -1995,15 +1992,16 @@ class HostConfirmDeleteView(
             host_confirm = request.POST.get('delete_host_confirm')
             actual_host = request.get_host().split(':')[0]
             if not host_confirm or host_confirm != actual_host:
+                display_name = self.get_object_display_name()
                 msg = (
-                    f'Incorrect host name for confirming sheet deletion: '
-                    f'"{host_confirm}"'
+                    f'Incorrect host name for confirming {display_name} '
+                    f'deletion: "{host_confirm}"'
                 )
                 logger.error(msg + f' (correct={actual_host})')
-                display_name = self.get_type_display_name()
                 messages.error(
                     request,
-                    f'Failed to delete {display_name}: Host name input incorrect.',
+                    f'Failed to delete {display_name}: Host name input '
+                    'incorrect.',
                 )
                 return redirect(request.path)
         return super().dispatch(request, *args, **kwargs)
@@ -2022,11 +2020,9 @@ class ProjectDeleteView(
     permission_required = 'projectroles.delete_project'
     slug_field = 'sodar_uuid'
     slug_url_kwarg = 'project'
-    custom_alerts_include = (
-        'projectroles/_project_confirm_delete_host_alerts.html'
-    )
+    template_name = 'projectroles/project_confirm_delete_host.html'
 
-    def get_type_display_name(self) -> str:
+    def get_object_display_name(self) -> str:
         """Override the display name for project or category objects"""
         project = self.get_object()
         return get_display_name(project.type)
@@ -2046,7 +2042,7 @@ class ProjectDeleteView(
     def post(self, *args, **kwargs):
         """Delete the project and redirect the user"""
         project = self.get_object()
-        display_name = self.get_type_display_name()
+        display_name = self.get_object_display_name()
         try:
             with transaction.atomic():
                 self.handle_delete(project, self.request)

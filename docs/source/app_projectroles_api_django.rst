@@ -35,10 +35,6 @@ Base mixins and classes for building UI views can be found in
     :members:
     :show-inheritance:
 
-.. autoclass:: HostConfirmDeleteView
-    :members:
-    :show-inheritance:
-
 .. autoclass:: ProjectContextMixin
     :members:
     :show-inheritance:
@@ -48,6 +44,10 @@ Base mixins and classes for building UI views can be found in
     :show-inheritance:
 
 .. autoclass:: InvalidFormMixin
+    :members:
+    :show-inheritance:
+
+.. autoclass:: HostConfirmDeleteView
     :members:
     :show-inheritance:
 

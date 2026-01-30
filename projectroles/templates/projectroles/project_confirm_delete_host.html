@@ -1,5 +1,8 @@
+{% extends 'projectroles/confirm_delete_host.html' %}
+
 {% load projectroles_common_tags %}
 
+{% block custom_content %}
 <div class="alert alert-danger" role="alert">
   Are you sure you want to delete this {% get_display_name object.type True %}?
   {% if object.is_project %}
@@ -7,3 +10,4 @@
   {% endif %}
   This action can <strong>NOT</strong> be undone!
 </div>
+{% endblock custom_content %}
