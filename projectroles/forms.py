@@ -132,7 +132,7 @@ class SODARAppSettingFormMixin:
         scope = s_def.scope
         scope_kw = {}
         if scope == APP_SETTING_SCOPE_PROJECT:
-            scope_kw = {'project': self.instance}
+            scope_kw = {'project': self.instance if self.instance.pk else None}
         elif scope == APP_SETTING_SCOPE_USER:
             scope_kw = {'user': self.user}  # NOTE: Requires self.user
         s_widget_attrs = s_def.widget_attrs
@@ -206,6 +206,7 @@ class SODARAppSettingFormMixin:
         value = app_settings.get(
             plugin_name=plugin_name,
             setting_name=s_def.name,
+            validate=self.instance.pk is not None,
             **scope_kw,
         )
         if s_def.type == APP_SETTING_TYPE_JSON:

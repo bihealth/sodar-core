@@ -455,6 +455,7 @@ class AppSettingAPI:
         project: Optional[Project] = None,
         user: Optional[User] = None,
         post_safe: bool = False,
+        validate: bool = True,
     ) -> Any:
         """
         Return app setting value for a project or a user. If not set, return
@@ -465,26 +466,17 @@ class AppSettingAPI:
         :param project: Project object (optional)
         :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
+        :param validate: Validate project and user args (bool, default=True)
         :return: Value
         :raise: ValueError if nothing is found with setting_name, or if neither
                 project nor user are set
         """
-        s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
-        cls._validate_project_and_user(s_def.scope, project, user)
-        if APP_SETTING_SCOPE_ARGS[s_def.scope]['project'] and not project.pk:
-            # This occurs in ProjectCreateView, which tries to get settings
-            # when the project is not saved in the db yet: django throws a
-            # ValueError: 'Model instances passed to related filters must be
-            # saved.' We could either catch this exception later or prevent it
-            # from happening with this if block.
-            val = cls.get_default(
-                plugin_name,
-                setting_name,
-                project=project,
-                user=user,
-                post_safe=post_safe,
+        if validate:
+            s_def = cls.get_definition(
+                name=setting_name, plugin_name=plugin_name
             )
-        elif not user or user.is_authenticated:
+            cls._validate_project_and_user(s_def.scope, project, user)
+        if not user or user.is_authenticated:
             try:
                 val = AppSetting.objects.get_setting_value(
                     plugin_name, setting_name, project=project, user=user
