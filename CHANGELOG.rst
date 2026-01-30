@@ -8,6 +8,27 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``ServiceUnavailable`` API exception class for ``HTTP 503`` (#1513)
+    - Optional user name display in user dropdown (#1853)
+    - ``dropdown_user_name_display`` user app setting (#1853)
+
+Changed
+-------
+
+- **General**
+    - Replace ``unique_together`` options with ``UniqueConstraint`` (#1434)
+
+Fixed
+-----
+
+- **General**
+    - Example site Django admin user creation (#1876)
+
+
 Removed
 -------
 

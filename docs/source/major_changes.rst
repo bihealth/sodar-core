@@ -16,6 +16,8 @@ v1.4.0 (WIP)
 Release Highlights
 ==================
 
+- Add optional user name display in user dropdown
+- Add general purpose HTTP 503 API exception class
 - Remove deprecated test base classes and mixins
 
 Breaking Changes
