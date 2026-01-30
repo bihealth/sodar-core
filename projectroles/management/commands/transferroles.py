@@ -1,6 +1,6 @@
 """
 Transferroles management command for transferring all project roles
-to a new user.
+to another user.
 """
 
 import sys
@@ -34,7 +34,7 @@ class Command(
     RoleAssignmentDeleteMixin,
     BaseCommand,
 ):
-    help = 'Transfer all project roles to a new user.'
+    help = 'Transfer all project roles to another user.'
 
     def _transfer_owner(
         self,
@@ -60,27 +60,6 @@ class Command(
         except Exception as ex:
             logger.error(
                 f'Failed to transfer ownership in {p_title} to '
-                f'{new_user.username}: {ex}'
-            )
-            return False
-
-    def _transfer_assignment(
-        self,
-        project: Project,
-        new_user: User,
-        role_as: RoleAssignment,
-        p_title: str,
-    ) -> bool:
-        try:
-            with transaction.atomic():
-                self.delete_assignment(role_as, None, False)
-                self._create_role_or_promote(
-                    project, new_user, role_as, p_title
-                )
-                return True
-        except Exception as ex:
-            logger.error(
-                f'Failed to transfer role "{role_as.role}" in {p_title} to '
                 f'{new_user.username}: {ex}'
             )
             return False
@@ -113,12 +92,12 @@ class Command(
         else:
             # Promote user to higher role
             assert new_user_roles.count() == 1
-            instance = new_user_roles.first()
-            if role_as.role.rank < instance.role.rank:
+            new_user_role = new_user_roles.first()
+            if role_as.role.rank < new_user_role.role.rank:
                 self.modify_assignment(
                     data=data,
                     project=project,
-                    instance=instance,
+                    instance=new_user_role,
                     notify=False,
                 )
                 logger.info(
@@ -130,6 +109,27 @@ class Command(
                     f'Skipping "{role_as.role}" role assignment for '
                     f'{new_user.username} in {p_title}'
                 )
+
+    def _transfer_assignment(
+        self,
+        project: Project,
+        new_user: User,
+        role_as: RoleAssignment,
+        p_title: str,
+    ) -> bool:
+        try:
+            with transaction.atomic():
+                self.delete_assignment(role_as, None, False)
+                self._create_role_or_promote(
+                    project, new_user, role_as, p_title
+                )
+                return True
+        except Exception as ex:
+            logger.error(
+                f'Failed to transfer role "{role_as.role}" in {p_title} to '
+                f'{new_user.username}: {ex}'
+            )
+            return False
 
     def add_arguments(self, parser):
         parser.add_argument(

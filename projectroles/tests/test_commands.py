@@ -1506,7 +1506,7 @@ class TestTransferRolesCommand(
     """Tests for transferroles command"""
 
     def setUp(self):
-        self.cmd_name = "transferroles"
+        self.cmd_name = 'transferroles'
         self.init_roles()
         # Init users
         self.user_owner_cat = self.make_user('user_owner_cat')
@@ -1619,7 +1619,7 @@ class TestTransferRolesCommand(
         self.assertEqual(AppAlert.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_dont_demote_non_owner(self):
+    def test_demote_non_owner(self):
         """Test demotion to lower role (should not work)"""
         self.assertTrue(self.project.has_role(self.user_contributor_cat))
         old_user_role = self.project.local_roles.filter(
@@ -1719,7 +1719,7 @@ class TestTransferRolesCommand(
             2,
         )
 
-    def test_dont_demote_owner(self):
+    def test_demote_owner(self):
         """Test demotion to non-owner (should not work)"""
         self.assertEqual(self.project.get_owner().user, self.user_owner)
         self.assertTrue(self.project.has_role(self.user_contributor))
