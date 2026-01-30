@@ -471,7 +471,20 @@ class AppSettingAPI:
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
         cls._validate_project_and_user(s_def.scope, project, user)
-        if not user or user.is_authenticated:
+        if APP_SETTING_SCOPE_ARGS[s_def.scope]['project'] and not project.pk:
+            # This occurs in ProjectCreateView, which tries to get settings
+            # when the project is not saved in the db yet: django throws a
+            # ValueError: 'Model instances passed to related filters must be
+            # saved.' We could either catch this exception later or prevent it
+            # from happening with this if block.
+            val = cls.get_default(
+                plugin_name,
+                setting_name,
+                project=project,
+                user=user,
+                post_safe=post_safe,
+            )
+        elif not user or user.is_authenticated:
             try:
                 val = AppSetting.objects.get_setting_value(
                     plugin_name, setting_name, project=project, user=user
