@@ -132,17 +132,12 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         return ret
 
     @classmethod
-    def _get_plugin_stats(cls, p_list: list) -> dict:
+    def _get_plugin_settings(cls, p_list: list) -> dict:
         ret = {}
         for p in p_list:
-            try:
-                ret[p] = {'stats': p.get_statistics(), 'settings': {}}
-            except Exception as ex:
-                ret[p] = {'error': str(ex)}
-                logger.error(f'Exception in {p.name}.get_statistics(): {ex}')
             if p.info_settings:
                 try:
-                    ret[p]['settings'] = cls._get_settings(p.info_settings)
+                    ret[p] = {'settings': cls._get_settings(p.info_settings)}
                 except Exception as ex:
                     logger.error(
                         f'Exception in _get_settings() for {p.name}: {ex}'
@@ -191,9 +186,9 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         site_plugins = plugin_api.get_active_plugins('site_app')
 
         # Plugin statistics
-        context['project_plugins'] = self._get_plugin_stats(project_plugins)
-        context['site_plugins'] = self._get_plugin_stats(site_plugins)
-        context['backend_plugins'] = self._get_plugin_stats(backend_plugins)
+        context['project_plugins'] = self._get_plugin_settings(project_plugins)
+        context['site_plugins'] = self._get_plugin_settings(site_plugins)
+        context['backend_plugins'] = self._get_plugin_settings(backend_plugins)
 
         # Basic site info
         context['site_title'] = settings.SITE_TITLE
