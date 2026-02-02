@@ -2,6 +2,7 @@
 
 {% load projectroles_common_tags %}
 {% load siteinfo_tags %}
+{% load static %}
 
 {% block title %}Site Info{% endblock title %}
 
@@ -235,3 +236,9 @@
   </div>
 </div>
 {% endblock projectroles %}
+
+{% block javascript %}
+  {{ block.super }}
+  <!-- SiteInfo stats Javascript -->
+  <script type="text/javascript" src="{% static 'siteinfo/js/siteinfo.js' %}"></script>
+{% endblock javascript %}

@@ -135,10 +135,12 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
     def _get_plugin_settings(cls, p_list: list) -> dict:
         ret = {}
         for p in p_list:
+            ret[p] = {}
             if p.info_settings:
                 try:
-                    ret[p] = {'settings': cls._get_settings(p.info_settings)}
+                    ret[p]['settings'] = cls._get_settings(p.info_settings)
                 except Exception as ex:
+                    ret[p]['error'] = str(ex)
                     logger.error(
                         f'Exception in _get_settings() for {p.name}: {ex}'
                     )

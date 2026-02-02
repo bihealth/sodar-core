@@ -72,6 +72,7 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
 
     def test_get_stats_error(self):
         """Test siteinfo stats with error in get_statistics()"""
+
         def adminalerts_get_statistics(self):
             raise ValueError('Invalid Stats')
 
