@@ -38,7 +38,7 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
 
     def setUp(self):
         super().setUp()
-        self.url = self.reverse('siteinfo:ajax_stats')
+        self.url = reverse('siteinfo:ajax_stats')
 
     def test_get_stats(self):
         """Test siteinfo stats for plugins"""
@@ -63,11 +63,21 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
         # Test stat values
         self.assertDictEqual(
             res['adminalerts']['stats']['alert_count'],
-            {'label': 'Alerts', 'value': 0},
+            {
+                'label': 'Alerts',
+                'value': 0,
+                'info_cls': 'col-md-7',
+                'info_val': 0,
+            },
         )
         self.assertDictEqual(
             res['example_backend_app']['stats']['backend_example_stat'],
-            {'label': 'Backend example', 'value': True},
+            {
+                'label': 'Backend example',
+                'value': True,
+                'info_cls': 'col-md-7',
+                'info_val': True,
+            },
         )
 
     def test_get_stats_error(self):
@@ -85,7 +95,12 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
         # Test that other plugins still work
         self.assertDictEqual(
             res['example_backend_app']['stats']['backend_example_stat'],
-            {'label': 'Backend example', 'value': True},
+            {
+                'label': 'Backend example',
+                'value': True,
+                'info_cls': 'col-md-7',
+                'info_val': True,
+            },
         )
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
@@ -93,5 +108,4 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
         """Test that inactive plugins are not considered"""
         with self.login(self.superuser):
             res = self.get(self.url).json()
-        print(res.keys())
         self.assertNotIn('example_backend_app', res.keys())
