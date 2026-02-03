@@ -61,13 +61,10 @@ class TestSiteInfoUI(UITestBase):
     def test_clientside_cards(self):
         """Test that client-side cards are shown"""
         self.login_and_redirect(self.superuser, self.url)
-        WebDriverWait(self.selenium, self.wait_time).until_not(
-            ec.presence_of_element_located(
-                (By.ID, 'sodar-si-app-stats-loading')
-            )
-        )
         for element_id in self.clientside_stats_elements:
-            self.assertIsNotNone(self.selenium.find_element(By.ID, element_id))
+            WebDriverWait(self.selenium, self.wait_time).until(
+                ec.visibility_of_element_located((By.ID, element_id))
+            )
             dt_children = self.selenium.find_elements(
                 By.CSS_SELECTOR, f'#{element_id} dl.row dt'
             )
