@@ -95,7 +95,7 @@ class Command(BaseCommand):
                 # Get allowed project types (if unset, default is PROJECT only)
                 if s_def.scope != APP_SETTING_SCOPE_USER:
                     p_types = s_def.project_types
-            except KeyError:
+            except ValueError:
                 logger.info(self._get_log_msg(s, DEF_NOT_FOUND_MSG, check))
                 if not check:
                     s.delete()

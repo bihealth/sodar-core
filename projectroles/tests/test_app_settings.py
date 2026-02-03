@@ -326,7 +326,7 @@ class TestAppSettingAPI(
 
     def test_get_nonexisting(self):
         """Test get() with non-existing setting"""
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             app_settings.get(
                 plugin_name=EXAMPLE_APP_NAME,
                 setting_name='NON-EXISTING SETTING',
@@ -633,7 +633,7 @@ class TestAppSettingAPI(
 
     def test_set_undefined(self):
         """Test set() with undefined setting (should fail)"""
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             app_settings.set(
                 plugin_name=EXAMPLE_APP_NAME,
                 setting_name='new_setting',
@@ -856,7 +856,7 @@ class TestAppSettingAPI(
 
     def test_get_definition_invalid(self):
         """Test get_definition() with innvalid input"""
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             app_settings.get_definition(
                 'non_existing_setting', plugin_name=EXAMPLE_APP_NAME
             )

@@ -419,14 +419,14 @@ class AppSettingAPI:
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: Setting value
         :raise: ValueError if app plugin is not found
-        :raise: KeyError if nothing is found with setting_name
+        :raise: ValueError if nothing is found with setting_name
         """
         if plugin_name == APP_NAME:
             s_defs = cls.get_projectroles_defs()
         else:
             s_defs = cls._get_defs(plugin_name=plugin_name)
         if setting_name not in s_defs:
-            raise KeyError(
+            raise ValueError(
                 f'Setting "{setting_name}" not found in app plugin '
                 f'"{plugin_name}"'
             )
@@ -468,7 +468,7 @@ class AppSettingAPI:
         :param post_safe: Whether a POST safe value should be returned (bool)
         :param validate: Validate project and user args (bool, default=True)
         :return: Value
-        :raise: KeyError if nothing is found with setting_name
+        :raise: ValueError if nothing is found with setting_name
         :raise: ValueError if neither project nor user are set
         """
         if validate:
@@ -599,7 +599,7 @@ class AppSettingAPI:
         :raise: ValueError if validating and value is not accepted for setting
                 type
         :raise: ValueError if neither project nor user are set
-        :raise: KeyError if setting name is not found in plugin specification
+        :raise: ValueError if setting name is not found in plugin specification
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
         cls._validate_project_and_user(s_def.scope, project, user)
@@ -819,7 +819,7 @@ class AppSettingAPI:
         """
         defs = cls._get_defs(plugin, plugin_name)
         if name not in defs:
-            raise KeyError(
+            raise ValueError(
                 f'App setting not found in plugin '
                 f'"{plugin_name or plugin.name}" with name "{name}"'
             )
