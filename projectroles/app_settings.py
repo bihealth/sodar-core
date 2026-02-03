@@ -419,14 +419,14 @@ class AppSettingAPI:
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: Setting value
         :raise: ValueError if app plugin is not found
-        :raise: KeyError if nothing is found with setting_name
+        :raise: ValueError if nothing is found with setting_name
         """
         if plugin_name == APP_NAME:
             s_defs = cls.get_projectroles_defs()
         else:
             s_defs = cls._get_defs(plugin_name=plugin_name)
         if setting_name not in s_defs:
-            raise KeyError(
+            raise ValueError(
                 f'Setting "{setting_name}" not found in app plugin '
                 f'"{plugin_name}"'
             )
@@ -455,6 +455,7 @@ class AppSettingAPI:
         project: Optional[Project] = None,
         user: Optional[User] = None,
         post_safe: bool = False,
+        validate: bool = True,
     ) -> Any:
         """
         Return app setting value for a project or a user. If not set, return
@@ -465,9 +466,16 @@ class AppSettingAPI:
         :param project: Project object (optional)
         :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
+        :param validate: Validate project and user args (bool, default=True)
         :return: Value
-        :raise: KeyError if nothing is found with setting_name
+        :raise: ValueError if nothing is found with setting_name
+        :raise: ValueError if neither project nor user are set
         """
+        if validate:
+            s_def = cls.get_definition(
+                name=setting_name, plugin_name=plugin_name
+            )
+            cls._validate_project_and_user(s_def.scope, project, user)
         if not user or user.is_authenticated:
             try:
                 val = AppSetting.objects.get_setting_value(
@@ -591,7 +599,7 @@ class AppSettingAPI:
         :raise: ValueError if validating and value is not accepted for setting
                 type
         :raise: ValueError if neither project nor user are set
-        :raise: KeyError if setting name is not found in plugin specification
+        :raise: ValueError if setting name is not found in plugin specification
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
         cls._validate_project_and_user(s_def.scope, project, user)

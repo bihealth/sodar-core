@@ -446,7 +446,7 @@ class ProjectContextMixin(
         else:
             context['project'] = self.get_project()
         # Project tagging/starring
-        if 'project' in context and not getattr(
+        if context.get('project') and not getattr(
             settings, 'PROJECTROLES_KIOSK_MODE', False
         ):
             context['project_starred'] = app_settings.get(

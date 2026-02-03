@@ -206,6 +206,7 @@ class SODARAppSettingFormMixin:
         value = app_settings.get(
             plugin_name=plugin_name,
             setting_name=s_def.name,
+            validate=False,
             **scope_kw,
         )
         if s_def.type == APP_SETTING_TYPE_JSON:
