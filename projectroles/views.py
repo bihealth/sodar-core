@@ -2145,10 +2145,11 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
     def modify_assignment(
         self,
         data: dict,
-        request: HttpRequest,
         project: Project,
+        request: Optional[HttpRequest] = None,
         instance: Optional[RoleAssignment] = None,
         promote: bool = False,
+        notify: bool = True,
     ) -> RoleAssignment:
         """
         Create or update a RoleAssignment. This method should be called either
@@ -2157,10 +2158,11 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         in your plugin.
 
         :param data: Cleaned data from a form or serializer
-        :param request: Request initiating the action
         :param project: Project object
+        :param request: Request initiating the action or None
         :param instance: Existing RoleAssignment object or None
         :param promote: Promoting an inherited user (boolean, default=False)
+        :param notify: Add app alerts and send email if True (default=True)
         :return: Created or updated RoleAssignment object
         """
         app_alerts = plugin_api.get_backend_api('appalerts_backend')
@@ -2181,7 +2183,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
-                user=request.user,
+                user=request.user if request else None,
                 event_name=f'role_{action.lower()}',
                 description=tl_desc,
             )
@@ -2191,7 +2193,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             role_as = RoleAssignment(project=project, user=user, role=role)
             old_role = None
         else:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
+            role_as = instance
             old_role = role_as.role
             role_as.role = role
         role_as.save()
@@ -2206,7 +2208,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         if tl_event:
             tl_event.set_status('OK')
 
-        if request.user != user:
+        if notify and request and request.user != user:
             if app_alerts and app_settings.get(
                 APP_NAME, 'notify_alert_role', user=user
             ):
@@ -2272,8 +2274,8 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         try:
             self.object = self.modify_assignment(
                 data=form.cleaned_data,
-                request=self.request,
                 project=project,
+                request=self.request,
                 instance=form.instance if instance else None,
                 promote=True if form.cleaned_data.get('promote') else False,
             )
@@ -2863,6 +2865,7 @@ class RoleAssignmentOwnerTransferMixin(
         old_owner_role: Optional[Role] = None,
         request: Optional[HttpRequest] = None,
         notify_old: bool = True,
+        notify_new: bool = True,
     ):
         """
         Transfer project ownership to a new user and assign a new role to the
@@ -2874,6 +2877,7 @@ class RoleAssignmentOwnerTransferMixin(
         :param old_owner_role: Role object for old owner's new role or None
         :param request: HttpRequest object or None
         :param notify_old: Notify old owner (boolean, default=True)
+        :param notify_new: Notify new owner (boolean, default=True)
         """
         app_alerts = plugin_api.get_backend_api('appalerts_backend')
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
@@ -2958,7 +2962,7 @@ class RoleAssignmentOwnerTransferMixin(
                     request,
                 )
         # Notify new owner
-        if not new_inh_owner and issuer != new_owner:
+        if notify_new and not new_inh_owner and issuer != new_owner:
             if app_alerts and app_settings.get(
                 APP_NAME, 'notify_alert_role', user=new_owner
             ):

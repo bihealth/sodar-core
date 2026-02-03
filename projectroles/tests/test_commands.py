@@ -598,7 +598,7 @@ class TestBatchUpdateRoles(
             ).count(),
             0,
         )
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_role_add_inherited_equal(self):
         """Test adding role with inherited role of equal rank (should fail)"""
@@ -1493,6 +1493,309 @@ class TestSyncGroups(TestCase):
         group = user.groups.first()
         self.assertIsNotNone(group)
         self.assertEqual(group.name, LDAP_DOMAIN.lower())
+
+
+class TestTransferRolesCommand(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestCase,
+):
+    """Tests for transferroles command"""
+
+    def setUp(self):
+        self.cmd_name = 'transferroles'
+        self.init_roles()
+        # Init users
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_owner = self.make_user('user_owner')
+        self.user_contributor = self.make_user('user_contributor')
+        self.user_contributor_cat = self.make_user('user_contributor_cat')
+        self.user = self.make_user('user')
+        # Init projects
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.cat_owner_as = self.make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.cat_contributor_as = self.make_assignment(
+            self.category, self.user_contributor_cat, self.role_contributor
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        self.contributor_as = self.make_assignment(
+            self.project, self.user_contributor, self.role_contributor
+        )
+        # user_contributor_cat is also a viewer in the project
+        self.cat_viewer = self.make_assignment(
+            self.project, self.user_contributor_cat, self.role_viewer
+        )
+
+    def test_create_non_owner(self):
+        """Test transfer non-owner roles"""
+        self.assertTrue(self.category.has_role(self.user_contributor_cat))
+        self.assertTrue(self.project.has_role(self.user_contributor_cat))
+        self.assertFalse(self.category.has_role(self.user))
+        self.assertFalse(self.project.has_role(self.user))
+        old_role_count = RoleAssignment.objects.count()
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_contributor_cat,
+            new_user=self.user,
+        )
+        self.assertFalse(self.category.has_role(self.user_contributor_cat))
+        self.assertFalse(self.project.has_role(self.user_contributor_cat))
+        self.assertTrue(self.category.has_role(self.user))
+        self.assertTrue(self.project.has_role(self.user))
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                user=self.user_contributor_cat
+            ).count(),
+            0,
+        )
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user).count(), 2
+        )
+
+        # Test that roles are neither created nor destroyed during the transfer
+        self.assertEqual(RoleAssignment.objects.count(), old_role_count)
+
+        # Test that both users are still active
+        self.user.refresh_from_db()
+        self.user_contributor_cat.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+        self.assertTrue(self.user_contributor_cat.is_active)
+
+    def test_promote_non_owner(self):
+        """Test promotion to non-owner role"""
+        self.assertTrue(self.project.has_role(self.user_contributor))
+        old_user_role = self.project.local_roles.filter(
+            user=self.user_contributor
+        ).first()
+        self.assertEqual(old_user_role.role, self.role_contributor)
+
+        self.assertTrue(self.project.has_role(self.user_contributor_cat))
+        new_user_role = self.project.local_roles.filter(
+            user=self.user_contributor_cat
+        ).first()
+        self.assertEqual(new_user_role.role, self.role_viewer)
+        self.assertTrue(old_user_role.role.rank < new_user_role.role.rank)
+
+        # In this test we also ensure timeline events are created,
+        # and app alerts are NOT created, and email is NOT sent
+        self.assertEqual(TimelineEvent.objects.count(), 0)
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_contributor,
+            new_user=self.user_contributor_cat,
+        )
+        self.assertFalse(self.project.has_role(self.user_contributor))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_contributor).count(), 0
+        )
+        new_user_new_role = self.project.local_roles.filter(
+            user=self.user_contributor_cat
+        ).first()
+        self.assertEqual(new_user_new_role.role, old_user_role.role)
+
+        self.assertEqual(TimelineEvent.objects.count(), 2)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 1
+        )
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_update').count(), 1
+        )
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_demote_non_owner(self):
+        """Test demotion to lower role (should not work)"""
+        self.assertTrue(self.project.has_role(self.user_contributor_cat))
+        old_user_role = self.project.local_roles.filter(
+            user=self.user_contributor_cat
+        ).first()
+        self.assertEqual(old_user_role.role, self.role_viewer)
+
+        self.assertTrue(self.project.has_role(self.user_contributor))
+        new_user_role = self.project.local_roles.filter(
+            user=self.user_contributor
+        ).first()
+        self.assertEqual(new_user_role.role, self.role_contributor)
+        self.assertTrue(old_user_role.role.rank > new_user_role.role.rank)
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_contributor_cat,
+            new_user=self.user_contributor,
+        )
+        self.assertFalse(self.project.has_role(self.user_contributor_cat))
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                user=self.user_contributor_cat
+            ).count(),
+            0,
+        )
+        new_user_new_role = self.project.local_roles.filter(
+            user=self.user_contributor
+        ).first()
+        self.assertEqual(new_user_new_role.role, new_user_role.role)
+
+        # Besides not being demoted to viewer, user_contributor is also assigned
+        # "contributor" role to the category
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_contributor).count(), 2
+        )
+        self.assertTrue(self.category.has_role(self.user_contributor))
+
+    def test_create_owner(self):
+        """Test ownership transfer with no existing role for new user"""
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        self.assertFalse(self.project.has_role(self.user))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user).count(), 0
+        )
+
+        call_command(
+            self.cmd_name, old_user=self.user_owner, new_user=self.user
+        )
+        self.assertFalse(self.project.has_role(self.user_owner))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_owner).count(), 0
+        )
+        self.assertEqual(self.project.get_owner().user, self.user)
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user).count(), 1
+        )
+
+        # Test timeline event for owner transfer
+        self.assertEqual(TimelineEvent.objects.count(), 1)
+        self.assertEqual(
+            TimelineEvent.objects.filter(
+                event_name='role_owner_transfer'
+            ).count(),
+            1,
+        )
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_promote_owner(self):
+        """Test ownership transfer with pre-existing role for new user"""
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        self.assertTrue(self.category.has_role(self.user_contributor_cat))
+        self.assertEqual(
+            self.category.local_roles.filter(user=self.user_contributor_cat)
+            .first()
+            .role,
+            self.role_contributor,
+        )
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_owner_cat,
+            new_user=self.user_contributor_cat,
+        )
+        self.assertFalse(self.category.has_role(self.user_owner_cat))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_owner_cat).count(), 0
+        )
+        self.assertEqual(
+            self.category.get_owner().user, self.user_contributor_cat
+        )
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                user=self.user_contributor_cat
+            ).count(),
+            2,
+        )
+
+    def test_demote_owner(self):
+        """Test demotion to non-owner (should not work)"""
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        self.assertTrue(self.project.has_role(self.user_contributor))
+        owner_role = self.project.local_roles.filter(
+            user=self.user_owner
+        ).first()
+        contributor_role = self.project.local_roles.filter(
+            user=self.user_contributor
+        ).first()
+        self.assertTrue(owner_role.role.rank < contributor_role.role.rank)
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_contributor,
+            new_user=self.user_owner,
+        )
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        self.assertFalse(self.project.has_role(self.user_contributor))
+
+    def test_transfer_from_nonexistent_user(self):
+        """Test that transfer fails when old_user doesn't exist"""
+        old_roles = RoleAssignment.objects.all()
+        with self.assertRaises(SystemExit):
+            call_command(
+                self.cmd_name, old_user='INVALID-NAME', new_user=self.user
+            )
+        new_roles = RoleAssignment.objects.all()
+        self.assertEqual(list(old_roles), list(new_roles))
+
+    def test_transfer_to_nonexistent_user(self):
+        """Test that transfer fails when new_user doesn't exist"""
+        old_roles = RoleAssignment.objects.all()
+        with self.assertRaises(SystemExit):
+            call_command(
+                self.cmd_name, old_user=self.user_owner, new_user='INVALID-NAME'
+            )
+        new_roles = RoleAssignment.objects.all()
+        self.assertEqual(list(old_roles), list(new_roles))
+
+    def test_transfer_to_self(self):
+        """Test that transfer fails when old_user==new_user"""
+        with self.assertRaises(SystemExit):
+            call_command(
+                self.cmd_name,
+                old_user=self.user_owner,
+                new_user=self.user_owner,
+            )
+
+    def test_deactivate_user(self):
+        """Test ownership transfer with no existing role for new user"""
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        self.assertFalse(self.category.has_role(self.user_contributor))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_contributor).count(), 1
+        )
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_owner_cat,
+            new_user=self.user_contributor,
+            deactivate=True,
+        )
+        self.assertFalse(self.category.has_role(self.user_owner_cat))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_owner_cat).count(), 0
+        )
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_contributor).count(), 2
+        )
+        self.assertEqual(self.category.get_owner().user, self.user_contributor)
+
+        # Test that old_user is deactivated (but not new_user)
+        self.user_owner_cat.refresh_from_db()
+        self.assertFalse(self.user_owner_cat.is_active)
+        self.user_contributor.refresh_from_db()
+        self.assertTrue(self.user_contributor.is_active)
 
 
 @override_settings(DEBUG=True)

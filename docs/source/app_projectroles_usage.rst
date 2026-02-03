@@ -435,6 +435,21 @@ transferred to the parent category owner. Example:
 
     $ ./manage.py removeroles --user alice --owner bob
 
+Transfer Roles Between Users
+----------------------------
+
+The ``transferroles`` management command can be used to transfer roles for all
+projects from a user to another one (and optionally deactivate the old user).
+This is useful in cases where e.g. a user with multiple organizational accounts
+switches to using a different one, or they switch from using an authentication
+system to another. If the new user already had a lower-ranking role in a
+project, the new user is promoted to the higher role. The old user can be
+deactivated by passing the `-d` flag.
+
+.. code-block:: console
+
+    $ ./manage.py transferroles --old-user alice --new-user bob
+
 
 User Status Checking
 --------------------
