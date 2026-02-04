@@ -83,11 +83,12 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
     def test_get_stats_error(self):
         """Test siteinfo stats with error in get_statistics()"""
 
-        def adminalerts_get_statistics(self):
+        def get_statistics_error(self):
             raise ValueError('Invalid Stats')
 
         # Monkey-patch the get_statistics() function to trigger an error
-        AdminAlertsSitePlugin.get_statistics = adminalerts_get_statistics
+        get_statistics_original = AdminAlertsSitePlugin.get_statistics
+        AdminAlertsSitePlugin.get_statistics = get_statistics_error
 
         with self.login(self.superuser):
             res = self.get(self.url).json()
@@ -102,6 +103,8 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
                 'info_val': True,
             },
         )
+
+        AdminAlertsSitePlugin.get_statistics = get_statistics_original
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
     def test_get_stats_inactive(self):
