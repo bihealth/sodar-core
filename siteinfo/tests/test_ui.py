@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
+from adminalerts.plugins import SiteAppPlugin as AdminAlertsSitePlugin
 from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.base import UITestBase
 
@@ -73,6 +74,31 @@ class TestSiteInfoUI(UITestBase):
             )
             self.assertEqual(len(dt_children), len(dd_children))
             self.assertGreater(len(dt_children), 0)
+
+    def test_clientside_cards_error(self):
+        """Test that client-side card errors are shown"""
+
+        def get_statistics_error(self):
+            raise ValueError('Invalid Stats')
+
+        # Monkey-patch the get_statistics() function to trigger an error
+        get_statistics_original = AdminAlertsSitePlugin.get_statistics
+        AdminAlertsSitePlugin.get_statistics = get_statistics_error
+
+        self.login_and_redirect(self.superuser, self.url)
+        element_id = 'sodar-si-adminalerts-app-stats-card'
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.visibility_of_element_located((By.ID, element_id))
+        )
+        error_element = self.selenium.find_element(
+            By.CSS_SELECTOR, f'#{element_id} dl.row div'
+        )
+        self.assertEqual(
+            error_element.text,
+            'Unable to retrieve app statistics: Invalid Stats',
+        )
+
+        AdminAlertsSitePlugin.get_statistics = get_statistics_original
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
     def test_clientside_cards_missing_backend(self):

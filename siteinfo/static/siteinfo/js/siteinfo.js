@@ -30,9 +30,9 @@ $(document).ready(function () {
         }
       } else if ('error' in plugin) {
         stats.push(`
-          <dd class="col-md-12 text-danger">
+          <div class="text-danger">
             Unable to retrieve app statistics: ${ plugin.error }
-          </dd>
+          </div>
         `);
       } else {
         console.error('Unexpected plugin format from ajax/stats view.')
