@@ -19,8 +19,7 @@ app of your own.
 
     To install this app you **must** have the ``django-sodar-core`` package
     installed and the ``projectroles`` app integrated into your Django site.
-    See the :ref:`projectroles integration document <app_projectroles_integration>`
-    for instructions.
+    See the :ref:`Getting Started document <getting_started>` for instructions.
 
 Django Settings
 ---------------

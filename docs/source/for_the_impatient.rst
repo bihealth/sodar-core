@@ -19,7 +19,7 @@ this time, the source code of the applications demonstrate how to use SODAR Core
 in complex web applications.
 
   `SODAR <https://github.com/bihealth/sodar-server>`_
-    The system for Omics data access and retrieval. This system is used to model
+    The System for Omics Data Access and Retrieval. This system is used to model
     study metadata and manage associated data files in different Omics research
     projects. SODAR Core was created by separating re-usable research project
     management components from the SODAR project.
@@ -57,7 +57,7 @@ site around it.
 We maintain a Git repository with a django project using the latest SODAR Core
 version here on GitHub:
 `sodar-django-site <https://github.com/bihealth/sodar-django-site>`_.
-See :ref:`app_projectroles_integration` on other ways to get started with SODAR
+See :ref:`getting_started` on other ways to get started with SODAR
 Core.
 
 To clone the example site, do the following:

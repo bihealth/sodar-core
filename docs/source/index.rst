@@ -3,12 +3,18 @@
 Welcome to the SODAR Core documentation!
 ========================================
 
-SODAR Core is a framework for Django web application development.
-
-It was conceived to facilitate the creation of scientific data management and
-analysis web applications, but can be useful in other contexts as well.
-In that it is similar to the CMS or ecommerce frameworks that you can find
-`Awesome Django List <https://github.com/wsvincent/awesome-django#content-management-systems>`__ but you will find the components/libraries provided in SODAR Core are more generic and in this reflecting the broader range of applications that we target.
+SODAR Core is a framework for Django web applications development. While
+the components it provides are very generic and suitable for a variety of
+contexts, it shines in the creation of websites for project management and
+data analysis, especially in a scientific setting. In essence, it provides a
+suite of Django apps that can be included in your web site to enable project
+access control, content management, and default UI templates. It is similar
+to the CMS or ecommerce frameworks that you can find `Awesome Django List
+<https://github.com/wsvincent/awesome-django#content-management-systems>`__ but
+you will find the components/libraries provided in SODAR Core are more generic
+and in this reflecting the broader range of applications that we target. SODAR
+Core is fully `open source <https://github.com/bihealth/sodar-core>`__ and
+MIT-licensed.
 
 How to Read This Manual
 -----------------------
@@ -42,11 +48,16 @@ SODAR Core
 What's Inside SODAR Core
 ------------------------
 
+The main functionality offered by SODAR Core comes from the ``projectroles``
+app, which provides user authentication, project management (including sharing
+and access control), and a plugin system for dynamic content management.
+Furthermore, SODAR Core comes with a number of built-in apps which can be
+enabled to activate additional functionality.
 The full list of apps are shown in the table of contents (on the left if you
-are reading the HTML version of this documentation). Here are some highlights:
+are reading the HTML version of this documentation). See also the
+:ref:`overview_sodar_core_apps` section for a summary of what each app does.
+Here are some highlights:
 
-- Project-based user access control
-- Dynamic app content management
 - Advanced project activity logging
 - Small file uploading and browsing
 - Managing server-side background jobs

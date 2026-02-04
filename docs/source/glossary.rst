@@ -47,6 +47,11 @@ Glossary
         mirrored on the currently active site. This allows linking to remote
         projects on other sites where the user would have access.
 
+    Project
+        A container for data. It can be created, updated, archived, and deleted.
+        Users can be given fine-grained access to a project through predefined
+        or custom roles.
+
     Project App
         SODAR Core application with the scope of providing data and
         functionality related to a specific project. Uses project-based access
