@@ -1,69 +1,73 @@
 $(document).ready(function () {
   $.get('ajax/stats').done(function (res) {
-    let cards = [];
-    for (const [plugin_id, plugin] of Object.entries(res)) {
-      let stats = [];
-      if ('stats' in plugin) {
-        for (const [_, stat] of Object.entries(plugin.stats)) {
-          let info_link = '';
-          let stat_url = '';
-          if ('info_link' in stat) {
-            info_link = stat.info_link;
-          }
+    let cards = []
+    for (const [pluginName, pluginData] of Object.entries(res)) {
+      let card = $('<div>').attr({
+        'class': 'card sodar-si-app-stats-card',
+        'data-plugin-name': pluginName,
+      })
+      let cardHeader = $('<div>').attr('class', 'card-header').append(
+        $('<h4>').append([
+          $('<i>').attr({
+            'class': 'iconify',
+            'data-icon': pluginData.icon,
+          }),
+          pluginData.title + ' Statistics',
+        ])
+      )
+      let cardBody = $('<div>').attr('class', 'card-body')
+      if ('stats' in pluginData) {
+        for (const [_, stat] of Object.entries(pluginData.stats)) {
+          let statValue = ''
           if ('url' in stat) {
-            stat_url = `
-              <dd class="col-md-9">
-                <a href="${ stat.url }">${ stat.value }</a>
-              </dd>`;
+            statValue = $('<dd>').attr('class', 'col-md-9').append(
+              $('<a>').attr('href', stat.url).text(stat.value)
+            )
           } else {
-            stat_url = `
-              <dd class="${ stat.info_cls }">
-                ${ stat.info_val }
-              </dd>`;
+            statValue = $('<dd>').attr('class', stat.info_cls).append(
+              stat.info_val
+            )
           }
-          stats.push(`
-            <dt class="col-md-3">${ stat.label }
-              ${ info_link }
-            </dt>
-            ${ stat_url }
-          `);
+          cardBody.append(
+            $('<dl>').attr('class', 'row').append([
+              $('<dt>').attr('class', 'col-md-3').append(
+                `${ stat.label } ${ stat?.info_link }`
+              ),
+              statValue,
+            ])
+          )
         }
-      } else if ('error' in plugin) {
-        stats.push(`
-          <div class="text-danger">
-            Unable to retrieve app statistics: ${ plugin.error }
-          </div>
-        `);
+      } else if ('error' in pluginData) {
+        cardBody.append(
+          $('<div>').attr('class', 'text-danger').text(
+            `Unable to retrieve app statistics: ${ pluginData.error }`
+          )
+        )
       } else {
-        console.error('Unexpected plugin format from ajax/stats view.')
+        console.error(
+          `Unexpected response format for plugin ${ pluginName }.`)
+        console.dir(pluginData)
       }
-      cards.push(`
-        <div class="card" id="sodar-si-${ plugin_id }-app-stats-card">
-          <div class="card-header">
-            <h4>
-              <i class="iconify" data-icon="${ plugin.icon }"></i>
-              ${ plugin.title } Statistics
-            </h4>
-          </div>
-          <div class="card-body">
-            <dl class="row">
-              ${ stats.join('\n') }
-            </dl>
-          </div>
-        </div>
-      `)
+      card.append([cardHeader, cardBody])
+      cards.push(card)
     }
-    $('#sodar-si-app-stats-loading').replaceWith(cards);
+    $('#sodar-si-app-stats-loading').replaceWith(cards)
   }).fail(function (err) {
-    console.error('Unable to fetch app stats: ' + err);
-    $('#sodar-si-app-stats-loading').replaceWith(`
-      <div class="text-center" id="sodar-si-app-stats-error">
-        <i class="iconify text-secondary"
-           data-icon="mdi:alert-circle" data-height="48">
-        </i>
-        <p>There was a problem fetching the app stats,
-           please try again later.</p>
-      </div>
-    `);
-  });
-});
+    console.error('Unable to fetch app stats: ' + err)
+    $('#sodar-si-app-stats-loading').replaceWith(
+      $('<div>').attr({
+        'class': 'text-center',
+        'id': 'sodar-si-app-stats-error',
+      }).append([
+        $('<i>').attr({
+          'class': 'iconify text-secondary',
+          'dataIcon': 'mdi:alert-circle',
+          'dataHeight': '48'
+        }),
+        $('<p>').text(
+          'There was a problem fetching the app stats, please try again later.'
+        ),
+      ])
+    )
+  })
+})

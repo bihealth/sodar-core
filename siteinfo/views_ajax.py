@@ -17,7 +17,7 @@ plugin_api = PluginAPI()
 
 
 class PluginStatisticsAjaxView(SODARBasePermissionAjaxView):
-    """Site info ajax view"""
+    """Plugin statistics retrieval ajax view"""
 
     permission_required = 'siteinfo.view_info'
 

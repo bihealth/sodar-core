@@ -3,6 +3,7 @@
 from django.test import override_settings
 from django.urls import reverse
 
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
@@ -21,24 +22,29 @@ class TestSiteInfoUI(UITestBase):
     def setUp(self):
         super().setUp()
         self.url = reverse('siteinfo:info')
-        self.serverside_stats_elements = [
+        # The server-side stat elements can be located "by id" in the HTML DOM
+        self.server_stats_elements = [
             'sodar-si-project-stats-card',
             'sodar-si-user-stats-card',
             'sodar-si-basic-card',
             'sodar-si-remote-card',
         ]
-        self.clientside_stats_elements = [
-            'sodar-si-adminalerts-app-stats-card',
-            'sodar-si-example_backend_app-app-stats-card',
-            'sodar-si-example_project_app-app-stats-card',
-            'sodar-si-filesfolders-app-stats-card',
-            'sodar-si-timeline-app-stats-card',
+        # The client-side stat elements can be located with the
+        # "data-plugin-name" attribute
+        self.client_stats_plugins = [
+            'adminalerts',
+            'example_backend_app',
+            'example_project_app',
+            'filesfolders',
+            'timeline',
         ]
+        # The apps elements can be located "by id"
         self.apps_elements = [
             'sodar-si-project-apps-card',
             'sodar-si-site-apps-card',
             'sodar-si-backend-apps-card',
         ]
+        # The settings elements can be located "by id"
         self.settings_elements = [
             'sodar-si-settings-card-core',
             'sodar-si-core-settings-card-app-bgjobs',
@@ -48,10 +54,10 @@ class TestSiteInfoUI(UITestBase):
             'sodar-si-core-settings-card-app-tokens',
         ]
 
-    def test_serverside_cards(self):
+    def test_server_cards(self):
         """Test that the expected cards are present"""
         self.login_and_redirect(self.superuser, self.url)
-        for element_id in self.serverside_stats_elements:
+        for element_id in self.server_stats_elements:
             self.assertIsNotNone(self.selenium.find_element(By.ID, element_id))
             # Test that the cards have reasonable content
             children = self.selenium.find_elements(
@@ -59,23 +65,25 @@ class TestSiteInfoUI(UITestBase):
             )
             self.assertGreater(len(children), 0)
 
-    def test_clientside_cards(self):
+    def test_client_cards(self):
         """Test that client-side cards are shown"""
         self.login_and_redirect(self.superuser, self.url)
-        for element_id in self.clientside_stats_elements:
+        for element_id in self.client_stats_plugins:
             WebDriverWait(self.selenium, self.wait_time).until(
-                ec.visibility_of_element_located((By.ID, element_id))
+                ec.visibility_of_element_located(
+                    (By.XPATH, f'//div[@data-plugin-name="{element_id}"]')
+                )
             )
             dt_children = self.selenium.find_elements(
-                By.CSS_SELECTOR, f'#{element_id} dl.row dt'
+                By.XPATH, f'//div[@data-plugin-name="{element_id}"]//dt'
             )
             dd_children = self.selenium.find_elements(
-                By.CSS_SELECTOR, f'#{element_id} dl.row dd'
+                By.XPATH, f'//div[@data-plugin-name="{element_id}"]//dd'
             )
             self.assertEqual(len(dt_children), len(dd_children))
             self.assertGreater(len(dt_children), 0)
 
-    def test_clientside_cards_error(self):
+    def test_client_cards_error(self):
         """Test that client-side card errors are shown"""
 
         def get_statistics_error(self):
@@ -86,12 +94,18 @@ class TestSiteInfoUI(UITestBase):
         AdminAlertsSitePlugin.get_statistics = get_statistics_error
 
         self.login_and_redirect(self.superuser, self.url)
-        element_id = 'sodar-si-adminalerts-app-stats-card'
+        element_id = 'adminalerts'
         WebDriverWait(self.selenium, self.wait_time).until(
-            ec.visibility_of_element_located((By.ID, element_id))
+            ec.visibility_of_element_located(
+                (By.XPATH, f'//div[@data-plugin-name="{element_id}"]')
+            )
         )
         error_element = self.selenium.find_element(
-            By.CSS_SELECTOR, f'#{element_id} dl.row div'
+            By.XPATH,
+            (
+                f'//div[@data-plugin-name="{element_id}"]'
+                '//div[@class="card-body"]//div'
+            ),
         )
         self.assertEqual(
             error_element.text,
@@ -101,16 +115,22 @@ class TestSiteInfoUI(UITestBase):
         AdminAlertsSitePlugin.get_statistics = get_statistics_original
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
-    def test_clientside_cards_missing_backend(self):
+    def test_client_cards_missing_backend(self):
         """Test that backend apps are not shown"""
-        expected_elements = self.clientside_stats_elements.copy()
-        expected_elements.remove('sodar-si-example_backend_app-app-stats-card')
-        self.assert_element_set(
-            [(self.superuser, expected_elements)],
-            self.clientside_stats_elements,
-            self.url,
-            wait_elem=expected_elements[0],
-        )
+        expected_plugins = self.client_stats_plugins.copy()
+        removed_plugin = 'example_backend_app'
+        expected_plugins.remove(removed_plugin)
+        self.login_and_redirect(self.superuser, self.url)
+        for plugin_id in expected_plugins:
+            WebDriverWait(self.selenium, self.wait_time).until(
+                ec.visibility_of_element_located(
+                    (By.XPATH, f'//div[@data-plugin-name="{plugin_id}"]')
+                )
+            )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.XPATH, f'//div[@data-plugin-name="{removed_plugin}"]'
+            )
 
     def test_apps_tab_cards(self):
         """Test the cards in the "Apps" tab"""
