@@ -25,6 +25,11 @@ Glossary
         Django API provided by a backend app, to be dynamically imported and
         used by other SODAR Core based Django apps.
 
+    Category
+        If a project is a container for data, a category is a container for
+        projects and other categories. Categories can be used to organize
+        projects hierarchically, but cannot contain data.
+
     Django API
         Application programming interface offered by an app, to be used by other
         apps within the Django site.

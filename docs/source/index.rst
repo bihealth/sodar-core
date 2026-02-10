@@ -7,9 +7,10 @@ SODAR Core is a framework for Django web applications development. While
 the components it provides are very generic and suitable for a variety of
 contexts, it shines in the creation of websites for project management and
 data analysis, especially in a scientific setting. In essence, it provides a
-suite of Django apps that can be included in your web site to enable project
-access control, content management, and default UI templates. It is similar
-to the CMS or ecommerce frameworks that you can find `Awesome Django List
+suite of Django apps that can be included in your web site to
+enable project access control, manage content dynamically,
+and use predefined UI templates. It is similar to the CMS or
+ecommerce frameworks that you can find in the `Awesome Django List
 <https://github.com/wsvincent/awesome-django#content-management-systems>`__ but
 you will find the components/libraries provided in SODAR Core are more generic
 and in this reflecting the broader range of applications that we target. SODAR
@@ -58,6 +59,8 @@ are reading the HTML version of this documentation). See also the
 :ref:`overview_sodar_core_apps` section for a summary of what each app does.
 Here are some highlights:
 
+- Project-based user access control
+- Dynamic app content management
 - Advanced project activity logging
 - Small file uploading and browsing
 - Managing server-side background jobs
@@ -159,6 +162,7 @@ HTML / Javascript / CSS / Bootstrap 4
     :hidden:
 
     Overview <dev_site>
+    Integration in an Existing Site <dev_projectroles_integration>
     Project Apps <dev_project_app>
     Site Apps <dev_site_app>
     Backend Apps <dev_backend_app>
