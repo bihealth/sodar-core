@@ -57,8 +57,7 @@ THIRD_PARTY_APPS = [
     'crispy_bootstrap4',  # Bootstrap4 theme for Crispy
     'rules.apps.AutodiscoverRulesConfig',  # Django rules engine
     'djangoplugins',  # Django plugins
-    'pagedown',  # For markdown
-    'markupfield',  # For markdown
+    'martor',  # For markdown
     'rest_framework',  # For API views
     'knox',  # For token auth
     'social_django',  # For OIDC authentication
@@ -235,6 +234,22 @@ ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
 # ------------------------------------------------------------------------------
 MEDIA_ROOT = str(APPS_DIR('media'))
 MEDIA_URL = '/media/'
+
+# MARTOR CONFIGURATION FOR MARKDOWN
+# ------------------------------------------------------------------------------
+# TODO: make configurable with environment variables
+# Choose your preferred theme: "bootstrap" or "semantic"
+MARTOR_THEME = 'bootstrap'  # Default
+# CSRF token configuration (required for AJAX uploads)
+CSRF_COOKIE_HTTPONLY = False
+MARTOR_ENABLE_CONFIGS = {
+    'imgur': 'false',
+    'mention': 'false',
+    'jquery': 'true',
+    'living': 'true',
+    'spellcheck': 'false',
+    'hljs': 'false',
+}
 
 # STORAGE CONFIGURATION
 # ------------------------------------------------------------------------------

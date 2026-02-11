@@ -48,6 +48,18 @@ CACHES = {
     }
 }
 
+# MARTOR CONFIGURATION FOR MARKDOWN
+MARTOR_THEME = 'bootstrap'
+CSRF_COOKIE_HTTPONLY = False
+MARTOR_ENABLE_CONFIGS = {
+    'imgur': 'false',
+    'mention': 'false',
+    'jquery': 'true',
+    'living': 'true',
+    'spellcheck': 'false',
+    'hljs': 'false',
+}
+
 # TESTING
 # ------------------------------------------------------------------------------
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'

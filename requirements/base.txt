@@ -67,9 +67,7 @@ django-rest-knox>=5.0.2, <5.1
 
 # Markdown field support
 markdown==3.9
-django-markupfield>=2.0.1, <2.1
-django-pagedown>=2.2.1, <2.3
-mistune>=3.1.4, <3.2
+martor>=1.7.15, <1.8
 
 # Database file storage for filesfolders
 django-db-file-storage==0.5.6.1
