@@ -12,7 +12,7 @@ $(document).ready(function () {
             'class': 'iconify',
             'data-icon': pluginData.icon,
           }),
-          pluginData.title + ' Statistics',
+          ` ${pluginData.title} Statistics`,
         ])
       )
       let cardBody = $('<div>').attr('class', 'card-body')
