@@ -242,14 +242,17 @@ MEDIA_URL = '/media/'
 MARTOR_THEME = 'bootstrap'  # Default
 # CSRF token configuration (required for AJAX uploads)
 CSRF_COOKIE_HTTPONLY = False
+MARTOR_ENABLE_LABEL = True
 MARTOR_ENABLE_CONFIGS = {
     'imgur': 'false',
     'mention': 'false',
-    'jquery': 'true',
+    'jquery': 'false',
     'living': 'true',
     'spellcheck': 'false',
     'hljs': 'false',
 }
+MARTOR_ALTERNATIVE_CSS_FILE_THEME = 'projectroles/css/projectroles.css'
+MARTOR_ENABLE_ADMIN_CSS = False
 
 # STORAGE CONFIGURATION
 # ------------------------------------------------------------------------------

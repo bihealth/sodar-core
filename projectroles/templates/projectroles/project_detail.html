@@ -98,7 +98,7 @@
     </div>
     <div class="card-body sodar-markdown-content">
       {% if object.readme|length > 0 %}
-        <div> {{ object.readme | safe_markdown }} </div>
+        {{ object.readme | safe_markdown }}
       {% else %}
         <p>
           No ReadMe is currently set for this {% get_display_name object.type title=False %}.

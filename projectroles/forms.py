@@ -374,7 +374,12 @@ class SODARMartorWidget(MartorWidget):
     """Martor widget for markdown fields"""
 
     class Media:
-        css = {'all': ['projectroles/css/martor.css']}
+        css = {
+            'all': (
+                'martor/css/martor.bootstrap.min.css',
+                'projectroles/css/martor.css',  # Should be the last one
+            )
+        }
 
 
 class MultipleFileInput(forms.ClearableFileInput):
