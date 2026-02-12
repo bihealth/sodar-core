@@ -118,7 +118,7 @@ class RemoteProjectAPI:
                     str(category.parent.sodar_uuid) if category.parent else None
                 ),
                 'description': category.description,
-                'readme': category.readme.raw,
+                'readme': category.readme,
             }
             if project_level == REMOTE_LEVEL_READ_ROLES:
                 cat_data['roles'] = {}
@@ -341,7 +341,7 @@ class RemoteProjectAPI:
                 REMOTE_LEVEL_REVOKED,
             ]:
                 project_data['description'] = project.description
-                project_data['readme'] = project.readme.raw
+                project_data['readme'] = project.readme
                 # Add parent categories and inherited roles
                 if project.parent:
                     sync_data = self._add_parent_categories(
@@ -654,14 +654,11 @@ class RemoteProjectAPI:
         uuid = str(project.sodar_uuid)
         for k, v in project_data.items():
             if (
-                k not in ['parent', 'sodar_uuid', 'roles', 'readme']
+                k not in ['parent', 'sodar_uuid', 'roles']
                 and hasattr(project, k)
                 and str(getattr(project, k)) != str(v)
             ):
                 updated_fields.append(k)
-        # README is a special case
-        if project.readme.raw != project_data['readme']:
-            updated_fields.append('readme')
 
         if updated_fields or project.parent != parent:
             project = self._update_obj(project, project_data, updated_fields)

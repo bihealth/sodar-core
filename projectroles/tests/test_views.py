@@ -1562,6 +1562,7 @@ class TestProjectUpdateView(
                 'owner': self.user.sodar_uuid,  # NOTE: Must add owner
                 'parent': self.category.sodar_uuid,  # NOTE: Must add parent
                 'public_access': '',  # NOTE: Must set to empty instead of None
+                'readme': '',  # NOTE: must set to empty instead of None
                 REMOTE_SITE_FIELD: False,
             }
         )
@@ -1573,6 +1574,7 @@ class TestProjectUpdateView(
                 'owner': self.user.sodar_uuid,
                 'parent': '',
                 'public_access': '',  # This gets passed in POST for category
+                'readme': '',
             }
         )
         # NOTE: Set manually in tests instead if we need to test category with
@@ -2221,6 +2223,7 @@ class TestProjectUpdateView(
         post_data['parent'] = self.category.sodar_uuid
         post_data['owner'] = self.user.sodar_uuid
         post_data['public_access'] = ''
+        post_data['readme'] = ''
         post_data[REMOTE_SITE_FIELD] = True
         ps = self._get_post_app_settings(self.project, self.user)
         post_data.update(ps)
@@ -2257,6 +2260,7 @@ class TestProjectUpdateView(
         post_data['parent'] = self.category.sodar_uuid
         post_data['owner'] = self.user.sodar_uuid
         post_data['public_access'] = ''
+        post_data['readme'] = ''
         post_data[REMOTE_SITE_FIELD] = False
         ps = self._get_post_app_settings(self.project, self.user)
         post_data.update(ps)
@@ -2290,6 +2294,7 @@ class TestProjectUpdateView(
         post_data['parent'] = self.category.sodar_uuid
         post_data['owner'] = self.user.sodar_uuid
         post_data['public_access'] = ''
+        post_data['readme'] = ''
         post_data[REMOTE_SITE_FIELD] = True
         ps = self._get_post_app_settings(self.project, self.user)
         post_data.update(ps)
@@ -2318,6 +2323,7 @@ class TestProjectUpdateView(
         post_data['owner'] = self.user.sodar_uuid
         post_data['parent'] = self.category.sodar_uuid
         post_data['public_access'] = ''
+        post_data['readme'] = ''
         post_data['settings.example_project_app.project_int_setting'] = 0
         post_data[
             'settings.example_project_app.project_int_setting_options'

@@ -276,14 +276,14 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': None,
                     'description': self.category.description,
-                    'readme': self.category.readme.raw,
+                    'readme': self.category.readme,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_READ_INFO,
                     'description': self.project.description,
-                    'readme': self.project.readme.raw,
+                    'readme': self.project.readme,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'remote_sites': [str(self.peer_site.sodar_uuid)],
                 },
@@ -323,7 +323,7 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': None,
                     'description': self.category.description,
-                    'readme': self.category.readme.raw,
+                    'readme': self.category.readme,
                 },
                 str(sub_category.sodar_uuid): {
                     'title': sub_category.title,
@@ -331,14 +331,14 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'description': sub_category.description,
-                    'readme': sub_category.readme.raw,
+                    'readme': sub_category.readme,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_READ_INFO,
                     'description': self.project.description,
-                    'readme': self.project.readme.raw,
+                    'readme': self.project.readme,
                     'parent_uuid': str(sub_category.sodar_uuid),
                     'remote_sites': [],
                 },
@@ -381,7 +381,7 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_ROLES,
                     'parent_uuid': None,
                     'description': self.category.description,
-                    'readme': self.category.readme.raw,
+                    'readme': self.category.readme,
                     'roles': {
                         str(self.category_owner_as.sodar_uuid): {
                             'user': self.user_source.username,
@@ -394,7 +394,7 @@ class TestGetSourceData(
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_READ_ROLES,
                     'description': self.project.description,
-                    'readme': self.project.readme.raw,
+                    'readme': self.project.readme,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'roles': {
                         str(self.project_owner_as.sodar_uuid): {
@@ -753,14 +753,14 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': None,
                     'description': self.category.description,
-                    'readme': self.category.readme.raw,
+                    'readme': self.category.readme,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_REVOKED,
                     'description': self.project.description,
-                    'readme': self.project.readme.raw,
+                    'readme': self.project.readme,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'roles': {
                         str(self.project_owner_as.sodar_uuid): {
