@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from markupfield.fields import MarkupField
+from martor.models import MartorField
 
 
 # Access Django user model
@@ -35,11 +35,10 @@ class AdminAlert(models.Model):
     )
 
     #: Full description (optional, will be shown on a separate page)
-    description = MarkupField(
+    description = MartorField(
         unique=False,
         blank=True,
         null=True,
-        markup_type='markdown',
         help_text='Full description of alert '
         '(optional, will be shown on a separate page)',
     )

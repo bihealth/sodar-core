@@ -19,7 +19,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from djangoplugins.models import Plugin
-from markupfield.fields import MarkupField
+from martor.models import MartorField
 
 from projectroles.constants import get_sodar_constants
 
@@ -159,10 +159,9 @@ class Project(models.Model):
     )
 
     #: Project README (optional, supports markdown)
-    readme = MarkupField(
+    readme = MartorField(
         null=True,
         blank=True,
-        markup_type='markdown',
         help_text='Project README (optional, supports markdown)',
     )
 

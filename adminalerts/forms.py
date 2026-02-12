@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 
 # Projectroles dependency
-from projectroles.forms import SODARModelForm, SODARPagedownWidget
+from projectroles.forms import SODARMartorWidget, SODARModelForm
 
 from adminalerts.models import AdminAlert
 
@@ -47,8 +47,8 @@ class AdminAlertForm(SODARModelForm):
             attrs={'type': 'date'}, format='%Y-%m-%d'
         )
         # Set description widget with preview
-        self.fields['description'].widget = SODARPagedownWidget(
-            attrs={'show_preview': True}
+        self.fields['description'].widget = SODARMartorWidget(
+            attrs={'rows': 6}
         )
 
         # Creation
@@ -63,7 +63,7 @@ class AdminAlertForm(SODARModelForm):
         # Updating
         else:  # self.instance.pk
             # Set description value as raw markdown
-            self.initial['description'] = self.instance.description.raw
+            self.initial['description'] = self.instance.description
             self.fields['send_email'].help_text = EMAIL_HELP_UPDATE
             # Sending email for update should be false by default
             self.initial['send_email'] = False
