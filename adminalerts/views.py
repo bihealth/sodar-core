@@ -121,9 +121,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
             message=alert.message,
         )
         if alert.description:
-            body += EMAIL_BODY_DESCRIPTION.format(
-                description=alert.description
-            )
+            body += EMAIL_BODY_DESCRIPTION.format(description=alert.description)
         recipients = self._get_email_recipients(alert)
         # NOTE: Recipients go under bcc
         # NOTE: If we have no recipients in bcc we cancel sending

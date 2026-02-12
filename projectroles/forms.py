@@ -692,9 +692,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         # Modify ModelChoiceFields to use sodar_uuid
         self.fields['parent'].to_field_name = 'sodar_uuid'
         # Set readme widget with preview
-        self.fields['readme'].widget = SODARMartorWidget(
-            attrs={'rows': 10}
-        )
+        self.fields['readme'].widget = SODARMartorWidget(attrs={'rows': 10})
         self.fields['public_access'].choices = [
             (None, 'None'),
             get_role_option(

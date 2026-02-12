@@ -47,9 +47,7 @@ class AdminAlertForm(SODARModelForm):
             attrs={'type': 'date'}, format='%Y-%m-%d'
         )
         # Set description widget with preview
-        self.fields['description'].widget = SODARMartorWidget(
-            attrs={'rows': 6}
-        )
+        self.fields['description'].widget = SODARMartorWidget(attrs={'rows': 6})
 
         # Creation
         if not self.instance.pk:
