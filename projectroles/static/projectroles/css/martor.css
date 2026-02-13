@@ -31,7 +31,24 @@
 .martor-toolbar .btn-group .btn {
   height: 2.3em;
 }
+.martor-toolbar .btn-light {
+  background-color: #fff;
+  border: none;
+}
+.martor-toolbar .btn-light:hover {
+  background-color: #e2e6ea;
+  border: none;
+}
 
 div.martor-preview {
   background: rgba(0,123,255,.25);
+}
+
+.sodar-json-input {
+  height: 175px !important;
+  min-height: 175px;
+  width: 100%;
+  background-color: Gainsboro;
+  border: 1px solid DarkGray;
+  resize: vertical;
 }
