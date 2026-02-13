@@ -656,6 +656,10 @@ Alternatively, the following management command can be used:
     users must be manually created by a target site admin in order for their
     data and roles to be synchronized.
 
+.. note::
+
+    Activity status for all users except superusers is synchronized.
+
 Project Detail View Links
 -------------------------
 
