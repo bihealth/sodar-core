@@ -237,22 +237,25 @@ MEDIA_URL = '/media/'
 
 # MARTOR CONFIGURATION FOR MARKDOWN
 # ------------------------------------------------------------------------------
-# TODO: make configurable with environment variables
+# NOTE: Setting CSRF_COOKIE_HTTPONLY to `False` is required for AJAX uploads
 # Choose your preferred theme: "bootstrap" or "semantic"
-MARTOR_THEME = 'bootstrap'  # Default
-# CSRF token configuration (required for AJAX uploads)
-CSRF_COOKIE_HTTPONLY = False
-MARTOR_ENABLE_LABEL = True
+MARTOR_THEME = env.str('MARTOR_THEME', 'bootstrap')
+MARTOR_ENABLE_LABEL = env.bool('MARTOR_ENABLE_LABEL', True)
 MARTOR_ENABLE_CONFIGS = {
-    'imgur': 'false',
-    'mention': 'false',
-    'jquery': 'false',
-    'living': 'true',
-    'spellcheck': 'false',
-    'hljs': 'false',
+    'imgur': env.str('MARTOR_ENABLE_CONFIG_IMGUR', 'false'),
+    'mention': env.str('MARTOR_ENABLE_CONFIG_MENTION', 'false'),
+    'jquery': env.str('MARTOR_ENABLE_CONFIG_JQUERY', 'false'),
+    'living': env.str('MARTOR_ENABLE_CONFIG_LIVING', 'true'),
+    'spellcheck': env.str('MARTOR_ENABLE_CONFIG_SPELLCHECK', 'false'),
+    'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
 }
-MARTOR_ALTERNATIVE_CSS_FILE_THEME = 'projectroles/css/projectroles.css'
-MARTOR_ENABLE_ADMIN_CSS = False
+# By default, martor loads bootstrap v5. We don't want that, so we supply an
+# alternative CSS file.
+MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
+    'MARTOR_ALTERNATIVE_CSS_FILE_THEME',
+    'projectroles/css/projectroles.css',
+)
+MARTOR_ENABLE_ADMIN_CSS = env.bool('MARTOR_ENABLE_ADMIN_CSS', False)
 
 # STORAGE CONFIGURATION
 # ------------------------------------------------------------------------------
