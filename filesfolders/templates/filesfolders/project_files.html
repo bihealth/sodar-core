@@ -181,7 +181,9 @@
           {% if readme_mime == 'text/plain' %}
             <pre>{{ readme_data|wordwrap:79 }}</pre>
           {% elif readme_mime == 'text/markdown' %}
-            <div>{{ readme_data|safe_markdown }}</div>
+            <div class="sodar-markdown-content">
+              {{ readme_data|safe_markdown }}
+            </div>
           {% endif %}
         </div>
       </div>
