@@ -147,7 +147,9 @@ Markdown
 --------
 
 For fields supporting Markdown, it is recommended to use the
-``SODARPagedownWidget`` found in ``projectroles.models``.
+``SODARMartorWidget`` found in ``projectroles.models``. It comes
+with a built-in Markdown editor and custom styling using `martor
+<https://django-markdown-editor.readthedocs.io>`__.
 
 .. hint::
 
