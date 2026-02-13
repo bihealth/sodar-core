@@ -28,7 +28,7 @@ Glossary
     Category
         If a project is a container for data, a category is a container for
         projects and other categories. Categories can be used to organize
-        projects hierarchically, but cannot contain data.
+        projects hierarchically, but are generally not expected to contain data.
 
     Django API
         Application programming interface offered by an app, to be used by other
