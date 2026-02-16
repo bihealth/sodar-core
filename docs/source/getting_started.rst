@@ -4,51 +4,14 @@
 Getting Started
 ^^^^^^^^^^^^^^^
 
-Installation and basic concepts of the SODAR Core framework and its apps are
-detailed in this document.
-
-
-Installation
-============
-
-The ``django-sodar-core`` package can be installed into your Django project
-from PyPI as follows. It is strongly recommended to pin the import to a specific
-version tag, as the package is under active development and breaking changes are
-expected.
-
-.. code-block:: console
-
-    pip install django-sodar-core==x.y.z
-
-Please note that the django-sodar-core package only installs
-:term:`Django apps<Django App>`, which you need to include in a
-:term:`Django web site<Django Site>` project. For instructions for integrating
-SODAR Core into an existing Django site or setting up a new site,
-see the :ref:`projectroles app documentation <app_projectroles>`.
-
-
-SODAR Core Apps
-===============
-
-The following Django apps will be installed when installing the
-``django-sodar-core`` package:
-
-- **projectroles**: Base app for project access management and dynamic app
-  content management. All other apps require the integration of projectroles.
-- **adminalerts**: Site app for displaying site-wide messages to all users.
-- **appalerts**: Site app and backend for raising alerts to users from apps.
-- **bgjobs**: Project app for managing background jobs.
-- **siteinfo**: Site app for displaying site information and statistics for
-  administrators.
-- **sodarcache**: Generic caching and aggregation of data referring to external
-  services.
-- **timeline**: Project app for logging and viewing project-related activity.
-- **tokens**: Token management for API access.
-- **userprofile**: Site app for viewing user profiles.
+This document provides instructions and guidelines for integrating projectroles
+and other SODAR Core apps into your Django site. Whether you want to set up a
+new Django site, or integrating the projectroles app into an existing site, you
+can follow one of the recommended options in this section.
 
 
 Requirements
-============
+************
 
 Major requirements for integrating projectroles and other SODAR Core apps into
 your Django site are listed below. For a complete requirement list, see the
@@ -70,12 +33,63 @@ For more details on installation and requirements for local development, see
 :ref:`dev_core_install`.
 
 
+Installation
+************
+
+This section shows three methods to start using SODAR Core.
+
+SODAR Django Site Template (Recommended)
+========================================
+
+When setting up a new :term:`SODAR Core based site<SODAR Core Based Site>`, it
+is strongly recommended to use
+`sodar-django-site <https://github.com/bihealth/sodar-django-site>`_ as the
+template. The repository contains a minimal :term:`Django site<Django Site>`
+pre-configured with projectroles and other
+:term:`SODAR Core apps<SODAR Core App>`. The ``main`` branch of this project
+always integrates the latest stable release of SODAR Core and projectroles.
+
+To set up your site with this template, clone the repository and follow the
+installation instructions in the README.rst file.
+
+
+Cookiecutter-Django
+===================
+
+If the SODAR Django site template does not suit your needs, it is also possible
+to set up your site using `cookiecutter-django <https://github.com/pydanny/cookiecutter-django/>`_.
+In this case, follow the instructions in the :ref:`Existing Site Integration
+<dev_projectroles_integration>` document as if you were integrating SODAR Core
+to an existing Django site.
+
+.. note::
+
+    The project was created using an old version of the cookiecutter script and
+    evolved from there. This means the site created by the version currently may
+    differ in several ways from how SODAR Core is set up. This method is
+    recommended only for experienced Django developers.
+
+.. note::
+
+    For any other issues regarding the cookiecutter-django setup, see the
+    cookiecutter-django documentation.
+
+
+Integration in an Existing Site
+================================
+
+If you already have a working site and want to migrate it to SODAR Core, see
+the :ref:`Existing Site Installation <dev_projectroles_integration>` document.
+
+
 Next Steps
-==========
+**********
 
-To proceed with using the SODAR Core framework in your Django site, you must
-first install and integrate the ``projectroles`` app. See the
-:ref:`projectroles app documentation <app_projectroles>` for instructions.
+You are now ready to develop your Django site using the SODAR Core framework.
+You can start by configuring the :ref:`app_projectroles` and, optionally, the
+other built-in apps. To modify default SODAR Core and projectroles settings, see
+the :ref:`app_projectroles_settings` document. For customizing the look and feel
+of your site, check out the :ref:`customization tips <app_projectroles_custom>`.
 
-Once projectroles has been integrated into your site, you may proceed to
-install other apps as needed.
+Later on, you may proceed to install or develop other apps as needed (see the
+:ref:`dev_site` document for instructions).

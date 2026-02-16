@@ -60,7 +60,8 @@ On a very high level here is how SODAR Core was used to built VarFish (cf.
 You can find the source code in the
 `Github project <https://github.com/varfish-org/varfish-server>`__.
 
-The aim is to provide an data analysis web application.
+The aim is to provide a web application for comprehensive DNA variant analysis
+for diagnostic and research.
 
 SODAR Core App Configuration
 ----------------------------

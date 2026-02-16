@@ -19,7 +19,6 @@ and app structure.
    :caption: Contents:
 
     Basics <app_projectroles_basics>
-    Integration <app_projectroles_integration>
     Settings <app_projectroles_settings>
     Usage <app_projectroles_usage>
     Customization <app_projectroles_custom>

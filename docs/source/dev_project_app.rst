@@ -46,7 +46,7 @@ This documentation assumes you have a Django site with the ``projectroles``
 app set up, either started with
 `sodar-django-site <https://github.com/bihealth/sodar-django-site>`_ or by
 integrating SODAR Core on an existing site (see
-:ref:`projectroles integration <app_projectroles_integration>`).
+:ref:`getting_started`).
 The instructions can be applied either to modify a previously existing app, or
 to set up a fresh app generated in the standard way with
 ``./manage.py startapp``.
