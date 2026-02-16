@@ -475,8 +475,8 @@ def render_markdown(raw_markdown: str) -> str:
     """Markdown field rendering helper"""
     logger.warning(
         'The `render_markdown` template tag is deprecated and will be removed '
-        'in a future version, please use the `safe_markdown` filter '
-        'from the martor package instead.'
+        'in version 1.5, please use the `safe_markdown` filter from the martor'
+        'package instead.'
     )
     return mistune.html(raw_markdown)
 
