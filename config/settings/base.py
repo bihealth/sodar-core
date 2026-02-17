@@ -255,10 +255,6 @@ MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
     'MARTOR_ALTERNATIVE_CSS_FILE_THEME',
     'projectroles/css/martor_theme.css',
 )
-MARTOR_ALTERNATIVE_JS_FILE_THEME = env.str(
-    'MARTOR_ALTERNATIVE_JS_FILE_THEME',
-    'projectroles/js/martor_theme.js',
-)
 MARTOR_ENABLE_ADMIN_CSS = env.bool('MARTOR_ENABLE_ADMIN_CSS', False)
 
 # STORAGE CONFIGURATION
