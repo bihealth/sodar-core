@@ -892,8 +892,8 @@ pre#sodar-email-body {
 }
 .sodar-markdown-content table,
 .sodar-markdown-content table tr,
-.sodar-markdown-content table tr thead th,
-.sodar-markdown-content table tr tbody td {
+.sodar-markdown-content table thead tr th,
+.sodar-markdown-content table tbody tr td {
   border: 1px solid #ced4da !important;
   padding-left: 5px !important;
   padding-right: 5px !important;
@@ -906,9 +906,13 @@ pre#sodar-email-body {
 }
 .sodar-markdown-content blockquote {
   border-left: 2px dotted #888 !important;
-  padding-left: 5px !important;
+  border-radius: 3px !important;
+  padding: 5px 15px !important;
   background: #d0f0ff !important;
   color: black !important;
+}
+.sodar-markdown-content blockquote > :last-child {
+  margin-bottom: 0 !important;
 }
 .sodar-markdown-content code {
   background: none !important;
@@ -919,6 +923,7 @@ pre#sodar-email-body {
   background: #d0f0ff !important;
   border: none !important;
   padding: 10px !important;
+  border-radius: 3px !important;
 }
 
 /* Style for json input elements */
