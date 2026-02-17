@@ -380,9 +380,7 @@ class SODARMartorWidget(MartorWidget):
                 'projectroles/css/martor_widget.css',  # Should be the last one
             )
         }
-        js = (
-            'projectroles/js/martor_widget.js',
-        )
+        js = ('projectroles/js/martor_widget.js',)
 
 
 class MultipleFileInput(forms.ClearableFileInput):
