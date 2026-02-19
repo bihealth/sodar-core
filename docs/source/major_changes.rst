@@ -39,6 +39,16 @@ These features were deprecated in v1.3 and have been removed in v1.4.
 Base Test Classes and Mixins
     The base test classes and mixins deprecated in v1.3 have been removed.
 
+REST API View Changes
+---------------------
+
+- Projectroles sync API
+    * Current version: ``2.1`` (breaking changes)
+    * Allowed versions: ``1.0``, ``2.0``, ``2.1``
+    * Add synchonization of ``is_active`` field for users
+    * **NOTE:** If called with API version ``1.0`` or ``2.0``, user activity status will not be synced to target sites.
+    * **NOTE:** The activity status for superusers is not synced.
+
 
 v1.3.2 (2026-01-12)
 *******************
