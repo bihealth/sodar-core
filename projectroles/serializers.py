@@ -644,9 +644,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Validate and update public_access
         self._validate_public_access(attrs)
 
-        # Set readme
-        if 'readme' in attrs and 'raw' in attrs['readme']:
-            attrs['readme'] = attrs['readme']['raw']
         return attrs
 
     def save(self, **kwargs):
@@ -692,7 +689,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
         # Else return full serialization
         # Proper rendering of readme
-        ret['readme'] = project.readme.raw or ''
+        ret['readme'] = project.readme or ''
         # Force project UUID
         if not ret.get('sodar_uuid'):
             ret['sodar_uuid'] = str(project.sodar_uuid)

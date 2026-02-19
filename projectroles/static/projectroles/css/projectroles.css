@@ -885,20 +885,57 @@ pre#sodar-email-body {
   }
 }
 
-/* Tables within markdown elements */
+/* Style within markdown elements */
 
 .sodar-markdown-content table {
   margin-bottom: 12px !important;
 }
-
 .sodar-markdown-content table,
-.sodar-markdown-content table thead th,
-.sodar-markdown-content table tbody td {
-  border: 1px solid #ced4da;
-  padding-left: 5px;
-  padding-right: 5px;
+.sodar-markdown-content table tr,
+.sodar-markdown-content table thead tr th,
+.sodar-markdown-content table tbody tr td {
+  border: 1px solid #ced4da !important;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+  background: none !important;
+}
+.sodar-markdown-content hr {
+  background: none !important;
+  border: 1px solid #dfdfdf !important;
+  height: 0px !important;
+}
+.sodar-markdown-content blockquote {
+  border-left: 2px dotted #888 !important;
+  border-radius: 3px !important;
+  padding: 5px 15px !important;
+  background: #d0f0ff !important;
+  color: black !important;
+}
+.sodar-markdown-content blockquote > :last-child {
+  margin-bottom: 0 !important;
+}
+.sodar-markdown-content code {
+  background: none !important;
+  border: none !important;
+  padding: 0px !important;
+}
+.sodar-markdown-content pre {
+  background: #d0f0ff !important;
+  border: none !important;
+  padding: 10px !important;
+  border-radius: 3px !important;
 }
 
+/* Style for json input elements */
+
+.sodar-json-input {
+  height: 175px !important;
+  min-height: 175px;
+  width: 100%;
+  background-color: Gainsboro;
+  border: 1px solid DarkGray;
+  resize: vertical;
+}
 
 /* Responsive modifications ------------------------------------------------- */
 

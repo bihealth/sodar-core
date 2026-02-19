@@ -55,8 +55,7 @@ following apps need to be included in the list in order for SODAR Core to work:
         'crispy_forms',
         'rules.apps.AutodiscoverRulesConfig',
         'djangoplugins',
-        'pagedown',
-        'markupfield',
+        'martor',
         'rest_framework',
         'knox',
         'projectroles.apps.ProjectrolesConfig',
@@ -142,6 +141,47 @@ site.
 .. code-block:: python
 
     ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
+
+
+Markdown
+========
+
+SODAR Core uses ``django-markdown-editor`` (`martor
+<https://django-markdown-editor.readthedocs.io>`__) for markdown form fields,
+widgets, and rendering. This means that users can enter markdown content using
+the powerful martor editor, which supports real-time rendering and syntax
+highlighting. Furthermore, martor is used to render markdown content in views
+and templates.
+
+The following settings can be used to configure martor. Please
+note that setting ``CSRF_COOKIE_HTTPONLY = `false``` is required for using the
+dynamic AJAX features of martor such as live preview. Also note that martor
+loads an additional CSS theme in the pages with markdown form fields.
+Depending on the theme, either bootstrap or semantic UI themes will be
+loaded. This can be avoided by setting ``MARTOR_ALTERNATIVE_CSS_FILE_THEME`` to
+a different file.
+
+.. code-block:: python
+
+    # Choose your preferred theme: "bootstrap" or "semantic"
+    MARTOR_THEME = env.str('MARTOR_THEME', 'bootstrap')
+    MARTOR_ENABLE_LABEL = env.bool('MARTOR_ENABLE_LABEL', True)
+    MARTOR_ENABLE_CONFIGS = {
+        'imgur': env.str('MARTOR_ENABLE_CONFIG_IMGUR', 'false'),
+        'mention': env.str('MARTOR_ENABLE_CONFIG_MENTION', 'false'),
+        'jquery': env.str('MARTOR_ENABLE_CONFIG_JQUERY', 'false'),
+        'living': env.str('MARTOR_ENABLE_CONFIG_LIVING', 'true'),
+        'spellcheck': env.str('MARTOR_ENABLE_CONFIG_SPELLCHECK', 'false'),
+        'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
+    }
+    MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
+        'MARTOR_ALTERNATIVE_CSS_FILE_THEME',
+        'projectroles/css/projectroles.css',
+    )
+    MARTOR_ENABLE_ADMIN_CSS = env.bool('MARTOR_ENABLE_ADMIN_CSS', False)
+
+Rendering markdown in templates can be achieved with the ``safe_markdown``
+filter after loading ``martortags``.
 
 
 Django REST Framework

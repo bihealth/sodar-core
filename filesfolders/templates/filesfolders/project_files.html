@@ -1,5 +1,6 @@
 {% extends 'projectroles/project_base.html' %}
 
+{% load martortags %}
 {% load rules %}
 {% load static %}
 
@@ -180,8 +181,9 @@
           {% if readme_mime == 'text/plain' %}
             <pre>{{ readme_data|wordwrap:79 }}</pre>
           {% elif readme_mime == 'text/markdown' %}
-            {% render_markdown readme_data as readme_markdown %}
-            <p>{{ readme_markdown|safe }}</p>
+            <div class="sodar-markdown-content">
+              {{ readme_data|safe_markdown }}
+            </div>
           {% endif %}
         </div>
       </div>

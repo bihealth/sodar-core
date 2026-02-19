@@ -48,6 +48,10 @@ CACHES = {
     }
 }
 
+# MARTOR CONFIGURATION FOR MARKDOWN
+# ------------------------------------------------------------------------------
+MARTOR_MARKDOWNIFY_TIMEOUT = 0  # Instant updates
+
 # TESTING
 # ------------------------------------------------------------------------------
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'

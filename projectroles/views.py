@@ -1013,7 +1013,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             'title': project.title,
             'parent': project.parent,
             'description': project.description,
-            'readme': project.readme.raw,
+            'readme': project.readme,
             'owner': project.get_owner().user,
             'public_access': project.public_access,
         }
@@ -1111,8 +1111,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['description'] != project.description:
             extra_data['description'] = project.description
             upd_fields.append('description')
-        if old_data['readme'] != project.readme.raw:
-            extra_data['readme'] = project.readme.raw
+        if old_data['readme'] != project.readme:
+            extra_data['readme'] = project.readme
             upd_fields.append('readme')
         if old_data['public_access'] != project.public_access:
             extra_data['public_access'] = project.get_public_access_name()
@@ -1239,7 +1239,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 'title': project.title,
                 'owner': owner.username,
                 'description': project.description,
-                'readme': project.readme.raw,
+                'readme': project.readme,
             }
             # Add settings to extra data
             for k, v in project_settings.items():
@@ -1652,7 +1652,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             'type': project.type,
             'parent': parent,
             'description': project.description,
-            'readme': project.readme.raw,
+            'readme': project.readme,
             'public_access': project.get_public_access_name(),
             'archive': project.archive,
             'full_title': project.full_title,

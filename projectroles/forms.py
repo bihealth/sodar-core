@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 
 from dal import autocomplete, forward as dal_forward
-from pagedown.widgets import PagedownWidget
+from martor.widgets import MartorWidget
 from djangoplugins.models import Plugin
 
 from projectroles.models import (
@@ -370,11 +370,17 @@ class SODARModelForm(SODARFormMixin, forms.ModelForm):
     """Override of Django model form with SODAR Core specific helpers."""
 
 
-class SODARPagedownWidget(PagedownWidget):
-    """Pagedown widget for markdown fields"""
+class SODARMartorWidget(MartorWidget):
+    """Martor widget for markdown fields"""
 
     class Media:
-        css = {'all': ['projectroles/css/pagedown.css']}
+        css = {
+            'all': (
+                'martor/css/martor.bootstrap.min.css',
+                'projectroles/css/martor_widget.css',  # Should be the last one
+            )
+        }
+        js = ('projectroles/js/martor_widget.js',)
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -687,9 +693,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         # Modify ModelChoiceFields to use sodar_uuid
         self.fields['parent'].to_field_name = 'sodar_uuid'
         # Set readme widget with preview
-        self.fields['readme'].widget = SODARPagedownWidget(
-            attrs={'show_preview': True}
-        )
+        self.fields['readme'].widget = SODARMartorWidget()
         self.fields['public_access'].choices = [
             (None, 'None'),
             get_role_option(
@@ -703,7 +707,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         # Updating an existing project
         if self.instance.pk:
             # Set readme value as raw markdown
-            self.initial['readme'] = self.instance.readme.raw
+            self.initial['readme'] = self.instance.readme
             # Hide project type selection
             self.fields['type'].widget = forms.HiddenInput()
             # Set hidden project field for autocomplete

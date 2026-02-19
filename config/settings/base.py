@@ -57,8 +57,7 @@ THIRD_PARTY_APPS = [
     'crispy_bootstrap4',  # Bootstrap4 theme for Crispy
     'rules.apps.AutodiscoverRulesConfig',  # Django rules engine
     'djangoplugins',  # Django plugins
-    'pagedown',  # For markdown
-    'markupfield',  # For markdown
+    'martor',  # For markdown
     'rest_framework',  # For API views
     'knox',  # For token auth
     'social_django',  # For OIDC authentication
@@ -235,6 +234,28 @@ ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
 # ------------------------------------------------------------------------------
 MEDIA_ROOT = str(APPS_DIR('media'))
 MEDIA_URL = '/media/'
+
+# MARTOR CONFIGURATION FOR MARKDOWN
+# ------------------------------------------------------------------------------
+# NOTE: Setting CSRF_COOKIE_HTTPONLY to `False` is required for AJAX uploads
+# Choose your preferred theme: "bootstrap" or "semantic"
+MARTOR_THEME = env.str('MARTOR_THEME', 'bootstrap')
+MARTOR_ENABLE_LABEL = env.bool('MARTOR_ENABLE_LABEL', True)
+MARTOR_ENABLE_CONFIGS = {
+    'imgur': env.str('MARTOR_ENABLE_CONFIG_IMGUR', 'false'),
+    'mention': env.str('MARTOR_ENABLE_CONFIG_MENTION', 'false'),
+    'jquery': env.str('MARTOR_ENABLE_CONFIG_JQUERY', 'false'),
+    'living': env.str('MARTOR_ENABLE_CONFIG_LIVING', 'true'),
+    'spellcheck': env.str('MARTOR_ENABLE_CONFIG_SPELLCHECK', 'false'),
+    'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
+}
+# By default, martor loads bootstrap v5. We don't want that, so we supply an
+# alternative CSS file.
+MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
+    'MARTOR_ALTERNATIVE_CSS_FILE_THEME',
+    'projectroles/css/martor_theme.css',
+)
+MARTOR_ENABLE_ADMIN_CSS = env.bool('MARTOR_ENABLE_ADMIN_CSS', False)
 
 # STORAGE CONFIGURATION
 # ------------------------------------------------------------------------------

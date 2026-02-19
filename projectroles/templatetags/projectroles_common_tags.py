@@ -3,6 +3,7 @@
 import mistune
 
 from importlib import import_module
+import logging
 from typing import Any, Optional, Union
 from uuid import UUID
 
@@ -30,6 +31,7 @@ from projectroles.utils import get_display_name as _get_display_name
 
 
 app_settings = AppSettingAPI()
+logger = logging.getLogger(__name__)
 plugin_api = PluginAPI()
 site = import_module(settings.SITE_PACKAGE)
 User = get_user_model()
@@ -471,6 +473,11 @@ def get_remote_icon(project: Project, request: HttpRequest) -> str:
 @register.simple_tag
 def render_markdown(raw_markdown: str) -> str:
     """Markdown field rendering helper"""
+    logger.warning(
+        'The `render_markdown` template tag is deprecated and will be removed '
+        'in version 1.5, please use the `safe_markdown` filter from the martor'
+        'package instead.'
+    )
     return mistune.html(raw_markdown)
 
 
