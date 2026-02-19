@@ -77,7 +77,6 @@ SOURCE_USER_FIRST_NAME = SOURCE_USER_NAME.split(' ')[0]
 SOURCE_USER_LAST_NAME = SOURCE_USER_NAME.split(' ')[1]
 SOURCE_USER_EMAIL = SOURCE_USER_USERNAME.split('@')[0] + '@example.com'
 SOURCE_USER_UUID = str(uuid.uuid4())
-SOURCE_USER_IS_ACTIVE = True
 
 SOURCE_USER2_DOMAIN = SOURCE_USER_DOMAIN
 SOURCE_USER2_USERNAME = 'source_user2@' + SOURCE_USER_DOMAIN
@@ -87,7 +86,6 @@ SOURCE_USER2_FIRST_NAME = SOURCE_USER2_NAME.split(' ')[0]
 SOURCE_USER2_LAST_NAME = SOURCE_USER2_NAME.split(' ')[1]
 SOURCE_USER2_EMAIL = SOURCE_USER2_USERNAME.split('@')[0] + '@example.com'
 SOURCE_USER2_UUID = str(uuid.uuid4())
-SOURCE_USER2_IS_ACTIVE = True
 
 SOURCE_USER3_DOMAIN = SOURCE_USER_DOMAIN
 SOURCE_USER3_USERNAME = 'source_user3@' + SOURCE_USER_DOMAIN
@@ -97,7 +95,6 @@ SOURCE_USER3_FIRST_NAME = SOURCE_USER3_NAME.split(' ')[0]
 SOURCE_USER3_LAST_NAME = SOURCE_USER3_NAME.split(' ')[1]
 SOURCE_USER3_EMAIL = SOURCE_USER3_USERNAME.split('@')[0] + '@example.com'
 SOURCE_USER3_UUID = str(uuid.uuid4())
-SOURCE_USER3_IS_ACTIVE = False
 
 SOURCE_USER4_DOMAIN = SOURCE_USER_DOMAIN
 SOURCE_USER4_USERNAME = 'source_user4@' + SOURCE_USER_DOMAIN
@@ -107,7 +104,6 @@ SOURCE_USER4_FIRST_NAME = SOURCE_USER4_NAME.split(' ')[0]
 SOURCE_USER4_LAST_NAME = SOURCE_USER4_NAME.split(' ')[1]
 SOURCE_USER4_EMAIL = SOURCE_USER4_USERNAME.split('@')[0] + '@example.com'
 SOURCE_USER4_UUID = str(uuid.uuid4())
-SOURCE_USER4_IS_ACTIVE = True
 
 SOURCE_CATEGORY_UUID = str(uuid.uuid4())
 SOURCE_CATEGORY_TITLE = 'TestCategory'
@@ -893,7 +889,6 @@ class SyncRemoteDataTestBase(
         self.admin_user.is_staff = True
         self.admin_user.is_superuser = True
         self.admin_user.save()
-        self.maxDiff = None
         # Init source site
         self.source_site = self.make_site(
             name=SOURCE_SITE_NAME,
@@ -916,7 +911,7 @@ class SyncRemoteDataTestBase(
                     'email': SOURCE_USER_EMAIL,
                     'additional_emails': [],
                     'groups': [SOURCE_USER_GROUP],
-                    'is_active': SOURCE_USER_IS_ACTIVE,
+                    'is_active': True,
                 },
             },
             'projects': {
@@ -1011,7 +1006,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
                     'email': SOURCE_USER2_EMAIL,
                     'additional_emails': [],
                     'groups': [SOURCE_USER2_GROUP],
-                    'is_active': SOURCE_USER2_IS_ACTIVE,
+                    'is_active': True,
                 },
                 SOURCE_USER3_UUID: {
                     'sodar_uuid': SOURCE_USER3_UUID,
@@ -1022,7 +1017,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
                     'email': SOURCE_USER3_EMAIL,
                     'additional_emails': [],
                     'groups': [SOURCE_USER3_GROUP],
-                    'is_active': SOURCE_USER3_IS_ACTIVE,
+                    'is_active': False,
                 },
                 SOURCE_USER4_UUID: {
                     'sodar_uuid': SOURCE_USER4_UUID,
@@ -1033,7 +1028,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
                     'email': SOURCE_USER4_EMAIL,
                     'additional_emails': [],
                     'groups': [SOURCE_USER4_GROUP],
-                    'is_active': SOURCE_USER4_IS_ACTIVE,
+                    'is_active': True,
                 },
             }
         )
