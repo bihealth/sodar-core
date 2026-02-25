@@ -102,9 +102,19 @@ class ProjectManager(models.Manager):
         :param project_type: Project type or None
         :return: QuerySet of Project objects
         """
-        projects = super().get_queryset().order_by('title')
+        objects = super().get_queryset().order_by('title')
+        if keywords and 'project' in keywords:
+            try:
+                project = Project.objects.get(sodar_uuid=keywords['project'])
+                objects = objects.filter(
+                    full_title__startswith=project.full_title
+                )
+            except Project.DoesNotExist:
+                return objects.none()
+            except ValidationError:
+                return objects.none()
         if project_type:
-            projects = projects.filter(type=project_type)
+            objects = objects.filter(type=project_type)
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(full_title__icontains=t), Q.OR)
@@ -115,7 +125,7 @@ class ProjectManager(models.Manager):
                 term_query.add(Q(sodar_uuid=t), Q.OR)
             except ValueError:
                 pass
-        return projects.filter(term_query).order_by('full_title')
+        return objects.filter(term_query).order_by('full_title')
 
 
 class Project(models.Model):

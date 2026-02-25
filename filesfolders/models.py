@@ -5,6 +5,7 @@ import uuid
 from typing import Optional
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, QuerySet
 
@@ -74,6 +75,16 @@ class FilesfoldersManager(models.Manager):
         :return: QuerySet of BaseFilesfolderClass objects
         """
         objects = super().get_queryset().order_by('name')
+        if keywords and 'project' in keywords:
+            try:
+                project = Project.objects.get(sodar_uuid=keywords['project'])
+                objects = objects.filter(
+                    project__full_title__startswith=project.full_title
+                )
+            except Project.DoesNotExist:
+                return objects.none()
+            except ValidationError:
+                return objects.none()
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(name__icontains=t), Q.OR)

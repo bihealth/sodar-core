@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any, Optional, Union
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Max, Q, QuerySet
 
@@ -80,6 +81,17 @@ class TimelineEventManager(models.Manager):
         :return: QuerySet of TimelineEvent objects
         """
         search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
+        objects = super().get_queryset()
+        if keywords and 'project' in keywords:
+            try:
+                project = Project.objects.get(sodar_uuid=keywords['project'])
+                objects = objects.filter(
+                    project__full_title__startswith=project.full_title
+                )
+            except Project.DoesNotExist:
+                return objects.none()
+            except ValidationError:
+                return objects.none()
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(event_name__icontains=t), Q.OR)
@@ -89,9 +101,7 @@ class TimelineEventManager(models.Manager):
             term_query.add(Q(user__name__icontains=t), Q.OR)
             term_query.add(Q(user__username__icontains=t), Q.OR)
         items = (
-            super()
-            .get_queryset()
-            .filter(term_query)
+            objects.filter(term_query)
             .annotate(timestamp=Max('status_changes__timestamp'))
             .order_by('-timestamp')
         )
