@@ -637,7 +637,7 @@ See the signature of ``search()`` in
     - You can specify supported types in the plugin's ``search_types`` list.
     - Examples: ``file``, ``sample``..
 ``keywords``
-    - Special search keywords, e.g. "exact".
+    - Special search keywords as key/value pairs.
     - **NOTE:** Currently not implemented.
 
 .. note::
