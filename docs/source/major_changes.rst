@@ -41,10 +41,12 @@ recommended to manipulate ``AppSetting`` objects directly.
 Plugin API search() Changes
 ---------------------------
 
-This release implemented support for the ``project:uuid`` keyword in the plugin
-``search()`` function. All SODAR Core apps are now expected to support this
-keyword as well, which should restrict the search to the project or category
-specified by the UUID.
+The ``search()`` function implemented by plugins already had the ``keywords``
+argument in its signature, but so far it was not used. This release implemented
+support for the ``project:uuid`` keyword. All SODAR Core apps are now expected
+to support this keyword as well, which, if present in the ``keywords``
+dictionary, should restrict the search to the project or category specified by
+the UUID.
 
 Previously Deprecated Features Removed
 --------------------------------------
