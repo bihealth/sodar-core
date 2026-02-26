@@ -465,6 +465,30 @@ class TestProjectSearchResultsView(
             len(response.context['app_results']),
             len([p for p in self.plugins if (p.search_enable)]),
         )
+        self.assertEqual(len(response.context['project_results']), 1)
+
+    def test_get_keywords_missing(self):
+        """Test GET with incomplete keyword missing the value"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'s': 'test project:'})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['test'])
+        self.assertEqual(response.context['search_keywords'], {'project': ''})
+        self.assertEqual(response.context['search_type'], None)
+        self.assertEqual(response.context['search_input'], 'test project:')
+        self.assertEqual(
+            len(response.context['app_results']),
+            len([p for p in self.plugins if (p.search_enable)]),
+        )
+        self.assertEqual(
+            [app['has_results'] for app in response.context['app_results']],
+            [False] * len([p for p in self.plugins if (p.search_enable)]),
+        )
+        self.assertEqual(len(response.context['project_results']), 0)
 
     def test_get_non_text_input(self):
         """Test GET with non-text input from standard search (should redirect)"""
@@ -643,7 +667,10 @@ class TestProjectSearchResultsView(
                 reverse('projectroles:search_advanced'),
                 data={
                     'm': 'testproject',
-                    'k': f'project:{self.project.sodar_uuid} project:{self.category.sodar_uuid}',
+                    'k': (
+                        f'project:{self.project.sodar_uuid} '
+                        f'project:{self.category.sodar_uuid}'
+                    ),
                 },
             )
         self.assertEqual(response.status_code, 200)
@@ -769,7 +796,7 @@ class TestProjectSearchResultsView(
         for app_result in response_project_new.context['app_results']:
             if app_result['plugin'] == 'timeline':
                 self.assertTrue(app_result['has_results'])
-        # Events are found when search is restricted to the parent category of `project_new`
+        # Events are found when search is restricted to the parent category
         self.assertEqual(response_category.status_code, 200)
         self.assertEqual(len(response_category.context['app_results']), 2)
         for app_result in response_category.context['app_results']:
