@@ -1,7 +1,7 @@
 """Model tests for the timeline app"""
 
 from typing import Any, Optional, Union
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
@@ -387,6 +387,38 @@ class TestTimelineEvent(
         self.user_owner.name = 'Owner User'
         self.user_owner.save()
         objects = TimelineEvent.objects.find(['Other User'])
+        self.assertEqual(len(objects), 0)
+
+    def test_find_event_with_keywords(self):
+        """Test TimelineEvent.find() with event name and keywords arg"""
+        other_project = self.make_project(
+            'Other Project', PROJECT_TYPE_PROJECT, None
+        )
+        other_event = self.make_event(
+            project=other_project,
+            app=APP_NAME_PR,
+            user=self.user_owner,
+            event_name='other_event',
+            description='xxx',
+            classified=False,
+            extra_data=EXTRA_DATA,
+        )
+        objects = TimelineEvent.objects.find(['test_event'], keywords={'project': self.project.sodar_uuid})
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], self.event)
+        objects = TimelineEvent.objects.find(['test_event'], keywords={'project': other_project.sodar_uuid})
+        self.assertEqual(len(objects), 0)
+        objects = TimelineEvent.objects.find(['other_event'], keywords={'project': self.project.sodar_uuid})
+        self.assertEqual(len(objects), 0)
+        objects = TimelineEvent.objects.find(['other_event'], keywords={'project': other_project.sodar_uuid})
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(objects[0], other_event)
+
+    def test_find_event_with_invalid_keywords(self):
+        """Test TimelineEvent.find() with invalid project keyword"""
+        objects = TimelineEvent.objects.find(['test_event'], keywords={'project': 'NOT_A_UUID'})
+        self.assertEqual(len(objects), 0)
+        objects = TimelineEvent.objects.find(['other_event'], keywords={'project': uuid4()})
         self.assertEqual(len(objects), 0)
 
 

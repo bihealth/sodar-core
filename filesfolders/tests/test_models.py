@@ -1,6 +1,7 @@
 """Tests for models in the filesfolders app"""
 
 import base64
+import uuid
 
 from typing import Optional
 
@@ -26,6 +27,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 PROJECT_NAME = 'Test Project'
+OTHER_PROJECT_NAME = 'Other Project'
+CATEGORY_NAME = 'Parent Category'
 SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
 
 
@@ -125,9 +128,13 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
     def setUp(self):
         # Make owner user
         self.user_owner = self.make_user('owner')
+        # Make category
+        self.category = self.make_project(
+            CATEGORY_NAME, PROJECT_TYPE_CATEGORY, None
+        )
         # Make project
         self.project = self.make_project(
-            PROJECT_NAME, PROJECT_TYPE_PROJECT, None
+            PROJECT_NAME, PROJECT_TYPE_PROJECT, self.category
         )
         # Make folder
         self.folder = self.make_folder(
@@ -136,6 +143,18 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             folder=None,
             owner=self.user_owner,
             description='description',
+        )
+        # Make other project
+        self.other_project = self.make_project(
+            OTHER_PROJECT_NAME, PROJECT_TYPE_PROJECT, self.category
+        )
+        # Make other folder
+        self.other_folder = self.make_folder(
+            name='directory',
+            project=self.other_project,
+            folder=None,
+            owner=self.user_owner,
+            description='xxx',
         )
 
     def test_initialization(self):
@@ -150,6 +169,17 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             'sodar_uuid': self.folder.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.folder), expected)
+        expected = {
+            'id': self.other_folder.pk,
+            'name': 'directory',
+            'project': self.other_project.pk,
+            'folder': None,
+            'owner': self.user_owner.pk,
+            'description': 'xxx',
+            'flag': None,
+            'sodar_uuid': self.other_folder.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.other_folder), expected)
 
     def test_find_name(self):
         """Test FilesfoldersManager find() with Folder name"""
@@ -165,13 +195,35 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
 
     def test_find_uuid(self):
         """Test FilesfoldersManager find() with Folder UUID"""
-        objects = Folder.objects.find(str(self.folder.sodar_uuid))
+        objects = Folder.objects.find([str(self.folder.sodar_uuid)])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.folder)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing Folder"""
         objects = Folder.objects.find(['Jaix1azu'])
+        self.assertEqual(len(objects), 0)
+
+    def test_find_with_keywords(self):
+        """Test FilesfoldersManager find() with project keyword"""
+        # Should work
+        objects = Folder.objects.find(['folder'], keywords={'project': self.project.sodar_uuid})
+        self.assertEqual(len(objects), 1)
+        # Should fail
+        objects = Folder.objects.find(['folder'], keywords={'project': self.other_project.sodar_uuid})
+        self.assertEqual(len(objects), 0)
+        # Should fail
+        objects = Folder.objects.find(['xxx'], keywords={'project': self.project.sodar_uuid})
+        self.assertEqual(len(objects), 0)
+        # Should work
+        objects = Folder.objects.find(['xxx'], keywords={'project': str(self.other_project.sodar_uuid)})
+        self.assertEqual(len(objects), 1)
+
+    def test_find_with_invalid_project_keyword(self):
+        """Test FilesfoldersManager find() with invalid project keyword"""
+        objects = Folder.objects.find(['folder'], keywords={'project': 'NOT_A_UUID'})
+        self.assertEqual(len(objects), 0)
+        objects = Folder.objects.find(['folder'], keywords={'project': str(uuid.uuid4())})
         self.assertEqual(len(objects), 0)
 
     def test__str__(self):
