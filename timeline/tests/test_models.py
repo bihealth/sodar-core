@@ -403,22 +403,34 @@ class TestTimelineEvent(
             classified=False,
             extra_data=EXTRA_DATA,
         )
-        objects = TimelineEvent.objects.find(['test_event'], keywords={'project': self.project.sodar_uuid})
+        objects = TimelineEvent.objects.find(
+            ['test_event'], keywords={'project': self.project.sodar_uuid}
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
-        objects = TimelineEvent.objects.find(['test_event'], keywords={'project': other_project.sodar_uuid})
+        objects = TimelineEvent.objects.find(
+            ['test_event'], keywords={'project': other_project.sodar_uuid}
+        )
         self.assertEqual(len(objects), 0)
-        objects = TimelineEvent.objects.find(['other_event'], keywords={'project': self.project.sodar_uuid})
+        objects = TimelineEvent.objects.find(
+            ['other_event'], keywords={'project': self.project.sodar_uuid}
+        )
         self.assertEqual(len(objects), 0)
-        objects = TimelineEvent.objects.find(['other_event'], keywords={'project': other_project.sodar_uuid})
+        objects = TimelineEvent.objects.find(
+            ['other_event'], keywords={'project': other_project.sodar_uuid}
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], other_event)
 
     def test_find_event_with_invalid_keywords(self):
         """Test TimelineEvent.find() with invalid project keyword"""
-        objects = TimelineEvent.objects.find(['test_event'], keywords={'project': 'NOT_A_UUID'})
+        objects = TimelineEvent.objects.find(
+            ['test_event'], keywords={'project': 'NOT_A_UUID'}
+        )
         self.assertEqual(len(objects), 0)
-        objects = TimelineEvent.objects.find(['other_event'], keywords={'project': uuid4()})
+        objects = TimelineEvent.objects.find(
+            ['other_event'], keywords={'project': uuid4()}
+        )
         self.assertEqual(len(objects), 0)
 
 

@@ -898,7 +898,9 @@ class ProjectSearchResultsView(
         # Get project results
         if not search_type or search_type == 'project':
             context['project_results'] = []
-            for p in Project.objects.find(search_terms, project_type='PROJECT', keywords=search_keywords):
+            for p in Project.objects.find(
+                search_terms, project_type='PROJECT', keywords=search_keywords
+            ):
                 if p.public_access or self.request.user.has_perm(
                     'projectroles.view_project', p
                 ):

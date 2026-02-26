@@ -452,20 +452,18 @@ class TestProjectSearchResultsView(
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
-        self.assertEqual(response.context['search_keywords'], {'project': str(self.project.sodar_uuid)})
+        self.assertEqual(
+            response.context['search_keywords'],
+            {'project': str(self.project.sodar_uuid)},
+        )
         self.assertEqual(response.context['search_type'], None)
-        self.assertEqual(response.context['search_input'], f'test project:{self.project.sodar_uuid}')
+        self.assertEqual(
+            response.context['search_input'],
+            f'test project:{self.project.sodar_uuid}',
+        )
         self.assertEqual(
             len(response.context['app_results']),
-            len(
-                [
-                    p
-                    for p in self.plugins
-                    if (
-                        p.search_enable
-                    )
-                ]
-            ),
+            len([p for p in self.plugins if (p.search_enable)]),
         )
 
     def test_get_non_text_input(self):
@@ -534,13 +532,19 @@ class TestProjectSearchResultsView(
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
-                data={'m': 'testproject\r\nxxx', 'k': f'project:{project_new.sodar_uuid}'},
+                data={
+                    'm': 'testproject\r\nxxx',
+                    'k': f'project:{project_new.sodar_uuid}',
+                },
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_terms'], ['testproject', 'xxx']
         )
-        self.assertEqual(response.context['search_keywords'], {'project': str(project_new.sodar_uuid)})
+        self.assertEqual(
+            response.context['search_keywords'],
+            {'project': str(project_new.sodar_uuid)},
+        )
         self.assertEqual(response.context['search_type'], None)
         # Only the project matching 'xxx' should be returned
         self.assertEqual(len(response.context['project_results']), 1)
@@ -561,13 +565,20 @@ class TestProjectSearchResultsView(
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
-                data={'m': 'testcategory\r\ntestproject\r\nxxx', 'k': f'type:project project:{self.category.sodar_uuid}'},
+                data={
+                    'm': 'testcategory\r\ntestproject\r\nxxx',
+                    'k': f'type:project project:{self.category.sodar_uuid}',
+                },
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            response.context['search_terms'], ['testcategory', 'testproject', 'xxx']
+            response.context['search_terms'],
+            ['testcategory', 'testproject', 'xxx'],
         )
-        self.assertEqual(response.context['search_keywords'], {'project': str(self.category.sodar_uuid)})
+        self.assertEqual(
+            response.context['search_keywords'],
+            {'project': str(self.category.sodar_uuid)},
+        )
         self.assertEqual(response.context['search_type'], 'project')
         self.assertEqual(len(response.context['project_results']), 2)
         # Get rid of the temporary project
@@ -630,12 +641,18 @@ class TestProjectSearchResultsView(
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
-                data={'m': 'testproject', 'k': f'project:{self.project.sodar_uuid} project:{self.category.sodar_uuid}'},
+                data={
+                    'm': 'testproject',
+                    'k': f'project:{self.project.sodar_uuid} project:{self.category.sodar_uuid}',
+                },
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['testproject'])
         # Only the last instance of the same keyword type is used
-        self.assertEqual(response.context['search_keywords'], {'project': str(self.category.sodar_uuid)})
+        self.assertEqual(
+            response.context['search_keywords'],
+            {'project': str(self.category.sodar_uuid)},
+        )
         self.assertEqual(len(response.context['project_results']), 1)
 
     def test_post_advanced_invalid_project_keyword(self):
@@ -647,7 +664,9 @@ class TestProjectSearchResultsView(
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['xxx'])
-        self.assertEqual(response.context['search_keywords'], {'project': 'not_a_uuid'})
+        self.assertEqual(
+            response.context['search_keywords'], {'project': 'not_a_uuid'}
+        )
         self.assertEqual(len(response.context['project_results']), 0)
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
@@ -720,13 +739,23 @@ class TestProjectSearchResultsView(
         )
         with self.login(self.user):
             response_project = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test_event project:{self.project.sodar_uuid}'})
+                reverse('projectroles:search')
+                + '?'
+                + urlencode(
+                    {'s': 'test_event project:{self.project.sodar_uuid}'}
+                )
             )
             response_project_new = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test_event project:{project_new}'})
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'s': 'test_event project:{project_new}'})
             )
             response_category = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test_event project:{self.category.sodar_uuid}'})
+                reverse('projectroles:search')
+                + '?'
+                + urlencode(
+                    {'s': 'test_event project:{self.category.sodar_uuid}'}
+                )
             )
         # Events are not found when search is restricted to `self.project`
         self.assertEqual(response_project.status_code, 200)

@@ -1403,7 +1403,11 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             (self.user_viewer, 1),
             (self.user_no_roles, 0),
         ]
-        url = self.url + '?' + urlencode({'s': f'test project:{self.project.sodar_uuid}'})
+        url = (
+            self.url
+            + '?'
+            + urlencode({'s': f'test project:{self.project.sodar_uuid}'})
+        )
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
     def test_search_type_nonexisting(self):

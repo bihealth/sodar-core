@@ -207,23 +207,35 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
     def test_find_with_keywords(self):
         """Test FilesfoldersManager find() with project keyword"""
         # Should work
-        objects = Folder.objects.find(['folder'], keywords={'project': self.project.sodar_uuid})
+        objects = Folder.objects.find(
+            ['folder'], keywords={'project': self.project.sodar_uuid}
+        )
         self.assertEqual(len(objects), 1)
         # Should fail
-        objects = Folder.objects.find(['folder'], keywords={'project': self.other_project.sodar_uuid})
+        objects = Folder.objects.find(
+            ['folder'], keywords={'project': self.other_project.sodar_uuid}
+        )
         self.assertEqual(len(objects), 0)
         # Should fail
-        objects = Folder.objects.find(['xxx'], keywords={'project': self.project.sodar_uuid})
+        objects = Folder.objects.find(
+            ['xxx'], keywords={'project': self.project.sodar_uuid}
+        )
         self.assertEqual(len(objects), 0)
         # Should work
-        objects = Folder.objects.find(['xxx'], keywords={'project': str(self.other_project.sodar_uuid)})
+        objects = Folder.objects.find(
+            ['xxx'], keywords={'project': str(self.other_project.sodar_uuid)}
+        )
         self.assertEqual(len(objects), 1)
 
     def test_find_with_invalid_project_keyword(self):
         """Test FilesfoldersManager find() with invalid project keyword"""
-        objects = Folder.objects.find(['folder'], keywords={'project': 'NOT_A_UUID'})
+        objects = Folder.objects.find(
+            ['folder'], keywords={'project': 'NOT_A_UUID'}
+        )
         self.assertEqual(len(objects), 0)
-        objects = Folder.objects.find(['folder'], keywords={'project': str(uuid.uuid4())})
+        objects = Folder.objects.find(
+            ['folder'], keywords={'project': str(uuid.uuid4())}
+        )
         self.assertEqual(len(objects), 0)
 
     def test__str__(self):
