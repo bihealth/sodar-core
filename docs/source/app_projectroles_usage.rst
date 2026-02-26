@@ -683,14 +683,17 @@ The basic search form is displayed in the top navigation bar if enabled. It
 takes one string as a search parameter, followed by optional ``keyword:value``
 pairs separated by white space.
 At this time, two keywords have been implemented:
-``type``
-- Used to limit the search to a certain data type as specified in app
-  plugins;
-``project``
-- Used to restrict the search to the specified project UUID and its
-  children.
 
-Thus, for example, if you want to search for folders containing the term ``diabetes`` under category ``44407b43-85f1-48a9-917c-0df21d9af347``, you could write::
+``type``
+    Used to limit the search to a certain data type as specified in app
+    plugins.
+``project``
+    Used to restrict the search to the specified project UUID and its
+    children.
+
+Thus, for example, if you want to search for folders containing the term
+``diabetes`` under category ``44407b43-85f1-48a9-917c-0df21d9af347``, you could
+write::
 
     diabetes type:folder project:44407b43-85f1-48a9-917c-0df21d9af347
 
