@@ -680,13 +680,24 @@ Search
 ======
 
 The basic search form is displayed in the top navigation bar if enabled. It
-takes one string as a search parameter, followed by optional keyword argument.
-At this time, the keyword of ``type`` has been implemented, used to limit the
-search to a certain data type as specified in app plugins.
+takes one string as a search parameter, followed by optional ``keyword:value``
+pairs separated by white space.
+At this time, two keywords have been implemented:
+``type``
+- Used to limit the search to a certain data type as specified in app
+  plugins;
+``project``
+- Used to restrict the search to the specified project UUID and its
+  children.
+
+Thus, for example, if you want to search for folders containing the term ``diabetes`` under category ``44407b43-85f1-48a9-917c-0df21d9af347``, you could write::
+
+    diabetes type:folder project:44407b43-85f1-48a9-917c-0df21d9af347
 
 Left to the basic search form is a link to the *Advanced Search* page, where you
 can currently search for items using multiple search terms combined with the OR
-operator.
+operator. In the *Advanced Search* page, keywords can be specified in a separate
+input element.
 
 Search results are split into results from different apps. For example, entering
 ``test`` will return all objects from all apps containing this string.

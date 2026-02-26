@@ -638,7 +638,8 @@ See the signature of ``search()`` in
     - Examples: ``file``, ``sample``..
 ``keywords``
     - Special search keywords as key/value pairs.
-    - **NOTE:** Currently not implemented.
+    - Currently the only supported keyword is ``project:uuid``, which is used
+      to limit the search to a specific project or category.
 
 .. note::
 

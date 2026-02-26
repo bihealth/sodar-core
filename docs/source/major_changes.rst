@@ -38,6 +38,14 @@ access the ``user_modifiable`` variable of an app setting, you should instead
 use ``AppSettingAPI.get_definition()``. Note that it is not generally
 recommended to manipulate ``AppSetting`` objects directly.
 
+Plugin API search() Changes
+---------------------------
+
+This release implemented support for the ``project:uuid`` keyword in the plugin
+``search()`` function. All SODAR Core apps are now expected to support this
+keyword as well, which should restrict the search to the project or category
+specified by the UUID.
+
 Previously Deprecated Features Removed
 --------------------------------------
 
