@@ -43,7 +43,7 @@ REST API View Changes
 ---------------------
 
 - Projectroles sync API
-    * Current version: ``2.1`` (breaking changes)
+    * Current version: ``2.1`` (non-breaking changes)
     * Allowed versions: ``1.0``, ``2.0``, ``2.1``
     * Add synchonization of ``is_active`` field for users
     * **NOTE:** If called with API version ``1.0`` or ``2.0``, user activity status will not be synced to target sites.
