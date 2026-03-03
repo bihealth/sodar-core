@@ -731,14 +731,14 @@ class ProjectSearchMixin:
         user: User,
         search_terms: list[str],
         search_type: Optional[str],
-        search_keywords: Optional[list[str]],
+        search_keywords: Optional[dict],
     ) -> list:
         """
         Return app plugin search results.
 
         :param search_terms: Search terms (list of strings)
         :param search_type: Optional type keyword for search (string or None)
-        :param search_keywords: Optional keywords (list of strings or None)
+        :param search_keywords: Optional keywords (dictionary or None)
         :return: List
         """
         plugins = plugin_api.get_active_plugins(plugin_type='project_app')
