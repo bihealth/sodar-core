@@ -15,19 +15,33 @@ Added
     - ``ServiceUnavailable`` API exception class for ``HTTP 503`` (#1513)
     - Optional user name display in user dropdown (#1853)
     - ``dropdown_user_name_display`` user app setting (#1853)
+    - ``HostConfirmDeleteView`` for delete views with host confirmation (#1550)
+    - ``transferroles`` management command (#1869)
+    - Remote sync user ``active`` status (#1882)
+- **Siteinfo**
+    - Client-side statistics retrieval (#1848)
 
 Changed
 -------
 
 - **General**
     - Replace ``unique_together`` options with ``UniqueConstraint`` (#1434)
+    - Upgrade to Django v5.2.12 (#1878)
+    - Upgrade general Python dependencies (#1878)
+    - Replace markupfield and pagedown with martor (#1861)
+    - General documentation updates (#1884)
+- **Projectroles**
+    - Make ``modify_assignment()`` ``request`` arg optional (#1875)
 
 Fixed
 -----
 
 - **General**
     - Example site Django admin user creation (#1876)
-
+- **Projectroles**
+    - ``batchupdateroles`` role promoting invalid role rank check (#1874)
+    - ``search()`` keyword type hints and docstrings (#1894)
+    - ``AppSettingAPI.get()`` ``PROJECT_USER`` scope exception raising (#1873)
 
 Removed
 -------

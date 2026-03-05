@@ -16,8 +16,15 @@ v1.4.0 (WIP)
 Release Highlights
 ==================
 
+- Add client-side siteinfo statistics retrieval
+- Add reusable host confirmation delete view
+- Add transferroles management command
 - Add optional user name display in user dropdown
+- Add user active status in remote sync
 - Add general purpose HTTP 503 API exception class
+- Replace Markupfield and Pagedown with Martor for Markdown rendering
+- Fix batchupdateroles role promoting
+- Fix app setting API get() exception handling with PROJECT_USER scope
 - Remove deprecated test base classes and mixins
 
 Breaking Changes
