@@ -89,6 +89,7 @@ class ProjectManager(models.Manager):
     def find(
         self,
         search_terms: list[str],
+        projects: QuerySet['Project'],
         keywords: Optional[dict] = None,
         project_type: Optional[str] = None,
     ) -> QuerySet:
@@ -98,21 +99,14 @@ class ProjectManager(models.Manager):
         Restrict to project type if project_type is set.
 
         :param search_terms: Search terms (list)
+        :param projects: QuerySet of projects where the terms are searched
         :param keywords: Optional search keywords as key/value pairs (dict)
         :param project_type: Project type or None
         :return: QuerySet of Project objects
         """
-        objects = super().get_queryset().order_by('title')
-        if keywords and 'project' in keywords:
-            try:
-                project = Project.objects.get(sodar_uuid=keywords['project'])
-                objects = objects.filter(
-                    full_title__startswith=project.full_title
-                )
-            except Project.DoesNotExist:
-                return objects.none()
-            except ValidationError:
-                return objects.none()
+        objects = (
+            super().get_queryset().filter(pk__in=projects).order_by('title')
+        )
         if project_type:
             objects = objects.filter(type=project_type)
         term_query = Q()

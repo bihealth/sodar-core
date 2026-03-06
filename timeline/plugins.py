@@ -3,9 +3,10 @@
 from typing import Optional
 
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS, Project
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     BackendPluginPoint,
@@ -113,6 +114,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         self,
         search_terms: list[str],
         user: User,
+        projects: QuerySet[Project],
         search_type: Optional[str] = None,
         keywords: Optional[dict] = None,
     ) -> list[PluginSearchResult]:
@@ -123,13 +125,16 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :param search_terms: Search terms to be joined with the OR operator
                              (list of strings)
         :param user: User object for user initiating the search
+        :param projects: QuerySet of projects where the terms are searched
         :param search_type: String
         :param keywords: Dictionary of key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
         items = []
         if not search_type or search_type == 'timeline':
-            events = list(TimelineEvent.objects.find(search_terms, keywords))
+            events = list(
+                TimelineEvent.objects.find(search_terms, projects, keywords)
+            )
             items = [e for e in events if self._check_permission(user, e)]
         ret = PluginSearchResult(
             category='all',

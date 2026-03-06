@@ -5,6 +5,7 @@ from uuid import UUID
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 from django.urls import reverse
 
 # Projectroles dependency
@@ -161,6 +162,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         self,
         search_terms: list[str],
         user: User,
+        projects: QuerySet[Project],
         search_type: Optional[str] = None,
         keywords: Optional[dict] = None,
     ) -> list[PluginSearchResult]:
@@ -171,25 +173,30 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :param search_terms: Search terms to be joined with the OR operator
                              (list of strings)
         :param user: User object for user initiating the search
+        :param projects: QuerySet of projects where the terms are searched
         :param search_type: String
         :param keywords: Dictionary of key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
         items = []
         if not search_type:
-            files = File.objects.find(search_terms, keywords)
-            folders = Folder.objects.find(search_terms, keywords)
-            links = HyperLink.objects.find(search_terms, keywords)
+            files = File.objects.find(search_terms, projects, keywords)
+            folders = Folder.objects.find(search_terms, projects, keywords)
+            links = HyperLink.objects.find(search_terms, projects, keywords)
             items = list(files) + list(folders) + list(links)
             items.sort(key=lambda x: x.name.lower())
         elif search_type == 'file':
-            items = File.objects.find(search_terms, keywords).order_by('name')
+            items = File.objects.find(
+                search_terms, projects, keywords
+            ).order_by('name')
         elif search_type == 'folder':
-            items = Folder.objects.find(search_terms, keywords).order_by('name')
+            items = Folder.objects.find(
+                search_terms, projects, keywords
+            ).order_by('name')
         elif search_type == 'link':
-            items = HyperLink.objects.find(search_terms, keywords).order_by(
-                'name'
-            )
+            items = HyperLink.objects.find(
+                search_terms, projects, keywords
+            ).order_by('name')
         if items:
             items = [
                 x

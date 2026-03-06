@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Any, Optional, Union
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Max, Q, QuerySet
 
@@ -71,27 +70,25 @@ class TimelineEventManager(models.Manager):
         ).order_by(order_by)
 
     def find(
-        self, search_terms: list[str], keywords: Optional[dict] = None
+        self,
+        search_terms: list[str],
+        projects: QuerySet[Project],
+        keywords: Optional[dict] = None,
     ) -> QuerySet:
         """
         Return events matching the query.
 
         :param search_terms: Search terms (list of strings)
+        :param projects: QuerySet of projects where the terms are searched
         :param keywords: Optional search keywords as key/value pairs (dict)
         :return: QuerySet of TimelineEvent objects
         """
         search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
-        objects = super().get_queryset()
-        if keywords and 'project' in keywords:
-            try:
-                project = Project.objects.get(sodar_uuid=keywords['project'])
-                objects = objects.filter(
-                    project__full_title__startswith=project.full_title
-                )
-            except Project.DoesNotExist:
-                return objects.none()
-            except ValidationError:
-                return objects.none()
+        objects = (
+            super()
+            .get_queryset()
+            .filter(Q(project__in=projects) | Q(project__isnull=True))
+        )
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(event_name__icontains=t), Q.OR)

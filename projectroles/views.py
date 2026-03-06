@@ -12,7 +12,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth.mixins import AccessMixin
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import transaction
 from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, Http404
@@ -730,6 +730,7 @@ class ProjectSearchMixin:
         self,
         user: User,
         search_terms: list[str],
+        projects: QuerySet[Project],
         search_type: Optional[str],
         search_keywords: Optional[dict],
     ) -> list:
@@ -760,6 +761,7 @@ class ProjectSearchMixin:
         for plugin in search_apps:
             search_kwargs = {
                 'user': user,
+                'projects': projects,
                 'search_type': search_type,
                 'search_terms': search_terms,
                 'keywords': search_keywords,
@@ -891,15 +893,32 @@ class ProjectSearchResultsView(
             else:
                 search_keywords[kw] = val
 
+        if 'project' in search_keywords:
+            try:
+                sodar_uuid = search_keywords['project']
+                parent = Project.objects.get(sodar_uuid=sodar_uuid)
+                search_projects = Project.objects.filter(
+                    full_title__startswith=parent.full_title
+                )
+            except ValidationError:
+                logger.debug("Invalid UUID provided to search")
+                search_projects = Project.objects.none()
+        else:
+            search_projects = Project.objects.all()
+
         context['search_input'] = search_input
         context['search_terms'] = search_terms
+        context['search_projects'] = search_projects
         context['search_type'] = search_type
         context['search_keywords'] = search_keywords
         # Get project results
         if not search_type or search_type == 'project':
             context['project_results'] = []
             for p in Project.objects.find(
-                search_terms, project_type='PROJECT', keywords=search_keywords
+                search_terms,
+                search_projects,
+                project_type='PROJECT',
+                keywords=search_keywords,
             ):
                 if p.public_access or self.request.user.has_perm(
                     'projectroles.view_project', p
@@ -915,7 +934,11 @@ class ProjectSearchResultsView(
                         context['project_results'].append(p)
         # Get app results
         context['app_results'] = self._get_app_results(
-            self.request.user, search_terms, search_type, search_keywords
+            self.request.user,
+            search_terms,
+            search_projects,
+            search_type,
+            search_keywords,
         )
         # List apps for which no results were found
         context['not_found'] = self._get_not_found(
