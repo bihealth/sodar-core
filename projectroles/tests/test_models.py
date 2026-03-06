@@ -1110,18 +1110,34 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
             parent=self.category_sub,
             description='AAA',
         )
+        self.all_projects_qs = Project.objects.all()
+        self.category_top_qs = Project.objects.filter(
+            full_title__startswith=self.category_top.full_title
+        )
+        self.category_sub_qs = Project.objects.filter(
+            full_title__startswith=self.category_sub.full_title
+        )
+        self.project_sub_qs = Project.objects.filter(
+            full_title__startswith=self.project_sub.full_title
+        )
 
     def test_find(self):
         """Test find()"""
-        result = Project.objects.find(['test'], project_type=None)
+        result = Project.objects.find(
+            ['test'], projects=self.all_projects_qs, project_type=None
+        )
         self.assertEqual(len(result), 4)
-        result = Project.objects.find(['ThisFails'], project_type=None)
+        result = Project.objects.find(
+            ['ThisFails'], projects=self.all_projects_qs, project_type=None
+        )
         self.assertEqual(len(result), 0)
 
     def test_find_project(self):
         """Test find() with project_type=PROJECT"""
         result = Project.objects.find(
-            ['test'], project_type=PROJECT_TYPE_PROJECT
+            ['test'],
+            projects=self.all_projects_qs,
+            project_type=PROJECT_TYPE_PROJECT,
         )
         self.assertEqual(len(result), 2)
         self.assertIn(self.project, result)
@@ -1130,7 +1146,9 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test_find_category(self):
         """Test find() with project_type=CATEGORY"""
         result = Project.objects.find(
-            ['test'], project_type=PROJECT_TYPE_CATEGORY
+            ['test'],
+            projects=self.all_projects_qs,
+            project_type=PROJECT_TYPE_CATEGORY,
         )
         self.assertEqual(len(result), 2)
         self.assertIn(self.category_top, result)
@@ -1138,76 +1156,97 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_find_multi_one(self):
         """Test find() with one valid multi-term"""
-        result = Project.objects.find(['project', 'ThisFails'])
+        result = Project.objects.find(
+            ['project', 'ThisFails'], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 2)
         self.assertIn(self.project, result)
         self.assertIn(self.project_sub, result)
 
     def test_find_multi_two(self):
         """Test find() with two valid multi-terms"""
-        result = Project.objects.find(['category', 'project'])
+        result = Project.objects.find(
+            ['category', 'project'], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 4)
 
     def test_find_description(self):
         """Test find() with search term for description"""
-        result = Project.objects.find(['xxx'])
+        result = Project.objects.find(['xxx'], projects=self.all_projects_qs)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
     def test_find_description_multi_one(self):
         """Test find() with one valid multi-search term for description"""
-        result = Project.objects.find(['xxx', 'ThisFails'])
+        result = Project.objects.find(
+            ['xxx', 'ThisFails'], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
     def test_find_description_multi_two(self):
         """Test find() with two valid multi-search terms for description"""
-        result = Project.objects.find(['xxx', 'yyy'])
+        result = Project.objects.find(
+            ['xxx', 'yyy'], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 2)
 
     def test_find_uuid(self):
         """Test find() with UUID"""
-        result = Project.objects.find([str(self.project.sodar_uuid)])
+        result = Project.objects.find(
+            [str(self.project.sodar_uuid)], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.project)
 
     def test_find_multi_fields(self):
         """Test find() with multiple terms for different fields"""
-        result = Project.objects.find(['project', 'xxx'])
+        result = Project.objects.find(
+            ['project', 'xxx'], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 3)
 
-    def test_find_with_project_keyword(self):
-        """Test find() with project uuid in keywords kwarg"""
+    def test_find_with_project_filtering(self):
+        """Test find() restricted to a category"""
         result = Project.objects.find(
-            ['Test'], keywords={'project': self.category_sub.sodar_uuid}
+            ['Test'],
+            projects=self.category_sub_qs,
+            keywords={'project': self.category_sub.sodar_uuid},
         )
         self.assertEqual(len(result), 2)
         self.assertIn(self.category_sub, result)
         self.assertIn(self.project_sub, result)
 
         result = Project.objects.find(
-            ['Test'], keywords={'project': self.category_top.sodar_uuid}
+            ['Test'],
+            projects=self.category_top_qs,
+            keywords={'project': self.category_top.sodar_uuid},
         )
         self.assertEqual(len(result), 4)
 
         result = Project.objects.find(
-            ['Test'], keywords={'project': self.project_sub.sodar_uuid}
+            ['Test'],
+            projects=self.project_sub_qs,
+            keywords={'project': self.project_sub.sodar_uuid},
         )
         self.assertEqual(list(result), [self.project_sub])
 
-    def test_find_with_empty_terms_and_project_keyword(self):
-        """Test find() with empty search terms and project in keywords kwarg"""
+    def test_find_with_empty_terms_and_project_filtering(self):
+        """Test find() with empty search terms and restricted to a category"""
         result = Project.objects.find(
-            [], keywords={'project': self.category_sub.sodar_uuid}
+            [],
+            projects=self.category_sub_qs,
+            keywords={'project': self.category_sub.sodar_uuid},
         )
         self.assertEqual(len(result), 2)
         self.assertIn(self.category_sub, result)
         self.assertIn(self.project_sub, result)
 
-    def test_find_with_type_and_project_keyword(self):
-        """Test find() with project_type and project in keywords"""
+    def test_find_with_type_and_project_filtering(self):
+        """Test find() with project_type and project filtering"""
         result = Project.objects.find(
             ['Test'],
+            projects=self.category_sub_qs,
             project_type=PROJECT_TYPE_CATEGORY,
             keywords={'project': self.category_sub.sodar_uuid},
         )
@@ -1215,6 +1254,7 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 
         result = Project.objects.find(
             ['XXX', 'YYY', 'ZZZ', 'AAA'],
+            projects=self.category_top_qs,
             project_type=PROJECT_TYPE_PROJECT,
             keywords={'project': self.category_top.sodar_uuid},
         )
@@ -1222,19 +1262,21 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.assertIn(self.project, result)
         self.assertIn(self.project_sub, result)
 
-    def test_find_with_wrong_uuid_project_keyword(self):
+    def test_find_with_wrong_uuid_project_filtering(self):
         """Test find() with a wrong project UUID in keywords kwarg"""
         result = Project.objects.find(
             ['Test'],
+            projects=Project.objects.none(),
             project_type=PROJECT_TYPE_CATEGORY,
             keywords={'project': uuid.uuid4()},
         )
         self.assertEqual(len(result), 0)
 
-    def test_find_with_invalid_uuid_project_keyword(self):
+    def test_find_with_invalid_uuid_project_filtering(self):
         """Test find() with an invalid project UUID in keywords kwarg"""
         result = Project.objects.find(
             ['Test'],
+            projects=Project.objects.none(),
             project_type=PROJECT_TYPE_CATEGORY,
             keywords={'project': 'NOT_A_UUID'},
         )

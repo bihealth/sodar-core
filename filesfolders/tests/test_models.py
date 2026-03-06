@@ -183,58 +183,80 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
 
     def test_find_name(self):
         """Test FilesfoldersManager find() with Folder name"""
-        objects = Folder.objects.find(['folder'])
+        objects = Folder.objects.find(['folder'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.folder)
 
     def test_find_desc(self):
         """Test FilesfoldersManager find() with Folder description"""
-        objects = Folder.objects.find(['description'])
+        objects = Folder.objects.find(['description'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.folder)
 
     def test_find_uuid(self):
         """Test FilesfoldersManager find() with Folder UUID"""
-        objects = Folder.objects.find([str(self.folder.sodar_uuid)])
+        objects = Folder.objects.find(
+            [str(self.folder.sodar_uuid)], Project.objects.all()
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.folder)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing Folder"""
-        objects = Folder.objects.find(['Jaix1azu'])
+        objects = Folder.objects.find(['Jaix1azu'], Project.objects.all())
         self.assertEqual(len(objects), 0)
 
     def test_find_with_keywords(self):
         """Test FilesfoldersManager find() with project keyword"""
         # Should work
         objects = Folder.objects.find(
-            ['folder'], keywords={'project': self.project.sodar_uuid}
+            ['folder'],
+            Project.objects.filter(
+                full_title__startswith=self.project.full_title
+            ),
+            keywords={'project': self.project.sodar_uuid},
         )
         self.assertEqual(len(objects), 1)
         # Should fail
         objects = Folder.objects.find(
-            ['folder'], keywords={'project': self.other_project.sodar_uuid}
+            ['folder'],
+            Project.objects.filter(
+                full_title__startswith=self.other_project.full_title
+            ),
+            keywords={'project': self.other_project.sodar_uuid},
         )
         self.assertEqual(len(objects), 0)
         # Should fail
         objects = Folder.objects.find(
-            ['xxx'], keywords={'project': self.project.sodar_uuid}
+            ['xxx'],
+            Project.objects.filter(
+                full_title__startswith=self.project.full_title
+            ),
+            keywords={'project': self.project.sodar_uuid},
         )
         self.assertEqual(len(objects), 0)
         # Should work
         objects = Folder.objects.find(
-            ['xxx'], keywords={'project': str(self.other_project.sodar_uuid)}
+            ['xxx'],
+            Project.objects.filter(
+                full_title__startswith=self.other_project.full_title
+            ),
+            keywords={'project': str(self.other_project.sodar_uuid)},
         )
         self.assertEqual(len(objects), 1)
 
     def test_find_with_invalid_project_keyword(self):
         """Test FilesfoldersManager find() with invalid project keyword"""
         objects = Folder.objects.find(
-            ['folder'], keywords={'project': 'NOT_A_UUID'}
+            ['folder'],
+            Project.objects.none(),
+            keywords={'project': 'NOT_A_UUID'},
         )
         self.assertEqual(len(objects), 0)
         objects = Folder.objects.find(
-            ['folder'], keywords={'project': str(uuid.uuid4())}
+            ['folder'],
+            Project.objects.none(),
+            keywords={'project': str(uuid.uuid4())},
         )
         self.assertEqual(len(objects), 0)
 
@@ -371,25 +393,27 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
 
     def test_find_name(self):
         """Test FilesfoldersManager find() with File name"""
-        objects = File.objects.find(['file.txt'])
+        objects = File.objects.find(['file.txt'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.file)
 
     def test_find_desc(self):
         """Test FilesfoldersManager find() with File description"""
-        objects = File.objects.find(['description'])
+        objects = File.objects.find(['description'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.file)
 
     def test_find_uuid(self):
         """Test FilesfoldersManager find() with File UUID"""
-        objects = File.objects.find(str(self.file.sodar_uuid))
+        objects = File.objects.find(
+            str(self.file.sodar_uuid), Project.objects.all()
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.file)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing File"""
-        objects = File.objects.find(['Jaix1azu'])
+        objects = File.objects.find(['Jaix1azu'], Project.objects.all())
         self.assertEqual(len(objects), 0)
 
     def test__str__(self):
@@ -481,23 +505,25 @@ class TestHyperLink(
 
     def test_find_name(self):
         """Test FilesfoldersManager find() with HyperLink name"""
-        objects = HyperLink.objects.find(['Link'])
+        objects = HyperLink.objects.find(['Link'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_desc(self):
         """Test FilesfoldersManager find() with HyperLink description"""
-        objects = HyperLink.objects.find(['description'])
+        objects = HyperLink.objects.find(['description'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_uuid(self):
         """Test FilesfoldersManager find() with HyperLink UUID"""
-        objects = HyperLink.objects.find(str(self.hyperlink.sodar_uuid))
+        objects = HyperLink.objects.find(
+            str(self.hyperlink.sodar_uuid), Project.objects.all()
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing HyperLink"""
-        objects = HyperLink.objects.find(['Jaix1azu'])
+        objects = HyperLink.objects.find(['Jaix1azu'], Project.objects.all())
         self.assertEqual(len(objects), 0)

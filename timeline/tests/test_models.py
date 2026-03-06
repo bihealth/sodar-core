@@ -341,44 +341,58 @@ class TestTimelineEvent(
 
     def test_find_event_name(self):
         """Test TimelineEvent.find() with event name"""
-        objects = TimelineEvent.objects.find(['test_event'])
+        objects = TimelineEvent.objects.find(
+            ['test_event'], Project.objects.all()
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
     def test_find_description(self):
         """Test TimelineEvent.find() with event description"""
-        objects = TimelineEvent.objects.find(['description'])
+        objects = TimelineEvent.objects.find(
+            ['description'], Project.objects.all()
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
     def test_find_object(self):
         """Test TimelineEvent.find() with object reference"""
-        objects = TimelineEvent.objects.find(['test_object_name'])
+        objects = TimelineEvent.objects.find(
+            ['test_object_name'], Project.objects.all()
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
     def test_find_fail(self):
         """Test TimelineEvent.find() with no matches"""
-        objects = TimelineEvent.objects.find(['asdfasdfafasdf'])
+        objects = TimelineEvent.objects.find(
+            ['asdfasdfafasdf'], Project.objects.all()
+        )
         self.assertEqual(len(objects), 0)
 
     def test_find_user_username(self):
         """Test TimelineEvent.find() with user username"""
-        objects = TimelineEvent.objects.find([self.user_owner.username])
+        objects = TimelineEvent.objects.find(
+            [self.user_owner.username], Project.objects.all()
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
     def test_find_user_username_not_found(self):
         """Test TimelineEvent.find() with user username not found"""
         user_new = self.make_user('user_new')
-        objects = TimelineEvent.objects.find([user_new.username])
+        objects = TimelineEvent.objects.find(
+            [user_new.username], Project.objects.all()
+        )
         self.assertEqual(len(objects), 0)
 
     def test_find_user_full_name(self):
         """Test TimelineEvent.find() with user full name"""
         self.user_owner.name = 'Owner User'
         self.user_owner.save()
-        objects = TimelineEvent.objects.find([self.user_owner.name])
+        objects = TimelineEvent.objects.find(
+            [self.user_owner.name], Project.objects.all()
+        )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
 
@@ -386,11 +400,13 @@ class TestTimelineEvent(
         """Test TimelineEvent.find() with user full name not found"""
         self.user_owner.name = 'Owner User'
         self.user_owner.save()
-        objects = TimelineEvent.objects.find(['Other User'])
+        objects = TimelineEvent.objects.find(
+            ['Other User'], Project.objects.all()
+        )
         self.assertEqual(len(objects), 0)
 
-    def test_find_event_with_keywords(self):
-        """Test TimelineEvent.find() with event name and keywords arg"""
+    def test_find_event_with_project_filtering(self):
+        """Test TimelineEvent.find() with event name and project_filtering"""
         other_project = self.make_project(
             'Other Project', PROJECT_TYPE_PROJECT, None
         )
@@ -404,20 +420,32 @@ class TestTimelineEvent(
             extra_data=EXTRA_DATA,
         )
         objects = TimelineEvent.objects.find(
-            ['test_event'], keywords={'project': self.project.sodar_uuid}
+            ['test_event'],
+            projects=Project.objects.filter(sodar_uuid=self.project.sodar_uuid),
+            keywords={'project': self.project.sodar_uuid},
         )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
         objects = TimelineEvent.objects.find(
-            ['test_event'], keywords={'project': other_project.sodar_uuid}
+            ['test_event'],
+            projects=Project.objects.filter(
+                sodar_uuid=other_project.sodar_uuid
+            ),
+            keywords={'project': other_project.sodar_uuid},
         )
         self.assertEqual(len(objects), 0)
         objects = TimelineEvent.objects.find(
-            ['other_event'], keywords={'project': self.project.sodar_uuid}
+            ['other_event'],
+            projects=Project.objects.filter(sodar_uuid=self.project.sodar_uuid),
+            keywords={'project': self.project.sodar_uuid},
         )
         self.assertEqual(len(objects), 0)
         objects = TimelineEvent.objects.find(
-            ['other_event'], keywords={'project': other_project.sodar_uuid}
+            ['other_event'],
+            projects=Project.objects.filter(
+                sodar_uuid=other_project.sodar_uuid
+            ),
+            keywords={'project': other_project.sodar_uuid},
         )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], other_event)
@@ -425,11 +453,15 @@ class TestTimelineEvent(
     def test_find_event_with_invalid_keywords(self):
         """Test TimelineEvent.find() with invalid project keyword"""
         objects = TimelineEvent.objects.find(
-            ['test_event'], keywords={'project': 'NOT_A_UUID'}
+            ['test_event'],
+            projects=Project.objects.none(),
+            keywords={'project': 'NOT_A_UUID'},
         )
         self.assertEqual(len(objects), 0)
         objects = TimelineEvent.objects.find(
-            ['other_event'], keywords={'project': uuid4()}
+            ['other_event'],
+            projects=Project.objects.none(),
+            keywords={'project': uuid4()},
         )
         self.assertEqual(len(objects), 0)
 
