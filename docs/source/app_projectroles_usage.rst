@@ -688,14 +688,21 @@ At this time, two keywords have been implemented:
     Used to limit the search to a certain data type as specified in app
     plugins.
 ``project``
-    Used to restrict the search to the specified project UUID and its
-    children.
+    Used to restrict the search to the given project (specified either by
+    UUID or by title) and its children.
 
 Thus, for example, if you want to search for folders containing the term
 ``diabetes`` under category ``44407b43-85f1-48a9-917c-0df21d9af347``, you could
 write::
 
     diabetes type:folder project:44407b43-85f1-48a9-917c-0df21d9af347
+
+Or, if you want to search for entities related to ``Covid-19`` within a category
+titled ``Infectious diseases``, you can do it like so (note that if the search
+term or the project title contain spaces, they need to be enclosed between
+quotes)::
+
+    covid-19 project:"infectious diseases"
 
 Left to the basic search form is a link to the *Advanced Search* page, where you
 can currently search for items using multiple search terms combined with the OR
