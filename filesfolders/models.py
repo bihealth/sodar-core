@@ -64,16 +64,25 @@ class FilesfoldersManager(models.Manager):
     """Manager for custom table-level BaseFilesfoldersClass queries"""
 
     def find(
-        self, search_terms: list[str], keywords: Optional[dict] = None
+        self,
+        search_terms: list[str],
+        projects: QuerySet[Project],
+        keywords: Optional[dict] = None,
     ) -> QuerySet:
         """
         Return files, folders and/or hyperlinks matching the query.
 
         :param search_terms: Search terms (list of strings)
+        :param projects: QuerySet of projects where the terms are searched
         :param keywords: Optional search keywords as key/value pairs (dict)
         :return: QuerySet of BaseFilesfolderClass objects
         """
-        objects = super().get_queryset().order_by('name')
+        objects = (
+            super()
+            .get_queryset()
+            .filter(Q(project__in=projects))
+            .order_by('name')
+        )
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(name__icontains=t), Q.OR)

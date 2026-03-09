@@ -1386,6 +1386,30 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         url = self.url + '?' + urlencode({'s': 'test type:project'})
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
+    def test_search_keywords(self):
+        """Test project search items visibility with project keyword"""
+        expected = [
+            (self.superuser, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_viewer_cat, 1),
+            (self.user_finder_cat, 1),
+            (self.user_owner, 1),
+            (self.user_delegate, 1),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
+            (self.user_viewer, 1),
+            (self.user_no_roles, 0),
+        ]
+        url = (
+            self.url
+            + '?'
+            + urlencode({'s': f'test project:{self.project.sodar_uuid}'})
+        )
+        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+
     def test_search_type_nonexisting(self):
         """Test project search items visibility with a nonexisting type"""
         expected = [

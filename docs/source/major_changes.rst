@@ -38,6 +38,19 @@ access the ``user_modifiable`` variable of an app setting, you should instead
 use ``AppSettingAPI.get_definition()``. Note that it is not generally
 recommended to manipulate ``AppSetting`` objects directly.
 
+Plugin API search() Changes
+---------------------------
+
+The signature of the ``search()`` function implemented by plugins has changed:
+it now takes an extra positional argument, ``projects``, which contains a
+``QuerySet`` of projects within which the search should be restricted. All
+SODAR Core apps are expected to honor this filtering criterion. Furthermore,
+the ``keywords`` dictionary (passed to ``search()`` as a kwarg) can contain
+a ``project:uuid`` key-value pair which identifies the user-provided project
+or category where the search is restricted. The projects are pre-fetched for
+efficiency and passed to ``search()`` through the ``projects`` argument, but
+apps can optionally also make use of the original UUID.
+
 Previously Deprecated Features Removed
 --------------------------------------
 

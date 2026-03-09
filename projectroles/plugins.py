@@ -428,6 +428,7 @@ class ProjectAppPluginPoint(PluginPoint):
         self,
         search_terms: list[str],
         user: User,
+        projects: QuerySet[Project],
         search_type: Optional[str] = None,
         keywords: Optional[dict] = None,
     ) -> list['PluginSearchResult']:
@@ -438,6 +439,7 @@ class ProjectAppPluginPoint(PluginPoint):
         :param search_terms: Search terms to be joined with the OR operator
                              (list of strings)
         :param user: User object for user initiating the search
+        :param projects: QuerySet of projects where the terms are searched
         :param search_type: String
         :param keywords: Dictionary of key/value pairs (optional)
         :return: List of PluginSearchResult objects
