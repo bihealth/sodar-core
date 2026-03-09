@@ -104,9 +104,7 @@ class ProjectManager(models.Manager):
         :param project_type: Project type or None
         :return: QuerySet of Project objects
         """
-        objects = (
-            super().get_queryset().filter(pk__in=projects).order_by('title')
-        )
+        objects = super().get_queryset().filter(pk__in=projects)
         if project_type:
             objects = objects.filter(type=project_type)
         term_query = Q()

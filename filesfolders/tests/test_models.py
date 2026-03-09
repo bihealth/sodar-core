@@ -27,7 +27,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 PROJECT_NAME = 'Test Project'
-OTHER_PROJECT_NAME = 'Other Project'
+PROJECT2_NAME = 'Other Project'
 CATEGORY_NAME = 'Parent Category'
 SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
 
@@ -145,13 +145,13 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             description='description',
         )
         # Make other project
-        self.other_project = self.make_project(
-            OTHER_PROJECT_NAME, PROJECT_TYPE_PROJECT, self.category
+        self.project2 = self.make_project(
+            PROJECT2_NAME, PROJECT_TYPE_PROJECT, self.category
         )
         # Make other folder
-        self.other_folder = self.make_folder(
+        self.folder2 = self.make_folder(
             name='directory',
-            project=self.other_project,
+            project=self.project2,
             folder=None,
             owner=self.user_owner,
             description='xxx',
@@ -169,17 +169,6 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             'sodar_uuid': self.folder.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.folder), expected)
-        expected = {
-            'id': self.other_folder.pk,
-            'name': 'directory',
-            'project': self.other_project.pk,
-            'folder': None,
-            'owner': self.user_owner.pk,
-            'description': 'xxx',
-            'flag': None,
-            'sodar_uuid': self.other_folder.sodar_uuid,
-        }
-        self.assertEqual(model_to_dict(self.other_folder), expected)
 
     def test_find_name(self):
         """Test FilesfoldersManager find() with Folder name"""
@@ -206,9 +195,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         objects = Folder.objects.find(['Jaix1azu'], Project.objects.all())
         self.assertEqual(len(objects), 0)
 
-    def test_find_with_keywords(self):
-        """Test FilesfoldersManager find() with project keyword"""
-        # Should work
+    def test_find_within_project(self):
+        """Test FilesfoldersManager find() within project"""
         objects = Folder.objects.find(
             ['folder'],
             Project.objects.filter(
@@ -217,16 +205,20 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             keywords={'project': self.project.sodar_uuid},
         )
         self.assertEqual(len(objects), 1)
-        # Should fail
+
+    def test_find_within_project2(self):
+        """Test FilesfoldersManager find() within project2"""
         objects = Folder.objects.find(
-            ['folder'],
+            ['xxx'],
             Project.objects.filter(
-                full_title__startswith=self.other_project.full_title
+                full_title__startswith=self.project2.full_title
             ),
-            keywords={'project': self.other_project.sodar_uuid},
+            keywords={'project': str(self.project2.sodar_uuid)},
         )
-        self.assertEqual(len(objects), 0)
-        # Should fail
+        self.assertEqual(len(objects), 1)
+
+    def test_find_within_project_no_results(self):
+        """Test FilesfoldersManager find() with keywords, no results expected"""
         objects = Folder.objects.find(
             ['xxx'],
             Project.objects.filter(
@@ -235,15 +227,17 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             keywords={'project': self.project.sodar_uuid},
         )
         self.assertEqual(len(objects), 0)
-        # Should work
+
+    def test_find_within_project2_no_results(self):
+        """Test FilesfoldersManager find() with keywords, no results expected"""
         objects = Folder.objects.find(
-            ['xxx'],
+            ['folder'],
             Project.objects.filter(
-                full_title__startswith=self.other_project.full_title
+                full_title__startswith=self.project2.full_title
             ),
-            keywords={'project': str(self.other_project.sodar_uuid)},
+            keywords={'project': self.project2.sodar_uuid},
         )
-        self.assertEqual(len(objects), 1)
+        self.assertEqual(len(objects), 0)
 
     def test_find_with_invalid_project_keyword(self):
         """Test FilesfoldersManager find() with invalid project keyword"""

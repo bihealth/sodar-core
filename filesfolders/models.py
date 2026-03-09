@@ -80,7 +80,7 @@ class FilesfoldersManager(models.Manager):
         objects = (
             super()
             .get_queryset()
-            .filter(Q(project__in=projects) | Q(project__isnull=True))
+            .filter(Q(project__in=projects))
             .order_by('name')
         )
         term_query = Q()

@@ -1206,8 +1206,17 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         )
         self.assertEqual(len(result), 3)
 
-    def test_find_with_project_filtering(self):
-        """Test find() restricted to a category"""
+    def test_find_within_category_top(self):
+        """Test find() restricted to a top category"""
+        result = Project.objects.find(
+            ['Test'],
+            projects=self.category_top_qs,
+            keywords={'project': self.category_top.sodar_uuid},
+        )
+        self.assertEqual(len(result), 4)
+
+    def test_find_within_category_sub(self):
+        """Test find() restricted to a sub category"""
         result = Project.objects.find(
             ['Test'],
             projects=self.category_sub_qs,
@@ -1217,13 +1226,8 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.assertIn(self.category_sub, result)
         self.assertIn(self.project_sub, result)
 
-        result = Project.objects.find(
-            ['Test'],
-            projects=self.category_top_qs,
-            keywords={'project': self.category_top.sodar_uuid},
-        )
-        self.assertEqual(len(result), 4)
-
+    def test_find_within_project_sub(self):
+        """Test find() restricted to a project"""
         result = Project.objects.find(
             ['Test'],
             projects=self.project_sub_qs,
@@ -1231,7 +1235,7 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         )
         self.assertEqual(list(result), [self.project_sub])
 
-    def test_find_with_empty_terms_and_project_filtering(self):
+    def test_find_empty_terms_with_project_filtering(self):
         """Test find() with empty search terms and restricted to a category"""
         result = Project.objects.find(
             [],
@@ -1242,7 +1246,7 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.assertIn(self.category_sub, result)
         self.assertIn(self.project_sub, result)
 
-    def test_find_with_type_and_project_filtering(self):
+    def test_find_type_category_within_category_sub(self):
         """Test find() with project_type and project filtering"""
         result = Project.objects.find(
             ['Test'],
@@ -1252,6 +1256,8 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         )
         self.assertEqual(list(result), [self.category_sub])
 
+    def test_find_type_category_within_category_top(self):
+        """Test find() with project_type and project filtering"""
         result = Project.objects.find(
             ['XXX', 'YYY', 'ZZZ', 'AAA'],
             projects=self.category_top_qs,

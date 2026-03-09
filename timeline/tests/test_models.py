@@ -161,6 +161,20 @@ class TestTimelineEvent(
             extra_data=EXTRA_DATA,
         )
 
+        self.project2 = self.make_project(
+            'Other Project', PROJECT_TYPE_PROJECT, None
+        )
+
+        self.event2 = self.make_event(
+            project=self.project2,
+            app=APP_NAME_PR,
+            user=self.user_owner,
+            event_name='other_event',
+            description='xxx',
+            classified=False,
+            extra_data=EXTRA_DATA,
+        )
+
     def test_initialization(self):
         """Test TimelineEvent initialization"""
         expected = {
@@ -375,8 +389,8 @@ class TestTimelineEvent(
         objects = TimelineEvent.objects.find(
             [self.user_owner.username], Project.objects.all()
         )
-        self.assertEqual(len(objects), 1)
-        self.assertEqual(objects[0], self.event)
+        self.assertEqual(len(objects), 2)
+        self.assertEqual(set(objects), set([self.event, self.event2]))
 
     def test_find_user_username_not_found(self):
         """Test TimelineEvent.find() with user username not found"""
@@ -393,8 +407,8 @@ class TestTimelineEvent(
         objects = TimelineEvent.objects.find(
             [self.user_owner.name], Project.objects.all()
         )
-        self.assertEqual(len(objects), 1)
-        self.assertEqual(objects[0], self.event)
+        self.assertEqual(len(objects), 2)
+        self.assertEqual(set(objects), set([self.event, self.event2]))
 
     def test_find_user_full_name_not_found(self):
         """Test TimelineEvent.find() with user full name not found"""
@@ -405,20 +419,8 @@ class TestTimelineEvent(
         )
         self.assertEqual(len(objects), 0)
 
-    def test_find_event_with_project_filtering(self):
-        """Test TimelineEvent.find() with event name and project_filtering"""
-        other_project = self.make_project(
-            'Other Project', PROJECT_TYPE_PROJECT, None
-        )
-        other_event = self.make_event(
-            project=other_project,
-            app=APP_NAME_PR,
-            user=self.user_owner,
-            event_name='other_event',
-            description='xxx',
-            classified=False,
-            extra_data=EXTRA_DATA,
-        )
+    def test_find_event_within_project(self):
+        """Test TimelineEvent.find() with event name within project"""
         objects = TimelineEvent.objects.find(
             ['test_event'],
             projects=Project.objects.filter(sodar_uuid=self.project.sodar_uuid),
@@ -426,31 +428,40 @@ class TestTimelineEvent(
         )
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.event)
+
+    def test_find_event_within_project2(self):
+        """Test find() with event name within project2 (should not work)"""
         objects = TimelineEvent.objects.find(
             ['test_event'],
             projects=Project.objects.filter(
-                sodar_uuid=other_project.sodar_uuid
+                sodar_uuid=self.project2.sodar_uuid
             ),
-            keywords={'project': other_project.sodar_uuid},
+            keywords={'project': self.project2.sodar_uuid},
         )
         self.assertEqual(len(objects), 0)
+
+    def test_find_event2_within_project(self):
+        """Test find() with event2 name within project (should not work)"""
         objects = TimelineEvent.objects.find(
             ['other_event'],
             projects=Project.objects.filter(sodar_uuid=self.project.sodar_uuid),
             keywords={'project': self.project.sodar_uuid},
         )
         self.assertEqual(len(objects), 0)
+
+    def test_find_event2_within_project2(self):
+        """Test TimelineEvent.find() with event2 name within project2"""
         objects = TimelineEvent.objects.find(
             ['other_event'],
             projects=Project.objects.filter(
-                sodar_uuid=other_project.sodar_uuid
+                sodar_uuid=self.project2.sodar_uuid
             ),
-            keywords={'project': other_project.sodar_uuid},
+            keywords={'project': self.project2.sodar_uuid},
         )
         self.assertEqual(len(objects), 1)
-        self.assertEqual(objects[0], other_event)
+        self.assertEqual(objects[0], self.event2)
 
-    def test_find_event_with_invalid_keywords(self):
+    def test_find_events_with_invalid_keywords(self):
         """Test TimelineEvent.find() with invalid project keyword"""
         objects = TimelineEvent.objects.find(
             ['test_event'],
