@@ -115,8 +115,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         search_terms: list[str],
         user: User,
         projects: QuerySet[Project],
-        search_type: Optional[str] = None,
-        keywords: Optional[dict] = None,
+        **kwargs: str,
     ) -> list[PluginSearchResult]:
         """
         Return app items based on one or more search terms, user, optional type
@@ -126,14 +125,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                              (list of strings)
         :param user: User object for user initiating the search
         :param projects: QuerySet of projects where the terms are searched
-        :param search_type: String
-        :param keywords: Dictionary of key/value pairs (optional)
+        :param kwargs: Search options as key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
         items = []
-        if not search_type or search_type == 'timeline':
+        if kwargs.get('type', 'timeline') == 'timeline':
             events = list(
-                TimelineEvent.objects.find(search_terms, projects, keywords)
+                TimelineEvent.objects.find(search_terms, projects, kwargs)
             )
             items = [e for e in events if self._check_permission(user, e)]
         ret = PluginSearchResult(
