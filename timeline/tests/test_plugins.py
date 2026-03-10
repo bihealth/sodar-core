@@ -302,7 +302,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
             SEARCH_TERMS,
             self.user,
             Project.objects.all(),
-            search_type='timeline',
+            type='timeline',
         )
         self.assertEqual(len(ret[0].items), 1)
 
@@ -313,7 +313,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
             SEARCH_TERMS,
             self.user,
             Project.objects.all(),
-            search_type='raTho0Oo',
+            type='raTho0Oo',
         )
         self.assertEqual(len(ret[0].items), 0)
 

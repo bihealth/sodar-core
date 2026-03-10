@@ -432,7 +432,6 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {})
-        self.assertEqual(response.context['search_type'], None)
         self.assertQuerySetEqual(
             response.context['search_projects'], Project.objects.all()
         )
@@ -473,11 +472,10 @@ class TestProjectSearchResultsView(
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
-        self.assertEqual(response.context['search_keywords'], {})
+        self.assertEqual(response.context['search_keywords'], {'type': 'file'})
         self.assertQuerySetEqual(
             response.context['search_projects'], Project.objects.all()
         )
-        self.assertEqual(response.context['search_type'], 'file')
         self.assertEqual(response.context['search_input'], 'test type:file')
         self.assertEqual(
             len(response.context['app_results']),
@@ -487,7 +485,7 @@ class TestProjectSearchResultsView(
                     for p in self.plugins
                     if (
                         p.search_enable
-                        and response.context['search_type'] in p.search_types
+                        and response.context['search_keywords'].get('type', None) in p.search_types
                     )
                 ]
             ),
@@ -660,7 +658,6 @@ class TestProjectSearchResultsView(
         self.assertQuerySetEqual(
             response.context['search_projects'], Project.objects.all()
         )
-        self.assertEqual(response.context['search_type'], None)
         self.assertEqual(response.context['search_input'], 'test project:')
 
     def test_get_non_text_input(self):
@@ -703,7 +700,6 @@ class TestProjectSearchResultsView(
             response.context['search_terms'], ['testproject', 'xxx']
         )
         self.assertEqual(response.context['search_keywords'], {})
-        self.assertEqual(response.context['search_type'], None)
         self.assertQuerySetEqual(
             response.context['search_projects'], Project.objects.all()
         )
@@ -727,7 +723,6 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': str(self.project2.sodar_uuid)},
         )
-        self.assertEqual(response.context['search_type'], None)
         # Only the project matching 'xxx' should be returned
         self.assertEqual(len(response.context['project_results']), 1)
 
@@ -748,7 +743,7 @@ class TestProjectSearchResultsView(
         )
         self.assertEqual(
             response.context['search_keywords'],
-            {'project': str(self.category.sodar_uuid)},
+            {'project': str(self.category.sodar_uuid), 'type': 'project'},
         )
         self.assertQuerySetEqual(
             response.context['search_projects'],
@@ -756,7 +751,6 @@ class TestProjectSearchResultsView(
                 full_title__startswith=self.category.full_title
             ),
         )
-        self.assertEqual(response.context['search_type'], 'project')
         self.assertEqual(len(response.context['project_results']), 2)
 
     def test_post_advanced_short_input(self):
