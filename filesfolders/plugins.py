@@ -184,9 +184,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             items = list(files) + list(folders) + list(links)
             items.sort(key=lambda x: x.name.lower())
         elif kwargs['type'] == 'file':
-            items = File.objects.find(
-                search_terms, projects, kwargs
-            ).order_by('name')
+            items = File.objects.find(search_terms, projects, kwargs).order_by(
+                'name'
+            )
         elif kwargs['type'] == 'folder':
             items = Folder.objects.find(
                 search_terms, projects, kwargs

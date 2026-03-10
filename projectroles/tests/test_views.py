@@ -485,7 +485,10 @@ class TestProjectSearchResultsView(
                     for p in self.plugins
                     if (
                         p.search_enable
-                        and response.context['search_keywords'].get('type', None) in p.search_types
+                        and response.context['search_keywords'].get(
+                            'type', None
+                        )
+                        in p.search_types
                     )
                 ]
             ),
