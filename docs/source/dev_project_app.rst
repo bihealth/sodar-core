@@ -634,18 +634,20 @@ See the signature of ``search()`` in
 ``projects``
     - ``QuerySet`` of Project objects within which the search should be
       restricted.
-``search_type``
+``**kwargs``
+    - Special search options as additional key-value pairs.
+
+Currently we support two keyword arguments:
+``project``
+    - Used to limit the search to a specific project or category.
+    - The full list of projects is pre-fetched for efficiency and passed in
+      the ``projects`` argument, but apps can optionally also make use of the
+      original user-provided UUID or title.
+``type``
     - The type of object to search for (string, optional).
     - Used to restrict search to specific types of objects.
     - You can specify supported types in the plugin's ``search_types`` list.
     - Examples: ``file``, ``sample``..
-``keywords``
-    - Special search keywords as a dictionary of ``key:value`` pairs.
-    - Currently the only supported keyword is ``project``, which is used to
-      limit the search to a specific project or category. The full list of
-      projects is pre-fetched for efficiency and passed in the ``projects``
-      argument, but apps can optionally also make use of the original
-      user-provided UUID or title.
 
 .. note::
 
