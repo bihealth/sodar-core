@@ -867,9 +867,9 @@ class ProjectSearchResultsView(
 
         if self.request.POST.get('m'):  # Multi search
             search_terms = [
-                t.strip()
+                t.strip().strip('\'"')
                 for t in self.request.POST['m'].strip().split('\r\n')
-                if len(t.strip()) >= 3
+                if len(t.strip().strip('\'"')) >= 3
             ]
             search_input = shlex.join(search_terms)
             if self.request.POST.get('k'):

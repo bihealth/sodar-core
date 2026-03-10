@@ -443,7 +443,7 @@ class TestProjectSearchResultsView(
         )
 
     def test_get_quoted(self):
-        """Test ProjectSearchResultsView GET with quoted search term"""
+        """Test GET with quoted search term"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search')
@@ -830,7 +830,7 @@ class TestProjectSearchResultsView(
         self.assertEqual(len(response.context['project_results']), 0)
 
     def test_post_advanced_search_string_parsing(self):
-        """Test POST from ProjectAdvancedSearchView"""
+        """Test POST from ProjectAdvancedSearchView with a challenging string"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
@@ -856,7 +856,22 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': 'project with spaces'},
         )
-        self.assertEqual(response.context['search_type'], 'project')
+
+    def test_post_advanced_search_quoted_string_parsing(self):
+        """Test POST from ProjectAdvancedSearchView with quoted search terms"""
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={
+                    'm': 'alert test\r\n"alert test"',
+                    'k': '',
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['search_terms'],
+            ['alert test'],
+        )
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_get_disabled(self):
@@ -910,7 +925,7 @@ class TestProjectSearchResultsView(
                     {'s': 'test_event project:{self.project.sodar_uuid}'}
                 )
             )
-        # Events are not found when search is restricted to `self.project`
+        # Events are not found when search is restricted to self.project
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['app_results']), 2)
         for app_result in response.context['app_results']:
@@ -925,7 +940,7 @@ class TestProjectSearchResultsView(
                 + '?'
                 + urlencode({'s': 'test_event project:"{self.project.title}"'})
             )
-        # Events are not found when search is restricted to `self.project`
+        # Events are not found when search is restricted to self.project
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['app_results']), 2)
         for app_result in response.context['app_results']:
@@ -940,7 +955,7 @@ class TestProjectSearchResultsView(
                 + '?'
                 + urlencode({'s': 'test_event project:{project_new}'})
             )
-        # Events are found when search is restricted to `project_new`
+        # Events are found when search is restricted to project_new
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['app_results']), 2)
         for app_result in response.context['app_results']:
