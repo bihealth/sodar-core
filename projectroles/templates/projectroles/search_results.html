@@ -10,8 +10,8 @@
     {% if search_terms|length == 1 %}
       for "{{ search_terms.0 }}"
     {% endif %}
-  {% if search_type %}
-    (type:{{ search_type }})
+  {% if 'type' in search_keywords %}
+    (type:{{ search_keywords.type }})
   {% endif %}
 {% endblock title %}
 
@@ -89,20 +89,20 @@
       {% else %}
         multiple terms
       {% endif %}
-      {% if search_type %}
-        (type:{{ search_type }})
+      {% if 'type' in search_keywords %}
+        (type:{{ search_keywords.type }})
       {% endif %}
     </div>
 </div>
 
 <div class="container-fluid sodar-page-container">
-  {% if search_type and search_type != 'project' and app_results|length == 0 %}
+  {% if 'type' in search_keywords and search_keywords.type != 'project' and app_results|length == 0 %}
     <div class="alert alert-danger" role="alert">
-      <strong>Error:</strong> Search type "{{ search_type }}" not recognized!
+      <strong>Error:</strong> Search type "{{ search_keywords.type }}" not recognized!
     </div>
   {% else %}
     {# Project Search #}
-    {% if not search_type or search_type == 'project' %}
+    {% if 'type' not in search_keywords or search_keywords.type == 'project' %}
       {% if project_results|length > 0 %}
         {% get_display_name 'PROJECT' title=True plural=True as projects_title %}
         {% include 'projectroles/_search_header.html' with search_title=projects_title result_count=project_results|length icon='mdi:cube' %}
