@@ -62,7 +62,7 @@ jobs:
         run: flake8 .
         if: ${{ matrix.python-version == '3.13' }}
       - name: Check formatting
-        run: make black arg=--check
+        run: ruff check
         if: ${{ matrix.python-version == '3.13' }}
       - name: Check docs building
         working-directory: ./docs

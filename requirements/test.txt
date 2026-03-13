@@ -20,7 +20,11 @@ tblib==3.2.0
 # BeautifulSoup for HTML testing
 beautifulsoup4==4.14.2
 
+# Ruff for linting and formatting (replaces black)
+ruff==0.15.6
+
 # Black for formatting
+# TODO: Remove once Ruff integration is done
 black==25.9.0
 
 # JQuery beautifying

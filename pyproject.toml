@@ -2,7 +2,22 @@
 requires = ["setuptools>=80.9.0", "versioneer[toml]==0.29"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
+[tool.ruff]
 line-length = 80
-skip-string-normalization = true
-exclude = ".git|.venv|.tox|build|env|src|docs|versioneer.py"
+indent-width = 4
+exclude = [
+    ".git",
+    ".venv",
+    ".tox",
+    "build",
+    "env",
+    "src",
+    "docs",
+    "versioneer.py",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
