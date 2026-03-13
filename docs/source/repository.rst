@@ -74,15 +74,15 @@ Relevant files in the root of the repository are detailed here.
 ``manage.py``
     The Django file for running management commands.
 ``pyproject.toml``
-    Settings for building and Black.
+    Settings for package building, Python linting and Python formatting.
 ``README.rst``
     The project readme.
 ``requirements.txt``
     Requirements file placed here for compatibility. Actual requirements can be
     found in ``requirements/*.txt``.
 ``setup.cfg``
-    Settings for Flake8, Pycodestyle and Versioneer. Generally these should not
-    be touched.
+    Settings for Versioneer and possible other components using legacy
+    configuration. Generally these should not be touched.
 ``setup.py``
     The setup file for the ``django-sodar-core`` package.
 ``versioneer.py``
