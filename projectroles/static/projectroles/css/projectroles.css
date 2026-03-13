@@ -192,8 +192,7 @@ h2.sodar-pr-content-title {
 }
 
 .sodar-pr-content-title-secondary {
-  margin-top: 6px;
-  margin-bottom: 12px;
+  margin-top: 5px;
 }
 
 .sodar-pr-content-title-secondary:first-line {
@@ -669,7 +668,7 @@ a.sodar-nav-link-last {
 .sodar-header-input-group button,
 .sodar-header-input-group a {
   height: 30px;
-  padding-top: 3px;
+  padding-top: 0.15em;
 }
 
 .sodar-header-input-group input.form-control {

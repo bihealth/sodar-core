@@ -80,10 +80,8 @@
 {% has_perm 'projectroles.create_project' request.user as can_create_project %}
 {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' default=5 as search_pagination %}
 
-<div class="row sodar-pr-content-title">
-  <h2 class="sodar-pr-content-title">
-    <i class="iconify" data-icon="mdi:search"></i> Search Results
-  </h2>
+<div class="row sodar-pr-content-title pt-2">
+  <h2 class="sodar-pr-content-title pt-auto">Search Results</h2>
     <div class="sodar-pr-content-title-secondary text-muted">
       for
       {% if search_terms|length <= 5 %}

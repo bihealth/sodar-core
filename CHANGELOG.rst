@@ -32,6 +32,7 @@ Changed
     - General documentation updates (#1884)
 - **Projectroles**
     - Make ``modify_assignment()`` ``request`` arg optional (#1875)
+    - Update default single sign-on button legend (#1883)
 
 Fixed
 -----
@@ -42,6 +43,9 @@ Fixed
     - ``batchupdateroles`` role promoting invalid role rank check (#1874)
     - ``search()`` keyword type hints and docstrings (#1894)
     - ``AppSettingAPI.get()`` ``PROJECT_USER`` scope exception raising (#1873)
+    - Header button padding rendering incorrectly in Firefox (#1885)
+    - Secondary content title CSS padding (#1904)
+    - Search results template inconsistent header size (#1904)
 
 Removed
 -------
