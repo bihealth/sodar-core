@@ -5,11 +5,13 @@ define USAGE=
 @echo -e "Usage:"
 @echo -e "\tmake black [arg=--<arg>]                 -- format Python with black (to be removed)"
 @echo -e "\tmake celery                              -- start celery worker"
+@echo -e "\tmake check                               -- check Python code linting and formatting"
 @echo -e "\tmake collectstatic                       -- run collectstatic"
-@echo -e "\tmake flake                               -- run flake8"
 @echo -e "\tmake js-beautify arg=<path>              -- run js-beautify on Javascript file(s)"
 @echo -e "\tmake manage_target arg=<target_command>  -- run management command on target site, arg is mandatory"
-@ecto -e "\tmake ruff                                -- format Python with ruff
+@echo -e "\tmake format                              -- format Python code"
+@echo -e "\tmake format-check                        -- check Python code formatting"
+@echo -e "\tmake lint                                -- lint Python code"
 @echo -e "\tmake serve                               -- start source server"
 @echo -e "\tmake serve_target                        -- start target server"
 @echo -e "\tmake spectacular                         -- generate OpenAPI schemas with drf-spectacular"
@@ -39,9 +41,10 @@ collectstatic:
 	$(MANAGE) collectstatic --no-input
 
 
-.PHONY: flake
-flake:
-	flake8 .
+.PHONY: check
+check:
+	ruff format --check
+	ruff check $(arg)
 
 
 .PHONY: js-beautify
@@ -60,9 +63,19 @@ else
 endif
 
 
-.PHONY: ruff
-ruff:
+.PHONY: format
+format:
 	ruff format $(arg)
+
+
+.PHONY: format-check
+format-check:
+	ruff format --check
+
+
+.PHONY: lint
+lint:
+	ruff check $(arg)
 
 
 .PHONY: serve

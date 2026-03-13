@@ -19,5 +19,25 @@ exclude = [
 [tool.ruff.format]
 quote-style = "single"
 
+[tool.ruff.lint]
+exclude = [
+    ".git",
+    "*/migrations/*",
+    "*/static/CACHE/*",
+    "docs",
+    "node_modules",
+    "config/*",
+    "versioneer.py",
+    "env/*",
+    ".venv",
+    "_version.py"
+]
+ignore = ["E203", "E266", "E501", "F405"]
+# TODO: Add B and Q, tweak ignores, fix warnings
+select = ["E", "F", "W"]
+
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 18

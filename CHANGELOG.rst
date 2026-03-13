@@ -30,6 +30,8 @@ Changed
     - Upgrade general Python dependencies (#1878)
     - Replace markupfield and pagedown with martor (#1861)
     - General documentation updates (#1884)
+    - Replace black and flake8 with ruff for linting and formatting (#1881)
+    - Update ``Makefile`` for new check, format and lint commands (#1881)
 - **Projectroles**
     - Make ``modify_assignment()`` ``request`` arg optional (#1875)
     - Update default single sign-on button legend (#1883)
@@ -50,6 +52,9 @@ Fixed
 Removed
 -------
 
+- **General**
+    - Black and flake8 dependencies (#1881)
+    - Legacy flake8 and pycodestyle configuration (#1881)
 - **Projectroles**
     - ``AppSetting.user_modifiable`` field (#1721)
     - Deprecated base test classes and mixins (#1830)
