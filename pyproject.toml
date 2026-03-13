@@ -20,4 +20,4 @@ exclude = [
 quote-style = "single"
 
 [tool.ruff.lint.flake8-quotes]
-docstring-quotes = "double"
+inline-quotes = "single"
