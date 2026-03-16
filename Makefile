@@ -42,9 +42,7 @@ collectstatic:
 
 
 .PHONY: check
-check:
-	ruff format --check
-	ruff check $(arg)
+check: format-check lint
 
 
 .PHONY: js-beautify
