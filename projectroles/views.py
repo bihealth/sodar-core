@@ -871,7 +871,6 @@ class ProjectSearchResultsView(
                 for t in self.request.POST['m'].strip().split('\r\n')
                 if len(t.strip().strip('\'"')) >= 3
             ]
-            search_input = shlex.join(search_terms)
             if self.request.POST.get('k'):
                 keyword_input = shlex.split(self.request.POST['k'])
         elif self.request.GET.get('s'):  # Single search

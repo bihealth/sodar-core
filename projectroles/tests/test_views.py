@@ -842,7 +842,7 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_input'],
-            '\'test with spaces\' testproject xxx',
+            '',
         )
         self.assertEqual(
             response.context['search_terms'],
