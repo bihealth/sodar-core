@@ -3,6 +3,8 @@
 import json
 import logging
 import re
+import shlex
+import uuid
 
 from ipaddress import ip_address, ip_network
 from typing import Any, Optional, Union
@@ -12,7 +14,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth.mixins import AccessMixin
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, Http404
@@ -865,24 +867,21 @@ class ProjectSearchResultsView(
 
         if self.request.POST.get('m'):  # Multi search
             search_terms = [
-                t.strip()
+                t.strip().strip('\'"')
                 for t in self.request.POST['m'].strip().split('\r\n')
-                if len(t.strip()) >= 3
+                if len(t.strip().strip('\'"')) >= 3
             ]
             if self.request.POST.get('k'):
-                keyword_input = self.request.POST['k'].strip().split(' ')
+                keyword_input = shlex.split(self.request.POST['k'])
         elif self.request.GET.get('s'):  # Single search
             search_input = self.request.GET.get('s').strip()
-            search_split = search_input.split(' ')
-            search_term = search_split[0].strip()
-            for i in range(1, len(search_split)):
-                s = search_split[i].strip()
-                if ':' in s:
-                    keyword_input.append(s)
-                elif s != '':
-                    search_term += ' ' + s.lower()
-            if search_term:
-                search_terms = [search_term]
+            search_split = shlex.split(search_input)
+            for token in search_split:
+                if ':' in token:
+                    keyword_input.append(token)
+                else:
+                    search_terms.append(token.lower())
+
         search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
         for s in keyword_input:
@@ -895,13 +894,17 @@ class ProjectSearchResultsView(
 
         if 'project' in search_keywords:
             try:
-                sodar_uuid = search_keywords['project']
+                sodar_uuid = uuid.UUID(search_keywords['project'])
                 parent = Project.objects.get(sodar_uuid=sodar_uuid)
                 search_projects = Project.objects.filter(
                     full_title__startswith=parent.full_title
                 )
-            except ValidationError:
-                logger.debug("Invalid UUID provided to search")
+            except ValueError:
+                # Not a valid UUID, trying to match project title directly
+                search_projects = Project.objects.filter(
+                    full_title__icontains=search_keywords['project']
+                )
+            except Project.DoesNotExist:
                 search_projects = Project.objects.none()
         else:
             search_projects = Project.objects.all()

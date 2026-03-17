@@ -45,11 +45,11 @@ The signature of the ``search()`` function implemented by plugins has changed:
 it now takes an extra positional argument, ``projects``, which contains a
 ``QuerySet`` of projects within which the search should be restricted. All
 SODAR Core apps are expected to honor this filtering criterion. Furthermore,
-the ``keywords`` dictionary (passed to ``search()`` as a kwarg) can contain
-a ``project:uuid`` key-value pair which identifies the user-provided project
-or category where the search is restricted. The projects are pre-fetched for
-efficiency and passed to ``search()`` through the ``projects`` argument, but
-apps can optionally also make use of the original UUID.
+the ``keywords`` dictionary (passed to ``search()`` as a kwarg) can contain a
+``project:<uuid or title>`` key-value pair which identifies the user-provided
+project or category where the search is restricted. The projects are pre-fetched
+for efficiency and passed to ``search()`` through the ``projects`` argument, but
+apps can optionally also make use of the original UUID or title.
 
 Previously Deprecated Features Removed
 --------------------------------------
