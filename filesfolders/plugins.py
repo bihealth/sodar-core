@@ -163,8 +163,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         search_terms: list[str],
         user: User,
         projects: QuerySet[Project],
-        search_type: Optional[str] = None,
-        keywords: Optional[dict] = None,
+        **kwargs: str,
     ) -> list[PluginSearchResult]:
         """
         Return app items based on one or more search terms, user, optional type
@@ -174,28 +173,27 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                              (list of strings)
         :param user: User object for user initiating the search
         :param projects: QuerySet of projects where the terms are searched
-        :param search_type: String
-        :param keywords: Dictionary of key/value pairs (optional)
+        :param kwargs: Search options as key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
         items = []
-        if not search_type:
-            files = File.objects.find(search_terms, projects, keywords)
-            folders = Folder.objects.find(search_terms, projects, keywords)
-            links = HyperLink.objects.find(search_terms, projects, keywords)
+        if 'type' not in kwargs:
+            files = File.objects.find(search_terms, projects, kwargs)
+            folders = Folder.objects.find(search_terms, projects, kwargs)
+            links = HyperLink.objects.find(search_terms, projects, kwargs)
             items = list(files) + list(folders) + list(links)
             items.sort(key=lambda x: x.name.lower())
-        elif search_type == 'file':
-            items = File.objects.find(
-                search_terms, projects, keywords
-            ).order_by('name')
-        elif search_type == 'folder':
+        elif kwargs['type'] == 'file':
+            items = File.objects.find(search_terms, projects, kwargs).order_by(
+                'name'
+            )
+        elif kwargs['type'] == 'folder':
             items = Folder.objects.find(
-                search_terms, projects, keywords
+                search_terms, projects, kwargs
             ).order_by('name')
-        elif search_type == 'link':
+        elif kwargs['type'] == 'link':
             items = HyperLink.objects.find(
-                search_terms, projects, keywords
+                search_terms, projects, kwargs
             ).order_by('name')
         if items:
             items = [

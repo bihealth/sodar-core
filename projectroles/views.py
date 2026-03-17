@@ -733,14 +733,14 @@ class ProjectSearchMixin:
         user: User,
         search_terms: list[str],
         projects: QuerySet[Project],
-        search_type: Optional[str],
         search_keywords: Optional[dict],
     ) -> list:
         """
         Return app plugin search results.
 
+        :param user: user who initiated the sarch
         :param search_terms: Search terms (list of strings)
-        :param search_type: Optional type keyword for search (string or None)
+        :param projects: All projects where the search should be performed
         :param search_keywords: Optional keywords (dictionary or None)
         :return: List
         """
@@ -756,15 +756,16 @@ class ProjectSearchMixin:
             ],
             key=lambda x: x.plugin_ordering,
         )
-        if search_type:
+        if search_keywords and 'type' in search_keywords:
             search_apps = [
-                p for p in search_apps if search_type in p.search_types
+                p
+                for p in search_apps
+                if search_keywords['type'] in p.search_types
             ]
         for plugin in search_apps:
             search_kwargs = {
                 'user': user,
                 'projects': projects,
-                'search_type': search_type,
                 'search_terms': search_terms,
                 'keywords': search_keywords,
             }
@@ -861,7 +862,6 @@ class ProjectSearchResultsView(
         context = super().get_context_data(**kwargs)
         search_input = ''
         search_terms = []
-        search_type = None
         keyword_input = []
         search_keywords = {}
 
@@ -887,10 +887,7 @@ class ProjectSearchResultsView(
         for s in keyword_input:
             kw = s.split(':')[0].lower().strip()
             val = s.split(':')[1].lower().strip()
-            if kw == 'type':
-                search_type = val
-            else:
-                search_keywords[kw] = val
+            search_keywords[kw] = val
 
         if 'project' in search_keywords:
             try:
@@ -912,10 +909,9 @@ class ProjectSearchResultsView(
         context['search_input'] = search_input
         context['search_terms'] = search_terms
         context['search_projects'] = search_projects
-        context['search_type'] = search_type
         context['search_keywords'] = search_keywords
         # Get project results
-        if not search_type or search_type == 'project':
+        if search_keywords.get('type', 'project') == 'project':
             context['project_results'] = []
             for p in Project.objects.find(
                 search_terms,
@@ -940,12 +936,11 @@ class ProjectSearchResultsView(
             self.request.user,
             search_terms,
             search_projects,
-            search_type,
             search_keywords,
         )
         # List apps for which no results were found
         context['not_found'] = self._get_not_found(
-            search_type,
+            search_keywords.get('type', None),
             context.get('project_results') or [],
             context['app_results'],
         )
