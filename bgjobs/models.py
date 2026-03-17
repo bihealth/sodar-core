@@ -96,7 +96,7 @@ class BackgroundJob(models.Model):
     )
 
     class Meta:
-        ordering = ["-date_created"]
+        ordering = ['-date_created']
 
     def get_human_readable_type(self) -> str:
         """

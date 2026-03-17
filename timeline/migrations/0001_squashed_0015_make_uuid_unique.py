@@ -32,7 +32,6 @@ def populate_object_ref_uuid(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     replaces = [
         ('timeline', '0001_initial'),
         ('timeline', '0002_projectevent_user'),

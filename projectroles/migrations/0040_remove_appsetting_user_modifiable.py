@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('projectroles', '0039_remove_project_public_guest_access'),
     ]

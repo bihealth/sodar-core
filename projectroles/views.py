@@ -2118,10 +2118,11 @@ class ProjectRoleView(
             [r.role.rank >= owner_rank for r in context['roles']]
         )
         if project.is_remote():
-            context[
-                'remote_roles_url'
-            ] = project.get_source_site().url + reverse(
-                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+            context['remote_roles_url'] = (
+                project.get_source_site().url
+                + reverse(
+                    'projectroles:roles', kwargs={'project': project.sodar_uuid}
+                )
             )
         context['finder_info'] = ROLE_FINDER_INFO.format(
             categories=get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
@@ -3827,8 +3828,7 @@ class RemoteSiteListView(
         if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
             messages.warning(
                 request,
-                '{} {} and nesting disabled, '
-                'remote {} sync disabled.'.format(
+                '{} {} and nesting disabled, remote {} sync disabled.'.format(
                     get_display_name(PROJECT_TYPE_PROJECT, title=True),
                     get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
                     get_display_name(PROJECT_TYPE_PROJECT),

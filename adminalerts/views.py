@@ -39,17 +39,17 @@ User = get_user_model()
 APP_NAME = 'adminalerts'
 DEFAULT_PAGINATION = 15
 EMAIL_SUBJECT = '{state} admin alert: {message}'
-EMAIL_BODY = r'''
+EMAIL_BODY = r"""
 An admin alert has been {action}d by {issuer}:
 
 {message}
-'''.lstrip()
-EMAIL_BODY_DESCRIPTION = r'''
+""".lstrip()
+EMAIL_BODY_DESCRIPTION = r"""
 Additional details:
 ----------------------------------------
 {description}
 ----------------------------------------
-'''
+"""
 
 
 # Listing/details views --------------------------------------------------------

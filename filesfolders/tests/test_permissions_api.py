@@ -659,7 +659,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIPermissionTestBase):
         self.post_data = {
             'name': 'New File',
             'flag': 'IMPORTANT',
-            'description': 'File\'s description',
+            'description': "File's description",
             'secret': 'foo',
             'public_url': True,
             'file': open(ZIP_PATH_NO_FILES, 'rb'),

@@ -397,7 +397,7 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test__repr__(self):
         """Test Project __repr__()"""
-        expected = "Project('TestProject', 'PROJECT', " "'TestCategory')"
+        expected = "Project('TestProject', 'PROJECT', 'TestCategory')"
         self.assertEqual(repr(self.project), expected)
 
     def test_validate_parent(self):
@@ -1014,7 +1014,7 @@ class TestProjectInvite(
     def test__str__(self):
         """Test ProjectInvite __str__()"""
         expected = (
-            'TestProject: test@example.com (project contributor) ' '[ACTIVE]'
+            'TestProject: test@example.com (project contributor) [ACTIVE]'
         )
         self.assertEqual(str(self.invite), expected)
 
@@ -1989,8 +1989,8 @@ class TestSODARUserAdditionalEmail(SODARUserAdditionalEmailMixin, TestCase):
 
     def test__repr__(self):
         """Test SODARUserAdditionalEmail __repr__()"""
-        expected = 'SODARUserAdditionalEmail(\'{}\')'.format(
-            '\', \''.join(
+        expected = "SODARUserAdditionalEmail('{}')".format(
+            "', '".join(
                 [
                     self.email.user.username,
                     self.email.email,

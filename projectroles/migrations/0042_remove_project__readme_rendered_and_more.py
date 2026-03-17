@@ -5,7 +5,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('projectroles', '0041_alter_appsetting_unique_together_and_more'),
     ]

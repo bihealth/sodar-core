@@ -4,17 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("projectroles", "0001_squashed_0032_alter_appsetting_value"),
+        ('projectroles', '0001_squashed_0032_alter_appsetting_value'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="sodaruseradditionalemail",
-            name="secret",
+            model_name='sodaruseradditionalemail',
+            name='secret',
             field=models.CharField(
-                help_text="Secret token for email verification",
+                help_text='Secret token for email verification',
                 max_length=255,
                 null=True,
                 unique=True,

@@ -641,14 +641,14 @@ class SiteAppPluginPoint(PluginPoint):
         :param user: User object (optional)
         :return: List of dicts or and empty list if no messages
         """
-        '''
+        """
         Example of valid return data:
         return [{
             'content': 'Message content in here, can contain html',
             'color': 'info',        # Corresponds to bg-* in Bootstrap
             'dismissable': True     # False for non-dismissable
         }]
-        '''
+        """
         return []
 
     def get_object(self, model: type[Model], uuid: Union[str, UUID]) -> Any:

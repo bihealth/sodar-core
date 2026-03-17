@@ -28,7 +28,6 @@ def update_ip_allow_list(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('projectroles', '0037_populate_public_access'),
     ]

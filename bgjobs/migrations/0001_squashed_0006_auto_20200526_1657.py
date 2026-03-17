@@ -7,7 +7,6 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     replaces = [
         ('bgjobs', '0001_initial'),
         ('bgjobs', '0002_backgroundjoblogentry'),
@@ -132,7 +131,7 @@ class Migration(migrations.Migration):
                         max_length=50,
                     ),
                 ),
-                ('message', models.TextField(help_text='Log level\'s message')),
+                ('message', models.TextField(help_text="Log level's message")),
                 (
                     'job',
                     models.ForeignKey(

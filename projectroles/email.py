@@ -49,31 +49,31 @@ EMAIL_RE = re.compile(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)')
 # Generic Elements -------------------------------------------------------------
 
 
-MESSAGE_HEADER = r'''
+MESSAGE_HEADER = r"""
 Dear {recipient},
 
 This email has been automatically sent to you by {site_title}.
 
-'''.lstrip()
+""".lstrip()
 
-MESSAGE_HEADER_NO_RECIPIENT = r'''
+MESSAGE_HEADER_NO_RECIPIENT = r"""
 This email has been automatically sent to you by {site_title}.
-'''.lstrip()
+""".lstrip()
 
-NO_REPLY_NOTE = r'''
+NO_REPLY_NOTE = r"""
 Please do not reply to this email.
-'''
+"""
 
-MESSAGE_FOOTER = r'''
+MESSAGE_FOOTER = r"""
 
 For support and reporting issues regarding {site_title},
 contact {admin_name} ({admin_email}).
-'''
+"""
 
-SETTINGS_LINK = r'''
+SETTINGS_LINK = r"""
 You can manage receiving of automated emails in your user settings:
 {url}
-'''
+"""
 
 
 # Role Change Template ---------------------------------------------------------
@@ -84,33 +84,33 @@ SUBJECT_ROLE_UPDATE = 'Membership changed in {project_label} "{project}"'
 SUBJECT_ROLE_DELETE = 'Membership removed from {project_label} "{project}"'
 SUBJECT_ROLE_LEAVE = 'Member {user_name} left {project_label} "{project}"'
 
-MESSAGE_ROLE_CREATE = r'''
+MESSAGE_ROLE_CREATE = r"""
 {issuer} has granted you the membership
 in {project_label} "{project}" with the role of "{role}".
 
 To access the {project_label} in {site_title}, please click on
 the following link:
 {project_url}
-'''.lstrip()
+""".lstrip()
 
-MESSAGE_ROLE_UPDATE = r'''
+MESSAGE_ROLE_UPDATE = r"""
 {issuer} has changed your membership
 role in {project_label} "{project}" into "{role}".
 
 To access the {project_label} in {site_title}, please click on
 the following link:
 {project_url}
-'''.lstrip()
+""".lstrip()
 
-MESSAGE_ROLE_DELETE = r'''
+MESSAGE_ROLE_DELETE = r"""
 {issuer} has removed your membership from {project_label} "{project}".
-'''.lstrip()
+""".lstrip()
 
-MESSAGE_ROLE_LEAVE = r'''
+MESSAGE_ROLE_LEAVE = r"""
 Member {user_name} has left the {project_label} "{project}".
 For them to regain access, it has to be granted again by {project_label}
 owner or delegate.
-'''.lstrip()
+""".lstrip()
 
 
 # Invite Template --------------------------------------------------------------
@@ -118,7 +118,7 @@ owner or delegate.
 
 SUBJECT_INVITE = 'Invitation for {project_label} "{project}"'
 
-MESSAGE_INVITE_BODY = r'''
+MESSAGE_INVITE_BODY = r"""
 You have been invited by {issuer}
 to share data in the {project_label} "{project}" with the
 role of "{role}".
@@ -132,14 +132,14 @@ accepting the invitation, please access the project with its URL or
 through the project list on the site's "Home" page.
 
 This invitation will expire on {date_expire}.
-'''
+"""
 
-MESSAGE_INVITE_ISSUER = r'''
+MESSAGE_INVITE_ISSUER = r"""
 Message from the sender of this invitation:
 ----------------------------------------
 {}
 ----------------------------------------
-'''
+"""
 
 
 # Invite Acceptance Notification Template --------------------------------------
@@ -147,11 +147,11 @@ Message from the sender of this invitation:
 
 SUBJECT_ACCEPT = 'Invitation accepted by {user} for {project_label} "{project}"'
 
-MESSAGE_ACCEPT_BODY = r'''
+MESSAGE_ACCEPT_BODY = r"""
 Invitation sent by you for role of "{role}" in {project_label} "{project}"
 has been accepted by {user}.
 They have been granted access in the {project_label} accordingly.
-'''.lstrip()
+""".lstrip()
 
 
 # Invite Expiry Notification Template ------------------------------------------
@@ -159,7 +159,7 @@ They have been granted access in the {project_label} accordingly.
 
 SUBJECT_EXPIRY = 'Expired invitation used by {user_name} in "{project}"'
 
-MESSAGE_EXPIRY_BODY = r'''
+MESSAGE_EXPIRY_BODY = r"""
 Invitation sent by you for role of "{role}" in {project_label} "{project}"
 was attempted to be used by {user_name} ({user_email}).
 
@@ -168,7 +168,7 @@ access was not granted to the user.
 
 Please add the role manually with "Add Member", if you still wish
 to grant the user access to the {project_label}.
-'''.lstrip()
+""".lstrip()
 
 
 # Project/Category Creation Notification Template ------------------------------
@@ -176,7 +176,7 @@ to grant the user access to the {project_label}.
 
 SUBJECT_PROJECT_CREATE = '{project_type} "{project}" created by {user}'
 
-MESSAGE_PROJECT_CREATE_BODY = r'''
+MESSAGE_PROJECT_CREATE_BODY = r"""
 {user} has created a new {project_type}
 under "{category}".
 You are receiving this email because you are the owner of the parent category.
@@ -187,7 +187,7 @@ Owner: {owner}
 
 You can access the project at the following link:
 {project_url}
-'''.lstrip()
+""".lstrip()
 
 
 # Project/Category Moving Notification Template ------------------------------
@@ -195,7 +195,7 @@ You can access the project at the following link:
 
 SUBJECT_PROJECT_MOVE = '{project_type} "{project}" moved by {user}'
 
-MESSAGE_PROJECT_MOVE_BODY = r'''
+MESSAGE_PROJECT_MOVE_BODY = r"""
 {user} has moved the {project_type} "{project}"
 under "{category}".
 You are receiving this email because you are the owner of the parent category.
@@ -206,7 +206,7 @@ Owner: {owner}
 
 You can access the project at the following link:
 {project_url}
-'''.lstrip()
+""".lstrip()
 
 
 # Project Archiving Template ---------------------------------------------------
@@ -214,7 +214,7 @@ You can access the project at the following link:
 
 SUBJECT_PROJECT_ARCHIVE = '{project_label_title} "{project}" archived by {user}'
 
-MESSAGE_PROJECT_ARCHIVE = r'''
+MESSAGE_PROJECT_ARCHIVE = r"""
 {user} has archived "{project}".
 The {project_label} is now read-only. Modifying data in
 {project_label} apps has been disabled. Existing project data
@@ -222,7 +222,7 @@ can still be accessed and user roles can be modified.
 
 You can access the archived {project_label} at the following link:
 {project_url}
-'''.lstrip()
+""".lstrip()
 
 
 # Project Unarchiving Template -------------------------------------------------
@@ -232,25 +232,25 @@ SUBJECT_PROJECT_UNARCHIVE = (
     '{project_label_title} "{project}" unarchived by {user}'
 )
 
-MESSAGE_PROJECT_UNARCHIVE = r'''
+MESSAGE_PROJECT_UNARCHIVE = r"""
 {user} has unarchived "{project}".
 {project_label_title} data can now be modified and write
 access for users has been restored.
 
 You can access the {project_label} at the following link:
 {project_url}
-'''.lstrip()
+""".lstrip()
 
 
 # Project Deletion Template ----------------------------------------------------
 
 SUBJECT_PROJECT_DELETE = '{project_label_title} "{project}" deleted by {user}'
 
-MESSAGE_PROJECT_DELETE = r'''
+MESSAGE_PROJECT_DELETE = r"""
 {user} has deleted "{project}".
 The {project_label} has been removed from the site and can no
 longer be accessed.
-'''.lstrip()
+""".lstrip()
 
 
 # Email composing helpers ------------------------------------------------------

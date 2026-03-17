@@ -16,13 +16,18 @@ v1.4.0 (WIP)
 Release Highlights
 ==================
 
+- Add project limiting to search via UUID or partial title
 - Add client-side siteinfo statistics retrieval
 - Add reusable host confirmation delete view
 - Add transferroles management command
 - Add optional user name display in user dropdown
 - Add user active status in remote sync
+- Add plugin search API pre-filtered project queryset
 - Add general purpose HTTP 503 API exception class
+- Update plugin search API args for project queryset and simplified keywords
 - Replace Markupfield and Pagedown with Martor for Markdown rendering
+- Replace Black and Flake8 with Ruff for linting and formatting
+- Update Makefile for check, format and lint commands
 - Fix batchupdateroles role promoting
 - Fix app setting API get() exception handling with PROJECT_USER scope
 - Remove deprecated test base classes and mixins

@@ -172,7 +172,7 @@ class AppLinkAPI:
                 if self._is_app_visible(plugin, project, user):
                     ret.append(
                         {
-                            'name': "app-plugin-" + plugin.name,
+                            'name': 'app-plugin-' + plugin.name,
                             'url': reverse(
                                 plugin.entry_point_url_id,
                                 kwargs={'project': project.sodar_uuid},

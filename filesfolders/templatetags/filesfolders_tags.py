@@ -63,8 +63,8 @@ def get_file_icon(file: File) -> str:
         ret = 'archive-outline'
     elif (
         'excel' in mt
-        or mt == 'application/vnd.openxmlformats-'
-        'officedocument.spreadsheetml.sheet'
+        or mt
+        == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ):
         ret = 'file-excel-outline'
     elif 'image/' in mt:
@@ -82,8 +82,9 @@ def get_flag(flag_name: str, tooltip: bool = True) -> str:
     tip_str = ''
     if tooltip:
         tip_str = (
-            'title="{}" data-toggle="tooltip" '
-            'data-placement="top"'.format(f['label'])
+            'title="{}" data-toggle="tooltip" data-placement="top"'.format(
+                f['label']
+            )
         )
     return (
         '<i class="iconify text-{} sodar-ff-flag-icon" data-icon="{}" {}>'

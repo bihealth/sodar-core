@@ -210,7 +210,6 @@ def populate_additional_email_model(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     replaces = [
         ('projectroles', '0001_initial'),
         ('projectroles', '0002_auto_20180411_1758'),

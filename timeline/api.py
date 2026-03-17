@@ -336,7 +336,7 @@ class TimelineAPI:
         :return: String (contains HTML)
         """
         desc = event.description
-        ref_ids = re.findall('{\'?(.*?)\'?}', desc)
+        ref_ids = re.findall("{'?(.*?)'?}", desc)
         if len(ref_ids) == 0:
             return event.description
         refs = {}

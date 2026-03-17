@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('filesfolders', '0001_squashed_0005_alter_foreignkey_fields'),
         ('projectroles', '0041_alter_appsetting_unique_together_and_more'),

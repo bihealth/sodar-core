@@ -102,7 +102,7 @@ class TestSiteInfoUI(UITestBase):
 
         self.login_and_redirect(self.superuser, self.url)
         parent_card_element = (
-            '//div[@id="nav-general"]' '//div[@data-plugin-name="adminalerts"]'
+            '//div[@id="nav-general"]//div[@data-plugin-name="adminalerts"]'
         )
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.visibility_of_element_located((By.XPATH, parent_card_element))

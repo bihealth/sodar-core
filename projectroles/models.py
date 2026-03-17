@@ -70,7 +70,7 @@ PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
 CAT_DELIMITER_ERROR_MSG = f'String "{CAT_DELIMITER}" is not allowed in title'
 ROLE_PROJECT_TYPE_ERROR_MSG = (
-    'Invalid project type "{project_type}" for ' 'role "{role_name}"'
+    'Invalid project type "{project_type}" for role "{role_name}"'
 )
 CAT_PUBLIC_ACCESS_MSG = 'Public access is not allowed for categories'
 ADD_EMAIL_ALREADY_SET_MSG = 'Email already set as {email_type} email for user'

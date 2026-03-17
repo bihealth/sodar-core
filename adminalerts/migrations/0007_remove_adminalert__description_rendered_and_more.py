@@ -5,7 +5,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('adminalerts', '0001_squashed_0006_adminalert_require_auth'),
     ]

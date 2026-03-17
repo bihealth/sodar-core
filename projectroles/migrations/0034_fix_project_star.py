@@ -19,7 +19,6 @@ def fix_project_star(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('projectroles', '0033_alter_sodaruseradditionalemail_secret'),
     ]

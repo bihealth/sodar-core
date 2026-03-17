@@ -358,7 +358,7 @@ class TestAppSettingAPI(
         with self.assertRaises(ValueError):
             app_settings.get(
                 EXAMPLE_APP_NAME,
-                "project_int_setting",
+                'project_int_setting',
                 project=None,  # No project
                 user=self.user,
             )
@@ -368,7 +368,7 @@ class TestAppSettingAPI(
         with self.assertRaises(ValueError):
             app_settings.get(
                 EXAMPLE_APP_NAME,
-                "user_str_setting",
+                'user_str_setting',
                 project=self.project,
                 user=None,  # No user
             )
@@ -378,7 +378,7 @@ class TestAppSettingAPI(
         with self.assertRaises(ValueError):
             app_settings.get(
                 EXAMPLE_APP_NAME,
-                "project_user_bool_setting",
+                'project_user_bool_setting',
                 project=self.project,
                 user=None,  # No user
             )
@@ -388,7 +388,7 @@ class TestAppSettingAPI(
         with self.assertRaises(ValueError):
             app_settings.get(
                 EXAMPLE_APP_NAME,
-                "site_bool_setting",
+                'site_bool_setting',
                 project=self.project,  # Project is passed when it shouldn't be
                 user=None,
             )
@@ -485,7 +485,8 @@ class TestAppSettingAPI(
         """Test get_all_by_scope() with invalid args"""
         with self.assertRaises(ValueError):
             app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT_USER, project=self.project  # No user
+                APP_SETTING_SCOPE_PROJECT_USER,
+                project=self.project,  # No user
             )
 
     def test_is_set_no_object(self):

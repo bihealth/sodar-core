@@ -471,7 +471,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         ):
             raise serializers.ValidationError(CAT_DELIMITER_ERROR_MSG)
         if parent and title == parent.title:
-            raise serializers.ValidationError('Title can\'t match with parent')
+            raise serializers.ValidationError("Title can't match with parent")
         if (
             title
             and not self.instance

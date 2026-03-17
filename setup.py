@@ -4,6 +4,7 @@
 """
 Package metadata for django-sodar-core.
 """
+
 import os
 from setuptools import setup
 

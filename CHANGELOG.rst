@@ -18,6 +18,8 @@ Added
     - ``HostConfirmDeleteView`` for delete views with host confirmation (#1550)
     - ``transferroles`` management command (#1869)
     - Remote sync user ``active`` status (#1882)
+    - Project limiting in search via ``project`` keyword (#1191, #1898)
+    - Plugin search API ``projects`` queryset kwarg (#1899)
 - **Siteinfo**
     - Client-side statistics retrieval (#1848)
 
@@ -30,6 +32,11 @@ Changed
     - Upgrade general Python dependencies (#1878)
     - Replace markupfield and pagedown with martor (#1861)
     - General documentation updates (#1884)
+    - Replace black and flake8 with ruff for linting and formatting (#1881)
+    - Update ``Makefile`` for new check, format and lint commands (#1881)
+    - Move tests after formatting and docs checks in CI (#1907)
+    - Move plugin search API ``search_type`` in keywords (#1901)
+    - Replace plugin search API ``keywords`` kwarg with ``**kwargs`` (#1902)
 - **Projectroles**
     - Make ``modify_assignment()`` ``request`` arg optional (#1875)
     - Update default single sign-on button legend (#1883)
@@ -50,6 +57,9 @@ Fixed
 Removed
 -------
 
+- **General**
+    - Black and flake8 dependencies (#1881)
+    - Legacy flake8 and pycodestyle configuration (#1881)
 - **Projectroles**
     - ``AppSetting.user_modifiable`` field (#1721)
     - Deprecated base test classes and mixins (#1830)

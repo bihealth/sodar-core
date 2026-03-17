@@ -8,7 +8,6 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     replaces = [
         ('adminalerts', '0001_initial'),
         ('adminalerts', '0002_adminalert_user'),
