@@ -28,8 +28,7 @@ class Command(BaseCommand):
         remote_api = RemoteProjectAPI()
         if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
             logger.info(
-                'Project categories and nesting disabled, '
-                'remote sync disabled'
+                'Project categories and nesting disabled, remote sync disabled'
             )
             sys.exit(0)
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_TARGET:

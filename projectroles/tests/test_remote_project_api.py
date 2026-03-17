@@ -1400,9 +1400,9 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
     def test_create_app_setting_local(self):
         """Test sync with local app setting"""
         self.remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
-        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
-            'global'
-        ] = False
+        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['global'] = (
+            False
+        )
         expected = deepcopy(self.remote_data)
         self.remote_api.sync_remote_data(self.source_site, self.remote_data)
 
@@ -1584,12 +1584,12 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
 
     def test_create_no_access(self):
         """Test sync with no READ_ROLE access set"""
-        self.remote_data['projects'][SOURCE_CATEGORY_UUID][
-            'level'
-        ] = REMOTE_LEVEL_READ_INFO
-        self.remote_data['projects'][SOURCE_PROJECT_UUID][
-            'level'
-        ] = REMOTE_LEVEL_READ_INFO
+        self.remote_data['projects'][SOURCE_CATEGORY_UUID]['level'] = (
+            REMOTE_LEVEL_READ_INFO
+        )
+        self.remote_data['projects'][SOURCE_PROJECT_UUID]['level'] = (
+            REMOTE_LEVEL_READ_INFO
+        )
         expected = deepcopy(self.remote_data)
         self.remote_api.sync_remote_data(self.source_site, self.remote_data)
 
@@ -1882,17 +1882,17 @@ class TestSyncRemoteDataUpdate(
 
         # Change Peer Site data
         self.remote_data['peer_sites'][PEER_SITE_UUID]['name'] = NEW_PEER_NAME
-        self.remote_data['peer_sites'][PEER_SITE_UUID][
-            'description'
-        ] = NEW_PEER_DESC
-        self.remote_data['peer_sites'][PEER_SITE_UUID][
-            'user_display'
-        ] = NEW_PEER_USER_DISPLAY
+        self.remote_data['peer_sites'][PEER_SITE_UUID]['description'] = (
+            NEW_PEER_DESC
+        )
+        self.remote_data['peer_sites'][PEER_SITE_UUID]['user_display'] = (
+            NEW_PEER_USER_DISPLAY
+        )
         # Change projectroles app settings
         self.remote_data['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
-        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
-            'value'
-        ] = '192.168.1.1'
+        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['value'] = (
+            '192.168.1.1'
+        )
         self.remote_data['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
         self.remote_data['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
         self.remote_data['users'][SOURCE_USER_UUID]['status'] = 'updated'
@@ -2256,9 +2256,9 @@ class TestSyncRemoteDataUpdate(
             'status'
         ] = 'created'
         expected['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
-        expected['app_settings'][SET_IP_ALLOW_LIST_UUID][
-            'value'
-        ] = '192.168.1.1'
+        expected['app_settings'][SET_IP_ALLOW_LIST_UUID]['value'] = (
+            '192.168.1.1'
+        )
         expected['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'updated'
         expected['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'updated'
         expected['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
@@ -2365,9 +2365,9 @@ class TestSyncRemoteDataUpdate(
     def test_update_settings_local(self):
         """Test update with local app settings (should not be updated)"""
         self.remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
-        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
-            'global'
-        ] = False
+        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['global'] = (
+            False
+        )
         self.remote_data['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
         self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
             'value_json'
@@ -2516,9 +2516,9 @@ class TestSyncRemoteDataUpdate(
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         # Revoke access to project
-        self.remote_data['projects'][SOURCE_PROJECT_UUID][
-            'level'
-        ] = REMOTE_LEVEL_REVOKED
+        self.remote_data['projects'][SOURCE_PROJECT_UUID]['level'] = (
+            REMOTE_LEVEL_REVOKED
+        )
         self.remote_data['projects'][SOURCE_PROJECT_UUID]['remote_sites'] = []
         self.remote_api.sync_remote_data(self.source_site, self.remote_data)
 

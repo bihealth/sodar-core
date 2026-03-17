@@ -211,8 +211,7 @@ def get_user_superuser_icon(tooltip: bool = True) -> str:
     if tooltip:
         ret += '<span title="Superuser" data-toggle="tooltip">'
     ret += (
-        '<i class="iconify text-info ml-1" '
-        'data-icon="mdi:shield-account"></i>'
+        '<i class="iconify text-info ml-1" data-icon="mdi:shield-account"></i>'
     )
     if tooltip:
         ret += '</span>'

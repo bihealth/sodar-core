@@ -746,8 +746,8 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 self.initial['owner'] = parent_cat.get_owner().user
             else:
                 self.initial['owner'] = self.current_user
-            self.fields['owner'].label_from_instance = (
-                lambda x: x.get_form_label(email=True)
+            self.fields['owner'].label_from_instance = lambda x: (
+                x.get_form_label(email=True)
             )
             # Hide owner select widget for regular users
             if not self.current_user.is_superuser:
@@ -1106,7 +1106,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         self.fields['old_owner_role'] = forms.ChoiceField(
             label=f'New role for {current_owner.username}',
             help_text='New role for the current owner. Select "Remove" in '
-            'the member list to remove the user\'s membership.',
+            "the member list to remove the user's membership.",
             choices=self.selectable_roles,
             initial=self.selectable_roles[0][0],
             disabled=True if len(self.selectable_roles) == 1 else False,
@@ -1151,7 +1151,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         user = self.cleaned_data['new_owner']
         if user == self.current_owner:
             raise forms.ValidationError(
-                'The new owner shouldn\'t be the current owner.'
+                "The new owner shouldn't be the current owner."
             )
         role_as = self.project.get_role(user)
         if not role_as:
@@ -1430,8 +1430,8 @@ class LocalUserForm(SODARModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if cleaned_data['password'] != cleaned_data['password_confirm']:
-            self.add_error('password_confirm', 'Passwords didn\'t match!')
-            self.add_error('password', 'Passwords didn\'t match!')
+            self.add_error('password_confirm', "Passwords didn't match!")
+            self.add_error('password', "Passwords didn't match!")
         return cleaned_data
 
 

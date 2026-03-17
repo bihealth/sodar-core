@@ -32,9 +32,9 @@ def specialize_job(bg_job: BackgroundJob) -> BackgroundJob:
     job_specs = {}
     # Setup the global map
     for plugin in BackgroundJobsPluginPoint.get_plugins():
-        assert not (
-            set(plugin.job_specs) & set(job_specs)
-        ), 'Registering model twice!'
+        assert not (set(plugin.job_specs) & set(job_specs)), (
+            'Registering model twice!'
+        )
         job_specs.update(plugin.job_specs)
 
     klass = job_specs.get(bg_job.job_type)

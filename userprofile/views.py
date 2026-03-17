@@ -42,7 +42,7 @@ APP_NAME = 'userprofile'
 APP_NAME_PR = 'projectroles'
 SETTING_UPDATE_MSG = 'User settings updated.'
 VERIFY_EMAIL_SUBJECT = 'Verify your additional email address for {site}'
-VERIFY_EMAIL_BODY = r'''
+VERIFY_EMAIL_BODY = r"""
 {user} has added this address to their
 additional emails on {site}.
 
@@ -53,7 +53,7 @@ Please verify this email address by following this URL:
 {url}
 
 If this was not requested by you, this message can be ignored.
-'''.lstrip()
+""".lstrip()
 EMAIL_NOT_FOUND_MSG = 'No email found.'
 EMAIL_ALREADY_VERIFIED_MSG = 'Email already verified.'
 EMAIL_VERIFIED_MSG = 'Email "{email}" verified.'

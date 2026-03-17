@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('djangoplugins', '0002_auto_20230718_1254'),
         ('projectroles', '0040_remove_appsetting_user_modifiable'),

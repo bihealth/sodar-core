@@ -696,8 +696,9 @@ class RemoteProjectAPI:
             self.remote_data['projects'][uuid]['status'] = 'updated'
             if self.tl_user:  # Timeline
                 tl_desc = (
-                    'update project from remote site '
-                    '"{{{}}}" ({})'.format('site', ', '.join(updated_fields))
+                    'update project from remote site "{{{}}}" ({})'.format(
+                        'site', ', '.join(updated_fields)
+                    )
                 )
                 # TODO: Add extra_data
                 tl_event = self.timeline.add_event(
@@ -873,9 +874,9 @@ class RemoteProjectAPI:
                         r['user'], self.default_owner.username
                     )
                 )
-                self.remote_data['projects'][uuid]['roles'][r_uuid][
-                    'user'
-                ] = self.default_owner.username
+                self.remote_data['projects'][uuid]['roles'][r_uuid]['user'] = (
+                    self.default_owner.username
+                )
                 self.remote_data['projects'][uuid]['roles'][r_uuid][
                     'status_msg'
                 ] = status_msg
@@ -943,8 +944,9 @@ class RemoteProjectAPI:
 
                 if self.tl_user:
                     tl_desc = (
-                        'add role "{}" for {{{}}} '
-                        'from site {{{}}}'.format(role.name, 'user', 'site')
+                        'add role "{}" for {{{}}} from site {{{}}}'.format(
+                            role.name, 'user', 'site'
+                        )
                     )
                     tl_event = self.timeline.add_event(
                         project=project,
@@ -995,8 +997,9 @@ class RemoteProjectAPI:
                 }
                 if self.tl_user:  # Timeline
                     tl_desc = (
-                        'remove role "{}" from {{{}}} by site '
-                        '{{{}}}'.format(del_role.name, 'user', 'site')
+                        'remove role "{}" from {{{}}} by site {{{}}}'.format(
+                            del_role.name, 'user', 'site'
+                        )
                     )
                     tl_event = timeline.add_event(
                         project=project,
@@ -1213,8 +1216,10 @@ class RemoteProjectAPI:
             app_plugin = Plugin.objects.filter(name=ad['app_plugin']).first()
             if not app_plugin:
                 logger.debug(
-                    skip_msg + 'App plugin not found with name '
-                    '"{}"'.format(ad['app_plugin'])
+                    skip_msg
+                    + 'App plugin not found with name "{}"'.format(
+                        ad['app_plugin']
+                    )
                 )
                 return
         if user_name:

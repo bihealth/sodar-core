@@ -309,7 +309,7 @@ class TestUserAppSettingsView(AppSettingMixin, UserViewTestBase):
     def test_post_custom_validation(self):
         """Test POST with custom validation and invalid value"""
         values = {
-            'settings.example_project_app.' 'user_str_setting': INVALID_VALUE,
+            'settings.example_project_app.user_str_setting': INVALID_VALUE,
             'settings.example_project_app.user_int_setting': '170',
             'settings.example_project_app.user_str_setting_options': 'string1',
             'settings.example_project_app.user_int_setting_options': '0',

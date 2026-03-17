@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('projectroles', '0038_update_ip_allow_list'),
     ]

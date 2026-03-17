@@ -14,7 +14,6 @@ def delete_legacy_tokens(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('tokens', '0001_rename_plugin'),
     ]
