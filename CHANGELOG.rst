@@ -32,6 +32,7 @@ Changed
     - General documentation updates (#1884)
     - Replace black and flake8 with ruff for linting and formatting (#1881)
     - Update ``Makefile`` for new check, format and lint commands (#1881)
+    - Move tests after formatting and docs checks in CI (#1907)
 - **Projectroles**
     - Make ``modify_assignment()`` ``request`` arg optional (#1875)
     - Update default single sign-on button legend (#1883)

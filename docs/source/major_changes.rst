@@ -24,7 +24,7 @@ Release Highlights
 - Add general purpose HTTP 503 API exception class
 - Replace Markupfield and Pagedown with Martor for Markdown rendering
 - Replace Black and Flake8 with Ruff for linting and formatting
-- Update Makefile for new check, format and lint commands
+- Update Makefile for check, format and lint commands
 - Fix batchupdateroles role promoting
 - Fix app setting API get() exception handling with PROJECT_USER scope
 - Remove deprecated test base classes and mixins
