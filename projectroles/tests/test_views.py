@@ -452,7 +452,6 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test quoted'])
         self.assertEqual(response.context['search_keywords'], {})
-        self.assertEqual(response.context['search_type'], None)
         self.assertQuerySetEqual(
             response.context['search_projects'], Project.objects.all()
         )
@@ -508,7 +507,6 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': str(self.project.sodar_uuid)},
         )
-        self.assertEqual(response.context['search_type'], None)
         self.assertQuerySetEqual(
             response.context['search_projects'],
             Project.objects.filter(sodar_uuid=self.project.sodar_uuid),
@@ -539,7 +537,6 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': 'white space'},
         )
-        self.assertEqual(response.context['search_type'], None)
         self.assertQuerySetEqual(
             response.context['search_projects'], Project.objects.none()
         )
@@ -566,7 +563,6 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': self.project.title.lower()},
         )
-        self.assertEqual(response.context['search_type'], None)
         self.assertQuerySetEqual(
             response.context['search_projects'],
             Project.objects.filter(title=self.project.title),
@@ -595,7 +591,6 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': self.category.title.lower()},
         )
-        self.assertEqual(response.context['search_type'], None)
         self.assertQuerySetEqual(
             response.context['search_projects'],
             Project.objects.filter(
@@ -634,7 +629,6 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'key1': 'value1', 'key2': 'value2 with spaces', 'key3': 'value3'},
         )
-        self.assertEqual(response.context['search_type'], None)
         self.assertEqual(
             response.context['search_input'],
             (
@@ -846,12 +840,8 @@ class TestProjectSearchResultsView(
             ['test with spaces', 'testproject', 'xxx'],
         )
         self.assertEqual(
-            response.context['search_type'],
-            'project',
-        )
-        self.assertEqual(
             response.context['search_keywords'],
-            {'project': 'project with spaces'},
+            {'project': 'project with spaces', 'type': 'project'},
         )
 
     def test_post_advanced_search_quoted_string_parsing(self):
