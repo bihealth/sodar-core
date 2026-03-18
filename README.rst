@@ -13,8 +13,8 @@ SODAR Core
 .. |b4| image:: https://img.shields.io/badge/License-MIT-green.svg
     :target: https://opensource.org/licenses/MIT
 
-.. |b5| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/ambv/black
+.. |b5| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
 
 .. |b6| image:: https://readthedocs.org/projects/sodar-core/badge/?version=latest
     :target: https://sodar-core.readthedocs.io/en/latest/?badge=latest
