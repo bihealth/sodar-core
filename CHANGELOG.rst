@@ -46,6 +46,7 @@ Fixed
 
 - **General**
     - Example site Django admin user creation (#1876)
+    - ``Makefile`` runs first command by default (#1911)
 - **Projectroles**
     - ``batchupdateroles`` role promoting invalid role rank check (#1874)
     - ``search()`` keyword type hints and docstrings (#1894)

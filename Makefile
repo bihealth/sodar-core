@@ -19,6 +19,8 @@ define USAGE=
 @echo -e
 endef
 
+default: usage
+
 # Argument passed from commandline, optional for some rules, mandatory for others.
 arg =
 
