@@ -33,8 +33,8 @@ exclude = [
     ".venv",
     "_version.py"
 ]
+# TODO: Review rules, add e.g. B and Q? (see #1910)
 ignore = ["E203", "E266", "E501", "F405"]
-# TODO: Add B and Q, tweak ignores, fix warnings
 select = ["E", "F", "W"]
 
 [tool.ruff.lint.flake8-quotes]

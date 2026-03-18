@@ -3,7 +3,6 @@ MANAGE = python manage.py
 define USAGE=
 @echo -e
 @echo -e "Usage:"
-@echo -e "\tmake black [arg=--<arg>]                 -- format Python with black (to be removed)"
 @echo -e "\tmake celery                              -- start celery worker"
 @echo -e "\tmake check                               -- check Python code linting and formatting"
 @echo -e "\tmake collectstatic                       -- run collectstatic"
