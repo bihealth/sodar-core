@@ -101,6 +101,13 @@ class TestAdminAlertListView(AdminAlertUITestBase):
         super().setUp()
         self.url = reverse('adminalerts:list')
 
+    def test_user_dropdown_app(self):
+        """Test existence of items in list"""
+        expected = [(self.superuser, 1), (self.regular_user, 1)]
+        self.assert_element_count(
+            expected, self.url, 'sodar-navbar-link-adminalerts', 'id'
+        )
+
     def test_list_items(self):
         """Test existence of items in list"""
         expected = [(self.superuser, 1), (self.regular_user, 1)]
