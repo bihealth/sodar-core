@@ -32,16 +32,16 @@ class TestAdminAlertListView(AdminalertsPermissionTestBase):
 
     def test_get(self):
         """Test AdminAlertListView GET"""
-        good_users = [self.superuser]
-        bad_users = [self.anonymous, self.regular_user]
+        good_users = [self.superuser, self.regular_user]
+        bad_users = [self.anonymous]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        good_users = [self.superuser]
-        bad_users = [self.anonymous, self.regular_user]
+        good_users = [self.superuser, self.regular_user]
+        bad_users = [self.anonymous]
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
 

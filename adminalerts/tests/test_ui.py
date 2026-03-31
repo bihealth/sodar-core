@@ -103,14 +103,28 @@ class TestAdminAlertListView(AdminAlertUITestBase):
 
     def test_list_items(self):
         """Test existence of items in list"""
-        expected = [(self.superuser, 1)]
+        expected = [(self.superuser, 1), (self.regular_user, 1)]
         self.assert_element_count(
             expected, self.url, 'sodar-aa-alert-item', 'id'
         )
 
     def test_list_dropdown(self):
         """Test existence of alert dropdown in list"""
-        expected = [(self.superuser, 1)]
+        expected = [(self.superuser, 1), (self.regular_user, 0)]
         self.assert_element_count(
             expected, self.url, 'sodar-aa-alert-dropdown', 'class'
+        )
+
+    def test_list_create_button(self):
+        """Test existence of alert creation button"""
+        expected = [(self.superuser, 1), (self.regular_user, 0)]
+        self.assert_element_count(
+            expected, self.url, 'sodar-aa-alert-create', 'id'
+        )
+
+    def test_list_active_status_toggle(self):
+        """Test ability to toggle alert status in list"""
+        expected = [(self.superuser, 1), (self.regular_user, 0)]
+        self.assert_element_count(
+            expected, self.url, 'js-change-alert-state-button', 'class'
         )
