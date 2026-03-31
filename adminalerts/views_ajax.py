@@ -39,5 +39,7 @@ class AdminAlertDismissAjaxView(SODARBasePermissionAjaxView):
             alert = AdminAlert.objects.get(sodar_uuid__exact=alert_uuid)
         except AdminAlert.DoesNotExist:
             return HttpResponseBadRequest()
-        AdminAlertDismissal.objects.get_or_create(user=request.user, alert=alert)
+        AdminAlertDismissal.objects.get_or_create(
+            user=request.user, alert=alert
+        )
         return Response(status=200)

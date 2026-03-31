@@ -60,7 +60,6 @@
 <script>
   $('.sodar-alert-site-app .sodar-alert-close-link').each(function () {
     this.addEventListener("click", function (event) {
-      console.log('getting ', event.currentTarget.dataset.dismissUrl)
       $.ajax({
         type: 'GET',
         url: event.currentTarget.dataset.dismissUrl,
