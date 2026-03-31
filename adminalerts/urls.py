@@ -44,7 +44,7 @@ urls_ajax = [
     path(
         route='ajax/dismiss/<uuid:adminalert>',
         view=adminalerts.views_ajax.AdminAlertDismissAjaxView.as_view(),
-        name='ajax_dismissal',
+        name='ajax_dismiss',
     ),
 ]
 

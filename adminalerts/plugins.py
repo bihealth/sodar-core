@@ -91,9 +91,9 @@ class SiteAppPlugin(SiteAppPluginPoint):
         alerts = AdminAlert.objects.filter(
             active=True, date_expire__gte=timezone.now()
         ).order_by('-pk')
-        # Messages are fetched before login, so it's possible that user is
-        # the AnonymousUser here, which makes the query fail because it doesn't
-        # have an id field in the database.
+        # Messages are fetched before login, so it's possible that user is the
+        # AnonymousUser here, who doesn't have and id field in the database and
+        # makes the .exclude() query fail.
         if user and not isinstance(user, AnonymousUser):
             alerts = alerts.exclude(dismissed_by=user)
 
@@ -120,11 +120,11 @@ class SiteAppPlugin(SiteAppPluginPoint):
                 {
                     'content': content,
                     'color': 'info',
-                    'dismissable': False,
+                    'dismissable': True,
                     'require_auth': a.require_auth,
                     'dismiss_url': reverse(
-                        'adminalerts:ajax_dismissal',
-                        kwargs={'adminalert': a.sodar_uuid}
+                        'adminalerts:ajax_dismiss',
+                        kwargs={'adminalert': a.sodar_uuid},
                     ),
                 }
             )
