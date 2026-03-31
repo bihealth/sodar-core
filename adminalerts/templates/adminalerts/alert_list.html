@@ -46,10 +46,12 @@
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h2><i class="iconify" data-icon="mdi:alert"></i> Admin Alerts</h2>
-  <a role="button" class="btn btn-primary ml-auto"
+  {% if request.user.is_superuser %}
+  <a role="button" class="btn btn-primary ml-auto" id="sodar-aa-alert-create"
      href="{% url 'adminalerts:create' %}">
     <i class="iconify" data-icon="mdi:plus-bold"></i> Create Alert
   </a>
+  {% endif %}
 </div>
 
 <div class="container-fluid sodar-page-container">
@@ -83,7 +85,8 @@
                 <button class="btn sodar-list-btn
                   {% if not a.is_expired and a.active %}btn-success
                   {% elif not a.is_expired and not a.active %} btn-warning
-                  {% else %} btn-danger{% endif %} js-change-alert-state-button"
+                  {% else %} btn-danger{% endif %}
+                  {% if request.user.is_superuser %} js-change-alert-state-button {% endif %}"
                   type="button" data-url="{% url 'adminalerts:ajax_active_toggle' adminalert=a.sodar_uuid %}"
                   {% if a.is_expired %}disabled{% endif %}>
                   {% if a.is_expired %}
@@ -96,22 +99,24 @@
                 </button>
               </td>
               <td>
-                <button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
-                        type="button" data-toggle="dropdown" aria-expanded="false">
-                  <i class="iconify" data-icon="mdi:cog"></i>
-                </button>
-                <div class="dropdown-menu dropdown-menu-right sodar-aa-alert-dropdown">
-                  <a class="dropdown-item"
-                     href="{% url 'adminalerts:update' adminalert=a.sodar_uuid %}">
-                    <i class="iconify" data-icon="mdi:lead-pencil"></i>
-                    Update Alert
-                  </a>
-                  <a class="dropdown-item text-danger"
-                     href="{% url 'adminalerts:delete' adminalert=a.sodar_uuid %}">
-                    <i class="iconify" data-icon="mdi:close-thick"></i>
-                    Delete Alert
-                  </a>
-                </div>
+                {% if request.user.is_superuser %}
+                  <button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
+                          type="button" data-toggle="dropdown" aria-expanded="false">
+                    <i class="iconify" data-icon="mdi:cog"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-right sodar-aa-alert-dropdown">
+                    <a class="dropdown-item"
+                       href="{% url 'adminalerts:update' adminalert=a.sodar_uuid %}">
+                      <i class="iconify" data-icon="mdi:lead-pencil"></i>
+                      Update Alert
+                    </a>
+                    <a class="dropdown-item text-danger"
+                       href="{% url 'adminalerts:delete' adminalert=a.sodar_uuid %}">
+                      <i class="iconify" data-icon="mdi:close-thick"></i>
+                      Delete Alert
+                    </a>
+                  </div>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}
