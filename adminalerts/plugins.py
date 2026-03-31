@@ -66,7 +66,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     entry_point_url_id = 'adminalerts:list'
 
     #: Required permission for displaying the app
-    app_permission = 'adminalerts.create_alert'
+    app_permission = 'adminalerts.view_alert'
 
     #: Names of plugin specific Django settings to display in siteinfo
     info_settings = ADMINALERTS_INFO_SETTINGS

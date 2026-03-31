@@ -91,14 +91,17 @@ output:
 Usage
 =====
 
-When logged in as a superuser, you can find the :guilabel:`Admin Alerts` option
-in your user dropdown menu in the top right corner of the site. This application
-is only available for users with superuser status.
+You can find the :guilabel:`Admin Alerts` option in your user dropdown menu
+in the top right corner of the site. This application is available for all
+authenticated users, but only users with superuser status can create and
+modify alerts. The initial view displays a list of alerts along with their
+active/inactive status. You can come back to this page to find alerts that you
+have previously dismissed.
 
-The initial view displays a list of alerts along with their active/inactive
-status. For each alert there is a dropdown for updating or deleting the alert.
-The :guilabel:`Status` column active/inactive badge doubles as a button for
-toggling the alert status. Inactive alerts will not be shown to users.
+If you have superuser status, for each alert you will see a dropdown for
+updating or deleting the alert. The :guilabel:`Status` column active/inactive
+badge doubles as a button for toggling the alert status. Inactive alerts will
+not be shown to users.
 
 .. figure:: _static/app_adminalerts/admin_alerts.png
     :align: center

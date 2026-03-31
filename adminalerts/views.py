@@ -58,7 +58,7 @@ Additional details:
 class AdminAlertListView(LoggedInPermissionMixin, ListView):
     """Alert list view"""
 
-    permission_required = 'adminalerts.create_alert'
+    permission_required = 'adminalerts.view_list'
     template_name = 'adminalerts/alert_list.html'
     model = AdminAlert
     paginate_by = getattr(

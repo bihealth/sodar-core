@@ -990,6 +990,13 @@ class TestProjectrolesTags(TemplateTagTestBase):
             tags.get_user_links(request),
             [
                 {
+                    'name': 'adminalerts',
+                    'url': reverse('adminalerts:list'),
+                    'label': 'Admin Alerts',
+                    'icon': 'mdi:alert',
+                    'active': False,
+                },
+                {
                     'name': 'appalerts',
                     'url': reverse('appalerts:list'),
                     'label': 'App Alerts',
