@@ -22,7 +22,7 @@ import rules
 rules.add_perm('adminalerts.view_alert', rules.is_authenticated)
 
 # Allow viewing alert list
-rules.add_perm('adminalerts.view_list', rules.is_superuser)
+rules.add_perm('adminalerts.view_list', rules.is_authenticated)
 
 # Allow creation of alerts
 rules.add_perm('adminalerts.create_alert', rules.is_superuser)
