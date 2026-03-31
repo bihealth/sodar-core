@@ -41,6 +41,11 @@ urls_ajax = [
         view=adminalerts.views_ajax.AdminAlertActiveToggleAjaxView.as_view(),
         name='ajax_active_toggle',
     ),
+    path(
+        route='ajax/dismiss/<uuid:adminalert>',
+        view=adminalerts.views_ajax.AdminAlertDismissAjaxView.as_view(),
+        name='ajax_dismissal',
+    ),
 ]
 
 urlpatterns = urls_ui + urls_ajax
