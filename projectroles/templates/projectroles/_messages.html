@@ -33,6 +33,11 @@
         <div class="alert alert-{{ message.color }} {% if message.dismissable %}alert-dismissable fade show{% endif %} sodar-alert-top sodar-alert-site-app">
           <div class="sodar-alert-top-content">
             {{ message.content | safe }}
+            {% if message.dismiss_url %}
+              <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link" data-dismiss-url="{{message.dismiss_url}}">
+                <i class="iconify text-muted" data-icon="mdi:close-thick"></i>
+              </a>
+            {% endif %}
           </div>
         </div>
       {% endif %}
@@ -51,3 +56,18 @@
     {% endfor %}
   </div>
 {% endif %}
+
+<script>
+  $('.sodar-alert-site-app .sodar-alert-close-link').each(function () {
+    this.addEventListener("click", function (event) {
+      console.log('getting ', event.currentTarget.dataset.dismissUrl)
+      $.ajax({
+        type: 'GET',
+        url: event.currentTarget.dataset.dismissUrl,
+        error: function (jqXHR, textStatus) {
+          console.error('Failed to dismiss alert:', textStatus);
+        },
+      })
+    })
+  })
+</script>
