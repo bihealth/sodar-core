@@ -10,12 +10,20 @@ from projectroles.plugins import (
     BackendPluginPoint,
     SiteAppPluginPoint,
     PluginSearchResult,
+    PluginSearchResultCell,
 )
 from projectroles.utils import get_display_name
 
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
+from timeline.templatetags import (
+    get_timestamp,
+    get_status_style,
+    get_app_icon_html,
+    get_plugin_lookup,
+    get_event_name,
+)
 
 
 User = get_user_model()
@@ -132,11 +140,54 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 TimelineEvent.objects.find(search_terms, projects, kwargs)
             )
             items = [e for e in events if self._check_permission(user, e)]
+        plugin_lookup = get_plugin_lookup()
+        rows = []
+        for item in items:
+            rows.append(
+                [
+                    # Timestamp
+                    PluginSearchResultCell(
+                        value=get_timestamp(item),
+                    ),
+                    # Description
+                    # TODO: add badges
+                    # {% if event.user %}
+                    #   {% get_user_badge event.user 'mr-1' as user_badge %}
+                    #   {{ user_badge | safe }}
+                    # {% endif %}
+                    # {% if event.project %}
+                    #   {% get_project_badge event.project extra_class='mr-1' as project_badge %}
+                    #   {{ project_badge | safe }}
+                    # {% endif %}
+                    PluginSearchResultCell(
+                        # TODO: span, event_name
+                        # <span class="badge bg-secondary text-white mr-1 sodar-obj-badge sodar-tl-event-badge">
+                        #   {{ event_icon|safe }}
+                        #   {% get_event_name event %}
+                        # </span>
+                        value=get_event_name(item),
+                        icon=get_app_icon_html(item, plugin_lookup),
+                    ),
+                    # Status
+                    PluginSearchResultCell(
+                        value=item.get_status.status_type,
+                    ),
+                ]
+            )
         ret = PluginSearchResult(
             category='all',
             title='Timeline Events',
             search_types=['timeline'],
-            items=items,
+            column_metadata=[
+                {'title': 'Timestamp', 'class': None},
+                {'title': 'Description', 'class': 'sodar-overflow-container'},
+                # TODO: how to handle dynamic column classes?
+                {
+                    'title': 'Status',
+                    'class': f'{get_status_style(event.get_status)} text-light sodar-tl-item-status',
+                },
+            ],
+            rows=rows,
         )
         return [ret]
 
