@@ -1,5 +1,6 @@
 """Plugin point definitions and plugin API for apps based on projectroles"""
 
+from dataclasses import dataclass
 import json
 import logging
 
@@ -939,37 +940,55 @@ class PluginObjectLink:
         self.blank = blank
 
 
+@dataclass
+class PluginSearchResultCell:
+    """
+    Represents a cell in the table of search results returned by app plugins.
+    """
+
+    value: str = None
+    value_url: str = None
+    icon: str = None
+    icon_url: str = None
+    highlight: str = None
+
+
 class PluginSearchResult:
     """
     Class representing a list of search results from a specific plugin for one
     or more search types. Expected to be returned from search() implementations.
     """
 
-    #: Category of the result set, used in templates (string)
+    #: Category of the result set, used in rendering (string)
     category = None
     #: Title to be displayed for this set of search results in the UI (string)
     title = None
     #: List of one or more search type keywords for these results
     search_types = []
-    #: List or QuerySet of result objects
-    items = []
+    #: List of column metadata, such as title and possible formatting (e.g. alignment)
+    column_metadata = []
+    #: List of lists of result objects
+    rows = []
 
     def __init__(
         self,
         category: str,
         title: str,
-        search_types: Optional[list[str]],
-        items: Union[list, QuerySet],
+        search_types: list[str],
+        column_metadata: list[dict],
+        rows: list[list[PluginSearchResultCell]],
     ):
         """
         Initialize PluginSearchResult.
 
-        :param category: Category of the result set, used in templates (string)
+        :param category: Category of the result set, used in rendering (string)
         :param title: Title to be displayed for this set of search results in
                       the UI (string)
         :param search_types: List of one or more search type keywords for the
                              results
-        :param items: List or QuerySet of result objects
+        :param column_metadata: List of column metadata such as title and
+                                possible formatting (e.g. alignment)
+        :param rows: List of lists of PluginSearchResultCell objects
         """
         self.category = category
         self.title = title
@@ -978,7 +997,8 @@ class PluginSearchResult:
             raise ValueError(
                 'At least one type keyword must be provided in search_types'
             )
-        self.items = items
+        self.column_metadata = column_metadata
+        self.rows = rows
 
 
 class PluginCategoryStatistic:

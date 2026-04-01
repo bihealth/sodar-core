@@ -7,14 +7,17 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from django.urls import reverse
+from django.template.defaultfilters import filesizeformat
 
 # Projectroles dependency
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project, SODAR_CONSTANTS, CAT_DELIMITER
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     PluginAppSettingDef,
     PluginObjectLink,
     PluginSearchResult,
+    PluginSearchResultCell,
     PluginCategoryStatistic,
 )
 from projectroles.utils import get_display_name
@@ -23,6 +26,7 @@ from filesfolders.models import File, Folder, HyperLink
 from filesfolders.urls import urlpatterns
 
 
+app_settings = AppSettingAPI()
 User = get_user_model()
 
 
@@ -176,7 +180,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :param kwargs: Search options as key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
-        items = []
         if 'type' not in kwargs:
             files = File.objects.find(search_terms, projects, kwargs)
             folders = Folder.objects.find(search_terms, projects, kwargs)
@@ -195,17 +198,107 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             items = HyperLink.objects.find(
                 search_terms, projects, kwargs
             ).order_by('name')
-        if items:
-            items = [
-                x
-                for x in items
-                if user.has_perm('filesfolders.view_data', x.project)
-            ]
+        else:
+            items = []
+        rows = []
+        for item in items:
+            if not user.has_perm('filesfolders.view_data', item.project):
+                continue
+            if item.get_class() == 'Hyperlink':
+                name_url = item.url
+            elif item.get_class() == 'Folder':
+                name_url = reverse(
+                    'filesfolders:list', kwargs={'folder': item.sodar_uuid}
+                )
+            elif item.get_class() == 'File':
+                name_url = reverse(
+                    'filesfolders:file_serve',
+                    kwargs={'file': item.sodar_uuid, 'file_name': item.name},
+                )
+            allow_public_links = app_settings.get(
+                'filesfolders', 'allow_public_links', project=item.project
+            )
+            can_share_link = user.has_perm(
+                'filesfolders.share_public_link', item.project
+            )
+            if (
+                item.get_class() == 'File'
+                and item.public_url
+                and allow_public_links
+                and can_share_link
+            ):
+                icon = 'mdi:link-variant'
+                icon_url = reverse(
+                    'filesfolders:file_public_link',
+                    kwargs={'file': item.sodar_uuid},
+                )
+            else:
+                icon = None
+                icon_url = None
+            if item.folder:
+                project_url = reverse(
+                    'filesfolders:list',
+                    kwargs={'folder': item.folder.sodar_uuid},
+                )
+            else:
+                project_url = reverse(
+                    'filesfolders:list',
+                    kwargs={'project': item.project.sodar_uuid},
+                )
+            if item.get_class == 'File':
+                size = filesizeformat(item.file.file.size)
+            else:
+                size = None
+            rows.append(
+                [
+                    # Name
+                    PluginSearchResultCell(
+                        value=item.name,
+                        value_url=name_url,
+                        icon=icon,
+                        icon_url=icon_url,
+                        highlight=search_terms,
+                        # TODO:
+                        # {% if item.flag %}
+                        #   {% get_flag item.flag as item_flag %}
+                        #   {{ item_flag|safe }}
+                        # {% endif %}
+                    ),
+                    # Type
+                    PluginSearchResultCell(
+                        value=item.get_class(),
+                    ),
+                    # Project
+                    PluginSearchResultCell(
+                        value=item.project.title,
+                        value_url=project_url,
+                    ),
+                    # Size
+                    PluginSearchResultCell(
+                        value=size,
+                    ),
+                    # Description
+                    PluginSearchResultCell(
+                        value=item.description,
+                        highlight=search_terms,
+                    ),
+                ]
+            )
         ret = PluginSearchResult(
             category='all',
             title='Files, Folders and Links',
             search_types=['file', 'folder', 'link'],
-            items=items,
+            column_metadata=[
+                {'title': 'Name', 'class': 'sodar-overflow-container'},
+                {'title': 'Type', 'class': 'text-nowrap'},
+                {
+                    'title': get_display_name('PROJECT', title=True),
+                    'class': 'sodar-overflow-container',
+                },
+                {'title': 'Size', 'class': 'text-right text-nowrap'},
+                {'title': 'Description', 'class': 'sodar-overflow-container'},
+            ],
+            rows=rows,
         )
         return [ret]
 
