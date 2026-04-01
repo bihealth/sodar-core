@@ -638,6 +638,7 @@ See the signature of ``search()`` in
     - Special search options as additional key-value pairs.
 
 Currently we support two keyword arguments:
+
 ``project``
     - Used to limit the search to a specific project or category.
     - The full list of projects is pre-fetched for efficiency and passed in
