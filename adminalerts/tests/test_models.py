@@ -60,6 +60,7 @@ class TestAdminAlert(AdminAlertMixin, TestCase):
             'message': 'alert',
             'user': self.superuser.pk,
             'date_expire': self.alert.date_expire,
+            'dismissed_by': [],
             'active': True,
             'require_auth': True,
             'sodar_uuid': self.alert.sodar_uuid,

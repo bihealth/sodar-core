@@ -61,7 +61,7 @@ class TestPlugins(AdminAlertMixin, TestCase):
         self.assertEqual(len(messages), 1)
         self.assertIn(self.alert.message, message['content'])
         self.assertEqual(message['color'], 'info')
-        self.assertEqual(message['dismissable'], False)
+        self.assertEqual(message['dismissable'], True)
         self.assertEqual(message['require_auth'], True)
         self.assertEqual(
             message['dismiss_url'],

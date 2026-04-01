@@ -63,11 +63,14 @@ class TestAdminAlertDismissAjaxView(AdminalertsViewTestBase):
             self.assertEqual(len(dismissal_objects), 1)
             self.assertEqual(dismissal_objects.first().user, self.superuser)
 
-        with self.login(self.regular_user):
+        with self.login(self.user_regular):
             response = self.client.get(self.url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
-                AdminAlertDismissal.objects.filter(user=self.regular_user), 1
+                AdminAlertDismissal.objects.filter(
+                    user=self.user_regular
+                ).count(),
+                1,
             )
 
         response = self.client.get(self.url)
