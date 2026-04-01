@@ -1,8 +1,10 @@
 """Ajax views for the adminalerts app"""
 
+from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponseBadRequest
 
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 # Projectroles dependency
 from projectroles.views_ajax import SODARBasePermissionAjaxView
@@ -27,13 +29,14 @@ class AdminAlertActiveToggleAjaxView(SODARBasePermissionAjaxView):
         return Response({'is_active': alert.active}, status=200)
 
 
-class AdminAlertDismissAjaxView(SODARBasePermissionAjaxView):
+class AdminAlertDismissAjaxView(APIView):
     """View to dismiss an AdminAlert for a specific user"""
 
-    permission_required = 'adminalerts.view_alert'
     http_method_names = ['get']
 
     def get(self, request, **kwargs):
+        if not request.user or request.user == AnonymousUser():
+            return Response(status=200)
         alert_uuid = kwargs.get('adminalert', None)
         try:
             alert = AdminAlert.objects.get(sodar_uuid__exact=alert_uuid)

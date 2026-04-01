@@ -94,7 +94,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
         # Messages are fetched before login, so it's possible that user is the
         # AnonymousUser here, who doesn't have and id field in the database and
         # makes the .exclude() query fail.
-        if user and not isinstance(user, AnonymousUser):
+        if user and user != AnonymousUser():
             alerts = alerts.exclude(dismissed_by=user)
 
         for a in alerts:
