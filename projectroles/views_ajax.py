@@ -1,6 +1,7 @@
 """Ajax API views for the projectroles app"""
 
 import logging
+import uuid
 
 from typing import Any, Optional
 
@@ -32,7 +33,11 @@ from projectroles.models import (
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import PluginAPI, PluginCategoryStatistic
+from projectroles.plugins import PluginAPI, PluginCategoryStatistic, PluginSearchResult, PluginSearchResultCell
+from projectroles.templatetags.projectroles_common_tags import (
+    get_project_title_html,
+    get_remote_icon,
+)
 from projectroles.utils import get_display_name
 from projectroles.views import ProjectAccessMixin
 from projectroles.views_api import (
@@ -488,6 +493,142 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
                 project, request.user
             )
         return Response(ret, status=200)
+
+
+class PluginSearchResultsAjaxView(SODARBaseAjaxView):
+    """View for retrieving search results"""
+
+    http_method_names = ['post']
+
+    @classmethod
+    def _get_search_results(cls, user, plugin_name, terms, projects, keywords):
+        # Get project results
+        if plugin_name == 'projectroles':
+            rows = []
+            for p in Project.objects.find(
+                terms,
+                projects,
+                project_type='PROJECT',
+                keywords=keywords,
+            ):
+                print('\n')
+                print('found project')
+                print(p)
+                if p.public_access or user.has_perm(
+                    'projectroles.view_project', p
+                ):
+                    print('has perm')
+                    rows.append(PluginSearchResultCell(
+                        value=get_project_title_html(p),
+                        value_url=reverse('projectroles:detail', kwargs={'project': p.sodar_uuid}),
+                        # TODO: update get_remote_icon? It takes request as second arg but it should take just request.user
+                        icons=[get_remote_icon(p, user)],
+                        icon_urls=[None],
+                        highlight=terms,
+                    ))
+                elif user.is_authenticated and p.parent:
+                    print('p-parent')
+                    parent_as = p.parent.get_role(user)
+                    if (
+                        parent_as
+                        and parent_as.role.rank
+                        >= ROLE_RANKING[PROJECT_ROLE_FINDER]
+                    ):
+                        rows.append(PluginSearchResultCell(
+                            value=get_project_title_html(p),
+                            value_url=None,
+                            icons=[get_remote_icon(p, user), 'mdi:account-supervisor'],
+                            # TODO: link title?
+                            icon_urls=[None, reverse('projectroles:roles', kwargs={'project': p.parent.sodar_uuid})],
+                            highlight=terms,
+                        ))
+            res = PluginSearchResult(
+                category='all',
+                title=get_display_name(PROJECT_TYPE_PROJECT, title=True, plural=True),
+                search_types=['project'],
+                column_metadata=[get_display_name(PROJECT_TYPE_PROJECT, title=True), 'Description'],
+                rows=rows,
+            )
+            # TODO: original code organized results by category, so results should be a dict where the categories are the keys.
+            return {
+                # 'has_results': len(rows) > 0,
+                'error': None,
+                'results': [res.to_dict()],
+            }
+        # Get app results
+        plugin = plugin_api.get_app_plugin(plugin_name)
+        try:
+            results = plugin.search(terms, user, projects, **keywords)
+            # TODO: original code organized results by category, so results should be a dict where the categories are the keys.
+            # # Build results into dict for easier use in templates
+            # search_res['results'] = {
+            #     r.category: r for r in search_res['results']
+            # }
+            return {
+                'error': None,
+                'results': [res.to_dict() for res in results],
+            }
+        except Exception as ex:
+            if settings.DEBUG:
+                raise ex
+            logger.error(
+                'Exception raised by search() in {}: "{}" ({})'.format(
+                    plugin.name,
+                    ex,
+                    '; '#.join(
+                    #     [f'{k}={v}' for k, v in search_kwargs.items()]
+                    # ),
+                )
+            )
+            return {
+                'error': str(ex),
+                'results': [],
+            }
+
+        # TODO: this not_found is not handled currently (the code returns earlier so this point is never reached)
+        # List apps for which no results were found
+        context['not_found'] = self._get_not_found(
+            search_keywords.get('type', None),
+            context.get('project_results') or [],
+            context['app_results'],
+        )
+        return results
+
+    def post(self, request, *args, **kwargs):
+        print('hehetetehethntETNHETNHNTEH')
+        print(request)
+        data = request.POST
+        search_terms = data.get('terms').split('\n')
+        search_keywords = {}
+        for line in data.get('keywords').split('\n'):
+            if line:
+                key, value = line.split(':')
+                search_keywords[key] = value
+        if 'project' in search_keywords:
+            try:
+                sodar_uuid = uuid.UUID(search_keywords['project'])
+                parent = Project.objects.get(sodar_uuid=sodar_uuid)
+                search_projects = Project.objects.filter(
+                    full_title__startswith=parent.full_title
+                )
+            except ValueError:
+                # Not a valid UUID, trying to match project title directly
+                search_projects = Project.objects.filter(
+                    full_title__icontains=search_keywords['project']
+                )
+            except Project.DoesNotExist:
+                search_projects = Project.objects.none()
+        else:
+            search_projects = Project.objects.all()
+
+        res = self._get_search_results(
+            request.user,
+            data.get('plugin'),
+            search_terms,
+            search_projects,
+            search_keywords,
+        )
+        return JsonResponse(res)
 
 
 class CategoryStatisticsAjaxView(SODARBaseAjaxView):

@@ -889,26 +889,8 @@ class ProjectSearchResultsView(
             val = s.split(':')[1].lower().strip()
             search_keywords[kw] = val
 
-        if 'project' in search_keywords:
-            try:
-                sodar_uuid = uuid.UUID(search_keywords['project'])
-                parent = Project.objects.get(sodar_uuid=sodar_uuid)
-                search_projects = Project.objects.filter(
-                    full_title__startswith=parent.full_title
-                )
-            except ValueError:
-                # Not a valid UUID, trying to match project title directly
-                search_projects = Project.objects.filter(
-                    full_title__icontains=search_keywords['project']
-                )
-            except Project.DoesNotExist:
-                search_projects = Project.objects.none()
-        else:
-            search_projects = Project.objects.all()
-
         context['search_input'] = search_input
         context['search_terms'] = search_terms
-        context['search_projects'] = search_projects
         context['search_keywords'] = search_keywords
 
         plugins = plugin_api.get_active_plugins(plugin_type='project_app')
@@ -928,47 +910,13 @@ class ProjectSearchResultsView(
                 for p in search_apps
                 if search_keywords['type'] in p.search_types
             ]
-        context['search_plugins'] = search_apps
+        context['search_apps'] = [{'name': app.name, 'title': app.title, 'icon': app.icon} for app in search_apps]
+        if search_keywords.get('type', 'project') == 'project':
+            context['search_apps'].insert(0, {'name': 'projectroles', 'title': get_display_name(PROJECT_TYPE_PROJECT, title=True, plural=True), 'icon':'mdi:cube'})
         print(search_apps[0])
         print(dir(search_apps[0]))
 
         return context
-
-        # # Get project results
-        # if search_keywords.get('type', 'project') == 'project':
-        #     context['project_results'] = []
-        #     for p in Project.objects.find(
-        #         search_terms,
-        #         search_projects,
-        #         project_type='PROJECT',
-        #         keywords=search_keywords,
-        #     ):
-        #         if p.public_access or self.request.user.has_perm(
-        #             'projectroles.view_project', p
-        #         ):
-        #             context['project_results'].append(p)
-        #         elif self.request.user.is_authenticated and p.parent:
-        #             parent_as = p.parent.get_role(self.request.user)
-        #             if (
-        #                 parent_as
-        #                 and parent_as.role.rank
-        #                 >= ROLE_RANKING[PROJECT_ROLE_FINDER]
-        #             ):
-        #                 context['project_results'].append(p)
-        # # Get app results
-        # context['app_results'] = self._get_app_results(
-        #     self.request.user,
-        #     search_terms,
-        #     search_projects,
-        #     search_keywords,
-        # )
-        # # List apps for which no results were found
-        # context['not_found'] = self._get_not_found(
-        #     search_keywords.get('type', None),
-        #     context.get('project_results') or [],
-        #     context['app_results'],
-        # )
-        # return context
 
     def get(self, request, *args, **kwargs):
         return self._handle_context(request, *args, *kwargs)
