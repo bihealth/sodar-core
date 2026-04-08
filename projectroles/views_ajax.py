@@ -33,7 +33,12 @@ from projectroles.models import (
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import PluginAPI, PluginCategoryStatistic, PluginSearchResult, PluginSearchResultCell
+from projectroles.plugins import (
+    PluginAPI,
+    PluginCategoryStatistic,
+    PluginSearchResult,
+    PluginSearchResultCell,
+)
 from projectroles.templatetags.projectroles_common_tags import (
     get_project_title_html,
     get_remote_icon,
@@ -518,14 +523,19 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     'projectroles.view_project', p
                 ):
                     print('has perm')
-                    rows.append(PluginSearchResultCell(
-                        value=get_project_title_html(p),
-                        value_url=reverse('projectroles:detail', kwargs={'project': p.sodar_uuid}),
-                        # TODO: update get_remote_icon? It takes request as second arg but it should take just request.user
-                        icons=[get_remote_icon(p, user)],
-                        icon_urls=[None],
-                        highlight=terms,
-                    ))
+                    rows.append(
+                        PluginSearchResultCell(
+                            value=get_project_title_html(p),
+                            value_url=reverse(
+                                'projectroles:detail',
+                                kwargs={'project': p.sodar_uuid},
+                            ),
+                            # TODO: update get_remote_icon? It takes request as second arg but it should take just request.user
+                            icons=[get_remote_icon(p, user)],
+                            icon_urls=[None],
+                            highlight=terms,
+                        )
+                    )
                 elif user.is_authenticated and p.parent:
                     print('p-parent')
                     parent_as = p.parent.get_role(user)
@@ -534,19 +544,35 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                         and parent_as.role.rank
                         >= ROLE_RANKING[PROJECT_ROLE_FINDER]
                     ):
-                        rows.append(PluginSearchResultCell(
-                            value=get_project_title_html(p),
-                            value_url=None,
-                            icons=[get_remote_icon(p, user), 'mdi:account-supervisor'],
-                            # TODO: link title?
-                            icon_urls=[None, reverse('projectroles:roles', kwargs={'project': p.parent.sodar_uuid})],
-                            highlight=terms,
-                        ))
+                        rows.append(
+                            PluginSearchResultCell(
+                                value=get_project_title_html(p),
+                                value_url=None,
+                                icons=[
+                                    get_remote_icon(p, user),
+                                    'mdi:account-supervisor',
+                                ],
+                                # TODO: link title?
+                                icon_urls=[
+                                    None,
+                                    reverse(
+                                        'projectroles:roles',
+                                        kwargs={'project': p.parent.sodar_uuid},
+                                    ),
+                                ],
+                                highlight=terms,
+                            )
+                        )
             res = PluginSearchResult(
                 category='all',
-                title=get_display_name(PROJECT_TYPE_PROJECT, title=True, plural=True),
+                title=get_display_name(
+                    PROJECT_TYPE_PROJECT, title=True, plural=True
+                ),
                 search_types=['project'],
-                column_metadata=[get_display_name(PROJECT_TYPE_PROJECT, title=True), 'Description'],
+                column_metadata=[
+                    get_display_name(PROJECT_TYPE_PROJECT, title=True),
+                    'Description',
+                ],
                 rows=rows,
             )
             # TODO: original code organized results by category, so results should be a dict where the categories are the keys.
@@ -575,7 +601,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 'Exception raised by search() in {}: "{}" ({})'.format(
                     plugin.name,
                     ex,
-                    '; '#.join(
+                    '; ',  # .join(
                     #     [f'{k}={v}' for k, v in search_kwargs.items()]
                     # ),
                 )

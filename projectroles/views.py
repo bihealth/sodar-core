@@ -910,9 +910,21 @@ class ProjectSearchResultsView(
                 for p in search_apps
                 if search_keywords['type'] in p.search_types
             ]
-        context['search_apps'] = [{'name': app.name, 'title': app.title, 'icon': app.icon} for app in search_apps]
+        context['search_apps'] = [
+            {'name': app.name, 'title': app.title, 'icon': app.icon}
+            for app in search_apps
+        ]
         if search_keywords.get('type', 'project') == 'project':
-            context['search_apps'].insert(0, {'name': 'projectroles', 'title': get_display_name(PROJECT_TYPE_PROJECT, title=True, plural=True), 'icon':'mdi:cube'})
+            context['search_apps'].insert(
+                0,
+                {
+                    'name': 'projectroles',
+                    'title': get_display_name(
+                        PROJECT_TYPE_PROJECT, title=True, plural=True
+                    ),
+                    'icon': 'mdi:cube',
+                },
+            )
         print(search_apps[0])
         print(dir(search_apps[0]))
 
