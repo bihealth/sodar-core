@@ -17,7 +17,7 @@ from projectroles.utils import get_display_name
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
-from timeline.templatetags import (
+from timeline.templatetags.timeline_tags import (
     get_timestamp,
     get_status_style,
     get_app_icon_html,
@@ -166,11 +166,12 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                         #   {% get_event_name event %}
                         # </span>
                         value=get_event_name(item),
-                        icon=get_app_icon_html(item, plugin_lookup),
+                        icons=[get_app_icon_html(item, plugin_lookup)],
+                        icon_urls=[None],
                     ),
                     # Status
                     PluginSearchResultCell(
-                        value=item.get_status.status_type,
+                        value=item.get_status().status_type,
                     ),
                 ]
             )
@@ -184,7 +185,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 # TODO: how to handle dynamic column classes?
                 {
                     'title': 'Status',
-                    'class': f'{get_status_style(event.get_status)} text-light sodar-tl-item-status',
+                    # 'class': f'{get_status_style(event.get_status)} text-light sodar-tl-item-status',
+                    'class': 'text-light sodar-tl-item-status',
                 },
             ],
             rows=rows,

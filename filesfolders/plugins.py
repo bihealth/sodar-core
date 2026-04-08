@@ -23,6 +23,7 @@ from projectroles.plugins import (
 from projectroles.utils import get_display_name
 
 from filesfolders.models import File, Folder, HyperLink
+from filesfolders.templatetags.filesfolders_tags import get_class
 from filesfolders.urls import urlpatterns
 
 
@@ -204,13 +205,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         for item in items:
             if not user.has_perm('filesfolders.view_data', item.project):
                 continue
-            if item.get_class() == 'Hyperlink':
+            if get_class(item) == 'Hyperlink':
                 name_url = item.url
-            elif item.get_class() == 'Folder':
+            elif get_class(item) == 'Folder':
                 name_url = reverse(
                     'filesfolders:list', kwargs={'folder': item.sodar_uuid}
                 )
-            elif item.get_class() == 'File':
+            elif get_class(item) == 'File':
                 name_url = reverse(
                     'filesfolders:file_serve',
                     kwargs={'file': item.sodar_uuid, 'file_name': item.name},
@@ -222,7 +223,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'filesfolders.share_public_link', item.project
             )
             if (
-                item.get_class() == 'File'
+                get_class(item) == 'File'
                 and item.public_url
                 and allow_public_links
                 and can_share_link
@@ -245,7 +246,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     'filesfolders:list',
                     kwargs={'project': item.project.sodar_uuid},
                 )
-            if item.get_class == 'File':
+            if get_class(item) == 'File':
                 size = filesizeformat(item.file.file.size)
             else:
                 size = None
@@ -255,8 +256,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     PluginSearchResultCell(
                         value=item.name,
                         value_url=name_url,
-                        icon=icon,
-                        icon_url=icon_url,
+                        icons=[icon],
+                        icon_urls=[icon_url],
                         highlight=search_terms,
                         # TODO:
                         # {% if item.flag %}
@@ -266,7 +267,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     ),
                     # Type
                     PluginSearchResultCell(
-                        value=item.get_class(),
+                        value=get_class(item),
                     ),
                     # Project
                     PluginSearchResultCell(

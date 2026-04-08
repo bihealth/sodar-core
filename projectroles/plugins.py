@@ -1,6 +1,6 @@
 """Plugin point definitions and plugin API for apps based on projectroles"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import json
 import logging
 
@@ -948,9 +948,9 @@ class PluginSearchResultCell:
 
     value: str = None
     value_url: str = None
-    icon: str = None
-    icon_url: str = None
-    highlight: str = None
+    icons: list[str] = None
+    icon_urls: list[str] = None
+    highlight: list[str] = None
 
 
 class PluginSearchResult:
@@ -999,6 +999,15 @@ class PluginSearchResult:
             )
         self.column_metadata = column_metadata
         self.rows = rows
+
+    def to_dict(self):
+        return {
+            'category': self.category,
+            'title': self.title,
+            'search_types': self.search_types,
+            'column_metadata': self.column_metadata,
+            'rows': [[asdict(cell) for cell in row] for row in self.rows],
+        }
 
 
 class PluginCategoryStatistic:
