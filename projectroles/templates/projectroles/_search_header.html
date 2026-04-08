@@ -4,9 +4,11 @@
       <i class="iconify"
          data-icon="{% if icon %}{{ icon }}{% else %}{{ plugin.icon }}{% endif %}"></i>
       {{ search_title }}
-      {% if result_count %}
-       ({{ result_count }})
-      {% endif %}
+      <span class="sodar-search-card-result-count">
+        {% if result_count %}
+         ({{ result_count }})
+        {% endif %}
+      </span>
       <div class="input-group sodar-header-input-group sodar-header-input-group-search pull-right">
         <select class="form-control sodar-search-page-length">
           <option selected value="{{ search_pagination }}">Page</option>

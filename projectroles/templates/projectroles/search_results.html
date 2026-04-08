@@ -22,7 +22,7 @@
 
   <style type="text/css">
     div.sodar-search-card {
-      display: none;  /* Will be enabled after DataTables init */
+      {# display: none;  /* Will be enabled after DataTables init */ #}
     }
     div.sodar-search-card-body {
       padding: 0;
@@ -96,43 +96,27 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
-  {% if 'type' in search_keywords and search_keywords.type != 'project' and app_results|length == 0 %}
+  {% if 'type' in search_keywords and search_keywords.type != 'project' and search_apps|length == 0 %}
     <div class="alert alert-danger" role="alert">
       <strong>Error:</strong> Search type "{{ search_keywords.type }}" not recognized!
     </div>
   {% else %}
-    {# Project Search #}
-    {% if 'type' not in search_keywords or search_keywords.type == 'project' %}
-      {% if project_results|length > 0 %}
-        {% get_display_name 'PROJECT' title=True plural=True as projects_title %}
-        {% include 'projectroles/_search_header.html' with search_title=projects_title result_count=project_results|length icon='mdi:cube' %}
-        <table class="table table-striped sodar-card-table sodar-search-table"
-               id="sodar-pr-search-table">
-          <thead>
-            <tr>
-              <th>{% get_display_name 'PROJECT' title=True %}</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for p in project_results %}
-              {% include 'projectroles/_project_search_item.html' %}
-            {% endfor %}
-          </tbody>
-        </table>
-        {% include 'projectroles/_search_footer.html' %}
-      {% endif %}
-    {% endif %}
-    {# App Search #}
-    {% for app in app_results %}
-      {% if app.plugin.search_template and app.has_results and not app.error %}
-        {% include app.plugin.search_template with plugin=app.plugin search_results=app.results %}
-      {% elif app.error %}
-        <div class="alert alert-error">
-          <strong>Error:</strong>
-          Exception raised by {{ app.plugin.name }}: "{{ app.error }}"
+    <form id="sodar-ajax-search" name="sodar-ajax-search" action={% url 'projectroles:ajax_search' %}>{# style="display: none;">#}
+      <textarea name="terms">{{ search_terms|join:'\n' }}</textarea>
+      <textarea name="terms">
+        {% for key, value in search_keywords.items %}
+          {{ key }}:{{ value }}
+        {% endfor %}
+        </textarea>
+    </form>
+    {% for app in search_apps %}
+      {% include 'projectroles/_search_header.html' with search_title=app.title result_count=0 icon=app.icon %}
+        <div class="sodar-ajax-search-results" data-app-name="{{ app.name }}">
+          <i class="iconify spin text-secondary""
+             data-icon="mdi:loading" data-height="42">
+          </i>
         </div>
-      {% endif %}
+      {% include 'projectroles/_search_footer.html' %}
     {% endfor %}
   {% endif %}
 
@@ -161,6 +145,50 @@
   <!-- DataTables -->
   {% include 'projectroles/_datatables_js.html' %}
   <!-- Project search -->
+  // TODO: move to static file (search.js)
+  <script type="text/javascript">
+    const form = document.querySelector("#sodar-ajax-search")
+    const url = form.action
+    const data = new FormData(form)
+    document.querySelectorAll(".sodar-ajax-search-results").forEach(x => {
+      $.post(url, {
+        "plugin": x.dataset.appName,
+        "terms": data.get("terms"),
+        "keywords": data.get("keywords"),
+      // TODO: handle errors, but how?
+      }, success = data => {
+        console.log(data)
+        if (data["errors"]) {
+          console.error(data["errors"])
+          // TODO: show error in html
+          return
+        }
+        $(x).text('')
+        for (let res of data["results"]) {
+          if (! res.rows.length) {
+            $(x).text("No data found.")
+            // TODO: hide pagination element
+            continue
+          }
+          $(x).closest(".sodar-search-card").find(".sodar-search-card-result-count").text(`(${res.rows.length})`)
+          let table = $('<table>')
+          let tr = $('<tr>')
+          for (let {title, className} of res.column_metadata) {
+            tr.append($('<th>').attr('class', className).text(title))
+          }
+          table.append($('<thead>').append(tr))
+          for (let row of res.rows) {
+            let tr = $('<tr>')
+            for (let field of row) {
+              tr.append($('<td>').text(field.value))
+            }
+            table.append(tr)
+          }
+          $(x).append(table)
+        }
+      })
+    })
+  </script>
   <script type="text/javascript" src="{% static 'projectroles/js/search.js' %}"></script>
 
   <!-- Tour content -->
