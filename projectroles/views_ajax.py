@@ -523,24 +523,31 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     'projectroles.view_project', p
                 ):
                     print('has perm')
-                    rows.append([
-                        PluginSearchResultCell(
-                            value=get_project_title_html(p),
-                            value_url=reverse(
-                                'projectroles:detail',
-                                kwargs={'project': p.sodar_uuid},
+                    rows.append(
+                        [
+                            PluginSearchResultCell(
+                                value=get_project_title_html(p),
+                                value_url=reverse(
+                                    'projectroles:detail',
+                                    kwargs={'project': p.sodar_uuid},
+                                ),
+                                # TODO: update get_remote_icon? It takes request as second arg but it should take just request.user
+                                icons=[
+                                    {
+                                        'icon': get_remote_icon(p, user),
+                                        'url': None,
+                                    }
+                                ],
+                                highlight=terms,
+                                class_name='sodar-overflow-container',
                             ),
-                            # TODO: update get_remote_icon? It takes request as second arg but it should take just request.user
-                            icons=[{'icon': get_remote_icon(p, user), 'url': None}],
-                            highlight=terms,
-                            className='sodar-overflow-container',
-                        ),
-                        PluginSearchResultCell(
-                            value=p.description,
-                            highlight=terms,
-                            className='sodar-overflow-container',
-                        ),
-                    ])
+                            PluginSearchResultCell(
+                                value=p.description,
+                                highlight=terms,
+                                class_name='sodar-overflow-container',
+                            ),
+                        ]
+                    )
                 elif user.is_authenticated and p.parent:
                     print('p-parent')
                     parent_as = p.parent.get_role(user)
@@ -549,31 +556,47 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                         and parent_as.role.rank
                         >= ROLE_RANKING[PROJECT_ROLE_FINDER]
                     ):
-                        rows.append([
-                            PluginSearchResultCell(
-                                value=get_project_title_html(p),
-                                value_url=None,
-                                # TODO: link title?
-                                icons=[
-                                    {'icon': get_remote_icon(p, user), 'url': None},
-                                    {'icon': 'mdi:account-supervisor', 'url': reverse('projectroles:roles', kwargs={'project': p.parent.sodar_uuid})},
-                                ],
-                                highlight=terms,
-                                className='sodar-overflow-container',
-                            ),
-                            PluginSearchResultCell(
-                                value=p.description,
-                                highlight=terms,
-                                className='sodar-overflow-container',
-                            ),
-                        ])
+                        rows.append(
+                            [
+                                PluginSearchResultCell(
+                                    value=get_project_title_html(p),
+                                    value_url=None,
+                                    # TODO: link title?
+                                    icons=[
+                                        {
+                                            'icon': get_remote_icon(p, user),
+                                            'url': None,
+                                        },
+                                        {
+                                            'icon': 'mdi:account-supervisor',
+                                            'url': reverse(
+                                                'projectroles:roles',
+                                                kwargs={
+                                                    'project': p.parent.sodar_uuid
+                                                },
+                                            ),
+                                        },
+                                    ],
+                                    highlight=terms,
+                                    class_name='sodar-overflow-container',
+                                ),
+                                PluginSearchResultCell(
+                                    value=p.description,
+                                    highlight=terms,
+                                    class_name='sodar-overflow-container',
+                                ),
+                            ]
+                        )
             res = PluginSearchResult(
                 category='all',
                 title=get_display_name(
                     PROJECT_TYPE_PROJECT, title=True, plural=True
                 ),
                 search_types=['project'],
-                fields=[get_display_name(PROJECT_TYPE_PROJECT, title=True), 'Description'],
+                fields=[
+                    get_display_name(PROJECT_TYPE_PROJECT, title=True),
+                    'Description',
+                ],
                 rows=rows,
             )
             # TODO: original code organized results by category, so results should be a dict where the categories are the keys.

@@ -892,6 +892,10 @@ class ProjectSearchResultsView(
         context['search_terms'] = search_terms
         context['search_keywords'] = search_keywords
 
+        print('-------------SEARCH"')
+        print(search_terms)
+        print(search_keywords)
+
         plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
 
@@ -924,8 +928,6 @@ class ProjectSearchResultsView(
                     'icon': 'mdi:cube',
                 },
             )
-        print(search_apps[0])
-        print(dir(search_apps[0]))
 
         return context
 

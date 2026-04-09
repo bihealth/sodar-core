@@ -950,7 +950,7 @@ class PluginSearchResultCell:
     value_url: str = None
     icons: list[dict[str, str]] = None
     highlight: list[str] = None
-    className: str = None
+    class_name: str = None
 
 
 class PluginSearchResult:

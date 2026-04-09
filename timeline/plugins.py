@@ -166,13 +166,18 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                         #   {% get_event_name event %}
                         # </span>
                         value=get_event_name(item),
-                        icons=[{'icon': get_app_icon_html(item, plugin_lookup), 'url': None}],
-                        className='sodar-overflow-container',
+                        icons=[
+                            {
+                                'icon': get_app_icon_html(item, plugin_lookup),
+                                'url': None,
+                            }
+                        ],
+                        class_name='sodar-overflow-container',
                     ),
                     # Status
                     PluginSearchResultCell(
                         value=item.get_status().status_type,
-                        className=f'{get_status_style(item.get_status())} text-light sodar-tl-item-status',
+                        class_name=f'{get_status_style(item.get_status())} text-light sodar-tl-item-status',
                     ),
                 ]
             )

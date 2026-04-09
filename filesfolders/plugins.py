@@ -258,7 +258,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                         value_url=name_url,
                         icons=[{'icon': icon, 'url': icon_url}],
                         highlight=search_terms,
-                        className='sodar-overflow-container',
+                        class_name='sodar-overflow-container',
                         # TODO:
                         # {% if item.flag %}
                         #   {% get_flag item.flag as item_flag %}
@@ -268,24 +268,24 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     # Type
                     PluginSearchResultCell(
                         value=get_class(item),
-                        className='text-nowrap',
+                        class_name='text-nowrap',
                     ),
                     # Project
                     PluginSearchResultCell(
                         value=item.project.title,
                         value_url=project_url,
-                        className='sodar-overflow-container',
+                        class_name='sodar-overflow-container',
                     ),
                     # Size
                     PluginSearchResultCell(
                         value=size,
-                        className='text-right text-nowrap',
+                        class_name='text-right text-nowrap',
                     ),
                     # Description
                     PluginSearchResultCell(
                         value=item.description,
                         highlight=search_terms,
-                        className='sodar-overflow-container',
+                        class_name='sodar-overflow-container',
                     ),
                 ]
             )
@@ -293,7 +293,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             category='all',
             title='Files, Folders and Links',
             search_types=['file', 'folder', 'link'],
-            fields=['Name', 'Type', get_display_name('PROJECT', title=True), 'Size', 'Description'],
+            fields=[
+                'Name',
+                'Type',
+                get_display_name('PROJECT', title=True),
+                'Size',
+                'Description',
+            ],
             rows=rows,
         )
         return [ret]
