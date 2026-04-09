@@ -258,7 +258,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                         value_url=name_url,
                         icons=[{'icon': icon, 'url': icon_url}],
                         highlight=search_terms,
-                        class_name='sodar-overflow-container',
+                        cell_class='sodar-overflow-container',
                         # TODO:
                         # {% if item.flag %}
                         #   {% get_flag item.flag as item_flag %}
@@ -268,24 +268,24 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     # Type
                     PluginSearchResultCell(
                         value=get_class(item),
-                        class_name='text-nowrap',
+                        cell_class='text-nowrap',
                     ),
                     # Project
                     PluginSearchResultCell(
                         value=item.project.title,
                         value_url=project_url,
-                        class_name='sodar-overflow-container',
+                        cell_class='sodar-overflow-container',
                     ),
                     # Size
                     PluginSearchResultCell(
                         value=size,
-                        class_name='text-right text-nowrap',
+                        cell_class='text-right text-nowrap',
                     ),
                     # Description
                     PluginSearchResultCell(
                         value=item.description,
                         highlight=search_terms,
-                        class_name='sodar-overflow-container',
+                        cell_class='sodar-overflow-container',
                     ),
                 ]
             )

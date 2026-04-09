@@ -172,12 +172,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                                 'url': None,
                             }
                         ],
-                        class_name='sodar-overflow-container',
+                        cell_class='sodar-overflow-container',
+                        # highlight=search_terms, # XXX: not in the original
                     ),
                     # Status
                     PluginSearchResultCell(
                         value=item.get_status().status_type,
-                        class_name=f'{get_status_style(item.get_status())} text-light sodar-tl-item-status',
+                        cell_class=f'{get_status_style(item.get_status())} text-light sodar-tl-item-status',
                     ),
                 ]
             )

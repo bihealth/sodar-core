@@ -516,13 +516,10 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 project_type='PROJECT',
                 keywords=keywords,
             ):
-                print('\n')
-                print('found project')
-                print(p)
                 if p.public_access or user.has_perm(
                     'projectroles.view_project', p
                 ):
-                    print('has perm')
+                    # TODO: <tr>'s can also have a class
                     rows.append(
                         [
                             PluginSearchResultCell(
@@ -531,7 +528,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                                     'projectroles:detail',
                                     kwargs={'project': p.sodar_uuid},
                                 ),
-                                # TODO: update get_remote_icon? It takes request as second arg but it should take just request.user
+                                value_url_class='sodar-pr-project-search-link',
                                 icons=[
                                     {
                                         'icon': get_remote_icon(p, user),
@@ -539,17 +536,16 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                                     }
                                 ],
                                 highlight=terms,
-                                class_name='sodar-overflow-container',
+                                cell_class='sodar-overflow-container',
                             ),
                             PluginSearchResultCell(
                                 value=p.description,
                                 highlight=terms,
-                                class_name='sodar-overflow-container',
+                                cell_class='sodar-overflow-container',
                             ),
                         ]
                     )
                 elif user.is_authenticated and p.parent:
-                    print('p-parent')
                     parent_as = p.parent.get_role(user)
                     if (
                         parent_as
@@ -575,15 +571,18 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                                                     'project': p.parent.sodar_uuid
                                                 },
                                             ),
+                                            'url_class': 'sodar-pr-project-findable',
+                                            'url_title': 'Findable project: Request access from category owner or delegate',
+                                            # data-toggle="tooltip">,
                                         },
                                     ],
                                     highlight=terms,
-                                    class_name='sodar-overflow-container',
+                                    cell_class='sodar-overflow-container text-muted',
                                 ),
                                 PluginSearchResultCell(
                                     value=p.description,
                                     highlight=terms,
-                                    class_name='sodar-overflow-container',
+                                    cell_class='sodar-overflow-container text-muted',
                                 ),
                             ]
                         )
@@ -600,6 +599,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 rows=rows,
             )
             # TODO: original code organized results by category, so results should be a dict where the categories are the keys.
+            # XXX: To be discussed: how are categories used?
             return {
                 # 'has_results': len(rows) > 0,
                 'error': None,
@@ -635,18 +635,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 'results': [],
             }
 
-        # # TODO: this not_found is not handled currently (the code returns earlier so this point is never reached)
-        # # List apps for which no results were found
-        # context['not_found'] = self._get_not_found(
-        #     search_keywords.get('type', None),
-        #     context.get('project_results') or [],
-        #     context['app_results'],
-        # )
-        # return results
-
     def post(self, request, *args, **kwargs):
-        print('hehetetehethntETNHETNHNTEH')
-        print(request)
         data = request.POST
         search_terms = data.get('terms').split('\n')
         search_keywords = {}
