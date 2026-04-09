@@ -523,7 +523,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     'projectroles.view_project', p
                 ):
                     print('has perm')
-                    rows.append(
+                    rows.append([
                         PluginSearchResultCell(
                             value=get_project_title_html(p),
                             value_url=reverse(
@@ -531,11 +531,16 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                                 kwargs={'project': p.sodar_uuid},
                             ),
                             # TODO: update get_remote_icon? It takes request as second arg but it should take just request.user
-                            icons=[get_remote_icon(p, user)],
-                            icon_urls=[None],
+                            icons=[{'icon': get_remote_icon(p, user), 'url': None}],
                             highlight=terms,
-                        )
-                    )
+                            className='sodar-overflow-container',
+                        ),
+                        PluginSearchResultCell(
+                            value=p.description,
+                            highlight=terms,
+                            className='sodar-overflow-container',
+                        ),
+                    ])
                 elif user.is_authenticated and p.parent:
                     print('p-parent')
                     parent_as = p.parent.get_role(user)
@@ -544,35 +549,31 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                         and parent_as.role.rank
                         >= ROLE_RANKING[PROJECT_ROLE_FINDER]
                     ):
-                        rows.append(
+                        rows.append([
                             PluginSearchResultCell(
                                 value=get_project_title_html(p),
                                 value_url=None,
-                                icons=[
-                                    get_remote_icon(p, user),
-                                    'mdi:account-supervisor',
-                                ],
                                 # TODO: link title?
-                                icon_urls=[
-                                    None,
-                                    reverse(
-                                        'projectroles:roles',
-                                        kwargs={'project': p.parent.sodar_uuid},
-                                    ),
+                                icons=[
+                                    {'icon': get_remote_icon(p, user), 'url': None},
+                                    {'icon': 'mdi:account-supervisor', 'url': reverse('projectroles:roles', kwargs={'project': p.parent.sodar_uuid})},
                                 ],
                                 highlight=terms,
-                            )
-                        )
+                                className='sodar-overflow-container',
+                            ),
+                            PluginSearchResultCell(
+                                value=p.description,
+                                highlight=terms,
+                                className='sodar-overflow-container',
+                            ),
+                        ])
             res = PluginSearchResult(
                 category='all',
                 title=get_display_name(
                     PROJECT_TYPE_PROJECT, title=True, plural=True
                 ),
                 search_types=['project'],
-                column_metadata=[
-                    get_display_name(PROJECT_TYPE_PROJECT, title=True),
-                    'Description',
-                ],
+                fields=[get_display_name(PROJECT_TYPE_PROJECT, title=True), 'Description'],
                 rows=rows,
             )
             # TODO: original code organized results by category, so results should be a dict where the categories are the keys.
@@ -611,14 +612,14 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 'results': [],
             }
 
-        # TODO: this not_found is not handled currently (the code returns earlier so this point is never reached)
-        # List apps for which no results were found
-        context['not_found'] = self._get_not_found(
-            search_keywords.get('type', None),
-            context.get('project_results') or [],
-            context['app_results'],
-        )
-        return results
+        # # TODO: this not_found is not handled currently (the code returns earlier so this point is never reached)
+        # # List apps for which no results were found
+        # context['not_found'] = self._get_not_found(
+        #     search_keywords.get('type', None),
+        #     context.get('project_results') or [],
+        #     context['app_results'],
+        # )
+        # return results
 
     def post(self, request, *args, **kwargs):
         print('hehetetehethntETNHETNHNTEH')

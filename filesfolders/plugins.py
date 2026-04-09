@@ -256,9 +256,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     PluginSearchResultCell(
                         value=item.name,
                         value_url=name_url,
-                        icons=[icon],
-                        icon_urls=[icon_url],
+                        icons=[{'icon': icon, 'url': icon_url}],
                         highlight=search_terms,
+                        className='sodar-overflow-container',
                         # TODO:
                         # {% if item.flag %}
                         #   {% get_flag item.flag as item_flag %}
@@ -268,20 +268,24 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     # Type
                     PluginSearchResultCell(
                         value=get_class(item),
+                        className='text-nowrap',
                     ),
                     # Project
                     PluginSearchResultCell(
                         value=item.project.title,
                         value_url=project_url,
+                        className='sodar-overflow-container',
                     ),
                     # Size
                     PluginSearchResultCell(
                         value=size,
+                        className='text-right text-nowrap',
                     ),
                     # Description
                     PluginSearchResultCell(
                         value=item.description,
                         highlight=search_terms,
+                        className='sodar-overflow-container',
                     ),
                 ]
             )
@@ -289,16 +293,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             category='all',
             title='Files, Folders and Links',
             search_types=['file', 'folder', 'link'],
-            column_metadata=[
-                {'title': 'Name', 'class': 'sodar-overflow-container'},
-                {'title': 'Type', 'class': 'text-nowrap'},
-                {
-                    'title': get_display_name('PROJECT', title=True),
-                    'class': 'sodar-overflow-container',
-                },
-                {'title': 'Size', 'class': 'text-right text-nowrap'},
-                {'title': 'Description', 'class': 'sodar-overflow-container'},
-            ],
+            fields=['Name', 'Type', get_display_name('PROJECT', title=True), 'Size', 'Description'],
             rows=rows,
         )
         return [ret]

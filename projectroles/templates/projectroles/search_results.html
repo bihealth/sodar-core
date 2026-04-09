@@ -150,9 +150,10 @@
     const form = document.querySelector("#sodar-ajax-search")
     const url = form.action
     const data = new FormData(form)
-    document.querySelectorAll(".sodar-ajax-search-results").forEach(x => {
+    $(".sodar-ajax-search-results").each(function() {
+      let appName = $(this).data("app-name")
       $.post(url, {
-        "plugin": x.dataset.appName,
+        "plugin": appName,
         "terms": data.get("terms"),
         "keywords": data.get("keywords"),
       // TODO: handle errors, but how?
@@ -163,28 +164,33 @@
           // TODO: show error in html
           return
         }
-        $(x).text('')
-        for (let res of data["results"]) {
+        $(this).text('')
+        for (let i = 0; i < data["results"].length; ++i) {
+          let res = data["results"][i]
           if (! res.rows.length) {
-            $(x).text("No data found.")
+            $(this).text("No data found.")
             // TODO: hide pagination element
             continue
           }
-          $(x).closest(".sodar-search-card").find(".sodar-search-card-result-count").text(`(${res.rows.length})`)
-          let table = $('<table>')
-          let tr = $('<tr>')
-          for (let {title, className} of res.column_metadata) {
-            tr.append($('<th>').attr('class', className).text(title))
+          // FIXME: if there are multiple pluginsearchresults, the next line is very wrong.
+          $(this).closest(".sodar-search-card").find(".sodar-search-card-result-count").text(`(${res.rows.length})`)
+          let tableId = `sodar-search-results-${appName}-${i}`
+          let table = $("<table>").attr("id", tableId)
+          let tr = $("<tr>")
+          for (let field of res.fields) {
+            tr.append($("<th>").text(field))
           }
-          table.append($('<thead>').append(tr))
+          table.append($("<thead>").append(tr))
           for (let row of res.rows) {
-            let tr = $('<tr>')
-            for (let field of row) {
-              tr.append($('<td>').text(field.value))
+            let tr = $("<tr>")
+            for (let j = 0; j < row.length; ++j) {
+              let field = row[j]
+              tr.append($("<td>").attr('class', field.className).text(field.value))
             }
             table.append(tr)
           }
-          $(x).append(table)
+          $(this).append(table)
+          let dt = new DataTable(`#${tableId}`)
         }
       })
     })

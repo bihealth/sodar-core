@@ -19,9 +19,9 @@ from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 from timeline.templatetags.timeline_tags import (
     get_timestamp,
-    get_status_style,
     get_app_icon_html,
     get_plugin_lookup,
+    get_status_style,
     get_event_name,
 )
 
@@ -166,12 +166,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                         #   {% get_event_name event %}
                         # </span>
                         value=get_event_name(item),
-                        icons=[get_app_icon_html(item, plugin_lookup)],
-                        icon_urls=[None],
+                        icons=[{'icon': get_app_icon_html(item, plugin_lookup), 'url': None}],
+                        className='sodar-overflow-container',
                     ),
                     # Status
                     PluginSearchResultCell(
                         value=item.get_status().status_type,
+                        className=f'{get_status_style(item.get_status())} text-light sodar-tl-item-status',
                     ),
                 ]
             )
@@ -179,16 +180,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             category='all',
             title='Timeline Events',
             search_types=['timeline'],
-            column_metadata=[
-                {'title': 'Timestamp', 'class': None},
-                {'title': 'Description', 'class': 'sodar-overflow-container'},
-                # TODO: how to handle dynamic column classes?
-                {
-                    'title': 'Status',
-                    # 'class': f'{get_status_style(event.get_status)} text-light sodar-tl-item-status',
-                    'class': 'text-light sodar-tl-item-status',
-                },
-            ],
+            fields=['Timestamp', 'Description', 'Status'],
             rows=rows,
         )
         return [ret]

@@ -948,9 +948,9 @@ class PluginSearchResultCell:
 
     value: str = None
     value_url: str = None
-    icons: list[str] = None
-    icon_urls: list[str] = None
+    icons: list[dict[str, str]] = None
     highlight: list[str] = None
+    className: str = None
 
 
 class PluginSearchResult:
@@ -965,8 +965,8 @@ class PluginSearchResult:
     title = None
     #: List of one or more search type keywords for these results
     search_types = []
-    #: List of column metadata, such as title and possible formatting (e.g. alignment)
-    column_metadata = []
+    #: List of column titles
+    fields = []
     #: List of lists of result objects
     rows = []
 
@@ -975,7 +975,7 @@ class PluginSearchResult:
         category: str,
         title: str,
         search_types: list[str],
-        column_metadata: list[dict],
+        fields: list[str],
         rows: list[list[PluginSearchResultCell]],
     ):
         """
@@ -986,8 +986,7 @@ class PluginSearchResult:
                       the UI (string)
         :param search_types: List of one or more search type keywords for the
                              results
-        :param column_metadata: List of column metadata such as title and
-                                possible formatting (e.g. alignment)
+        :param fields: List of column titles
         :param rows: List of lists of PluginSearchResultCell objects
         """
         self.category = category
@@ -997,7 +996,7 @@ class PluginSearchResult:
             raise ValueError(
                 'At least one type keyword must be provided in search_types'
             )
-        self.column_metadata = column_metadata
+        self.fields = fields
         self.rows = rows
 
     def to_dict(self):
@@ -1005,7 +1004,7 @@ class PluginSearchResult:
             'category': self.category,
             'title': self.title,
             'search_types': self.search_types,
-            'column_metadata': self.column_metadata,
+            'fields': self.fields,
             'rows': [[asdict(cell) for cell in row] for row in self.rows],
         }
 

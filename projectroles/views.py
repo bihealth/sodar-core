@@ -4,7 +4,6 @@ import json
 import logging
 import re
 import shlex
-import uuid
 
 from ipaddress import ip_address, ip_network
 from typing import Any, Optional, Union
