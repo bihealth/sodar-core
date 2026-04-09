@@ -169,28 +169,59 @@
           let res = data["results"][i]
           if (! res.rows.length) {
             $(this).text("No data found.")
-            // TODO: hide pagination element
+            // Disable pagination and filtering for this card
+            let card = $(this).closest('.sodar-search-card')
+            card.find('.sodar-search-page-length').prop('disabled', 'disabled')
+            card.find('.sodar-search-filter').prop('disabled', 'disabled')
             continue
           }
           // FIXME: if there are multiple pluginsearchresults, the next line is very wrong.
-          $(this).closest(".sodar-search-card").find(".sodar-search-card-result-count").text(`(${res.rows.length})`)
+          <!-- $(this).closest(".sodar-search-card").find(".sodar-search-card-result-count").text(`(${res.rows.length})`) -->
           let tableId = `sodar-search-results-${appName}-${i}`
-          let table = $("<table>").attr("id", tableId)
+          let table = $("<table>").attr("id", tableId).attr("class", "sodar-search-table table-striped")
           let tr = $("<tr>")
           for (let field of res.fields) {
             tr.append($("<th>").text(field))
           }
           table.append($("<thead>").append(tr))
+          let tbody = $("<tbody>")
           for (let row of res.rows) {
             let tr = $("<tr>")
             for (let j = 0; j < row.length; ++j) {
               let field = row[j]
-              tr.append($("<td>").attr('class', field.className).text(field.value))
+              if (field.value_url) {
+                $("<td>").attr("class", field.className).append($("<a>").attr("href", field.value_url).text(field.value)).appendTo(tr)
+              } else if (field.value) {
+                $("<td>").attr("class", field.className).text(field.value).appendTo(tr)
+              } else {
+                $("<td>").attr("class", "text-muted").text("N/A").appendTo(tr)
+              }
             }
-            table.append(tr)
+            tbody.append(tr)
           }
-          $(this).append(table)
-          let dt = new DataTable(`#${tableId}`)
+          $(this).append(table.append(tbody))
+          $(table).DataTable({
+            order: [], // Disable default ordering
+            scrollX: false,
+            autoWidth: false,
+            paging: true,
+            pagingType: 'full_numbers',
+            pageLength: window.searchPagination,
+            lengthChange: true,
+            scrollCollapse: true,
+            info: false,
+            language: {paginate: sodarDataTablesPaginate},
+            dom: 'tp',
+            fnDrawCallback: function () {
+              modifyCellOverflow()
+            }
+          })
+          // Hide pagination and disable page dropdown if only one page
+          if ($(table).DataTable().page.info().pages === 1) {
+            $(table).closest('.sodar-search-card')
+              .find('.sodar-search-page-length').prop('disabled', 'disabled')
+            $(table).next('.dt-paging').hide()
+          }
         }
       })
     })
