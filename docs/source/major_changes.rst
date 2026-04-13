@@ -66,6 +66,13 @@ The signature of the ``search()`` function implemented by plugins has changed:
     - ``type:<string>``, which specifies the type of objects that should be
       retrieved by the search.
 
+Template Tag get_remote_icon() Updated
+--------------------------------------------
+
+The signature of the ``get_remote_icon()`` template tag in
+``projectroles_common_tags`` has been updated. The second argument is now
+expected as a ``User`` object instead of a ``HttpRequest``.
+
 Previously Deprecated Features Removed
 --------------------------------------
 

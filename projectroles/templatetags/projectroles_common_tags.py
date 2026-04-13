@@ -190,7 +190,7 @@ def get_project_link(
     """Return link to project with a simple or full title"""
     remote_icon = ''
     if request:
-        remote_icon = get_remote_icon(project, request)
+        remote_icon = get_remote_icon(project, request.user)
     return (
         '<a href="{}" title="{}" data-toggle="tooltip" '
         'data-placement="top">{}</a>{}'.format(
@@ -448,9 +448,9 @@ def get_info_link(content: str, html: bool = False) -> str:
 
 
 @register.simple_tag
-def get_remote_icon(project: Project, request: HttpRequest) -> str:
+def get_remote_icon(project: Project, user: User) -> str:
     """Get remote project icon HTML"""
-    if project.is_remote() and request.user.is_superuser:
+    if project.is_remote() and user.is_superuser:
         remote_project = RemoteProject.objects.filter(
             project=project, site__mode=SITE_MODE_SOURCE
         ).first()
