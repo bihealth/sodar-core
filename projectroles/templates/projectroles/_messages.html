@@ -64,7 +64,7 @@
         type: 'GET',
         url: event.currentTarget.dataset.dismissUrl,
         error: function (jqXHR, textStatus) {
-          console.error('Failed to dismiss alert:', textStatus);
+          console.error('Failed to dismiss alert:', jqXHR.status);
         },
       })
     })
