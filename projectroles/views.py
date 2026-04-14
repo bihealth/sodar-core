@@ -724,125 +724,7 @@ class ProjectDetailView(
 # Search Views -----------------------------------------------------------------
 
 
-class ProjectSearchMixin:
-    """Common functionalities for search views"""
-
-    def _get_app_results(
-        self,
-        user: User,
-        search_terms: list[str],
-        projects: QuerySet[Project],
-        search_keywords: Optional[dict],
-    ) -> list:
-        """
-        Return app plugin search results.
-
-        :param user: user who initiated the sarch
-        :param search_terms: Search terms (list of strings)
-        :param projects: All projects where the search should be performed
-        :param search_keywords: Optional keywords (dictionary or None)
-        :return: List
-        """
-        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
-        ret = []
-        omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
-
-        search_apps = sorted(
-            [
-                p
-                for p in plugins
-                if (p.search_enable and p.name not in omit_apps_list)
-            ],
-            key=lambda x: x.plugin_ordering,
-        )
-        if search_keywords and 'type' in search_keywords:
-            search_apps = [
-                p
-                for p in search_apps
-                if search_keywords['type'] in p.search_types
-            ]
-        for plugin in search_apps:
-            search_kwargs = {
-                'user': user,
-                'projects': projects,
-                'search_terms': search_terms,
-                'keywords': search_keywords,
-            }
-            search_res = {
-                'plugin': plugin,
-                'results': None,
-                'error': None,
-                'has_results': False,
-            }
-            try:
-                search_res['results'] = plugin.search(**search_kwargs)
-                for r in search_res['results']:
-                    if r.items and (
-                        (isinstance(r.items, QuerySet) and r.items.count() > 0)
-                        or (isinstance(r.items, list) and len(r.items) > 0)
-                    ):
-                        search_res['has_results'] = True
-                        break
-                # Build results into dict for easier use in templates
-                search_res['results'] = {
-                    r.category: r for r in search_res['results']
-                }
-            except Exception as ex:
-                if settings.DEBUG:
-                    raise ex
-                search_res['error'] = str(ex)
-                logger.error(
-                    'Exception raised by search() in {}: "{}" ({})'.format(
-                        plugin.name,
-                        ex,
-                        '; '.join(
-                            [f'{k}={v}' for k, v in search_kwargs.items()]
-                        ),
-                    )
-                )
-            ret.append(search_res)
-        return ret
-
-    def _get_not_found(
-        self,
-        search_type: Optional[str],
-        project_results: list,
-        app_results: list,
-    ) -> list:
-        """
-        Return list of apps for which objects were search for but not returned.
-
-        :param search_type: Type keyword for search or None
-        :param project_results: Results for projectroles search
-        :param app_results: Results for app plugin search
-        :return: List
-        """
-        ret = []
-        if len(project_results) == 0 and (
-            not search_type or search_type == 'project'
-        ):
-            ret.append('Projects')
-        for results in [a['results'] for a in app_results]:
-            if not results:
-                continue
-            for k, r in results.items():
-                type_match = True if search_type else False
-                if not type_match and search_type in r.search_types:
-                    type_match = True
-                if (type_match or not search_type) and (not r.items):
-                    ret.append(r.title)
-        return ret
-
-    def dispatch(self, request, *args, **kwargs):
-        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
-            messages.error(request, 'Search is not enabled.')
-            return redirect('home')
-        return super().dispatch(request, *args, **kwargs)
-
-
-class ProjectSearchResultsView(
-    LoginRequiredMixin, ProjectSearchMixin, TemplateView
-):
+class ProjectSearchResultsView(LoginRequiredMixin, TemplateView):
     """View for displaying results of search within projects"""
 
     template_name = 'projectroles/search_results.html'
@@ -892,10 +774,6 @@ class ProjectSearchResultsView(
         context['search_terms'] = search_terms
         context['search_keywords'] = search_keywords
 
-        print('-------------SEARCH"')
-        print(search_terms)
-        print(search_keywords)
-
         plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
 
@@ -931,6 +809,12 @@ class ProjectSearchResultsView(
 
         return context
 
+    def dispatch(self, request, *args, **kwargs):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
+            messages.error(request, 'Search is not enabled.')
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         return self._handle_context(request, *args, *kwargs)
 
@@ -938,9 +822,7 @@ class ProjectSearchResultsView(
         return self._handle_context(request, *args, *kwargs)
 
 
-class ProjectAdvancedSearchView(
-    LoginRequiredMixin, ProjectSearchMixin, TemplateView
-):
+class ProjectAdvancedSearchView(LoginRequiredMixin, TemplateView):
     """View for displaying advanced search form"""
 
     template_name = 'projectroles/search_advanced.html'

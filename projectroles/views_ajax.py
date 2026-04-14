@@ -625,9 +625,10 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 'Exception raised by search() in {}: "{}" ({})'.format(
                     plugin.name,
                     ex,
-                    '; ',  # .join(
-                    #     [f'{k}={v}' for k, v in search_kwargs.items()]
-                    # ),
+                    f'terms={terms}; '
+                    f'user={user}; '
+                    f'projects={projects}; '
+                    f'keywords={keywords}'
                 )
             )
             return {
