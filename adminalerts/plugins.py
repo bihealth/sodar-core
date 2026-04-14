@@ -120,7 +120,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
                 {
                     'content': content,
                     'color': 'info',
-                    'dismissable': True,
+                    'dismissable': user and user.is_authenticated,
                     'require_auth': a.require_auth,
                     'dismiss_url': reverse(
                         'adminalerts:ajax_dismiss',

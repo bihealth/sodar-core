@@ -1,10 +1,13 @@
 """UI tests for the adminalerts app"""
 
+import time
 from django.urls import reverse
 from django.utils import timezone
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
 
 # Projectroles dependency
 from projectroles.tests.base import SiteUITestBase
@@ -91,6 +94,23 @@ class TestAlertMessage(AdminAlertUITestBase):
         self.selenium.get(self.build_selenium_url(reverse('login')))
         self.assertIsNotNone(
             self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-site-app')
+        )
+
+    def test_message_dismissal(self):
+        """Test dismissal of alert for authenticated users"""
+        self.login_and_redirect(self.regular_user, reverse('home'))
+        close_link = self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-close-link')
+        self.assertIsNotNone(close_link)
+        close_link.click()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.invisibility_of_element_located((By.CLASS_NAME, 'sodar-alert-site-app'))
+        )
+
+    def test_message_dismissal_anonymous(self):
+        """Test inability to dismiss alerts for anonymous users"""
+        self.selenium.get(reverse('login'))
+        self.assertIsNone(
+            self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-close-link')
         )
 
 
