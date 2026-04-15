@@ -722,6 +722,7 @@ class ProjectDetailView(
 
 # Search Views -----------------------------------------------------------------
 
+
 class ProjectSearchMixin:
     """Common functionalities for search views"""
 
@@ -802,7 +803,9 @@ class ProjectSearchMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
-class ProjectSearchResultsView(LoginRequiredMixin, ProjectSearchMixin, TemplateView):
+class ProjectSearchResultsView(
+    LoginRequiredMixin, ProjectSearchMixin, TemplateView
+):
     """View for displaying results of search within projects"""
 
     template_name = 'projectroles/search_results.html'
@@ -824,7 +827,9 @@ class ProjectSearchResultsView(LoginRequiredMixin, ProjectSearchMixin, TemplateV
         return self._handle_context(request, *args, *kwargs)
 
 
-class ProjectAdvancedSearchView(LoginRequiredMixin, ProjectSearchMixin, TemplateView):
+class ProjectAdvancedSearchView(
+    LoginRequiredMixin, ProjectSearchMixin, TemplateView
+):
     """View for displaying advanced search form"""
 
     template_name = 'projectroles/search_advanced.html'

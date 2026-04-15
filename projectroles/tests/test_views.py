@@ -401,7 +401,8 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.context['search_input'], 'test')
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
-            ['projectroles'] + [p.name for p in self.plugins if p.search_enable],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_quoted(self):
@@ -418,7 +419,8 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.context['search_input'], '"test quoted"')
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
-            ['projectroles'] + [p.name for p in self.plugins if p.search_enable],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_search_type(self):
@@ -462,7 +464,8 @@ class TestProjectSearchResultsView(
         )
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
-            ['projectroles'] + [p.name for p in self.plugins if p.search_enable],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_keywords_quoted(self):
@@ -487,7 +490,8 @@ class TestProjectSearchResultsView(
         )
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
-            ['projectroles'] + [p.name for p in self.plugins if p.search_enable],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_keywords_project_title(self):
@@ -510,7 +514,8 @@ class TestProjectSearchResultsView(
         )
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
-            ['projectroles'] + [p.name for p in self.plugins if p.search_enable],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_keywords_category_title(self):
@@ -533,7 +538,8 @@ class TestProjectSearchResultsView(
         )
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
-            ['projectroles'] + [p.name for p in self.plugins if p.search_enable],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_search_string_parsing(self):
@@ -568,7 +574,8 @@ class TestProjectSearchResultsView(
         )
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
-            ['projectroles'] + [p.name for p in self.plugins if p.search_enable],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_keywords_missing(self):
@@ -643,13 +650,15 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
     def test_post(self):
         """Test POST"""
         with self.login(self.user):
-            response = self.client.post(reverse('projectroles:search_advanced'), data={
-                                        'm': 'cats\r\ndogs', 'k': 'type:project'})
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'cats\r\ndogs', 'k': 'type:project'},
+            )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['cats', 'dogs'])
         self.assertEqual(
-            response.context['search_terms'], ['cats', 'dogs']
+            response.context['search_keywords'], {'type': 'project'}
         )
-        self.assertEqual(response.context['search_keywords'], {'type': 'project'})
 
     def test_post_with_search_type_and_keywords(self):
         """Test POST from ProjectAdvancedSearchView with keywords"""
@@ -713,9 +722,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         self.assertEqual(
             response.context['search_terms'], ['testproject', 'xxx']
         )
-        self.assertEqual(
-            response.context['search_keywords'], {}
-        )
+        self.assertEqual(response.context['search_keywords'], {})
 
     def test_post_advanced_invalid_project_keyword(self):
         """Test POST with invalid UUID for project keyword"""

@@ -1299,7 +1299,11 @@ class TestSearchResultsAjaxView(
         self.owner_as = self.make_assignment(
             self.project, self.user, self.role_owner
         )
-        self.plugins = [p for p in plugin_api.get_active_plugins(plugin_type='project_app') if p.search_enable]
+        self.plugins = [
+            p
+            for p in plugin_api.get_active_plugins(plugin_type='project_app')
+            if p.search_enable
+        ]
         self.project2 = self.make_project(
             'AnotherProject',
             PROJECT_TYPE_PROJECT,
@@ -1360,7 +1364,9 @@ class TestSearchResultsAjaxView(
         self.assertIsNone(data['error'])
         self.assertEqual(len(data['results']), 1)
         self.assertEqual(data['results'][0]['title'], 'Projects')
-        self.assertEqual(data['results'][0]['fields'], ['Project', 'Description'])
+        self.assertEqual(
+            data['results'][0]['fields'], ['Project', 'Description']
+        )
         self.assertEqual(len(data['results'][0]['rows']), 2)
 
     def test_post_missing_fields(self):
@@ -1403,19 +1409,25 @@ class TestSearchResultsAjaxView(
 
     def test_post_keywords_project_uuid(self):
         """Test POST with project:<uuid> in  keywords"""
-        results = self._get_app_results(self.user, 'test', f'project:{self.project.sodar_uuid}')
+        results = self._get_app_results(
+            self.user, 'test', f'project:{self.project.sodar_uuid}'
+        )
         self.assertEqual(len(results['projectroles']), 1)
         self.assertEqual(len(results['projectroles'][0]['rows']), 1)
 
     def test_post_keywords_project_title(self):
         """Test POST with project:<title> in keywords"""
-        results = self._get_app_results(self.user, 'test', f'project:{self.project.title}')
+        results = self._get_app_results(
+            self.user, 'test', f'project:{self.project.title}'
+        )
         self.assertEqual(len(results['projectroles']), 1)
         self.assertEqual(len(results['projectroles'][0]['rows']), 1)
 
     def test_post_keywords(self):
         """Test POST with multiple keywords"""
-        results = self._get_app_results(self.user, 'test', f'project:{self.project.title}\ntype:timeline')
+        results = self._get_app_results(
+            self.user, 'test', f'project:{self.project.title}\ntype:timeline'
+        )
         self.assertEqual(len(results['projectroles']), 0)
         self.assertEqual(len(results['filesfolders']), 0)
         self.assertEqual(len(results['timeline']), 1)
@@ -1448,14 +1460,20 @@ class TestSearchResultsAjaxView(
 
     def test_post_advanced_with_project_keyword(self):
         """Test POST with multiple terms and project keyword"""
-        results = self._get_app_results(self.user, 'testproject\nxxx', f'project:{self.project2.sodar_uuid}')
+        results = self._get_app_results(
+            self.user, 'testproject\nxxx', f'project:{self.project2.sodar_uuid}'
+        )
         self.assertEqual(len(results['projectroles']), 1)
         # Only the project matching 'xxx' should be returned
         self.assertEqual(len(results['projectroles'][0]['rows']), 1)
 
     def test_post_advanced_with_search_type_and_keywords(self):
         """Test POST with multiple terms and multiple keywords"""
-        results = self._get_app_results(self.user, 'testcategory\ntestproject\nxxx', f'type:project project:{self.project2.sodar_uuid}')
+        results = self._get_app_results(
+            self.user,
+            'testcategory\ntestproject\nxxx',
+            f'type:project project:{self.project2.sodar_uuid}',
+        )
         self.assertEqual(len(results['projectroles']), 1)
         self.assertEqual(len(results['projectroles'][0]['rows']), 2)
 
@@ -1478,27 +1496,37 @@ class TestSearchResultsAjaxView(
 
     def test_app_search_results_within_project(self):
         """Test app search results within project by UUID"""
-        results = self._get_app_results(self.user, 'test_event', f'project:{self.project.sodar_uuid}')
+        results = self._get_app_results(
+            self.user, 'test_event', f'project:{self.project.sodar_uuid}'
+        )
         # Events are not found when search is restricted to self.project
         self.assertEqual(results['timeline'][0]['rows'], 0)
 
     def test_app_search_results_within_project_by_title(self):
         """Test app search results within project by title"""
-        results = self._get_app_results(self.user, 'test_event', f'project:{self.project.title}')
+        results = self._get_app_results(
+            self.user, 'test_event', f'project:{self.project.title}'
+        )
         # Events are not found when search is restricted to self.project
         self.assertEqual(results['timeline'][0]['rows'], 0)
 
     def test_app_search_results_within_project2(self):
         """Test app search results within project2"""
-        results = self._get_app_results(self.user, 'test_event', f'project:{self.project2.sodar_uuid}')
+        results = self._get_app_results(
+            self.user, 'test_event', f'project:{self.project2.sodar_uuid}'
+        )
         self.assertEqual(results['timeline'][0]['rows'], 1)
 
     def test_app_search_results_within_category(self):
         """Test app search results within category"""
-        results = self._get_app_results(self.user, 'test_event', f'project:{self.category.sodar_uuid}')
+        results = self._get_app_results(
+            self.user, 'test_event', f'project:{self.category.sodar_uuid}'
+        )
         self.assertEqual(results['timeline'][0]['rows'], 1)
 
     def test_app_search_results_within_category_by_title(self):
         """Test app search results within category by title"""
-        results = self._get_app_results(self.user, 'test_event', f'project:{self.category.title}')
+        results = self._get_app_results(
+            self.user, 'test_event', f'project:{self.category.title}'
+        )
         self.assertEqual(results['timeline'][0]['rows'], 1)

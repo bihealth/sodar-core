@@ -651,10 +651,12 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
     def post(self, request, *args, **kwargs):
         data = request.POST
         if not ('terms' in data and 'keywords' in data and 'plugin' in data):
-            return JsonResponse({
-                'error': 'Please provide "terms", "keywords", and "plugin" in the POST data.',
-                'results': None,
-            })
+            return JsonResponse(
+                {
+                    'error': 'Please provide "terms", "keywords", and "plugin" in the POST data.',
+                    'results': None,
+                }
+            )
         search_terms = data['terms'].split('\n')
         search_keywords = {}
         for line in data['keywords'].split('\n'):
