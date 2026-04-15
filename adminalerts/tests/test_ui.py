@@ -108,10 +108,9 @@ class TestAlertMessage(AdminAlertUITestBase):
 
     def test_message_dismissal_anonymous(self):
         """Test inability to dismiss alerts for anonymous users"""
-        self.selenium.get(reverse('login'))
-        self.assertIsNone(
+        self.selenium.get(self.build_selenium_url(reverse('login')))
+        with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-close-link')
-        )
 
 
 class TestAdminAlertListView(AdminAlertUITestBase):

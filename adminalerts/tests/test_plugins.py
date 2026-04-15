@@ -56,12 +56,30 @@ class TestPlugins(AdminAlertMixin, TestCase):
     def test_get_messages(self):
         """Test the get_messages() function"""
         plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
-        messages = plugin.get_messages()
+        messages = plugin.get_messages(self.regular_user)
         message = messages[0]
         self.assertEqual(len(messages), 1)
         self.assertIn(self.alert.message, message['content'])
         self.assertEqual(message['color'], 'info')
         self.assertEqual(message['dismissable'], True)
+        self.assertEqual(message['require_auth'], True)
+        self.assertEqual(
+            message['dismiss_url'],
+            reverse(
+                'adminalerts:ajax_dismiss',
+                kwargs={'adminalert': self.alert.sodar_uuid},
+            ),
+        )
+
+    def test_get_messages_anonymous(self):
+        """Test the get_messages() function for anonymous users"""
+        plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
+        messages = plugin.get_messages()
+        message = messages[0]
+        self.assertEqual(len(messages), 1)
+        self.assertIn(self.alert.message, message['content'])
+        self.assertEqual(message['color'], 'info')
+        self.assertEqual(message['dismissable'], False)
         self.assertEqual(message['require_auth'], True)
         self.assertEqual(
             message['dismiss_url'],

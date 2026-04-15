@@ -73,7 +73,6 @@ class TestAdminAlertDismissAjaxView(AdminalertsViewTestBase):
                 1,
             )
 
-        # Anonymous users get a 200 status, but nothing happens to the alerts.
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(AdminAlertDismissal.objects.count(), 2)

@@ -62,12 +62,18 @@ class TestAdminAlertDismissAjaxView(AdminAlertMixin, SiteAppPermissionTestBase):
         """Test AdminAlertDismissAjaxView GET"""
         self.assert_response(
             self.url,
-            [self.superuser, self.regular_user, self.anonymous],
+            [self.superuser, self.regular_user],
             200,
+            method='GET',
+        )
+        self.assert_response(
+            self.url,
+            self.anonymous,
+            403,
             method='GET',
         )
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
         """Test GET with anonymous access"""
-        self.assert_response(self.url, self.anonymous, 200, method='GET')
+        self.assert_response(self.url, self.anonymous, 403, method='GET')

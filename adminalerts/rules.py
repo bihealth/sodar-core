@@ -29,3 +29,6 @@ rules.add_perm('adminalerts.create_alert', rules.is_superuser)
 
 # Allow updating alerts
 rules.add_perm('adminalerts.update_alert', rules.is_superuser)
+
+# Allow dismissing alerts
+rules.add_perm('adminalerts.dismiss_alert', rules.is_authenticated)
