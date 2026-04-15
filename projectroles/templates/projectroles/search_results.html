@@ -103,7 +103,7 @@
   {% else %}
     <form id="sodar-ajax-search" name="sodar-ajax-search" action={% url 'projectroles:ajax_search' %} style="display: none;">
       <textarea name="terms">{{ search_terms|join:'\n' }}</textarea>
-      <textarea name="terms">
+      <textarea name="keywords">
         {% for key, value in search_keywords.items %}
           {{ key }}:{{ value }}
         {% endfor %}
@@ -118,16 +118,6 @@
     {% endfor %}
   {% endif %}
 
-  {% if not_found %}
-    <div class="alert alert-info d-none" id="sodar-search-not-found-alert">
-      No results found:
-      <ul class="mb-0">
-        {% for n in not_found %}
-          <li>{{ n }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endif %}
 </div>
 
 {% endblock projectroles %}
