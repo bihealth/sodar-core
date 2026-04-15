@@ -15,7 +15,6 @@ from django.contrib import auth, messages
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
-from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import redirect
 from django.urls import resolve, reverse, reverse_lazy
@@ -723,21 +722,8 @@ class ProjectDetailView(
 
 # Search Views -----------------------------------------------------------------
 
-
-class ProjectSearchResultsView(LoginRequiredMixin, TemplateView):
-    """View for displaying results of search within projects"""
-
-    template_name = 'projectroles/search_results.html'
-
-    def _handle_context(
-        self, request: HttpRequest, *args, **kwargs
-    ) -> HttpResponse:
-        """Handle context and render to response in GET/POST requests"""
-        context = self.get_context_data(*args, **kwargs)
-        if not context['search_terms']:
-            messages.error(request, 'No search terms provided.')
-            return redirect(reverse('home'))
-        return super().render_to_response(context)
+class ProjectSearchMixin:
+    """Common functionalities for search views"""
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -815,6 +801,22 @@ class ProjectSearchResultsView(LoginRequiredMixin, TemplateView):
             return redirect('home')
         return super().dispatch(request, *args, **kwargs)
 
+
+class ProjectSearchResultsView(LoginRequiredMixin, ProjectSearchMixin, TemplateView):
+    """View for displaying results of search within projects"""
+
+    template_name = 'projectroles/search_results.html'
+
+    def _handle_context(
+        self, request: HttpRequest, *args, **kwargs
+    ) -> HttpResponse:
+        """Handle context and render to response in GET/POST requests"""
+        context = self.get_context_data(*args, **kwargs)
+        if not context['search_terms']:
+            messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        return super().render_to_response(context)
+
     def get(self, request, *args, **kwargs):
         return self._handle_context(request, *args, *kwargs)
 
@@ -822,7 +824,7 @@ class ProjectSearchResultsView(LoginRequiredMixin, TemplateView):
         return self._handle_context(request, *args, *kwargs)
 
 
-class ProjectAdvancedSearchView(LoginRequiredMixin, TemplateView):
+class ProjectAdvancedSearchView(LoginRequiredMixin, ProjectSearchMixin, TemplateView):
     """View for displaying advanced search form"""
 
     template_name = 'projectroles/search_advanced.html'
