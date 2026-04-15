@@ -430,8 +430,7 @@ class ProjectAppPluginPoint(PluginPoint):
         search_terms: list[str],
         user: User,
         projects: QuerySet[Project],
-        search_type: Optional[str] = None,
-        keywords: Optional[dict] = None,
+        **kwargs: str,
     ) -> list['PluginSearchResult']:
         """
         Return app items based on one or more search terms, user, optional type
@@ -441,8 +440,7 @@ class ProjectAppPluginPoint(PluginPoint):
                              (list of strings)
         :param user: User object for user initiating the search
         :param projects: QuerySet of projects where the terms are searched
-        :param search_type: String
-        :param keywords: Dictionary of key/value pairs (optional)
+        :param kwargs: Search options as key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
         # TODO: If implemented, also implement display of results in the app's
