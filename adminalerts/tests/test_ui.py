@@ -1,6 +1,5 @@
 """UI tests for the adminalerts app"""
 
-import time
 from django.urls import reverse
 from django.utils import timezone
 
@@ -99,11 +98,15 @@ class TestAlertMessage(AdminAlertUITestBase):
     def test_message_dismissal(self):
         """Test dismissal of alert for authenticated users"""
         self.login_and_redirect(self.regular_user, reverse('home'))
-        close_link = self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-close-link')
+        close_link = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-alert-close-link'
+        )
         self.assertIsNotNone(close_link)
         close_link.click()
         WebDriverWait(self.selenium, self.wait_time).until(
-            ec.invisibility_of_element_located((By.CLASS_NAME, 'sodar-alert-site-app'))
+            ec.invisibility_of_element_located(
+                (By.CLASS_NAME, 'sodar-alert-site-app')
+            )
         )
 
     def test_message_dismissal_anonymous(self):

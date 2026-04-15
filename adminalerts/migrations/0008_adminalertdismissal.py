@@ -6,46 +6,48 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("adminalerts", "0007_remove_adminalert__description_rendered_and_more"),
+        (
+            'adminalerts',
+            '0007_remove_adminalert__description_rendered_and_more',
+        ),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="AdminAlertDismissal",
+            name='AdminAlertDismissal',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
                 (
-                    "date_modified",
+                    'date_modified',
                     models.DateTimeField(
-                        auto_now=True, help_text="DateTime of last modification"
+                        auto_now=True, help_text='DateTime of last modification'
                     ),
                 ),
                 (
-                    "alert",
+                    'alert',
                     models.ForeignKey(
-                        help_text="Alert which has been dismissed",
+                        help_text='Alert which has been dismissed',
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="dismissals",
-                        to="adminalerts.adminalert",
+                        related_name='dismissals',
+                        to='adminalerts.adminalert',
                     ),
                 ),
                 (
-                    "user",
+                    'user',
                     models.ForeignKey(
-                        help_text="User who has dismissed the alert",
+                        help_text='User who has dismissed the alert',
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="dismissed_alerts",
+                        related_name='dismissed_alerts',
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
