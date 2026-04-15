@@ -507,8 +507,14 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
 
     @classmethod
     def _get_search_results(cls, user, plugin_name, terms, projects, keywords):
+        search_type = keywords.get('type', 'project')
         # Get project results
         if plugin_name == 'projectroles':
+            if search_type != 'project':
+                return {
+                    'error': None,
+                    'results': None,
+                }
             rows = []
             for p in Project.objects.find(
                 terms,
@@ -607,6 +613,12 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
             }
         # Get app results
         plugin = plugin_api.get_app_plugin(plugin_name)
+        if search_type not in plugin.search_types:
+            return {
+                # 'error': f'The app "{plugin_name}" does not support search results of type "{search_type}".',
+                'error': None,
+                'results': None,
+            }
         try:
             results = plugin.search(terms, user, projects, **keywords)
             # TODO: original code organized results by category, so results should be a dict where the categories are the keys.
@@ -628,19 +640,24 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     f'terms={terms}; '
                     f'user={user}; '
                     f'projects={projects}; '
-                    f'keywords={keywords}'
+                    f'keywords={keywords}',
                 )
             )
             return {
                 'error': str(ex),
-                'results': [],
+                'results': None,
             }
 
     def post(self, request, *args, **kwargs):
         data = request.POST
-        search_terms = data.get('terms').split('\n')
+        if not ('terms' in data and 'keywords' in data and 'plugin' in data):
+            return JsonResponse({
+                'error': 'Please provide "terms", "keywords", and "plugin" in the POST data.',
+                'results': None,
+            })
+        search_terms = data['terms'].split('\n')
         search_keywords = {}
-        for line in data.get('keywords').split('\n'):
+        for line in data['keywords'].split('\n'):
             if line:
                 key, value = line.split(':')
                 search_keywords[key] = value
@@ -663,7 +680,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
 
         res = self._get_search_results(
             request.user,
-            data.get('plugin'),
+            data['plugin'],
             search_terms,
             search_projects,
             search_keywords,
