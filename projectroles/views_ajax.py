@@ -507,10 +507,10 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
 
     @classmethod
     def _get_search_results(cls, user, plugin_name, terms, projects, keywords):
-        search_type = keywords.get('type', 'project')
+        search_type = keywords.get('type', None)
         # Get project results
         if plugin_name == 'projectroles':
-            if search_type != 'project':
+            if search_type is not None and search_type != 'project':
                 return {
                     'error': None,
                     'results': None,
@@ -604,16 +604,13 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 ],
                 rows=rows,
             )
-            # TODO: original code organized results by category, so results should be a dict where the categories are the keys.
-            # XXX: To be discussed: how are categories used?
             return {
-                # 'has_results': len(rows) > 0,
                 'error': None,
                 'results': [res.to_dict()],
             }
         # Get app results
         plugin = plugin_api.get_app_plugin(plugin_name)
-        if search_type not in plugin.search_types:
+        if search_type is not None and search_type not in plugin.search_types:
             return {
                 # 'error': f'The app "{plugin_name}" does not support search results of type "{search_type}".',
                 'error': None,
@@ -621,7 +618,8 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
             }
         try:
             results = plugin.search(terms, user, projects, **keywords)
-            # TODO: original code organized results by category, so results should be a dict where the categories are the keys.
+            # TODO: The original code organized results by category, so results should be a dict where the categories are the keys.
+            # XXX: To be discussed: how are categories used?
             # # Build results into dict for easier use in templates
             # search_res['results'] = {
             #     r.category: r for r in search_res['results']
@@ -653,7 +651,8 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
         if not ('terms' in data and 'keywords' in data and 'plugin' in data):
             return JsonResponse(
                 {
-                    'error': 'Please provide "terms", "keywords", and "plugin" in the POST data.',
+                    'error': 'Please provide "terms", "keywords", and "plugin"'
+                             ' in the POST data.',
                     'results': None,
                 }
             )

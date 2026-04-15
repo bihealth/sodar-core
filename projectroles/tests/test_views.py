@@ -667,7 +667,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
                 reverse('projectroles:search_advanced'),
                 data={
                     'm': 'testcategory\r\ntestproject\r\nxxx',
-                    'k': f'type:project project:{self.category.sodar_uuid}',
+                    'k': f'type:project project:title',
                 },
             )
         self.assertEqual(response.status_code, 200)
@@ -677,7 +677,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         )
         self.assertEqual(
             response.context['search_keywords'],
-            {'project': str(self.category.sodar_uuid), 'type': 'project'},
+            {'project': 'title', 'type': 'project'},
         )
 
     def test_post_advanced_dupe(self):
@@ -697,10 +697,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
                 reverse('projectroles:search_advanced'),
                 data={
                     'm': 'testproject',
-                    'k': (
-                        f'project:{self.project.sodar_uuid} '
-                        f'project:{self.category.sodar_uuid}'
-                    ),
+                    'k': 'project:UUID1 project:UUID2'
                 },
             )
         self.assertEqual(response.status_code, 200)
@@ -708,7 +705,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         # Only the last instance of the same keyword type is used
         self.assertEqual(
             response.context['search_keywords'],
-            {'project': str(self.category.sodar_uuid)},
+            {'project': 'uuid2'},
         )
 
     def test_post_advanced_empty_input(self):

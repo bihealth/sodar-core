@@ -1387,7 +1387,7 @@ class TestSearchResultsAjaxView(
 
     def test_post_search_type(self):
         """Test POST with search type"""
-        results = self._get_app_results(self.user, 'test', 'type:files')
+        results = self._get_app_results(self.user, 'test', 'type:file')
         self.assertEqual(len(results['filesfolders']), 1)
         self.assertEqual(len(results['filesfolders'][0]['rows']), 0)
 
@@ -1426,10 +1426,10 @@ class TestSearchResultsAjaxView(
     def test_post_keywords(self):
         """Test POST with multiple keywords"""
         results = self._get_app_results(
-            self.user, 'test', f'project:{self.project.title}\ntype:timeline'
+            self.user, 'test', f'project:{self.project2.title}\ntype:timeline'
         )
-        self.assertEqual(len(results['projectroles']), 0)
-        self.assertEqual(len(results['filesfolders']), 0)
+        self.assertIsNone(results['projectroles'])
+        self.assertIsNone(results['filesfolders'])
         self.assertEqual(len(results['timeline']), 1)
         self.assertEqual(len(results['timeline'][0]['rows']), 1)
 
@@ -1472,7 +1472,7 @@ class TestSearchResultsAjaxView(
         results = self._get_app_results(
             self.user,
             'testcategory\ntestproject\nxxx',
-            f'type:project project:{self.project2.sodar_uuid}',
+            f'type:project\nproject:{self.category.sodar_uuid}',
         )
         self.assertEqual(len(results['projectroles']), 1)
         self.assertEqual(len(results['projectroles'][0]['rows']), 2)
@@ -1500,7 +1500,7 @@ class TestSearchResultsAjaxView(
             self.user, 'test_event', f'project:{self.project.sodar_uuid}'
         )
         # Events are not found when search is restricted to self.project
-        self.assertEqual(results['timeline'][0]['rows'], 0)
+        self.assertEqual(len(results['timeline'][0]['rows']), 0)
 
     def test_app_search_results_within_project_by_title(self):
         """Test app search results within project by title"""
@@ -1508,25 +1508,26 @@ class TestSearchResultsAjaxView(
             self.user, 'test_event', f'project:{self.project.title}'
         )
         # Events are not found when search is restricted to self.project
-        self.assertEqual(results['timeline'][0]['rows'], 0)
+        self.assertEqual(len(results['timeline'][0]['rows']), 0)
 
     def test_app_search_results_within_project2(self):
         """Test app search results within project2"""
         results = self._get_app_results(
             self.user, 'test_event', f'project:{self.project2.sodar_uuid}'
         )
-        self.assertEqual(results['timeline'][0]['rows'], 1)
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)
 
     def test_app_search_results_within_category(self):
         """Test app search results within category"""
         results = self._get_app_results(
             self.user, 'test_event', f'project:{self.category.sodar_uuid}'
         )
-        self.assertEqual(results['timeline'][0]['rows'], 1)
+        print(results)
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)
 
     def test_app_search_results_within_category_by_title(self):
         """Test app search results within category by title"""
         results = self._get_app_results(
             self.user, 'test_event', f'project:{self.category.title}'
         )
-        self.assertEqual(results['timeline'][0]['rows'], 1)
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)
