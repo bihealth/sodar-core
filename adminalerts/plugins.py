@@ -95,7 +95,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
         # AnonymousUser here, who doesn't have and id field in the database and
         # makes the .exclude() query fail.
         if user and user != AnonymousUser():
-            alerts = alerts.exclude(dismissed_by=user)
+            alerts = alerts.exclude(dismissals__user=user)
 
         for a in alerts:
             content = '<i class="iconify" data-icon="mdi:alert"></i> '
@@ -120,7 +120,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
                 {
                     'content': content,
                     'color': 'info',
-                    'dismissable': user and user.is_authenticated,
+                    'dismissable': user is not None and user.is_authenticated,
                     'require_auth': a.require_auth,
                     'dismiss_url': reverse(
                         'adminalerts:ajax_dismiss',

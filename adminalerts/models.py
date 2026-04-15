@@ -59,10 +59,6 @@ class AdminAlert(models.Model):
         help_text='Alert status (for disabling the alert before expiration)',
     )
 
-    dismissed_by = models.ManyToManyField(
-        AUTH_USER_MODEL, through='AdminAlertDismissal'
-    )
-
     #: Require authorization to view alert
     require_auth = models.BooleanField(
         default=True, help_text='Require authorization to view alert'
@@ -108,6 +104,7 @@ class AdminAlertDismissal(models.Model):
     #: Alert which has been dismissed
     alert = models.ForeignKey(
         AdminAlert,
+        related_name='dismissals',
         help_text='Alert which has been dismissed',
         on_delete=models.CASCADE,
     )
