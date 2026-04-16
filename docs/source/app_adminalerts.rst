@@ -11,14 +11,15 @@ messages to all users with an expiration date.
 Basics
 ======
 
-The app displays un-dismissible small alerts on the top of page content to all
-users. They can be used to e.g. warn users of upcoming downtime or highlight
-recently deployed changes.
+The app displays small alerts on the top of page content to all users. They can
+be used to e.g. warn users of upcoming downtime or highlight recently deployed
+changes.
 
-Upon creation, an expiration date is set for each alert. Alerts can also be
-freely enabled, disabled or deleted by superuser on the app UI. Additional
-information regarding an alert can be provided with Markdown syntax and viewed
-on a separate details page.
+Upon creation, a global expiration date is set for each alert, but individual
+users can dismiss alerts before the expiration date. Alerts can also be freely
+enabled, disabled or deleted by superuser on the app UI. Additional information
+regarding an alert can be provided with Markdown syntax and viewed on a separate
+details page.
 
 
 Installation

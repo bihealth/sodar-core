@@ -2,9 +2,12 @@
 
 from test_plus.test import TestCase
 
+from django.urls import reverse
+
 # Projectroles dependency
 from projectroles.plugins import SiteAppPluginPoint
 
+from adminalerts.models import AdminAlertDismissal
 from adminalerts.urls import urlpatterns
 from adminalerts.tests.test_models import AdminAlertMixin
 
@@ -26,6 +29,7 @@ class TestPlugins(AdminAlertMixin, TestCase):
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
+        self.regular_user = self.make_user('regular_user')
         # Create alert
         self.alert = self.make_alert(
             message='alert',
@@ -52,6 +56,24 @@ class TestPlugins(AdminAlertMixin, TestCase):
     def test_get_messages(self):
         """Test the get_messages() function"""
         plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
+        messages = plugin.get_messages(self.regular_user)
+        message = messages[0]
+        self.assertEqual(len(messages), 1)
+        self.assertIn(self.alert.message, message['content'])
+        self.assertEqual(message['color'], 'info')
+        self.assertEqual(message['dismissable'], True)
+        self.assertEqual(message['require_auth'], True)
+        self.assertEqual(
+            message['dismiss_url'],
+            reverse(
+                'adminalerts:ajax_dismiss',
+                kwargs={'adminalert': self.alert.sodar_uuid},
+            ),
+        )
+
+    def test_get_messages_anonymous(self):
+        """Test the get_messages() function for anonymous users"""
+        plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
         messages = plugin.get_messages()
         message = messages[0]
         self.assertEqual(len(messages), 1)
@@ -59,3 +81,28 @@ class TestPlugins(AdminAlertMixin, TestCase):
         self.assertEqual(message['color'], 'info')
         self.assertEqual(message['dismissable'], False)
         self.assertEqual(message['require_auth'], True)
+        self.assertEqual(
+            message['dismiss_url'],
+            reverse(
+                'adminalerts:ajax_dismiss',
+                kwargs={'adminalert': self.alert.sodar_uuid},
+            ),
+        )
+
+    def test_get_dismissed_messages(self):
+        """Test message dismissal"""
+        plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
+        messages_before = plugin.get_messages(self.superuser)
+        self.assertEqual(len(messages_before), 1)
+        AdminAlertDismissal.objects.create(
+            user=self.superuser, alert=self.alert
+        )
+        messages_after_superuser = plugin.get_messages(self.superuser)
+        messages_after_regular_user = plugin.get_messages(self.regular_user)
+        self.assertEqual(len(messages_after_superuser), 0)
+        self.assertEqual(len(messages_after_regular_user), 1)
+        AdminAlertDismissal.objects.create(
+            user=self.regular_user, alert=self.alert
+        )
+        messages_after_regular_user = plugin.get_messages(self.regular_user)
+        self.assertEqual(len(messages_after_regular_user), 0)

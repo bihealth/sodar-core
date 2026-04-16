@@ -4,6 +4,7 @@ import json
 
 from django.urls import reverse
 
+from adminalerts.models import AdminAlertDismissal
 from adminalerts.tests.test_views import AdminalertsViewTestBase
 
 
@@ -40,3 +41,38 @@ class TestAdminAlertActiveToggleAjaxView(AdminalertsViewTestBase):
         self.alert.refresh_from_db()
         self.assertTrue(self.alert.active)
         self.assertTrue(data['is_active'])
+
+
+class TestAdminAlertDismissAjaxView(AdminalertsViewTestBase):
+    """Tests for AdminAlertDismissAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.alert = self._make_alert()
+        self.url = reverse(
+            'adminalerts:ajax_dismiss',
+            kwargs={'adminalert': self.alert.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test AdminAlertActiveToggleAjaxView POST to deactivate alert"""
+        with self.login(self.superuser):
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, 200)
+            dismissal_objects = AdminAlertDismissal.objects.all()
+            self.assertEqual(len(dismissal_objects), 1)
+            self.assertEqual(dismissal_objects.first().user, self.superuser)
+
+        with self.login(self.user_regular):
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                AdminAlertDismissal.objects.filter(
+                    user=self.user_regular
+                ).count(),
+                1,
+            )
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(AdminAlertDismissal.objects.count(), 2)

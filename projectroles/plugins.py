@@ -646,7 +646,9 @@ class SiteAppPluginPoint(PluginPoint):
         return [{
             'content': 'Message content in here, can contain html',
             'color': 'info',        # Corresponds to bg-* in Bootstrap
-            'dismissable': True     # False for non-dismissable
+            'dismissable': True,    # False for non-dismissable
+            'require_auth': True,   # False to let anonymous users to see alert
+            'dismiss_url': None,    # (Optional) Call this url to dismiss alert
         }]
         """
         return []

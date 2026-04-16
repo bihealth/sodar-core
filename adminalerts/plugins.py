@@ -3,6 +3,7 @@
 from typing import Optional
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.urls import reverse
 from django.utils import timezone
 
@@ -90,6 +91,11 @@ class SiteAppPlugin(SiteAppPluginPoint):
         alerts = AdminAlert.objects.filter(
             active=True, date_expire__gte=timezone.now()
         ).order_by('-pk')
+        # Messages are fetched before login, so it's possible that user is the
+        # AnonymousUser here, who doesn't have and id field in the database and
+        # makes the .exclude() query fail.
+        if user and user != AnonymousUser():
+            alerts = alerts.exclude(dismissals__user=user)
 
         for a in alerts:
             content = '<i class="iconify" data-icon="mdi:alert"></i> '
@@ -114,8 +120,13 @@ class SiteAppPlugin(SiteAppPluginPoint):
                 {
                     'content': content,
                     'color': 'info',
-                    'dismissable': False,
+                    'dismissable': user is not None and user.is_authenticated,
                     'require_auth': a.require_auth,
+                    'dismiss_url': reverse(
+                        'adminalerts:ajax_dismiss',
+                        kwargs={'adminalert': a.sodar_uuid},
+                    ),
                 }
             )
+
         return messages

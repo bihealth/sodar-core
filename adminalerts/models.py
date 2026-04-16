@@ -15,8 +15,8 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 class AdminAlert(models.Model):
     """
-    An un-dismissable alert from a superuser to site users. Not dependent on
-    project. Will expire after a set time.
+    An alert from a superuser to site users. Not dependent on project. Will
+    expire after a set time, but can also be dismissed by users.
     """
 
     #: Alert message to be shown for users
@@ -94,3 +94,30 @@ class AdminAlert(models.Model):
     def is_expired(self) -> bool:
         """Return True if alert has expired"""
         return True if self.date_expire < timezone.now() else False
+
+
+class AdminAlertDismissal(models.Model):
+    """
+    Table for keeping track of alerts dismissed by users individually.
+    """
+
+    #: Alert which has been dismissed
+    alert = models.ForeignKey(
+        AdminAlert,
+        related_name='dismissals',
+        help_text='Alert which has been dismissed',
+        on_delete=models.CASCADE,
+    )
+
+    #: User who has dismissed the alert
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        related_name='dismissed_alerts',
+        help_text='User who has dismissed the alert',
+        on_delete=models.CASCADE,
+    )
+
+    #: Autofill DateTime of last modification
+    date_modified = models.DateTimeField(
+        auto_now=True, help_text='DateTime of last modification'
+    )

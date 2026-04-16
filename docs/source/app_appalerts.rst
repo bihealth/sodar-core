@@ -34,7 +34,7 @@ Add the app into ``THIRD_PARTY_APPS`` in ``config/settings/base.py`` as follows:
 
     THIRD_PARTY_APPS = [
         # ...
-        'adminalerts.apps.AdminalertsConfig',
+        'appalerts.apps.AppalertsConfig',
     ]
 
 Next, make sure the context processor for app alerts is included in the
@@ -63,7 +63,7 @@ URL Configuration
 -----------------
 
 In the Django URL configuration file, add the following line under
-``urlpatterns`` to include adminalerts URLs in your site.
+``urlpatterns`` to include appalerts URLs in your site.
 
 .. code-block:: python
 
