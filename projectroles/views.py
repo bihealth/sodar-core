@@ -833,6 +833,7 @@ class ProjectAdvancedSearchView(
     """View for displaying advanced search form"""
 
     template_name = 'projectroles/search_advanced.html'
+    http_method_names = ['post']
 
     def post(self, request, *args, **kwargs):
         return ProjectSearchResultsView.as_view()(request)
