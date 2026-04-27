@@ -1348,6 +1348,21 @@ class TestSearchResultsAjaxView(
             results[app] = data['results']
         return results
 
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_post_disabled(self):
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                {
+                    'terms': 'test',
+                    'keywords': '',
+                    'plugin': 'projectroles',
+                },
+            )
+            data = response.json()
+            self.assertIsNone(data['results'])
+            self.assertIsNotNone(data['error'])
+
     def test_post_projectroles(self):
         """Test ProjectSearchResultsAjaxView POST for the projectroles app"""
         with self.login(self.user):
@@ -1477,17 +1492,6 @@ class TestSearchResultsAjaxView(
         self.assertEqual(len(results['projectroles']), 1)
         self.assertEqual(len(results['projectroles'][0]['rows']), 2)
 
-    # def test_post_advanced_short_input(self):
-    #     """Test POST with short term (< 3 characters)"""
-    #     with self.login(self.user):
-    #         response = self.client.post(
-    #             reverse('projectroles:search_advanced'),
-    #             data={'m': 'testproject\r\nxx', 'k': ''},
-    #         )
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertEqual(response.context['search_terms'], ['testproject'])
-    #     self.assertEqual(len(response.context['project_results']), 1)
-
     def test_post_invalid_project_keyword(self):
         """Test POST with invalid UUID for project keyword"""
         results = self._get_app_results(self.user, 'xxx', 'project:NOT_A_UUID')
@@ -1522,7 +1526,6 @@ class TestSearchResultsAjaxView(
         results = self._get_app_results(
             self.user, 'test_event', f'project:{self.category.sodar_uuid}'
         )
-        print(results)
         self.assertEqual(len(results['timeline'][0]['rows']), 1)
 
     def test_app_search_results_within_category_by_title(self):

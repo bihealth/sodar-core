@@ -630,6 +630,17 @@ class TestProjectSearchResultsView(
                 [p['name'] for p in response.context['search_apps']],
             )
 
+    def test_post(self):
+        """Test ProjectSearchView POST with wrong payload"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'m': 'test'})
+            )
+            # Search views take either GET with 's' parameter or POST
+            # with 'm' and 'k' parameters. Hence, GET with 'm' parameter
+            # results in redirection.
+            self.assertRedirects(response, reverse('home'))
+
 
 class TestProjectAdvancedSearchView(UIViewTestBase):
     """Tests for ProjectAdvancedSearchView"""
@@ -638,7 +649,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test ProjectAdvancedSearchView GET"""
         with self.login(self.user):
             response = self.client.get(reverse('projectroles:search_advanced'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 405)
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_get_disabled(self):
@@ -660,6 +671,13 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             response.context['search_keywords'], {'type': 'project'}
         )
 
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_post_disabled(self):
+        """Test POST with disabled search"""
+        with self.login(self.user):
+            response = self.client.post(reverse('projectroles:search_advanced'))
+            self.assertRedirects(response, reverse('home'))
+
     def test_post_with_search_type_and_keywords(self):
         """Test POST from ProjectAdvancedSearchView with keywords"""
         with self.login(self.user):
@@ -679,6 +697,30 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             response.context['search_keywords'],
             {'project': 'title', 'type': 'project'},
         )
+
+    def test_post_advanced_short_input(self):
+        """Test POST with short term (< 3 characters)"""
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'testproject\r\nxx', 'k': ''},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['testproject'])
+        self.assertEqual(response.context['search_keywords'], {})
+
+    def test_post_advanced_empty_input(self):
+        """Test POST with empty term (should be ignored)"""
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={'m': 'testproject\r\nxxx\r\n', 'k': ''},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['search_terms'], ['testproject', 'xxx']
+        )
+        self.assertEqual(response.context['search_keywords'], {})
 
     def test_post_advanced_dupe(self):
         """Test POST with duplicate term"""
@@ -704,19 +746,6 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             response.context['search_keywords'],
             {'project': 'uuid2'},
         )
-
-    def test_post_advanced_empty_input(self):
-        """Test POST with empty term (should be ignored)"""
-        with self.login(self.user):
-            response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'testproject\r\nxxx', 'k': ''},
-            )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.context['search_terms'], ['testproject', 'xxx']
-        )
-        self.assertEqual(response.context['search_keywords'], {})
 
     def test_post_advanced_invalid_project_keyword(self):
         """Test POST with invalid UUID for project keyword"""
