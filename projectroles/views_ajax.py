@@ -1,5 +1,6 @@
 """Ajax API views for the projectroles app"""
 
+import json
 import logging
 import uuid
 
@@ -664,13 +665,8 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     'results': None,
                 }
             )
-        search_terms = data['terms'].split('\n')
-        search_keywords = {}
-        for line in data['keywords'].split('\n'):
-            line = line.strip()
-            if line:
-                key, value = line.split(':')
-                search_keywords[key] = value
+        search_terms = json.loads(data['terms'])
+        search_keywords = json.loads(data['keywords'])
         if 'project' in search_keywords:
             try:
                 sodar_uuid = uuid.UUID(search_keywords['project'])

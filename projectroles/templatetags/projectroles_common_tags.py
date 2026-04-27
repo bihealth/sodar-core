@@ -3,6 +3,7 @@
 import mistune
 
 from importlib import import_module
+import json
 import logging
 from typing import Any, Optional, Union
 from uuid import UUID
@@ -478,6 +479,12 @@ def render_markdown(raw_markdown: str) -> str:
         'package instead.'
     )
     return mistune.html(raw_markdown)
+
+
+@register.simple_tag
+def render_json(obj: Any) -> str:
+    """JSON rendering helper"""
+    return json.dumps(obj)
 
 
 @register.filter

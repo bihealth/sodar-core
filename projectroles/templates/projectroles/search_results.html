@@ -102,12 +102,8 @@
     </div>
   {% else %}
     <form id="sodar-ajax-search" name="sodar-ajax-search" action={% url 'projectroles:ajax_search' %} style="display: none;">
-      <textarea name="terms">{{ search_terms|join:'\n' }}</textarea>
-      <textarea name="keywords">
-        {% for key, value in search_keywords.items %}
-          {{ key }}:{{ value }}
-        {% endfor %}
-      </textarea>
+      <textarea name="terms">{% render_json search_terms %}</textarea>
+      <textarea name="keywords">{% render_json search_keywords %}</textarea>
     </form>
     {% for app in search_apps %}
       <div class="sodar-ajax-search-results" data-app-name="{{ app.name }}" data-app-title="{{ app.title }}" data-app-icon="{{ app.icon }}">
