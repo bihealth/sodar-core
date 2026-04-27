@@ -7,8 +7,12 @@ from django.urls import reverse
 from test_plus.test import TestCase
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import ProjectAppPluginPoint, PluginObjectLink
+from projectroles.models import Project, SODAR_CONSTANTS
+from projectroles.plugins import (
+    ProjectAppPluginPoint,
+    PluginObjectLink,
+    PluginSearchResult,
+)
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleMixin,
@@ -211,3 +215,13 @@ class TestPlugin(
         )
         ret = self.plugin.get_category_stats(self.category)
         self.assertEqual(ret[0].value, 1)  # Only one file should be counted
+
+    def test_search_file(self):
+        """Test search() with no events"""
+        ret = self.plugin.search(['file.txt'], self.user, Project.objects.all())
+        self.assertEqual(len(ret), 1)
+        self.assertIsInstance(ret[0], PluginSearchResult)
+        self.assertEqual(ret[0].category, 'all')
+        self.assertEqual(ret[0].title, 'Files, Folders and Links')
+        self.assertEqual(ret[0].search_types, ['file', 'folder', 'link'])
+        self.assertEqual(len(ret[0].rows), 1)

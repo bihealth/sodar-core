@@ -652,7 +652,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
             return JsonResponse(
                 {
                     'error': 'Please provide "terms", "keywords", and "plugin"'
-                             ' in the POST data.',
+                    ' in the POST data.',
                     'results': None,
                 }
             )

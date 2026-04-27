@@ -667,7 +667,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
                 reverse('projectroles:search_advanced'),
                 data={
                     'm': 'testcategory\r\ntestproject\r\nxxx',
-                    'k': f'type:project project:title',
+                    'k': 'type:project project:title',
                 },
             )
         self.assertEqual(response.status_code, 200)
@@ -695,10 +695,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
-                data={
-                    'm': 'testproject',
-                    'k': 'project:UUID1 project:UUID2'
-                },
+                data={'m': 'testproject', 'k': 'project:UUID1 project:UUID2'},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['testproject'])
