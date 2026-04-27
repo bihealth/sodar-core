@@ -1,7 +1,10 @@
 """Plugins for the Timeline app"""
 
+import logging
+
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
+from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS, Project
@@ -18,8 +21,9 @@ from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 from timeline.templatetags.timeline_tags import (
+    ICON_PROJECTROLES,
+    ICON_UNKNOWN_APP,
     get_timestamp,
-    get_app_icon_html,
     get_plugin_lookup,
     get_status_style,
     get_event_name,
@@ -27,6 +31,7 @@ from timeline.templatetags.timeline_tags import (
 
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 # Local constants
@@ -143,11 +148,44 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         plugin_lookup = get_plugin_lookup()
         rows = []
         for item in items:
+            app_badge_icon = ICON_UNKNOWN_APP
+            app_badge_url = None
+            app_badge_title = item.app  # Default in case the plugin is not found
+            app_badge_text = get_event_name(item)
+            if item.app == 'projectroles':
+                if item.project:
+                    app_badge_url = reverse(
+                        'projectroles:detail',
+                        kwargs={'project': item.project.sodar_uuid},
+                    )
+                app_badge_title = 'Projectroles'
+                app_badge_icon = ICON_PROJECTROLES
+            else:
+                plugin_name = item.plugin if item.plugin else item.app
+                if plugin_name in plugin_lookup.keys():
+                    url_kwargs = {}
+                    plugin = plugin_lookup[plugin_name]
+                    if isinstance(plugin, ProjectAppPluginPoint):
+                        url_kwargs['project'] = item.project.sodar_uuid
+                    entry_point = getattr(plugin, 'entry_point_url_id', None)
+                    if entry_point:
+                        try:
+                            app_badge_url = reverse(entry_point, kwargs=url_kwargs)
+                        except Exception as ex:
+                            app_badge_url = None
+                            logger.error(
+                                f'Unable to get URL for entry point "{entry_point}": '
+                                f'{ex}'
+                            )
+                    app_badge_title = plugin.title
+                    if getattr(plugin, 'icon', None):
+                        app_badge_icon = plugin.icon
             rows.append(
                 [
                     # Timestamp
                     PluginSearchResultCell(
                         value=get_timestamp(item),
+                        cell_class='text-nowrap',
                     ),
                     # Description
                     # TODO: add badges
@@ -160,18 +198,20 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     #   {{ project_badge | safe }}
                     # {% endif %}
                     PluginSearchResultCell(
-                        # TODO: span, event_name
-                        # <span class="badge bg-secondary text-white mr-1 sodar-obj-badge sodar-tl-event-badge">
-                        #   {{ event_icon|safe }}
-                        #   {% get_event_name event %}
-                        # </span>
-                        value=get_event_name(item),
-                        icons=[
-                            {
-                                'icon': get_app_icon_html(item, plugin_lookup),
-                                'url': None,
-                            }
+                        # TODO: we should use timeline.templatetags.timeline_tags.get_event_description()
+                        value=item.description,
+                        badges=[
+                            {'icon': app_badge_icon, 'url': app_badge_url, 'title': app_badge_title, 'text': app_badge_text},
+                            # {'icon': user_badge_icon, 'url': user_badge_url, 'title': user_badge_title, 'text': user_badge_text},
+                            # {'icon': project_badge_icon, 'url': project_badge_url, 'title': project_badge_title, 'text': project_badge_text},
                         ],
+                        # icons=[
+                        #     {
+                        #         'icon': icon,
+                        #         'url': icon_url,
+                        #         'title': icon_title,
+                        #     }
+                        # ],
                         cell_class='sodar-overflow-container',
                         # highlight=search_terms, # XXX: not in the original
                     ),
