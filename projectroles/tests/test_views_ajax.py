@@ -20,6 +20,8 @@ from projectroles.tests.test_models import (
     RemoteProjectMixin,
 )
 
+from filesfolders.tests.test_models import FileMixin
+
 from timeline.tests.test_models import (
     TimelineEventMixin,
     TimelineEventStatusMixin,
@@ -1328,6 +1330,24 @@ class TestSearchResultsAjaxView(
             description='SUBMIT',
             extra_data={'test_key': 'test_val'},
         )
+        self.file = self.make_file(
+            name='file.txt',
+            file_name='file.txt',
+            file_content=bytes('content'.encode('utf-8')),
+            project=self.project,
+            folder=None,
+            owner=self.user,
+            description='',
+        )
+        self.other_file = self.make_file(
+            name='other file.txt',
+            file_name='other file.txt',
+            file_content=bytes('My name contains a space'.encode('utf-8')),
+            project=self.project,
+            folder=None,
+            owner=self.user,
+            description='',
+        )
 
     def _get_app_results(self, user, terms, keywords=''):
         apps = ['projectroles'] + [p.name for p in self.plugins]
@@ -1534,3 +1554,18 @@ class TestSearchResultsAjaxView(
             self.user, 'test_event', f'project:{self.category.title}'
         )
         self.assertEqual(len(results['timeline'][0]['rows']), 1)
+
+    def test_post_terms_with_space(self):
+        """Test POST with multiple space-separated terms"""
+        results = self._get_app_results(self.user, 'other file')
+        self.assertEqual(len(results['filesfolders']), 1)
+        # Here, "other" and "file" are separate terms, so both file.txt
+        # and "other file.txt" should be found
+        self.assertEqual(len(results['filesfolders'][0]['rows']), 2)
+
+    def test_post_terms_with_space_quoted(self):
+        """Test POST with one quoted term containing spaces"""
+        results = self._get_app_results(self.user, '"other file"')
+        self.assertEqual(len(results['filesfolders']), 1)
+        # Here, only "other file.txt" should be found
+        self.assertEqual(len(results['filesfolders'][0]['rows']), 1)
