@@ -205,7 +205,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         for item in items:
             if not user.has_perm('filesfolders.view_data', item.project):
                 continue
-            if get_class(item) == 'Hyperlink':
+            if get_class(item) == 'HyperLink':
                 name_url = item.url
             elif get_class(item) == 'Folder':
                 name_url = reverse(
@@ -216,26 +216,37 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     'filesfolders:file_serve',
                     kwargs={'file': item.sodar_uuid, 'file_name': item.name},
                 )
+            else:
+                raise ValueError(f'Unexpected filesfolders item class: {get_class(item)}')
             allow_public_links = app_settings.get(
                 'filesfolders', 'allow_public_links', project=item.project
             )
             can_share_link = user.has_perm(
                 'filesfolders.share_public_link', item.project
             )
+            icons = []
             if (
                 get_class(item) == 'File'
-                and item.public_url
-                and allow_public_links
-                and can_share_link
+                # and item.public_url
+                # and allow_public_links
+                # and can_share_link
             ):
-                icon = 'mdi:link-variant'
-                icon_url = reverse(
-                    'filesfolders:file_public_link',
-                    kwargs={'file': item.sodar_uuid},
-                )
-            else:
-                icon = None
-                icon_url = None
+                icons.append({
+                    'icon': 'mdi:link-variant',
+                    'url': reverse(
+                        'filesfolders:file_public_link',
+                        kwargs={'file': item.sodar_uuid},
+                    ),
+                    'title': 'Public link',
+                })
+            if item.flag:
+                f = FILESFOLDERS_FLAGS[item.flag]
+                icons.append({
+                    'icon': f['icon'],
+                    'url': '#',
+                    'class': f'text-{f["color"]} sodar-ff-flag-icon',
+                    'title': f['label'],
+                })
             if item.folder:
                 project_url = reverse(
                     'filesfolders:list',
@@ -256,7 +267,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     PluginSearchResultCell(
                         value=item.name,
                         value_url=name_url,
-                        icons=[{'icon': icon, 'url': icon_url}],
+                        icons=icons,
                         highlight=search_terms,
                         cell_class='sodar-overflow-container',
                         # TODO:

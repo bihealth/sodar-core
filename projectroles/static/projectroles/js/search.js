@@ -77,24 +77,32 @@ function makeSearchResultsTable(results) {
   for (let row of results.rows) {
     let tr = $('<tr>')
     for (let field of row) {
+      let td = $('<td>')
       if (field.value_url) {
-        $('<td>', {
-          class: field.cell_class
-        }).append(
-          $('<a>', {
-            href: field.value_url,
-            class: field.value_url_class
-          }).text(field.value)
-        ).appendTo(tr)
+        td.attr('class', field.cell_class)
+          .append(
+            $('<a>', {
+              href: field.value_url,
+              class: field.value_url_class
+            }).text(field.value)
+          )
       } else if (field.value) {
-        $('<td>', {
-          class: field.cell_class
-        }).text(field.value).appendTo(tr)
+        td.attr('class', field.cell_class)
+          .text(field.value)
       } else {
-        $('<td>', {
-          class: 'text-muted'
-        }).text('N/A').appendTo(tr)
+        td.attr('class', 'text-muted')
+          .text('N/A')
       }
+      console.log(field.icons)
+      if (field.icons !== null) {
+        td.append('&emsp;')
+        for (let icon of field.icons) {
+          $('<a>', {href: icon.url, title: icon.title, 'data-toggle': 'tooltip', 'data-placement': 'top'})
+            .append($('<i>', {class: `iconify ${icon.class}`, 'data-icon': icon.icon}))
+            .appendTo(td)
+        }
+      }
+      tr.append(td)
     }
     tbody.append(tr)
   }
@@ -139,7 +147,7 @@ $(document).ready(function () {
             role: 'alert'
           })
           .text(
-            `Error while searching in ${appName}: ${data['errors']}`
+            `Error while searching in ${appName}: ${data['error']}`
           )
         )
         return
