@@ -667,6 +667,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
         search_terms = data['terms'].split('\n')
         search_keywords = {}
         for line in data['keywords'].split('\n'):
+            line = line.strip()
             if line:
                 key, value = line.split(':')
                 search_keywords[key] = value

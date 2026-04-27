@@ -120,14 +120,14 @@ $(document).ready(function () {
       'terms': data.get('terms'),
       'keywords': data.get('keywords'),
     }).fail((xhr, textStatus, error) => {
-      console.error(textStatus, error)
+      console.error(xhr.status, textStatus, error)
       $(this).html(
         $('<div>', {
           class: 'alert alert-warning',
           role: 'alert'
         })
         .text(
-          `Error fetching search results for ${appName}: ${textStatus}`
+          `Error fetching search results for ${appName}: ${xhr.statusText}`
         )
       )
     }).done(data => {
