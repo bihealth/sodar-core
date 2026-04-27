@@ -646,6 +646,14 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 'results': None,
             }
 
+    def dispatch(self, request, *args, **kwargs):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
+            return {
+                'error': 'Search is not enabled.',
+                'results': None,
+            }
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         data = request.POST
         if not ('terms' in data and 'keywords' in data and 'plugin' in data):
