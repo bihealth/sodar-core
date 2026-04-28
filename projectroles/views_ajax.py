@@ -517,82 +517,58 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     'results': None,
                 }
             rows = []
-            for p in Project.objects.find(
+            for project in Project.objects.find(
                 terms,
                 projects,
                 project_type='PROJECT',
                 keywords=keywords,
             ):
-                if p.public_access or user.has_perm(
-                    'projectroles.view_project', p
-                ):
-                    # TODO: <tr>'s can also have a class
-                    rows.append(
-                        [
-                            PluginSearchResultCell(
-                                value=get_project_title_html(p),
-                                value_url=reverse(
-                                    'projectroles:detail',
-                                    kwargs={'project': p.sodar_uuid},
-                                ),
-                                value_url_class='sodar-pr-project-search-link',
-                                icons=[
-                                    {
-                                        'icon': get_remote_icon(p, user),
-                                        'url': None,
-                                    }
-                                ],
-                                highlight=terms,
-                                cell_class='sodar-overflow-container',
-                            ),
-                            PluginSearchResultCell(
-                                value=p.description,
-                                highlight=terms,
-                                cell_class='sodar-overflow-container',
-                            ),
-                        ]
+                can_view_project = project.public_access or user.has_perm('projectroles.view_project', project)
+                value_url = None
+                if can_view_project:
+                    value_url = reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
                     )
-                elif user.is_authenticated and p.parent:
-                    parent_as = p.parent.get_role(user)
-                    if (
-                        parent_as
-                        and parent_as.role.rank
-                        >= ROLE_RANKING[PROJECT_ROLE_FINDER]
-                    ):
-                        rows.append(
-                            [
-                                PluginSearchResultCell(
-                                    value=get_project_title_html(p),
-                                    value_url=None,
-                                    # TODO: link title?
-                                    icons=[
-                                        {
-                                            'icon': get_remote_icon(p, user),
-                                            'url': None,
-                                        },
-                                        {
-                                            'icon': 'mdi:account-supervisor',
-                                            'url': reverse(
-                                                'projectroles:roles',
-                                                kwargs={
-                                                    'project': p.parent.sodar_uuid
-                                                },
-                                            ),
-                                            'url_class': 'sodar-pr-project-findable',
-                                            'url_title': 'Findable project: Request access from category owner or delegate',
-                                            # data-toggle="tooltip">,
-                                        },
-                                    ],
-                                    highlight=terms,
-                                    cell_class='sodar-overflow-container text-muted',
-                                ),
-                                PluginSearchResultCell(
-                                    value=p.description,
-                                    highlight=terms,
-                                    cell_class='sodar-overflow-container text-muted',
-                                ),
-                            ]
-                        )
+                icons = []
+                if project.is_remote() and user.is_superuser:
+                    remote_project = RemoteProject.objects.filter(
+                        project=project, site__mode=SITE_MODE_SOURCE
+                    ).first()
+                    if remote_project:
+                        icons.append({
+                            'icon': 'mdi:cloud',
+                            'url': '#',
+                            'title': '{} project from {}'.format('REVOKED remote' if project.is_revoked() else 'Remote', remote_project.site.name),
+                            'class': 'mr-1 sodar-pr-remote-project-icon' + 'text-danger' if project.is_revoked() else 'text-info',
+                        })
+                if not can_view_project and user.is_authenticated and project.parent:
+                    icons.append({
+                        'icon': 'mdi:account-supervisor',
+                        'url': reverse(
+                            'projectroles:roles',
+                            kwargs={'project': project.parent.sodar_uuid},
+                        ),
+                        'class': 'sodar-pr-project-findable',
+                        'title': 'Findable project: Request access from category owner or delegate',
+                    })
+                rows.append(
+                    [
+                        PluginSearchResultCell(
+                            value=get_project_title_html(project),
+                            value_url=value_url,
+                            value_url_class='sodar-pr-project-search-link',
+                            icons=icons,
+                            highlight=terms,
+                            cell_class='sodar-overflow-container',
+                        ),
+                        PluginSearchResultCell(
+                            value=project.description,
+                            highlight=terms,
+                            cell_class='sodar-overflow-container',
+                        ),
+                    ]
+                )
             res = PluginSearchResult(
                 category='all',
                 title=get_display_name(
