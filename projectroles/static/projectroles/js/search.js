@@ -67,7 +67,9 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength) {
 }
 
 function makeSearchResultsTable(results) {
-  let table = $('<table>', {class: 'table-striped sodar-search-table'})
+  let table = $('<table>', {
+    class: 'table-striped sodar-search-table'
+  })
   let tr = $('<tr>')
   for (let field of results.field_titles) {
     tr.append($('<th>').text(field))
@@ -102,8 +104,16 @@ function makeSearchResultsTable(results) {
       if (field.icons !== null) {
         td.append('&emsp;')
         for (let icon of field.icons) {
-          $('<a>', {href: icon.url, title: icon.title, 'data-toggle': 'tooltip', 'data-placement': 'top'})
-            .append($('<i>', {class: `iconify ${icon.class}`, 'data-icon': icon.icon}))
+          $('<a>', {
+              href: icon.url,
+              title: icon.title,
+              'data-toggle': 'tooltip',
+              'data-placement': 'top'
+            })
+            .append($('<i>', {
+              class: `iconify ${icon.class}`,
+              'data-icon': icon.icon
+            }))
             .appendTo(td)
         }
       }
@@ -123,7 +133,8 @@ function highlightSearchResults(table, highlightFields, searchTerms) {
         let walker = document.createTreeWalker(this, 0x4)
         let node = walker.nextNode()
         while (node !== null) {
-          $(node).replaceWith($(node).text().replaceAll(re, `<strong>$&</strong>`))
+          $(node).replaceWith($(node).text().replaceAll(re,
+            `<strong>$&</strong>`))
           node = walker.nextNode()
         }
       })
@@ -184,12 +195,12 @@ $(document).ready(function () {
         )
         $(this).append(card)
         if (!results.rows.length) {
-          $(this).find('.sodar-search-card-body').html($('<p>')
-            .attr('class', 'font-italic text-center m-3').text(
-              'No results found.'))
+          $(this).find('.sodar-search-card-body').html(
+            $('<p>').attr('class', 'font-italic text-center m-3')
+            .text('No results found.')
+          )
           // Disable pagination and filtering for this card
-          $(this).find('.sodar-search-page-length').prop(
-            'disabled',
+          $(this).find('.sodar-search-page-length').prop('disabled',
             'disabled')
           $(this).find('.sodar-search-filter').prop('disabled',
             'disabled')
@@ -218,12 +229,16 @@ $(document).ready(function () {
         // Hide pagination and disable page dropdown if only one page
         if ($(table).DataTable().page.info().pages === 1) {
           $(table).closest('.sodar-search-card')
-            .find('.sodar-search-page-length').prop('disabled',
-              'disabled')
+            .find('.sodar-search-page-length')
+            .prop('disabled', 'disabled')
           $(table).next('.dt-paging').hide()
         }
         // Highlight search terms
-        highlightSearchResults(table, results.highlight_fields, JSON.parse(searchTerms))
+        highlightSearchResults(
+          table,
+          results.highlight_fields,
+          JSON.parse(searchTerms),
+        )
       }
 
       // Update overflow status
