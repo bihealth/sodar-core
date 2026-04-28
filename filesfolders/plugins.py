@@ -22,7 +22,7 @@ from projectroles.plugins import (
 )
 from projectroles.utils import get_display_name
 
-from filesfolders.models import File, Folder, HyperLink
+from filesfolders.models import File, Folder, HyperLink, FILESFOLDERS_FLAGS
 from filesfolders.templatetags.filesfolders_tags import get_class
 from filesfolders.urls import urlpatterns
 
@@ -227,9 +227,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             icons = []
             if (
                 get_class(item) == 'File'
-                # and item.public_url
-                # and allow_public_links
-                # and can_share_link
+                and item.public_url
+                and allow_public_links
+                and can_share_link
             ):
                 icons.append({
                     'icon': 'mdi:link-variant',
@@ -268,13 +268,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                         value=item.name,
                         value_url=name_url,
                         icons=icons,
-                        highlight=search_terms,
+                        highlight=True,
                         cell_class='sodar-overflow-container',
-                        # TODO:
-                        # {% if item.flag %}
-                        #   {% get_flag item.flag as item_flag %}
-                        #   {{ item_flag|safe }}
-                        # {% endif %}
                     ),
                     # Type
                     PluginSearchResultCell(
@@ -295,7 +290,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     # Description
                     PluginSearchResultCell(
                         value=item.description,
-                        highlight=search_terms,
+                        highlight=True,
                         cell_class='sodar-overflow-container',
                     ),
                 ]

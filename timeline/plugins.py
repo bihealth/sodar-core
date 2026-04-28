@@ -168,7 +168,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                         snippets=[app_badge, user_badge, project_badge, f'<span>{get_event_description(item, plugin_lookup)}</span>'],
                         value='',
                         cell_class='sodar-overflow-container',
-                        # highlight=search_terms, # XXX: not in the original
+                        # highlight=True, # XXX: not in the original
                     ),
                     # Status
                     PluginSearchResultCell(

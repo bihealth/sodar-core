@@ -949,7 +949,7 @@ class PluginSearchResultCell:
     value_url_class: str = None
     snippets: list[str] = None
     icons: list[dict[str, str]] = None
-    highlight: list[str] = None
+    highlight: bool = False
     cell_class: str = None
 
 

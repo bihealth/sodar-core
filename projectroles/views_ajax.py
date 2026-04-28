@@ -559,12 +559,12 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                             value_url=value_url,
                             value_url_class='sodar-pr-project-search-link',
                             icons=icons,
-                            highlight=terms,
+                            highlight=True,
                             cell_class='sodar-overflow-container',
                         ),
                         PluginSearchResultCell(
                             value=project.description,
-                            highlight=terms,
+                            highlight=True,
                             cell_class='sodar-overflow-container',
                         ),
                     ]
