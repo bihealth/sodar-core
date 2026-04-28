@@ -78,21 +78,13 @@ function makeSearchResultsTable(results) {
     let tr = $('<tr>')
     for (let field of row) {
       let td = $('<td>')
-      if (field.badges !== null) {
-        for (let badge of field.badges) {
-          $('<a>', {href: badge.url, title: badge.title, 'data-toggle': 'tooltip', 'data-placement': 'top'})
-            .append($('<span>', {class: 'badge bg-secondary text-white mr-1 sodar-obj-badge sodar-tl-event-badge'})
-              .append(
-                $('<i>', {class: `iconify ${badge.class}`, 'data-icon': badge.icon}),
-                ' ',
-                badge.text,
-              )
-            )
-            .appendTo(td)
+      if (field.snippets !== null) {
+        for (let snippet of field.snippets) {
+          $(snippet).appendTo(td)
         }
         td.append('&ensp;')
       }
-      if (field.value_url) {
+      if (field.value_url !== null) {
         td.attr('class', field.cell_class)
           .append(
             $('<a>', {
@@ -100,7 +92,7 @@ function makeSearchResultsTable(results) {
               class: field.value_url_class
             }).text(field.value)
           )
-      } else if (field.value) {
+      } else if (field.value !== null) {
         td.attr('class', field.cell_class)
           .append(field.value)
       } else {

@@ -137,6 +137,52 @@ def get_app_icon_html(event: TimelineEvent, plugin_lookup: dict) -> str:
 
 
 @register.simple_tag
+def get_app_badge(event: TimelineEvent, plugin_lookup: dict, extra_class: Optional[str]=None) -> str:
+    """Return badge HTML for app by plugin lookup"""
+    url = None
+    title = event.app
+    icon = ICON_UNKNOWN_APP  # Default in case the plugin is not found
+
+    if event.app == 'projectroles':
+        if event.project:
+            url = reverse(
+                'projectroles:detail',
+                kwargs={'project': event.project.sodar_uuid},
+            )
+        title = 'Projectroles'
+        icon = ICON_PROJECTROLES
+    else:
+        plugin_name = event.plugin if event.plugin else event.app
+        if plugin_name in plugin_lookup.keys():
+            url_kwargs = {}
+            plugin = plugin_lookup[plugin_name]
+            if isinstance(plugin, ProjectAppPluginPoint):
+                url_kwargs['project'] = event.project.sodar_uuid
+            entry_point = getattr(plugin, 'entry_point_url_id', None)
+            if entry_point:
+                try:
+                    url = reverse(entry_point, kwargs=url_kwargs)
+                except Exception as ex:
+                    url = None
+                    logger.error(
+                        f'Unable to get URL for entry point "{entry_point}": '
+                        f'{ex}'
+                    )
+            title = plugin.title
+            if getattr(plugin, 'icon', None):
+                icon = plugin.icon
+
+    extra_class = (' ' + extra_class) if extra_class else ''
+    href = 'href="{url}"' if url else ''
+    return (
+        f'<span class="badge badge-secondary sodar-obj-badge sodar-tl-event-badge{extra_class}" title="{title}" data-toggle="tooltip" data-placement="top">'
+        f'<i class="iconify" data-icon="{icon}"></i> '
+        f'<a {href} class="sodar-tl-item-app-icon">{get_event_name(event)}'
+        f'</span>'
+    )
+
+
+@register.simple_tag
 def get_status_style(status: str) -> str:
     """Retrn status style class"""
     return (

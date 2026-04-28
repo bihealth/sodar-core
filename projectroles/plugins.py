@@ -947,7 +947,7 @@ class PluginSearchResultCell:
     value: str = None
     value_url: str = None
     value_url_class: str = None
-    badges: list[dict[str, str]] = None
+    snippets: list[str] = None
     icons: list[dict[str, str]] = None
     highlight: list[str] = None
     cell_class: str = None
