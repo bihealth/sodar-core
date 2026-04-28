@@ -4,7 +4,6 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
-from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS, Project
@@ -25,8 +24,6 @@ from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 from timeline.templatetags.timeline_tags import (
-    ICON_PROJECTROLES,
-    ICON_UNKNOWN_APP,
     get_app_badge,
     get_event_description,
     get_plugin_lookup,
@@ -165,10 +162,14 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     ),
                     # Description
                     PluginSearchResultCell(
-                        snippets=[app_badge, user_badge, project_badge, f'<span>{get_event_description(item, plugin_lookup)}</span>'],
+                        snippets=[
+                            app_badge,
+                            user_badge,
+                            project_badge,
+                            f'<span>{get_event_description(item, plugin_lookup)}</span>',
+                        ],
                         value='',
                         cell_class='sodar-overflow-container',
-                        # highlight=True, # XXX: not in the original
                     ),
                     # Status
                     PluginSearchResultCell(
@@ -181,7 +182,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             category='all',
             title='Timeline Events',
             search_types=['timeline'],
-            fields=['Timestamp', 'Description', 'Status'],
+            field_titles=['Timestamp', 'Description', 'Status'],
+            highlight_fields=[1],
             rows=rows,
         )
         return [ret]

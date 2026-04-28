@@ -20,7 +20,6 @@ from projectroles.tests.test_models import (
     RemoteProjectMixin,
 )
 
-from filesfolders.tests.test_models import FileMixin
 
 from timeline.tests.test_models import (
     TimelineEventMixin,

@@ -1,5 +1,5 @@
-function makeSearchResultsCard(appTitle, appIcon, cardTitle, resLength) {
-  let resTitleElement = ' ' + appTitle
+function makeSearchResultsCard(appIcon, cardTitle, resLength) {
+  let resTitleElement = ' ' + cardTitle
   let resLengthElement = resLength ? ` (${resLength})` : ''
   let card = $('<div>', {
     class: 'card sodar-search-card'
@@ -69,7 +69,7 @@ function makeSearchResultsCard(appTitle, appIcon, cardTitle, resLength) {
 function makeSearchResultsTable(results) {
   let table = $('<table>', {class: 'table-striped sodar-search-table'})
   let tr = $('<tr>')
-  for (let field of results.fields) {
+  for (let field of results.field_titles) {
     tr.append($('<th>').text(field))
   }
   table.append($('<thead>').append(tr))
@@ -115,6 +115,22 @@ function makeSearchResultsTable(results) {
   return table
 }
 
+function highlightSearchResults(table, highlightFields, searchTerms) {
+  for (let term of searchTerms) {
+    const re = new RegExp(term, 'ig')
+    for (let fieldIdx of highlightFields) {
+      table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
+        let walker = document.createTreeWalker(this, 0x4)
+        let node = walker.nextNode()
+        while (node !== null) {
+          $(node).replaceWith($(node).text().replaceAll(re, `<strong>$&</strong>`))
+          node = walker.nextNode()
+        }
+      })
+    }
+  }
+}
+
 // Set up DataTables for search tables
 $(document).ready(function () {
   /*****************
@@ -126,11 +142,12 @@ $(document).ready(function () {
   const form = document.querySelector('#sodar-ajax-search')
   const url = form.action
   const data = new FormData(form)
+  const searchTerms = data.get('terms')
   $('.sodar-ajax-search-results').each(function () {
     let appName = $(this).data('app-name')
     $.post(url, {
       'plugin': appName,
-      'terms': data.get('terms'),
+      'terms': searchTerms,
       'keywords': data.get('keywords'),
     }).fail((xhr, textStatus, error) => {
       console.error(xhr.status, textStatus, error)
@@ -161,7 +178,6 @@ $(document).ready(function () {
       for (let i = 0; i < data['results'].length; ++i) {
         let results = data['results'][i]
         let card = makeSearchResultsCard(
-          $(this).data('app-title'),
           $(this).data('app-icon'),
           results.title,
           results.rows.length,
@@ -206,6 +222,8 @@ $(document).ready(function () {
               'disabled')
           $(table).next('.dt-paging').hide()
         }
+        // Highlight search terms
+        highlightSearchResults(table, results.highlight_fields, JSON.parse(searchTerms))
       }
 
       // Update overflow status

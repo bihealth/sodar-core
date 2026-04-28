@@ -217,7 +217,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     kwargs={'file': item.sodar_uuid, 'file_name': item.name},
                 )
             else:
-                raise ValueError(f'Unexpected filesfolders item class: {get_class(item)}')
+                raise ValueError(
+                    f'Unexpected filesfolders item class: {get_class(item)}'
+                )
             allow_public_links = app_settings.get(
                 'filesfolders', 'allow_public_links', project=item.project
             )
@@ -231,22 +233,26 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 and allow_public_links
                 and can_share_link
             ):
-                icons.append({
-                    'icon': 'mdi:link-variant',
-                    'url': reverse(
-                        'filesfolders:file_public_link',
-                        kwargs={'file': item.sodar_uuid},
-                    ),
-                    'title': 'Public link',
-                })
+                icons.append(
+                    {
+                        'icon': 'mdi:link-variant',
+                        'url': reverse(
+                            'filesfolders:file_public_link',
+                            kwargs={'file': item.sodar_uuid},
+                        ),
+                        'title': 'Public link',
+                    }
+                )
             if item.flag:
                 f = FILESFOLDERS_FLAGS[item.flag]
-                icons.append({
-                    'icon': f['icon'],
-                    'url': '#',
-                    'class': f'text-{f["color"]} sodar-ff-flag-icon',
-                    'title': f['label'],
-                })
+                icons.append(
+                    {
+                        'icon': f['icon'],
+                        'url': '#',
+                        'class': f'text-{f["color"]} sodar-ff-flag-icon',
+                        'title': f['label'],
+                    }
+                )
             if item.folder:
                 project_url = reverse(
                     'filesfolders:list',
@@ -268,7 +274,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                         value=item.name,
                         value_url=name_url,
                         icons=icons,
-                        highlight=True,
                         cell_class='sodar-overflow-container',
                     ),
                     # Type
@@ -290,7 +295,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     # Description
                     PluginSearchResultCell(
                         value=item.description,
-                        highlight=True,
                         cell_class='sodar-overflow-container',
                     ),
                 ]
@@ -299,13 +303,14 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             category='all',
             title='Files, Folders and Links',
             search_types=['file', 'folder', 'link'],
-            fields=[
+            field_titles=[
                 'Name',
                 'Type',
                 get_display_name('PROJECT', title=True),
                 'Size',
                 'Description',
             ],
+            highlight_fields=[0, 4],
             rows=rows,
         )
         return [ret]

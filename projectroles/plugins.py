@@ -947,9 +947,8 @@ class PluginSearchResultCell:
     value: str = None
     value_url: str = None
     value_url_class: str = None
-    snippets: list[str] = None
     icons: list[dict[str, str]] = None
-    highlight: bool = False
+    snippets: list[str] = None
     cell_class: str = None
 
 
@@ -966,7 +965,9 @@ class PluginSearchResult:
     #: List of one or more search type keywords for these results
     search_types = []
     #: List of column titles
-    fields = []
+    field_titles = []
+    #: List of field indices where search terms should be highlighted (0-based)
+    highlight_fields = []
     #: List of lists of result objects
     rows = []
 
@@ -975,7 +976,8 @@ class PluginSearchResult:
         category: str,
         title: str,
         search_types: list[str],
-        fields: list[str],
+        field_titles: list[str],
+        highlight_fields: list[int],
         rows: list[list[PluginSearchResultCell]],
     ):
         """
@@ -986,7 +988,9 @@ class PluginSearchResult:
                       the UI (string)
         :param search_types: List of one or more search type keywords for the
                              results
-        :param fields: List of column titles
+        :param field_titles: List of column titles
+        :param highlight_fields: List of field indices where search terms
+                                 should be highlighted (0-based)
         :param rows: List of lists of PluginSearchResultCell objects
         """
         self.category = category
@@ -996,7 +1000,8 @@ class PluginSearchResult:
             raise ValueError(
                 'At least one type keyword must be provided in search_types'
             )
-        self.fields = fields
+        self.field_titles = field_titles
+        self.highlight_fields = highlight_fields
         self.rows = rows
 
     def to_dict(self):
@@ -1004,7 +1009,8 @@ class PluginSearchResult:
             'category': self.category,
             'title': self.title,
             'search_types': self.search_types,
-            'fields': self.fields,
+            'field_titles': self.field_titles,
+            'highlight_fields': self.highlight_fields,
             'rows': [[asdict(cell) for cell in row] for row in self.rows],
         }
 
