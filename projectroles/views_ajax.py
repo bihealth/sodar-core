@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 
@@ -506,7 +506,25 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
     http_method_names = ['post']
 
     @classmethod
-    def _get_search_results(cls, user, plugin_name, terms, projects, keywords):
+    def _get_search_results(
+        cls,
+        user: User,
+        plugin_name: str,
+        terms: list[str],
+        projects: QuerySet[Project],
+        keywords: dict,
+    ):
+        """
+        Collect search results for a specific plugin.
+
+        :param user: user who initiated the sarch
+        :param plugin_name: the plugin which should be searched
+        :param terms: Search terms (list of strings)
+        :param projects: All projects where the search should be performed
+        :param keywords: Optional keywords (dictionary or None)
+        :return: Dictionary with two keys: "error" (either str or None) and
+                 "results" (either list of dicts or None)
+        """
         search_type = keywords.get('type', None)
         # Get project results
         if plugin_name == 'projectroles':
