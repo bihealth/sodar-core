@@ -38,9 +38,11 @@ from projectroles.plugins import (
     PluginAPI,
     PluginCategoryStatistic,
     PluginSearchResult,
+    PluginSearchResultColumn,
     PluginSearchResultCell,
 )
 from projectroles.templatetags.projectroles_common_tags import (
+    get_remote_icon,
     get_project_title_html,
 )
 from projectroles.utils import get_display_name
@@ -513,7 +515,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
         terms: list[str],
         projects: QuerySet[Project],
         keywords: dict,
-    ):
+    ) -> tuple[Optional[str], list[PluginSearchResult]]:
         """
         Collect search results for a specific plugin.
 
@@ -522,8 +524,8 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
         :param terms: Search terms (list of strings)
         :param projects: All projects where the search should be performed
         :param keywords: Optional keywords (dictionary or None)
-        :return: Dictionary with two keys: "error" (either str or None) and
-                 "results" (either list of dicts or None)
+        :return: Tuple of two values: error (either str or None) and
+                 results (list of PluginSearchResult objects)
         """
         search_type = keywords.get('type', None)
         # Get project results
@@ -540,104 +542,70 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 project_type='PROJECT',
                 keywords=keywords,
             ):
+                project_title = get_project_title_html(project)
                 can_view_project = project.public_access or user.has_perm(
                     'projectroles.view_project', project
                 )
-                value_url = None
                 if can_view_project:
-                    value_url = reverse(
+                    project_url = reverse(
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
                     )
-                icons = []
-                if project.is_remote() and user.is_superuser:
-                    remote_project = RemoteProject.objects.filter(
-                        project=project, site__mode=SITE_MODE_SOURCE
-                    ).first()
-                    if remote_project:
-                        icons.append(
-                            {
-                                'icon': 'mdi:cloud',
-                                'url': '#',
-                                'title': '{} project from {}'.format(
-                                    'REVOKED remote'
-                                    if project.is_revoked()
-                                    else 'Remote',
-                                    remote_project.site.name,
-                                ),
-                                'class': 'mr-1 sodar-pr-remote-project-icon'
-                                + 'text-danger'
-                                if project.is_revoked()
-                                else 'text-info',
-                            }
-                        )
+                    project_title = f'<a href="{project_url}">{project_title}</a>'
+                project_title += get_remote_icon(project, user)
                 if (
                     not can_view_project
                     and user.is_authenticated
                     and project.parent
                 ):
-                    icons.append(
-                        {
-                            'icon': 'mdi:account-supervisor',
-                            'url': reverse(
-                                'projectroles:roles',
-                                kwargs={'project': project.parent.sodar_uuid},
-                            ),
-                            'class': 'sodar-pr-project-findable',
-                            'title': 'Findable project: Request access from category owner or delegate',
-                        }
-                    )
+                    role_url = reverse(
+                        'projectroles:roles',
+                        kwargs={'project': project.parent.sodar_uuid},
+                    ),
+                    project_title += f'<a href="{role_url}" class="sodar-pr-project-findable" title="Findable project: Request access from category owner or delegate" data-toggle="tooltip"><i class="iconify ml-1" data-icon="mdi:account-supervisor"></i></a>'
                 rows.append(
                     [
                         PluginSearchResultCell(
-                            value=get_project_title_html(project),
-                            value_url=value_url,
-                            value_url_class='sodar-pr-project-search-link',
-                            icons=icons,
-                            cell_class='sodar-overflow-container',
+                            value=project_title,
+                            cell_class='text-muted' if not can_view_project else '',
                         ),
                         PluginSearchResultCell(
                             value=project.description,
-                            cell_class='sodar-overflow-container',
                         ),
                     ]
                 )
-            res = PluginSearchResult(
+            projectroles_result = PluginSearchResult(
                 category='all',
                 title=get_display_name(
                     PROJECT_TYPE_PROJECT, title=True, plural=True
                 ),
+                table_class='sodar-pr-search-table',
                 search_types=['project'],
-                field_titles=[
-                    get_display_name(PROJECT_TYPE_PROJECT, title=True),
-                    'Description',
+                columns=[
+                    PluginSearchResultColumn(
+                        title=get_display_name(PROJECT_TYPE_PROJECT, title=True),
+                        column_class='sodar-overflow-container',
+                        highlight=True,
+                        value_html=True,
+                    ),
+                    PluginSearchResultColumn(
+                        title='Description',
+                        column_class='sodar-overflow-container',
+                        highlight=True,
+                        value_html=False,
+                    ),
                 ],
-                highlight_fields=[0, 1],
                 rows=rows,
+                result_limit=-1,
             )
-            return {
-                'error': None,
-                'results': [res.to_dict()],
-            }
+            return (None, projectroles_result)
         # Get app results
         plugin = plugin_api.get_app_plugin(plugin_name)
         if search_type is not None and search_type not in plugin.search_types:
-            return {
-                'error': f'The app "{plugin_name}" does not support search results of type "{search_type}".',
-                'results': None,
-            }
+            return (f'The app "{plugin_name}" does not support search results of type "{search_type}".', [])
         try:
-            results = plugin.search(terms, user, projects, **keywords)
-            # TODO: The original code organized results by category, so results should be a dict where the categories are the keys.
-            # XXX: To be discussed: how should we group results by category?
-            # # Build results into dict for easier use in templates
-            # search_res['results'] = {
-            #     r.category: r for r in search_res['results']
-            # }
-            return {
-                'error': None,
-                'results': [res.to_dict() for res in results],
-            }
+            app_results = plugin.search(terms, user, projects, **keywords)
+            return (None, app_results)
         except Exception as ex:
             if settings.DEBUG:
                 raise ex
@@ -651,16 +619,13 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     f'keywords={keywords}',
                 )
             )
-            return {
-                'error': str(ex),
-                'results': None,
-            }
+            return (str(ex), [])
 
     def dispatch(self, request, *args, **kwargs):
         if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
             return {
                 'error': 'Search is not enabled.',
-                'results': None,
+                'results': [],
             }
         return super().dispatch(request, *args, **kwargs)
 
@@ -671,7 +636,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 {
                     'error': 'Please provide "terms", "keywords", and "plugin"'
                     ' in the POST data.',
-                    'results': None,
+                    'results': [],
                 }
             )
         search_terms = json.loads(data['terms'])
@@ -693,14 +658,17 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
         else:
             search_projects = Project.objects.all()
 
-        res = self._get_search_results(
+        error, results = self._get_search_results(
             request.user,
             data['plugin'],
             search_terms,
             search_projects,
             search_keywords,
         )
-        return JsonResponse(res)
+        return JsonResponse({
+            'error': error,
+            'results': [res.to_dict() for res in results]
+        })
 
 
 class CategoryStatisticsAjaxView(SODARBaseAjaxView):

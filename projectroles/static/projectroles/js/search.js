@@ -1,121 +1,95 @@
-function makeSearchResultsCard(appIcon, cardTitle, resLength) {
-  let resTitleElement = ' ' + cardTitle
-  let resLengthElement = resLength ? ` (${resLength})` : ''
-  let card = $('<div>', {
+function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
+  const resTitleElement = ' ' + cardTitle
+  const resLengthElement = resLength ? ` (${resLength})` : ''
+  const paginationOptions = [
+    {value: window.searchPagination, label: 'Page', selected: true},
+    {value: window.searchPagination, label: `${window.searchPagination} (default)`},
+    {value: 10, label: '10'},
+    {value: 25, label: '25'},
+    {value: 50, label: '50'},
+    {value: 100, label: '100'},
+    {value: -1, label: 'All'},
+  ]
+  const card = $('<div>', {
     class: 'card sodar-search-card'
+  })
+  const cardHeader = $('<div>', {
+    class: 'card-header'
   }).append(
-    $('<div>', {
-      class: 'card-header'
-    }).append(
-      $('<h4>').append(
-        $('<i>', {
-          class: 'iconify',
-          'data-icon': appIcon
+    $('<h4>').append(
+      $('<i>', {
+        class: 'iconify',
+        'data-icon': appIcon
+      }),
+      resTitleElement,
+      resLengthElement,
+      $('<div>', {
+        class: 'input-group sodar-header-input-group sodar-header-input-group-search pull-right'
+      }).append(
+        $('<select>', {
+          class: 'form-control sodar-search-page-length'
+        }).append(paginationOptions.map(x => $('<option>', x))),
+        $('<input>', {
+          class: 'form-control sodar-search-filter',
+          type: 'text',
+          placeholder: 'Filter',
+          ariaLabel: `Filter ${cardTitle}`
         }),
-        resTitleElement,
-        resLengthElement,
-        $('<div>', {
-          class: 'input-group sodar-header-input-group sodar-header-input-group-search pull-right'
-        }).append(
-          $('<select>', {
-            class: 'form-control sodar-search-page-length'
-          }).append(
-            $('<option>', {
-              value: window.searchPagination,
-              selected: true
-            }).text('Page'),
-            $('<option>', {
-              value: window.searchPagination
-            }).text(`${window.searchPagination} (default)`),
-            $('<option>', {
-              value: '10'
-            }).text('10'),
-            $('<option>', {
-              value: '25'
-            }).text('25'),
-            $('<option>', {
-              value: '50'
-            }).text('50'),
-            $('<option>', {
-              value: '100'
-            }).text('100'),
-            $('<option>', {
-              value: '-1'
-            }).text('All'),
-          ),
-          $('<input>', {
-            class: 'form-control sodar-search-filter',
-            type: 'text',
-            placeholder: 'Filter',
-            ariaLabel: `Filter ${cardTitle}`
-          }),
-        ),
       ),
     ),
-    // XXX: To be discussed: I found this code in the old _search_header.html template, but I can't see any other reference to result_limit. Is it still relevant?
-    // {% if result_count >= result_limit %}
-    //   <div class='card-body sodar-card-body-info'>
-    //     <i class='iconify' data-icon='mdi:alert'></i>
-    //     Some results may be omitted, please narrow down your search.
-    //   </div>
-    // {% endif %}
-    $('<div>', {
-      class: 'card-body sodar-search-card-body'
-    }),
   )
+  card.append(cardHeader)
+  if (resLimit >= 0 && resLength >= resLimit) {
+    const cardResultLimitWarning = $('<div>', {
+      class: 'card-body sodar-card-body-info'
+    }).append(
+      $('<i>', {
+        class: 'iconify',
+        'data-icon': 'mdi:alert',
+      }),
+      'Some results may be omitted, please narrow down your search.',
+    )
+    card.append(cardResultLimitWarning)
+  }
+  const cardBody = $('<div>', {
+    class: 'card-body sodar-search-card-body'
+  })
+  card.append(cardBody)
   return card
 }
 
 function makeSearchResultsTable(results) {
-  let table = $('<table>', {
+  const table = $('<table>', {
     class: 'table-striped sodar-search-table'
   })
-  let tr = $('<tr>')
-  for (let field of results.field_titles) {
-    tr.append($('<th>').text(field))
+  const tr = $('<tr>')
+  for (let column of results.columns) {
+    tr.append($('<th>').text(column.title))
   }
   table.append($('<thead>').append(tr))
-  let tbody = $('<tbody>')
+  const tbody = $('<tbody>')
   for (let row of results.rows) {
     let tr = $('<tr>')
-    for (let field of row) {
-      let td = $('<td>')
-      if (field.snippets !== null) {
-        for (let snippet of field.snippets) {
-          $(snippet).appendTo(td)
-        }
-        td.append('&ensp;')
-      }
-      if (field.value_url !== null) {
-        td.attr('class', field.cell_class)
+    for (let fieldIdx of row) {
+      const column = results.columns[fieldIdx]
+      const cell = row[fieldIdx]
+      const td = $('<td>')
+      if (column.value_html == true) {
+        td.attr('class', cell.cell_class)
+          .append(cell.value)
+      } else if (cell.value_url !== null) {
+        td.attr('class', cell.cell_class)
           .append(
             $('<a>', {
-              href: field.value_url,
-              class: field.value_url_class
-            }).text(field.value)
+              href: cell.value_url,
+            }).text(cell.value)
           )
-      } else if (field.value !== null) {
-        td.attr('class', field.cell_class)
-          .append(field.value)
+      } else if (cell.value !== null) {
+        td.attr('class', cell.cell_class)
+          .append(cell.value)
       } else {
         td.attr('class', 'text-muted')
           .append('N/A')
-      }
-      if (field.icons !== null) {
-        td.append('&emsp;')
-        for (let icon of field.icons) {
-          $('<a>', {
-              href: icon.url,
-              title: icon.title,
-              'data-toggle': 'tooltip',
-              'data-placement': 'top'
-            })
-            .append($('<i>', {
-              class: `iconify ${icon.class}`,
-              'data-icon': icon.icon
-            }))
-            .appendTo(td)
-        }
       }
       tr.append(td)
     }
@@ -130,7 +104,7 @@ function highlightSearchResults(table, highlightFields, searchTerms) {
     const re = new RegExp(term, 'ig')
     for (let fieldIdx of highlightFields) {
       table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
-        let walker = document.createTreeWalker(this, 0x4)
+        const walker = document.createTreeWalker(this, 0x4)
         let node = walker.nextNode()
         while (node !== null) {
           $(node).replaceWith($(node).text().replaceAll(re,
@@ -155,7 +129,7 @@ $(document).ready(function () {
   const data = new FormData(form)
   const searchTerms = data.get('terms')
   $('.sodar-ajax-search-results').each(function () {
-    let appName = $(this).data('app-name')
+    const appName = $(this).data('app-name')
     $.post(url, {
       'plugin': appName,
       'terms': searchTerms,
@@ -168,30 +142,31 @@ $(document).ready(function () {
           role: 'alert'
         })
         .text(
-          `Error fetching search results for ${appName}: ${xhr.statusText}`
+          `Error fetching search results for the ${appName} app: ${xhr.statusText}`
         )
       )
     }).done(data => {
-      if (data['errors']) {
-        console.error(data['errors'])
+      if (data['error']) {
+        console.error(data['error'])
         $(this).html(
           $('<div>', {
             class: 'alert alert-warning',
             role: 'alert'
           })
           .text(
-            `Error while searching in ${appName}: ${data['error']}`
+            `Error while searching in the ${appName} app: ${data['error']}`
           )
         )
         return
       }
       $(this).text('')
       for (let i = 0; i < data['results'].length; ++i) {
-        let results = data['results'][i]
-        let card = makeSearchResultsCard(
+        const results = data['results'][i]
+        const card = makeSearchResultsCard(
           $(this).data('app-icon'),
           results.title,
           results.rows.length,
+          results.result_limit,
         )
         $(this).append(card)
         if (!results.rows.length) {
@@ -206,7 +181,7 @@ $(document).ready(function () {
             'disabled')
           continue
         }
-        let table = makeSearchResultsTable(results)
+        const table = makeSearchResultsTable(results)
         $(this).find('.sodar-search-card-body').append(table)
         $(table).DataTable({
           order: [], // Disable default ordering
@@ -249,10 +224,10 @@ $(document).ready(function () {
        **********/
 
       $('.sodar-search-page-length').change(function () {
-        let dt = $(this).closest('.sodar-search-card').find(
+        const dt = $(this).closest('.sodar-search-card').find(
             'table')
           .DataTable()
-        let value = parseInt($(this).val())
+        const value = parseInt($(this).val())
         dt.page.len(value).draw()
       })
 
@@ -261,10 +236,10 @@ $(document).ready(function () {
        *********/
 
       $('.sodar-search-filter').keyup(function () {
-        let dt = $(this).closest('.sodar-search-card').find(
+        const dt = $(this).closest('.sodar-search-card').find(
             'table')
           .dataTable().api()
-        let v = $(this).val()
+        const v = $(this).val()
         dt.search(v)
         dt.draw()
       })

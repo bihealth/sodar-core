@@ -355,8 +355,8 @@ class ProjectAppPluginPoint(PluginPoint):
     #: List of search object types for the app
     search_types = []
 
-    #: Search results template
-    search_template = None
+    #: CSS file for the search resutls table from this plugin
+    search_css = None
 
     #: App card template for the project details page
     details_template = None
@@ -944,12 +944,28 @@ class PluginSearchResultCell:
     Represents a cell in the table of search results returned by app plugins.
     """
 
+    #: XXX
     value: str = None
-    value_url: str = None
-    value_url_class: str = None
-    icons: list[dict[str, str]] = None
-    snippets: list[str] = None
-    cell_class: str = None
+    #: XXX
+    value_url: Optional[str] = None
+    #: XXX
+    cell_class: Optional[str] = None
+
+
+@dataclass
+class PluginSearchResultColumn:
+    """
+    Represents a column in the table of search results returned by app plugins.
+    """
+
+    #: The title to be displayed (str)
+    title: str
+    #: Classes to be added to the cells for that column (str)
+    column_class: Optional[str] = None
+    #: Whether to apply highlighting for this column (bool)
+    highlight: bool = False
+    #: Interpret the value field of PluginSearchResultCell as HTML (bool)
+    value_html: bool = False
 
 
 class PluginSearchResult:
@@ -962,23 +978,26 @@ class PluginSearchResult:
     category = None
     #: Title to be displayed for this set of search results in the UI (string)
     title = None
+    #: HTML Class for the whole results table
+    table_class = None
     #: List of one or more search type keywords for these results
     search_types = []
-    #: List of column titles
-    field_titles = []
-    #: List of field indices where search terms should be highlighted (0-based)
-    highlight_fields = []
+    #: List of columns to be shown in the results table
+    columns = []
     #: List of lists of result objects
     rows = []
+    #: Limit for the number of items returned (if <0, no limit is applied)
+    result_limit = -1
 
     def __init__(
         self,
         category: str,
         title: str,
+        table_class: str,
         search_types: list[str],
-        field_titles: list[str],
-        highlight_fields: list[int],
+        columns: list[PluginSearchResultColumn],
         rows: list[list[PluginSearchResultCell]],
+        result_limit: int = -1,
     ):
         """
         Initialize PluginSearchResult.
@@ -986,32 +1005,37 @@ class PluginSearchResult:
         :param category: Category of the result set, used in rendering (string)
         :param title: Title to be displayed for this set of search results in
                       the UI (string)
+        :param table_class: HTML class for the whole results table
         :param search_types: List of one or more search type keywords for the
                              results
         :param field_titles: List of column titles
         :param highlight_fields: List of field indices where search terms
                                  should be highlighted (0-based)
         :param rows: List of lists of PluginSearchResultCell objects
+        :param result_limit: Limit for the number of items returned (if <0, no
+                             limit is applied)
         """
         self.category = category
         self.title = title
+        self.table_class = table_class
         self.search_types = search_types
         if not isinstance(search_types, list) or len(search_types) < 1:
             raise ValueError(
                 'At least one type keyword must be provided in search_types'
             )
-        self.field_titles = field_titles
-        self.highlight_fields = highlight_fields
+        self.columns = columns
         self.rows = rows
+        self.result_limit = result_limit
 
     def to_dict(self):
         return {
             'category': self.category,
             'title': self.title,
+            'table_class': self.table_class,
             'search_types': self.search_types,
-            'field_titles': self.field_titles,
-            'highlight_fields': self.highlight_fields,
+            'columns': [asdict(column) for column in self.columns],
             'rows': [[asdict(cell) for cell in row] for row in self.rows],
+            'result_limit': self.result_limit,
         }
 
 

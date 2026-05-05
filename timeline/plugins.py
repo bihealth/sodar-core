@@ -12,6 +12,7 @@ from projectroles.plugins import (
     BackendPluginPoint,
     SiteAppPluginPoint,
     PluginSearchResult,
+    PluginSearchResultColumn,
     PluginSearchResultCell,
 )
 from projectroles.utils import get_display_name
@@ -76,8 +77,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: List of search object types for the app
     search_types = ['timeline']
 
-    #: Search results template
-    search_template = 'timeline/_search_results.html'
+    #: Search results CSS
+    search_css = 'timeline/search.css'
 
     #: App card template for the project details page
     details_template = 'timeline/_details_card.html'
@@ -158,33 +159,35 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     # Timestamp
                     PluginSearchResultCell(
                         value=get_timestamp(item),
-                        cell_class='text-nowrap',
                     ),
                     # Description
                     PluginSearchResultCell(
-                        snippets=[
-                            app_badge,
-                            user_badge,
-                            project_badge,
-                            f'<span>{get_event_description(item, plugin_lookup)}</span>',
-                        ],
-                        value='',
-                        cell_class='sodar-overflow-container',
+                        value=(
+                            app_badge +
+                            user_badge +
+                            project_badge +
+                            f'<span>{get_event_description(item, plugin_lookup)}</span>'
+                        ),
                     ),
                     # Status
                     PluginSearchResultCell(
                         value=item.get_status().status_type,
-                        cell_class=f'{get_status_style(item.get_status())} text-light sodar-tl-item-status',
+                        cell_class=get_status_style(item.get_status()),
                     ),
                 ]
             )
         ret = PluginSearchResult(
             category='all',
             title='Timeline Events',
+            table_class='sodar-tl-search-table',
             search_types=['timeline'],
-            field_titles=['Timestamp', 'Description', 'Status'],
-            highlight_fields=[1],
+            columns=[
+                PluginSearchResultColumn(title='Timestamp', column_class='text-nowrap', higlight=False, value_html=False),
+                PluginSearchResultColumn(title='Description', column_class='sodar-overflow-container', higlight=True, value_html=True),
+                PluginSearchResultColumn(title='Status', column_class='text-light sodar-tl-item-status', higlight=False, value_html=False),
+            ],
             rows=rows,
+            result_limit=-1,
         )
         return [ret]
 

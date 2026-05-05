@@ -17,13 +17,14 @@ from projectroles.plugins import (
     PluginAppSettingDef,
     PluginObjectLink,
     PluginSearchResult,
+    PluginSearchResultColumn,
     PluginSearchResultCell,
     PluginCategoryStatistic,
 )
 from projectroles.utils import get_display_name
 
-from filesfolders.models import File, Folder, HyperLink, FILESFOLDERS_FLAGS
-from filesfolders.templatetags.filesfolders_tags import get_class
+from filesfolders.models import File, Folder, HyperLink
+from filesfolders.templatetags.filesfolders_tags import get_class, get_flag
 from filesfolders.urls import urlpatterns
 
 
@@ -89,8 +90,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: List of search object types for the app
     search_types = ['file', 'folder', 'link']
 
-    #: Search results template
-    search_template = 'filesfolders/_search_results.html'
+    #: Search results CSS
+    search_css = 'filesfolders/search.css'
 
     #: App card template for the project details page
     details_template = 'filesfolders/_details_card.html'
@@ -220,39 +221,26 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 raise ValueError(
                     f'Unexpected filesfolders item class: {get_class(item)}'
                 )
+            name_value = f'<a href="{name_url}">{item.name}</a>'
             allow_public_links = app_settings.get(
                 'filesfolders', 'allow_public_links', project=item.project
             )
             can_share_link = user.has_perm(
                 'filesfolders.share_public_link', item.project
             )
-            icons = []
             if (
                 get_class(item) == 'File'
                 and item.public_url
                 and allow_public_links
                 and can_share_link
             ):
-                icons.append(
-                    {
-                        'icon': 'mdi:link-variant',
-                        'url': reverse(
-                            'filesfolders:file_public_link',
-                            kwargs={'file': item.sodar_uuid},
-                        ),
-                        'title': 'Public link',
-                    }
+                share_url = reverse(
+                    'filesfolders:file_public_link',
+                    kwargs={'file': item.sodar_uuid},
                 )
+                name_value += f'<a href="{share_url}" title="Public link"><i class="iconify" data-icon="mdi:link-variant"></i></a>'
             if item.flag:
-                f = FILESFOLDERS_FLAGS[item.flag]
-                icons.append(
-                    {
-                        'icon': f['icon'],
-                        'url': '#',
-                        'class': f'text-{f["color"]} sodar-ff-flag-icon',
-                        'title': f['label'],
-                    }
-                )
+                name_value += get_flag(item.flag)
             if item.folder:
                 project_url = reverse(
                     'filesfolders:list',
@@ -271,47 +259,41 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 [
                     # Name
                     PluginSearchResultCell(
-                        value=item.name,
-                        value_url=name_url,
-                        icons=icons,
-                        cell_class='sodar-overflow-container',
+                        value=name_value,
                     ),
                     # Type
                     PluginSearchResultCell(
                         value=get_class(item),
-                        cell_class='text-nowrap',
                     ),
                     # Project
                     PluginSearchResultCell(
                         value=item.project.title,
                         value_url=project_url,
-                        cell_class='sodar-overflow-container',
                     ),
                     # Size
                     PluginSearchResultCell(
                         value=size,
-                        cell_class='text-right text-nowrap',
                     ),
                     # Description
                     PluginSearchResultCell(
                         value=item.description,
-                        cell_class='sodar-overflow-container',
                     ),
                 ]
             )
         ret = PluginSearchResult(
             category='all',
             title='Files, Folders and Links',
+            table_class='sodar-ff-search-table',
             search_types=['file', 'folder', 'link'],
-            field_titles=[
-                'Name',
-                'Type',
-                get_display_name('PROJECT', title=True),
-                'Size',
-                'Description',
+            columns=[
+                PluginSearchResultColumn(title='Name', column_class='sodar-overflow-container', highlight=True, value_html=True),
+                PluginSearchResultColumn(title='Type', column_class='text-nowrap', highlight=False, value_html=False),
+                PluginSearchResultColumn(title=get_display_name('PROJECT', title=True), column_class='sodar-overflow-container', highlight=False, value_html=False),
+                PluginSearchResultColumn(title='Size', column_class='text-right text-nowrap', highlight=False, value_html=False),
+                PluginSearchResultColumn(title='Description', column_class='sodar-overflow-container', highlight=True, value_html=False),
             ],
-            highlight_fields=[0, 4],
             rows=rows,
+            result_limit=-1,
         )
         return [ret]
 
