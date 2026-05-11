@@ -131,7 +131,7 @@ $(document).ready(function () {
 
 
 function modifyCellOverflow() {
-  $('.sodar-overflow-container').each(function () {
+  $('.sodar-overflow-container div').each(function () {
     let parentWidth = $(this).parent().prop('scrollWidth')
     let lastVisibleTd = false
 

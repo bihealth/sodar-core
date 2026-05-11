@@ -551,23 +551,29 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
                     )
-                    project_title = f'<a href="{project_url}">{project_title}</a>'
+                    project_title = (
+                        f'<a href="{project_url}">{project_title}</a>'
+                    )
                 project_title += get_remote_icon(project, user)
                 if (
                     not can_view_project
                     and user.is_authenticated
                     and project.parent
                 ):
-                    role_url = reverse(
-                        'projectroles:roles',
-                        kwargs={'project': project.parent.sodar_uuid},
-                    ),
+                    role_url = (
+                        reverse(
+                            'projectroles:roles',
+                            kwargs={'project': project.parent.sodar_uuid},
+                        ),
+                    )
                     project_title += f'<a href="{role_url}" class="sodar-pr-project-findable" title="Findable project: Request access from category owner or delegate" data-toggle="tooltip"><i class="iconify ml-1" data-icon="mdi:account-supervisor"></i></a>'
                 rows.append(
                     [
                         PluginSearchResultCell(
                             value=project_title,
-                            cell_class='text-muted' if not can_view_project else '',
+                            cell_class='text-muted'
+                            if not can_view_project
+                            else '',
                         ),
                         PluginSearchResultCell(
                             value=project.description,
@@ -583,7 +589,9 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 search_types=['project'],
                 columns=[
                     PluginSearchResultColumn(
-                        title=get_display_name(PROJECT_TYPE_PROJECT, title=True),
+                        title=get_display_name(
+                            PROJECT_TYPE_PROJECT, title=True
+                        ),
                         column_class='sodar-overflow-container',
                         highlight=True,
                         value_html=True,
@@ -596,13 +604,15 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     ),
                 ],
                 rows=rows,
-                result_limit=-1,
             )
-            return (None, projectroles_result)
+            return (None, [projectroles_result])
         # Get app results
         plugin = plugin_api.get_app_plugin(plugin_name)
         if search_type is not None and search_type not in plugin.search_types:
-            return (f'The app "{plugin_name}" does not support search results of type "{search_type}".', [])
+            return (
+                f'The app "{plugin_name}" does not support search results of type "{search_type}".',
+                [],
+            )
         try:
             app_results = plugin.search(terms, user, projects, **keywords)
             return (None, app_results)
@@ -665,10 +675,9 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
             search_projects,
             search_keywords,
         )
-        return JsonResponse({
-            'error': error,
-            'results': [res.to_dict() for res in results]
-        })
+        return JsonResponse(
+            {'error': error, 'results': [res.to_dict() for res in results]}
+        )
 
 
 class CategoryStatisticsAjaxView(SODARBaseAjaxView):

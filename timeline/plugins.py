@@ -151,7 +151,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         plugin_lookup = get_plugin_lookup()
         rows = []
         for item in items:
-            app_badge = get_app_badge(item, plugin_lookup, extra_class='mr-1')
+            app_badge = get_app_badge(item, plugin_lookup, extra_class='badge-secondary mr-1')
             user_badge = get_user_badge(item.user, extra_class='mr-1')
             project_badge = get_project_badge(item.project, extra_class='mr-1')
             rows.append(
@@ -163,10 +163,10 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     # Description
                     PluginSearchResultCell(
                         value=(
-                            app_badge +
-                            user_badge +
-                            project_badge +
-                            f'<span>{get_event_description(item, plugin_lookup)}</span>'
+                            app_badge
+                            + user_badge
+                            + project_badge
+                            + f'<span>{get_event_description(item, plugin_lookup)}</span>'
                         ),
                     ),
                     # Status
@@ -182,12 +182,26 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             table_class='sodar-tl-search-table',
             search_types=['timeline'],
             columns=[
-                PluginSearchResultColumn(title='Timestamp', column_class='text-nowrap', higlight=False, value_html=False),
-                PluginSearchResultColumn(title='Description', column_class='sodar-overflow-container', higlight=True, value_html=True),
-                PluginSearchResultColumn(title='Status', column_class='text-light sodar-tl-item-status', higlight=False, value_html=False),
+                PluginSearchResultColumn(
+                    title='Timestamp',
+                    column_class='text-nowrap',
+                    highlight=False,
+                    value_html=False,
+                ),
+                PluginSearchResultColumn(
+                    title='Description',
+                    column_class='sodar-overflow-container',
+                    highlight=True,
+                    value_html=True,
+                ),
+                PluginSearchResultColumn(
+                    title='Status',
+                    column_class='text-light sodar-tl-item-status',
+                    highlight=False,
+                    value_html=False,
+                ),
             ],
             rows=rows,
-            result_limit=-1,
         )
         return [ret]
 

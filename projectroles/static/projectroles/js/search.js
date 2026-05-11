@@ -58,39 +58,44 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
   return card
 }
 
-function makeSearchResultsTable(results) {
+function makeSearchResultsTable(result) {
   const table = $('<table>', {
-    class: 'table-striped sodar-search-table'
+    class: `table table-striped sodar-card-table sodar-search-table ${result.table_class}`
   })
   const tr = $('<tr>')
-  for (let column of results.columns) {
+  for (let column of result.columns) {
     tr.append($('<th>').text(column.title))
   }
   table.append($('<thead>').append(tr))
   const tbody = $('<tbody>')
-  for (let row of results.rows) {
-    let tr = $('<tr>')
-    for (let fieldIdx of row) {
-      const column = results.columns[fieldIdx]
+  for (let row of result.rows) {
+    const tr = $('<tr>')
+    for (let fieldIdx in row) {
+      const column = result.columns[fieldIdx]
       const cell = row[fieldIdx]
-      const td = $('<td>')
+      const cellDiv = $('<div>')
       if (column.value_html == true) {
-        td.attr('class', cell.cell_class)
-          .append(cell.value)
+        cellDiv.append(cell.value)
       } else if (cell.value_url !== null) {
-        td.attr('class', cell.cell_class)
-          .append(
+        cellDiv.append(
             $('<a>', {
               href: cell.value_url,
             }).text(cell.value)
           )
       } else if (cell.value !== null) {
-        td.attr('class', cell.cell_class)
-          .append(cell.value)
+        cellDiv.append(cell.value)
       } else {
-        td.attr('class', 'text-muted')
-          .append('N/A')
+        cellDiv.addClass('text-muted')
+        cellDiv.append('N/A')
       }
+      const td = $('<td>')
+      if (column.column_class !== null) {
+        td.addClass(column.column_class)
+      }
+      if (cell.cell_class !== null) {
+        td.addClass(cell.cell_class)
+      }
+      td.append(cellDiv)
       tr.append(td)
     }
     tbody.append(tr)
@@ -102,7 +107,7 @@ function makeSearchResultsTable(results) {
 function highlightSearchResults(table, highlightFields, searchTerms) {
   for (let term of searchTerms) {
     const re = new RegExp(term, 'ig')
-    for (let fieldIdx of highlightFields) {
+    for (let fieldIdx in highlightFields) {
       table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
         const walker = document.createTreeWalker(this, 0x4)
         let node = walker.nextNode()

@@ -238,9 +238,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     'filesfolders:file_public_link',
                     kwargs={'file': item.sodar_uuid},
                 )
-                name_value += f'<a href="{share_url}" title="Public link"><i class="iconify" data-icon="mdi:link-variant"></i></a>'
+                name_value += f' <a href="{share_url}" title="Public link"><i class="iconify" data-icon="mdi:link-variant"></i></a>'
             if item.flag:
-                name_value += get_flag(item.flag)
+                name_value += ' ' + get_flag(item.flag)
             if item.folder:
                 project_url = reverse(
                     'filesfolders:list',
@@ -254,7 +254,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             if get_class(item) == 'File':
                 size = filesizeformat(item.file.file.size)
             else:
-                size = None
+                size = ''
             rows.append(
                 [
                     # Name
@@ -286,14 +286,38 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             table_class='sodar-ff-search-table',
             search_types=['file', 'folder', 'link'],
             columns=[
-                PluginSearchResultColumn(title='Name', column_class='sodar-overflow-container', highlight=True, value_html=True),
-                PluginSearchResultColumn(title='Type', column_class='text-nowrap', highlight=False, value_html=False),
-                PluginSearchResultColumn(title=get_display_name('PROJECT', title=True), column_class='sodar-overflow-container', highlight=False, value_html=False),
-                PluginSearchResultColumn(title='Size', column_class='text-right text-nowrap', highlight=False, value_html=False),
-                PluginSearchResultColumn(title='Description', column_class='sodar-overflow-container', highlight=True, value_html=False),
+                PluginSearchResultColumn(
+                    title='Name',
+                    column_class='sodar-overflow-container',
+                    highlight=True,
+                    value_html=True,
+                ),
+                PluginSearchResultColumn(
+                    title='Type',
+                    column_class='text-nowrap',
+                    highlight=False,
+                    value_html=False,
+                ),
+                PluginSearchResultColumn(
+                    title=get_display_name('PROJECT', title=True),
+                    column_class='sodar-overflow-container',
+                    highlight=False,
+                    value_html=False,
+                ),
+                PluginSearchResultColumn(
+                    title='Size',
+                    column_class='text-right text-nowrap',
+                    highlight=False,
+                    value_html=False,
+                ),
+                PluginSearchResultColumn(
+                    title='Description',
+                    column_class='sodar-overflow-container',
+                    highlight=True,
+                    value_html=False,
+                ),
             ],
             rows=rows,
-            result_limit=-1,
         )
         return [ret]
 

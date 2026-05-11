@@ -4,8 +4,8 @@
 {% get_remote_project_obj site project as remote_project %}
 
 <tr>
-  <td class="align-middle">
-    <div class="sodar-overflow-container">
+  <td class="align-middle sodar-overflow-container">
+    <div>
       <a href="{% url 'projectroles:detail' project=project.sodar_uuid %}"
          target="_blank">
        {% get_project_title_html project %}
