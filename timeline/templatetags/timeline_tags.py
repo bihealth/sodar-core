@@ -92,7 +92,9 @@ def get_plugin_lookup() -> dict:
 
 
 @register.simple_tag
-def get_app_badge(event: TimelineEvent, plugin_lookup: dict, extra_class: Optional[str] = None) -> str:
+def get_app_badge(
+    event: TimelineEvent, plugin_lookup: dict, extra_class: Optional[str] = None
+) -> str:
     """Return badge HTML for app by plugin lookup"""
     url = None
     title = event.app

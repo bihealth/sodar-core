@@ -151,7 +151,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         plugin_lookup = get_plugin_lookup()
         rows = []
         for item in items:
-            app_badge = get_app_badge(item, plugin_lookup, extra_class='badge-secondary mr-1')
+            app_badge = get_app_badge(
+                item, plugin_lookup, extra_class='badge-secondary mr-1'
+            )
             user_badge = get_user_badge(item.user, extra_class='mr-1')
             project_badge = get_project_badge(item.project, extra_class='mr-1')
             rows.append(

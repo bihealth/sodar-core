@@ -779,7 +779,12 @@ class ProjectSearchMixin:
                 if search_keywords['type'] in p.search_types
             ]
         context['search_apps'] = [
-            {'name': app.name, 'title': app.title, 'icon': app.icon, 'search_css': app.search_css}
+            {
+                'name': app.name,
+                'title': app.title,
+                'icon': app.icon,
+                'search_css': app.search_css,
+            }
             for app in search_apps
         ]
         if search_keywords.get('type', 'project') == 'project':
