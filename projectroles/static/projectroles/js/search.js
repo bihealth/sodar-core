@@ -1,15 +1,29 @@
 function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
   const resTitleElement = ' ' + cardTitle
   const resLengthElement = resLength ? ` (${resLength})` : ''
-  const paginationOptions = [
-    {value: window.searchPagination, label: 'Page', selected: true},
-    {value: window.searchPagination, label: `${window.searchPagination} (default)`},
-    {value: 10, label: '10'},
-    {value: 25, label: '25'},
-    {value: 50, label: '50'},
-    {value: 100, label: '100'},
-    {value: -1, label: 'All'},
-  ]
+  const paginationOptions = [{
+    value: window.searchPagination,
+    label: 'Page',
+    selected: true
+  }, {
+    value: window.searchPagination,
+    label: `${window.searchPagination} (default)`
+  }, {
+    value: 10,
+    label: '10'
+  }, {
+    value: 25,
+    label: '25'
+  }, {
+    value: 50,
+    label: '50'
+  }, {
+    value: 100,
+    label: '100'
+  }, {
+    value: -1,
+    label: 'All'
+  }, ]
   const card = $('<div>', {
     class: 'card sodar-search-card'
   })
@@ -79,10 +93,10 @@ function makeSearchResultsTable(result) {
         cellDiv.append(cell.value)
       } else if (cell.value_url !== null) {
         cellDiv.append(
-            $('<a>', {
-              href: cell.value_url,
-            }).text(cell.value)
-          )
+          $('<a>', {
+            href: cell.value_url,
+          }).text(cell.value)
+        )
       } else if (cell.value !== null) {
         cellDiv.append(cell.value)
       } else {
@@ -105,19 +119,21 @@ function makeSearchResultsTable(result) {
   return table
 }
 
-function highlightSearchResults(table, highlightFields, searchTerms) {
+function highlightSearchResults(table, columns, searchTerms) {
   for (let term of searchTerms) {
     const re = new RegExp(term, 'ig')
-    for (let fieldIdx in highlightFields) {
-      table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
-        const walker = document.createTreeWalker(this, 0x4)
-        let node = walker.nextNode()
-        while (node !== null) {
-          $(node).replaceWith($(node).text().replaceAll(re,
-            `<strong>$&</strong>`))
-          node = walker.nextNode()
-        }
-      })
+    for (let fieldIdx in columns) {
+      if (columns[fieldIdx].highlight == true) {
+        table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
+          const walker = document.createTreeWalker(this, 0x4)
+          let node = walker.nextNode()
+          while (node !== null) {
+            $(node).replaceWith($(node).text().replaceAll(re,
+              `<strong>$&</strong>`))
+            node = walker.nextNode()
+          }
+        })
+      }
     }
   }
 }
@@ -217,7 +233,7 @@ $(document).ready(function () {
         // Highlight search terms
         highlightSearchResults(
           table,
-          results.highlight_fields,
+          results.columns,
           JSON.parse(searchTerms),
         )
       }
