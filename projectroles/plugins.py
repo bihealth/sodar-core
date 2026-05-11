@@ -978,8 +978,8 @@ class PluginSearchResult:
     category = None
     #: Title to be displayed for this set of search results in the UI (string)
     title = None
-    #: HTML Class for the whole results table
-    table_class = None
+    #: HTML id for the whole results table
+    table_id = None
     #: List of one or more search type keywords for these results
     search_types = []
     #: List of columns to be shown in the results table
@@ -993,7 +993,7 @@ class PluginSearchResult:
         self,
         category: str,
         title: str,
-        table_class: str,
+        table_id: str,
         search_types: list[str],
         columns: list[PluginSearchResultColumn],
         rows: list[list[PluginSearchResultCell]],
@@ -1005,7 +1005,7 @@ class PluginSearchResult:
         :param category: Category of the result set, used in rendering (string)
         :param title: Title to be displayed for this set of search results in
                       the UI (string)
-        :param table_class: HTML class for the whole results table
+        :param table_id: HTML id for the whole results table
         :param search_types: List of one or more search type keywords for the
                              results
         :param field_titles: List of column titles
@@ -1017,7 +1017,7 @@ class PluginSearchResult:
         """
         self.category = category
         self.title = title
-        self.table_class = table_class
+        self.table_id = table_id
         self.search_types = search_types
         if not isinstance(search_types, list) or len(search_types) < 1:
             raise ValueError(
@@ -1031,7 +1031,7 @@ class PluginSearchResult:
         return {
             'category': self.category,
             'title': self.title,
-            'table_class': self.table_class,
+            'table_id': self.table_id,
             'search_types': self.search_types,
             'columns': [asdict(column) for column in self.columns],
             'rows': [[asdict(cell) for cell in row] for row in self.rows],

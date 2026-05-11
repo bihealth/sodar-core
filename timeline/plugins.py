@@ -78,7 +78,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     search_types = ['timeline']
 
     #: Search results CSS
-    search_css = 'timeline/search.css'
+    search_css = 'timeline/css/search.css'
 
     #: App card template for the project details page
     details_template = 'timeline/_details_card.html'
@@ -179,7 +179,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         ret = PluginSearchResult(
             category='all',
             title='Timeline Events',
-            table_class='sodar-tl-search-table',
+            table_id='sodar-tl-search-table',
             search_types=['timeline'],
             columns=[
                 PluginSearchResultColumn(

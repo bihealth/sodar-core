@@ -1,0 +1,19 @@
+.table#sodar-tl-search-table tbody tr td:nth-child(1) {
+  white-space: nowrap;
+}
+.table#sodar-tl-search-table tbody tr td:nth-child(2) {
+  width: 100%;
+}
+/* Responsive modifications */
+@media screen and (max-width: 650px) {
+  .table#sodar-tl-search-table tr th:nth-child(1),
+  .table#sodar-tl-search-table tr td:nth-child(1) {
+    display: none;
+  }
+}
+@media screen and (max-width: 1000px) {
+  .table#sodar-tl-search-table thead tr th:nth-child(3),
+  .table#sodar-tl-search-table tbody tr td:nth-child(3) {
+    display: none;
+  }
+}

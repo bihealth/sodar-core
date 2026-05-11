@@ -585,7 +585,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 title=get_display_name(
                     PROJECT_TYPE_PROJECT, title=True, plural=True
                 ),
-                table_class='sodar-pr-search-table',
+                table_id='sodar-pr-search-table',
                 search_types=['project'],
                 columns=[
                     PluginSearchResultColumn(

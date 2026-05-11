@@ -779,7 +779,7 @@ class ProjectSearchMixin:
                 if search_keywords['type'] in p.search_types
             ]
         context['search_apps'] = [
-            {'name': app.name, 'title': app.title, 'icon': app.icon}
+            {'name': app.name, 'title': app.title, 'icon': app.icon, 'search_css': app.search_css}
             for app in search_apps
         ]
         if search_keywords.get('type', 'project') == 'project':
@@ -791,6 +791,7 @@ class ProjectSearchMixin:
                         PROJECT_TYPE_PROJECT, title=True, plural=True
                     ),
                     'icon': 'mdi:cube',
+                    'search_css': 'projectroles/css/search.css',
                 },
             )
 

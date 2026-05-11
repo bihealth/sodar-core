@@ -91,7 +91,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     search_types = ['file', 'folder', 'link']
 
     #: Search results CSS
-    search_css = 'filesfolders/search.css'
+    search_css = 'filesfolders/css/search.css'
 
     #: App card template for the project details page
     details_template = 'filesfolders/_details_card.html'
@@ -283,7 +283,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         ret = PluginSearchResult(
             category='all',
             title='Files, Folders and Links',
-            table_class='sodar-ff-search-table',
+            table_id='sodar-ff-search-table',
             search_types=['file', 'folder', 'link'],
             columns=[
                 PluginSearchResultColumn(

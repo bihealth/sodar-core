@@ -60,7 +60,8 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
 
 function makeSearchResultsTable(result) {
   const table = $('<table>', {
-    class: `table table-striped sodar-card-table sodar-search-table ${result.table_class}`
+    class: 'table table-striped sodar-card-table sodar-search-table',
+    id: result.table_id,
   })
   const tr = $('<tr>')
   for (let column of result.columns) {

@@ -1,0 +1,37 @@
+.table#sodar-ff-search-table thead tr th:nth-child(2) {
+  width: 75px !important;
+}
+.table#sodar-ff-search-table tbody tr td:nth-child(2) {
+  width: 75px !important;
+}
+.table#sodar-ff-search-table thead tr th:nth-child(4) {
+  width: 75px !important;
+}
+.table#sodar-ff-search-table tbody tr td:nth-child(4) {
+  width: 75px !important;
+}
+/* Responsive modifications */
+@media screen and (max-width: 1300px) {
+  .table#sodar-ff-search-table tr th:nth-child(4),
+  .table#sodar-ff-search-table tr td:nth-child(4) {
+    display: none;
+  }
+}
+@media screen and (max-width: 1100px) {
+  .table#sodar-ff-search-table tr th:nth-child(2),
+  .table#sodar-ff-search-table tr td:nth-child(2) {
+    display: none;
+  }
+}
+@media screen and (max-width: 900px) {
+  .table#sodar-ff-search-table tr th:nth-child(5),
+  .table#sodar-ff-search-table tr td:nth-child(5) {
+    display: none;
+  }
+}
+@media screen and (max-width: 600px) {
+  .table#sodar-ff-search-table tr th:nth-child(3),
+  .table#sodar-ff-search-table tr td:nth-child(3) {
+    display: none;
+  }
+}
