@@ -156,6 +156,7 @@ class Command(
                         user.username = random_username
                         break
                 user.save()
+                logger.info('All personal data were removed.')
 
     def add_arguments(self, parser):
         parser.add_argument(
