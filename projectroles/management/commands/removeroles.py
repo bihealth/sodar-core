@@ -145,7 +145,7 @@ class Command(
                 user.last_name = ''
                 user.email = ''
                 while True:
-                    random_username = 'deactivated_' + ''.join(
+                    random_username = 'deactivated' + ''.join(
                         random.choices(
                             string.ascii_lowercase + string.digits, k=12
                         )
