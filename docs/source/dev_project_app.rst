@@ -243,7 +243,7 @@ Implementing the following is **optional**:
     definition for an example.
 ``search_types``
     Implement if searching the data of the app is enabled.
-``search_CSS``
+``search_css``
     Path to CSS file styling the search results for this plugin. Implement if
     searching the data of the app is enabled.
 ``project_list_columns``

@@ -23,7 +23,7 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
   }, {
     value: -1,
     label: 'All'
-  }, ]
+  }]
   const card = $('<div>', {
     class: 'card sodar-search-card'
   })

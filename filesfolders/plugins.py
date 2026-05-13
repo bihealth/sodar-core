@@ -204,7 +204,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             items = []
         rows = []
         for item in items:
-            item_class = item.__class__.__name
+            item_class = item.__class__.__name__
             if not user.has_perm('filesfolders.view_data', item.project):
                 continue
             if item_class == 'HyperLink':
