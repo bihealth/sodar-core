@@ -146,16 +146,15 @@ $(document).ready(function () {
   $.fn.dataTable.ext.classes.sPageButton =
     'btn sodar-list-btn ml-1 sodar-paginate-button btn-outline-light text-primary'
 
-  const form = document.querySelector('#sodar-ajax-search')
-  const url = form.action
-  const data = new FormData(form)
-  const searchTerms = data.get('terms')
   $('.sodar-ajax-search-results').each(function () {
+    const url = $(this).data('url')
     const appName = $(this).data('app-name')
+    const searchTerms = document.getElementById('search-terms').textContent
+    const searchKeywords = document.getElementById('search-keywords').textContent
     $.post(url, {
       'plugin': appName,
       'terms': searchTerms,
-      'keywords': data.get('keywords'),
+      'keywords': searchKeywords,
     }).fail((xhr, textStatus, error) => {
       console.error(xhr.status, textStatus, error)
       $(this).html(

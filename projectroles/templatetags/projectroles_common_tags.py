@@ -481,12 +481,6 @@ def render_markdown(raw_markdown: str) -> str:
     return mistune.html(raw_markdown)
 
 
-@register.simple_tag
-def render_json(obj: Any) -> str:
-    """JSON rendering helper"""
-    return json.dumps(obj)
-
-
 @register.filter
 def force_wrap(s: str, length: int) -> str:
     """Force wrapping of string"""

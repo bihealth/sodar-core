@@ -52,12 +52,10 @@
       <strong>Error:</strong> Search type "{{ search_keywords.type }}" not recognized!
     </div>
   {% else %}
-    <form id="sodar-ajax-search" name="sodar-ajax-search" action={% url 'projectroles:ajax_search' %} style="display: none;">
-      <textarea name="terms">{% render_json search_terms %}</textarea>
-      <textarea name="keywords">{% render_json search_keywords %}</textarea>
-    </form>
+    {{ search_terms|json_script:"search-terms" }}
+    {{ search_keywords|json_script:"search-keywords" }}
     {% for app in search_apps %}
-      <div class="sodar-ajax-search-results" data-app-name="{{ app.name }}" data-app-title="{{ app.title }}" data-app-icon="{{ app.icon }}">
+      <div class="sodar-ajax-search-results" data-url="{% url 'projectroles:ajax_search' %}" data-app-name="{{ app.name }}" data-app-title="{{ app.title }}" data-app-icon="{{ app.icon }}">
         <i class="iconify spin text-secondary"
            data-icon="mdi:loading" data-height="42">
         </i>
