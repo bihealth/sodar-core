@@ -37,6 +37,7 @@ Changed
     - Move tests after formatting and docs checks in CI (#1907)
     - Move plugin search API ``search_type`` in keywords (#1901)
     - Replace plugin search API ``keywords`` kwarg with ``**kwargs`` (#1902)
+    - Upgrade GitHub Actions in CI (#1913)
 - **Projectroles**
     - Make ``modify_assignment()`` ``request`` arg optional (#1875)
     - Update default single sign-on button legend (#1883)
