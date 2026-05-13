@@ -340,8 +340,8 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     #: List of search object types for the app
     search_types = []
 
-    #: Search results template
-    search_template = None
+    #: Search results CSS
+    search_CSS = None
 
     #: App card template for the project details page
     details_template = 'example_project_app/_details_card.html'

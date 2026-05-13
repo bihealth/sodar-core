@@ -36,8 +36,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: List of search object types for the app
     search_types = []
 
-    #: Search results template
-    search_template = None
+    #: Search results CSS
+    search_css = None
 
     #: App card template for the project details page
     details_template = 'bgjobs/_details_card.html'
