@@ -21,7 +21,7 @@
   {% include 'projectroles/_datatables_css.html' %}
 
   <!-- Global CSS for search results -->
-  <link rel="stylesheet" type="text/css" href="{% static 'projectroles/css/search.css %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'projectroles/css/search.css' %}">
 
   <!-- Plugin CSS for app search results -->
   {% for app in search_apps %}
@@ -61,11 +61,13 @@
     {{ search_keywords|json_script:"search-keywords" }}
     {% for app in search_apps %}
       <div class="sodar-ajax-search-results" data-url="{% url 'projectroles:ajax_search' %}" data-app-name="{{ app.name }}" data-app-title="{{ app.title }}" data-app-icon="{{ app.icon }}">
-        <i class="iconify spin text-secondary"
-           data-icon="mdi:loading" data-height="42">
-        </i>
       </div>
     {% endfor %}
+    <div id="sodar-search-results-spinner" class="w-100 text-center">
+      <i class="iconify spin text-secondary"
+         data-icon="mdi:loading" data-height="42">
+      </i>
+    </div>
   {% endif %}
 
 </div>

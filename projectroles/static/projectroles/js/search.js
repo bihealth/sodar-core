@@ -149,26 +149,15 @@ $(document).ready(function () {
   $.fn.dataTable.ext.classes.sPageButton =
     'btn sodar-list-btn ml-1 sodar-paginate-button btn-outline-light text-primary'
 
-  $('.sodar-ajax-search-results').each(function () {
+  const resultCalls = $('.sodar-ajax-search-results').map(function () {
     const url = $(this).data('url')
     const appName = $(this).data('app-name')
     const searchTerms = document.getElementById('search-terms').textContent
     const searchKeywords = document.getElementById('search-keywords').textContent
-    $.post(url, {
+    return $.post(url, {
       'plugin': appName,
       'terms': searchTerms,
       'keywords': searchKeywords,
-    }).fail((xhr, textStatus, error) => {
-      console.error(xhr.status, textStatus, error)
-      $(this).html(
-        $('<div>', {
-          class: 'alert alert-warning',
-          role: 'alert'
-        })
-        .text(
-          `Error fetching search results for the ${appName} app: ${xhr.statusText}`
-        )
-      )
     }).done(data => {
       if (data['error']) {
         console.error(data['error'])
@@ -183,7 +172,6 @@ $(document).ready(function () {
         )
         return
       }
-      $(this).text('')
       for (let i = 0; i < data['results'].length; ++i) {
         const results = data['results'][i]
         const card = makeSearchResultsCard(
@@ -239,34 +227,47 @@ $(document).ready(function () {
           JSON.parse(searchTerms),
         )
       }
-
-      // Update overflow status
-      modifyCellOverflow()
-
-      /**********
-       Pagination
-       **********/
-
-      $('.sodar-search-page-length').change(function () {
-        const dt = $(this).closest('.sodar-search-card').find(
-            'table')
-          .DataTable()
-        const value = parseInt($(this).val())
-        dt.page.len(value).draw()
-      })
-
-      /*********
-       Filtering
-       *********/
-
-      $('.sodar-search-filter').keyup(function () {
-        const dt = $(this).closest('.sodar-search-card').find(
-            'table')
-          .dataTable().api()
-        const v = $(this).val()
-        dt.search(v)
-        dt.draw()
-      })
+    }).catch(xhr => {
+      $(this).html(
+        $('<div>', {
+          class: 'alert alert-warning',
+          role: 'alert'
+        })
+        .text(
+          `Error fetching search results for the ${appName} app: ${xhr.statusText}`
+        )
+      )
     })
+  })
+  $.when.apply($, resultCalls).done(() => {
+    $('#sodar-search-results-spinner').text('')
+  })
+
+  // Update overflow status
+  modifyCellOverflow()
+
+  /**********
+   Pagination
+   **********/
+
+  $('.sodar-search-page-length').change(function () {
+    const dt = $(this).closest('.sodar-search-card').find(
+        'table')
+      .DataTable()
+    const value = parseInt($(this).val())
+    dt.page.len(value).draw()
+  })
+
+  /*********
+   Filtering
+   *********/
+
+  $('.sodar-search-filter').keyup(function () {
+    const dt = $(this).closest('.sodar-search-card').find(
+        'table')
+      .dataTable().api()
+    const v = $(this).val()
+    dt.search(v)
+    dt.draw()
   })
 })

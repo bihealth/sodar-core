@@ -3,7 +3,6 @@
 import mistune
 
 from importlib import import_module
-import json
 import logging
 from typing import Any, Optional, Union
 from uuid import UUID
