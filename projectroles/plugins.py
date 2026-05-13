@@ -942,13 +942,20 @@ class PluginObjectLink:
 class PluginSearchResultCell:
     """
     Represents a cell in the table of search results returned by app plugins.
+
+    :param value: The content of the cell (str). If ``value_html`` is True
+        in the corresponding PluginSearchResultColumn, this is interpreted
+        as HTML, otherwise plain text.
+    :param value_url: If defined, the cell content becomes a link refencing the
+        specified URL. If ``value_html`` is true, this fiel is ignored.
+    :cell_class: Optional HTML class to be applied to this cell only.
     """
 
-    #: XXX
+    #: The content of the cell (str)
     value: str = None
-    #: XXX
+    #: If defined, the cell content becomes a hyperlink to the specified URL
     value_url: Optional[str] = None
-    #: XXX
+    #: Optional HTML class to be applied to this cell only.
     cell_class: Optional[str] = None
 
 
@@ -966,6 +973,8 @@ class PluginSearchResultColumn:
     highlight: bool = False
     #: Interpret the value field of PluginSearchResultCell as HTML (bool)
     value_html: bool = False
+    #: Whether the column content is allowed to overflow (bool)
+    overflow: bool = False
 
 
 class PluginSearchResult:
@@ -987,7 +996,7 @@ class PluginSearchResult:
     #: List of lists of result objects
     rows = []
     #: Limit for the number of items returned (if <0, no limit is applied)
-    result_limit = -1
+    result_limit = 0
 
     def __init__(
         self,
@@ -997,7 +1006,7 @@ class PluginSearchResult:
         search_types: list[str],
         columns: list[PluginSearchResultColumn],
         rows: list[list[PluginSearchResultCell]],
-        result_limit: int = -1,
+        result_limit: int = 0,
     ):
         """
         Initialize PluginSearchResult.
@@ -1012,7 +1021,7 @@ class PluginSearchResult:
         :param highlight_fields: List of field indices where search terms
                                  should be highlighted (0-based)
         :param rows: List of lists of PluginSearchResultCell objects
-        :param result_limit: Limit for the number of items returned (if <0, no
+        :param result_limit: Limit for the number of items returned (if 0, no
                              limit is applied)
         """
         self.category = category

@@ -53,7 +53,7 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
     ),
   )
   card.append(cardHeader)
-  if (resLimit >= 0 && resLength >= resLimit) {
+  if (resLimit > 0 && resLength >= resLimit) {
     const cardResultLimitWarning = $('<div>', {
       class: 'card-body sodar-card-body-info'
     }).append(
@@ -89,9 +89,12 @@ function makeSearchResultsTable(result) {
       const column = result.columns[fieldIdx]
       const cell = row[fieldIdx]
       const cellDiv = $('<div>')
-      if (column.value_html == true) {
+      if (column.overflow) {
+        cellDiv.addClass('sodar-overflow-container')
+      }
+      if (column.value_html) {
         cellDiv.append(cell.value)
-      } else if (cell.value_url !== null) {
+      } else if (cell.value_url) {
         cellDiv.append(
           $('<a>', {
             href: cell.value_url,
@@ -104,10 +107,10 @@ function makeSearchResultsTable(result) {
         cellDiv.append('N/A')
       }
       const td = $('<td>')
-      if (column.column_class !== null) {
+      if (column.column_class) {
         td.addClass(column.column_class)
       }
-      if (cell.cell_class !== null) {
+      if (cell.cell_class) {
         td.addClass(cell.cell_class)
       }
       td.append(cellDiv)

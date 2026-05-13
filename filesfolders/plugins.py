@@ -24,7 +24,7 @@ from projectroles.plugins import (
 from projectroles.utils import get_display_name
 
 from filesfolders.models import File, Folder, HyperLink
-from filesfolders.templatetags.filesfolders_tags import get_class, get_flag
+from filesfolders.templatetags.filesfolders_tags import get_flag
 from filesfolders.urls import urlpatterns
 
 
@@ -204,22 +204,23 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             items = []
         rows = []
         for item in items:
+            item_class = item.__class__.__name
             if not user.has_perm('filesfolders.view_data', item.project):
                 continue
-            if get_class(item) == 'HyperLink':
+            if item_class == 'HyperLink':
                 name_url = item.url
-            elif get_class(item) == 'Folder':
+            elif item_class == 'Folder':
                 name_url = reverse(
                     'filesfolders:list', kwargs={'folder': item.sodar_uuid}
                 )
-            elif get_class(item) == 'File':
+            elif item_class == 'File':
                 name_url = reverse(
                     'filesfolders:file_serve',
                     kwargs={'file': item.sodar_uuid, 'file_name': item.name},
                 )
             else:
                 raise ValueError(
-                    f'Unexpected filesfolders item class: {get_class(item)}'
+                    f'Unexpected filesfolders item class: {item_class}'
                 )
             name_value = f'<a href="{name_url}">{item.name}</a>'
             allow_public_links = app_settings.get(
@@ -229,7 +230,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'filesfolders.share_public_link', item.project
             )
             if (
-                get_class(item) == 'File'
+                item.__class__.__name__ == 'File'
                 and item.public_url
                 and allow_public_links
                 and can_share_link
@@ -238,7 +239,10 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     'filesfolders:file_public_link',
                     kwargs={'file': item.sodar_uuid},
                 )
-                name_value += f' <a href="{share_url}" title="Public link"><i class="iconify" data-icon="mdi:link-variant"></i></a>'
+                name_value += (
+                    f' <a href="{share_url}" title="Public link">'
+                    '<i class="iconify" data-icon="mdi:link-variant"></i></a>'
+                )
             if item.flag:
                 name_value += ' ' + get_flag(item.flag)
             if item.folder:
@@ -251,7 +255,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     'filesfolders:list',
                     kwargs={'project': item.project.sodar_uuid},
                 )
-            if get_class(item) == 'File':
+            if item.__class__.__name__ == 'File':
                 size = filesizeformat(item.file.file.size)
             else:
                 size = ''
@@ -263,7 +267,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     ),
                     # Type
                     PluginSearchResultCell(
-                        value=get_class(item),
+                        value=item.__class__.__name__,
                     ),
                     # Project
                     PluginSearchResultCell(
@@ -288,33 +292,26 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             columns=[
                 PluginSearchResultColumn(
                     title='Name',
-                    column_class='sodar-overflow-container',
                     highlight=True,
                     value_html=True,
+                    overflow=True,
                 ),
                 PluginSearchResultColumn(
                     title='Type',
                     column_class='text-nowrap',
-                    highlight=False,
-                    value_html=False,
                 ),
                 PluginSearchResultColumn(
                     title=get_display_name('PROJECT', title=True),
-                    column_class='sodar-overflow-container',
-                    highlight=False,
-                    value_html=False,
+                    overflow=True,
                 ),
                 PluginSearchResultColumn(
                     title='Size',
                     column_class='text-right text-nowrap',
-                    highlight=False,
-                    value_html=False,
                 ),
                 PluginSearchResultColumn(
                     title='Description',
-                    column_class='sodar-overflow-container',
                     highlight=True,
-                    value_html=False,
+                    overflow=True,
                 ),
             ],
             rows=rows,

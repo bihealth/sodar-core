@@ -566,7 +566,16 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                             kwargs={'project': project.parent.sodar_uuid},
                         ),
                     )
-                    project_title += f'<a href="{role_url}" class="sodar-pr-project-findable" title="Findable project: Request access from category owner or delegate" data-toggle="tooltip"><i class="iconify ml-1" data-icon="mdi:account-supervisor"></i></a>'
+                    project_title += (
+                        f'<a href="{role_url}" '
+                        'class="sodar-pr-project-findable" '
+                        'title="Findable project: Request access '
+                        'from category owner or delegate" '
+                        'data-toggle="tooltip">'
+                        '<i class="iconify ml-1" '
+                        'data-icon="mdi:account-supervisor">'
+                        '</i></a>'
+                    )
                 rows.append(
                     [
                         PluginSearchResultCell(
@@ -592,15 +601,14 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                         title=get_display_name(
                             PROJECT_TYPE_PROJECT, title=True
                         ),
-                        column_class='sodar-overflow-container',
                         highlight=True,
                         value_html=True,
+                        overflow=True,
                     ),
                     PluginSearchResultColumn(
                         title='Description',
-                        column_class='sodar-overflow-container',
                         highlight=True,
-                        value_html=False,
+                        overflow=True,
                     ),
                 ],
                 rows=rows,
@@ -610,7 +618,8 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
         plugin = plugin_api.get_app_plugin(plugin_name)
         if search_type is not None and search_type not in plugin.search_types:
             return (
-                f'The app "{plugin_name}" does not support search results of type "{search_type}".',
+                f'The app "{plugin_name}" does not support search results '
+                f'of type "{search_type}".',
                 [],
             )
         try:

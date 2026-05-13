@@ -187,20 +187,16 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 PluginSearchResultColumn(
                     title='Timestamp',
                     column_class='text-nowrap',
-                    highlight=False,
-                    value_html=False,
                 ),
                 PluginSearchResultColumn(
                     title='Description',
-                    column_class='sodar-overflow-container',
                     highlight=True,
                     value_html=True,
+                    overflow=True,
                 ),
                 PluginSearchResultColumn(
                     title='Status',
                     column_class='text-light sodar-tl-item-status',
-                    highlight=False,
-                    value_html=False,
                 ),
             ],
             rows=rows,
