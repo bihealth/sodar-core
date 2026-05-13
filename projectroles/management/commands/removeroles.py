@@ -3,6 +3,8 @@ Removeroles management command for removing all roles from a user.
 """
 
 import sys
+import random
+import string
 
 from typing import Optional
 
@@ -34,7 +36,7 @@ class Command(
 ):
     help = (
         'Remove all roles from a user. Replace owner roles with given user or '
-        'parent owner.'
+        'parent owner. Optionally clear out all personal data.'
     )
 
     @classmethod
@@ -121,6 +123,40 @@ class Command(
             )
             return False
 
+    def _deactivate_user(
+        self, user: User, pseudonymize: bool, check: bool
+    ) -> bool:
+        """Deactivate a user, optionally removing their personal data"""
+        if check:
+            logger.info(f'User to be deactivated: {user.username}')
+        else:
+            user.is_active = False
+            user.save()
+            logger.info(f'User "{user.username}" deactivated')
+        if pseudonymize:
+            if check:
+                logger.info(
+                    "The user's name and email will be emptied, "
+                    'and the username will become a random string.'
+                )
+            else:
+                user.name = ''
+                user.first_name = ''
+                user.last_name = ''
+                user.email = ''
+                while True:
+                    random_username = 'deactivated_' + ''.join(
+                        random.choices(
+                            string.ascii_lowercase + string.digits, k=12
+                        )
+                    )
+                    try:
+                        User.objects.get(username=random_username)
+                    except User.DoesNotExist:
+                        user.username = random_username
+                        break
+                user.save()
+
     def add_arguments(self, parser):
         parser.add_argument(
             '-u',
@@ -145,6 +181,17 @@ class Command(
             default=False,
             action='store_true',
             help='Deactivate user after removing their roles',
+        )
+        parser.add_argument(
+            '-p',
+            '--pseudonymize',
+            dest='pseudonymize',
+            required=False,
+            default=False,
+            action='store_true',
+            help='Clear out all personal user data and replace the username '
+            'with a random string (this takes effect only if applied '
+            'together with --deactivate)',
         )
         parser.add_argument(
             '-c',
@@ -200,7 +247,6 @@ class Command(
         )
         if roles.count() == 0:
             logger.info('No roles found')
-            return
 
         for role_as in roles:
             project = role_as.project
@@ -220,12 +266,7 @@ class Command(
             elif not check:
                 fail_count += 1
         if options['deactivate']:
-            if check:
-                logger.info(f'User to be deactivated: {user.username}')
-            else:
-                user.is_active = False
-                user.save()
-                logger.info(f'User "{user.username}" deactivated')
+            self._deactivate_user(user, options['pseudonymize'], check)
         if check:
             logger.info('Check done')
         else:
