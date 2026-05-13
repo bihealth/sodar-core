@@ -123,20 +123,18 @@ function makeSearchResultsTable(result) {
 }
 
 function highlightSearchResults(table, columns, searchTerms) {
-  for (let term of searchTerms) {
-    const re = new RegExp(term, 'ig')
-    for (let fieldIdx in columns) {
-      if (columns[fieldIdx].highlight == true) {
-        table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
-          const walker = document.createTreeWalker(this, 0x4)
-          let node = walker.nextNode()
-          while (node !== null) {
-            $(node).replaceWith($(node).text().replaceAll(re,
-              `<strong>$&</strong>`))
-            node = walker.nextNode()
-          }
-        })
-      }
+  const re = new RegExp(searchTerms.join('|'), 'ig')
+  for (let fieldIdx in columns) {
+    if (columns[fieldIdx].highlight == true) {
+      table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
+        const walker = document.createTreeWalker(this, 0x4)
+        let node = walker.nextNode()
+        while (node !== null) {
+          $(node).replaceWith($(node).text().replaceAll(re,
+            `<strong>$&</strong>`))
+          node = walker.nextNode()
+        }
+      })
     }
   }
 }
