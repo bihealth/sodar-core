@@ -20,9 +20,14 @@
   <!-- DataTables -->
   {% include 'projectroles/_datatables_css.html' %}
 
+  <!-- Global CSS for search results -->
+  <link rel="stylesheet" type="text/css" href="{% static 'projectroles/css/search.css %}">
+
   <!-- Plugin CSS for app search results -->
   {% for app in search_apps %}
-    <link rel="stylesheet" type="text/css" href="{% static app.search_css %}">
+    {% if app.search_css %}
+      <link rel="stylesheet" type="text/css" href="{% static app.search_css %}">
+    {% endif %}
   {% endfor %}
 {% endblock css %}
 

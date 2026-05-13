@@ -796,7 +796,6 @@ class ProjectSearchMixin:
                         PROJECT_TYPE_PROJECT, title=True, plural=True
                     ),
                     'icon': 'mdi:cube',
-                    'search_css': 'projectroles/css/search.css',
                 },
             )
 
