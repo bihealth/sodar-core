@@ -132,7 +132,9 @@ def get_app_badge(
     extra_class = (' ' + extra_class) if extra_class else ''
     href = 'href="{url}"' if url else ''
     return (
-        f'<span class="badge sodar-obj-badge sodar-tl-event-badge{extra_class}" title="{title}" data-toggle="tooltip" data-placement="top">'
+        f'<span class="badge bg-secondary text-white sodar-obj-badge '
+        f'sodar-tl-event-badge{extra_class}" title="{title}" '
+        'data-toggle="tooltip" data-placement="top">'
         f'<i class="iconify" data-icon="{icon}"></i> '
         f'<a {href} class="sodar-tl-item-app-icon">{get_event_name(event)}</a>'
         f'</span>'
