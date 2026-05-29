@@ -81,6 +81,7 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_ROLE_VIEWER = SODAR_CONSTANTS['PROJECT_ROLE_VIEWER']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
@@ -396,6 +397,29 @@ class TestBatchUpdateRoles(
         )
         self.assertEqual(len(mail.outbox), 2)
 
+    def test_invite_multi_promote(self):
+        """Test inviting user to multiple projects with promoting"""
+        email = 'new@example.com'
+        self.assertEqual(ProjectInvite.objects.count(), 0)
+
+        fd = [
+            [self.category_uuid, email, PROJECT_ROLE_VIEWER],
+            [self.project_uuid, email, PROJECT_ROLE_GUEST],
+        ]
+        self.write_file(fd)
+        # NOTE: Using user_owner_cat as they have perms for both projects
+        self.command.handle(
+            **{'file': self.file.name, 'issuer': self.user_owner_cat.username}
+        )
+
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.category).count(), 1
+        )
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 1
+        )
+        self.assertEqual(len(mail.outbox), 2)
+
     def test_invite_owner(self):
         """Test inviting an owner (should fail)"""
         self.write_file(
@@ -464,6 +488,32 @@ class TestBatchUpdateRoles(
         )
         self.assertEqual(role_as.role, self.role_guest)
         self.assertEqual(len(mail.outbox), 1)
+
+    # TODO: This fails randomly with wrong processing order. See #1933
+    def test_role_add_multi_promote_viewer(self):
+        """Test adding user roles with promoting from viewer"""
+        email = 'new@example.com'
+        user_new = self.make_user('user_new')
+        user_new.email = email
+        user_new.save()
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=user_new).count(), 0
+        )
+        self.assertEqual(ProjectInvite.objects.count(), 0)
+
+        fd = [
+            [self.category_uuid, email, PROJECT_ROLE_VIEWER],
+            [self.project_uuid, email, PROJECT_ROLE_GUEST],
+        ]
+        self.write_file(fd)
+        self.command.handle(
+            **{'file': self.file.name, 'issuer': self.user_owner_cat.username}
+        )
+
+        self.assertEqual(ProjectInvite.objects.count(), 0)
+        assignments = RoleAssignment.objects.filter(user=user_new)
+        self.assertEqual(assignments.count(), 2)
+        self.assertEqual(len(mail.outbox), 2)
 
     def test_role_update(self):
         """Test updating an existing role for user"""
