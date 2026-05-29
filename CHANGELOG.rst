@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **Adminalerts**
+    - Alert dismissal (#1917)
 - **Projectroles**
     - ``ServiceUnavailable`` API exception class for ``HTTP 503`` (#1513)
     - Optional user name display in user dropdown (#1853)
@@ -20,6 +22,7 @@ Added
     - Remote sync user ``active`` status (#1882)
     - Project limiting in search via ``project`` keyword (#1191, #1898)
     - Plugin search API ``projects`` queryset kwarg (#1899)
+    - Site app message custom dismissal URL support (#1918)
 - **Siteinfo**
     - Client-side statistics retrieval (#1848)
 
@@ -34,10 +37,13 @@ Changed
     - General documentation updates (#1884)
     - Replace black and flake8 with ruff for linting and formatting (#1881, #1909)
     - Update ``Makefile`` for new check, format and lint commands (#1881, #1934)
+    - Reformat with ruff (#1881)
     - Move tests after formatting and docs checks in CI (#1907)
     - Move plugin search API ``search_type`` in keywords (#1901)
     - Replace plugin search API ``keywords`` kwarg with ``**kwargs`` (#1902)
     - Upgrade GitHub Actions in CI (#1913)
+- **Adminalerts**
+    - Enable ``AdminAlertListView`` viewing for authenticated non-superusers (#1916)
 - **Projectroles**
     - Make ``modify_assignment()`` ``request`` arg optional (#1875)
     - Update default single sign-on button legend (#1883)

@@ -16,6 +16,7 @@ v1.4.0 (WIP)
 Release Highlights
 ==================
 
+- Add admin alert dismissal
 - Add project limiting to search via UUID or partial title
 - Add client-side siteinfo statistics retrieval
 - Add reusable host confirmation delete view
@@ -24,6 +25,8 @@ Release Highlights
 - Add user active status in remote sync
 - Add plugin search API pre-filtered project queryset
 - Add general purpose HTTP 503 API exception class
+- Add site app message custom dismissal URL support
+- Enable adminalerts alert list viewing for authenticated non-superusers
 - Update plugin search API args for project queryset and simplified keywords
 - Replace Markupfield and Pagedown with Martor for Markdown rendering
 - Replace Black and Flake8 with Ruff for linting and formatting
