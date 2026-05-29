@@ -33,7 +33,7 @@ Changed
     - Replace markupfield and pagedown with martor (#1861)
     - General documentation updates (#1884)
     - Replace black and flake8 with ruff for linting and formatting (#1881, #1909)
-    - Update ``Makefile`` for new check, format and lint commands (#1881)
+    - Update ``Makefile`` for new check, format and lint commands (#1881, #1934)
     - Move tests after formatting and docs checks in CI (#1907)
     - Move plugin search API ``search_type`` in keywords (#1901)
     - Replace plugin search API ``keywords`` kwarg with ``**kwargs`` (#1902)

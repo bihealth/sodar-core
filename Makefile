@@ -27,11 +27,6 @@ arg =
 target_port = 8001
 
 
-.PHONY: black
-black:
-	black . $(arg)
-
-
 .PHONY: celery
 celery:
 	celery -A config worker -l info --beat
