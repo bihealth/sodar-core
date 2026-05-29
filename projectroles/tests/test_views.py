@@ -4208,6 +4208,44 @@ class TestRoleAssignmentCreateView(
             )
         self.assertEqual(response.status_code, 200)
 
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=0)
+    def test_get_promote_delegate_limit_disabled(self):
+        """Test GET with inherited contributor and delegate limit disabled"""
+        contrib_as_cat = self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': contrib_as_cat.sodar_uuid,
+                    },
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=0)
+    def test_get_promote_delegate_limit_disabled_as_delegate(self):
+        """Test GET with contributor and delegate limit disabled as delegate (should fail)"""
+        user_delegate = self.make_user('user_delegate')
+        self.make_assignment(self.project, user_delegate, self.role_delegate)
+        contrib_as_cat = self.make_assignment(
+            self.category, self.user_new, self.role_contributor
+        )
+        with self.login(user_delegate):
+            response = self.client.get(
+                reverse(
+                    'projectroles:role_create_promote',
+                    kwargs={
+                        'project': self.project.sodar_uuid,
+                        'promote_as': contrib_as_cat.sodar_uuid,
+                    },
+                )
+            )
+        self.assertEqual(response.status_code, 302)
+
     def test_post(self):
         """Test RoleAssignmentCreateView POST"""
         self.assertEqual(RoleAssignment.objects.all().count(), 2)

@@ -2563,6 +2563,17 @@ class RoleAssignmentCreateView(
                 sodar_uuid=self.kwargs['promote_as']
             ).first()
 
+            # Check for delegate promotion perm
+            if self.promote_as.role.rank == ROLE_RANKING[
+                PROJECT_ROLE_CONTRIBUTOR
+            ] and not request.user.has_perm(
+                'projectroles.update_project_delegate', project
+            ):
+                messages.error(
+                    request, 'User lacks permissions for delegate promotion.'
+                )
+                return redirect(redirect_url)
+
             # Check for reached delegate limit
             del_count = RoleAssignment.objects.filter(
                 project=project, role__name=PROJECT_ROLE_DELEGATE
@@ -2572,7 +2583,7 @@ class RoleAssignmentCreateView(
                 self.promote_as
                 and self.promote_as.role.rank
                 == ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR]
-                and del_count >= del_limit
+                and 0 < del_limit <= del_count
             ):
                 messages.warning(
                     request,

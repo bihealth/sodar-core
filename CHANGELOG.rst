@@ -55,6 +55,8 @@ Fixed
     - Header button padding rendering incorrectly in Firefox (#1885)
     - Secondary content title CSS padding (#1904)
     - Search results template inconsistent header size (#1904)
+    - ``RoleAssignmentCreateView`` delegate limit check with ``PROJECTROLES_DELEGATE_LIMIT=0`` (#1921)
+    - ``RoleAssignmentCreateView`` missing role promotion permission check (#1935)
 
 Removed
 -------

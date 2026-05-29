@@ -28,6 +28,7 @@ Release Highlights
 - Replace Markupfield and Pagedown with Martor for Markdown rendering
 - Replace Black and Flake8 with Ruff for linting and formatting
 - Update Makefile for check, format and lint commands
+- Fix UI delegate role promoting issues
 - Fix batchupdateroles role promoting
 - Fix app setting API get() exception handling with PROJECT_USER scope
 - Remove deprecated test base classes and mixins
