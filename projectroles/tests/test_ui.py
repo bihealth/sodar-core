@@ -2570,7 +2570,7 @@ class TestProjectRoleView(RemoteTargetMixin, ProjectUITestBase):
             f'//tr[@data-user-uuid="{self.user_contributor.sodar_uuid}"]',
         )
         for td in row.find_elements(By.TAG_NAME, 'td')[:3]:
-            self.assertNotIn('text-secondary', td.get_attribute('class'))
+            self.assertNotIn('text-secondary', td.get_attribute('class') or '')
 
     def test_render_role_row_inactive(self):
         """Test rendering user role row with inactive user"""

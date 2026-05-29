@@ -47,6 +47,7 @@ Changed
 - **Projectroles**
     - Make ``modify_assignment()`` ``request`` arg optional (#1875)
     - Update default single sign-on button legend (#1883)
+    - Update UI tests to work with Selenium v4.44 ``get_attribute()`` (#1938)
 
 Fixed
 -----
