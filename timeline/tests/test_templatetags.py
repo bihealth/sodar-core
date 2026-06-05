@@ -162,9 +162,9 @@ class TestTemplateTags(
             self.assertIn(p.name, ret.keys())
             self.assertEqual(ret[p.name].__class__, p.get_plugin().__class__)
 
-    def test_get_app_icon_html(self):
-        """Test get_app_icon_html()"""
-        ret = tags.get_app_icon_html(self.event, self.plugin_lookup)
+    def test_get_app_badge(self):
+        """Test get_app_badge()"""
+        ret = tags.get_app_badge(self.event, self.plugin_lookup)
         url = reverse(
             'projectroles:detail',
             kwargs={'project': self.project.sodar_uuid},
@@ -173,8 +173,8 @@ class TestTemplateTags(
         self.assertIn('Projectroles', ret)
         self.assertIn(url, ret)
 
-    def test_get_app_icon_html_no_project(self):
-        """Test get_app_icon_html() on event without project"""
+    def test_get_app_badge_no_project(self):
+        """Test get_app_badge() on event without project"""
         event = self.make_event(
             project=None,
             app=APP_NAME_PR,
@@ -182,13 +182,13 @@ class TestTemplateTags(
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
         )
-        ret = tags.get_app_icon_html(event, self.plugin_lookup)
+        ret = tags.get_app_badge(event, self.plugin_lookup)
         self.assertIn(tags.ICON_PROJECTROLES, ret)
         self.assertIn('Projectroles', ret)
         self.assertNotIn('href=', ret)
 
-    def test_get_app_icon_html_plugin(self):
-        """Test get_app_icon_html() on event from an app plugin"""
+    def test_get_app_badge_plugin(self):
+        """Test get_app_badge() on event from an app plugin"""
         plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         url = reverse(
             plugin.entry_point_url_id,
@@ -201,13 +201,13 @@ class TestTemplateTags(
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
         )
-        ret = tags.get_app_icon_html(event, self.plugin_lookup)
+        ret = tags.get_app_badge(event, self.plugin_lookup)
         self.assertIn(plugin.icon, ret)
         self.assertIn(plugin.title, ret)
         self.assertIn(url, ret)
 
-    def test_get_app_icon_html_projectroles(self):
-        """Test get_app_icon_html() on event without project"""
+    def test_get_app_badge_projectroles(self):
+        """Test get_app_badge() on event without project"""
         event = self.make_event(
             project=self.project,
             app=APP_NAME_PR,
@@ -219,13 +219,13 @@ class TestTemplateTags(
             'projectroles:detail',
             kwargs={'project': self.project.sodar_uuid},
         )
-        ret = tags.get_app_icon_html(event, self.plugin_lookup)
+        ret = tags.get_app_badge(event, self.plugin_lookup)
         self.assertIn(tags.ICON_PROJECTROLES, ret)
         self.assertIn('Projectroles', ret)
         self.assertIn(url, ret)
 
-    def test_get_app_icon_html_example_project_app(self):
-        """Test get_app_icon_html() on event from an app plugin"""
+    def test_get_app_badge_example_project_app(self):
+        """Test get_app_badge() on event from an app plugin"""
         plugin = plugin_api.get_app_plugin('example_project_app')
         url = reverse(
             plugin.entry_point_url_id,
@@ -238,13 +238,13 @@ class TestTemplateTags(
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
         )
-        ret = tags.get_app_icon_html(event, self.plugin_lookup)
+        ret = tags.get_app_badge(event, self.plugin_lookup)
         self.assertIn(plugin.icon, ret)
         self.assertIn(plugin.title, ret)
         self.assertIn(url, ret)
 
-    def test_get_app_icon_html_example_site_app(self):
-        """Test get_app_icon_html() on event from an app plugin"""
+    def test_get_app_badge_example_site_app(self):
+        """Test get_app_badge() on event from an app plugin"""
         plugin = plugin_api.get_app_plugin('example_site_app')
         url = reverse(
             plugin.entry_point_url_id,
@@ -257,13 +257,13 @@ class TestTemplateTags(
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
         )
-        ret = tags.get_app_icon_html(event, self.plugin_lookup)
+        ret = tags.get_app_badge(event, self.plugin_lookup)
         self.assertIn(plugin.icon, ret)
         self.assertIn(plugin.title, ret)
         self.assertIn(url, ret)
 
-    def test_get_app_icon_html_invalid_plugin(self):
-        """Test get_app_icon_html() on event from an invalid plugin"""
+    def test_get_app_badge_invalid_plugin(self):
+        """Test get_app_badge() on event from an invalid plugin"""
         event = self.make_event(
             project=self.project,
             app=INVALID_APP_NAME,
@@ -271,7 +271,7 @@ class TestTemplateTags(
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
         )
-        ret = tags.get_app_icon_html(event, self.plugin_lookup)
+        ret = tags.get_app_badge(event, self.plugin_lookup)
         self.assertIn(tags.ICON_UNKNOWN_APP, ret)
         self.assertIn(INVALID_APP_NAME, ret)  # No title = use app name in event
         self.assertNotIn('href=', ret)

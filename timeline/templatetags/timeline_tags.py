@@ -130,7 +130,7 @@ def get_app_badge(
                 icon = plugin.icon
 
     extra_class = (' ' + extra_class) if extra_class else ''
-    href = 'href="{url}"' if url else ''
+    href = f'href="{url}"' if url else ''
     return (
         f'<span class="badge bg-secondary text-white sodar-obj-badge '
         f'sodar-tl-event-badge{extra_class}" title="{title}" '

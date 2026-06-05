@@ -2,6 +2,8 @@
 
 import json
 
+from datetime import datetime
+
 from django.urls import reverse
 from django.utils.timezone import localtime
 from django.test import override_settings
@@ -523,23 +525,40 @@ class TestSearch(
             + urlencode({'s': 'description'})
         )
         for user, count in expected:
-            self.login_and_redirect(user, url, wait_elem=None, wait_loc='ID')
-            elements = self.selenium.find_elements(
-                By.CLASS_NAME, 'sodar-pr-project-list-item'
+            self.login_and_redirect(
+                user,
+                url,
+                wait_elem='sodar-tl-search-table',
+                wait_loc='CLASS_NAME',
             )
-            elem_set = set()
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR, '.sodar-tl-search-table tbody tr'
+            )
+            self.assertEqual(len(elements), count)
             for elem in elements:
-                elem_set.add(elem.get_attribute('id'))
-            self.assertEqual(len(elem_set), count)
+                timestamp, description, status = elem.find_elements(
+                    By.TAG_NAME, 'td'
+                )
+                parsed_timestamp = datetime.strptime(
+                    timestamp.get_attribute('innerText'), '%Y-%m-%d %H:%M:%S'
+                )
+                self.assertIsInstance(parsed_timestamp, datetime)
+                self.assertIn(
+                    'Description', description.get_attribute('innerText')
+                )
+                self.assertEqual(status.get_attribute('innerText'), 'SUBMIT')
 
     @override_settings(TIMELINE_SEARCH_LIMIT=2)
     def test_search_limit(self):
         """Test search limit"""
         url = reverse('projectroles:search') + '?' + urlencode({'s': 'event'})
         self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
+            self.superuser,
+            url,
+            wait_elem='sodar-tl-search-table',
+            wait_loc='CLASS_NAME',
         )
         elements = self.selenium.find_elements(
-            By.CLASS_NAME, 'sodar-pr-project-list-item'
+            By.CSS_SELECTOR, '.sodar-tl-search-table tbody tr'
         )
         self.assertEqual(len(elements), 2)

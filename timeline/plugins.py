@@ -41,6 +41,22 @@ logger = logging.getLogger(__name__)
 STATS_DESC_USER_COUNT = 'Amount of users who have initiated events'
 
 
+def get_event_full_description(event, plugin_lookup, extra_class='mr-1'):
+    components = [get_app_badge(event, plugin_lookup, extra_class=extra_class)]
+    if event.user:
+        components.append(get_user_badge(event.user, extra_class=extra_class))
+    if event.project:
+        components.append(
+            get_project_badge(event.project, extra_class=extra_class)
+        )
+    components.append(
+        '<span>'
+        + get_event_description(event, plugin_lookup).capitalize()
+        + '</span>'
+    )
+    return ' '.join(components)
+
+
 class ProjectAppPlugin(ProjectAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
@@ -151,16 +167,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         plugin_lookup = get_plugin_lookup()
         rows = []
         for item in items:
-            app_badge = get_app_badge(item, plugin_lookup, extra_class='mr-1')
-            user_badge = get_user_badge(item.user, extra_class='mr-1')
-            project_badge = get_project_badge(item.project, extra_class='mr-1')
-            event_description = get_event_description(item, plugin_lookup)
-            event_full_description = ' '.join((
-                app_badge,
-                user_badge,
-                project_badge,
-                f'<span>{event_description.capitalize()}</span>',
-            ))
             rows.append(
                 [
                     # Timestamp
@@ -169,7 +175,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     ),
                     # Description
                     PluginSearchResultCell(
-                        value=event_full_description,
+                        value=get_event_full_description(item, plugin_lookup),
                     ),
                     # Status
                     PluginSearchResultCell(
