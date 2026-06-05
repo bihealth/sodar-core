@@ -154,6 +154,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             app_badge = get_app_badge(item, plugin_lookup, extra_class='mr-1')
             user_badge = get_user_badge(item.user, extra_class='mr-1')
             project_badge = get_project_badge(item.project, extra_class='mr-1')
+            event_description = get_event_description(item, plugin_lookup)
+            event_full_description = ' '.join((
+                app_badge,
+                user_badge,
+                project_badge,
+                f'<span>{event_description.capitalize()}</span>',
+            ))
             rows.append(
                 [
                     # Timestamp
@@ -162,12 +169,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     ),
                     # Description
                     PluginSearchResultCell(
-                        value=(
-                            app_badge
-                            + user_badge
-                            + project_badge
-                            + f'<span>{get_event_description(item, plugin_lookup)}</span>'
-                        ),
+                        value=event_full_description,
                     ),
                     # Status
                     PluginSearchResultCell(
@@ -179,7 +181,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         ret = PluginSearchResult(
             category='all',
             title='Timeline Events',
-            table_id='sodar-tl-search-table',
             search_types=['timeline'],
             columns=[
                 PluginSearchResultColumn(
@@ -198,6 +199,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 ),
             ],
             rows=rows,
+            table_class='sodar-tl-search-table',
         )
         return [ret]
 

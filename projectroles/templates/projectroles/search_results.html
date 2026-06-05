@@ -60,7 +60,11 @@
     {{ search_terms|json_script:"search-terms" }}
     {{ search_keywords|json_script:"search-keywords" }}
     {% for app in search_apps %}
-      <div class="sodar-ajax-search-results" data-url="{% url 'projectroles:ajax_search' %}" data-app-name="{{ app.name }}" data-app-title="{{ app.title }}" data-app-icon="{{ app.icon }}">
+      <div class="sodar-ajax-search-results"
+           data-url="{% url 'projectroles:ajax_search' %}"
+           data-app-name="{{ app.name }}"
+           data-app-title="{{ app.title }}"
+           data-app-icon="{{ app.icon }}">
       </div>
     {% endfor %}
     <div id="sodar-search-results-spinner" class="w-100 text-center">
@@ -69,7 +73,6 @@
       </i>
     </div>
   {% endif %}
-
 </div>
 
 {% endblock projectroles %}

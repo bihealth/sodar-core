@@ -287,7 +287,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         ret = PluginSearchResult(
             category='all',
             title='Files, Folders and Links',
-            table_id='sodar-ff-search-table',
             search_types=['file', 'folder', 'link'],
             columns=[
                 PluginSearchResultColumn(
@@ -315,6 +314,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 ),
             ],
             rows=rows,
+            table_class='sodar-ff-search-table',
         )
         return [ret]
 

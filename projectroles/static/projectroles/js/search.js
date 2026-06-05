@@ -75,8 +75,10 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
 function makeSearchResultsTable(result) {
   const table = $('<table>', {
     class: 'table table-striped sodar-card-table sodar-search-table',
-    id: result.table_id,
   })
+  if (result.table_class) {
+    table.addClass(result.table_class)
+  }
   const tr = $('<tr>')
   for (let column of result.columns) {
     tr.append($('<th>').text(column.title))

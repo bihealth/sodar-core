@@ -594,7 +594,6 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 title=get_display_name(
                     PROJECT_TYPE_PROJECT, title=True, plural=True
                 ),
-                table_id='sodar-pr-search-table',
                 search_types=['project'],
                 columns=[
                     PluginSearchResultColumn(
@@ -612,6 +611,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     ),
                 ],
                 rows=rows,
+                table_class='sodar-pr-search-table',
             )
             return (None, [projectroles_result])
         # Get app results
