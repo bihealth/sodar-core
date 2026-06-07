@@ -226,4 +226,4 @@ class TestPlugin(
         self.assertEqual(ret[0].title, 'Files, Folders and Links')
         self.assertEqual(ret[0].search_types, ['file', 'folder', 'link'])
         self.assertEqual(len(ret[0].rows), 1)
-        self.assertIsInstance(ret[0].rows[0], PluginSearchResultCell)
+        self.assertIsInstance(ret[0].rows[0][0], PluginSearchResultCell)

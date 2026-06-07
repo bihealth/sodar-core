@@ -4,6 +4,8 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
+from selenium.webdriver.common.by import By
+
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
@@ -458,6 +460,17 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
         )
         self.url = reverse('projectroles:search')
 
+    def _assert_search_results_count(self, expected, url):
+        for expected_user, expected_count in expected:
+            self.login_and_redirect(
+                expected_user, url, 'sodar-ff-search-table', 'CLASS_NAME'
+            )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                '.sodar-ff-search-table tbody tr',
+            )
+            self.assertEqual(len(elements), expected_count)
+
     def test_search_results(self):
         """Test search items visibility according to user permissions"""
         expected = [
@@ -476,7 +489,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'description'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_file(self):
         """Test search items visibility with 'file' type"""
@@ -496,7 +509,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'file type:file'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_folder(self):
         """Test search items visibility with 'folder' type"""
@@ -516,7 +529,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'folder type:folder'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_link(self):
         """Test search items visibility with 'link' as type"""
@@ -536,27 +549,35 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'link type:link'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_nonexisting(self):
         """Test search items visibility with a nonexisting type"""
-        expected = [
-            (self.superuser, 0),
-            (self.user_owner_cat, 0),
-            (self.user_delegate_cat, 0),
-            (self.user_contributor_cat, 0),
-            (self.user_guest_cat, 0),
-            (self.user_viewer_cat, 0),
-            (self.user_finder_cat, 0),
-            (self.user_owner, 0),
-            (self.user_delegate, 0),
-            (self.user_contributor, 0),
-            (self.user_guest, 0),
-            (self.user_viewer, 0),
-            (self.user_no_roles, 0),
+        user_types = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+            self.user_no_roles,
         ]
         url = self.url + '?' + urlencode({'s': 'test type:Jaix1au'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        for user_type in user_types:
+            self.login_and_redirect(user_type, url)
+            alert_elem = self.selenium.find_element(
+                By.CSS_SELECTOR,
+                'div.alert.alert-danger',
+            )
+            self.assertEqual(
+                alert_elem.text, 'Error: Search type "jaix1au" not recognized!'
+            )
 
 
 class TestHomeView(ProjectUITestBase):

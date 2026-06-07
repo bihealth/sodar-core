@@ -22,7 +22,6 @@ from timeline.models import TimelineEvent, TL_STATUS_OK
 from timeline.plugins import STATS_DESC_USER_COUNT, get_event_full_description
 from timeline.templatetags.timeline_tags import (
     get_timestamp,
-    get_event_name,
     get_plugin_lookup,
 )
 

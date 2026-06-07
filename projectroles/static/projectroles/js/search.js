@@ -173,16 +173,23 @@ $(document).ready(function () {
         return
       }
       for (let i = 0; i < data['results'].length; ++i) {
-        const results = data['results'][i]
+        const result = data['results'][i]
         const card = makeSearchResultsCard(
           $(this).data('app-icon'),
-          results.title,
-          results.rows.length,
-          results.result_limit,
+          result.title,
+          result.rows.length,
+          result.result_limit,
         )
         $(this).append(card)
-        if (!results.rows.length) {
-          $(this).find('.sodar-search-card-body').html(
+        if (!result.rows.length) {
+          const emptyTable = $('<table>', {
+            class: 'table table-striped sodar-card-table',
+          })
+          if (result.table_class) {
+            emptyTable.addClass(result.table_class)
+          }
+          $(this).find('.sodar-search-card-body').append(
+            emptyTable,
             $('<p>').attr('class', 'font-italic text-center m-3')
             .text('No results found.')
           )
@@ -193,7 +200,7 @@ $(document).ready(function () {
             'disabled')
           continue
         }
-        const table = makeSearchResultsTable(results)
+        const table = makeSearchResultsTable(result)
         $(this).find('.sodar-search-card-body').append(table)
         $(table).DataTable({
           order: [], // Disable default ordering
@@ -223,7 +230,7 @@ $(document).ready(function () {
         // Highlight search terms
         highlightSearchResults(
           table,
-          results.columns,
+          result.columns,
           JSON.parse(searchTerms),
         )
       }
