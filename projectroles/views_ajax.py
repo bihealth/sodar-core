@@ -531,10 +531,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
         # Get project results
         if plugin_name == 'projectroles':
             if search_type is not None and search_type != 'project':
-                return {
-                    'error': None,
-                    'results': None,
-                }
+                return (None, [])
             rows = []
             for project in Project.objects.find(
                 terms,
@@ -542,17 +539,30 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                 project_type='PROJECT',
                 keywords=keywords,
             ):
-                project_title = get_project_title_html(project)
                 can_view_project = project.public_access or user.has_perm(
                     'projectroles.view_project', project
                 )
+                can_find_project = can_view_project
+                if user.is_authenticated and project.parent:
+                    parent_as = project.parent.get_role(user)
+                    if (
+                        parent_as
+                        and parent_as.role.rank
+                        >= ROLE_RANKING[PROJECT_ROLE_FINDER]
+                    ):
+                        can_find_project = True
+                if not can_find_project:
+                    continue
+                project_title = get_project_title_html(project)
                 if can_view_project:
                     project_url = reverse(
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
                     )
                     project_title = (
-                        f'<a href="{project_url}">{project_title}</a>'
+                        f'<a href="{project_url}" '
+                        'class="sodar-pr-project-search-link">'
+                        f'{project_title}</a>'
                     )
                 project_title += get_remote_icon(project, user)
                 if (
@@ -642,10 +652,12 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
 
     def dispatch(self, request, *args, **kwargs):
         if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
-            return {
-                'error': 'Search is not enabled.',
-                'results': [],
-            }
+            return JsonResponse(
+                {
+                    'error': 'Search is not enabled.',
+                    'results': [],
+                }
+            )
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
