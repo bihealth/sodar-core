@@ -93,7 +93,7 @@
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true
-    $(document).ready(function() {
+    $(document).on('searchResultsLoaded', function() {
       tour.addStep('search_results', {
         title: 'Search Results',
         text: 'Search results are displayed in this view. Found search items ' +
@@ -132,12 +132,12 @@
           showCancelLink: true
         })
       }
-      if ($('th.sorting').length) {
+      if ($('th .dt-column-order').length) {
         tour.addStep('search_card_sort', {
           title: 'Search Result Sorting',
           text: 'Results can be sorted by each column in an ascending or ' +
                 'descending order by clicking on these icons.',
-          attachTo: 'th.sorting right',
+          attachTo: 'th .dt-column-order right',
           advanceOn: '.docs-link click',
           showCancelLink: true
         })
@@ -161,12 +161,12 @@
           showCancelLink: true
         })
       }
-      if ($('#sodar-search-not-found-alert').length) {
+      if ($('.sodar-search-not-found-alert').length) {
         tour.addStep('search_not_found', {
           title: 'Data Not Found',
           text: 'Data types in which we could not find anything are listed ' +
                 'here.',
-          attachTo: '#sodar-search-not-found-alert top',
+          attachTo: '.sodar-search-not-found-alert top',
           advanceOn: '.docs-link click',
           showCancelLink: true
         })

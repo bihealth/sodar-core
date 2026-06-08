@@ -133,7 +133,7 @@ function highlightSearchResults(table, columns, searchTerms) {
         let node = walker.nextNode()
         while (node !== null) {
           $(node).replaceWith($(node).text().replaceAll(re,
-            `<strong>$&</strong>`))
+            `<strong class="sodar-search-highlight">$&</strong>`))
           node = walker.nextNode()
         }
       })
@@ -190,7 +190,7 @@ $(document).ready(function () {
           }
           $(this).find('.sodar-search-card-body').append(
             emptyTable,
-            $('<p>').attr('class', 'font-italic text-center m-3')
+            $('<p>').attr('class', 'sodar-search-not-found-alert font-italic text-center m-3')
             .text('No results found.')
           )
           // Disable pagination and filtering for this card
@@ -216,9 +216,6 @@ $(document).ready(function () {
             paginate: sodarDataTablesPaginate
           },
           dom: 'tp',
-          fnDrawCallback: function () {
-            modifyCellOverflow()
-          }
         })
         // Hide pagination and disable page dropdown if only one page
         if ($(table).DataTable().page.info().pages === 1) {
@@ -247,34 +244,37 @@ $(document).ready(function () {
     })
   })
   $.when.apply($, resultCalls).done(() => {
+    $(document).trigger('searchResultsLoaded')
     $('#sodar-search-results-spinner').text('')
-  })
 
-  // Update overflow status
-  modifyCellOverflow()
+    /**********
+     Pagination
+     **********/
 
-  /**********
-   Pagination
-   **********/
+    $('.sodar-search-page-length').change(function () {
+      const dt = $(this).closest('.sodar-search-card').find(
+          'table')
+        .DataTable()
+      const value = parseInt($(this).val())
+      dt.page.len(value).draw()
+    })
 
-  $('.sodar-search-page-length').change(function () {
-    const dt = $(this).closest('.sodar-search-card').find(
-        'table')
-      .DataTable()
-    const value = parseInt($(this).val())
-    dt.page.len(value).draw()
-  })
+    /*********
+     Filtering
+     *********/
 
-  /*********
-   Filtering
-   *********/
+    $('.sodar-search-filter').keyup(function () {
+      const dt = $(this).closest('.sodar-search-card').find(
+          'table')
+        .dataTable().api()
+      const v = $(this).val()
+      dt.search(v)
+      dt.draw()
+    })
 
-  $('.sodar-search-filter').keyup(function () {
-    const dt = $(this).closest('.sodar-search-card').find(
-        'table')
-      .dataTable().api()
-    const v = $(this).val()
-    dt.search(v)
-    dt.draw()
+    /***************
+     Overflow status
+     ***************/
+    modifyCellOverflow()
   })
 })

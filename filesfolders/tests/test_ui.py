@@ -509,7 +509,10 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
         name_content = name_cell.find_element(By.TAG_NAME, 'a').get_attribute(
             'innerHTML'
         )
-        self.assertEqual(name_content, '<strong>folder_con</strong>tributor')
+        self.assertEqual(
+            name_content,
+            '<strong class="sodar-search-highlight">folder_con</strong>tributor',
+        )
 
     def test_search_results(self):
         """Test search items visibility according to user permissions"""

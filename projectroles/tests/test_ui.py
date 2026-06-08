@@ -1411,7 +1411,8 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         )
         self.assertEqual(
             name_content,
-            '<strong>Test</strong>Category / <strong>Test</strong>Project',
+            '<strong class="sodar-search-highlight">Test</strong>Category / '
+            '<strong class="sodar-search-highlight">Test</strong>Project',
         )
 
     def test_search_results(self):
