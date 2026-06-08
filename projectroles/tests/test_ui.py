@@ -1472,7 +1472,12 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         ]
         url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(
-            expected, url, 'sodar-pr-project-search-link', attribute='class'
+            expected,
+            url,
+            'sodar-pr-project-search-link',
+            attribute='class',
+            wait_elem='sodar-pr-search-table',
+            wait_loc='CLASS_NAME',
         )
 
     def test_search_project_findable_link(self):
@@ -1494,7 +1499,12 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         ]
         url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(
-            expected, url, 'sodar-pr-project-findable', attribute='class'
+            expected,
+            url,
+            'sodar-pr-project-findable',
+            attribute='class',
+            wait_elem='sodar-pr-search-table',
+            wait_loc='CLASS_NAME',
         )
 
 

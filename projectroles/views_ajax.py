@@ -564,17 +564,11 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                         'class="sodar-pr-project-search-link">'
                         f'{project_title}</a>'
                     )
-                project_title += get_remote_icon(project, user)
-                if (
-                    not can_view_project
-                    and user.is_authenticated
-                    and project.parent
-                ):
-                    role_url = (
-                        reverse(
-                            'projectroles:roles',
-                            kwargs={'project': project.parent.sodar_uuid},
-                        ),
+                    project_title += get_remote_icon(project, user)
+                else:
+                    role_url = reverse(
+                        'projectroles:roles',
+                        kwargs={'project': project.parent.sodar_uuid},
                     )
                     project_title += (
                         f'<a href="{role_url}" '
@@ -592,7 +586,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                             value=project_title,
                             cell_class='text-muted'
                             if not can_view_project
-                            else '',
+                            else None,
                         ),
                         PluginSearchResultCell(
                             value=project.description,

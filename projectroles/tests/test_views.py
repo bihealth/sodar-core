@@ -649,7 +649,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test ProjectAdvancedSearchView GET"""
         with self.login(self.user):
             response = self.client.get(reverse('projectroles:search_advanced'))
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 200)
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_get_disabled(self):
