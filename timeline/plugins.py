@@ -2,6 +2,7 @@
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
@@ -42,6 +43,7 @@ STATS_DESC_USER_COUNT = 'Amount of users who have initiated events'
 
 
 def get_event_full_description(event, plugin_lookup, extra_class='mr-1'):
+    """Get an HTML string giving the full description of a timeline event"""
     components = [get_app_badge(event, plugin_lookup, extra_class=extra_class)]
     if event.user:
         components.append(get_user_badge(event.user, extra_class=extra_class))
@@ -159,10 +161,11 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :return: List of PluginSearchResult objects
         """
         items = []
+        search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
         if kwargs.get('type', 'timeline') == 'timeline':
-            events = list(
-                TimelineEvent.objects.find(search_terms, projects, kwargs)
-            )
+            events = TimelineEvent.objects.find(search_terms, projects, kwargs)[
+                :search_limit
+            ]
             items = [e for e in events if self._check_permission(user, e)]
         plugin_lookup = get_plugin_lookup()
         rows = []
@@ -206,6 +209,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             ],
             rows=rows,
             table_class='sodar-tl-search-table',
+            result_limit=search_limit,
         )
         return [ret]
 

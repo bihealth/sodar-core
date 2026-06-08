@@ -502,6 +502,33 @@ class TestSearch(
             extra_data=EXTRA_DATA,
         )
 
+    def test_search_results_table_layout(self):
+        """Test search results table layout"""
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
+        self.login_and_redirect(
+            self.superuser,
+            url,
+            wait_elem='sodar-tl-search-table',
+            wait_loc='CLASS_NAME',
+        )
+        thead = self.selenium.find_elements(
+            By.CSS_SELECTOR, '.sodar-tl-search-table thead th'
+        )
+        self.assertEqual(len(thead), 3)
+        self.assertEqual(
+            [th.text for th in thead],
+            ['Timestamp', 'Description', 'Status'],
+        )
+        tbody_rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-tl-search-table tbody tr',
+        )
+        self.assertEqual(len(tbody_rows), 4)
+
     def test_search_results(self):
         """Test search results"""
         expected = [
@@ -558,7 +585,14 @@ class TestSearch(
             wait_elem='sodar-tl-search-table',
             wait_loc='CLASS_NAME',
         )
-        elements = self.selenium.find_elements(
+        result_elements = self.selenium.find_elements(
             By.CSS_SELECTOR, '.sodar-tl-search-table tbody tr'
         )
-        self.assertEqual(len(elements), 2)
+        self.assertEqual(len(result_elements), 2)
+        warning_element = self.selenium.find_element(
+            By.CSS_SELECTOR, '.sodar-search-card .sodar-card-body-info'
+        )
+        self.assertEqual(
+            warning_element.text,
+            'Some results may be omitted, please narrow down your search.',
+        )

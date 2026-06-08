@@ -61,7 +61,7 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
         class: 'iconify',
         'data-icon': 'mdi:alert',
       }),
-      'Some results may be omitted, please narrow down your search.',
+      ' Some results may be omitted, please narrow down your search.',
     )
     card.append(cardResultLimitWarning)
   }

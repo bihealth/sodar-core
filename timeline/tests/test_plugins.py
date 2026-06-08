@@ -9,6 +9,8 @@ from projectroles.plugins import (
     BackendPluginPoint,
     SiteAppPluginPoint,
     PluginSearchResult,
+    PluginSearchResultColumn,
+    PluginSearchResultCell,
     PluginAPI,
 )
 from projectroles.tests.test_models import (
@@ -176,8 +178,15 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         event2 = self._add_event()
         ret = self.plugin.search(SEARCH_TERMS, self.user, Project.objects.all())
         self.assertEqual(len(ret), 1)
+        self.assertEqual(len(ret[0].columns), 3)
+        self.assertIsInstance(ret[0].columns[0], PluginSearchResultColumn)
+        self.assertEqual(
+            [col.title for col in ret[0].columns],
+            ['Timestamp', 'Description', 'Status'],
+        )
         self.assertIsInstance(ret[0].rows, list)
         self.assertEqual(len(ret[0].rows), 2)
+        self.assertIsInstance(ret[0].rows[0][0], PluginSearchResultCell)
         self.assertEqual(
             ret[0].rows[0][0].value,
             get_timestamp(event2),

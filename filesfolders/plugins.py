@@ -240,7 +240,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     kwargs={'file': item.sodar_uuid},
                 )
                 name_value += (
-                    f' <a href="{share_url}" title="Public link">'
+                    f' <a href="{share_url}" title="Public Link">'
                     '<i class="iconify" data-icon="mdi:link-variant"></i></a>'
                 )
             if item.flag:

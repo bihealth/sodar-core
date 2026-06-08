@@ -1361,6 +1361,59 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             )
             self.assertEqual(len(elements), expected_count)
 
+    def test_search_results_card_layout(self):
+        """Test project search results card layout"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        card = self.selenium.find_element(
+            By.XPATH,
+            '//div[@class="sodar-ajax-search-results" '
+            'and @data-app-name="projectroles"]',
+        )
+        card_title = card.find_element(By.TAG_NAME, 'h4').text
+        self.assertEqual(card_title, 'Projects (1)')
+
+    def test_search_results_table_layout(self):
+        """Test project search results table layout"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        thead = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table thead th',
+        )
+        self.assertEqual(len(thead), 2)
+        self.assertEqual(
+            [th.text for th in thead],
+            ['Project', 'Description'],
+        )
+        tbody_rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table tbody tr',
+        )
+        self.assertEqual(len(tbody_rows), 1)
+
+    def test_search_results_highlight(self):
+        """Test project search results highlight"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        name_cell = self.selenium.find_element(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table tbody tr td:nth-child(1)',
+        )
+        name_content = name_cell.find_element(By.TAG_NAME, 'a').get_attribute(
+            'innerHTML'
+        )
+        self.assertEqual(
+            name_content,
+            '<strong>Test</strong>Category / <strong>Test</strong>Project',
+        )
+
     def test_search_results(self):
         """Test project search items visibility according to user permissions"""
         expected = [

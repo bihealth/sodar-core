@@ -630,7 +630,25 @@ class TestProjectSearchResultsView(
                 [p['name'] for p in response.context['search_apps']],
             )
 
-    def test_post(self):
+    def test_get_invalid_type(self):
+        """Test GET with invalid type"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'s': 'test type:Jaix1au'})
+            )
+            self.assertEqual(response.context['search_apps'], [])
+
+    def test_get_no_terms(self):
+        """Test GET with no search terms"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'s': ''})
+            )
+            self.assertRedirects(response, reverse('home'))
+
+    def test_post_wrong_payload(self):
         """Test ProjectSearchView POST with wrong payload"""
         with self.login(self.user):
             response = self.client.get(

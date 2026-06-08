@@ -12,6 +12,7 @@ from projectroles.plugins import (
     ProjectAppPluginPoint,
     PluginObjectLink,
     PluginSearchResult,
+    PluginSearchResultColumn,
     PluginSearchResultCell,
 )
 from projectroles.tests.test_models import (
@@ -218,12 +219,28 @@ class TestPlugin(
         self.assertEqual(ret[0].value, 1)  # Only one file should be counted
 
     def test_search_file(self):
-        """Test search() with no events"""
+        """Test search()"""
         ret = self.plugin.search(['file.txt'], self.user, Project.objects.all())
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], PluginSearchResult)
         self.assertEqual(ret[0].category, 'all')
         self.assertEqual(ret[0].title, 'Files, Folders and Links')
         self.assertEqual(ret[0].search_types, ['file', 'folder', 'link'])
+        self.assertEqual(len(ret[0].columns), 5)
+        self.assertIsInstance(ret[0].columns[0], PluginSearchResultColumn)
         self.assertEqual(len(ret[0].rows), 1)
         self.assertIsInstance(ret[0].rows[0][0], PluginSearchResultCell)
+        size_value = ret[0].rows[0][3].value
+        self.assertEqual(size_value, '7\xa0bytes')
+
+    def test_search_file_no_results(self):
+        """Test search() with no results"""
+        ret = self.plugin.search(
+            ['not_existing.md'], self.user, Project.objects.all()
+        )
+        self.assertEqual(len(ret), 1)
+        self.assertIsInstance(ret[0], PluginSearchResult)
+        self.assertEqual(ret[0].category, 'all')
+        self.assertEqual(ret[0].title, 'Files, Folders and Links')
+        self.assertEqual(ret[0].search_types, ['file', 'folder', 'link'])
+        self.assertEqual(len(ret[0].rows), 0)

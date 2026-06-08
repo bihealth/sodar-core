@@ -531,7 +531,11 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
         # Get project results
         if plugin_name == 'projectroles':
             if search_type is not None and search_type != 'project':
-                return (None, [])
+                return (
+                    f'The app "{plugin_name}" does not support search results '
+                    f'of type "{search_type}".',
+                    [],
+                )
             rows = []
             for project in Project.objects.find(
                 terms,
@@ -563,8 +567,8 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                         f'<a href="{project_url}" '
                         'class="sodar-pr-project-search-link">'
                         f'{project_title}</a>'
+                        f'{get_remote_icon(project, user)}'
                     )
-                    project_title += get_remote_icon(project, user)
                 else:
                     role_url = reverse(
                         'projectroles:roles',

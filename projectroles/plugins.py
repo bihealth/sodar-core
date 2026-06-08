@@ -995,7 +995,7 @@ class PluginSearchResult:
     rows = []
     #: HTML class for the whole results table (optional)
     table_class = None
-    #: Limit for the number of items returned (if <0, no limit is applied)
+    #: Limit for the number of items returned (if 0, no limit is applied)
     result_limit = 0
 
     def __init__(

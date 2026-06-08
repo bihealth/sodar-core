@@ -1381,21 +1381,6 @@ class TestSearchResultsAjaxView(
             results[app] = data['results']
         return results
 
-    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
-    def test_post_disabled(self):
-        with self.login(self.user):
-            response = self.client.post(
-                self.url,
-                {
-                    'terms': '["test"]',
-                    'keywords': '{}',
-                    'plugin': 'projectroles',
-                },
-            )
-            data = response.json()
-            self.assertEqual(data['results'], [])
-            self.assertEqual(data['error'], 'Search is not enabled.')
-
     def test_post_projectroles(self):
         """Test ProjectSearchResultsAjaxView POST for the projectroles app"""
         with self.login(self.user):
@@ -1411,15 +1396,19 @@ class TestSearchResultsAjaxView(
         data = response.json()
         self.assertIsNone(data['error'])
         self.assertEqual(len(data['results']), 1)
-        self.assertEqual(data['results'][0]['title'], 'Projects')
+        result = data['results'][0]
+        self.assertEqual(result['category'], 'all')
+        self.assertEqual(result['title'], 'Projects')
+        self.assertEqual(result['search_types'], ['project'])
         self.assertEqual(
-            [column['title'] for column in data['results'][0]['columns']],
+            [column['title'] for column in result['columns']],
             ['Project', 'Description'],
         )
-        self.assertEqual(len(data['results'][0]['rows']), 2)
+        self.assertEqual(len(result['rows']), 2)
+        self.assertEqual(result['table_class'], 'sodar-pr-search-table')
 
     def test_post_missing_fields(self):
-        """Test ProjectSearchResultsAjaxView POST for the projectroles app"""
+        """Test POST for the projectroles app with missing fields"""
         with self.login(self.user):
             # Missing "keywords" in POST data
             response = self.client.post(
@@ -1433,6 +1422,22 @@ class TestSearchResultsAjaxView(
         data = response.json()
         self.assertIsNotNone(data['error'])
         self.assertEqual(data['results'], [])
+
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_post_disabled(self):
+        """Test POST with search disabled"""
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                {
+                    'terms': '["test"]',
+                    'keywords': '{}',
+                    'plugin': 'projectroles',
+                },
+            )
+            data = response.json()
+            self.assertEqual(data['results'], [])
+            self.assertEqual(data['error'], 'Search is not enabled.')
 
     def test_post_search_type(self):
         """Test POST with search type"""
@@ -1458,6 +1463,27 @@ class TestSearchResultsAjaxView(
         self.assertEqual(
             data['error'],
             'The app "timeline" does not support search results of type "file".',
+        )
+
+    def test_post_wrong_type_projectroles(self):
+        """Test POST for projectroles with an unsupported type"""
+        with self.login(self.user):
+            # The projectroles plugin doesn't provide search for type "timeline"
+            response = self.client.post(
+                self.url,
+                {
+                    'terms': '["test"]',
+                    'keywords': '{"type": "timeline"}',
+                    'plugin': 'projectroles',
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['results'], [])
+        self.assertEqual(
+            data['error'],
+            'The app "projectroles" does not support search results '
+            'of type "timeline".',
         )
 
     def test_post_keywords_project_uuid(self):
@@ -1597,3 +1623,13 @@ class TestSearchResultsAjaxView(
         self.assertEqual(len(results['filesfolders']), 1)
         # Here, only "other file.txt" should be found
         self.assertEqual(len(results['filesfolders'][0]['rows']), 1)
+
+    def test_post_all_plugins(self):
+        """Test POST with results from all plugins"""
+        results = self._get_app_results(self.user, ['test', 'file'])
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 2)
+        self.assertEqual(len(results['filesfolders']), 1)
+        self.assertEqual(len(results['filesfolders'][0]['rows']), 2)
+        self.assertEqual(len(results['timeline']), 1)
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)
