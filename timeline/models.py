@@ -83,6 +83,7 @@ class TimelineEventManager(models.Manager):
         :param keywords: Optional search keywords as key/value pairs (dict)
         :return: QuerySet of TimelineEvent objects
         """
+        search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
         objects = (
             super()
             .get_queryset()
@@ -101,7 +102,7 @@ class TimelineEventManager(models.Manager):
             .annotate(timestamp=Max('status_changes__timestamp'))
             .order_by('-timestamp')
         )
-        return items
+        return items[:search_limit]
 
 
 class TimelineEvent(models.Model):

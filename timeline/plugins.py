@@ -163,9 +163,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         items = []
         search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
         if kwargs.get('type', 'timeline') == 'timeline':
-            events = TimelineEvent.objects.find(search_terms, projects, kwargs)[
-                :search_limit
-            ]
+            # NOTE: the search is already limited to ``search_limit`` results
+            # within the find() method.
+            events = TimelineEvent.objects.find(search_terms, projects, kwargs)
             items = [e for e in events if self._check_permission(user, e)]
         plugin_lookup = get_plugin_lookup()
         rows = []
