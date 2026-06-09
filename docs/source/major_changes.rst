@@ -67,8 +67,30 @@ The signature of the ``search()`` function implemented by plugins has changed:
     - ``type:<string>``, which specifies the type of objects that should be
       retrieved by the search.
 
+The ``PluginSearchResult`` objects returned by the ``search()`` function have
+also been updated. Search results are now loaded asynchronously for each app,
+and the HTML tables are built with jQuery from the structure of the search
+results themselves. Thus, apps are expected to conform with the new structure
+of ``PluginSearchResult``, which should include both data and display options.
+As a consequence, search templates for each individual app are no longer
+necessary. However, apps can still customize the style of search results
+tables by providing a CSS file. In summary, the following changes affected
+``ProjectAppPluginPoint``:
+
+- Remove the ``search_template`` attribute;
+- Add the ``search_css`` attribute;
+- Update the implementaion of the ``search()`` method.
+
+Timeline Template Tag get_app_icon_html() Replaced by get_app_badge()
+---------------------------------------------------------------------
+
+The ``get_app_icon_html()`` template tag from the timeline plugin was removed
+in favour of the more general ``get_app_badge()``, which accepts the same
+arguments plus an additional optional argument, ``extra_class``, which
+specifies an additional HTML class for the badge.
+
 Template Tag get_remote_icon() Updated
---------------------------------------------
+--------------------------------------
 
 The signature of the ``get_remote_icon()`` template tag in
 ``projectroles_common_tags`` has been updated. The second argument is now
