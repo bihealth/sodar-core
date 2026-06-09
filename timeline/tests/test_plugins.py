@@ -32,7 +32,6 @@ from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 
 
 plugin_api = PluginAPI()
-plugin_lookup = get_plugin_lookup()
 
 
 # SODAR constants
@@ -103,6 +102,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
     def setUp(self):
         super().setUp()
         self.plugin = ProjectAppPluginPoint.get_plugin(PROJECT_PLUGIN_NAME)
+        self.plugin_lookup = get_plugin_lookup()
         self.event_kw = {
             'project': self.project,
             'app_name': 'projectroles',
@@ -193,7 +193,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         )
         self.assertEqual(
             ret[0].rows[0][1].value,
-            get_event_full_description(event2, plugin_lookup),
+            get_event_full_description(event2, self.plugin_lookup),
         )
         self.assertEqual(
             ret[0].rows[0][2].value,
@@ -205,7 +205,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         )
         self.assertEqual(
             ret[0].rows[1][1].value,
-            get_event_full_description(event, plugin_lookup),
+            get_event_full_description(event, self.plugin_lookup),
         )
         self.assertEqual(
             ret[0].rows[0][2].value,
@@ -220,7 +220,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].rows), 1)
         self.assertEqual(
             ret[0].rows[0][1].value,
-            get_event_full_description(event, plugin_lookup),
+            get_event_full_description(event, self.plugin_lookup),
         )
 
     def test_search_event_name_display(self):
@@ -233,7 +233,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].rows), 1)
         self.assertEqual(
             ret[0].rows[0][1].value,
-            get_event_full_description(event, plugin_lookup),
+            get_event_full_description(event, self.plugin_lookup),
         )
 
     def test_search_invalid_terms(self):
