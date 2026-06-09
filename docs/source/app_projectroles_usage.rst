@@ -681,8 +681,7 @@ Search
 
 The basic search form is displayed in the top navigation bar if enabled. It
 takes one string as a search parameter, followed by optional ``keyword:value``
-pairs separated by white space.
-Search terms and keywords are case-insensitive.
+pairs separated by white space. Search terms and keywords are case-insensitive.
 At this time, two keywords have been implemented:
 
 ``type``

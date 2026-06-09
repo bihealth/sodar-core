@@ -245,7 +245,8 @@ Implementing the following is **optional**:
     Implement if searching the data of the app is enabled.
 ``search_css``
     Path to CSS file styling the search results for this plugin. Implement if
-    searching the data of the app is enabled.
+    searching the data of the app is enabled and if CSS needs to be customized
+    in the search results.
 ``project_list_columns``
     Optional custom columns do be shown in the project list. See the plugin
     point definition for an example.
