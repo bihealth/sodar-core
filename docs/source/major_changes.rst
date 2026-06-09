@@ -51,6 +51,7 @@ Plugin API search() Changes
 ---------------------------
 
 The signature of the ``search()`` function implemented by plugins has changed:
+
 - It now takes a new positional argument, ``projects``, which contains a
   ``QuerySet`` of projects within which the search should be restricted. All
   SODAR Core apps are expected to honor this filtering criterion.

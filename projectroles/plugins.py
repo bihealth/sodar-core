@@ -355,7 +355,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #: List of search object types for the app
     search_types = []
 
-    #: CSS file for the search resutls table from this plugin
+    #: CSS file for the search resutls table from this plugin (optional)
     search_css = None
 
     #: App card template for the project details page
@@ -436,6 +436,9 @@ class ProjectAppPluginPoint(PluginPoint):
         Return app items based on one or more search terms, user, optional type
         and optional keywords.
 
+        The search results are loaded asynchronously and rendered via jQuery;
+        see :file:`static/projectroles/js/search.js`.
+
         :param search_terms: Search terms to be joined with the OR operator
                              (list of strings)
         :param user: User object for user initiating the search
@@ -443,8 +446,6 @@ class ProjectAppPluginPoint(PluginPoint):
         :param kwargs: Search options as key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
-        # TODO: If implemented, also implement display of results in the app's
-        #       search template
         return []
 
     def update_cache(
@@ -942,18 +943,16 @@ class PluginObjectLink:
 class PluginSearchResultCell:
     """
     Represents a cell in the table of search results returned by app plugins.
-
-    :param value: The content of the cell (str). If ``value_html`` is True
-        in the corresponding PluginSearchResultColumn, this is interpreted
-        as HTML, otherwise plain text.
-    :param value_url: If defined, the cell content becomes a link refencing the
-        specified URL. If ``value_html`` is true, this fiel is ignored.
-    :cell_class: Optional HTML class to be applied to this cell only.
+    This class is used by :py:class:`PluginSearchResult` for the
+    :py:attr:`~PluginSearchResult.rows` attribute.
     """
 
-    #: The content of the cell (str)
+    #: The content of the cell (str). If ``value_html`` is True
+    #: in the corresponding :py:class:`PluginSearchResultColumn`, this is
+    #: interpreted as HTML, otherwise plain text.
     value: str = None
-    #: If defined, the cell content becomes a hyperlink to the specified URL
+    #: If defined, the cell content becomes a hyperlink to the specified URL.
+    #: If ``value_html`` is true, this field is ignored.
     value_url: Optional[str] = None
     #: Optional HTML class to be applied to this cell only.
     cell_class: Optional[str] = None
@@ -963,6 +962,8 @@ class PluginSearchResultCell:
 class PluginSearchResultColumn:
     """
     Represents a column in the table of search results returned by app plugins.
+    This class is used by :py:class:`PluginSearchResult` for the
+    :py:attr:`~PluginSearchResult.columns` attribute.
     """
 
     #: The title to be displayed (str)
@@ -971,7 +972,8 @@ class PluginSearchResultColumn:
     column_class: Optional[str] = None
     #: Whether to apply highlighting for this column (bool)
     highlight: bool = False
-    #: Interpret the value field of PluginSearchResultCell as HTML (bool)
+    #: Interpret the value field of :py:class:`PluginSearchResultCell`
+    #: as HTML (bool)
     value_html: bool = False
     #: Whether the column content is allowed to overflow (bool)
     overflow: bool = False
@@ -981,6 +983,12 @@ class PluginSearchResult:
     """
     Class representing a list of search results from a specific plugin for one
     or more search types. Expected to be returned from search() implementations.
+
+    The :py:attr:`columns` attribute is a list of
+    :py:class:`PluginSearchResultColumn` defining field titles and customizing
+    their display. The :py:attr:`rows` attribute is a list specifying the rows
+    of the table. Each element is a list of :py:class:`PluginSearchResultCell`,
+    one for each of the fields in the :py:attr:`columns` attribute.
     """
 
     #: Category of the result set, used in rendering (string)
