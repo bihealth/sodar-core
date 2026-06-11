@@ -17,21 +17,16 @@ from projectroles.plugins import (
     PluginSearchResultCell,
 )
 from projectroles.utils import get_display_name
-from projectroles.templatetags.projectroles_common_tags import (
-    get_user_badge,
-    get_project_badge,
-)
 
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent
-from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 from timeline.templatetags.timeline_tags import (
-    get_app_badge,
-    get_event_description,
     get_plugin_lookup,
     get_status_style,
     get_timestamp,
 )
+from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
+from timeline.utils import get_event_full_description
 
 
 User = get_user_model()
@@ -40,23 +35,6 @@ logger = logging.getLogger(__name__)
 
 # Local constants
 STATS_DESC_USER_COUNT = 'Amount of users who have initiated events'
-
-
-def get_event_full_description(event, plugin_lookup, extra_class='mr-1'):
-    """Get an HTML string giving the full description of a timeline event"""
-    components = [get_app_badge(event, plugin_lookup, extra_class=extra_class)]
-    if event.user:
-        components.append(get_user_badge(event.user, extra_class=extra_class))
-    if event.project:
-        components.append(
-            get_project_badge(event.project, extra_class=extra_class)
-        )
-    components.append(
-        '<span>'
-        + get_event_description(event, plugin_lookup).capitalize()
-        + '</span>'
-    )
-    return ' '.join(components)
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -201,6 +179,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     highlight=True,
                     value_html=True,
                     overflow=True,
+                    orderable=False,
                 ),
                 PluginSearchResultColumn(
                     title='Status',

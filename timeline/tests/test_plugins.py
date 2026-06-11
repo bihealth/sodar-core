@@ -21,14 +21,13 @@ from projectroles.tests.test_models import (
 
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent, TL_STATUS_OK
-from timeline.plugins import STATS_DESC_USER_COUNT, get_event_full_description
+from timeline.plugins import STATS_DESC_USER_COUNT
 from timeline.templatetags.timeline_tags import (
     get_timestamp,
     get_plugin_lookup,
 )
-
-# from timeline.tests.test_models import TimelineEventMixin
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
+from timeline.utils import get_event_full_description
 
 
 plugin_api = PluginAPI()

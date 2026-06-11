@@ -971,6 +971,10 @@ class PluginSearchResultColumn:
     value_html: bool = False
     #: Whether the column content is allowed to overflow (bool)
     overflow: bool = False
+    #: Whether users can order the table by this column's values (bool)
+    orderable: bool = True
+    #: Whether the column content is searchable (bool)
+    searchable: bool = True
 
 
 class PluginSearchResult:
