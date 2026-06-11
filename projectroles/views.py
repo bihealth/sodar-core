@@ -4,7 +4,6 @@ import json
 import logging
 import re
 import shlex
-import uuid
 
 from ipaddress import ip_address, ip_network
 from typing import Any, Optional, Union
@@ -16,7 +15,6 @@ from django.contrib import auth, messages
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
-from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import redirect
 from django.urls import resolve, reverse, reverse_lazy
@@ -728,136 +726,6 @@ class ProjectDetailView(
 class ProjectSearchMixin:
     """Common functionalities for search views"""
 
-    def _get_app_results(
-        self,
-        user: User,
-        search_terms: list[str],
-        projects: QuerySet[Project],
-        search_keywords: Optional[dict],
-    ) -> list:
-        """
-        Return app plugin search results.
-
-        :param user: user who initiated the sarch
-        :param search_terms: Search terms (list of strings)
-        :param projects: All projects where the search should be performed
-        :param search_keywords: Optional keywords (dictionary or None)
-        :return: List
-        """
-        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
-        ret = []
-        omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
-
-        search_apps = sorted(
-            [
-                p
-                for p in plugins
-                if (p.search_enable and p.name not in omit_apps_list)
-            ],
-            key=lambda x: x.plugin_ordering,
-        )
-        if search_keywords and 'type' in search_keywords:
-            search_apps = [
-                p
-                for p in search_apps
-                if search_keywords['type'] in p.search_types
-            ]
-        for plugin in search_apps:
-            search_kwargs = {
-                'user': user,
-                'projects': projects,
-                'search_terms': search_terms,
-                'keywords': search_keywords,
-            }
-            search_res = {
-                'plugin': plugin,
-                'results': None,
-                'error': None,
-                'has_results': False,
-            }
-            try:
-                search_res['results'] = plugin.search(**search_kwargs)
-                for r in search_res['results']:
-                    if r.items and (
-                        (isinstance(r.items, QuerySet) and r.items.count() > 0)
-                        or (isinstance(r.items, list) and len(r.items) > 0)
-                    ):
-                        search_res['has_results'] = True
-                        break
-                # Build results into dict for easier use in templates
-                search_res['results'] = {
-                    r.category: r for r in search_res['results']
-                }
-            except Exception as ex:
-                if settings.DEBUG:
-                    raise ex
-                search_res['error'] = str(ex)
-                logger.error(
-                    'Exception raised by search() in {}: "{}" ({})'.format(
-                        plugin.name,
-                        ex,
-                        '; '.join(
-                            [f'{k}={v}' for k, v in search_kwargs.items()]
-                        ),
-                    )
-                )
-            ret.append(search_res)
-        return ret
-
-    def _get_not_found(
-        self,
-        search_type: Optional[str],
-        project_results: list,
-        app_results: list,
-    ) -> list:
-        """
-        Return list of apps for which objects were search for but not returned.
-
-        :param search_type: Type keyword for search or None
-        :param project_results: Results for projectroles search
-        :param app_results: Results for app plugin search
-        :return: List
-        """
-        ret = []
-        if len(project_results) == 0 and (
-            not search_type or search_type == 'project'
-        ):
-            ret.append('Projects')
-        for results in [a['results'] for a in app_results]:
-            if not results:
-                continue
-            for k, r in results.items():
-                type_match = True if search_type else False
-                if not type_match and search_type in r.search_types:
-                    type_match = True
-                if (type_match or not search_type) and (not r.items):
-                    ret.append(r.title)
-        return ret
-
-    def dispatch(self, request, *args, **kwargs):
-        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
-            messages.error(request, 'Search is not enabled.')
-            return redirect('home')
-        return super().dispatch(request, *args, **kwargs)
-
-
-class ProjectSearchResultsView(
-    LoginRequiredMixin, ProjectSearchMixin, TemplateView
-):
-    """View for displaying results of search within projects"""
-
-    template_name = 'projectroles/search_results.html'
-
-    def _handle_context(
-        self, request: HttpRequest, *args, **kwargs
-    ) -> HttpResponse:
-        """Handle context and render to response in GET/POST requests"""
-        context = self.get_context_data(*args, **kwargs)
-        if not context['search_terms']:
-            messages.error(request, 'No search terms provided.')
-            return redirect(reverse('home'))
-        return super().render_to_response(context)
-
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
         search_input = ''
@@ -889,62 +757,73 @@ class ProjectSearchResultsView(
             val = s.split(':')[1].lower().strip()
             search_keywords[kw] = val
 
-        if 'project' in search_keywords:
-            try:
-                sodar_uuid = uuid.UUID(search_keywords['project'])
-                parent = Project.objects.get(sodar_uuid=sodar_uuid)
-                search_projects = Project.objects.filter(
-                    full_title__startswith=parent.full_title
-                )
-            except ValueError:
-                # Not a valid UUID, trying to match project title directly
-                search_projects = Project.objects.filter(
-                    full_title__icontains=search_keywords['project']
-                )
-            except Project.DoesNotExist:
-                search_projects = Project.objects.none()
-        else:
-            search_projects = Project.objects.all()
-
         context['search_input'] = search_input
         context['search_terms'] = search_terms
-        context['search_projects'] = search_projects
         context['search_keywords'] = search_keywords
-        # Get project results
+
+        plugins = plugin_api.get_active_plugins(plugin_type='project_app')
+        omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
+
+        search_apps = sorted(
+            [
+                p
+                for p in plugins
+                if (p.search_enable and p.name not in omit_apps_list)
+            ],
+            key=lambda x: x.plugin_ordering,
+        )
+        if search_keywords and 'type' in search_keywords:
+            search_apps = [
+                p
+                for p in search_apps
+                if search_keywords['type'] in p.search_types
+            ]
+        context['search_apps'] = [
+            {
+                'name': app.name,
+                'title': app.title,
+                'icon': app.icon,
+                'search_css': app.search_css,
+            }
+            for app in search_apps
+        ]
         if search_keywords.get('type', 'project') == 'project':
-            context['project_results'] = []
-            for p in Project.objects.find(
-                search_terms,
-                search_projects,
-                project_type='PROJECT',
-                keywords=search_keywords,
-            ):
-                if p.public_access or self.request.user.has_perm(
-                    'projectroles.view_project', p
-                ):
-                    context['project_results'].append(p)
-                elif self.request.user.is_authenticated and p.parent:
-                    parent_as = p.parent.get_role(self.request.user)
-                    if (
-                        parent_as
-                        and parent_as.role.rank
-                        >= ROLE_RANKING[PROJECT_ROLE_FINDER]
-                    ):
-                        context['project_results'].append(p)
-        # Get app results
-        context['app_results'] = self._get_app_results(
-            self.request.user,
-            search_terms,
-            search_projects,
-            search_keywords,
-        )
-        # List apps for which no results were found
-        context['not_found'] = self._get_not_found(
-            search_keywords.get('type', None),
-            context.get('project_results') or [],
-            context['app_results'],
-        )
+            context['search_apps'].insert(
+                0,
+                {
+                    'name': 'projectroles',
+                    'title': get_display_name(
+                        PROJECT_TYPE_PROJECT, title=True, plural=True
+                    ),
+                    'icon': 'mdi:cube',
+                },
+            )
+
         return context
+
+    def dispatch(self, request, *args, **kwargs):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
+            messages.error(request, 'Search is not enabled.')
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ProjectSearchResultsView(
+    LoginRequiredMixin, ProjectSearchMixin, TemplateView
+):
+    """View for displaying results of search within projects"""
+
+    template_name = 'projectroles/search_results.html'
+
+    def _handle_context(
+        self, request: HttpRequest, *args, **kwargs
+    ) -> HttpResponse:
+        """Handle context and render to response in GET/POST requests"""
+        context = self.get_context_data(*args, **kwargs)
+        if not context['search_terms']:
+            messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        return super().render_to_response(context)
 
     def get(self, request, *args, **kwargs):
         return self._handle_context(request, *args, *kwargs)

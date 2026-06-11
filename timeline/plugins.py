@@ -1,5 +1,8 @@
 """Plugins for the Timeline app"""
 
+import logging
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
@@ -10,19 +13,50 @@ from projectroles.plugins import (
     BackendPluginPoint,
     SiteAppPluginPoint,
     PluginSearchResult,
+    PluginSearchResultColumn,
+    PluginSearchResultCell,
 )
 from projectroles.utils import get_display_name
+from projectroles.templatetags.projectroles_common_tags import (
+    get_user_badge,
+    get_project_badge,
+)
 
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
+from timeline.templatetags.timeline_tags import (
+    get_app_badge,
+    get_event_description,
+    get_plugin_lookup,
+    get_status_style,
+    get_timestamp,
+)
 
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 # Local constants
 STATS_DESC_USER_COUNT = 'Amount of users who have initiated events'
+
+
+def get_event_full_description(event, plugin_lookup, extra_class='mr-1'):
+    """Get an HTML string giving the full description of a timeline event"""
+    components = [get_app_badge(event, plugin_lookup, extra_class=extra_class)]
+    if event.user:
+        components.append(get_user_badge(event.user, extra_class=extra_class))
+    if event.project:
+        components.append(
+            get_project_badge(event.project, extra_class=extra_class)
+        )
+    components.append(
+        '<span>'
+        + get_event_description(event, plugin_lookup).capitalize()
+        + '</span>'
+    )
+    return ' '.join(components)
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -61,8 +95,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: List of search object types for the app
     search_types = ['timeline']
 
-    #: Search results template
-    search_template = 'timeline/_search_results.html'
+    #: Search results CSS
+    search_css = 'timeline/css/search.css'
 
     #: App card template for the project details page
     details_template = 'timeline/_details_card.html'
@@ -127,16 +161,55 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :return: List of PluginSearchResult objects
         """
         items = []
+        search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
         if kwargs.get('type', 'timeline') == 'timeline':
-            events = list(
-                TimelineEvent.objects.find(search_terms, projects, kwargs)
-            )
+            # NOTE: the search is already limited to ``search_limit`` results
+            # within the find() method.
+            events = TimelineEvent.objects.find(search_terms, projects, kwargs)
             items = [e for e in events if self._check_permission(user, e)]
+        plugin_lookup = get_plugin_lookup()
+        rows = []
+        for item in items:
+            rows.append(
+                [
+                    # Timestamp
+                    PluginSearchResultCell(
+                        value=get_timestamp(item),
+                    ),
+                    # Description
+                    PluginSearchResultCell(
+                        value=get_event_full_description(item, plugin_lookup),
+                    ),
+                    # Status
+                    PluginSearchResultCell(
+                        value=item.get_status().status_type,
+                        cell_class=get_status_style(item.get_status()),
+                    ),
+                ]
+            )
         ret = PluginSearchResult(
             category='all',
             title='Timeline Events',
             search_types=['timeline'],
-            items=items,
+            columns=[
+                PluginSearchResultColumn(
+                    title='Timestamp',
+                    column_class='text-nowrap',
+                ),
+                PluginSearchResultColumn(
+                    title='Description',
+                    highlight=True,
+                    value_html=True,
+                    overflow=True,
+                ),
+                PluginSearchResultColumn(
+                    title='Status',
+                    column_class='text-light sodar-tl-item-status',
+                ),
+            ],
+            rows=rows,
+            table_class='sodar-tl-search-table',
+            result_limit=search_limit,
         )
         return [ret]
 

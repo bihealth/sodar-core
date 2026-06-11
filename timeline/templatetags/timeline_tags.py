@@ -92,8 +92,10 @@ def get_plugin_lookup() -> dict:
 
 
 @register.simple_tag
-def get_app_icon_html(event: TimelineEvent, plugin_lookup: dict) -> str:
-    """Return icon link HTML for app by plugin lookup"""
+def get_app_badge(
+    event: TimelineEvent, plugin_lookup: dict, extra_class: Optional[str] = None
+) -> str:
+    """Return badge HTML for app by plugin lookup"""
     url = None
     title = event.app
     icon = ICON_UNKNOWN_APP  # Default in case the plugin is not found
@@ -127,12 +129,15 @@ def get_app_icon_html(event: TimelineEvent, plugin_lookup: dict) -> str:
             if getattr(plugin, 'icon', None):
                 icon = plugin.icon
 
+    extra_class = (' ' + extra_class) if extra_class else ''
+    href = f'href="{url}"' if url else ''
     return (
-        '<a {} class="sodar-tl-item-app-icon" title="{}" data-toggle="tooltip" '
-        'data-placement="top">'
-        '<i class="iconify" data-icon="{}"></i></a>'.format(
-            'href="{}"'.format(url) if url else '', title, icon
-        )
+        f'<span class="badge bg-secondary text-white sodar-obj-badge '
+        f'sodar-tl-event-badge{extra_class}" title="{title}" '
+        'data-toggle="tooltip" data-placement="top">'
+        f'<i class="iconify" data-icon="{icon}"></i> '
+        f'<a {href} class="sodar-tl-item-app-icon">{get_event_name(event)}</a>'
+        f'</span>'
     )
 
 

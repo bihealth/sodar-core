@@ -20,59 +20,15 @@
   <!-- DataTables -->
   {% include 'projectroles/_datatables_css.html' %}
 
-  <style type="text/css">
-    div.sodar-search-card {
-      display: none;  /* Will be enabled after DataTables init */
-    }
-    div.sodar-search-card-body {
-      padding: 0;
-      overflow-x: hidden; /* Fix possible overflow when resizing window */
-    }
-    table.sodar-search-table {
-      display: inline-table;
-      min-width: 100%;
-      max-width: 100%;
-      width: 100%;
-      border-bottom: 0 !important;
-      margin: 0 !important;
-    }
-    table.sodar-search-table thead tr th {
-      padding: 12px !important;
-      padding-right: 22px !important; /* Avoid covering sort icons */
-      max-width: 250px !important;
-    }
-    table.sodar-search-table tbody tr td {
-      padding: 12px !important;
-      max-width: 250px !important;
-    }
-    .sodar-header-input-group-search {
-      max-width: 380px;
-    }
-    select.sodar-search-page-length {
-      max-width: 110px;
-      height: 30px;
-      padding-top: 4px;
-    }
+  <!-- Global CSS for search results -->
+  <link rel="stylesheet" type="text/css" href="{% static 'projectroles/css/search.css' %}">
 
-    /* DataTables modifications */
-    th.sorting {
-      padding-left: 10px !important;
-      border-bottom: 0 !important;
-    }
-    th.sorting::after {
-      padding-top: 7px !important;
-    }
-    .previous::before, .next::after {
-        display: none !important;
-    }
-
-    /* Responsive modifications */
-    @media screen and (max-width: 1000px) {
-      .sodar-header-input-group-search {
-        display: none;
-      }
-    }
-  </style>
+  <!-- Plugin CSS for app search results -->
+  {% for app in search_apps %}
+    {% if app.search_css %}
+      <link rel="stylesheet" type="text/css" href="{% static app.search_css %}">
+    {% endif %}
+  {% endfor %}
 {% endblock css %}
 
 {% block projectroles %}
@@ -96,54 +52,25 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
-  {% if 'type' in search_keywords and search_keywords.type != 'project' and app_results|length == 0 %}
+  {% if 'type' in search_keywords and search_keywords.type != 'project' and search_apps|length == 0 %}
     <div class="alert alert-danger" role="alert">
       <strong>Error:</strong> Search type "{{ search_keywords.type }}" not recognized!
     </div>
   {% else %}
-    {# Project Search #}
-    {% if 'type' not in search_keywords or search_keywords.type == 'project' %}
-      {% if project_results|length > 0 %}
-        {% get_display_name 'PROJECT' title=True plural=True as projects_title %}
-        {% include 'projectroles/_search_header.html' with search_title=projects_title result_count=project_results|length icon='mdi:cube' %}
-        <table class="table table-striped sodar-card-table sodar-search-table"
-               id="sodar-pr-search-table">
-          <thead>
-            <tr>
-              <th>{% get_display_name 'PROJECT' title=True %}</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for p in project_results %}
-              {% include 'projectroles/_project_search_item.html' %}
-            {% endfor %}
-          </tbody>
-        </table>
-        {% include 'projectroles/_search_footer.html' %}
-      {% endif %}
-    {% endif %}
-    {# App Search #}
-    {% for app in app_results %}
-      {% if app.plugin.search_template and app.has_results and not app.error %}
-        {% include app.plugin.search_template with plugin=app.plugin search_results=app.results %}
-      {% elif app.error %}
-        <div class="alert alert-error">
-          <strong>Error:</strong>
-          Exception raised by {{ app.plugin.name }}: "{{ app.error }}"
-        </div>
-      {% endif %}
+    {{ search_terms|json_script:"search-terms" }}
+    {{ search_keywords|json_script:"search-keywords" }}
+    {% for app in search_apps %}
+      <div class="sodar-ajax-search-results"
+           data-url="{% url 'projectroles:ajax_search' %}"
+           data-app-name="{{ app.name }}"
+           data-app-title="{{ app.title }}"
+           data-app-icon="{{ app.icon }}">
+      </div>
     {% endfor %}
-  {% endif %}
-
-  {% if not_found %}
-    <div class="alert alert-info d-none" id="sodar-search-not-found-alert">
-      No results found:
-      <ul class="mb-0">
-        {% for n in not_found %}
-          <li>{{ n }}</li>
-        {% endfor %}
-      </ul>
+    <div id="sodar-search-results-spinner" class="w-100 text-center">
+      <i class="iconify spin text-secondary"
+         data-icon="mdi:loading" data-height="42">
+      </i>
     </div>
   {% endif %}
 </div>
@@ -166,7 +93,7 @@
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true
-    $(document).ready(function() {
+    $(document).on('searchResultsLoaded', function() {
       tour.addStep('search_results', {
         title: 'Search Results',
         text: 'Search results are displayed in this view. Found search items ' +
@@ -205,12 +132,12 @@
           showCancelLink: true
         })
       }
-      if ($('th.sorting').length) {
+      if ($('th .dt-column-order').length) {
         tour.addStep('search_card_sort', {
           title: 'Search Result Sorting',
           text: 'Results can be sorted by each column in an ascending or ' +
                 'descending order by clicking on these icons.',
-          attachTo: 'th.sorting right',
+          attachTo: 'th .dt-column-order right',
           advanceOn: '.docs-link click',
           showCancelLink: true
         })
@@ -234,12 +161,12 @@
           showCancelLink: true
         })
       }
-      if ($('#sodar-search-not-found-alert').length) {
+      if ($('.sodar-search-not-found-alert').length) {
         tour.addStep('search_not_found', {
           title: 'Data Not Found',
           text: 'Data types in which we could not find anything are listed ' +
                 'here.',
-          attachTo: '#sodar-search-not-found-alert top',
+          attachTo: '.sodar-search-not-found-alert top',
           advanceOn: '.docs-link click',
           showCancelLink: true
         })

@@ -4,6 +4,8 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
+from selenium.webdriver.common.by import By
+
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
@@ -395,6 +397,9 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
 
     def setUp(self):
         super().setUp()
+        app_settings.set(
+            APP_NAME, 'allow_public_links', True, project=self.project
+        )
         self.file_content = bytes('content'.encode('utf-8'))
         self.secret_file_owner = build_secret()
         self.secret_file_contributor = build_secret()
@@ -425,6 +430,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             description='description',
             public_url=True,  # NOTE: Public URL OK
             secret=self.secret_file_owner,
+            flag='FLAG_HEART',
         )
         # File uploaded by project contributor
         self.file_contributor = self.make_file(
@@ -458,6 +464,56 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
         )
         self.url = reverse('projectroles:search')
 
+    def _assert_search_results_count(self, expected, url):
+        for expected_user, expected_count in expected:
+            self.login_and_redirect(
+                expected_user, url, 'sodar-ff-search-table', 'CLASS_NAME'
+            )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                '.sodar-ff-search-table tbody tr',
+            )
+            self.assertEqual(len(elements), expected_count)
+
+    def test_search_results_table_layout(self):
+        """Test search results table layout"""
+        url = self.url + '?' + urlencode({'s': 'descriptio'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-ff-search-table', 'CLASS_NAME'
+        )
+        thead = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-ff-search-table thead th',
+        )
+        self.assertEqual(len(thead), 5)
+        self.assertEqual(
+            [th.text for th in thead],
+            ['Name', 'Type', 'Project', 'Size', 'Description'],
+        )
+        tbody_rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-ff-search-table tbody tr',
+        )
+        self.assertEqual(len(tbody_rows), 6)
+
+    def test_search_results_highlight(self):
+        """Test search results highlight"""
+        url = self.url + '?' + urlencode({'s': 'folder_con type:folder'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-ff-search-table', 'CLASS_NAME'
+        )
+        name_cell = self.selenium.find_element(
+            By.CSS_SELECTOR,
+            '.sodar-ff-search-table tbody tr td:nth-child(1)',
+        )
+        name_content = name_cell.find_element(By.TAG_NAME, 'a').get_attribute(
+            'innerHTML'
+        )
+        self.assertEqual(
+            name_content,
+            '<strong class="sodar-search-highlight">folder_con</strong>tributor',
+        )
+
     def test_search_results(self):
         """Test search items visibility according to user permissions"""
         expected = [
@@ -476,7 +532,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'description'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_file(self):
         """Test search items visibility with 'file' type"""
@@ -496,7 +552,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'file type:file'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_folder(self):
         """Test search items visibility with 'folder' type"""
@@ -516,7 +572,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'folder type:folder'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_link(self):
         """Test search items visibility with 'link' as type"""
@@ -536,27 +592,89 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'link type:link'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_nonexisting(self):
         """Test search items visibility with a nonexisting type"""
+        user_types = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
+        url = self.url + '?' + urlencode({'s': 'test type:Jaix1au'})
+        for user_type in user_types:
+            self.login_and_redirect(user_type, url)
+            alert_elem = self.selenium.find_element(
+                By.CSS_SELECTOR,
+                'div.alert.alert-danger',
+            )
+            self.assertEqual(
+                alert_elem.text, 'Error: Search type "jaix1au" not recognized!'
+            )
+
+    def test_search_with_public_link(self):
+        """Test public link visibility in search items"""
         expected = [
-            (self.superuser, 0),
-            (self.user_owner_cat, 0),
-            (self.user_delegate_cat, 0),
-            (self.user_contributor_cat, 0),
+            (self.superuser, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
             (self.user_guest_cat, 0),
             (self.user_viewer_cat, 0),
             (self.user_finder_cat, 0),
-            (self.user_owner, 0),
-            (self.user_delegate, 0),
-            (self.user_contributor, 0),
+            (self.user_owner, 1),
+            (self.user_delegate, 1),
+            (self.user_contributor, 1),
             (self.user_guest, 0),
             (self.user_viewer, 0),
             (self.user_no_roles, 0),
         ]
-        url = self.url + '?' + urlencode({'s': 'test type:Jaix1au'})
-        self.assert_element_count(expected, url, 'sodar-ff-search-item')
+        url = self.url + '?' + urlencode({'s': 'file'})
+        self.assert_element_count(
+            expected,
+            url,
+            'Public Link',
+            'title',
+            wait_elem='sodar-ff-search-table',
+            wait_loc='CLASS_NAME',
+        )
+
+    def test_search_with_flag(self):
+        """Test public link visibility in search items"""
+        expected = [
+            (self.superuser, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_viewer_cat, 0),
+            (self.user_finder_cat, 0),
+            (self.user_owner, 1),
+            (self.user_delegate, 1),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
+            (self.user_viewer, 0),
+            (self.user_no_roles, 0),
+        ]
+        url = self.url + '?' + urlencode({'s': 'file'})
+        self.assert_element_count(
+            expected,
+            url,
+            'sodar-ff-flag-icon',
+            'class',
+            wait_elem='sodar-ff-search-table',
+            wait_loc='CLASS_NAME',
+        )
 
 
 class TestHomeView(ProjectUITestBase):

@@ -21,10 +21,6 @@ from test_plus.test import TestCase
 
 # Timeline dependency
 from timeline.models import TimelineEvent
-from timeline.tests.test_models import (
-    TimelineEventMixin,
-    TimelineEventStatusMixin,
-)
 
 from projectroles.app_settings import AppSettingAPI
 from projectroles.email import (
@@ -379,9 +375,6 @@ class TestLoginViewAxes(UIViewTestBase):
 
 class TestProjectSearchResultsView(
     ProjectMixin,
-    RoleAssignmentMixin,
-    TimelineEventMixin,
-    TimelineEventStatusMixin,
     UIViewTestBase,
 ):
     """Tests for ProjectSearchResultsView"""
@@ -394,34 +387,7 @@ class TestProjectSearchResultsView(
         self.project = self.make_project(
             'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
-        self.owner_as = self.make_assignment(
-            self.project, self.user, self.role_owner
-        )
         self.plugins = plugin_api.get_active_plugins(plugin_type='project_app')
-        self.project2 = self.make_project(
-            'AnotherProject',
-            PROJECT_TYPE_PROJECT,
-            self.category,
-            description='xxx',
-        )
-        self.cat_owner_as = self.make_assignment(
-            self.project2, self.user, self.role_owner
-        )
-        self.event = self.make_event(
-            project=self.project2,
-            app=APP_NAME,
-            user=self.user,
-            event_name='test_event',
-            description='description',
-            classified=False,
-            extra_data={'test_key': 'test_val'},
-        )
-        self.make_event_status(
-            event=self.event,
-            status_type='SUBMIT',
-            description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
-        )
 
     def test_get(self):
         """Test ProjectSearchResultsView GET"""
@@ -432,13 +398,11 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {})
-        self.assertQuerySetEqual(
-            response.context['search_projects'], Project.objects.all()
-        )
         self.assertEqual(response.context['search_input'], 'test')
         self.assertEqual(
-            len(response.context['app_results']),
-            len([p for p in self.plugins if p.search_enable]),
+            [p['name'] for p in response.context['search_apps']],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_quoted(self):
@@ -452,13 +416,11 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test quoted'])
         self.assertEqual(response.context['search_keywords'], {})
-        self.assertQuerySetEqual(
-            response.context['search_projects'], Project.objects.all()
-        )
         self.assertEqual(response.context['search_input'], '"test quoted"')
         self.assertEqual(
-            len(response.context['app_results']),
-            len([p for p in self.plugins if p.search_enable]),
+            [p['name'] for p in response.context['search_apps']],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_search_type(self):
@@ -472,25 +434,14 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {'type': 'file'})
-        self.assertQuerySetEqual(
-            response.context['search_projects'], Project.objects.all()
-        )
         self.assertEqual(response.context['search_input'], 'test type:file')
         self.assertEqual(
-            len(response.context['app_results']),
-            len(
-                [
-                    p
-                    for p in self.plugins
-                    if (
-                        p.search_enable
-                        and response.context['search_keywords'].get(
-                            'type', None
-                        )
-                        in p.search_types
-                    )
-                ]
-            ),
+            [p['name'] for p in response.context['search_apps']],
+            [
+                p.name
+                for p in self.plugins
+                if p.search_enable and 'file' in p.search_types
+            ],
         )
 
     def test_get_keywords(self):
@@ -507,19 +458,15 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': str(self.project.sodar_uuid)},
         )
-        self.assertQuerySetEqual(
-            response.context['search_projects'],
-            Project.objects.filter(sodar_uuid=self.project.sodar_uuid),
-        )
         self.assertEqual(
             response.context['search_input'],
             f'test project:{self.project.sodar_uuid}',
         )
         self.assertEqual(
-            len(response.context['app_results']),
-            len([p for p in self.plugins if (p.search_enable)]),
+            [p['name'] for p in response.context['search_apps']],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
-        self.assertEqual(len(response.context['project_results']), 1)
 
     def test_get_keywords_quoted(self):
         """Test GET with quoted keywords and check that they are parsed OK"""
@@ -537,16 +484,14 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': 'white space'},
         )
-        self.assertQuerySetEqual(
-            response.context['search_projects'], Project.objects.none()
-        )
         self.assertEqual(
             response.context['search_input'],
             'test "test quoted" project:"white space"',
         )
         self.assertEqual(
-            len(response.context['app_results']),
-            len([p for p in self.plugins if (p.search_enable)]),
+            [p['name'] for p in response.context['search_apps']],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_keywords_project_title(self):
@@ -563,19 +508,15 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': self.project.title.lower()},
         )
-        self.assertQuerySetEqual(
-            response.context['search_projects'],
-            Project.objects.filter(title=self.project.title),
-        )
         self.assertEqual(
             response.context['search_input'],
             f'test project:"{self.project.title}"',
         )
         self.assertEqual(
-            len(response.context['app_results']),
-            len([p for p in self.plugins if (p.search_enable)]),
+            [p['name'] for p in response.context['search_apps']],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
-        self.assertEqual(len(response.context['project_results']), 1)
 
     def test_get_keywords_category_title(self):
         """Test GET with project:<category title> in keywords"""
@@ -591,19 +532,14 @@ class TestProjectSearchResultsView(
             response.context['search_keywords'],
             {'project': self.category.title.lower()},
         )
-        self.assertQuerySetEqual(
-            response.context['search_projects'],
-            Project.objects.filter(
-                full_title__startswith=self.category.full_title
-            ),
-        )
         self.assertEqual(
             response.context['search_input'],
             f'test project:"{self.category.title}"',
         )
         self.assertEqual(
-            len(response.context['app_results']),
-            len([p for p in self.plugins if (p.search_enable)]),
+            [p['name'] for p in response.context['search_apps']],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_search_string_parsing(self):
@@ -637,8 +573,9 @@ class TestProjectSearchResultsView(
             ),
         )
         self.assertEqual(
-            len(response.context['app_results']),
-            len([p for p in self.plugins if (p.search_enable)]),
+            [p['name'] for p in response.context['search_apps']],
+            ['projectroles']
+            + [p.name for p in self.plugins if p.search_enable],
         )
 
     def test_get_keywords_missing(self):
@@ -652,9 +589,6 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {'project': ''})
-        self.assertQuerySetEqual(
-            response.context['search_projects'], Project.objects.all()
-        )
         self.assertEqual(response.context['search_input'], 'test project:')
 
     def test_get_non_text_input(self):
@@ -665,72 +599,111 @@ class TestProjectSearchResultsView(
             )
             self.assertRedirects(response, reverse('home'))
 
-    def test_get_finder(self):
-        """Test GET as finder"""
-        user_finder = self.make_user('user_finder')
-        finder_cat = self.make_project(
-            'FinderCategory', PROJECT_TYPE_CATEGORY, self.category
-        )
-        self.make_assignment(finder_cat, self.user, self.role_owner)
-        self.make_assignment(finder_cat, user_finder, self.role_finder)
-        finder_project = self.make_project(
-            'FinderProject', PROJECT_TYPE_PROJECT, finder_cat
-        )
-        self.make_assignment(finder_project, self.user, self.role_owner)
-        with self.login(user_finder):
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_get_disabled(self):
+        """Test GET with disabled search"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+            )
+            self.assertRedirects(response, reverse('home'))
+
+    def test_get_omit_app(self):
+        """Test GET with omitted app"""
+        with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
             )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['project_results']), 1)
-        self.assertEqual(response.context['project_results'][0], finder_project)
+        self.assertEqual(len(response.context['search_apps']), 3)
+        with override_settings(PROJECTROLES_SEARCH_OMIT_APPS=['timeline']):
+            with self.login(self.user):
+                response = self.client.get(
+                    reverse('projectroles:search')
+                    + '?'
+                    + urlencode({'s': 'test'})
+                )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['search_apps']), 2)
+            self.assertNotIn(
+                'timeline',
+                [p['name'] for p in response.context['search_apps']],
+            )
 
-    def test_post_advanced(self):
-        """Test POST from ProjectAdvancedSearchView"""
+    def test_get_invalid_type(self):
+        """Test GET with invalid type"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'s': 'test type:Jaix1au'})
+            )
+            self.assertEqual(response.context['search_apps'], [])
+
+    def test_get_no_terms(self):
+        """Test GET with no search terms"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'s': ''})
+            )
+            self.assertRedirects(response, reverse('home'))
+
+    def test_post_wrong_payload(self):
+        """Test ProjectSearchView POST with wrong payload"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'m': 'test'})
+            )
+            # Search views take either GET with 's' parameter or POST
+            # with 'm' and 'k' parameters. Hence, GET with 'm' parameter
+            # results in redirection.
+            self.assertRedirects(response, reverse('home'))
+
+
+class TestProjectAdvancedSearchView(UIViewTestBase):
+    """Tests for ProjectAdvancedSearchView"""
+
+    def test_get(self):
+        """Test ProjectAdvancedSearchView GET"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:search_advanced'))
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_get_disabled(self):
+        """Test GET with disabled search"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:search_advanced'))
+            self.assertRedirects(response, reverse('home'))
+
+    def test_post(self):
+        """Test POST"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
-                data={'m': 'testproject\r\nxxx', 'k': ''},
+                data={'m': 'cats\r\ndogs', 'k': 'type:project'},
             )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['cats', 'dogs'])
         self.assertEqual(
-            response.context['search_terms'], ['testproject', 'xxx']
+            response.context['search_keywords'], {'type': 'project'}
         )
-        self.assertEqual(response.context['search_keywords'], {})
-        self.assertQuerySetEqual(
-            response.context['search_projects'], Project.objects.all()
-        )
-        self.assertEqual(len(response.context['project_results']), 2)
 
-    def test_post_advanced_with_keywords(self):
-        """Test POST from ProjectAdvancedSearchView with keywords"""
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_post_disabled(self):
+        """Test POST with disabled search"""
         with self.login(self.user):
-            response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={
-                    'm': 'testproject\r\nxxx',
-                    'k': f'project:{self.project2.sodar_uuid}',
-                },
-            )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.context['search_terms'], ['testproject', 'xxx']
-        )
-        self.assertEqual(
-            response.context['search_keywords'],
-            {'project': str(self.project2.sodar_uuid)},
-        )
-        # Only the project matching 'xxx' should be returned
-        self.assertEqual(len(response.context['project_results']), 1)
+            response = self.client.post(reverse('projectroles:search_advanced'))
+            self.assertRedirects(response, reverse('home'))
 
-    def test_post_advanced_with_search_type_and_keywords(self):
+    def test_post_with_search_type_and_keywords(self):
         """Test POST from ProjectAdvancedSearchView with keywords"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
                 data={
                     'm': 'testcategory\r\ntestproject\r\nxxx',
-                    'k': f'type:project project:{self.category.sodar_uuid}',
+                    'k': 'type:project project:title',
                 },
             )
         self.assertEqual(response.status_code, 200)
@@ -740,15 +713,8 @@ class TestProjectSearchResultsView(
         )
         self.assertEqual(
             response.context['search_keywords'],
-            {'project': str(self.category.sodar_uuid), 'type': 'project'},
+            {'project': 'title', 'type': 'project'},
         )
-        self.assertQuerySetEqual(
-            response.context['search_projects'],
-            Project.objects.filter(
-                full_title__startswith=self.category.full_title
-            ),
-        )
-        self.assertEqual(len(response.context['project_results']), 2)
 
     def test_post_advanced_short_input(self):
         """Test POST with short term (< 3 characters)"""
@@ -759,20 +725,20 @@ class TestProjectSearchResultsView(
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['testproject'])
-        self.assertEqual(len(response.context['project_results']), 1)
+        self.assertEqual(response.context['search_keywords'], {})
 
     def test_post_advanced_empty_input(self):
         """Test POST with empty term (should be ignored)"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
-                data={'m': 'testproject\r\nxxx', 'k': ''},
+                data={'m': 'testproject\r\nxxx\r\n', 'k': ''},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_terms'], ['testproject', 'xxx']
         )
-        self.assertEqual(len(response.context['project_results']), 2)
+        self.assertEqual(response.context['search_keywords'], {})
 
     def test_post_advanced_dupe(self):
         """Test POST with duplicate term"""
@@ -789,22 +755,15 @@ class TestProjectSearchResultsView(
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
-                data={
-                    'm': 'testproject',
-                    'k': (
-                        f'project:{self.project.sodar_uuid} '
-                        f'project:{self.category.sodar_uuid}'
-                    ),
-                },
+                data={'m': 'testproject', 'k': 'project:UUID1 project:UUID2'},
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['testproject'])
         # Only the last instance of the same keyword type is used
         self.assertEqual(
             response.context['search_keywords'],
-            {'project': str(self.category.sodar_uuid)},
+            {'project': 'uuid2'},
         )
-        self.assertEqual(len(response.context['project_results']), 1)
 
     def test_post_advanced_invalid_project_keyword(self):
         """Test POST with invalid UUID for project keyword"""
@@ -818,7 +777,6 @@ class TestProjectSearchResultsView(
         self.assertEqual(
             response.context['search_keywords'], {'project': 'not_a_uuid'}
         )
-        self.assertEqual(len(response.context['project_results']), 0)
 
     def test_post_advanced_search_string_parsing(self):
         """Test POST from ProjectAdvancedSearchView with a challenging string"""
@@ -859,146 +817,6 @@ class TestProjectSearchResultsView(
             response.context['search_terms'],
             ['alert test'],
         )
-
-    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
-    def test_get_disabled(self):
-        """Test GET with disabled search"""
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-            )
-            self.assertRedirects(response, reverse('home'))
-
-    def test_get_omit_app(self):
-        """Test GET with omitted app"""
-        self.event = self.make_event(
-            project=self.project,
-            app=APP_NAME,
-            user=self.user,
-            event_name='test_event',
-            description='description',
-            classified=False,
-            extra_data={'test_key': 'test_val'},
-        )
-        self.make_event_status(
-            event=self.event,
-            status_type='SUBMIT',
-            description='SUBMIT',
-            extra_data={'test_key': 'test_val'},
-        )
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-            )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['app_results']), 2)
-        with override_settings(PROJECTROLES_SEARCH_OMIT_APPS=['timeline']):
-            with self.login(self.user):
-                response = self.client.get(
-                    reverse('projectroles:search')
-                    + '?'
-                    + urlencode({'s': 'test'})
-                )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context['app_results']), 1)
-
-    def test_get_app_search_results_within_project(self):
-        """Test GET app search results within project by UUID"""
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode(
-                    {'s': 'test_event project:{self.project.sodar_uuid}'}
-                )
-            )
-        # Events are not found when search is restricted to self.project
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['app_results']), 2)
-        for app_result in response.context['app_results']:
-            if app_result['plugin'] == 'timeline':
-                self.assertFalse(app_result['has_results'])
-
-    def test_get_app_search_results_within_project_by_title(self):
-        """Test GET app search results within project by title"""
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test_event project:"{self.project.title}"'})
-            )
-        # Events are not found when search is restricted to self.project
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['app_results']), 2)
-        for app_result in response.context['app_results']:
-            if app_result['plugin'] == 'timeline':
-                self.assertFalse(app_result['has_results'])
-
-    def test_get_app_search_results_within_project2(self):
-        """Test GET app search results within project2"""
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test_event project:{project_new}'})
-            )
-        # Events are found when search is restricted to project_new
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['app_results']), 2)
-        for app_result in response.context['app_results']:
-            if app_result['plugin'] == 'timeline':
-                self.assertTrue(app_result['has_results'])
-
-    def test_get_app_search_results_within_category(self):
-        """Test GET app search results within category"""
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode(
-                    {'s': 'test_event project:{self.category.sodar_uuid}'}
-                )
-            )
-        # Events are found when search is restricted to the parent category
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['app_results']), 2)
-        for app_result in response.context['app_results']:
-            if app_result['plugin'] == 'timeline':
-                self.assertTrue(app_result['has_results'])
-
-    def test_get_app_search_results_within_category_by_title(self):
-        """Test GET app search results within category by title"""
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test_event project:{self.category.title}'})
-            )
-        # Events are found when search is restricted to the parent category
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['app_results']), 2)
-        for app_result in response.context['app_results']:
-            if app_result['plugin'] == 'timeline':
-                self.assertTrue(app_result['has_results'])
-
-
-class TestProjectAdvancedSearchView(
-    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
-):
-    """Tests for ProjectAdvancedSearchView"""
-
-    def test_get(self):
-        """Test ProjectAdvancedSearchView GET"""
-        with self.login(self.user):
-            response = self.client.get(reverse('projectroles:search_advanced'))
-        self.assertEqual(response.status_code, 200)
-
-    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
-    def test_get_disabled(self):
-        """Test GET with disabled search"""
-        with self.login(self.user):
-            response = self.client.get(reverse('projectroles:search_advanced'))
-            self.assertRedirects(response, reverse('home'))
 
 
 class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):

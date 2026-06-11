@@ -1350,6 +1350,71 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         super().setUp()
         self.url = reverse('projectroles:search')
 
+    def _assert_search_results_count(self, expected, url):
+        for expected_user, expected_count in expected:
+            self.login_and_redirect(
+                expected_user, url, 'sodar-pr-search-table', 'CLASS_NAME'
+            )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                '.sodar-pr-search-table tbody tr',
+            )
+            self.assertEqual(len(elements), expected_count)
+
+    def test_search_results_card_layout(self):
+        """Test project search results card layout"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        card = self.selenium.find_element(
+            By.XPATH,
+            '//div[@class="sodar-ajax-search-results" '
+            'and @data-app-name="projectroles"]',
+        )
+        card_title = card.find_element(By.TAG_NAME, 'h4').text
+        self.assertEqual(card_title, 'Projects (1)')
+
+    def test_search_results_table_layout(self):
+        """Test project search results table layout"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        thead = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table thead th',
+        )
+        self.assertEqual(len(thead), 2)
+        self.assertEqual(
+            [th.text for th in thead],
+            ['Project', 'Description'],
+        )
+        tbody_rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table tbody tr',
+        )
+        self.assertEqual(len(tbody_rows), 1)
+
+    def test_search_results_highlight(self):
+        """Test project search results highlight"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        name_cell = self.selenium.find_element(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table tbody tr td:nth-child(1)',
+        )
+        name_content = name_cell.find_element(By.TAG_NAME, 'a').get_attribute(
+            'innerHTML'
+        )
+        self.assertEqual(
+            name_content,
+            '<strong class="sodar-search-highlight">Test</strong>Category / '
+            '<strong class="sodar-search-highlight">Test</strong>Project',
+        )
+
     def test_search_results(self):
         """Test project search items visibility according to user permissions"""
         expected = [
@@ -1368,7 +1433,7 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'test'})
-        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_project(self):
         """Test project search items visibility with project type"""
@@ -1388,7 +1453,7 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'test type:project'})
-        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_keywords(self):
         """Test project search items visibility with project keyword"""
@@ -1412,27 +1477,35 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             + '?'
             + urlencode({'s': f'test project:{self.project.sodar_uuid}'})
         )
-        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+        self._assert_search_results_count(expected, url)
 
     def test_search_type_nonexisting(self):
         """Test project search items visibility with a nonexisting type"""
-        expected = [
-            (self.superuser, 0),
-            (self.user_owner_cat, 0),
-            (self.user_delegate_cat, 0),
-            (self.user_contributor_cat, 0),
-            (self.user_guest_cat, 0),
-            (self.user_viewer_cat, 0),
-            (self.user_finder_cat, 0),
-            (self.user_owner, 0),
-            (self.user_delegate, 0),
-            (self.user_contributor, 0),
-            (self.user_guest, 0),
-            (self.user_viewer, 0),
-            (self.user_no_roles, 0),
+        user_types = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+            self.user_no_roles,
         ]
         url = self.url + '?' + urlencode({'s': 'test type:Jaix1au'})
-        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+        for user_type in user_types:
+            self.login_and_redirect(user_type, url)
+            alert_elem = self.selenium.find_element(
+                By.CSS_SELECTOR,
+                'div.alert.alert-danger',
+            )
+            self.assertEqual(
+                alert_elem.text, 'Error: Search type "jaix1au" not recognized!'
+            )
 
     def test_search_project_link(self):
         """Test project link visibility according to user permissions"""
@@ -1453,7 +1526,12 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         ]
         url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(
-            expected, url, 'sodar-pr-project-search-link', attribute='class'
+            expected,
+            url,
+            'sodar-pr-project-search-link',
+            attribute='class',
+            wait_elem='sodar-pr-search-table',
+            wait_loc='CLASS_NAME',
         )
 
     def test_search_project_findable_link(self):
@@ -1475,7 +1553,12 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         ]
         url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(
-            expected, url, 'sodar-pr-project-findable', attribute='class'
+            expected,
+            url,
+            'sodar-pr-project-findable',
+            attribute='class',
+            wait_elem='sodar-pr-search-table',
+            wait_loc='CLASS_NAME',
         )
 
 

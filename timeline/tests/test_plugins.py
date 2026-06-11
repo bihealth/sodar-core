@@ -9,6 +9,8 @@ from projectroles.plugins import (
     BackendPluginPoint,
     SiteAppPluginPoint,
     PluginSearchResult,
+    PluginSearchResultColumn,
+    PluginSearchResultCell,
     PluginAPI,
 )
 from projectroles.tests.test_models import (
@@ -19,7 +21,11 @@ from projectroles.tests.test_models import (
 
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent, TL_STATUS_OK
-from timeline.plugins import STATS_DESC_USER_COUNT
+from timeline.plugins import STATS_DESC_USER_COUNT, get_event_full_description
+from timeline.templatetags.timeline_tags import (
+    get_timestamp,
+    get_plugin_lookup,
+)
 
 # from timeline.tests.test_models import TimelineEventMixin
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
@@ -96,6 +102,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
     def setUp(self):
         super().setUp()
         self.plugin = ProjectAppPluginPoint.get_plugin(PROJECT_PLUGIN_NAME)
+        self.plugin_lookup = get_plugin_lookup()
         self.event_kw = {
             'project': self.project,
             'app_name': 'projectroles',
@@ -162,7 +169,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(ret[0].category, SEARCH_RET_CAT)
         self.assertEqual(ret[0].title, SEARCH_RET_TITLE)
         self.assertEqual(ret[0].search_types, SEARCH_RET_TYPES)
-        self.assertEqual(ret[0].items, [])
+        self.assertEqual(ret[0].rows, [])
 
     def test_search_events(self):
         """Test search() with events"""
@@ -171,18 +178,50 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         event2 = self._add_event()
         ret = self.plugin.search(SEARCH_TERMS, self.user, Project.objects.all())
         self.assertEqual(len(ret), 1)
-        self.assertIsInstance(ret[0].items, list)
-        self.assertEqual(len(ret[0].items), 2)
-        self.assertEqual(ret[0].items[0], event2)
-        self.assertEqual(ret[0].items[1], event)
+        self.assertEqual(len(ret[0].columns), 3)
+        self.assertIsInstance(ret[0].columns[0], PluginSearchResultColumn)
+        self.assertEqual(
+            [col.title for col in ret[0].columns],
+            ['Timestamp', 'Description', 'Status'],
+        )
+        self.assertIsInstance(ret[0].rows, list)
+        self.assertEqual(len(ret[0].rows), 2)
+        self.assertIsInstance(ret[0].rows[0][0], PluginSearchResultCell)
+        self.assertEqual(
+            ret[0].rows[0][0].value,
+            get_timestamp(event2),
+        )
+        self.assertEqual(
+            ret[0].rows[0][1].value,
+            get_event_full_description(event2, self.plugin_lookup),
+        )
+        self.assertEqual(
+            ret[0].rows[0][2].value,
+            event2.get_status().status_type,
+        )
+        self.assertEqual(
+            ret[0].rows[1][0].value,
+            get_timestamp(event),
+        )
+        self.assertEqual(
+            ret[0].rows[1][1].value,
+            get_event_full_description(event, self.plugin_lookup),
+        )
+        self.assertEqual(
+            ret[0].rows[0][2].value,
+            event.get_status().status_type,
+        )
 
     def test_search_event_name(self):
         """Test search() with event name"""
         event = self._add_event()
         ret = self.plugin.search([EVENT_NAME], self.user, Project.objects.all())
         self.assertEqual(len(ret), 1)
-        self.assertEqual(len(ret[0].items), 1)
-        self.assertEqual(ret[0].items[0], event)
+        self.assertEqual(len(ret[0].rows), 1)
+        self.assertEqual(
+            ret[0].rows[0][1].value,
+            get_event_full_description(event, self.plugin_lookup),
+        )
 
     def test_search_event_name_display(self):
         """Test search() with event name in display formatting"""
@@ -191,8 +230,11 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
             ['Test Event'], self.user, Project.objects.all()
         )
         self.assertEqual(len(ret), 1)
-        self.assertEqual(len(ret[0].items), 1)
-        self.assertEqual(ret[0].items[0], event)
+        self.assertEqual(len(ret[0].rows), 1)
+        self.assertEqual(
+            ret[0].rows[0][1].value,
+            get_event_full_description(event, self.plugin_lookup),
+        )
 
     def test_search_invalid_terms(self):
         """Test search() with invalid terms"""
@@ -200,7 +242,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         ret = self.plugin.search(
             ['yuyaeQu7ma6aeFi2'], self.user, Project.objects.all()
         )
-        self.assertEqual(len(ret[0].items), 0)
+        self.assertEqual(len(ret[0].rows), 0)
 
     def test_search_mixed_terms(self):
         """Test search() with valid and invalid terms"""
@@ -210,7 +252,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
             self.user,
             Project.objects.all(),
         )
-        self.assertEqual(len(ret[0].items), 1)
+        self.assertEqual(len(ret[0].rows), 1)
 
     def test_search_no_perms(self):
         """Test search() as user with no permissions"""
@@ -220,7 +262,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         ret = self.plugin.search(
             SEARCH_TERMS, user_no_perms, Project.objects.all()
         )
-        self.assertEqual(len(ret[0].items), 0)
+        self.assertEqual(len(ret[0].rows), 0)
 
     def test_search_mixed_perms(self):
         """Test search() as user with mixed permissions"""
@@ -234,12 +276,16 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.event_kw['project'] = project_new
         project_event_new = self._add_event()
         ret = self.plugin.search(SEARCH_TERMS, user_new, Project.objects.all())
-        self.assertEqual(len(ret[0].items), 1)
-        self.assertEqual(ret[0].items[0], project_event_new)
+        self.assertEqual(len(ret[0].rows), 1)
+        plugin_lookup = TimelineAPI()
+        self.assertEqual(
+            ret[0].rows[0][1].value,
+            get_event_full_description(project_event_new, plugin_lookup),
+        )
         ret = self.plugin.search(
             SEARCH_TERMS, self.user_owner, Project.objects.all()
         )
-        self.assertEqual(len(ret[0].items), 2)
+        self.assertEqual(len(ret[0].rows), 2)
 
     def test_search_project_classified_owner(self):
         """Test search() with classified project event as owner"""
@@ -248,7 +294,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         ret = self.plugin.search(
             SEARCH_TERMS, self.user_owner, Project.objects.all()
         )
-        self.assertEqual(len(ret[0].items), 1)
+        self.assertEqual(len(ret[0].rows), 1)
 
     def test_search_project_classified_contributor(self):
         """Test search() with classified project event as contributor"""
@@ -259,14 +305,14 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         ret = self.plugin.search(
             SEARCH_TERMS, user_contrib, Project.objects.all()
         )
-        self.assertEqual(len(ret[0].items), 0)
+        self.assertEqual(len(ret[0].rows), 0)
 
     def test_search_site_superuser(self):
         """Test search() with site event as superuser"""
         self.event_kw['project'] = None
         self._add_event()
         ret = self.plugin.search(SEARCH_TERMS, self.user, Project.objects.all())
-        self.assertEqual(len(ret[0].items), 1)
+        self.assertEqual(len(ret[0].rows), 1)
 
     def test_search_site_regular_user(self):
         """Test search() with site event as regular user"""
@@ -275,7 +321,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         ret = self.plugin.search(
             SEARCH_TERMS, self.user_owner, Project.objects.all()
         )
-        self.assertEqual(len(ret[0].items), 1)
+        self.assertEqual(len(ret[0].rows), 1)
 
     def test_search_site_classified_superuser(self):
         """Test search() with classified site event as superuser"""
@@ -283,7 +329,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.event_kw['classified'] = True
         self._add_event()
         ret = self.plugin.search(SEARCH_TERMS, self.user, Project.objects.all())
-        self.assertEqual(len(ret[0].items), 1)
+        self.assertEqual(len(ret[0].rows), 1)
 
     def test_search_site_classified_regular_user(self):
         """Test search() with classified site event as regular user"""
@@ -293,7 +339,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         ret = self.plugin.search(
             SEARCH_TERMS, self.user_owner, Project.objects.all()
         )
-        self.assertEqual(len(ret[0].items), 0)
+        self.assertEqual(len(ret[0].rows), 0)
 
     def test_search_type(self):
         """Test search() with defined search type"""
@@ -304,7 +350,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
             Project.objects.all(),
             type='timeline',
         )
-        self.assertEqual(len(ret[0].items), 1)
+        self.assertEqual(len(ret[0].rows), 1)
 
     def test_search_type_invalid(self):
         """Test search() with invalid search type"""
@@ -315,7 +361,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
             Project.objects.all(),
             type='raTho0Oo',
         )
-        self.assertEqual(len(ret[0].items), 0)
+        self.assertEqual(len(ret[0].rows), 0)
 
 
 class TestBackendPlugin(TimelinePluginTestBase):

@@ -243,8 +243,10 @@ Implementing the following is **optional**:
     definition for an example.
 ``search_types``
     Implement if searching the data of the app is enabled.
-``search_template``
-    Implement if searching the data of the app is enabled.
+``search_css``
+    Path to CSS file styling the search results for this plugin. Implement if
+    searching the data of the app is enabled and if CSS needs to be customized
+    in the search results.
 ``project_list_columns``
     Optional custom columns do be shown in the project list. See the plugin
     point definition for an example.
@@ -609,9 +611,12 @@ It is expected to have the content in a ``card-body`` container:
 Project Search API and Template
 ===============================
 
-If you want to implement search in your project app, you need to implement the
-``search()`` method in your plugin, as well as a template for displaying the
-results.
+If you want to implement search in your project app, you need to implement
+the ``search()`` method in your plugin. The results will be loaded
+asynchronously and rendered according to the structure specified in the
+:py:class:`PluginSearchResult` objects returned by the ``search()`` method. The
+style of the search results table can be customized by providing the path to a
+CSS file in the ``search_css`` attribute.
 
 .. hint::
 
@@ -659,18 +664,30 @@ The return data is a list of one or more ``PluginSearchResult`` objects. The
 objects are expected to be split between search categories, of which there can
 be one or multiple. This is useful where e.g. the same type of HTML list isn't
 suitable for all returnable types. If only returning one type of data, you can
-use e.g. ``all`` as your only category. Example of a return data:
+use e.g. ``all`` as your only category. Example of a return table with two
+columns and one row:
 
 .. code-block:: python
 
-    from projectroles.plugins import PluginSearchResult
+    from projectroles.plugins import (
+        PluginSearchResult, PluginSearchResultColumn, PluginSearchResultCell
+    )
     # ...
     return [
         PluginSearchResult(
             category='all',  # Category ID to be used in your search template
             title='List title',  # Title of the result set
             search_types=[],  # Object types included in this category
-            items=[],  # List or QuerySet of objects returned by search
+            columns=[  # List of column specifictations for the results table
+                PluginSearchResultColumn(title='First field'),
+                PluginSearchResultColumn(title='Second field'),
+            ],
+            rows=[  # List of row specifications, each row is a list of cells
+                [
+                    PluginSearchResultCell(value='Result name'),
+                    PluginSearchResultCell(value='Result description')
+                ],
+            ],
         )
     ]
 
@@ -680,48 +697,42 @@ use e.g. ``all`` as your only category. Example of a return data:
     has been deprecated and support for it will be removed in SODAR Core v1.1.
 
 
-Search Template
----------------
+Search Results
+--------------
 
-Projectroles will provide your template context the ``search_results`` object,
-which corresponds to the result dict of the aforementioned function. There are
-also includes for formatting the results list, which you are encouraged to use.
+Projectroles will build an HTML table from the search results using
+the structure of the ``PluginSearchResult`` object. The ``title`` and
+``table_class`` attributes define the title and HTML class of the
+whole table. The ``columns`` attribute specifies, for each field, the
+title and the HTML class assigned to cells in that field. Furthermore,
+``PluginSearchResultColumn`` objects can be used to customize the display
+of the search results for that field using one or more of the following
+attributes:
 
-Example of a simple results template, in case of a single ``all`` category:
+- ``overflow`` (bool): whether the column content is allowed to overflow;
+- ``value_html`` (bool): whether the ``value`` field of corresponding
+  ``PluginSearchResultCell`` objects should be interpret as HTML (by default,
+  it is treated as plain text);
+- ``highlight`` (bool): if true, the search terms will be highlighted in this
+  column.
 
-.. code-block:: django
+The ``rows`` attribute contains the actual data returned by the search. Each
+row is a list of ``PluginSearchResultCell`` objects, each object corresponding
+to a column of the table. Typically, cells contain either plain text or
+link anchors. This type of cell can be specified using the ``value`` and
+``value_url`` attributes. If ``value_url`` is present, the cell will be a
+hyperlink with that URL as the destination. For more complex types of cells,
+for example if you want to include badges or multiple links, set ``value_html``
+to True for the corresponding column and put the HTML directly in the ``value``
+attribute of ``PluginSearchResultCell``. In this case, the ``value_url``
+attribute will be ignored. In addition to the HTML class assigned to the whole
+column, an extra class for individual cells can be set with the ``cell_class``
+attribute.
 
-   {% if search_results.all.items|length > 0 %}
-
-     {# Include standard search list header here #}
-     {% include 'projectroles/_search_header.html' with search_title=search_results.all.title result_count=search_results.all.items|length %}
-
-     {# Set up a table with your results #}
-     <table class="table table-striped sodar-card-table sodar-search-table" id="sodar-ff-search-table">
-       <thead>
-         <tr>
-           <th>Name</th>
-           <th>Some Other Field</th>
-         </tr>
-      </thead>
-      <tbody>
-        {% for item in search_results.all.items %}
-          <tr>
-            <td>
-              <a href="#link_to_somewhere_in your_app">{{ item.name }}</a>
-            </td>
-            <td>
-              {{ item.some_other_field }}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    {# Include standard search list footer here #}
-    {% include 'projectroles/_search_footer.html' %}
-
-  {% endif %}
+The style of the app's search results table can be customized by setting the
+path to a CSS file in the plugin's ``search_css`` attribute. Within this CSS
+file, the correct table can be targeted by using the HTML class specified in
+the search results.
 
 
 .. _dev_project_app_rest_api:
