@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Example production configuration (#1886)
 - **Adminalerts**
     - Alert dismissal (#1917)
 - **Projectroles**
@@ -23,6 +25,7 @@ Added
     - Project limiting in search via ``project`` keyword (#1191, #1898)
     - Plugin search API ``projects`` queryset kwarg (#1899)
     - Site app message custom dismissal URL support (#1918)
+    - ``removeroles`` management command pseudonymization option (#1923)
 - **Siteinfo**
     - Client-side statistics retrieval (#1848)
 
@@ -48,6 +51,7 @@ Changed
     - Make ``modify_assignment()`` ``request`` arg optional (#1875)
     - Update default single sign-on button legend (#1883)
     - Update UI tests to work with Selenium v4.44 ``get_attribute()`` (#1938)
+    - Update search with client-side implementation (#22)
 
 Fixed
 -----
@@ -64,6 +68,8 @@ Fixed
     - Search results template inconsistent header size (#1904)
     - ``RoleAssignmentCreateView`` delegate limit check with ``PROJECTROLES_DELEGATE_LIMIT=0`` (#1921)
     - ``RoleAssignmentCreateView`` missing role promotion permission check (#1935)
+- **Timeline**
+    - Search result descriptions not capitalized (#1926)
 
 Removed
 -------

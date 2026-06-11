@@ -20,7 +20,8 @@ Django development site, as well as a CI and issue tracker setup.
 ``bgjobs``
     :ref:`app_bgjobs`.
 ``config``
-    Example Django site configuration.
+    Example Django site configuration files for development, testing and
+    production deployment.
 ``docs``
     This documentation.
 ``example_backend_app``

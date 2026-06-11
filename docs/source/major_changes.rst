@@ -17,17 +17,19 @@ Release Highlights
 ==================
 
 - Add admin alert dismissal
+- Add adminalerts alert list viewing for authenticated non-superusers
 - Add project limiting to search via UUID or partial title
 - Add client-side siteinfo statistics retrieval
 - Add reusable host confirmation delete view
 - Add transferroles management command
 - Add optional user name display in user dropdown
 - Add user active status in remote sync
+- Add removeroles management command pseudonymization option
 - Add plugin search API pre-filtered project queryset
 - Add general purpose HTTP 503 API exception class
 - Add site app message custom dismissal URL support
-- Enable adminalerts alert list viewing for authenticated non-superusers
-- Update plugin search API args for project queryset and simplified keywords
+- Update search for client-side querying
+- Update search API for client-side search, project queryset and simplified keywords
 - Replace Markupfield and Pagedown with Martor for Markdown rendering
 - Replace Black and Flake8 with Ruff for linting and formatting
 - Update Makefile for check, format and lint commands

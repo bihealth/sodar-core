@@ -26,6 +26,12 @@ env accordingly. For development and testing, it is highly recommended to set
 place the env variables into a ``.env`` file in the root directory of your
 Django site repository. See ``env.example`` for an example of such a file.
 
+.. hint::
+
+    Although SODAR Core is not intended to be deployed in production by itself,
+    we provide an example of a production configuration in
+    ``config/settings/production.py``. You can use this as a starting point for
+    your own site's production settings.
 
 Site Package and Paths
 ======================
