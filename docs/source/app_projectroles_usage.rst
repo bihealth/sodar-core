@@ -208,6 +208,12 @@ and *project viewer* (limited access to basic project information).
     Public access can only be set for projects. Categories will be visible
     for users with access to any category or project under them.
 
+.. note::
+
+    Public access status will **not** be synchronized to target sites if remote
+    project synchronization is used. Public access status has to be explicitly
+    granted on the target site for each project.
+
 Top Level Category Public Statistics
 ------------------------------------
 
