@@ -1,6 +1,7 @@
 """Tests for management commands in the projectroles app"""
 
 import os
+import random
 
 from tempfile import NamedTemporaryFile
 from typing import Union
@@ -1166,6 +1167,10 @@ class TestRemoveRoles(
         self.user_owner_cat = self.make_user('user_owner_cat')
         self.user_owner = self.make_user('user_owner')
         self.user = self.make_user('user')
+        self.user.first_name = 'Max'
+        self.user.last_name = 'Mustermann'
+        self.user.name = 'Max Mustermann'
+        self.user.save()
         # Init projects
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
@@ -1237,6 +1242,39 @@ class TestRemoveRoles(
         self.user.refresh_from_db()
         self.assertEqual(self.user.is_active, False)
 
+    def test_command_pseudonymize(self):
+        """Test user deactivation with pseudonymization"""
+        self.assertTrue(self.user.is_active)
+        call_command(
+            self.cmd_name, user=self.user, deactivate=True, pseudonymize=True
+        )
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertEqual(self.user.name, '')
+        self.assertEqual(self.user.first_name, '')
+        self.assertEqual(self.user.last_name, '')
+        self.assertEqual(self.user.email, '')
+        self.assertTrue(self.user.username.startswith('deactivated'))
+
+    def test_command_pseudonymize_dupe_username(self):
+        """Test username pseudonymization with duplicates"""
+        random.seed(13)
+        call_command(
+            self.cmd_name, user=self.user, deactivate=True, pseudonymize=True
+        )
+        random.seed(13)
+        call_command(
+            self.cmd_name,
+            user=self.user_owner,
+            deactivate=True,
+            pseudonymize=True,
+        )
+        self.user.refresh_from_db()
+        self.user_owner.refresh_from_db()
+        self.assertTrue(self.user.username.startswith('deactivated'))
+        self.assertTrue(self.user_owner.username.startswith('deactivated'))
+        self.assertNotEqual(self.user.username, self.user_owner.username)
+
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_command_remote(self):
         """Test removing roles from remote project"""
@@ -1306,6 +1344,29 @@ class TestRemoveRoles(
         self.assertEqual(self.project.has_role(self.user), True)
         self.user.refresh_from_db()
         self.assertEqual(self.user.is_active, True)
+
+    def test_command_check_pseudonymize(self):
+        """Test command with check mode and pseudonymization"""
+        self.make_assignment(self.category, self.user, self.role_contributor)
+        self.make_assignment(self.project, self.user, self.role_guest)
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(self.user.is_active, True)
+        call_command(
+            self.cmd_name,
+            user=self.user,
+            check=True,
+            deactivate=True,
+            pseudonymize=True,
+        )
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.is_active, True)
+        self.assertNotEqual(self.user.first_name, '')
+        self.assertNotEqual(self.user.last_name, '')
+        self.assertNotEqual(self.user.name, '')
+        self.assertNotEqual(self.user.email, '')
 
     def test_command_owner_unset(self):
         """Test removing owner with unset new owner"""
