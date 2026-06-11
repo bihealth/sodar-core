@@ -1361,6 +1361,49 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             )
             self.assertEqual(len(elements), expected_count)
 
+    def _assert_search_results_filtering_count(
+        self, filter, before, after, url
+    ):
+        """
+        Utility function to test search result table filtering.
+
+        :param filter: The string to search (str)
+        :param before: Expected number of results before filtering (int)
+        :param after: Expected number of results after filtering (int)
+        :param url: URL with the search query (str)
+        """
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        elements = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table tbody tr',
+        )
+        self.assertEqual(len(elements), before)
+        f_input = self.selenium.find_element(
+            By.XPATH,
+            '//div[@data-app-name="projectroles"]'
+            '//input[contains(@class, "sodar-search-filter")]',
+        )
+        f_input.send_keys(filter)
+        if after == 0:
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                '.sodar-pr-search-table tbody tr',
+            )
+            self.assertEqual(len(elements), 1)
+            self.assertEqual(elements[0].text, 'No matching records found')
+        else:
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element(
+                    By.CSS_SELECTOR, '.sodar-pr-search-table tbody tr .dt-empty'
+                )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                '.sodar-pr-search-table tbody tr',
+            )
+            self.assertEqual(len(elements), after)
+
     def test_search_results_card_layout(self):
         """Test project search results card layout"""
         url = self.url + '?' + urlencode({'s': 'test'})
@@ -1414,6 +1457,25 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             '<strong class="sodar-search-highlight">Test</strong>Category / '
             '<strong class="sodar-search-highlight">Test</strong>Project',
         )
+
+    def test_search_results_ordering(self):
+        """Test project search results orderable columns"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        orderable_columns = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table .dt-orderable-desc',
+        )
+        self.assertEqual([col.text for col in orderable_columns], ['Project'])
+
+    def test_search_results_filtering(self):
+        """Test project search results filterable columns"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        # Filter on Project column
+        self._assert_search_results_filtering_count('test', 1, 1, url)
+        self._assert_search_results_filtering_count('abcde', 1, 0, url)
 
     def test_search_results(self):
         """Test project search items visibility according to user permissions"""

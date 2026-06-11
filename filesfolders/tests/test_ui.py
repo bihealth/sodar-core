@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 
 # Projectroles dependency
@@ -475,6 +476,49 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             )
             self.assertEqual(len(elements), expected_count)
 
+    def _assert_search_results_filtering_count(
+        self, filter, before, after, url
+    ):
+        """
+        Utility function to test search result table filtering.
+
+        :param filter: The string to search (str)
+        :param before: Expected number of results before filtering (int)
+        :param after: Expected number of results after filtering (int)
+        :param url: URL with the search query (str)
+        """
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-ff-search-table', 'CLASS_NAME'
+        )
+        elements = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-ff-search-table tbody tr',
+        )
+        self.assertEqual(len(elements), before)
+        f_input = self.selenium.find_element(
+            By.XPATH,
+            '//div[@data-app-name="filesfolders"]'
+            '//input[contains(@class, "sodar-search-filter")]',
+        )
+        f_input.send_keys(filter)
+        if after == 0:
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                '.sodar-ff-search-table tbody tr',
+            )
+            self.assertEqual(len(elements), 1)
+            self.assertEqual(elements[0].text, 'No matching records found')
+        else:
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element(
+                    By.CSS_SELECTOR, '.sodar-ff-search-table tbody tr .dt-empty'
+                )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                '.sodar-ff-search-table tbody tr',
+            )
+            self.assertEqual(len(elements), after)
+
     def test_search_results_table_layout(self):
         """Test search results table layout"""
         url = self.url + '?' + urlencode({'s': 'descriptio'})
@@ -513,6 +557,37 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             name_content,
             '<strong class="sodar-search-highlight">folder_con</strong>tributor',
         )
+
+    def test_search_results_ordering(self):
+        """Test search results orderable columns"""
+        url = self.url + '?' + urlencode({'s': 'description'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-ff-search-table', 'CLASS_NAME'
+        )
+        orderable_columns = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-ff-search-table .dt-orderable-desc',
+        )
+        self.assertEqual(
+            [col.text for col in orderable_columns],
+            ['Name', 'Type', 'Project', 'Size'],
+        )
+
+    def test_search_results_filtering(self):
+        """Test search results filterable columns"""
+        url = self.url + '?' + urlencode({'s': 'description'})
+        # Filter on Name column
+        self._assert_search_results_filtering_count('contributor', 6, 3, url)
+        # Filter on Type column
+        self._assert_search_results_filtering_count('hyperlink', 6, 0, url)
+        # Filter on Project column
+        self._assert_search_results_filtering_count('testproject', 6, 6, url)
+        # Filter on Size column
+        self._assert_search_results_filtering_count('bytes', 6, 0, url)
+        # Filter on Description column
+        self._assert_search_results_filtering_count('description', 6, 6, url)
+        # Failing filter
+        self._assert_search_results_filtering_count('qdrwfu;p', 6, 0, url)
 
     def test_search_results(self):
         """Test search items visibility according to user permissions"""
