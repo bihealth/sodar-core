@@ -419,9 +419,7 @@ class ProjectAppPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(
-        self, _extra_data: dict, _name: str
-    ) -> Optional[str]:
+    def get_extra_data_link(self, extra_data: dict, name: str) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
@@ -577,9 +575,7 @@ class BackendPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(
-        self, _extra_data: dict, _name: str
-    ) -> Optional[str]:
+    def get_extra_data_link(self, extra_data: dict, name: str) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
@@ -683,9 +679,7 @@ class SiteAppPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(
-        self, _extra_data: dict, _name: str
-    ) -> Optional[str]:
+    def get_extra_data_link(self, extra_data: dict, name: str) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 

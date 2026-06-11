@@ -83,6 +83,13 @@ tables by providing a CSS file. In summary, the following changes affected
 - Add the ``search_css`` attribute;
 - Update the implementaion of the ``search()`` method.
 
+Plugin get_extra_data_link() Changes
+------------------------------------
+
+The names of arguments for ``get_extra_data_link()`` plugin methods have
+changed. If you supply them as kwargs in your implementations, please review
+the current naming.
+
 Timeline Template Tag get_app_icon_html() Replaced by get_app_badge()
 ---------------------------------------------------------------------
 

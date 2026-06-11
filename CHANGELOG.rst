@@ -53,6 +53,7 @@ Changed
     - Update default single sign-on button legend (#1883)
     - Update UI tests to work with Selenium v4.44 ``get_attribute()`` (#1938)
     - Update search with client-side implementation (#22)
+    - Rename ``get_extra_data_link()`` args (#837)
 
 Fixed
 -----
