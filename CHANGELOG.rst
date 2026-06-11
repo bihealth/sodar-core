@@ -26,6 +26,7 @@ Added
     - Plugin search API ``projects`` queryset kwarg (#1899)
     - Site app message custom dismissal URL support (#1918)
     - ``removeroles`` management command pseudonymization option (#1923)
+    - ``get_value()`` common template tag (#1854)
 - **Siteinfo**
     - Client-side statistics retrieval (#1848)
 
@@ -77,6 +78,8 @@ Removed
 - **General**
     - Black and flake8 dependencies (#1881)
     - Legacy flake8 and pycodestyle configuration (#1881)
+- **Bgjobs**
+    - ``keyvalue()`` template tag (#1854)
 - **Projectroles**
     - ``AppSetting.user_modifiable`` field (#1721)
     - Deprecated base test classes and mixins (#1830)

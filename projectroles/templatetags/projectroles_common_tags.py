@@ -505,3 +505,8 @@ def get_class(obj: Any, lower: bool = False) -> str:
 def split(s: str, sep: str) -> list:
     """Split string by separator"""
     return s.split(sep)
+
+
+@register.filter
+def get_value(data: dict, key: str) -> Any:
+    return data.get(key)

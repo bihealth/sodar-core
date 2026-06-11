@@ -673,6 +673,12 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         s = 'xyz'
         self.assertEqual(c_tags.split(s, 'y'), ['x', 'z'])
 
+    def test_get_value(self):
+        """Test get_value()"""
+        d = {'a': 1}
+        self.assertEqual(c_tags.get_value(d, 'a'), 1)
+        self.assertEqual(c_tags.get_value(d, 'b'), None)
+
 
 class TestProjectrolesRoleTags(TemplateTagTestBase):
     """Tests for template tags in projectroles_role_tags"""
