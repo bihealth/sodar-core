@@ -2,7 +2,7 @@
 
 import base64
 import socket
-
+import time
 
 from datetime import datetime
 from typing import Optional, Union
@@ -29,6 +29,7 @@ from rest_framework.test import APIClient
 from selenium import webdriver
 from selenium.common.exceptions import (
     NoSuchElementException,
+    SessionNotCreatedException,
     StaleElementReferenceException,
 )
 from selenium.webdriver.common.by import By
@@ -697,7 +698,19 @@ class SeleniumSetupMixin:
         options.add_experimental_option(
             'prefs', {'profile.password_manager_leak_detection': False}
         )
-        self.selenium = webdriver.Chrome(options=options)
+        # Initialize selenium with Chrome
+        # Workaround for init randomly failing in SlopHub CI (see #1936)
+        self.selenium = None
+        for i in range(5):
+            try:
+                self.selenium = webdriver.Chrome(options=options)
+                break
+            except SessionNotCreatedException:
+                if i < 4:
+                    print('Selenium session creation failed, retrying..')
+                    time.sleep(2)
+        if not self.selenium:
+            self.fail('Selenium initialization failed, maximum retries reached')
 
 
 class LiveUserMixin:

@@ -27,6 +27,7 @@ Added
     - Site app message custom dismissal URL support (#1918)
     - ``removeroles`` management command pseudonymization option (#1923)
     - ``get_value()`` common template tag (#1854)
+    - ``SeleniumSetupMixin`` init retry CI workaround (#1936)
 - **Siteinfo**
     - Client-side statistics retrieval (#1848)
 
