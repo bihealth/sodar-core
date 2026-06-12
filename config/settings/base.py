@@ -525,7 +525,7 @@ if AXES_ENABLED:
     AXES_COOLOFF_TIME = env.int('AXES_COOLOFF_TIME', None)
     # Lockout parameters. by default, block by username only (GRPR compliance)
     AXES_LOCKOUT_PARAMETERS = env.list(
-        'AXES_LOCKOUT_PARAMETERS', default=['username']
+        'AXES_LOCKOUT_PARAMETERS', default=['ip_address', 'username']
     )
     # Only enable lock for admin site if True
     AXES_ONLY_ADMIN_SITE = env.bool('AXES_ONLY_ADMIN_SITE', False)

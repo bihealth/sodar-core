@@ -46,6 +46,7 @@ Changed
     - Move plugin search API ``search_type`` in keywords (#1901)
     - Replace plugin search API ``keywords`` kwarg with ``**kwargs`` (#1902)
     - Upgrade GitHub Actions in CI (#1913)
+    - Update ``AXES_LOCKOUT_PARAMETERS`` setting default value (#1878)
 - **Adminalerts**
     - Enable ``AdminAlertListView`` viewing for authenticated non-superusers (#1916)
 - **Projectroles**

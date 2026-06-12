@@ -123,6 +123,16 @@ REST API View Changes
     * **NOTE:** If called with API version ``1.0`` or ``2.0``, user activity status will not be synced to target sites.
     * **NOTE:** The activity status for superusers is not synced.
 
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.15.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project.
+
 
 v1.3.2 (2026-01-12)
 *******************
