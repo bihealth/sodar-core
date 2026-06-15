@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
-from projectroles.tests.base import ProjectUITestBase
+from projectroles.tests.base import ProjectUITestBase, SearchUITestMixin
 from projectroles.utils import build_secret
 
 from filesfolders.tests.test_models import (
@@ -392,7 +392,9 @@ class TestProjectFileView(
         )
 
 
-class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
+class TestSearch(
+    FolderMixin, FileMixin, HyperLinkMixin, SearchUITestMixin, ProjectUITestBase
+):
     """Tests for the project search UI functionalities"""
 
     def setUp(self):
@@ -464,17 +466,6 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
         )
         self.url = reverse('projectroles:search')
 
-    def _assert_search_results_count(self, expected, url):
-        for expected_user, expected_count in expected:
-            self.login_and_redirect(
-                expected_user, url, 'sodar-ff-search-table', 'CLASS_NAME'
-            )
-            elements = self.selenium.find_elements(
-                By.CSS_SELECTOR,
-                '.sodar-ff-search-table tbody tr',
-            )
-            self.assertEqual(len(elements), expected_count)
-
     def test_search_results_table_layout(self):
         """Test search results table layout"""
         url = self.url + '?' + urlencode({'s': 'descriptio'})
@@ -514,6 +505,38 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             '<strong class="sodar-search-highlight">folder_con</strong>tributor',
         )
 
+    def test_search_results_order(self):
+        """Test search results orderable columns"""
+        url = self.url + '?' + urlencode({'s': 'description'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-ff-search-table', 'CLASS_NAME'
+        )
+        orderable_columns = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-ff-search-table .dt-orderable-desc',
+        )
+        self.assertEqual(
+            [col.text for col in orderable_columns],
+            ['Name', 'Type', 'Project', 'Size'],
+        )
+
+    def test_search_results_filter(self):
+        """Test search results filterable columns"""
+        url = self.url + '?' + urlencode({'s': 'description'})
+        ff_args = [url, 'filesfolders', 'sodar-ff-search-table']
+        # Filter on Name column
+        self.assert_search_filter_count('contributor', 6, 3, *ff_args)
+        # Filter on Type column
+        self.assert_search_filter_count('hyperlink', 6, 0, *ff_args)
+        # Filter on Project column
+        self.assert_search_filter_count('testproject', 6, 6, *ff_args)
+        # Filter on Size column
+        self.assert_search_filter_count('bytes', 6, 0, *ff_args)
+        # Filter on Description column
+        self.assert_search_filter_count('description', 6, 6, *ff_args)
+        # Failing filter
+        self.assert_search_filter_count('qdrwfu;p', 6, 0, *ff_args)
+
     def test_search_results(self):
         """Test search items visibility according to user permissions"""
         expected = [
@@ -532,7 +555,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'description'})
-        self._assert_search_results_count(expected, url)
+        self.assert_search_count(expected, url, 'sodar-ff-search-table')
 
     def test_search_type_file(self):
         """Test search items visibility with 'file' type"""
@@ -552,7 +575,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'file type:file'})
-        self._assert_search_results_count(expected, url)
+        self.assert_search_count(expected, url, 'sodar-ff-search-table')
 
     def test_search_type_folder(self):
         """Test search items visibility with 'folder' type"""
@@ -572,7 +595,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'folder type:folder'})
-        self._assert_search_results_count(expected, url)
+        self.assert_search_count(expected, url, 'sodar-ff-search-table')
 
     def test_search_type_link(self):
         """Test search items visibility with 'link' as type"""
@@ -592,7 +615,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'link type:link'})
-        self._assert_search_results_count(expected, url)
+        self.assert_search_count(expected, url, 'sodar-ff-search-table')
 
     def test_search_type_nonexisting(self):
         """Test search items visibility with a nonexisting type"""

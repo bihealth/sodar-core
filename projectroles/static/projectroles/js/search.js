@@ -1,4 +1,4 @@
-function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
+function makeSearchResultCardHeader(appIcon, cardTitle, resLength) {
   const resTitleElement = ' ' + cardTitle
   const resLengthElement = resLength ? ` (${resLength})` : ''
   const paginationOptions = [{
@@ -24,10 +24,7 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
     value: -1,
     label: 'All'
   }]
-  const card = $('<div>', {
-    class: 'card sodar-search-card'
-  })
-  const cardHeader = $('<div>', {
+  return $('<div>', {
     class: 'card-header'
   }).append(
     $('<h4>').append(
@@ -52,6 +49,13 @@ function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
       ),
     ),
   )
+}
+
+function makeSearchResultsCard(appIcon, cardTitle, resLength, resLimit) {
+  const card = $('<div>', {
+    class: 'card sodar-search-card'
+  })
+  cardHeader = makeSearchResultCardHeader(appIcon, cardTitle, resLength)
   card.append(cardHeader)
   if (resLimit > 0 && resLength >= resLimit) {
     const cardResultLimitWarning = $('<div>', {
@@ -124,6 +128,97 @@ function makeSearchResultsTable(result) {
   return table
 }
 
+function renderSearchResults(parentContainer, result, searchTerms) {
+  const card = makeSearchResultsCard(
+    parentContainer.data('app-icon'),
+    result.title,
+    result.rows.length,
+    result.result_limit,
+  )
+  parentContainer.append(card)
+  cardBody = card.find('.sodar-search-card-body')
+  if (!result.rows.length) {
+    const emptyTable = $('<table>', {
+      class: 'table table-striped sodar-card-table',
+    })
+    if (result.table_class) {
+      emptyTable.addClass(result.table_class)
+    }
+    // Append an empty table to simplify UI unit tests
+    cardBody.append(
+      emptyTable,
+      $('<p>').attr('class',
+        'sodar-search-not-found-alert font-italic text-center m-3')
+      .text('No results found.')
+    )
+    // Disable pagination and filtering for this card
+    card.find('.sodar-search-page-length').prop('disabled',
+      'disabled')
+    card.find('.sodar-search-filter').prop('disabled',
+      'disabled')
+    return
+  }
+  const table = makeSearchResultsTable(result)
+  cardBody.append(table)
+
+  /************************
+   DataTable Initialization
+   ************************/
+
+  unorderableColumns = []
+  unsearchableColumns = []
+  for (let i = 0; i < result.columns.length; ++i) {
+    const column = result.columns[i]
+    if (!column.orderable) {
+      unorderableColumns.push(i)
+    }
+    if (!column.searchable) {
+      unsearchableColumns.push(i)
+    }
+  }
+  console.log(unorderableColumns)
+  const tableDT = $(table).DataTable({
+    order: [], // Disable default ordering
+    scrollX: false,
+    autoWidth: false,
+    paging: true,
+    pagingType: 'full_numbers',
+    pageLength: window.searchPagination,
+    lengthChange: true,
+    scrollCollapse: true,
+    columnDefs: [{
+      orderable: false,
+      targets: unorderableColumns,
+    }, {
+      searchable: false,
+      targets: unsearchableColumns,
+    }, ],
+    info: false,
+    language: {
+      paginate: sodarDataTablesPaginate
+    },
+    dom: 'tp',
+  })
+
+  /*********************
+   Cosmetic Improvements
+   *********************/
+
+  // Overflow status
+  modifyCellOverflow()
+  // Hide pagination and disable page dropdown if only one page
+  if (tableDT.page.info().pages === 1) {
+    card.find('.sodar-search-page-length').prop('disabled', 'disabled')
+    $(table).next('.dt-paging').hide()
+  }
+  // Highlight search terms
+  highlightSearchResults(
+    table,
+    result.columns,
+    JSON.parse(searchTerms),
+  )
+}
+
 function highlightSearchResults(table, columns, searchTerms) {
   const re = new RegExp(searchTerms.join('|'), 'ig')
   for (let fieldIdx in columns) {
@@ -172,64 +267,8 @@ $(document).ready(function () {
         )
         return
       }
-      for (let i = 0; i < data['results'].length; ++i) {
-        const result = data['results'][i]
-        const card = makeSearchResultsCard(
-          $(this).data('app-icon'),
-          result.title,
-          result.rows.length,
-          result.result_limit,
-        )
-        $(this).append(card)
-        if (!result.rows.length) {
-          const emptyTable = $('<table>', {
-            class: 'table table-striped sodar-card-table',
-          })
-          if (result.table_class) {
-            emptyTable.addClass(result.table_class)
-          }
-          $(this).find('.sodar-search-card-body').append(
-            emptyTable,
-            $('<p>').attr('class', 'sodar-search-not-found-alert font-italic text-center m-3')
-            .text('No results found.')
-          )
-          // Disable pagination and filtering for this card
-          $(this).find('.sodar-search-page-length').prop('disabled',
-            'disabled')
-          $(this).find('.sodar-search-filter').prop('disabled',
-            'disabled')
-          continue
-        }
-        const table = makeSearchResultsTable(result)
-        $(this).find('.sodar-search-card-body').append(table)
-        $(table).DataTable({
-          order: [], // Disable default ordering
-          scrollX: false,
-          autoWidth: false,
-          paging: true,
-          pagingType: 'full_numbers',
-          pageLength: window.searchPagination,
-          lengthChange: true,
-          scrollCollapse: true,
-          info: false,
-          language: {
-            paginate: sodarDataTablesPaginate
-          },
-          dom: 'tp',
-        })
-        // Hide pagination and disable page dropdown if only one page
-        if ($(table).DataTable().page.info().pages === 1) {
-          $(table).closest('.sodar-search-card')
-            .find('.sodar-search-page-length')
-            .prop('disabled', 'disabled')
-          $(table).next('.dt-paging').hide()
-        }
-        // Highlight search terms
-        highlightSearchResults(
-          table,
-          result.columns,
-          JSON.parse(searchTerms),
-        )
+      for (let result of data['results']) {
+        renderSearchResults($(this), result, searchTerms)
       }
     }).catch(xhr => {
       $(this).html(
@@ -243,6 +282,7 @@ $(document).ready(function () {
       )
     })
   })
+
   $.when.apply($, resultCalls).done(() => {
     $(document).trigger('searchResultsLoaded')
     $('#sodar-search-results-spinner').text('')
@@ -252,8 +292,8 @@ $(document).ready(function () {
      **********/
 
     $('.sodar-search-page-length').change(function () {
-      const dt = $(this).closest('.sodar-search-card').find(
-          'table')
+      const dt = $(this).closest('.sodar-search-card')
+        .find('table')
         .DataTable()
       const value = parseInt($(this).val())
       dt.page.len(value).draw()
@@ -264,17 +304,13 @@ $(document).ready(function () {
      *********/
 
     $('.sodar-search-filter').keyup(function () {
-      const dt = $(this).closest('.sodar-search-card').find(
-          'table')
-        .dataTable().api()
+      const dt = $(this).closest('.sodar-search-card')
+        .find('table')
+        .dataTable()
+        .api()
       const v = $(this).val()
       dt.search(v)
       dt.draw()
     })
-
-    /***************
-     Overflow status
-     ***************/
-    modifyCellOverflow()
   })
 })

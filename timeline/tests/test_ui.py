@@ -16,7 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
-from projectroles.tests.base import ProjectUITestBase
+from projectroles.tests.base import ProjectUITestBase, SearchUITestMixin
 
 from timeline.models import TL_STATUS_OK
 from timeline.tests.test_models import (
@@ -431,7 +431,10 @@ class TestModals(
 
 
 class TestSearch(
-    TimelineEventMixin, TimelineEventStatusMixin, ProjectUITestBase
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    SearchUITestMixin,
+    ProjectUITestBase,
 ):
     """Tests for the project search UI functionality"""
 
@@ -528,6 +531,42 @@ class TestSearch(
             '.sodar-tl-search-table tbody tr',
         )
         self.assertEqual(len(tbody_rows), 4)
+
+    def test_search_results_order(self):
+        """Test search results orderable columns"""
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-tl-search-table', 'CLASS_NAME'
+        )
+        orderable_columns = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-tl-search-table .dt-orderable-desc',
+        )
+        self.assertEqual(
+            [col.text for col in orderable_columns], ['Timestamp', 'Status']
+        )
+
+    def test_search_results_filter(self):
+        """Test search results filterable columns"""
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
+        tl_args = [url, 'timeline', 'sodar-tl-search-table']
+        # Filter on Timestamp column
+        self.assert_search_filter_count(':', 4, 4, *tl_args)
+        # Filter on Description column
+        self.assert_search_filter_count('description', 4, 4, *tl_args)
+        self.assert_search_filter_count('classified', 4, 2, *tl_args)
+        # Filter on Status column
+        self.assert_search_filter_count('submit', 4, 4, *tl_args)
+        # Failing filter
+        self.assert_search_filter_count('qdrwfu;p', 4, 0, *tl_args)
 
     def test_search_results(self):
         """Test search results"""

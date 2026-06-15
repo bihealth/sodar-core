@@ -1038,6 +1038,78 @@ class UITestMixin:
         self.assertEqual(elem.is_displayed(), expected)
 
 
+class SearchUITestMixin:
+    """Helper mixin for search results UI tests"""
+
+    def assert_search_count(
+        self, expected: list[tuple[str, int]], url: str, table_class: str
+    ):
+        """Test that the number of search results matches expectations.
+
+        :param expected: List of (user, expected_count) tuples.
+        :param url: URL with the search query (str)
+        :param table_class: class name of the search results HTML table (str)
+        """
+        for expected_user, expected_count in expected:
+            self.login_and_redirect(
+                expected_user, url, table_class, 'CLASS_NAME'
+            )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                f'.{table_class} tbody tr',
+            )
+            self.assertEqual(len(elements), expected_count)
+
+    def assert_search_filter_count(
+        self,
+        filter: str,
+        before: int,
+        after: int,
+        url: str,
+        app_name: str,
+        table_class: str,
+    ):
+        """
+        Utility function to test search result table filtering.
+
+        :param filter: The string to search (str)
+        :param before: Expected number of results before filtering (int)
+        :param after: Expected number of results after filtering (int)
+        :param url: URL with the search query (str)
+        :param app_name: name of the app performing the search (str)
+        :param table_class: class name of the search results HTML table (str)
+        """
+        self.login_and_redirect(self.superuser, url, table_class, 'CLASS_NAME')
+        elements = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            f'.{table_class} tbody tr',
+        )
+        self.assertEqual(len(elements), before)
+        f_input = self.selenium.find_element(
+            By.XPATH,
+            f'//div[@data-app-name="{app_name}"]'
+            '//input[contains(@class, "sodar-search-filter")]',
+        )
+        f_input.send_keys(filter)
+        if after == 0:
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                f'.{table_class} tbody tr',
+            )
+            self.assertEqual(len(elements), 1)
+            self.assertEqual(elements[0].text, 'No matching records found')
+        else:
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element(
+                    By.CSS_SELECTOR, f'.{table_class} tbody tr .dt-empty'
+                )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                f'.{table_class} tbody tr',
+            )
+            self.assertEqual(len(elements), after)
+
+
 class UITestBase(
     SeleniumSetupMixin, LiveUserMixin, UITestMixin, LiveServerTestCase
 ):

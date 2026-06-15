@@ -715,6 +715,10 @@ attributes:
   it is treated as plain text);
 - ``highlight`` (bool): if true, the search terms will be highlighted in this
   column.
+- ``orderable`` (bool): if false, the table will not be orderable by the content
+  of this column.
+- ``searchable`` (bool): if false, the table will not be filterable by the content
+  of this column.
 
 The ``rows`` attribute contains the actual data returned by the search. Each
 row is a list of ``PluginSearchResultCell`` objects, each object corresponding
