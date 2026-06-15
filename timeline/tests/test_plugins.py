@@ -21,13 +21,15 @@ from projectroles.tests.test_models import (
 
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent, TL_STATUS_OK
-from timeline.plugins import STATS_DESC_USER_COUNT
+from timeline.plugins import (
+    STATS_DESC_USER_COUNT,
+    ProjectAppPlugin as TimelinePlugin,
+)
 from timeline.templatetags.timeline_tags import (
     get_timestamp,
     get_plugin_lookup,
 )
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
-from timeline.utils import get_event_full_description
 
 
 plugin_api = PluginAPI()
@@ -192,7 +194,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         )
         self.assertEqual(
             ret[0].rows[0][1].value,
-            get_event_full_description(event2, self.plugin_lookup),
+            TimelinePlugin._get_event_full_description(
+                event2, self.plugin_lookup
+            ),
         )
         self.assertEqual(
             ret[0].rows[0][2].value,
@@ -204,7 +208,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         )
         self.assertEqual(
             ret[0].rows[1][1].value,
-            get_event_full_description(event, self.plugin_lookup),
+            TimelinePlugin._get_event_full_description(
+                event, self.plugin_lookup
+            ),
         )
         self.assertEqual(
             ret[0].rows[0][2].value,
@@ -219,7 +225,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].rows), 1)
         self.assertEqual(
             ret[0].rows[0][1].value,
-            get_event_full_description(event, self.plugin_lookup),
+            TimelinePlugin._get_event_full_description(
+                event, self.plugin_lookup
+            ),
         )
 
     def test_search_event_name_display(self):
@@ -232,7 +240,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].rows), 1)
         self.assertEqual(
             ret[0].rows[0][1].value,
-            get_event_full_description(event, self.plugin_lookup),
+            TimelinePlugin._get_event_full_description(
+                event, self.plugin_lookup
+            ),
         )
 
     def test_search_invalid_terms(self):
@@ -279,7 +289,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         plugin_lookup = TimelineAPI()
         self.assertEqual(
             ret[0].rows[0][1].value,
-            get_event_full_description(project_event_new, plugin_lookup),
+            TimelinePlugin._get_event_full_description(
+                project_event_new, plugin_lookup
+            ),
         )
         ret = self.plugin.search(
             SEARCH_TERMS, self.user_owner, Project.objects.all()

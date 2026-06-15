@@ -9,7 +9,6 @@ from django.utils.timezone import localtime
 from django.test import override_settings
 from urllib.parse import urlencode
 
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -17,7 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
-from projectroles.tests.base import ProjectUITestBase
+from projectroles.tests.base import ProjectUITestBase, SearchUITestMixin
 
 from timeline.models import TL_STATUS_OK
 from timeline.tests.test_models import (
@@ -432,7 +431,10 @@ class TestModals(
 
 
 class TestSearch(
-    TimelineEventMixin, TimelineEventStatusMixin, ProjectUITestBase
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    SearchUITestMixin,
+    ProjectUITestBase,
 ):
     """Tests for the project search UI functionality"""
 
@@ -503,49 +505,6 @@ class TestSearch(
             extra_data=EXTRA_DATA,
         )
 
-    def _assert_search_results_filtering_count(
-        self, filter, before, after, url
-    ):
-        """
-        Utility function to test search result table filtering.
-
-        :param filter: The string to search (str)
-        :param before: Expected number of results before filtering (int)
-        :param after: Expected number of results after filtering (int)
-        :param url: URL with the search query (str)
-        """
-        self.login_and_redirect(
-            self.superuser, url, 'sodar-tl-search-table', 'CLASS_NAME'
-        )
-        elements = self.selenium.find_elements(
-            By.CSS_SELECTOR,
-            '.sodar-tl-search-table tbody tr',
-        )
-        self.assertEqual(len(elements), before)
-        f_input = self.selenium.find_element(
-            By.XPATH,
-            '//div[@data-app-name="timeline"]'
-            '//input[contains(@class, "sodar-search-filter")]',
-        )
-        f_input.send_keys(filter)
-        if after == 0:
-            elements = self.selenium.find_elements(
-                By.CSS_SELECTOR,
-                '.sodar-tl-search-table tbody tr',
-            )
-            self.assertEqual(len(elements), 1)
-            self.assertEqual(elements[0].text, 'No matching records found')
-        else:
-            with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element(
-                    By.CSS_SELECTOR, '.sodar-tl-search-table tbody tr .dt-empty'
-                )
-            elements = self.selenium.find_elements(
-                By.CSS_SELECTOR,
-                '.sodar-tl-search-table tbody tr',
-            )
-            self.assertEqual(len(elements), after)
-
     def test_search_results_table_layout(self):
         """Test search results table layout"""
         url = (
@@ -573,7 +532,7 @@ class TestSearch(
         )
         self.assertEqual(len(tbody_rows), 4)
 
-    def test_search_results_ordering(self):
+    def test_search_results_order(self):
         """Test search results orderable columns"""
         url = (
             reverse('projectroles:search')
@@ -591,22 +550,23 @@ class TestSearch(
             [col.text for col in orderable_columns], ['Timestamp', 'Status']
         )
 
-    def test_search_results_filtering(self):
+    def test_search_results_filter(self):
         """Test search results filterable columns"""
         url = (
             reverse('projectroles:search')
             + '?'
             + urlencode({'s': 'description'})
         )
+        tl_args = [url, 'timeline', 'sodar-tl-search-table']
         # Filter on Timestamp column
-        self._assert_search_results_filtering_count(':', 4, 4, url)
+        self.assert_search_filter_count(':', 4, 4, *tl_args)
         # Filter on Description column
-        self._assert_search_results_filtering_count('description', 4, 4, url)
-        self._assert_search_results_filtering_count('classified', 4, 2, url)
+        self.assert_search_filter_count('description', 4, 4, *tl_args)
+        self.assert_search_filter_count('classified', 4, 2, *tl_args)
         # Filter on Status column
-        self._assert_search_results_filtering_count('submit', 4, 4, url)
+        self.assert_search_filter_count('submit', 4, 4, *tl_args)
         # Failing filter
-        self._assert_search_results_filtering_count('qdrwfu;p', 4, 0, url)
+        self.assert_search_filter_count('qdrwfu;p', 4, 0, *tl_args)
 
     def test_search_results(self):
         """Test search results"""
