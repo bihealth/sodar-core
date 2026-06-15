@@ -1041,7 +1041,15 @@ class UITestMixin:
 class SearchUITestMixin:
     """Helper mixin for search results UI tests"""
 
-    def assert_search_count(self, expected, url, table_class):
+    def assert_search_count(
+        self, expected: list[tuple[str, int]], url: str, table_class: str
+    ):
+        """Test that the number of search results matches expectations.
+
+        :param expected: List of (user, expected_count) tuples.
+        :param url: URL with the search query (str)
+        :param table_class: class name of the search results HTML table (str)
+        """
         for expected_user, expected_count in expected:
             self.login_and_redirect(
                 expected_user, url, table_class, 'CLASS_NAME'
@@ -1053,7 +1061,13 @@ class SearchUITestMixin:
             self.assertEqual(len(elements), expected_count)
 
     def assert_search_filter_count(
-        self, filter, before, after, url, app_name, table_class
+        self,
+        filter: str,
+        before: int,
+        after: int,
+        url: str,
+        app_name: str,
+        table_class: str,
     ):
         """
         Utility function to test search result table filtering.
