@@ -39,7 +39,7 @@ class TestPlugins(AdminAlertMixin, TestCase):
         )
 
     def test_plugin_retrieval(self):
-        """Test retrieving the plugin from the database"""
+        """Test retrieval of adminalerts plugin"""
         plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
         self.assertIsNotNone(plugin)
         self.assertEqual(plugin.get_model().name, PLUGIN_NAME)
@@ -49,12 +49,12 @@ class TestPlugins(AdminAlertMixin, TestCase):
         self.assertEqual(plugin.entry_point_url_id, PLUGIN_URL_ID)
 
     def test_plugin_urls(self):
-        """Test plugin URLs to ensure they're the same as in the app config"""
+        """Test plugin URLs"""
         plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
         self.assertEqual(plugin.urls, urlpatterns)
 
     def test_get_messages(self):
-        """Test the get_messages() function"""
+        """Test get_messages()"""
         plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
         messages = plugin.get_messages(self.regular_user)
         message = messages[0]
@@ -72,7 +72,7 @@ class TestPlugins(AdminAlertMixin, TestCase):
         )
 
     def test_get_messages_anonymous(self):
-        """Test the get_messages() function for anonymous users"""
+        """Test get_messages() for anonymous users"""
         plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
         messages = plugin.get_messages()
         message = messages[0]
@@ -89,8 +89,8 @@ class TestPlugins(AdminAlertMixin, TestCase):
             ),
         )
 
-    def test_get_dismissed_messages(self):
-        """Test message dismissal"""
+    def test_get_messages_dismissed(self):
+        """Test get_messages() with dismissal object"""
         plugin = SiteAppPluginPoint.get_plugin(PLUGIN_NAME)
         messages_before = plugin.get_messages(self.superuser)
         self.assertEqual(len(messages_before), 1)

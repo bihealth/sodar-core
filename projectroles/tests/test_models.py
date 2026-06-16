@@ -1206,8 +1206,8 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         )
         self.assertEqual(len(result), 3)
 
-    def test_find_within_category_top(self):
-        """Test find() restricted to a top category"""
+    def test_find_category_top(self):
+        """Test find() restricted to top category"""
         result = Project.objects.find(
             ['Test'],
             projects=self.category_top_qs,
@@ -1215,8 +1215,8 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         )
         self.assertEqual(len(result), 4)
 
-    def test_find_within_category_sub(self):
-        """Test find() restricted to a sub category"""
+    def test_find_category_sub(self):
+        """Test find() restricted to sub category"""
         result = Project.objects.find(
             ['Test'],
             projects=self.category_sub_qs,
@@ -1226,8 +1226,8 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.assertIn(self.category_sub, result)
         self.assertIn(self.project_sub, result)
 
-    def test_find_within_project_sub(self):
-        """Test find() restricted to a project"""
+    def test_find_project_sub(self):
+        """Test find() restricted to project"""
         result = Project.objects.find(
             ['Test'],
             projects=self.project_sub_qs,
@@ -1256,7 +1256,7 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         )
         self.assertEqual(list(result), [self.category_sub])
 
-    def test_find_type_category_within_category_top(self):
+    def test_find_project_type_category_top(self):
         """Test find() with project_type and project filtering"""
         result = Project.objects.find(
             ['XXX', 'YYY', 'ZZZ', 'AAA'],
@@ -1268,8 +1268,8 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.assertIn(self.project, result)
         self.assertIn(self.project_sub, result)
 
-    def test_find_with_wrong_uuid_project_filtering(self):
-        """Test find() with a wrong project UUID in keywords kwarg"""
+    def test_find_wrong_uuid_project_filtering(self):
+        """Test find() with wrong project UUID in keywords kwarg"""
         result = Project.objects.find(
             ['Test'],
             projects=Project.objects.none(),
@@ -1278,8 +1278,8 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         )
         self.assertEqual(len(result), 0)
 
-    def test_find_with_invalid_uuid_project_filtering(self):
-        """Test find() with an invalid project UUID in keywords kwarg"""
+    def test_find_invalid_uuid_project_filtering(self):
+        """Test find() with invalid project UUID in keywords kwarg"""
         result = Project.objects.find(
             ['Test'],
             projects=Project.objects.none(),

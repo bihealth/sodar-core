@@ -40,8 +40,8 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
         super().setUp()
         self.url = reverse('siteinfo:ajax_stats')
 
-    def test_get_stats(self):
-        """Test siteinfo stats for plugins"""
+    def test_get(self):
+        """Test TestPluginStatisticsAjaxView GET"""
         with self.login(self.superuser):
             res = self.get(self.url).json()
         # Test existing plugins (only plugins with stats will be returned)
@@ -81,7 +81,7 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
         )
 
     def test_get_stats_error(self):
-        """Test siteinfo stats with error in get_statistics()"""
+        """Test GET with error from get_statistics()"""
 
         def get_statistics_error(self):
             raise ValueError('Invalid Stats')
@@ -108,7 +108,7 @@ class TestPluginStatisticsAjaxView(SiteAppPermissionTestBase):
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
     def test_get_stats_inactive(self):
-        """Test that inactive plugins are not considered"""
+        """Test GET with inactive backend plugins"""
         with self.login(self.superuser):
             res = self.get(self.url).json()
         self.assertNotIn('example_backend_app', res.keys())

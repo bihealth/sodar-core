@@ -177,13 +177,13 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(objects[0], self.folder)
 
     def test_find_desc(self):
-        """Test FilesfoldersManager find() with Folder description"""
+        """Test find() with Folder description"""
         objects = Folder.objects.find(['description'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.folder)
 
     def test_find_uuid(self):
-        """Test FilesfoldersManager find() with Folder UUID"""
+        """Test find() with Folder UUID"""
         objects = Folder.objects.find(
             [str(self.folder.sodar_uuid)], Project.objects.all()
         )
@@ -191,12 +191,12 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(objects[0], self.folder)
 
     def test_find_fail(self):
-        """Test FilesfoldersManager find() with a non-existing Folder"""
+        """Test find() with a non-existing Folder"""
         objects = Folder.objects.find(['Jaix1azu'], Project.objects.all())
         self.assertEqual(len(objects), 0)
 
-    def test_find_within_project(self):
-        """Test FilesfoldersManager find() within project"""
+    def test_find_project(self):
+        """Test find() within project"""
         objects = Folder.objects.find(
             ['folder'],
             Project.objects.filter(
@@ -206,8 +206,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         )
         self.assertEqual(len(objects), 1)
 
-    def test_find_within_project2(self):
-        """Test FilesfoldersManager find() within project2"""
+    def test_find_project2(self):
+        """Test find() within project2"""
         objects = Folder.objects.find(
             ['xxx'],
             Project.objects.filter(
@@ -217,8 +217,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         )
         self.assertEqual(len(objects), 1)
 
-    def test_find_within_project_no_results(self):
-        """Test FilesfoldersManager find() with keywords, no results expected"""
+    def test_find_project_no_results(self):
+        """Test find() with keywords, no results expected"""
         objects = Folder.objects.find(
             ['xxx'],
             Project.objects.filter(
@@ -228,8 +228,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         )
         self.assertEqual(len(objects), 0)
 
-    def test_find_within_project2_no_results(self):
-        """Test FilesfoldersManager find() with keywords, no results expected"""
+    def test_find_project2_no_results(self):
+        """Test find() with keywords, no results expected"""
         objects = Folder.objects.find(
             ['folder'],
             Project.objects.filter(
@@ -239,8 +239,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         )
         self.assertEqual(len(objects), 0)
 
-    def test_find_with_invalid_project_keyword(self):
-        """Test FilesfoldersManager find() with invalid project keyword"""
+    def test_find_invalid_project_keyword(self):
+        """Test find() with invalid project keyword"""
         objects = Folder.objects.find(
             ['folder'],
             Project.objects.none(),
@@ -288,7 +288,7 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(self.folder.get_path(), 'root/folder/')
 
     def test_get_path_subfolder(self):
-        """Test get_irods_path() in Folder for a subfolder"""
+        """Test get_irods_path() in Folder for subfolder"""
         subfolder = self.make_folder(
             name='subfolder',
             project=self.project,
@@ -299,11 +299,11 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
         self.assertEqual(subfolder.get_path(), 'root/folder/subfolder/')
 
     def test_is_empty(self):
-        """Test is_empty() in Folder for an empty folder"""
+        """Test is_empty() in Folder for empty folder"""
         self.assertEqual(self.folder.is_empty(), True)
 
     def test_is_empty_nonempty(self):
-        """Test is_empty() in Folder for a non-empty folder"""
+        """Test is_empty() in Folder for non-empty folder"""
         self.hyperlink = self.make_hyperlink(
             name='Link',
             url='http://www.google.com/',
@@ -392,13 +392,13 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
         self.assertEqual(objects[0], self.file)
 
     def test_find_desc(self):
-        """Test FilesfoldersManager find() with File description"""
+        """Test find() with File description"""
         objects = File.objects.find(['description'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.file)
 
     def test_find_uuid(self):
-        """Test FilesfoldersManager find() with File UUID"""
+        """Test find() with File UUID"""
         objects = File.objects.find(
             str(self.file.sodar_uuid), Project.objects.all()
         )
@@ -406,7 +406,7 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
         self.assertEqual(objects[0], self.file)
 
     def test_find_fail(self):
-        """Test FilesfoldersManager find() with a non-existing File"""
+        """Test find() with non-existing File"""
         objects = File.objects.find(['Jaix1azu'], Project.objects.all())
         self.assertEqual(len(objects), 0)
 
@@ -423,7 +423,7 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
         self.assertEqual(repr(self.file), expected)
 
     def test_file_access(self):
-        """Test file can be accessed in database after creation"""
+        """Test file database access after creation"""
         file_data = FileData.objects.get(file_name=self.file.file.name)
         expected = {
             'id': file_data.pk,
@@ -435,7 +435,7 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
         self.assertEqual(model_to_dict(file_data), expected)
 
     def test_file_deletion(self):
-        """Test file is removed from database after deletion"""
+        """Test file database removal after deletion"""
         self.assertEqual(FileData.objects.all().count(), 1)
         self.file.delete()
         self.assertEqual(FileData.objects.all().count(), 0)
@@ -504,13 +504,13 @@ class TestHyperLink(
         self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_desc(self):
-        """Test FilesfoldersManager find() with HyperLink description"""
+        """Test find() with HyperLink description"""
         objects = HyperLink.objects.find(['description'], Project.objects.all())
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_uuid(self):
-        """Test FilesfoldersManager find() with HyperLink UUID"""
+        """Test find() with HyperLink UUID"""
         objects = HyperLink.objects.find(
             str(self.hyperlink.sodar_uuid), Project.objects.all()
         )
@@ -518,6 +518,6 @@ class TestHyperLink(
         self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_fail(self):
-        """Test FilesfoldersManager find() with a non-existing HyperLink"""
+        """Test find() with non-existing HyperLink"""
         objects = HyperLink.objects.find(['Jaix1azu'], Project.objects.all())
         self.assertEqual(len(objects), 0)

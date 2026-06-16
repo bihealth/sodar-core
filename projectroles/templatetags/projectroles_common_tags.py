@@ -470,12 +470,12 @@ def get_remote_icon(project: Project, user: User) -> str:
 
 
 @register.simple_tag
-def render_markdown(raw_markdown: str) -> str:
+def render_markdown(raw_markdown: str) -> str | list | dict:
     """Markdown field rendering helper"""
     logger.warning(
-        'The `render_markdown` template tag is deprecated and will be removed '
-        'in version 1.5, please use the `safe_markdown` filter from the martor'
-        'package instead.'
+        'The render_markdown template tag is deprecated and will be removed '
+        'in v1.5. Please use the safe_markdown filter from the martor package '
+        'instead.'
     )
     return mistune.html(raw_markdown)
 

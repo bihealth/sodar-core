@@ -10,26 +10,27 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.4.0 (WIP)
-************
+v1.4.0 (2026-06-16)
+*******************
 
 Release Highlights
 ==================
 
-- Add admin alert dismissal
+- Add adminalerts alert dismissal
 - Add adminalerts alert list viewing for authenticated non-superusers
-- Add project limiting to search via UUID or partial title
-- Add client-side siteinfo statistics retrieval
+- Add search project limiting via UUID or partial title
+- Add siteinfo client-side statistics retrieval
 - Add reusable host confirmation delete view
 - Add transferroles management command
 - Add optional user name display in user dropdown
-- Add user active status in remote sync
+- Add remote sync user active status
 - Add removeroles management command pseudonymization option
 - Add plugin search API pre-filtered project queryset
+- Add plugin search API column ordering and filtering controls
 - Add general purpose HTTP 503 API exception class
 - Add site app message custom dismissal URL support
 - Update search for client-side querying
-- Update search API for client-side search, project queryset and simplified keywords
+- Update search API for client-side search and simplified keywords
 - Replace Markupfield and Pagedown with Martor for Markdown rendering
 - Replace Black and Flake8 with Ruff for linting and formatting
 - Update Makefile for check, format and lint commands
@@ -44,44 +45,59 @@ Breaking Changes
 AppSetting Model Update
 -----------------------
 
-The ``user_modifiable`` field has been removed from the ``AppSetting`` model. To
-access the ``user_modifiable`` variable of an app setting, you should instead
-use ``AppSettingAPI.get_definition()``. Note that it is not generally
+The ``user_modifiable`` field has been removed from the ``AppSetting`` model.
+Instead, use ``AppSettingAPI.get_definition()``. Note that it is not generally
 recommended to manipulate ``AppSetting`` objects directly.
 
-Plugin API search() Changes
----------------------------
+Plugin Search API Changes
+-------------------------
 
-The signature of the ``search()`` function implemented by plugins has changed:
+The plugin search API has been updated with no backwards compatibility for old
+implementations. The ``search()`` method signature has changed along with data
+types of expected results, along with changes to plugin attributes and
+templates.
 
-- It now takes a new positional argument, ``projects``, which contains a
-  ``QuerySet`` of projects within which the search should be restricted. All
-  SODAR Core apps are expected to honor this filtering criterion.
-- The ``search_type`` positional argument has been dropped in favour of the
-  ``type`` kwarg (see below)
-- The ``keywords`` dictionary has been replaced by the more general ``**kwargs``
-- Currently there are two supported keys for ``**kwargs``:
-    - ``project:<uuid or title>``, which identifies the user-provided project or
-      category where the search is restricted. The projects are pre-fetched
-      for efficiency and passed to ``search()`` through the ``projects``
-      argument, but apps can optionally also make use of the original UUID or
-      title.
-    - ``type:<string>``, which specifies the type of objects that should be
-      retrieved by the search.
+Changes to the ``search()`` method signature:
 
-The ``PluginSearchResult`` objects returned by the ``search()`` function have
-also been updated. Search results are now loaded asynchronously for each app,
-and the HTML tables are built with jQuery from the structure of the search
-results themselves. Thus, apps are expected to conform with the new structure
-of ``PluginSearchResult``, which should include both data and display options.
-As a consequence, search templates for each individual app are no longer
-necessary. However, apps can still customize the style of search results
-tables by providing a CSS file. In summary, the following changes affected
-``ProjectAppPluginPoint``:
+- Added the mandatory positional argument ``projects``.
+- Removed the ``search_type`` argument in favour of the ``type`` kwarg.
+- Replaced the ``keywords`` argument with ``**kwargs``.
 
-- Remove the ``search_template`` attribute;
-- Add the ``search_css`` attribute;
-- Update the implementaion of the ``search()`` method.
+Keys for the ``**kwargs`` argument:
+
+``project:<uuid or title>``
+    User-provided project or category to which the search is restricted.
+    Projects are pre-filtered for the ``QuerySet`` provided in the ``projects``
+    argument, but apps can use this argument to access the original UUID or
+    title in the search query.
+``type:<string>``
+    The type of item to be searched.
+
+Changes to ``PluginSearchResult`` return data type:
+
+- Each object must include a list of ``PluginSearchResultColumn`` objects in
+  the ``columns`` attribute.
+- Each object must include a list of lists of ``PluginSearchResultCell`` objects
+  in the ``rows`` attribute.
+- Additional attributes have been added for defining and customizing results.
+
+The new search implementation retrieves and renders search results on the client
+side. Thus, server-side search templates are no longer used and can be removed
+from your apps. Likewise, the ``search_template`` attribute in
+``ProjectAppPluginPoint`` is no longer supported. If your app requires explicit
+CSS for formatting search results, they can be provided via a static file
+declared in your plugin's ``search_css`` attribute.
+
+In summary, the following changes should be done in ``ProjectAppPluginPoint``:
+
+1. Update the ``search()`` implementation.
+2. Add the ``search_css`` attribute (if applicable).
+3. Remove the ``search_template`` attribute.
+4. Delete any existing search template files from your apps.
+
+For more information and full specifications, see
+:ref:`project app development <dev_project_app_search>` and the
+:ref:`plugin API documentation <app_projectroles_api_django_plugins>`.
 
 Plugin get_extra_data_link() Changes
 ------------------------------------
@@ -90,13 +106,13 @@ The names of arguments for ``get_extra_data_link()`` plugin methods have
 changed. If you supply them as kwargs in your implementations, please review
 the current naming.
 
-Timeline Template Tag get_app_icon_html() Replaced by get_app_badge()
----------------------------------------------------------------------
+Timeline Template Tag get_app_icon_html() Replaced
+--------------------------------------------------
 
 The ``get_app_icon_html()`` template tag from the timeline plugin was removed
-in favour of the more general ``get_app_badge()``, which accepts the same
-arguments plus an additional optional argument, ``extra_class``, which
-specifies an additional HTML class for the badge.
+in favour of ``get_app_badge()``, which accepts the same arguments. It also
+introduces an optional argument ``extra_class`` for providing additional CSS
+classes for the badge.
 
 Template Tag get_remote_icon() Updated
 --------------------------------------
@@ -104,14 +120,6 @@ Template Tag get_remote_icon() Updated
 The signature of the ``get_remote_icon()`` template tag in
 ``projectroles_common_tags`` has been updated. The second argument is now
 expected as a ``User`` object instead of a ``HttpRequest``.
-
-Previously Deprecated Features Removed
---------------------------------------
-
-These features were deprecated in v1.3 and have been removed in v1.4.
-
-Base Test Classes and Mixins
-    The base test classes and mixins deprecated in v1.3 have been removed.
 
 REST API View Changes
 ---------------------
@@ -132,6 +140,22 @@ General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your
     project.
+
+Deprecated Features
+-------------------
+
+These features have been deprecated in v1.4 and will be removed in v1.5.
+
+Template Tag ``render_markdown()``
+    Use the ``safe_markdown`` filter from the ``martor`` package.
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.3 and have been removed in v1.4.
+
+Base Test Classes and Mixins
+    The base test classes and mixins deprecated in v1.3 have been removed.
 
 
 v1.3.2 (2026-01-12)

@@ -118,7 +118,7 @@ class TestBaseTemplate(ProjectUITestBase):
         # Username should not be visible
         self.assertEqual(
             app_settings.get(
-                APP_NAME, 'dropdown_user_name_display', user=self.user_owner
+                APP_NAME, 'user_dropdown_name_display', user=self.user_owner
             ),
             False,
         )
@@ -133,7 +133,7 @@ class TestBaseTemplate(ProjectUITestBase):
         # Ensure username is visible
         user = self.user_contributor
         app_settings.set(
-            APP_NAME, 'dropdown_user_name_display', True, user=user
+            APP_NAME, 'user_dropdown_name_display', True, user=user
         )
         self.login_and_redirect(user, reverse('home'))
         username_element = self.selenium.find_element(
@@ -161,7 +161,7 @@ class TestBaseTemplate(ProjectUITestBase):
         """Test visibility with superuser"""
         # Username should be visible
         app_settings.set(
-            APP_NAME, 'dropdown_user_name_display', True, user=self.superuser
+            APP_NAME, 'user_dropdown_name_display', True, user=self.superuser
         )
         self.login_and_redirect(self.superuser, reverse('home'))
         username_element = self.selenium.find_element(
@@ -173,7 +173,7 @@ class TestBaseTemplate(ProjectUITestBase):
         """Test visibility and truncation for user with long name"""
         long_name_user = self.make_user('long_name_which_should_be_truncated')
         app_settings.set(
-            APP_NAME, 'dropdown_user_name_display', True, user=long_name_user
+            APP_NAME, 'user_dropdown_name_display', True, user=long_name_user
         )
         self.login_and_redirect(long_name_user, reverse('home'))
         username_element = self.selenium.find_element(
@@ -1350,7 +1350,7 @@ class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
         super().setUp()
         self.url = reverse('projectroles:search')
 
-    def test_search_results_card_layout(self):
+    def test_search_card_layout(self):
         """Test project search results card layout"""
         url = self.url + '?' + urlencode({'s': 'test'})
         self.login_and_redirect(
@@ -1364,7 +1364,7 @@ class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
         card_title = card.find_element(By.TAG_NAME, 'h4').text
         self.assertEqual(card_title, 'Projects (1)')
 
-    def test_search_results_table_layout(self):
+    def test_search_table_layout(self):
         """Test project search results table layout"""
         url = self.url + '?' + urlencode({'s': 'test'})
         self.login_and_redirect(
@@ -1385,7 +1385,7 @@ class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
         )
         self.assertEqual(len(tbody_rows), 1)
 
-    def test_search_results_highlight(self):
+    def test_search_highlight(self):
         """Test project search results highlight"""
         url = self.url + '?' + urlencode({'s': 'test'})
         self.login_and_redirect(
@@ -1404,7 +1404,7 @@ class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
             '<strong class="sodar-search-highlight">Test</strong>Project',
         )
 
-    def test_search_results_order(self):
+    def test_search_order(self):
         """Test project search results orderable columns"""
         url = self.url + '?' + urlencode({'s': 'test'})
         self.login_and_redirect(
@@ -1416,7 +1416,7 @@ class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
         )
         self.assertEqual([col.text for col in orderable_columns], ['Project'])
 
-    def test_search_results_filter(self):
+    def test_search_filter(self):
         """Test project search results filterable columns"""
         url = self.url + '?' + urlencode({'s': 'test'})
         pr_args = [url, 'projectroles', 'sodar-pr-search-table']
@@ -1489,7 +1489,7 @@ class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
         self.assert_search_count(expected, url, 'sodar-pr-search-table')
 
     def test_search_type_nonexisting(self):
-        """Test project search items visibility with a nonexisting type"""
+        """Test project search items visibility with nonexisting type"""
         user_types = [
             self.superuser,
             self.user_owner_cat,

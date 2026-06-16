@@ -111,9 +111,9 @@ Project list title highlight
     Highlight project title in paths displayed in the project list.
 Project list page size
     Amount of projects per page in the project list.
-Display username in the user dropdown button
-    If true, the username of the current user is shown in the title bar (useful
-    for owners of mulitple accounts).
+Display user name in user dropdown
+    Display the user name of the currently logged in user in the title bar
+    user dropdown link. Useful for users with mulitple accounts.
 
 In the development setup, the SODAR Core example site apps also provide
 additional settings for demonstrating settings features.

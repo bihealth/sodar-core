@@ -110,7 +110,7 @@ class TestProjectFileView(
         )
 
     def test_readme(self):
-        """Test rendering readme if it has been uploaded to the folder"""
+        """Test rendering readme in folder"""
         # Init readme file
         self.readme_file = self.make_file(
             name='readme.txt',
@@ -330,7 +330,7 @@ class TestProjectFileView(
         self.assert_element_count(expected, self.url, 'sodar-ff-link-public')
 
     def test_public_link_disable(self):
-        """Test public link visibility if allow_public_links is set to False"""
+        """Test public link visibility with allow_public_links=False"""
         setting = AppSetting.objects.get(
             project=self.project.pk,
             app_plugin__name=APP_NAME,
@@ -395,7 +395,7 @@ class TestProjectFileView(
 class TestSearch(
     FolderMixin, FileMixin, HyperLinkMixin, SearchUITestMixin, ProjectUITestBase
 ):
-    """Tests for the project search UI functionalities"""
+    """Tests for project search UI functionality"""
 
     def setUp(self):
         super().setUp()
@@ -466,7 +466,7 @@ class TestSearch(
         )
         self.url = reverse('projectroles:search')
 
-    def test_search_results_table_layout(self):
+    def test_search_table_layout(self):
         """Test search results table layout"""
         url = self.url + '?' + urlencode({'s': 'descriptio'})
         self.login_and_redirect(
@@ -487,7 +487,7 @@ class TestSearch(
         )
         self.assertEqual(len(tbody_rows), 6)
 
-    def test_search_results_highlight(self):
+    def test_search_highlight(self):
         """Test search results highlight"""
         url = self.url + '?' + urlencode({'s': 'folder_con type:folder'})
         self.login_and_redirect(
@@ -505,7 +505,7 @@ class TestSearch(
             '<strong class="sodar-search-highlight">folder_con</strong>tributor',
         )
 
-    def test_search_results_order(self):
+    def test_search_order(self):
         """Test search results orderable columns"""
         url = self.url + '?' + urlencode({'s': 'description'})
         self.login_and_redirect(
@@ -520,7 +520,7 @@ class TestSearch(
             ['Name', 'Type', 'Project', 'Size'],
         )
 
-    def test_search_results_filter(self):
+    def test_search_filter(self):
         """Test search results filterable columns"""
         url = self.url + '?' + urlencode({'s': 'description'})
         ff_args = [url, 'filesfolders', 'sodar-ff-search-table']
@@ -558,7 +558,7 @@ class TestSearch(
         self.assert_search_count(expected, url, 'sodar-ff-search-table')
 
     def test_search_type_file(self):
-        """Test search items visibility with 'file' type"""
+        """Test search item visibility with file type"""
         expected = [
             (self.superuser, 2),
             (self.user_owner_cat, 2),
@@ -578,7 +578,7 @@ class TestSearch(
         self.assert_search_count(expected, url, 'sodar-ff-search-table')
 
     def test_search_type_folder(self):
-        """Test search items visibility with 'folder' type"""
+        """Test search item visibility with folder type"""
         expected = [
             (self.superuser, 2),
             (self.user_owner_cat, 2),
@@ -598,7 +598,7 @@ class TestSearch(
         self.assert_search_count(expected, url, 'sodar-ff-search-table')
 
     def test_search_type_link(self):
-        """Test search items visibility with 'link' as type"""
+        """Test search item visibility with link type"""
         expected = [
             (self.superuser, 2),
             (self.user_owner_cat, 2),
@@ -618,7 +618,7 @@ class TestSearch(
         self.assert_search_count(expected, url, 'sodar-ff-search-table')
 
     def test_search_type_nonexisting(self):
-        """Test search items visibility with a nonexisting type"""
+        """Test search item visibility with nonexisting type"""
         user_types = [
             self.superuser,
             self.user_owner_cat,
@@ -645,7 +645,7 @@ class TestSearch(
                 alert_elem.text, 'Error: Search type "jaix1au" not recognized!'
             )
 
-    def test_search_with_public_link(self):
+    def test_search_public_link(self):
         """Test public link visibility in search items"""
         expected = [
             (self.superuser, 1),
@@ -672,7 +672,7 @@ class TestSearch(
             wait_loc='CLASS_NAME',
         )
 
-    def test_search_with_flag(self):
+    def test_search_flag(self):
         """Test public link visibility in search items"""
         expected = [
             (self.superuser, 1),
@@ -701,7 +701,7 @@ class TestSearch(
 
 
 class TestHomeView(ProjectUITestBase):
-    """Tests for appearance of filesfolders specific data in the home view"""
+    """Tests for appearance of filesfolders specific data in home view"""
 
     def test_project_list(self):
         """Test custom filesfolders project list column visibility"""

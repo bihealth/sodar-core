@@ -1,8 +1,8 @@
-.. _dev_projectroles_integration:
+.. _dev_integration:
 
 
-Integration in an Existing Site
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Integration to an Existing Site
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Instructions for setting up projectroles and SODAR Core on an existing Django
 site or a fresh site generated with cookiecutter-django are detailed in this

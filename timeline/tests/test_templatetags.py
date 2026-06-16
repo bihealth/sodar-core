@@ -89,7 +89,7 @@ class TestTemplateTags(
         )
 
     def test_get_event_description_no_request(self):
-        """Test get_event_description() without a request object"""
+        """Test get_event_description() without request"""
         self.assertEqual(
             tags.get_event_description(self.event, self.plugin_lookup),
             self.timeline.get_event_description(self.event),
@@ -188,7 +188,7 @@ class TestTemplateTags(
         self.assertNotIn('href=', ret)
 
     def test_get_app_badge_plugin(self):
-        """Test get_app_badge() on event from an app plugin"""
+        """Test get_app_badge() on event from app plugin"""
         plugin = plugin_api.get_app_plugin(APP_NAME_FF)
         url = reverse(
             plugin.entry_point_url_id,
@@ -225,7 +225,7 @@ class TestTemplateTags(
         self.assertIn(url, ret)
 
     def test_get_app_badge_example_project_app(self):
-        """Test get_app_badge() on event from an app plugin"""
+        """Test get_app_badge() on event from app plugin"""
         plugin = plugin_api.get_app_plugin('example_project_app')
         url = reverse(
             plugin.entry_point_url_id,
@@ -244,7 +244,7 @@ class TestTemplateTags(
         self.assertIn(url, ret)
 
     def test_get_app_badge_example_site_app(self):
-        """Test get_app_badge() on event from an app plugin"""
+        """Test get_app_badge() on event from app plugin"""
         plugin = plugin_api.get_app_plugin('example_site_app')
         url = reverse(
             plugin.entry_point_url_id,
@@ -263,7 +263,7 @@ class TestTemplateTags(
         self.assertIn(url, ret)
 
     def test_get_app_badge_invalid_plugin(self):
-        """Test get_app_badge() on event from an invalid plugin"""
+        """Test get_app_badge() on event from invalid plugin"""
         event = self.make_event(
             project=self.project,
             app=INVALID_APP_NAME,

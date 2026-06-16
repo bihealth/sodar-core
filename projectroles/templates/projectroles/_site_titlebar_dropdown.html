@@ -32,9 +32,9 @@
   <a class="nav-link sodar-nav-link-last dropdown-toggle"
      id="sodar-navbar-user-dropdown"
      data-toggle="dropdown">
-    {% get_app_setting 'projectroles' 'dropdown_user_name_display' user=request.user as dropdown_user_name_display %}
+    {% get_app_setting 'projectroles' 'user_dropdown_name_display' user=request.user as name_display %}
     {% get_user_icon request.user as user_icon %}
-    {% if dropdown_user_name_display and request.user.is_authenticated %}
+    {% if name_display and request.user.is_authenticated %}
       <div class="badge badge-pill"
            id="sodar-navbar-user-dropdown-username">
         {{ user_icon|safe }}

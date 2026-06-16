@@ -174,18 +174,11 @@ Markdown
 
 SODAR Core uses ``django-markdown-editor`` (`martor
 <https://django-markdown-editor.readthedocs.io>`__) for markdown form fields,
-widgets, and rendering. This means that users can enter markdown content using
-the powerful martor editor, which supports real-time rendering and syntax
-highlighting. Furthermore, martor is used to render markdown content in views
-and templates.
+widgets, and rendering. Users can author markdown content into supported fields
+using martor editor, which supports real-time rendering and syntax highlighting.
+Furthermore, martor is used to render markdown content in views and templates.
 
-The following settings can be used to configure martor. Please
-note that setting ``CSRF_COOKIE_HTTPONLY = `false``` is required for using the
-dynamic AJAX features of martor such as live preview. Also note that martor
-loads an additional CSS theme in the pages with markdown form fields.
-Depending on the theme, either bootstrap or semantic UI themes will be
-loaded. This can be avoided by setting ``MARTOR_ALTERNATIVE_CSS_FILE_THEME`` to
-a different file.
+The following settings can be used to configure martor:
 
 .. code-block:: python
 
@@ -205,6 +198,18 @@ a different file.
         'projectroles/css/projectroles.css',
     )
     MARTOR_ENABLE_ADMIN_CSS = env.bool('MARTOR_ENABLE_ADMIN_CSS', False)
+
+.. note::
+
+    Setting ``CSRF_COOKIE_HTTPONLY = 'false'`` is required for using dynamic
+    martor features such as live preview.
+
+.. note::
+
+    Martor loads an additional CSS theme in the pages with markdown form fields.
+    Depending on the theme, either bootstrap or semantic UI themes will be
+    loaded. This can be avoided by setting ``MARTOR_ALTERNATIVE_CSS_FILE_THEME``
+    to point to a different file.
 
 Rendering markdown in templates can be achieved with the ``safe_markdown``
 filter after loading ``martortags``.
@@ -443,14 +448,14 @@ For enabling page size customization for pagination, it's recommended to set
 LDAP/AD Configuration (Optional)
 ================================
 
-To support LDAP/AD authentication, it can be configured via Django settings.
-The default configurations for SODAR Core and SODAR Django Site have the most
-relevant settings already included and retrieved from environment variables.
+LDAP/AD authentication can be enabled via Django settings. The default
+configurations for SODAR Core and SODAR Django Site include common settings
+predefined and retrieved from environment variables.
 
 .. note::
 
-    In order to support LDAP, make sure you have installed the dependencies from
-    ``utility/install_ldap_dependencies.sh`` and ``requirements/ldap.txt``! For
+    In order to enable LDAP, make sure you have installed the dependencies from
+    ``utility/install_ldap_dependencies.sh`` and ``requirements/ldap.txt``. For
     more information see :ref:`dev_core_install`.
 
 .. hint::

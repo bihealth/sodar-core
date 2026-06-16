@@ -58,7 +58,7 @@ class TestSiteInfoUI(UITestBase):
         ]
 
     def test_server_cards(self):
-        """Test that the expected cards are present"""
+        """Test rendering of server-side cards"""
         self.login_and_redirect(self.superuser, self.url)
         for element_id in self.server_stats_elements:
             self.assertIsNotNone(self.selenium.find_element(By.ID, element_id))
@@ -69,7 +69,7 @@ class TestSiteInfoUI(UITestBase):
             self.assertGreater(len(children), 0)
 
     def test_client_cards(self):
-        """Test that client-side cards are shown"""
+        """Test rendering of client-side cards"""
         self.login_and_redirect(self.superuser, self.url)
         for plugin_name in self.client_stats_plugins:
             parent_card_element = (
@@ -91,7 +91,7 @@ class TestSiteInfoUI(UITestBase):
             self.assertGreater(len(dt_children), 0)
 
     def test_client_cards_error(self):
-        """Test that client-side card errors are shown"""
+        """Test rendering of client-side card errors"""
 
         def get_statistics_error(self):
             raise ValueError('Invalid Stats')
@@ -114,12 +114,11 @@ class TestSiteInfoUI(UITestBase):
             error_element.text,
             'Unable to retrieve app statistics: Invalid Stats',
         )
-
         AdminAlertsSitePlugin.get_statistics = get_statistics_original
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
     def test_client_cards_missing_backend(self):
-        """Test that backend apps are not shown"""
+        """Test visibility of backend apps (should not be shown)"""
         expected_plugins = self.client_stats_plugins.copy()
         removed_plugin = 'example_backend_app'
         expected_plugins.remove(removed_plugin)
@@ -140,7 +139,7 @@ class TestSiteInfoUI(UITestBase):
             )
 
     def test_apps_tab_cards(self):
-        """Test the cards in the "Apps" tab"""
+        """Test rendering of apps tab cards"""
         self.login_and_redirect(self.superuser, self.url)
         for element_id in self.apps_elements:
             self.assertIsNotNone(self.selenium.find_element(By.ID, element_id))
@@ -155,7 +154,7 @@ class TestSiteInfoUI(UITestBase):
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
     def test_apps_tab_cards_missing_backend(self):
-        """Test the cards in the "Apps" tab without backend apps"""
+        """Test rendering of apps tab cards without backend apps"""
         self.login_and_redirect(self.superuser, self.url)
         backend_card_id = 'sodar-si-backend-apps-card'
         self.assertIsNotNone(self.selenium.find_element(By.ID, backend_card_id))
@@ -169,7 +168,7 @@ class TestSiteInfoUI(UITestBase):
         self.assertEqual(len(dd_children), 0)
 
     def test_settings_tab_cards(self):
-        """Test the cards in the "Settings" tab"""
+        """Test rendering of settings tab cards"""
         self.login_and_redirect(self.superuser, self.url)
         for element_id in self.settings_elements:
             self.assertIsNotNone(self.selenium.find_element(By.ID, element_id))

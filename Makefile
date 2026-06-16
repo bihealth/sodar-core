@@ -6,11 +6,11 @@ define USAGE=
 @echo -e "\tmake celery                              -- start celery worker"
 @echo -e "\tmake check                               -- check Python code linting and formatting"
 @echo -e "\tmake collectstatic                       -- run collectstatic"
-@echo -e "\tmake js-beautify arg=<path>              -- run js-beautify on Javascript file(s)"
-@echo -e "\tmake manage_target arg=<target_command>  -- run management command on target site, arg is mandatory"
 @echo -e "\tmake format                              -- format Python code"
 @echo -e "\tmake format-check                        -- check Python code formatting"
+@echo -e "\tmake js-beautify arg=<path>              -- run js-beautify on Javascript file(s)"
 @echo -e "\tmake lint                                -- lint Python code"
+@echo -e "\tmake manage_target arg=<target_command>  -- run management command on target site, arg is mandatory"
 @echo -e "\tmake serve                               -- start source server"
 @echo -e "\tmake serve_target                        -- start target server"
 @echo -e "\tmake spectacular                         -- generate OpenAPI schemas with drf-spectacular"
@@ -32,29 +32,13 @@ celery:
 	celery -A config worker -l info --beat
 
 
-.PHONY: collectstatic
-collectstatic:
-	$(MANAGE) collectstatic --no-input
-
-
 .PHONY: check
 check: format-check lint
 
 
-.PHONY: js-beautify
-js-beautify:
-	js-beautify -anr -s 2 -w 80 $(arg)
-
-
-.PHONY: manage_target
-manage_target:
-ifeq ($(arg),)
-	@echo -e
-	@echo -e "ERROR:\tPlease provide \`arg=<target_command>\`"
-	$(USAGE)
-else
-	$(MANAGE) $(arg) --settings=config.settings.local_target
-endif
+.PHONY: collectstatic
+collectstatic:
+	$(MANAGE) collectstatic --no-input
 
 
 .PHONY: format
@@ -67,9 +51,25 @@ format-check:
 	ruff format --check
 
 
+.PHONY: js-beautify
+js-beautify:
+	js-beautify -anr -s 2 -w 80 $(arg)
+
+
 .PHONY: lint
 lint:
 	ruff check $(arg)
+
+
+.PHONY: manage_target
+manage_target:
+ifeq ($(arg),)
+	@echo -e
+	@echo -e "ERROR:\tPlease provide \`arg=<target_command>\`"
+	$(USAGE)
+else
+	$(MANAGE) $(arg) --settings=config.settings.local_target
+endif
 
 
 .PHONY: serve

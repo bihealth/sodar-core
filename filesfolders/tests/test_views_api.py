@@ -51,7 +51,7 @@ class TestFolderListCreateAPIView(FilesfoldersAPIViewTestBase):
         self.folder_data = {
             'name': 'New Folder',
             'flag': 'IMPORTANT',
-            'description': "Folder's description",
+            'description': 'Folder description',
         }
         self.url = reverse(
             'filesfolders:api_folder_list_create',
@@ -237,7 +237,7 @@ class TestFileListCreateAPIView(FilesfoldersAPIViewTestBase):
         self.file_data = {
             'name': 'New File',
             'flag': 'IMPORTANT',
-            'description': "File's description",
+            'description': 'File description',
             'secret': 'foo',
             'public_url': True,
             'file': open(ZIP_PATH_NO_FILES, 'rb'),
@@ -491,7 +491,7 @@ class TestHyperLinkListCreateAPIView(FilesfoldersAPIViewTestBase):
         self.hyperlink_data = {
             'name': 'New HyperLink',
             'flag': 'IMPORTANT',
-            'description': "HyperLink's description",
+            'description': 'HyperLink description',
             'url': 'http://www.cubi.bihealth.org',
         }
         self.url = reverse(

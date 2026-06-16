@@ -325,7 +325,7 @@ class TestBatchUpdateRoles(
         super().tearDown()
 
     def test_invite(self):
-        """Test inviting a single user via email to project"""
+        """Test inviting single user via email"""
         email = 'new@example.com'
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
@@ -343,7 +343,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 1)
 
     def test_invite_existing(self):
-        """Test inviting a user when they already have an active invite"""
+        """Test inviting user with active invite"""
         email = 'new@example.com'
         self.make_invite(email, self.project, self.role_guest, self.user_owner)
         self.assertEqual(ProjectInvite.objects.count(), 1)
@@ -398,7 +398,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 2)
 
     def test_invite_owner(self):
-        """Test inviting an owner (should fail)"""
+        """Test inviting owner (should fail)"""
         self.write_file(
             [self.project_uuid, 'new@example.com', PROJECT_ROLE_OWNER]
         )
@@ -409,7 +409,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 0)
 
     def test_invite_delegate(self):
-        """Test inviting a delegate"""
+        """Test inviting delegate"""
         self.write_file(
             [self.project_uuid, 'new@example.com', PROJECT_ROLE_DELEGATE]
         )
@@ -421,7 +421,7 @@ class TestBatchUpdateRoles(
 
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
     def test_invite_delegate_no_perms(self):
-        """Test inviting a delegate without perms (should fail)"""
+        """Test inviting delegate without perms (should fail)"""
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
         self.write_file(
@@ -434,7 +434,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 0)
 
     def test_invite_delegate_limit(self):
-        """Test inviting a delegate with limit reached (should fail)"""
+        """Test inviting delegate with limit reached (should fail)"""
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
         self.write_file(
@@ -467,7 +467,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 1)
 
     def test_role_update(self):
-        """Test updating an existing role for user"""
+        """Test updating  existing role for user"""
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -491,7 +491,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 1)
 
     def test_role_update_owner(self):
-        """Test updating the role of current owner (should fail)"""
+        """Test updating role of current owner (should fail)"""
         email = 'owner@example.com'
         self.user_owner.email = email
         self.user_owner.save()
@@ -514,7 +514,7 @@ class TestBatchUpdateRoles(
 
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
     def test_role_update_delegate_no_perms(self):
-        """Test updating a delegate role without perms (should fail)"""
+        """Test updating delegate role without perms (should fail)"""
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -534,7 +534,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 0)
 
     def test_role_update_delegate_limit(self):
-        """Test updating a delegate role with limit reached (should fail)"""
+        """Test updating delegate role with limit reached (should fail)"""
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -1626,10 +1626,10 @@ class TestTransferRolesCommand(
             RoleAssignment.objects.filter(user=self.user).count(), 2
         )
 
-        # Test that roles are neither created nor destroyed during the transfer
+        # Assert roles are neither created nor destroyed during the transfer
         self.assertEqual(RoleAssignment.objects.count(), old_role_count)
 
-        # Test that both users are still active
+        # Assert both users are still active
         self.user.refresh_from_db()
         self.user_contributor_cat.refresh_from_db()
         self.assertTrue(self.user.is_active)
@@ -1681,7 +1681,7 @@ class TestTransferRolesCommand(
         self.assertEqual(len(mail.outbox), 0)
 
     def test_demote_non_owner(self):
-        """Test demotion to lower role (should not work)"""
+        """Test demotion to lower role (should fail)"""
         self.assertTrue(self.project.has_role(self.user_contributor_cat))
         old_user_role = self.project.local_roles.filter(
             user=self.user_contributor_cat
@@ -1781,7 +1781,7 @@ class TestTransferRolesCommand(
         )
 
     def test_demote_owner(self):
-        """Test demotion to non-owner (should not work)"""
+        """Test demotion to non-owner (should fail)"""
         self.assertEqual(self.project.get_owner().user, self.user_owner)
         self.assertTrue(self.project.has_role(self.user_contributor))
         owner_role = self.project.local_roles.filter(
@@ -1801,7 +1801,7 @@ class TestTransferRolesCommand(
         self.assertFalse(self.project.has_role(self.user_contributor))
 
     def test_transfer_from_nonexistent_user(self):
-        """Test that transfer fails when old_user doesn't exist"""
+        """Test transfer with nonexistent old_user (should fail)"""
         old_roles = RoleAssignment.objects.all()
         with self.assertRaises(SystemExit):
             call_command(
@@ -1811,7 +1811,7 @@ class TestTransferRolesCommand(
         self.assertEqual(list(old_roles), list(new_roles))
 
     def test_transfer_to_nonexistent_user(self):
-        """Test that transfer fails when new_user doesn't exist"""
+        """Test transfer with nonexistent new_user (should fail)"""
         old_roles = RoleAssignment.objects.all()
         with self.assertRaises(SystemExit):
             call_command(
@@ -1821,7 +1821,7 @@ class TestTransferRolesCommand(
         self.assertEqual(list(old_roles), list(new_roles))
 
     def test_transfer_to_self(self):
-        """Test that transfer fails when old_user==new_user"""
+        """Test transfer with old_user==new_user (should fail)"""
         with self.assertRaises(SystemExit):
             call_command(
                 self.cmd_name,

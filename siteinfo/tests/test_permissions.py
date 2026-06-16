@@ -43,5 +43,5 @@ class TestSiteInfoAjaxViewPermissions(SiteAppPermissionTestBase):
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_anon(self):
-        """Test SiteInfoAjaxView GET with anonymous access"""
+        """Test GET with anonymous access"""
         self.assert_response(self.url, self.anonymous, 403)

@@ -28,8 +28,9 @@
   /* Same font family as what bootstrap uses for <code> elements */
   font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",
     "Courier New",monospace !important;
-  /* Make it slightly smaller */
-  font-size: 90%;
+  font-size: 85%;
+  color: rgb(53, 60, 67) !important;
+  line-height: 20px;
 }
 
 /* Fix the irregular heights in the toolbar */

@@ -194,9 +194,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         )
         self.assertEqual(
             ret[0].rows[0][1].value,
-            TimelinePlugin._get_event_full_description(
-                event2, self.plugin_lookup
-            ),
+            TimelinePlugin._get_description_html(event2, self.plugin_lookup),
         )
         self.assertEqual(
             ret[0].rows[0][2].value,
@@ -208,9 +206,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         )
         self.assertEqual(
             ret[0].rows[1][1].value,
-            TimelinePlugin._get_event_full_description(
-                event, self.plugin_lookup
-            ),
+            TimelinePlugin._get_description_html(event, self.plugin_lookup),
         )
         self.assertEqual(
             ret[0].rows[0][2].value,
@@ -225,9 +221,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].rows), 1)
         self.assertEqual(
             ret[0].rows[0][1].value,
-            TimelinePlugin._get_event_full_description(
-                event, self.plugin_lookup
-            ),
+            TimelinePlugin._get_description_html(event, self.plugin_lookup),
         )
 
     def test_search_event_name_display(self):
@@ -240,9 +234,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].rows), 1)
         self.assertEqual(
             ret[0].rows[0][1].value,
-            TimelinePlugin._get_event_full_description(
-                event, self.plugin_lookup
-            ),
+            TimelinePlugin._get_description_html(event, self.plugin_lookup),
         )
 
     def test_search_invalid_terms(self):
@@ -289,7 +281,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         plugin_lookup = TimelineAPI()
         self.assertEqual(
             ret[0].rows[0][1].value,
-            TimelinePlugin._get_event_full_description(
+            TimelinePlugin._get_description_html(
                 project_event_new, plugin_lookup
             ),
         )

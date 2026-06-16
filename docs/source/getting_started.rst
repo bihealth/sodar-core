@@ -57,10 +57,11 @@ Cookiecutter-Django
 ===================
 
 If the SODAR Django site template does not suit your needs, it is also possible
-to set up your site using `cookiecutter-django <https://github.com/pydanny/cookiecutter-django/>`_.
-In this case, follow the instructions in the :ref:`Existing Site Integration
-<dev_projectroles_integration>` document as if you were integrating SODAR Core
-to an existing Django site.
+to set up your site using
+`cookiecutter-django <https://github.com/pydanny/cookiecutter-django/>`_.
+In this case, follow the instructions in the
+:ref:`integration documentation <dev_integration>` as if you were integrating
+SODAR Core to an existing Django site.
 
 .. note::
 
@@ -75,11 +76,11 @@ to an existing Django site.
     cookiecutter-django documentation.
 
 
-Integration in an Existing Site
+Integration to an Existing Site
 ================================
 
-If you already have a working site and want to migrate it to SODAR Core, see
-the :ref:`Existing Site Installation <dev_projectroles_integration>` document.
+If you already have a working site and want to migrate it to using SODAR Core,
+see the :ref:`integration documentation <dev_integration>`.
 
 
 Next Steps

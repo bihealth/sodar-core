@@ -434,9 +434,6 @@ class ProjectAppPluginPoint(PluginPoint):
         Return app items based on one or more search terms, user, optional type
         and optional keywords.
 
-        The search results are loaded asynchronously and rendered via jQuery;
-        see :file:`static/projectroles/js/search.js`.
-
         :param search_terms: Search terms to be joined with the OR operator
                              (list of strings)
         :param user: User object for user initiating the search
@@ -637,6 +634,7 @@ class SiteAppPluginPoint(PluginPoint):
         :param user: User object (optional)
         :return: List of dicts or and empty list if no messages
         """
+
         """
         Example of valid return data:
         return [{
@@ -936,17 +934,15 @@ class PluginObjectLink:
 @dataclass
 class PluginSearchResultCell:
     """
-    Represents a cell in the table of search results returned by app plugins.
-    This class is used by :py:class:`PluginSearchResult` for the
-    :py:attr:`~PluginSearchResult.rows` attribute.
+    App plugin search result table cell class. Used in PluginSearchResult for
+    its rows attribute.
     """
 
-    #: The content of the cell (str). If ``value_html`` is True
-    #: in the corresponding :py:class:`PluginSearchResultColumn`, this is
-    #: interpreted as HTML, otherwise plain text.
+    #: Cell content. Intepreted as HTML if value_html is set True in the
+    #: corresponding PluginSearchResultColumn object.
     value: str = None
-    #: If defined, the cell content becomes a hyperlink to the specified URL.
-    #: If ``value_html`` is true, this field is ignored.
+    #: Optional URL. If used, the cell is rendered as a link. Ignored if
+    #: value_html is set True.
     value_url: Optional[str] = None
     #: Optional HTML class to be applied to this cell only.
     cell_class: Optional[str] = None
@@ -955,54 +951,51 @@ class PluginSearchResultCell:
 @dataclass
 class PluginSearchResultColumn:
     """
-    Represents a column in the table of search results returned by app plugins.
-    This class is used by :py:class:`PluginSearchResult` for the
-    :py:attr:`~PluginSearchResult.columns` attribute.
+    App plugin search result table column class. Used in PluginSearchResult for
+    its columns attribute.
     """
 
-    #: The title to be displayed (str)
+    #: The title to be displayed
     title: str
-    #: Classes to be added to the cells for that column (str)
+    #: Classes to be added to the cells for that column
     column_class: Optional[str] = None
-    #: Whether to apply highlighting for this column (bool)
+    #: Whether to apply highlighting for this column
     highlight: bool = False
-    #: Interpret the value field of :py:class:`PluginSearchResultCell`
-    #: as HTML (bool)
+    #: Interpret the value of corresponding PluginSearchResultCell as HTML
     value_html: bool = False
-    #: Whether the column content is allowed to overflow (bool)
+    #: Whether the column content is allowed to overflow
     overflow: bool = False
-    #: Whether users can order the table by this column's values (bool)
+    #: Whether users can order the table by this column's values
     orderable: bool = True
-    #: Whether the column content is searchable (bool)
+    #: Whether the column content is searchable
     searchable: bool = True
 
 
 class PluginSearchResult:
     """
-    Class representing a list of search results from a specific plugin for one
-    or more search types. Expected to be returned from search() implementations.
+    App plugin search result table class. Expected to be returned from search()
+    implementations. Represents a table of a search result set in a specific
+    category from the plugin implementing search.
 
-    The :py:attr:`columns` attribute is a list of
-    :py:class:`PluginSearchResultColumn` defining field titles and customizing
-    their display. The :py:attr:`rows` attribute is a list specifying the rows
-    of the table. Each element is a list of :py:class:`PluginSearchResultCell`,
-    one for each of the fields in the :py:attr:`columns` attribute.
+    The columns attribute defines the table columns and their attributes. The
+    rows attribute contains table rows. Elements in each row are assumed to
+    correspond to a column of the same index.
     """
 
-    #: Category of the result set, used in rendering (string)
-    category = None
-    #: Title to be displayed for this set of search results in the UI (string)
-    title = None
+    #: Optional Category of result set, used in rendering
+    category: Optional[str] = None
+    #: Optional title to be displayed for this set of search results
+    title: Optional[str] = None
     #: List of one or more search type keywords for these results
-    search_types = []
+    search_types: list[str] = []
     #: List of columns to be shown in the results table
-    columns = []
+    columns: list[PluginSearchResultColumn] = []
     #: List of lists of result objects
-    rows = []
+    rows: list[list[PluginSearchResultCell]] = []
     #: HTML class for the whole results table (optional)
-    table_class = None
+    table_class: Optional[str] = None
     #: Limit for the number of items returned (if 0, no limit is applied)
-    result_limit = 0
+    result_limit: int = 0
 
     def __init__(
         self,
@@ -1022,9 +1015,6 @@ class PluginSearchResult:
                       the UI (string)
         :param search_types: List of one or more search type keywords for the
                              results
-        :param field_titles: List of column titles
-        :param highlight_fields: List of field indices where search terms
-                                 should be highlighted (0-based)
         :param rows: List of lists of PluginSearchResultCell objects
         :param table_class: HTML class for the whole results table (optional)
         :param result_limit: Limit for the number of items returned (if 0, no
@@ -1058,19 +1048,19 @@ class PluginCategoryStatistic:
     """Class representing an item of category statistics"""
 
     #: Plugin from which this item is initialized (None for projectroles)
-    plugin = None
-    #: Title to be displayed (string)
-    title = None
-    #: Value of the statistic (int or float)
-    value = 0
-    #: Optional unit (string or None)
-    unit = None
-    #: Optional description to be displayed as tooltip (string or None)
-    description = None
-    #: Optional icon namespace and ID (string or None)
-    icon = None
-    #: Optional prefix to be displayed (string or None)
-    prefix = None
+    plugin: Optional[ProjectAppPluginPoint] = None
+    #: Title to be displayed
+    title: str = None
+    #: Value of the statistic
+    value: Union[int, float] = 0
+    #: Optional unit
+    unit: Optional[str] = None
+    #: Optional description to be displayed as tooltip
+    description: Optional[str] = None
+    #: Optional icon namespace and ID
+    icon: Optional[str] = None
+    #: Optional prefix to be displayed
+    prefix: Optional[str] = None
 
     def __init__(
         self,

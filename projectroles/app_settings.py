@@ -196,7 +196,7 @@ PROJECTROLES_APP_SETTINGS = [
         global_edit=False,
     ),
     PluginAppSettingDef(
-        name='dropdown_user_name_display',
+        name='user_dropdown_name_display',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_BOOLEAN,
         default=False,

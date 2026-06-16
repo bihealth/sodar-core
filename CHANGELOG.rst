@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.4.0 (2026-06-16)
+===================
 
 Added
 -----
@@ -18,7 +18,7 @@ Added
 - **Projectroles**
     - ``ServiceUnavailable`` API exception class for ``HTTP 503`` (#1513)
     - Optional user name display in user dropdown (#1853)
-    - ``dropdown_user_name_display`` user app setting (#1853)
+    - ``user_dropdown_name_display`` user app setting (#1853)
     - ``HostConfirmDeleteView`` for delete views with host confirmation (#1550)
     - ``transferroles`` management command (#1869)
     - Remote sync user ``active`` status (#1882)
@@ -28,6 +28,7 @@ Added
     - ``removeroles`` management command pseudonymization option (#1923)
     - ``get_value()`` common template tag (#1854)
     - ``SeleniumSetupMixin`` init retry CI workaround (#1936)
+    - Plugin search API result column filtering and ordering controls (#1927)
 - **Siteinfo**
     - Client-side statistics retrieval (#1848)
 
@@ -56,6 +57,7 @@ Changed
     - Update UI tests to work with Selenium v4.44 ``get_attribute()`` (#1938)
     - Update search with client-side implementation (#22)
     - Rename ``get_extra_data_link()`` args (#837)
+    - Deprecate ``render_markdown()`` template tag (#1861)
 
 Fixed
 -----
@@ -86,6 +88,7 @@ Removed
 - **Projectroles**
     - ``AppSetting.user_modifiable`` field (#1721)
     - Deprecated base test classes and mixins (#1830)
+    - ``ProjectAppPluginPoint.search_template`` attribute support (#1861)
 
 
 v1.3.2 (2026-01-12)

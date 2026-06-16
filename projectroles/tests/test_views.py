@@ -188,7 +188,7 @@ APP_SETTINGS_TEST = [
         global_edit=False,
     ),
     PluginAppSettingDef(
-        name='dropdown_user_name_display',
+        name='user_dropdown_name_display',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_BOOLEAN,
         default=False,
@@ -445,7 +445,7 @@ class TestProjectSearchResultsView(
         )
 
     def test_get_keywords(self):
-        """Test GET with keywords and check that they are parsed OK"""
+        """Test GET with keywords"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search')
@@ -469,7 +469,7 @@ class TestProjectSearchResultsView(
         )
 
     def test_get_keywords_quoted(self):
-        """Test GET with quoted keywords and check that they are parsed OK"""
+        """Test GET with quoted keywords"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search')
@@ -494,8 +494,8 @@ class TestProjectSearchResultsView(
             + [p.name for p in self.plugins if p.search_enable],
         )
 
-    def test_get_keywords_project_title(self):
-        """Test GET with project:<title> in keywords"""
+    def test_get_keyword_project_title(self):
+        """Test GET with project keyword title value"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search')
@@ -518,8 +518,8 @@ class TestProjectSearchResultsView(
             + [p.name for p in self.plugins if p.search_enable],
         )
 
-    def test_get_keywords_category_title(self):
-        """Test GET with project:<category title> in keywords"""
+    def test_get_keyword_category_title(self):
+        """Test GET with project keywoard title value for category"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search')
@@ -543,7 +543,7 @@ class TestProjectSearchResultsView(
         )
 
     def test_get_search_string_parsing(self):
-        """Test GET with a challenging string and check that it is parsed OK"""
+        """Test GET search string parsing with complex input"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search')
@@ -578,7 +578,7 @@ class TestProjectSearchResultsView(
             + [p.name for p in self.plugins if p.search_enable],
         )
 
-    def test_get_keywords_missing(self):
+    def test_get_keyword_missing(self):
         """Test GET with incomplete keyword missing the value"""
         with self.login(self.user):
             response = self.client.get(

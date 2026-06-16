@@ -286,27 +286,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             )
             rows.append(
                 [
-                    # Name
+                    PluginSearchResultCell(value=name_html),  # Name
+                    PluginSearchResultCell(value=item_class),  # Type
                     PluginSearchResultCell(
-                        value=name_html,
-                    ),
-                    # Type
-                    PluginSearchResultCell(
-                        value=item_class,
-                    ),
-                    # Project
-                    PluginSearchResultCell(
-                        value=item.project.title,
-                        value_url=project_url,
-                    ),
-                    # Size
-                    PluginSearchResultCell(
-                        value=size,
-                    ),
-                    # Description
-                    PluginSearchResultCell(
-                        value=item.description,
-                    ),
+                        value=item.project.title, value_url=project_url
+                    ),  # Project
+                    PluginSearchResultCell(value=size),  # Size
+                    PluginSearchResultCell(value=item.description),  # Descript.
                 ]
             )
         ret = PluginSearchResult(

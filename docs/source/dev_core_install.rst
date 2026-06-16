@@ -78,6 +78,7 @@ environment configuration file.
 
     $ git clone https://github.com/bihealth/sodar-core.git
     $ cd sodar-core
+    $ git checkout dev
     $ cp env.example .env
 
 .. important::
@@ -85,6 +86,12 @@ environment configuration file.
     To enable loading environment variables from the ``.env`` file, make sure to
     set ``DJANGO_READ_DOT_ENV_FILE=1`` in the environment variables of the
     development host.
+
+.. important::
+
+    Make sure you are basing your work branches on  the ``dev`` branch. This is
+    the bleeding edge branch used for SODAR Core development, except for
+    specific situations such as patches to past releases.
 
 
 3. Install OS Dependencies

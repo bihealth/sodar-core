@@ -55,7 +55,7 @@ class TestAdminAlertDismissAjaxView(AdminalertsViewTestBase):
         )
 
     def test_get(self):
-        """Test AdminAlertActiveToggleAjaxView POST to deactivate alert"""
+        """Test TestAdminAlertDismissAjaxView GET to dismiss alert"""
         with self.login(self.superuser):
             response = self.client.get(self.url)
             self.assertEqual(response.status_code, 200)

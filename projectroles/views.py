@@ -3331,7 +3331,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
 
 
 class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
-    """View to handle accepting a project invite"""
+    """View for handle the accepting of a project invite"""
 
     def _redirect_process(self, login: bool = True) -> HttpResponseRedirect:
         """Redirect to the proper process view"""
@@ -3555,7 +3555,7 @@ class ProjectInviteProcessNewUserView(ProjectInviteProcessMixin, FormView):
 class ProjectInviteResendView(
     LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectInviteMixin, View
 ):
-    """View to handle resending a project invite"""
+    """View for handling the resending of a project invite"""
 
     permission_required = 'projectroles.invite_users'
 
@@ -3591,7 +3591,7 @@ class ProjectInviteRevokeView(
     ProjectInviteMixin,
     TemplateView,
 ):
-    """Batch delete/move confirm view"""
+    """View for revoking a project invite"""
 
     template_name = 'projectroles/invite_revoke_confirm.html'
     permission_required = 'projectroles.invite_users'

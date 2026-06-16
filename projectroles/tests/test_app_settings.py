@@ -354,7 +354,7 @@ class TestAppSettingAPI(
         self.assertEqual(type(val), str)
 
     def test_get_scope_project_invalid_args(self):
-        """Test get() with scope project and invalid args"""
+        """Test get() with PROJECT scope and invalid args"""
         with self.assertRaises(ValueError):
             app_settings.get(
                 EXAMPLE_APP_NAME,
@@ -364,7 +364,7 @@ class TestAppSettingAPI(
             )
 
     def test_get_scope_user_invalid_args(self):
-        """Test get() with scope user and invalid args"""
+        """Test get() with USER scope and invalid args"""
         with self.assertRaises(ValueError):
             app_settings.get(
                 EXAMPLE_APP_NAME,
@@ -374,7 +374,7 @@ class TestAppSettingAPI(
             )
 
     def test_get_scope_project_user_invalid_args(self):
-        """Test get() with scope project_user and invalid args"""
+        """Test get() with PROJECT_USER scope and invalid args"""
         with self.assertRaises(ValueError):
             app_settings.get(
                 EXAMPLE_APP_NAME,
@@ -384,7 +384,7 @@ class TestAppSettingAPI(
             )
 
     def test_get_scope_site_invalid_args(self):
-        """Test get() with scope site and invalid args"""
+        """Test get() with SITE scope and invalid args"""
         with self.assertRaises(ValueError):
             app_settings.get(
                 EXAMPLE_APP_NAME,

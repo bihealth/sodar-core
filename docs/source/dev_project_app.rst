@@ -608,26 +608,29 @@ It is expected to have the content in a ``card-body`` container:
    </div>
 
 
-Project Search API and Template
-===============================
+.. _dev_project_app_search:
 
-If you want to implement search in your project app, you need to implement
-the ``search()`` method in your plugin. The results will be loaded
-asynchronously and rendered according to the structure specified in the
-:py:class:`PluginSearchResult` objects returned by the ``search()`` method. The
-style of the search results table can be customized by providing the path to a
-CSS file in the ``search_css`` attribute.
+Search API
+==========
+
+To enable site-wide search in your project app, you need to implement the
+``search()`` method in your plugin. This method is called by SODAR Core to
+render results asynchronously in the UI. The method is expected to return search
+results as well as attributes defining how to render the results in the UI.
 
 .. hint::
 
-   Implementing search *can* be complex. If you have access to the main SODAR
-   repository, apps in that project might prove useful examples.
+    Existing SODAR Core and SODAR Server apps can provide useful examples on how
+    to implement search in your apps.
 
-The search() Function
----------------------
+Plugin search() Method
+----------------------
 
-See the signature of ``search()`` in
-``projectroles.plugins.ProjectAppPluginPoint``. The arguments are as follows:
+For a full list of attributes for ``search()``, the ``PluginSearchResult``
+return data class and related classes, see the
+:ref:`plugin API documentation <app_projectroles_api_django_plugins>`.
+
+The arguments for ``search()`` are as follows:
 
 ``search_terms``
     - One or more terms to be searched for (list of strings). Expected to be
@@ -658,14 +661,16 @@ Currently we support two keyword arguments:
 .. note::
 
    Within this method, you are expected to verify appropriate access of the
-   searching user yourself!
+   searching user to the returned objects yourself. This can be done with e.g.
+   ``User.has_perm('your_app.your_perm_here')``.
 
 The return data is a list of one or more ``PluginSearchResult`` objects. The
 objects are expected to be split between search categories, of which there can
-be one or multiple. This is useful where e.g. the same type of HTML list isn't
-suitable for all returnable types. If only returning one type of data, you can
-use e.g. ``all`` as your only category. Example of a return table with two
-columns and one row:
+be one or multiple. This is useful where e.g. the same type of list or context
+isn't applicable to all returnable types. If only returning one type of data,
+you can use e.g. ``all`` as your only category.
+
+Example of a results table with two columns and one row:
 
 .. code-block:: python
 
@@ -675,14 +680,14 @@ columns and one row:
     # ...
     return [
         PluginSearchResult(
-            category='all',  # Category ID to be used in your search template
+            category='all',  # Category ID
             title='List title',  # Title of the result set
             search_types=[],  # Object types included in this category
             columns=[  # List of column specifictations for the results table
                 PluginSearchResultColumn(title='First field'),
                 PluginSearchResultColumn(title='Second field'),
             ],
-            rows=[  # List of row specifications, each row is a list of cells
+            rows=[  # List of rows, each row consisting of a list of cells
                 [
                     PluginSearchResultCell(value='Result name'),
                     PluginSearchResultCell(value='Result description')
@@ -691,52 +696,25 @@ columns and one row:
         )
     ]
 
-.. warning::
+Search Result Customization
+---------------------------
 
-    The earlier search implementation expected a ``dict`` as return data. This
-    has been deprecated and support for it will be removed in SODAR Core v1.1.
-
-
-Search Results
---------------
-
-Projectroles will build an HTML table from the search results using
-the structure of the ``PluginSearchResult`` object. The ``title`` and
-``table_class`` attributes define the title and HTML class of the
-whole table. The ``columns`` attribute specifies, for each field, the
-title and the HTML class assigned to cells in that field. Furthermore,
-``PluginSearchResultColumn`` objects can be used to customize the display
-of the search results for that field using one or more of the following
-attributes:
-
-- ``overflow`` (bool): whether the column content is allowed to overflow;
-- ``value_html`` (bool): whether the ``value`` field of corresponding
-  ``PluginSearchResultCell`` objects should be interpret as HTML (by default,
-  it is treated as plain text);
-- ``highlight`` (bool): if true, the search terms will be highlighted in this
-  column.
-- ``orderable`` (bool): if false, the table will not be orderable by the content
-  of this column.
-- ``searchable`` (bool): if false, the table will not be filterable by the content
-  of this column.
-
-The ``rows`` attribute contains the actual data returned by the search. Each
-row is a list of ``PluginSearchResultCell`` objects, each object corresponding
-to a column of the table. Typically, cells contain either plain text or
-link anchors. This type of cell can be specified using the ``value`` and
+Typically, cells in search result rows contain either plain text or link
+anchors. This type of cell can be specified using the ``value`` and
 ``value_url`` attributes. If ``value_url`` is present, the cell will be a
-hyperlink with that URL as the destination. For more complex types of cells,
-for example if you want to include badges or multiple links, set ``value_html``
-to True for the corresponding column and put the HTML directly in the ``value``
-attribute of ``PluginSearchResultCell``. In this case, the ``value_url``
-attribute will be ignored. In addition to the HTML class assigned to the whole
-column, an extra class for individual cells can be set with the ``cell_class``
-attribute.
+hyperlink with that URL as the destination.
+
+For more complex cases, e.g. including HTML badges or multiple links, set
+``value_html`` to ``True`` for the corresponding column and place HTML directly
+in the ``value`` attribute of ``PluginSearchResultCell``. In this case, the
+``value_url`` attribute will be ignored. In addition to the CSS class assigned
+to the whole column, an extra class for individual cells can be set with the
+``cell_class`` attribute.
 
 The style of the app's search results table can be customized by setting the
-path to a CSS file in the plugin's ``search_css`` attribute. Within this CSS
-file, the correct table can be targeted by using the HTML class specified in
-the search results.
+path to a CSS file in the plugin's ``search_css`` attribute. Within this file,
+the correct table can be targeted by using the CSS class declared in
+``PluginSearchResult.table_class``.
 
 
 .. _dev_project_app_rest_api:

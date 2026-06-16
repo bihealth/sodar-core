@@ -36,7 +36,8 @@ class Command(
 ):
     help = (
         'Remove all roles from a user. Replace owner roles with given user or '
-        'parent owner. Optionally clear out all personal data.'
+        'parent owner. Optionally pseudonymize user by clearing their real '
+        'name and email address.'
     )
 
     @classmethod
@@ -190,9 +191,8 @@ class Command(
             required=False,
             default=False,
             action='store_true',
-            help='Clear out all personal user data and replace the username '
-            'with a random string (this takes effect only if applied '
-            'together with --deactivate)',
+            help='Clear real name and email of user, replace username with '
+            'random string (must be applied together with --deactivate)',
         )
         parser.add_argument(
             '-c',

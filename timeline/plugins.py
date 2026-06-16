@@ -110,30 +110,33 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         return user.has_perm('timeline.view_site_timeline')
 
     @classmethod
-    def _get_event_full_description(
+    def _get_description_html(
         cls,
         event: TimelineEvent,
         plugin_lookup: dict,
         extra_class: str = 'mr-1',
     ) -> str:
-        """Get an HTML string giving the full description of a timeline event"""
-        components = [
-            get_app_badge(event, plugin_lookup, extra_class=extra_class)
-        ]
+        """
+        Return HTML-decorated description of a timeline event.
+
+        :param event: TimelineEvent object
+        :param plugin_lookup: Dict of app plugins with app name as key
+        :param extra_class: String for CSS classes to add to badges
+        :return: String (contains HTML)
+        """
+        ret = [get_app_badge(event, plugin_lookup, extra_class=extra_class)]
         if event.user:
-            components.append(
-                get_user_badge(event.user, extra_class=extra_class)
-            )
+            ret.append(get_user_badge(event.user, extra_class=extra_class))
         if event.project:
-            components.append(
+            ret.append(
                 get_project_badge(event.project, extra_class=extra_class)
             )
-        components.append(
+        ret.append(
             '<span>'
             + get_event_description(event, plugin_lookup).capitalize()
             + '</span>'
         )
-        return ' '.join(components)
+        return ' '.join(ret)
 
     def get_statistics(self) -> dict:
         return {
@@ -182,14 +185,10 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             rows.append(
                 [
                     # Timestamp
-                    PluginSearchResultCell(
-                        value=get_timestamp(item),
-                    ),
+                    PluginSearchResultCell(value=get_timestamp(item)),
                     # Description
                     PluginSearchResultCell(
-                        value=self._get_event_full_description(
-                            item, plugin_lookup
-                        ),
+                        value=self._get_description_html(item, plugin_lookup)
                     ),
                     # Status
                     PluginSearchResultCell(

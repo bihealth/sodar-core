@@ -2100,7 +2100,7 @@ class TestSyncRemoteDataUpdate(
         self.assertEqual(model_to_dict(p_contrib_obj), expected)
 
     def test_update_superuser(self):
-        """Test that active status is not changed during sync for superusers"""
+        """Test sync with superuser and is_active=False"""
         remote_data = deepcopy(self.remote_data)
         remote_data['users'][self.admin_user.sodar_uuid] = {
             'sodar_uuid': self.admin_user.sodar_uuid,
