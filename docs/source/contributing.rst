@@ -85,14 +85,15 @@ Ready to contribute code to SODAR Core? Here are the steps to get started.
 
     $ git checkout -b 123-branch-name dev
 
-5. When you're done making changes, make sure to apply proper formatting using
-   Black. Next, check linting with flake8. Finally, run the tests.::
+5. When you're done making changes, make sure to apply proper formatting and run
+   linting to ensure the correct code style. Finally, run the tests. ::
 
-    $ make black
-    $ flake8 .
+    $ make format
+    $ make lint
     $ make test
 
-6. Once flake8 and tests, commit your changes and push your branch to GitHub. ::
+6. Once the checks and tests pass, commit your changes and push your branch to
+   GitHub. ::
 
     $ git add .
     $ git commit -m "add/update/fix issue-description-here (#issue-id)"

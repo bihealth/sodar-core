@@ -21,11 +21,8 @@
     {% endif %}
   </td>
   <td class="sodar-tl-item-desc">
-    {% get_app_icon_html event plugin_lookup as event_icon %}
-    <span class="badge bg-secondary text-white sodar-obj-badge sodar-tl-event-badge mr-1">
-      {{ event_icon|safe }}
-      {% get_event_name event %}
-    </span>
+    {% get_app_badge event plugin_lookup 'mr-1' as event_icon %}
+    {{ event_icon|safe }}
     {% if event.user %}
       {% get_user_badge event.user 'mr-1' as user_badge %}
       {{ user_badge | safe }}

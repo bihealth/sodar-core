@@ -73,7 +73,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         Handle role update for an existing user.
 
         :param project: Project object
-        ;param user: User object
+        :param user: User object
         :param role: Role object
         """
         logger.info(f'Updating role of user {user.username} to {role.name}..')
@@ -89,7 +89,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         elif (
             role_as
             and role_as.project != project
-            and role_as.role.rank > role.rank
+            and role_as.role.rank < role.rank
         ):
             logger.warning(
                 'Skipping as demoting an inherited role is not permitted'
@@ -97,8 +97,8 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             return
         self.modify_assignment(
             data={'user': user, 'role': role},
-            request=self.request,
             project=project,
+            request=self.request,
             instance=role_as,
         )
         self.update_count += 1

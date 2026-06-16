@@ -1,7 +1,5 @@
 """Template tags for the bgjobs app"""
 
-from typing import Any
-
 from django import template
 from django.db.models import QuerySet
 
@@ -32,9 +30,9 @@ def specialize_job(bg_job: BackgroundJob) -> BackgroundJob:
     job_specs = {}
     # Setup the global map
     for plugin in BackgroundJobsPluginPoint.get_plugins():
-        assert not (
-            set(plugin.job_specs) & set(job_specs)
-        ), 'Registering model twice!'
+        assert not (set(plugin.job_specs) & set(job_specs)), (
+            'Registering model twice!'
+        )
         job_specs.update(plugin.job_specs)
 
     klass = job_specs.get(bg_job.job_type)
@@ -45,12 +43,3 @@ def specialize_job(bg_job: BackgroundJob) -> BackgroundJob:
             return klass.objects.get(bg_job=bg_job)
         except klass.DoesNotExist:
             return bg_job
-
-
-# Originally from dict.py in varfish-web (see issue #97)
-@register.filter
-def keyvalue(data: dict, key: str) -> Any:
-    if hasattr(data, 'get'):
-        return data.get(key)
-    else:
-        return data[key]

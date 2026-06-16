@@ -47,6 +47,12 @@ Base mixins and classes for building UI views can be found in
     :members:
     :show-inheritance:
 
+.. autoclass:: HostConfirmDeleteView
+    :members:
+    :show-inheritance:
+
+
+.. _app_projectroles_api_django_plugins:
 
 Plugins
 =======
@@ -64,7 +70,32 @@ Models
 Projectroles models are used by other apps for project access and metadata
 management as well as linking objects to projects.
 
-.. automodule:: projectroles.models
+.. autoclass:: projectroles.models.Project
+    :members:
+
+.. autoclass:: projectroles.models.Role
+    :members:
+
+.. autoclass:: projectroles.models.RoleAssignment
+    :members:
+
+.. autoclass:: projectroles.models.AppSetting
+    :members:
+    :no-index: type
+
+.. autoclass:: projectroles.models.ProjectInvite
+    :members:
+
+.. autoclass:: projectroles.models.RemoteSite
+    :members:
+
+.. autoclass:: projectroles.models.RemoteProject
+    :members:
+
+.. autoclass:: projectroles.models.SODARUser
+    :members:
+
+.. autoclass:: projectroles.models.SODARUserAdditionalEmail
     :members:
 
 
@@ -104,7 +135,6 @@ General utility functions are stored in ``utils.py``.
 
 .. automodule:: projectroles.utils
     :members:
-
 
 .. _app_projectroles_api_django_ajax_common:
 

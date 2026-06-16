@@ -27,6 +27,8 @@ urlpatterns = [
     path('icons/', include('dj_iconify.urls')),
     # Social auth for OIDC support
     path('social/', include('social_django.urls')),
+    # Markdown support from martor
+    path('martor/', include('martor.urls')),
     # Projectroles URLs
     path('project/', include('projectroles.urls')),
     # Admin Alerts URLs

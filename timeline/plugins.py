@@ -1,25 +1,41 @@
 """Plugins for the Timeline app"""
 
-from typing import Optional
+import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS, Project
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     BackendPluginPoint,
     SiteAppPluginPoint,
     PluginSearchResult,
+    PluginSearchResultColumn,
+    PluginSearchResultCell,
+)
+from projectroles.templatetags.projectroles_common_tags import (
+    get_user_badge,
+    get_project_badge,
 )
 from projectroles.utils import get_display_name
 
 from timeline.api import TimelineAPI
 from timeline.models import TimelineEvent
+from timeline.templatetags.timeline_tags import (
+    get_app_badge,
+    get_event_description,
+    get_plugin_lookup,
+    get_status_style,
+    get_timestamp,
+)
 from timeline.urls import urls_ui_project, urls_ui_site, urls_ui_admin
 
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 # Local constants
@@ -62,8 +78,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: List of search object types for the app
     search_types = ['timeline']
 
-    #: Search results template
-    search_template = 'timeline/_search_results.html'
+    #: Search results CSS
+    search_css = 'timeline/css/search.css'
 
     #: App card template for the project details page
     details_template = 'timeline/_details_card.html'
@@ -93,6 +109,35 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             return user.has_perm('timeline.view_classified_site_event')
         return user.has_perm('timeline.view_site_timeline')
 
+    @classmethod
+    def _get_description_html(
+        cls,
+        event: TimelineEvent,
+        plugin_lookup: dict,
+        extra_class: str = 'mr-1',
+    ) -> str:
+        """
+        Return HTML-decorated description of a timeline event.
+
+        :param event: TimelineEvent object
+        :param plugin_lookup: Dict of app plugins with app name as key
+        :param extra_class: String for CSS classes to add to badges
+        :return: String (contains HTML)
+        """
+        ret = [get_app_badge(event, plugin_lookup, extra_class=extra_class)]
+        if event.user:
+            ret.append(get_user_badge(event.user, extra_class=extra_class))
+        if event.project:
+            ret.append(
+                get_project_badge(event.project, extra_class=extra_class)
+            )
+        ret.append(
+            '<span>'
+            + get_event_description(event, plugin_lookup).capitalize()
+            + '</span>'
+        )
+        return ' '.join(ret)
+
     def get_statistics(self) -> dict:
         return {
             'event_count': {
@@ -113,8 +158,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         self,
         search_terms: list[str],
         user: User,
-        search_type: Optional[str] = None,
-        keywords: Optional[list[str]] = None,
+        projects: QuerySet[Project],
+        **kwargs: str,
     ) -> list[PluginSearchResult]:
         """
         Return app items based on one or more search terms, user, optional type
@@ -123,19 +168,59 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :param search_terms: Search terms to be joined with the OR operator
                              (list of strings)
         :param user: User object for user initiating the search
-        :param search_type: String
-        :param keywords: List (optional)
+        :param projects: QuerySet of projects where the terms are searched
+        :param kwargs: Search options as key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
         items = []
-        if not search_type or search_type == 'timeline':
-            events = list(TimelineEvent.objects.find(search_terms, keywords))
+        search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
+        if kwargs.get('type', 'timeline') == 'timeline':
+            # NOTE: the search is already limited to ``search_limit`` results
+            # within the find() method.
+            events = TimelineEvent.objects.find(search_terms, projects, kwargs)
             items = [e for e in events if self._check_permission(user, e)]
+        plugin_lookup = get_plugin_lookup()
+        rows = []
+        for item in items:
+            rows.append(
+                [
+                    # Timestamp
+                    PluginSearchResultCell(value=get_timestamp(item)),
+                    # Description
+                    PluginSearchResultCell(
+                        value=self._get_description_html(item, plugin_lookup)
+                    ),
+                    # Status
+                    PluginSearchResultCell(
+                        value=item.get_status().status_type,
+                        cell_class=get_status_style(item.get_status()),
+                    ),
+                ]
+            )
         ret = PluginSearchResult(
             category='all',
             title='Timeline Events',
             search_types=['timeline'],
-            items=items,
+            columns=[
+                PluginSearchResultColumn(
+                    title='Timestamp',
+                    column_class='text-nowrap',
+                ),
+                PluginSearchResultColumn(
+                    title='Description',
+                    highlight=True,
+                    value_html=True,
+                    overflow=True,
+                    orderable=False,
+                ),
+                PluginSearchResultColumn(
+                    title='Status',
+                    column_class='text-light sodar-tl-item-status',
+                ),
+            ],
+            rows=rows,
+            table_class='sodar-tl-search-table',
+            result_limit=search_limit,
         )
         return [ret]
 

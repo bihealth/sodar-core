@@ -276,14 +276,14 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': None,
                     'description': self.category.description,
-                    'readme': self.category.readme.raw,
+                    'readme': self.category.readme,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_READ_INFO,
                     'description': self.project.description,
-                    'readme': self.project.readme.raw,
+                    'readme': self.project.readme,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'remote_sites': [str(self.peer_site.sodar_uuid)],
                 },
@@ -323,7 +323,7 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': None,
                     'description': self.category.description,
-                    'readme': self.category.readme.raw,
+                    'readme': self.category.readme,
                 },
                 str(sub_category.sodar_uuid): {
                     'title': sub_category.title,
@@ -331,14 +331,14 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'description': sub_category.description,
-                    'readme': sub_category.readme.raw,
+                    'readme': sub_category.readme,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_READ_INFO,
                     'description': self.project.description,
-                    'readme': self.project.readme.raw,
+                    'readme': self.project.readme,
                     'parent_uuid': str(sub_category.sodar_uuid),
                     'remote_sites': [],
                 },
@@ -360,6 +360,19 @@ class TestGetSourceData(
             site=self.peer_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
+        # Add an inactive user to test activity sync
+        user_inactive = self.make_sodar_user(
+            username='user_inactive@' + SOURCE_USER_DOMAIN,
+            name='Inactive User',
+            first_name='Inactive',
+            last_name='User',
+            email='user_inactive@example.com',
+        )
+        user_inactive.is_active = False
+        user_inactive.save()
+        contrib_as = self.make_assignment(
+            self.project, user_inactive, self.role_contributor
+        )
         sync_data = self.remote_api.get_source_data(**self.get_kw)
         expected = {
             'users': {
@@ -371,8 +384,20 @@ class TestGetSourceData(
                     'email': self.user_source.email,
                     'additional_emails': [],
                     'groups': [SOURCE_USER_GROUP],
+                    'is_active': self.user_source.is_active,
                     'sodar_uuid': str(self.user_source.sodar_uuid),
-                }
+                },
+                str(user_inactive.sodar_uuid): {
+                    'username': user_inactive.username,
+                    'name': user_inactive.name,
+                    'first_name': user_inactive.first_name,
+                    'last_name': user_inactive.last_name,
+                    'email': user_inactive.email,
+                    'additional_emails': [],
+                    'groups': [SOURCE_USER_GROUP],
+                    'is_active': False,
+                    'sodar_uuid': str(user_inactive.sodar_uuid),
+                },
             },
             'projects': {
                 str(self.category.sodar_uuid): {
@@ -381,7 +406,7 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_ROLES,
                     'parent_uuid': None,
                     'description': self.category.description,
-                    'readme': self.category.readme.raw,
+                    'readme': self.category.readme,
                     'roles': {
                         str(self.category_owner_as.sodar_uuid): {
                             'user': self.user_source.username,
@@ -394,13 +419,17 @@ class TestGetSourceData(
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_READ_ROLES,
                     'description': self.project.description,
-                    'readme': self.project.readme.raw,
+                    'readme': self.project.readme,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'roles': {
                         str(self.project_owner_as.sodar_uuid): {
                             'user': self.user_source.username,
                             'role': self.role_owner.name,
-                        }
+                        },
+                        str(contrib_as.sodar_uuid): {
+                            'user': user_inactive.username,
+                            'role': self.role_contributor.name,
+                        },
                     },
                     'remote_sites': [str(self.peer_site.sodar_uuid)],
                 },
@@ -416,6 +445,21 @@ class TestGetSourceData(
             'app_settings': {},
         }
         self.assertEqual(sync_data, expected)
+
+    def test_get_read_roles_v2_0(self):
+        """Test get_source_data() with user roles and API v2.0"""
+        self.make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        self.get_kw['req_version'] = '2.0'
+        sync_data = self.remote_api.get_source_data(**self.get_kw)
+        # Active status should not be present
+        self.assertNotIn(
+            'is_active',
+            sync_data['users'][str(self.user_source.sodar_uuid)].keys(),
+        )
 
     def test_get_read_roles_inherited(self):
         """Test get_source_data() with READ_ROLES and inherited contributor"""
@@ -743,6 +787,7 @@ class TestGetSourceData(
                     'email': self.user_source.email,
                     'additional_emails': [],
                     'groups': [SOURCE_USER_GROUP],
+                    'is_active': self.user_source.is_active,
                     'sodar_uuid': str(self.user_source.sodar_uuid),
                 }
             },
@@ -753,14 +798,14 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': None,
                     'description': self.category.description,
-                    'readme': self.category.readme.raw,
+                    'readme': self.category.readme,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_REVOKED,
                     'description': self.project.description,
-                    'readme': self.project.readme.raw,
+                    'readme': self.project.readme,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'roles': {
                         str(self.project_owner_as.sodar_uuid): {
@@ -843,7 +888,7 @@ class SyncRemoteDataTestBase(
         self.admin_user = self.make_user(settings.PROJECTROLES_DEFAULT_ADMIN)
         self.admin_user.is_staff = True
         self.admin_user.is_superuser = True
-        self.maxDiff = None
+        self.admin_user.save()
         # Init source site
         self.source_site = self.make_site(
             name=SOURCE_SITE_NAME,
@@ -866,6 +911,7 @@ class SyncRemoteDataTestBase(
                     'email': SOURCE_USER_EMAIL,
                     'additional_emails': [],
                     'groups': [SOURCE_USER_GROUP],
+                    'is_active': True,
                 },
             },
             'projects': {
@@ -960,6 +1006,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
                     'email': SOURCE_USER2_EMAIL,
                     'additional_emails': [],
                     'groups': [SOURCE_USER2_GROUP],
+                    'is_active': True,
                 },
                 SOURCE_USER3_UUID: {
                     'sodar_uuid': SOURCE_USER3_UUID,
@@ -970,6 +1017,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
                     'email': SOURCE_USER3_EMAIL,
                     'additional_emails': [],
                     'groups': [SOURCE_USER3_GROUP],
+                    'is_active': False,
                 },
                 SOURCE_USER4_UUID: {
                     'sodar_uuid': SOURCE_USER4_UUID,
@@ -980,6 +1028,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
                     'email': SOURCE_USER4_EMAIL,
                     'additional_emails': [],
                     'groups': [SOURCE_USER4_GROUP],
+                    'is_active': True,
                 },
             }
         )
@@ -1086,6 +1135,10 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
         new_user2 = User.objects.get(username=SOURCE_USER2_USERNAME)
         new_user3 = User.objects.get(username=SOURCE_USER3_USERNAME)
         new_user4 = User.objects.get(username=SOURCE_USER4_USERNAME)
+        self.assertTrue(new_user.is_active)
+        self.assertTrue(new_user2.is_active)
+        self.assertFalse(new_user3.is_active)
+        self.assertTrue(new_user4.is_active)
         category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
         c_owner_obj = RoleAssignment.objects.get(
             sodar_uuid=SOURCE_CATEGORY_ROLE_UUID
@@ -1279,7 +1332,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
@@ -1290,7 +1342,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
@@ -1301,7 +1352,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'app_plugin': None,
             'project': project_obj.id,
             'user': new_user.id,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_STAR_UUID, expected)
 
@@ -1350,9 +1400,9 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
     def test_create_app_setting_local(self):
         """Test sync with local app setting"""
         self.remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
-        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
-            'global'
-        ] = False
+        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['global'] = (
+            False
+        )
         expected = deepcopy(self.remote_data)
         self.remote_api.sync_remote_data(self.source_site, self.remote_data)
 
@@ -1534,12 +1584,12 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
 
     def test_create_no_access(self):
         """Test sync with no READ_ROLE access set"""
-        self.remote_data['projects'][SOURCE_CATEGORY_UUID][
-            'level'
-        ] = REMOTE_LEVEL_READ_INFO
-        self.remote_data['projects'][SOURCE_PROJECT_UUID][
-            'level'
-        ] = REMOTE_LEVEL_READ_INFO
+        self.remote_data['projects'][SOURCE_CATEGORY_UUID]['level'] = (
+            REMOTE_LEVEL_READ_INFO
+        )
+        self.remote_data['projects'][SOURCE_PROJECT_UUID]['level'] = (
+            REMOTE_LEVEL_READ_INFO
+        )
         expected = deepcopy(self.remote_data)
         self.remote_api.sync_remote_data(self.source_site, self.remote_data)
 
@@ -1756,7 +1806,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'user': target_user.pk,
             'value': '0',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': obj.sodar_uuid,
         }
         self.assertEqual(model_to_dict(obj), expected)
@@ -1774,7 +1823,6 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'user': target_user.pk,
             'value': 'Local value',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': obj.sodar_uuid,
         }
         self.assertEqual(model_to_dict(obj), expected)
@@ -1834,17 +1882,17 @@ class TestSyncRemoteDataUpdate(
 
         # Change Peer Site data
         self.remote_data['peer_sites'][PEER_SITE_UUID]['name'] = NEW_PEER_NAME
-        self.remote_data['peer_sites'][PEER_SITE_UUID][
-            'description'
-        ] = NEW_PEER_DESC
-        self.remote_data['peer_sites'][PEER_SITE_UUID][
-            'user_display'
-        ] = NEW_PEER_USER_DISPLAY
+        self.remote_data['peer_sites'][PEER_SITE_UUID]['description'] = (
+            NEW_PEER_DESC
+        )
+        self.remote_data['peer_sites'][PEER_SITE_UUID]['user_display'] = (
+            NEW_PEER_USER_DISPLAY
+        )
         # Change projectroles app settings
         self.remote_data['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
-        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
-            'value'
-        ] = '192.168.1.1'
+        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['value'] = (
+            '192.168.1.1'
+        )
         self.remote_data['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
         self.remote_data['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
         self.remote_data['users'][SOURCE_USER_UUID]['status'] = 'updated'
@@ -2051,6 +2099,32 @@ class TestSyncRemoteDataUpdate(
         }
         self.assertEqual(model_to_dict(p_contrib_obj), expected)
 
+    def test_update_superuser(self):
+        """Test sync with superuser and is_active=False"""
+        remote_data = deepcopy(self.remote_data)
+        remote_data['users'][self.admin_user.sodar_uuid] = {
+            'sodar_uuid': self.admin_user.sodar_uuid,
+            'username': self.admin_user.username,
+            'name': 'Bob User',
+            'first_name': 'Bob',
+            'last_name': 'User',
+            'email': 'bob@sodar.org',
+            'additional_emails': [],
+            'groups': [SOURCE_USER_GROUP],
+            'is_active': False,
+        }
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][
+            self.new_role_uuid
+        ] = {
+            'user': self.admin_user.username,
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+        }
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
+        admin_user = User.objects.get(username=self.admin_user.username)
+        self.assertEqual(admin_user.name, 'Bob User')
+        self.assertTrue(admin_user.is_superuser)
+        self.assertTrue(admin_user.is_active)
+
     def test_update_assert_remote_objs(self):
         """Test sync for update and assert remote site and project"""
         self.assertEqual(RemoteProject.objects.all().count(), 3)
@@ -2146,7 +2220,6 @@ class TestSyncRemoteDataUpdate(
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
@@ -2157,7 +2230,6 @@ class TestSyncRemoteDataUpdate(
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
@@ -2168,7 +2240,6 @@ class TestSyncRemoteDataUpdate(
             'app_plugin': None,
             'project': self.project_obj.id,
             'user': self.user_target.id,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_STAR_UUID, expected)
 
@@ -2185,9 +2256,9 @@ class TestSyncRemoteDataUpdate(
             'status'
         ] = 'created'
         expected['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
-        expected['app_settings'][SET_IP_ALLOW_LIST_UUID][
-            'value'
-        ] = '192.168.1.1'
+        expected['app_settings'][SET_IP_ALLOW_LIST_UUID]['value'] = (
+            '192.168.1.1'
+        )
         expected['app_settings'][SET_IP_RESTRICT_UUID]['status'] = 'updated'
         expected['app_settings'][SET_IP_ALLOW_LIST_UUID]['status'] = 'updated'
         expected['app_settings'][SET_STAR_UUID]['status'] = 'skipped'
@@ -2294,9 +2365,9 @@ class TestSyncRemoteDataUpdate(
     def test_update_settings_local(self):
         """Test update with local app settings (should not be updated)"""
         self.remote_data['app_settings'][SET_IP_RESTRICT_UUID]['global'] = False
-        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
-            'global'
-        ] = False
+        self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID]['global'] = (
+            False
+        )
         self.remote_data['app_settings'][SET_IP_RESTRICT_UUID]['value'] = True
         self.remote_data['app_settings'][SET_IP_ALLOW_LIST_UUID][
             'value_json'
@@ -2312,7 +2383,6 @@ class TestSyncRemoteDataUpdate(
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_RESTRICT_UUID, expected)
         expected = {
@@ -2323,7 +2393,6 @@ class TestSyncRemoteDataUpdate(
             'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_IP_ALLOW_LIST_UUID, expected)
         expected = {
@@ -2334,7 +2403,6 @@ class TestSyncRemoteDataUpdate(
             'app_plugin': None,
             'project': self.project_obj.id,
             'user': self.user_target.id,
-            'user_modifiable': True,
         }
         self.assert_app_setting(SET_STAR_UUID, expected)
 
@@ -2448,9 +2516,9 @@ class TestSyncRemoteDataUpdate(
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         # Revoke access to project
-        self.remote_data['projects'][SOURCE_PROJECT_UUID][
-            'level'
-        ] = REMOTE_LEVEL_REVOKED
+        self.remote_data['projects'][SOURCE_PROJECT_UUID]['level'] = (
+            REMOTE_LEVEL_REVOKED
+        )
         self.remote_data['projects'][SOURCE_PROJECT_UUID]['remote_sites'] = []
         self.remote_api.sync_remote_data(self.source_site, self.remote_data)
 

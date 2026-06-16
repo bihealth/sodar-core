@@ -7,7 +7,6 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     replaces = [
         ('sodarcache', '0001_initial'),
         ('sodarcache', '0002_make_user_optional'),

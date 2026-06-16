@@ -208,6 +208,12 @@ and *project viewer* (limited access to basic project information).
     Public access can only be set for projects. Categories will be visible
     for users with access to any category or project under them.
 
+.. note::
+
+    Public access status will **not** be synchronized to target sites if remote
+    project synchronization is used. Public access status has to be explicitly
+    granted on the target site for each project.
+
 Top Level Category Public Statistics
 ------------------------------------
 
@@ -435,6 +441,22 @@ transferred to the parent category owner. Example:
 
     $ ./manage.py removeroles --user alice --owner bob
 
+Transfer Roles Between Users
+----------------------------
+
+The ``transferroles`` management command can be used to transfer roles for all
+projects from one user to another, optionally deactivating the former. This is
+useful in cases where e.g. a user with multiple organizational accounts switches
+to a different one, or they switch from using an authentication system to
+another.
+
+If the new user already had a lower-ranking role in a project, the new user is
+promoted to the higher role. The old user can be deactivated by providing the
+``-d`` flag.
+
+.. code-block:: console
+
+    $ ./manage.py transferroles --old-user alice --new-user bob
 
 User Status Checking
 --------------------
@@ -641,6 +663,10 @@ Alternatively, the following management command can be used:
     users must be manually created by a target site admin in order for their
     data and roles to be synchronized.
 
+.. note::
+
+    Activity status for all users except superusers is synchronized.
+
 Project Detail View Links
 -------------------------
 
@@ -660,16 +686,48 @@ such.
 Search
 ======
 
+Two forms of site-wide search are provided by SODAR Core: basic search and
+advanced search.
+
+Basic Search
+------------
+
 The basic search form is displayed in the top navigation bar if enabled. It
-takes one string as a search parameter, followed by optional keyword argument.
-At this time, the keyword of ``type`` has been implemented, used to limit the
-search to a certain data type as specified in app plugins.
+takes a string as a search parameter, followed by optional ``keyword:value``
+pairs separated by whitespace. Search terms and keywords are case-insensitive.
+At this time, two keywords have been implemented:
 
-Left to the basic search form is a link to the *Advanced Search* page, where you
-can currently search for items using multiple search terms combined with the OR
-operator.
+``type``
+    Used to limit the search to a certain data type as specified in app
+    plugins.
+``project``
+    Used to restrict the search to the given project (specified either by
+    UUID or by title) and its children.
 
-Search results are split into results from different apps. For example, entering
+For example, if you want to search for folders containing the term
+``diabetes`` under category ``44407b43-85f1-48a9-917c-0df21d9af347``, you would
+enter: ::
+
+    diabetes type:folder project:44407b43-85f1-48a9-917c-0df21d9af347
+
+Or, if you want to search for entities related to ``Covid-19`` within a category
+titled ``Infectious diseases``, you can do it as follows. Note that if the
+search term or the project title contain spaces, they need to be enclosed between
+quotes. ::
+
+    covid-19 project:"infectious diseases"
+
+Advanced Search
+---------------
+
+Left to the basic search form is a link to the *Advanced Search* view, which
+allows for entering multiple search terms, which will be combined with the OR
+operator. In this view, keywords can be specified in a separate input element.
+
+Search Results
+--------------
+
+Search results are split into sections by application. For example, entering
 ``test`` will return all objects from all apps containing this string.
 Alternatively, entering ``test type:project`` will provide results from any app
 configured to produce results of type *project*. By default, this will result in

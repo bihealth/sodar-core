@@ -196,6 +196,16 @@ PROJECTROLES_APP_SETTINGS = [
         global_edit=False,
     ),
     PluginAppSettingDef(
+        name='user_dropdown_name_display',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=False,
+        label='Display user name in user dropdown',
+        description='Display your user name in the user dropdown link',
+        user_modifiable=True,
+        global_edit=True,
+    ),
+    PluginAppSettingDef(
         name='project_list_pagination',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_INTEGER,
@@ -409,14 +419,14 @@ class AppSettingAPI:
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: Setting value
         :raise: ValueError if app plugin is not found
-        :raise: KeyError if nothing is found with setting_name
+        :raise: ValueError if nothing is found with setting_name
         """
         if plugin_name == APP_NAME:
             s_defs = cls.get_projectroles_defs()
         else:
             s_defs = cls._get_defs(plugin_name=plugin_name)
         if setting_name not in s_defs:
-            raise KeyError(
+            raise ValueError(
                 f'Setting "{setting_name}" not found in app plugin '
                 f'"{plugin_name}"'
             )
@@ -445,6 +455,7 @@ class AppSettingAPI:
         project: Optional[Project] = None,
         user: Optional[User] = None,
         post_safe: bool = False,
+        validate: bool = True,
     ) -> Any:
         """
         Return app setting value for a project or a user. If not set, return
@@ -455,9 +466,16 @@ class AppSettingAPI:
         :param project: Project object (optional)
         :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
+        :param validate: Validate project and user args (bool, default=True)
         :return: Value
-        :raise: KeyError if nothing is found with setting_name
+        :raise: ValueError if nothing is found with setting_name
+        :raise: ValueError if neither project nor user are set
         """
+        if validate:
+            s_def = cls.get_definition(
+                name=setting_name, plugin_name=plugin_name
+            )
+            cls._validate_project_and_user(s_def.scope, project, user)
         if not user or user.is_authenticated:
             try:
                 val = AppSetting.objects.get_setting_value(
@@ -581,7 +599,7 @@ class AppSettingAPI:
         :raise: ValueError if validating and value is not accepted for setting
                 type
         :raise: ValueError if neither project nor user are set
-        :raise: KeyError if setting name is not found in plugin specification
+        :raise: ValueError if setting name is not found in plugin specification
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
         cls._validate_project_and_user(s_def.scope, project, user)
@@ -643,14 +661,12 @@ class AppSettingAPI:
             else:
                 app_plugin = cls._get_app_plugin(plugin_name)
                 app_plugin_model = app_plugin.get_model()
-            s_mod = bool(s_def.user_modifiable)
             s_vals = {
                 'app_plugin': app_plugin_model,
                 'project': project,
                 'user': user,
                 'name': setting_name,
                 'type': s_type,
-                'user_modifiable': s_mod,
             }
             if s_type == APP_SETTING_TYPE_JSON:
                 s_vals['value_json'] = cls._get_json_value(value)

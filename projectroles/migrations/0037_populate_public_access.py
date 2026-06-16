@@ -28,7 +28,6 @@ def revert_public_access(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('projectroles', '0036_project_public_access'),
     ]

@@ -5,6 +5,8 @@ from django.utils import timezone
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
 
 # Projectroles dependency
 from projectroles.tests.base import SiteUITestBase
@@ -93,6 +95,26 @@ class TestAlertMessage(AdminAlertUITestBase):
             self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-site-app')
         )
 
+    def test_message_dismissal(self):
+        """Test dismissal of alert for authenticated users"""
+        self.login_and_redirect(self.regular_user, reverse('home'))
+        close_link = self.selenium.find_element(
+            By.CLASS_NAME, 'sodar-alert-close-link'
+        )
+        self.assertIsNotNone(close_link)
+        close_link.click()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.invisibility_of_element_located(
+                (By.CLASS_NAME, 'sodar-alert-site-app')
+            )
+        )
+
+    def test_message_dismissal_anonymous(self):
+        """Test inability to dismiss alerts for anonymous users"""
+        self.selenium.get(self.build_selenium_url(reverse('login')))
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-close-link')
+
 
 class TestAdminAlertListView(AdminAlertUITestBase):
     """Tests for AdminAlertListView"""
@@ -101,16 +123,37 @@ class TestAdminAlertListView(AdminAlertUITestBase):
         super().setUp()
         self.url = reverse('adminalerts:list')
 
+    def test_user_dropdown_app(self):
+        """Test existence of items in list"""
+        expected = [(self.superuser, 1), (self.regular_user, 1)]
+        self.assert_element_count(
+            expected, self.url, 'sodar-navbar-link-adminalerts', 'id'
+        )
+
     def test_list_items(self):
         """Test existence of items in list"""
-        expected = [(self.superuser, 1)]
+        expected = [(self.superuser, 1), (self.regular_user, 1)]
         self.assert_element_count(
             expected, self.url, 'sodar-aa-alert-item', 'id'
         )
 
     def test_list_dropdown(self):
         """Test existence of alert dropdown in list"""
-        expected = [(self.superuser, 1)]
+        expected = [(self.superuser, 1), (self.regular_user, 0)]
         self.assert_element_count(
             expected, self.url, 'sodar-aa-alert-dropdown', 'class'
+        )
+
+    def test_list_create_button(self):
+        """Test existence of alert creation button"""
+        expected = [(self.superuser, 1), (self.regular_user, 0)]
+        self.assert_element_count(
+            expected, self.url, 'sodar-aa-alert-create', 'id'
+        )
+
+    def test_list_active_status_toggle(self):
+        """Test ability to toggle alert status in list"""
+        expected = [(self.superuser, 1), (self.regular_user, 0)]
+        self.assert_element_count(
+            expected, self.url, 'js-change-alert-state-button', 'class'
         )

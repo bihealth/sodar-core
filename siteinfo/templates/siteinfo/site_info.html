@@ -2,6 +2,7 @@
 
 {% load projectroles_common_tags %}
 {% load siteinfo_tags %}
+{% load static %}
 
 {% block title %}Site Info{% endblock title %}
 
@@ -93,18 +94,6 @@
           </dl>
         </div>
       </div>
-      {# Project App Statistics #}
-      {% for plugin, pl_data in project_plugins.items %}
-        {% include 'siteinfo/_app_stats.html' %}
-      {% endfor %}
-      {# Site app Statistics #}
-      {% for plugin, pl_data in site_plugins.items %}
-        {% include 'siteinfo/_app_stats.html' %}
-      {% endfor %}
-      {# Backend Statistics #}
-      {% for plugin, pl_data in backend_plugins.items %}
-        {% include 'siteinfo/_app_stats.html' %}
-      {% endfor %}
       {# Basic Site Info #}
       <div class="card" id="sodar-si-basic-card">
         <div class="card-header">
@@ -140,6 +129,12 @@
             {% endif %}
           </dl>
         </div>
+      </div>
+      {# All App Statistics #}
+      <div class="text-center" id="sodar-si-app-stats-loading">
+        <i class="iconify spin text-secondary"
+           data-icon="mdi:loading" data-height="48">
+        </i>
       </div>
     </div>
     {# Apps #}
@@ -182,7 +177,7 @@
         </div>
       </div>
       {# Enabled Backend Apps #}
-      <div class="card" id="sodar-si-site-apps-card">
+      <div class="card" id="sodar-si-backend-apps-card">
         <div class="card-header">
           <h4><i class="iconify" data-icon="mdi:server"></i> Backend Apps</h4>
         </div>
@@ -241,3 +236,9 @@
   </div>
 </div>
 {% endblock projectroles %}
+
+{% block javascript %}
+  {{ block.super }}
+  <!-- SiteInfo stats Javascript -->
+  <script type="text/javascript" src="{% static 'siteinfo/js/siteinfo.js' %}"></script>
+{% endblock javascript %}

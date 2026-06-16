@@ -66,6 +66,7 @@ APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 APP_NAME = 'projectroles'
 NO_LOCAL_USERS_MSG = 'Local users not allowed'
 VERSION_2_0 = parse_version('2.0')
+VERSION_2_1 = parse_version('2.1')
 
 
 class RemoteProjectAPI:
@@ -91,7 +92,11 @@ class RemoteProjectAPI:
 
     @classmethod
     def _add_parent_categories(
-        cls, sync_data: dict, category: Project, project_level: str
+        cls,
+        sync_data: dict,
+        category: Project,
+        project_level: str,
+        req_version: str,
     ) -> dict:
         """
         Add parent categories of a project to source site sync data.
@@ -103,7 +108,7 @@ class RemoteProjectAPI:
         """
         if category.parent:
             sync_data = cls._add_parent_categories(
-                sync_data, category.parent, project_level
+                sync_data, category.parent, project_level, req_version
             )
         # Add if not added yet OR if a READ_ROLES project is encountered
         if str(category.sodar_uuid) not in sync_data['projects'].keys() or (
@@ -118,7 +123,7 @@ class RemoteProjectAPI:
                     str(category.parent.sodar_uuid) if category.parent else None
                 ),
                 'description': category.description,
-                'readme': category.readme.raw,
+                'readme': category.readme,
             }
             if project_level == REMOTE_LEVEL_READ_ROLES:
                 cat_data['roles'] = {}
@@ -128,7 +133,9 @@ class RemoteProjectAPI:
                         'user': role_as.user.username,
                         'role': role_as.role.name,
                     }
-                    sync_data = cls._add_user(sync_data, role_as.user)
+                    sync_data = cls._add_user(
+                        sync_data, role_as.user, req_version
+                    )
             else:
                 cat_data['level'] = REMOTE_LEVEL_READ_INFO
             sync_data['projects'][str(category.sodar_uuid)] = cat_data
@@ -154,7 +161,9 @@ class RemoteProjectAPI:
         return sync_data
 
     @classmethod
-    def _add_user(cls, sync_data: dict, user: SODARUser) -> dict:
+    def _add_user(
+        cls, sync_data: dict, user: SODARUser, req_version: str
+    ) -> dict:
         """
         Add user to source site sync data.
 
@@ -178,6 +187,12 @@ class RemoteProjectAPI:
                 'groups': [g.name for g in user.groups.all()],
                 'sodar_uuid': str(user.sodar_uuid),
             }
+            if parse_version(req_version) >= VERSION_2_1:
+                sync_data['users'][str(user.sodar_uuid)].update(
+                    {
+                        'is_active': user.is_active,
+                    }
+                )
         return sync_data
 
     @classmethod
@@ -341,11 +356,11 @@ class RemoteProjectAPI:
                 REMOTE_LEVEL_REVOKED,
             ]:
                 project_data['description'] = project.description
-                project_data['readme'] = project.readme.raw
+                project_data['readme'] = project.readme
                 # Add parent categories and inherited roles
                 if project.parent:
                     sync_data = self._add_parent_categories(
-                        sync_data, project.parent, rp.level
+                        sync_data, project.parent, rp.level, req_version
                     )
                     project_data['parent_uuid'] = str(project.parent.sodar_uuid)
 
@@ -375,14 +390,16 @@ class RemoteProjectAPI:
                             'user': role_as.user.username,
                             'role': role_as.role.name,
                         }
-                        sync_data = self._add_user(sync_data, role_as.user)
+                        sync_data = self._add_user(
+                            sync_data, role_as.user, req_version
+                        )
             sync_data['projects'][str(rp.project_uuid)] = project_data
 
         # Sync USER scope settings
         for a in AppSetting.objects.filter(project=None).exclude(user=None):
             try:
                 # Add user if they lack roles in remote projects (see #1593)
-                self._add_user(sync_data, a.user)
+                self._add_user(sync_data, a.user, req_version)
                 sync_data = self._add_app_setting(sync_data, a, all_defs)
             except Exception as ex:
                 logger.error(self._get_app_setting_error(a, ex))
@@ -482,11 +499,39 @@ class RemoteProjectAPI:
             return self._check_local_categories(c_data['parent_uuid'])
         return False
 
+    def _sync_user_add_emails(self, user: User, add_emails: list[str]):
+        # Sync additional emails
+        deleted_emails = SODARUserAdditionalEmail.objects.filter(
+            user=user
+        ).exclude(email__in=add_emails)
+        email_update = False
+        for e in deleted_emails:
+            e.delete()
+            logger.info(
+                f'Deleted user {user.username} additional email "{e.email}"'
+            )
+            email_update = True
+        for e in add_emails:
+            if SODARUserAdditionalEmail.objects.filter(
+                user=user, email=e
+            ).exists():
+                continue
+            email_obj = SODARUserAdditionalEmail.objects.create(
+                user=user, email=e, verified=True
+            )
+            logger.info(
+                f'Created user {user.username} additional email '
+                f'"{email_obj.email}"'
+            )
+            email_update = True
+        return email_update
+
     def _sync_user(self, uuid: str, user_data: dict):
         """
         Synchronize user on target site. For local users, will only update an
         existing user object. Local users must be manually created. If local
-        users are not allowed, data is not synchronized.
+        users are not allowed, data is not synchronized. Active status is
+        explicitly synchronized.
 
         :param uuid: User UUID (string)
         :param user_data: User sync data (dict)
@@ -513,6 +558,10 @@ class RemoteProjectAPI:
                     and str(getattr(user, k)) != str(v)
                 ):
                     updated_fields.append(k)
+            # Don't synchronize active status for superusers to avoid unwanted
+            # lockouts for admins
+            if user.is_superuser and 'is_active' in updated_fields:
+                updated_fields.remove('is_active')
 
             if updated_fields:
                 user = self._update_obj(user, user_data, updated_fields)
@@ -569,30 +618,7 @@ class RemoteProjectAPI:
                     f'"{g}"'
                 )
 
-        # Sync additional emails
-        deleted_emails = SODARUserAdditionalEmail.objects.filter(
-            user=user
-        ).exclude(email__in=add_emails)
-        email_update = False
-        for e in deleted_emails:
-            e.delete()
-            logger.info(
-                f'Deleted user {user.username} additional email "{e.email}"'
-            )
-            email_update = True
-        for e in add_emails:
-            if SODARUserAdditionalEmail.objects.filter(
-                user=user, email=e
-            ).exists():
-                continue
-            email_obj = SODARUserAdditionalEmail.objects.create(
-                user=user, email=e, verified=True
-            )
-            logger.info(
-                f'Created user {user.username} additional email '
-                f'"{email_obj.email}"'
-            )
-            email_update = True
+        email_update = self._sync_user_add_emails(user, add_emails)
         # HACK: Re-add additional emails
         user_data['additional_emails'] = add_emails
         # Set user to updated if additional emails were changed
@@ -654,14 +680,11 @@ class RemoteProjectAPI:
         uuid = str(project.sodar_uuid)
         for k, v in project_data.items():
             if (
-                k not in ['parent', 'sodar_uuid', 'roles', 'readme']
+                k not in ['parent', 'sodar_uuid', 'roles']
                 and hasattr(project, k)
                 and str(getattr(project, k)) != str(v)
             ):
                 updated_fields.append(k)
-        # README is a special case
-        if project.readme.raw != project_data['readme']:
-            updated_fields.append('readme')
 
         if updated_fields or project.parent != parent:
             project = self._update_obj(project, project_data, updated_fields)
@@ -673,8 +696,9 @@ class RemoteProjectAPI:
             self.remote_data['projects'][uuid]['status'] = 'updated'
             if self.tl_user:  # Timeline
                 tl_desc = (
-                    'update project from remote site '
-                    '"{{{}}}" ({})'.format('site', ', '.join(updated_fields))
+                    'update project from remote site "{{{}}}" ({})'.format(
+                        'site', ', '.join(updated_fields)
+                    )
                 )
                 # TODO: Add extra_data
                 tl_event = self.timeline.add_event(
@@ -850,9 +874,9 @@ class RemoteProjectAPI:
                         r['user'], self.default_owner.username
                     )
                 )
-                self.remote_data['projects'][uuid]['roles'][r_uuid][
-                    'user'
-                ] = self.default_owner.username
+                self.remote_data['projects'][uuid]['roles'][r_uuid]['user'] = (
+                    self.default_owner.username
+                )
                 self.remote_data['projects'][uuid]['roles'][r_uuid][
                     'status_msg'
                 ] = status_msg
@@ -920,8 +944,9 @@ class RemoteProjectAPI:
 
                 if self.tl_user:
                     tl_desc = (
-                        'add role "{}" for {{{}}} '
-                        'from site {{{}}}'.format(role.name, 'user', 'site')
+                        'add role "{}" for {{{}}} from site {{{}}}'.format(
+                            role.name, 'user', 'site'
+                        )
                     )
                     tl_event = self.timeline.add_event(
                         project=project,
@@ -972,8 +997,9 @@ class RemoteProjectAPI:
                 }
                 if self.tl_user:  # Timeline
                     tl_desc = (
-                        'remove role "{}" from {{{}}} by site '
-                        '{{{}}}'.format(del_role.name, 'user', 'site')
+                        'remove role "{}" from {{{}}} by site {{{}}}'.format(
+                            del_role.name, 'user', 'site'
+                        )
                     )
                     tl_event = timeline.add_event(
                         project=project,
@@ -1190,8 +1216,10 @@ class RemoteProjectAPI:
             app_plugin = Plugin.objects.filter(name=ad['app_plugin']).first()
             if not app_plugin:
                 logger.debug(
-                    skip_msg + 'App plugin not found with name '
-                    '"{}"'.format(ad['app_plugin'])
+                    skip_msg
+                    + 'App plugin not found with name "{}"'.format(
+                        ad['app_plugin']
+                    )
                 )
                 return
         if user_name:

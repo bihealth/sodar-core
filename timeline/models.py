@@ -70,16 +70,25 @@ class TimelineEventManager(models.Manager):
         ).order_by(order_by)
 
     def find(
-        self, search_terms: list[str], keywords: Optional[dict] = None
+        self,
+        search_terms: list[str],
+        projects: QuerySet[Project],
+        keywords: Optional[dict] = None,
     ) -> QuerySet:
         """
         Return events matching the query.
 
         :param search_terms: Search terms (list of strings)
+        :param projects: QuerySet of projects where the terms are searched
         :param keywords: Optional search keywords as key/value pairs (dict)
         :return: QuerySet of TimelineEvent objects
         """
         search_limit = getattr(settings, 'TIMELINE_SEARCH_LIMIT', 250)
+        objects = (
+            super()
+            .get_queryset()
+            .filter(Q(project__in=projects) | Q(project__isnull=True))
+        )
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(event_name__icontains=t), Q.OR)
@@ -89,9 +98,7 @@ class TimelineEventManager(models.Manager):
             term_query.add(Q(user__name__icontains=t), Q.OR)
             term_query.add(Q(user__username__icontains=t), Q.OR)
         items = (
-            super()
-            .get_queryset()
-            .filter(term_query)
+            objects.filter(term_query)
             .annotate(timestamp=Max('status_changes__timestamp'))
             .order_by('-timestamp')
         )

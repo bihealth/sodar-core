@@ -26,6 +26,12 @@ env accordingly. For development and testing, it is highly recommended to set
 place the env variables into a ``.env`` file in the root directory of your
 Django site repository. See ``env.example`` for an example of such a file.
 
+.. hint::
+
+    Although SODAR Core is not intended to be deployed in production by itself,
+    we provide an example of a production configuration in
+    ``config/settings/production.py``. You can use this as a starting point for
+    your own site's production settings.
 
 Site Package and Paths
 ======================
@@ -55,8 +61,7 @@ following apps need to be included in the list in order for SODAR Core to work:
         'crispy_forms',
         'rules.apps.AutodiscoverRulesConfig',
         'djangoplugins',
-        'pagedown',
-        'markupfield',
+        'martor',
         'rest_framework',
         'knox',
         'projectroles.apps.ProjectrolesConfig',
@@ -93,16 +98,36 @@ projectroles processors:
     'projectroles.context_processors.sidebar_processor',
 
 
+.. _app_projectroles_settings_email:
+
 Email
 =====
 
-Under ``EMAIL_CONFIGURATION`` or ``EMAIL``, configure email settings:
+For sending email, a number of configuration options are available. Note that
+these only need to be configured for deployment in production. For development,
+default settings control "sending" emails within the Django server only to
+verify email functionality.
+
+You should ensure SODAR Core specific email settings are defined in your Django
+settings file:
 
 .. code-block:: python
 
     EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@example.com')
     EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX', default='')
 
+Environment variables to set are as follows:
+
+``EMAIL_URL``
+    URL of the email server along with its protocol, user and password. Email
+    server authentication settings will be derived from this URL (string)
+``EMAIL_SENDER``
+    Sender address to be displayed in sent email (string)
+``EMAIL_SUBJECT_PREFIX``
+    Prefix to be displayed in the subject line of sent email (string)
+
+
+.. _app_projectroles_settings_auth:
 
 Authentication
 ==============
@@ -142,6 +167,52 @@ site.
 .. code-block:: python
 
     ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
+
+
+Markdown
+========
+
+SODAR Core uses ``django-markdown-editor`` (`martor
+<https://django-markdown-editor.readthedocs.io>`__) for markdown form fields,
+widgets, and rendering. Users can author markdown content into supported fields
+using martor editor, which supports real-time rendering and syntax highlighting.
+Furthermore, martor is used to render markdown content in views and templates.
+
+The following settings can be used to configure martor:
+
+.. code-block:: python
+
+    # Choose your preferred theme: "bootstrap" or "semantic"
+    MARTOR_THEME = env.str('MARTOR_THEME', 'bootstrap')
+    MARTOR_ENABLE_LABEL = env.bool('MARTOR_ENABLE_LABEL', True)
+    MARTOR_ENABLE_CONFIGS = {
+        'imgur': env.str('MARTOR_ENABLE_CONFIG_IMGUR', 'false'),
+        'mention': env.str('MARTOR_ENABLE_CONFIG_MENTION', 'false'),
+        'jquery': env.str('MARTOR_ENABLE_CONFIG_JQUERY', 'false'),
+        'living': env.str('MARTOR_ENABLE_CONFIG_LIVING', 'true'),
+        'spellcheck': env.str('MARTOR_ENABLE_CONFIG_SPELLCHECK', 'false'),
+        'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
+    }
+    MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
+        'MARTOR_ALTERNATIVE_CSS_FILE_THEME',
+        'projectroles/css/projectroles.css',
+    )
+    MARTOR_ENABLE_ADMIN_CSS = env.bool('MARTOR_ENABLE_ADMIN_CSS', False)
+
+.. note::
+
+    Setting ``CSRF_COOKIE_HTTPONLY = 'false'`` is required for using dynamic
+    martor features such as live preview.
+
+.. note::
+
+    Martor loads an additional CSS theme in the pages with markdown form fields.
+    Depending on the theme, either bootstrap or semantic UI themes will be
+    loaded. This can be avoided by setting ``MARTOR_ALTERNATIVE_CSS_FILE_THEME``
+    to point to a different file.
+
+Rendering markdown in templates can be achieved with the ``safe_markdown``
+filter after loading ``martortags``.
 
 
 Django REST Framework
@@ -372,121 +443,91 @@ For enabling page size customization for pagination, it's recommended to set
     }
 
 
+.. _app_projectroles_settings_ldap:
+
 LDAP/AD Configuration (Optional)
 ================================
 
-If you want to utilize LDAP/AD user logins as configured by projectroles, you
-can add the following configuration. Make sure to also add the related
-environment variables to your configuration.
-
-This part of the setup is **optional**.
+LDAP/AD authentication can be enabled via Django settings. The default
+configurations for SODAR Core and SODAR Django Site include common settings
+predefined and retrieved from environment variables.
 
 .. note::
 
-    In order to support LDAP, make sure you have installed the dependencies from
-    ``utility/install_ldap_dependencies.sh`` and ``requirements/ldap.txt``! For
+    In order to enable LDAP, make sure you have installed the dependencies from
+    ``utility/install_ldap_dependencies.sh`` and ``requirements/ldap.txt``. For
     more information see :ref:`dev_core_install`.
 
-.. note::
+.. hint::
 
-    If only using one LDAP/AD server, you can leave the "secondary LDAP server"
-    values unset.
+    If only using one LDAP/AD server, you can leave ``ENABLE_LDAP_SECONDARY``
+    and ``AUTH_LDAP2_*`` values unset.
 
 .. hint::
 
     To help debug possible connection problems with your LDAP server(s), set
     ``LDAP_DEBUG=1`` in your environment variables.
 
-.. code-block:: python
+.. _app_projectroles_settings_ldap_vars:
 
-    ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
-    ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
-    LDAP_DEBUG = env.bool('LDAP_DEBUG', False)
-    LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, default=[])
+General LDAP Settings
+---------------------
 
-    if ENABLE_LDAP:
-        import itertools
-        import ldap
-        from django_auth_ldap.config import LDAPSearch
+``ENABLE_LDAP``
+    Enable LDAP/AD authentication. Other settings will only take effect if this
+    is set true (boolean).
+``ENABLE_LDAP_SECONDARY``
+    Enable secondary LDAP/AD server (boolean)
+``LDAP_DEBUG``
+    Enable LDAP debug logging (boolean)
+``LDAP_ALT_DOMAINS``
+    Alternative domains for detecting LDAP access by email address (list of
+    strings)
 
-        if LDAP_DEBUG:
-            ldap.set_option(ldap.OPT_DEBUG_LEVEL, 255)
-        # Default values
-        LDAP_DEFAULT_CONN_OPTIONS = {ldap.OPT_REFERRALS: 0}
-        LDAP_DEFAULT_ATTR_MAP = {
-            'first_name': 'givenName',
-            'last_name': 'sn',
-            'email': 'mail',
-        }
+Primary LDAP Server Settings
+----------------------------
 
-        # Primary LDAP server
-        AUTH_LDAP_SERVER_URI = env.str('AUTH_LDAP_SERVER_URI', None)
-        AUTH_LDAP_BIND_DN = env.str('AUTH_LDAP_BIND_DN', None)
-        AUTH_LDAP_BIND_PASSWORD = env.str('AUTH_LDAP_BIND_PASSWORD', None)
-        AUTH_LDAP_START_TLS = env.bool('AUTH_LDAP_START_TLS', False)
-        AUTH_LDAP_CA_CERT_FILE = env.str('AUTH_LDAP_CA_CERT_FILE', None)
-        AUTH_LDAP_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
-        if AUTH_LDAP_CA_CERT_FILE:
-            AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = (
-                AUTH_LDAP_CA_CERT_FILE
-            )
-            AUTH_LDAP_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
-        AUTH_LDAP_USER_FILTER = env.str(
-            'AUTH_LDAP_USER_FILTER', '(sAMAccountName=%(user)s)'
-        )
-        AUTH_LDAP_USER_SEARCH_BASE = env.str('AUTH_LDAP_USER_SEARCH_BASE', None)
-        AUTH_LDAP_USER_SEARCH = LDAPSearch(
-            AUTH_LDAP_USER_SEARCH_BASE,
-            ldap.SCOPE_SUBTREE,
-            AUTH_LDAP_USER_FILTER,
-        )
-        AUTH_LDAP_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
-        AUTH_LDAP_USERNAME_DOMAIN = env.str('AUTH_LDAP_USERNAME_DOMAIN', None)
-        AUTH_LDAP_DOMAIN_PRINTABLE = env.str(
-            'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN
-        )
-        AUTHENTICATION_BACKENDS = tuple(
-            itertools.chain(
-                ('projectroles.auth_backends.PrimaryLDAPBackend',),
-                AUTHENTICATION_BACKENDS,
-            )
-        )
+Settings for the primary LDAP server can be set with variables starting with
+``AUTH_LDAP_*``. See
+`django-auth-ldap documentation <https://django-auth-ldap.readthedocs.io/en/latest/reference.html#settings>`_
+for detailed documentation on specific settings directly derived from that
+package.
 
-        # Secondary LDAP server (optional)
-        if ENABLE_LDAP_SECONDARY:
-            AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
-            AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
-            AUTH_LDAP2_BIND_PASSWORD = env.str('AUTH_LDAP2_BIND_PASSWORD', None)
-            AUTH_LDAP2_START_TLS = env.bool('AUTH_LDAP2_START_TLS', False)
-            AUTH_LDAP2_CA_CERT_FILE = env.str('AUTH_LDAP2_CA_CERT_FILE', None)
-            AUTH_LDAP2_CONNECTION_OPTIONS = {**LDAP_DEFAULT_CONN_OPTIONS}
-            if AUTH_LDAP2_CA_CERT_FILE:
-                AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = (
-                    AUTH_LDAP2_CA_CERT_FILE
-                )
-                AUTH_LDAP2_CONNECTION_OPTIONS[ldap.OPT_X_TLS_NEWCTX] = 0
-            AUTH_LDAP2_USER_FILTER = env.str(
-                'AUTH_LDAP2_USER_FILTER', '(sAMAccountName=%(user)s)'
-            )
-            AUTH_LDAP2_USER_SEARCH_BASE = env.str(
-                'AUTH_LDAP2_USER_SEARCH_BASE', None
-            )
-            AUTH_LDAP2_USER_SEARCH = LDAPSearch(
-                AUTH_LDAP2_USER_SEARCH_BASE,
-                ldap.SCOPE_SUBTREE,
-                AUTH_LDAP2_USER_FILTER,
-            )
-            AUTH_LDAP2_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
-            AUTH_LDAP2_USERNAME_DOMAIN = env.str('AUTH_LDAP2_USERNAME_DOMAIN')
-            AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
-                'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP2_USERNAME_DOMAIN
-            )
-            AUTHENTICATION_BACKENDS = tuple(
-                itertools.chain(
-                    ('projectroles.auth_backends.SecondaryLDAPBackend',),
-                    AUTHENTICATION_BACKENDS,
-                )
-            )
+The following variables are enabled by default SODAR Core settings files:
+
+``AUTH_LDAP_SERVER_URI``
+    The URI of the LDAP server (string)
+``AUTH_LDAP_BIND_DN``
+    The distinguished name to use when binding to the LDAP server (string)
+``AUTH_LDAP_BIND_PASSWORD``
+    The password to use with ``AUTH_LDAP_BIND_DN`` (string)
+``AUTH_LDAP_START_TLS``
+    Enable TLS encryption over the standard LDAP port (boolean)
+``AUTH_LDAP_CA_CERT_FILE``
+    Path to LDAP server certificate file (string) [1]_
+``AUTH_LDAP_USER_FILTER``
+    Filter for user accounts (string) [1]_
+``AUTH_LDAP_USER_SEARCH_BASE``
+    Search base for user accounts (string) [1]_
+``AUTH_LDAP_USERNAME_DOMAIN``
+    Comain suffix for usernames authenticating with this server (string) [1]_
+``AUTH_LDAP_DOMAIN_PRINTABLE``
+    Printable name for LDAP server domain (string) [1]_
+
+.. [1] SODAR Core specific setting, not in django-auth-ldap.
+
+.. note::
+
+    If you need to configure additional django-auth-ldap settings, you have to
+    explicitly add them to your site's Django settings and environment
+    variables.
+
+Secondary LDAP Server Settings
+------------------------------
+
+If ``ENABLE_LDAP_SECONDARY`` is set true, you can configure settings for the
+secondary LDAP server as ``AUTH_LDAP2_*``, following the settings scheme
+presented in the preceding section.
 
 
 .. _app_projectroles_settings_oidc:
@@ -498,7 +539,8 @@ SODAR Core supports single sign-on authentication via OIDC from v1.0 onwards. To
 enable OIDC logins, add the following Django settings and related environment
 variables to your configuration.
 
-This part of the setup is **optional**.
+OIDC Backend Setup
+------------------
 
 OIDC support is implemented using the ``social_django`` app. You first need to
 add the app to your ``INSTALLED_APPS``:
@@ -520,42 +562,19 @@ Next, you must add the app's URL patterns in ``config/urls.py``:
         path('social/', include('social_django.urls')),
     ]
 
-Finally, you should add the following Django settings in your ``base.py``
-settings file:
+Finally, you should add related Django settings in your ``base.py`` settings
+file. You can copy the example implementation from the SODAR Core
+``config/settings/base.py`` and modify it as applicable.
 
 .. code-block:: python
 
     ENABLE_OIDC = env.bool('ENABLE_OIDC', False)
+    # ... (see config/settings/base.py for more)
 
-    if ENABLE_OIDC:
-        AUTHENTICATION_BACKENDS = tuple(
-            itertools.chain(
-                ('social_core.backends.open_id_connect.OpenIdConnectAuth',),
-                AUTHENTICATION_BACKENDS,
-            )
-        )
-        TEMPLATES[0]['OPTIONS']['context_processors'] += [
-            'social_django.context_processors.backends',
-            'social_django.context_processors.login_redirect',
-        ]
-        SOCIAL_AUTH_JSONFIELD_ENABLED = True
-        SOCIAL_AUTH_JSONFIELD_CUSTOM = 'django.db.models.JSONField'
-        SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
-        SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
-            'username',
-            'name',
-            'first_name',
-            'last_name',
-            'email',
-        ]
-        SOCIAL_AUTH_OIDC_OIDC_ENDPOINT = env.str(
-            'SOCIAL_AUTH_OIDC_OIDC_ENDPOINT', None
-        )
-        SOCIAL_AUTH_OIDC_KEY = env.str('SOCIAL_AUTH_OIDC_KEY', 'CHANGEME')
-        SOCIAL_AUTH_OIDC_SECRET = env.str('SOCIAL_AUTH_OIDC_SECRET', 'CHANGEME')
-        SOCIAL_AUTH_OIDC_USERNAME_KEY = env.str(
-            'SOCIAL_AUTH_OIDC_USERNAME_KEY', 'username'
-        )
+.. _app_projectroles_settings_oidc_vars:
+
+OIDC Settings
+-------------
 
 Critical settings which should be provided through environment variables:
 

@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 
 from dal import autocomplete, forward as dal_forward
-from pagedown.widgets import PagedownWidget
+from martor.widgets import MartorWidget
 from djangoplugins.models import Plugin
 
 from projectroles.models import (
@@ -206,6 +206,7 @@ class SODARAppSettingFormMixin:
         value = app_settings.get(
             plugin_name=plugin_name,
             setting_name=s_def.name,
+            validate=False,
             **scope_kw,
         )
         if s_def.type == APP_SETTING_TYPE_JSON:
@@ -369,11 +370,17 @@ class SODARModelForm(SODARFormMixin, forms.ModelForm):
     """Override of Django model form with SODAR Core specific helpers."""
 
 
-class SODARPagedownWidget(PagedownWidget):
-    """Pagedown widget for markdown fields"""
+class SODARMartorWidget(MartorWidget):
+    """Martor widget for markdown fields"""
 
     class Media:
-        css = {'all': ['projectroles/css/pagedown.css']}
+        css = {
+            'all': (
+                'martor/css/martor.bootstrap.min.css',
+                'projectroles/css/martor_widget.css',  # Should be the last one
+            )
+        }
+        js = ('projectroles/js/martor_widget.js',)
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -686,9 +693,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         # Modify ModelChoiceFields to use sodar_uuid
         self.fields['parent'].to_field_name = 'sodar_uuid'
         # Set readme widget with preview
-        self.fields['readme'].widget = SODARPagedownWidget(
-            attrs={'show_preview': True}
-        )
+        self.fields['readme'].widget = SODARMartorWidget()
         self.fields['public_access'].choices = [
             (None, 'None'),
             get_role_option(
@@ -702,7 +707,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         # Updating an existing project
         if self.instance.pk:
             # Set readme value as raw markdown
-            self.initial['readme'] = self.instance.readme.raw
+            self.initial['readme'] = self.instance.readme
             # Hide project type selection
             self.fields['type'].widget = forms.HiddenInput()
             # Set hidden project field for autocomplete
@@ -741,8 +746,8 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 self.initial['owner'] = parent_cat.get_owner().user
             else:
                 self.initial['owner'] = self.current_user
-            self.fields['owner'].label_from_instance = (
-                lambda x: x.get_form_label(email=True)
+            self.fields['owner'].label_from_instance = lambda x: (
+                x.get_form_label(email=True)
             )
             # Hide owner select widget for regular users
             if not self.current_user.is_superuser:
@@ -1101,7 +1106,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         self.fields['old_owner_role'] = forms.ChoiceField(
             label=f'New role for {current_owner.username}',
             help_text='New role for the current owner. Select "Remove" in '
-            'the member list to remove the user\'s membership.',
+            "the member list to remove the user's membership.",
             choices=self.selectable_roles,
             initial=self.selectable_roles[0][0],
             disabled=True if len(self.selectable_roles) == 1 else False,
@@ -1146,7 +1151,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         user = self.cleaned_data['new_owner']
         if user == self.current_owner:
             raise forms.ValidationError(
-                'The new owner shouldn\'t be the current owner.'
+                "The new owner shouldn't be the current owner."
             )
         role_as = self.project.get_role(user)
         if not role_as:
@@ -1425,8 +1430,8 @@ class LocalUserForm(SODARModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if cleaned_data['password'] != cleaned_data['password_confirm']:
-            self.add_error('password_confirm', 'Passwords didn\'t match!')
-            self.add_error('password', 'Passwords didn\'t match!')
+            self.add_error('password_confirm', "Passwords didn't match!")
+            self.add_error('password', "Passwords didn't match!")
         return cleaned_data
 
 

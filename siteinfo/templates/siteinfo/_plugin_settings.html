@@ -1,7 +1,7 @@
 {% load siteinfo_tags %}
 
 {% if pl_data.settings %}
-  <div class="card" id="sodar-si-core-settings-card-app-{{ plugin.name }}">
+  <div class="card sodar-si-app-settings-card" data-plugin-name="{{ plugin.name }}">
     <div class="card-header">
       <h4>
         <i class="iconify" data-icon="{{ plugin.icon }}"></i>

@@ -188,7 +188,6 @@ class AppSettingMixin:
         setting_type: str,
         value: Any,
         value_json: Union[dict, list, None] = {},
-        user_modifiable: bool = True,
         project: Optional[Project] = None,
         user: Optional[User] = None,
         sodar_uuid: Union[str, UUID, None] = None,
@@ -205,7 +204,6 @@ class AppSettingMixin:
             'type': setting_type,
             'value': value,
             'value_json': value_json,
-            'user_modifiable': user_modifiable,
             'user': user,
         }
         if sodar_uuid:
@@ -399,7 +397,7 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
 
     def test__repr__(self):
         """Test Project __repr__()"""
-        expected = "Project('TestProject', 'PROJECT', " "'TestCategory')"
+        expected = "Project('TestProject', 'PROJECT', 'TestCategory')"
         self.assertEqual(repr(self.project), expected)
 
     def test_validate_parent(self):
@@ -1016,7 +1014,7 @@ class TestProjectInvite(
     def test__str__(self):
         """Test ProjectInvite __str__()"""
         expected = (
-            'TestProject: test@example.com (project contributor) ' '[ACTIVE]'
+            'TestProject: test@example.com (project contributor) [ACTIVE]'
         )
         self.assertEqual(str(self.invite), expected)
 
@@ -1100,68 +1098,195 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
             parent=self.category_top,
             description='YYY',
         )
+        self.category_sub = self.make_project(
+            title='TestSubCategory',
+            type=PROJECT_TYPE_CATEGORY,
+            parent=self.category_top,
+            description='ZZZ',
+        )
+        self.project_sub = self.make_project(
+            title='TestSubProject',
+            type=PROJECT_TYPE_PROJECT,
+            parent=self.category_sub,
+            description='AAA',
+        )
+        self.all_projects_qs = Project.objects.all()
+        self.category_top_qs = Project.objects.filter(
+            full_title__startswith=self.category_top.full_title
+        )
+        self.category_sub_qs = Project.objects.filter(
+            full_title__startswith=self.category_sub.full_title
+        )
+        self.project_sub_qs = Project.objects.filter(
+            full_title__startswith=self.project_sub.full_title
+        )
 
     def test_find(self):
         """Test find()"""
-        result = Project.objects.find(['test'], project_type=None)
-        self.assertEqual(len(result), 2)
-        result = Project.objects.find(['ThisFails'], project_type=None)
+        result = Project.objects.find(
+            ['test'], projects=self.all_projects_qs, project_type=None
+        )
+        self.assertEqual(len(result), 4)
+        result = Project.objects.find(
+            ['ThisFails'], projects=self.all_projects_qs, project_type=None
+        )
         self.assertEqual(len(result), 0)
 
     def test_find_project(self):
         """Test find() with project_type=PROJECT"""
         result = Project.objects.find(
-            ['test'], project_type=PROJECT_TYPE_PROJECT
+            ['test'],
+            projects=self.all_projects_qs,
+            project_type=PROJECT_TYPE_PROJECT,
         )
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.project)
+        self.assertEqual(len(result), 2)
+        self.assertIn(self.project, result)
+        self.assertIn(self.project_sub, result)
 
     def test_find_category(self):
         """Test find() with project_type=CATEGORY"""
         result = Project.objects.find(
-            ['test'], project_type=PROJECT_TYPE_CATEGORY
+            ['test'],
+            projects=self.all_projects_qs,
+            project_type=PROJECT_TYPE_CATEGORY,
         )
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.category_top)
+        self.assertEqual(len(result), 2)
+        self.assertIn(self.category_top, result)
+        self.assertIn(self.category_sub, result)
 
     def test_find_multi_one(self):
         """Test find() with one valid multi-term"""
-        result = Project.objects.find(['project', 'ThisFails'])
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.project)
+        result = Project.objects.find(
+            ['project', 'ThisFails'], projects=self.all_projects_qs
+        )
+        self.assertEqual(len(result), 2)
+        self.assertIn(self.project, result)
+        self.assertIn(self.project_sub, result)
 
     def test_find_multi_two(self):
         """Test find() with two valid multi-terms"""
-        result = Project.objects.find(['category', 'project'])
-        self.assertEqual(len(result), 2)
+        result = Project.objects.find(
+            ['category', 'project'], projects=self.all_projects_qs
+        )
+        self.assertEqual(len(result), 4)
 
     def test_find_description(self):
         """Test find() with search term for description"""
-        result = Project.objects.find(['xxx'])
+        result = Project.objects.find(['xxx'], projects=self.all_projects_qs)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
     def test_find_description_multi_one(self):
         """Test find() with one valid multi-search term for description"""
-        result = Project.objects.find(['xxx', 'ThisFails'])
+        result = Project.objects.find(
+            ['xxx', 'ThisFails'], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
     def test_find_description_multi_two(self):
         """Test find() with two valid multi-search terms for description"""
-        result = Project.objects.find(['xxx', 'yyy'])
+        result = Project.objects.find(
+            ['xxx', 'yyy'], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 2)
 
     def test_find_uuid(self):
         """Test find() with UUID"""
-        result = Project.objects.find([str(self.project.sodar_uuid)])
+        result = Project.objects.find(
+            [str(self.project.sodar_uuid)], projects=self.all_projects_qs
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.project)
 
     def test_find_multi_fields(self):
         """Test find() with multiple terms for different fields"""
-        result = Project.objects.find(['project', 'xxx'])
+        result = Project.objects.find(
+            ['project', 'xxx'], projects=self.all_projects_qs
+        )
+        self.assertEqual(len(result), 3)
+
+    def test_find_category_top(self):
+        """Test find() restricted to top category"""
+        result = Project.objects.find(
+            ['Test'],
+            projects=self.category_top_qs,
+            keywords={'project': self.category_top.sodar_uuid},
+        )
+        self.assertEqual(len(result), 4)
+
+    def test_find_category_sub(self):
+        """Test find() restricted to sub category"""
+        result = Project.objects.find(
+            ['Test'],
+            projects=self.category_sub_qs,
+            keywords={'project': self.category_sub.sodar_uuid},
+        )
         self.assertEqual(len(result), 2)
+        self.assertIn(self.category_sub, result)
+        self.assertIn(self.project_sub, result)
+
+    def test_find_project_sub(self):
+        """Test find() restricted to project"""
+        result = Project.objects.find(
+            ['Test'],
+            projects=self.project_sub_qs,
+            keywords={'project': self.project_sub.sodar_uuid},
+        )
+        self.assertEqual(list(result), [self.project_sub])
+
+    def test_find_empty_terms_with_project_filtering(self):
+        """Test find() with empty search terms and restricted to a category"""
+        result = Project.objects.find(
+            [],
+            projects=self.category_sub_qs,
+            keywords={'project': self.category_sub.sodar_uuid},
+        )
+        self.assertEqual(len(result), 2)
+        self.assertIn(self.category_sub, result)
+        self.assertIn(self.project_sub, result)
+
+    def test_find_type_category_within_category_sub(self):
+        """Test find() with project_type and project filtering"""
+        result = Project.objects.find(
+            ['Test'],
+            projects=self.category_sub_qs,
+            project_type=PROJECT_TYPE_CATEGORY,
+            keywords={'project': self.category_sub.sodar_uuid},
+        )
+        self.assertEqual(list(result), [self.category_sub])
+
+    def test_find_project_type_category_top(self):
+        """Test find() with project_type and project filtering"""
+        result = Project.objects.find(
+            ['XXX', 'YYY', 'ZZZ', 'AAA'],
+            projects=self.category_top_qs,
+            project_type=PROJECT_TYPE_PROJECT,
+            keywords={'project': self.category_top.sodar_uuid},
+        )
+        self.assertEqual(len(result), 2)
+        self.assertIn(self.project, result)
+        self.assertIn(self.project_sub, result)
+
+    def test_find_wrong_uuid_project_filtering(self):
+        """Test find() with wrong project UUID in keywords kwarg"""
+        result = Project.objects.find(
+            ['Test'],
+            projects=Project.objects.none(),
+            project_type=PROJECT_TYPE_CATEGORY,
+            keywords={'project': uuid.uuid4()},
+        )
+        self.assertEqual(len(result), 0)
+
+    def test_find_invalid_uuid_project_filtering(self):
+        """Test find() with invalid project UUID in keywords kwarg"""
+        result = Project.objects.find(
+            ['Test'],
+            projects=Project.objects.none(),
+            project_type=PROJECT_TYPE_CATEGORY,
+            keywords={'project': 'NOT_A_UUID'},
+        )
+        self.assertEqual(len(result), 0)
 
 
 class TestProjectAppSetting(
@@ -1229,7 +1354,6 @@ class TestProjectAppSetting(
             'user': None,
             'value': 'test',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_str.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_str), expected)
@@ -1247,7 +1371,6 @@ class TestProjectAppSetting(
             'user': None,
             'value': '170',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_int.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_int), expected)
@@ -1265,7 +1388,6 @@ class TestProjectAppSetting(
             'user': None,
             'value': None,
             'value_json': {'Testing': 'good'},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_json.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_json), expected)
@@ -1360,7 +1482,6 @@ class TestUserAppSetting(
             'user': self.user.pk,
             'value': 'test',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_str.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_str), expected)
@@ -1378,7 +1499,6 @@ class TestUserAppSetting(
             'user': self.user.pk,
             'value': '170',
             'value_json': {},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_int.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_int), expected)
@@ -1396,7 +1516,6 @@ class TestUserAppSetting(
             'user': self.user.pk,
             'value': None,
             'value_json': {'Testing': 'good'},
-            'user_modifiable': True,
             'sodar_uuid': self.setting_json.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_json), expected)
@@ -1870,8 +1989,8 @@ class TestSODARUserAdditionalEmail(SODARUserAdditionalEmailMixin, TestCase):
 
     def test__repr__(self):
         """Test SODARUserAdditionalEmail __repr__()"""
-        expected = 'SODARUserAdditionalEmail(\'{}\')'.format(
-            '\', \''.join(
+        expected = "SODARUserAdditionalEmail('{}')".format(
+            "', '".join(
                 [
                     self.email.user.username,
                     self.email.email,

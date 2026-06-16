@@ -27,7 +27,6 @@ def revert_viewer_role(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('projectroles', '0034_fix_project_star'),
     ]

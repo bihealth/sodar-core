@@ -7,7 +7,6 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     replaces = [
         ('filesfolders', '0001_initial'),
         ('filesfolders', '0002_auto_20180411_1758'),

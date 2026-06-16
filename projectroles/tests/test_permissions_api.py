@@ -13,10 +13,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.tests.test_models import RemoteSiteMixin, RemoteProjectMixin
-from projectroles.tests.base import (
-    SODARAPIPermissionTestMixin as MovedSODARAPIPermissionTestMixin,
-    ProjectAPIPermissionTestBase as MovedProjectAPIPermissionTestBase,
-)
+from projectroles.tests.base import ProjectAPIPermissionTestBase
 from projectroles.utils import build_secret
 from projectroles.views_api import (
     PROJECTROLES_API_MEDIA_TYPE,
@@ -44,26 +41,6 @@ REMOTE_SITE_SECRET = build_secret()
 
 
 # Base Classes and Mixins ------------------------------------------------------
-
-
-# TODO: Remove in v1.4 (see #1830)
-class SODARAPIPermissionTestMixin(MovedSODARAPIPermissionTestMixin):
-    """
-    Mixin for permission testing with knox auth.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.SODARAPIPermissionTestMixin instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class ProjectAPIPermissionTestBase(MovedProjectAPIPermissionTestBase):
-    """
-    Base class for testing project permissions in SODAR API views.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.ProjectAPIPermissionTestBase instead.
-    """
 
 
 class ProjectrolesAPIPermissionTestBase(ProjectAPIPermissionTestBase):

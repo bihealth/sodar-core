@@ -3,18 +3,22 @@ MANAGE = python manage.py
 define USAGE=
 @echo -e
 @echo -e "Usage:"
-@echo -e "\tmake black [arg=--<arg>]                 -- black formatting"
-@echo -e "\tmake flake                               -- run flake8"
-@echo -e "\tmake js-beautify arg=<path>              -- run js-beautify on Javascript file(s)"
 @echo -e "\tmake celery                              -- start celery worker"
+@echo -e "\tmake check                               -- check Python code linting and formatting"
+@echo -e "\tmake collectstatic                       -- run collectstatic"
+@echo -e "\tmake format                              -- format Python code"
+@echo -e "\tmake format-check                        -- check Python code formatting"
+@echo -e "\tmake js-beautify arg=<path>              -- run js-beautify on Javascript file(s)"
+@echo -e "\tmake lint                                -- lint Python code"
+@echo -e "\tmake manage_target arg=<target_command>  -- run management command on target site, arg is mandatory"
 @echo -e "\tmake serve                               -- start source server"
 @echo -e "\tmake serve_target                        -- start target server"
-@echo -e "\tmake collectstatic                       -- run collectstatic"
-@echo -e "\tmake test [arg=<test_object>]            -- run all tests or specify module/class/function"
-@echo -e "\tmake manage_target arg=<target_command>  -- run management command on target site, arg is mandatory"
 @echo -e "\tmake spectacular                         -- generate OpenAPI schemas with drf-spectacular"
+@echo -e "\tmake test [arg=<test_object>]            -- run all tests or specify module/class/function"
 @echo -e
 endef
+
+default: usage
 
 # Argument passed from commandline, optional for some rules, mandatory for others.
 arg =
@@ -23,34 +27,13 @@ arg =
 target_port = 8001
 
 
-.PHONY: black
-black:
-	black . $(arg)
-
-
-.PHONY: flake
-flake:
-	flake8 .
-
-
-.PHONY: js-beautify
-js-beautify:
-	js-beautify -anr -s 2 -w 80 $(arg)
-
-
 .PHONY: celery
 celery:
 	celery -A config worker -l info --beat
 
 
-.PHONY: serve
-serve:
-	$(MANAGE) runserver --settings=config.settings.local
-
-
-.PHONY: serve_target
-serve_target:
-	$(MANAGE) runserver 0.0.0.0:$(target_port) --settings=config.settings.local_target
+.PHONY: check
+check: format-check lint
 
 
 .PHONY: collectstatic
@@ -58,9 +41,24 @@ collectstatic:
 	$(MANAGE) collectstatic --no-input
 
 
-.PHONY: test
-test: collectstatic
-	$(MANAGE) test -v 2 --parallel --settings=config.settings.test $(arg)
+.PHONY: format
+format:
+	ruff format $(arg)
+
+
+.PHONY: format-check
+format-check:
+	ruff format --check
+
+
+.PHONY: js-beautify
+js-beautify:
+	js-beautify -anr -s 2 -w 80 $(arg)
+
+
+.PHONY: lint
+lint:
+	ruff check $(arg)
 
 
 .PHONY: manage_target
@@ -74,12 +72,26 @@ else
 endif
 
 
+.PHONY: serve
+serve:
+	$(MANAGE) runserver --settings=config.settings.local
+
+
+.PHONY: serve_target
+serve_target:
+	$(MANAGE) runserver 0.0.0.0:$(target_port) --settings=config.settings.local_target
+
+
 .PHONY: spectacular
 spectacular:
 	$(MANAGE) spectacular --color $(arg)
 
 
+.PHONY: test
+test: collectstatic
+	$(MANAGE) test -v 2 --parallel --settings=config.settings.test $(arg)
+
+
 .PHONY: usage
 usage:
 	$(USAGE)
-

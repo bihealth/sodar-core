@@ -1,6 +1,8 @@
 """Ajax API views for the projectroles app"""
 
+import json
 import logging
+import uuid
 
 from typing import Any, Optional
 
@@ -8,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 
@@ -32,7 +34,17 @@ from projectroles.models import (
     CAT_DELIMITER,
     ROLE_RANKING,
 )
-from projectroles.plugins import PluginAPI, PluginCategoryStatistic
+from projectroles.plugins import (
+    PluginAPI,
+    PluginCategoryStatistic,
+    PluginSearchResult,
+    PluginSearchResultColumn,
+    PluginSearchResultCell,
+)
+from projectroles.templatetags.projectroles_common_tags import (
+    get_remote_icon,
+    get_project_title_html,
+)
 from projectroles.utils import get_display_name
 from projectroles.views import ProjectAccessMixin
 from projectroles.views_api import (
@@ -488,6 +500,232 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
                 project, request.user
             )
         return Response(ret, status=200)
+
+
+class PluginSearchResultsAjaxView(SODARBaseAjaxView):
+    """View for retrieving search results"""
+
+    http_method_names = ['post']
+
+    @classmethod
+    def _get_projectroles_search_results(
+        cls,
+        user: User,
+        terms: list[str],
+        projects: QuerySet[Project],
+        keywords: dict,
+    ) -> tuple[Optional[str], list[PluginSearchResult]]:
+        """
+        Collect search results from the projectroles app.
+
+        :param user: user who initiated the sarch
+        :param terms: Search terms (list of strings)
+        :param projects: All projects where the search should be performed
+        :param keywords: Optional keywords (dictionary or None)
+        :return: Tuple of two values: error (either str or None) and
+                 results (list of PluginSearchResult objects)
+        """
+        search_type = keywords.get('type')
+        if search_type is not None and search_type != 'project':
+            return (
+                f'The app "projectroles" does not support search results '
+                f'of type "{search_type}".',
+                [],
+            )
+        rows = []
+        for project in Project.objects.find(
+            terms,
+            projects,
+            project_type='PROJECT',
+            keywords=keywords,
+        ):
+            can_view_project = project.public_access or user.has_perm(
+                'projectroles.view_project', project
+            )
+            can_find_project = can_view_project
+            if user.is_authenticated and project.parent:
+                parent_as = project.parent.get_role(user)
+                if (
+                    parent_as
+                    and parent_as.role.rank >= ROLE_RANKING[PROJECT_ROLE_FINDER]
+                ):
+                    can_find_project = True
+            if not can_find_project:
+                continue
+            project_title = get_project_title_html(project)
+            if can_view_project:
+                project_url = reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.sodar_uuid},
+                )
+                project_title = (
+                    f'<a href="{project_url}" '
+                    'class="sodar-pr-project-search-link">'
+                    f'{project_title}</a>'
+                    f'{get_remote_icon(project, user)}'
+                )
+            else:
+                role_url = reverse(
+                    'projectroles:roles',
+                    kwargs={'project': project.parent.sodar_uuid},
+                )
+                project_title += (
+                    f'<a href="{role_url}" '
+                    'class="sodar-pr-project-findable" '
+                    'title="Findable project: Request access '
+                    'from category owner or delegate" '
+                    'data-toggle="tooltip">'
+                    '<i class="iconify ml-1" '
+                    'data-icon="mdi:account-supervisor">'
+                    '</i></a>'
+                )
+            rows.append(
+                [
+                    PluginSearchResultCell(
+                        value=project_title,
+                        cell_class='text-muted'
+                        if not can_view_project
+                        else None,
+                    ),
+                    PluginSearchResultCell(
+                        value=project.description,
+                    ),
+                ]
+            )
+        projectroles_result = PluginSearchResult(
+            category='all',
+            title=get_display_name(
+                PROJECT_TYPE_PROJECT, title=True, plural=True
+            ),
+            search_types=['project'],
+            columns=[
+                PluginSearchResultColumn(
+                    title=get_display_name(PROJECT_TYPE_PROJECT, title=True),
+                    highlight=True,
+                    value_html=True,
+                    overflow=True,
+                ),
+                PluginSearchResultColumn(
+                    title='Description',
+                    highlight=True,
+                    overflow=True,
+                    orderable=False,
+                ),
+            ],
+            rows=rows,
+            table_class='sodar-pr-search-table',
+        )
+        return (None, [projectroles_result])
+
+    @classmethod
+    def _get_plugin_search_results(
+        cls,
+        user: User,
+        plugin_name: str,
+        terms: list[str],
+        projects: QuerySet[Project],
+        keywords: dict,
+    ) -> tuple[Optional[str], list[PluginSearchResult]]:
+        """
+        Collect search results for a specific plugin.
+
+        :param user: user who initiated the sarch
+        :param plugin_name: the plugin which should be searched
+        :param terms: Search terms (list of strings)
+        :param projects: All projects where the search should be performed
+        :param keywords: Optional keywords (dictionary or None)
+        :return: Tuple of two values: error (either str or None) and
+                 results (list of PluginSearchResult objects)
+        """
+        # Get project results
+        if plugin_name == 'projectroles':
+            return cls._get_projectroles_search_results(
+                user, terms, projects, keywords
+            )
+        # Get app results
+        plugin = plugin_api.get_app_plugin(plugin_name)
+        search_type = keywords.get('type')
+        if search_type is not None and search_type not in plugin.search_types:
+            return (
+                f'The app "{plugin_name}" does not support search results '
+                f'of type "{search_type}".',
+                [],
+            )
+        try:
+            app_results = plugin.search(terms, user, projects, **keywords)
+            return (None, app_results)
+        except Exception as ex:
+            if settings.DEBUG:
+                raise ex
+            logger.error(
+                'Exception raised by search() in {}: "{}" ({})'.format(
+                    plugin.name,
+                    ex,
+                    f'terms={terms}; '
+                    f'user={user}; '
+                    f'projects={projects}; '
+                    f'keywords={keywords}',
+                )
+            )
+            return (str(ex), [])
+
+    def dispatch(self, request, *args, **kwargs):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
+            return JsonResponse(
+                {
+                    'error': 'Search is not enabled.',
+                    'results': [],
+                }
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        data = request.POST
+        if not ('terms' in data and 'keywords' in data and 'plugin' in data):
+            return JsonResponse(
+                {
+                    'error': 'Please provide "terms", "keywords", and "plugin"'
+                    ' in the POST data.',
+                    'results': [],
+                }
+            )
+        search_terms = json.loads(data['terms'])
+        search_keywords = json.loads(data['keywords'])
+        if 'project' in search_keywords:
+            try:
+                sodar_uuid = uuid.UUID(search_keywords['project'])
+                parent = Project.objects.get(sodar_uuid=sodar_uuid)
+                search_projects = Project.objects.filter(
+                    full_title__startswith=parent.full_title
+                )
+            except ValueError:
+                # Not a valid UUID, trying to match project title directly
+                search_projects = Project.objects.filter(
+                    full_title__icontains=search_keywords['project']
+                )
+            except Project.DoesNotExist:
+                search_projects = Project.objects.none()
+        else:
+            search_projects = Project.objects.all()
+
+        if (plugin_name := data['plugin']) == 'projectroles':
+            error, results = self._get_projectroles_search_results(
+                request.user,
+                search_terms,
+                search_projects,
+                search_keywords,
+            )
+        else:
+            error, results = self._get_plugin_search_results(
+                request.user,
+                plugin_name,
+                search_terms,
+                search_projects,
+                search_keywords,
+            )
+        return JsonResponse(
+            {'error': error, 'results': [res.to_dict() for res in results]}
+        )
 
 
 class CategoryStatisticsAjaxView(SODARBaseAjaxView):

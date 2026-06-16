@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+import shlex
 
 from ipaddress import ip_address, ip_network
 from typing import Any, Optional, Union
@@ -14,7 +15,6 @@ from django.contrib import auth, messages
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
-from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import redirect
 from django.urls import resolve, reverse, reverse_lazy
@@ -446,7 +446,7 @@ class ProjectContextMixin(
         else:
             context['project'] = self.get_project()
         # Project tagging/starring
-        if 'project' in context and not getattr(
+        if context.get('project') and not getattr(
             settings, 'PROJECTROLES_KIOSK_MODE', False
         ):
             context['project_starred'] = app_settings.get(
@@ -726,23 +726,42 @@ class ProjectDetailView(
 class ProjectSearchMixin:
     """Common functionalities for search views"""
 
-    def _get_app_results(
-        self,
-        user: User,
-        search_terms: list[str],
-        search_type: Optional[str],
-        search_keywords: Optional[list[str]],
-    ) -> list:
-        """
-        Return app plugin search results.
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search_input = ''
+        search_terms = []
+        keyword_input = []
+        search_keywords = {}
 
-        :param search_terms: Search terms (list of strings)
-        :param search_type: Optional type keyword for search (string or None)
-        :param search_keywords: Optional keywords (list of strings or None)
-        :return: List
-        """
+        if self.request.POST.get('m'):  # Multi search
+            search_terms = [
+                t.strip().strip('\'"')
+                for t in self.request.POST['m'].strip().split('\r\n')
+                if len(t.strip().strip('\'"')) >= 3
+            ]
+            if self.request.POST.get('k'):
+                keyword_input = shlex.split(self.request.POST['k'])
+        elif self.request.GET.get('s'):  # Single search
+            search_input = self.request.GET.get('s').strip()
+            search_split = shlex.split(search_input)
+            for token in search_split:
+                if ':' in token:
+                    keyword_input.append(token)
+                else:
+                    search_terms.append(token.lower())
+
+        search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
+
+        for s in keyword_input:
+            kw = s.split(':')[0].lower().strip()
+            val = s.split(':')[1].lower().strip()
+            search_keywords[kw] = val
+
+        context['search_input'] = search_input
+        context['search_terms'] = search_terms
+        context['search_keywords'] = search_keywords
+
         plugins = plugin_api.get_active_plugins(plugin_type='project_app')
-        ret = []
         omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
 
         search_apps = sorted(
@@ -753,81 +772,34 @@ class ProjectSearchMixin:
             ],
             key=lambda x: x.plugin_ordering,
         )
-        if search_type:
+        if search_keywords and 'type' in search_keywords:
             search_apps = [
-                p for p in search_apps if search_type in p.search_types
+                p
+                for p in search_apps
+                if search_keywords['type'] in p.search_types
             ]
-        for plugin in search_apps:
-            search_kwargs = {
-                'user': user,
-                'search_type': search_type,
-                'search_terms': search_terms,
-                'keywords': search_keywords,
+        context['search_apps'] = [
+            {
+                'name': app.name,
+                'title': app.title,
+                'icon': app.icon,
+                'search_css': app.search_css,
             }
-            search_res = {
-                'plugin': plugin,
-                'results': None,
-                'error': None,
-                'has_results': False,
-            }
-            try:
-                search_res['results'] = plugin.search(**search_kwargs)
-                for r in search_res['results']:
-                    if r.items and (
-                        (isinstance(r.items, QuerySet) and r.items.count() > 0)
-                        or (isinstance(r.items, list) and len(r.items) > 0)
-                    ):
-                        search_res['has_results'] = True
-                        break
-                # Build results into dict for easier use in templates
-                search_res['results'] = {
-                    r.category: r for r in search_res['results']
-                }
-            except Exception as ex:
-                if settings.DEBUG:
-                    raise ex
-                search_res['error'] = str(ex)
-                logger.error(
-                    'Exception raised by search() in {}: "{}" ({})'.format(
-                        plugin.name,
-                        ex,
-                        '; '.join(
-                            [f'{k}={v}' for k, v in search_kwargs.items()]
-                        ),
-                    )
-                )
-            ret.append(search_res)
-        return ret
+            for app in search_apps
+        ]
+        if search_keywords.get('type', 'project') == 'project':
+            context['search_apps'].insert(
+                0,
+                {
+                    'name': 'projectroles',
+                    'title': get_display_name(
+                        PROJECT_TYPE_PROJECT, title=True, plural=True
+                    ),
+                    'icon': 'mdi:cube',
+                },
+            )
 
-    def _get_not_found(
-        self,
-        search_type: Optional[str],
-        project_results: list,
-        app_results: list,
-    ) -> list:
-        """
-        Return list of apps for which objects were search for but not returned.
-
-        :param search_type: Type keyword for search or None
-        :param project_results: Results for projectroles search
-        :param app_results: Results for app plugin search
-        :return: List
-        """
-        ret = []
-        if len(project_results) == 0 and (
-            not search_type or search_type == 'project'
-        ):
-            ret.append('Projects')
-        for results in [a['results'] for a in app_results]:
-            if not results:
-                continue
-            for k, r in results.items():
-                type_match = True if search_type else False
-                if not type_match and search_type in r.search_types:
-                    type_match = True
-                if (type_match or not search_type) and (not r.items):
-                    ret.append(r.title)
-        return ret
+        return context
 
     def dispatch(self, request, *args, **kwargs):
         if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
@@ -852,76 +824,6 @@ class ProjectSearchResultsView(
             messages.error(request, 'No search terms provided.')
             return redirect(reverse('home'))
         return super().render_to_response(context)
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(**kwargs)
-        search_input = ''
-        search_terms = []
-        search_type = None
-        keyword_input = []
-        search_keywords = {}
-
-        if self.request.POST.get('m'):  # Multi search
-            search_terms = [
-                t.strip()
-                for t in self.request.POST['m'].strip().split('\r\n')
-                if len(t.strip()) >= 3
-            ]
-            if self.request.POST.get('k'):
-                keyword_input = self.request.POST['k'].strip().split(' ')
-        elif self.request.GET.get('s'):  # Single search
-            search_input = self.request.GET.get('s').strip()
-            search_split = search_input.split(' ')
-            search_term = search_split[0].strip()
-            for i in range(1, len(search_split)):
-                s = search_split[i].strip()
-                if ':' in s:
-                    keyword_input.append(s)
-                elif s != '':
-                    search_term += ' ' + s.lower()
-            if search_term:
-                search_terms = [search_term]
-        search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
-
-        for s in keyword_input:
-            kw = s.split(':')[0].lower().strip()
-            val = s.split(':')[1].lower().strip()
-            if kw == 'type':
-                search_type = val
-            else:
-                search_keywords[kw] = val
-
-        context['search_input'] = search_input
-        context['search_terms'] = search_terms
-        context['search_type'] = search_type
-        context['search_keywords'] = search_keywords
-        # Get project results
-        if not search_type or search_type == 'project':
-            context['project_results'] = []
-            for p in Project.objects.find(search_terms, project_type='PROJECT'):
-                if p.public_access or self.request.user.has_perm(
-                    'projectroles.view_project', p
-                ):
-                    context['project_results'].append(p)
-                elif self.request.user.is_authenticated and p.parent:
-                    parent_as = p.parent.get_role(self.request.user)
-                    if (
-                        parent_as
-                        and parent_as.role.rank
-                        >= ROLE_RANKING[PROJECT_ROLE_FINDER]
-                    ):
-                        context['project_results'].append(p)
-        # Get app results
-        context['app_results'] = self._get_app_results(
-            self.request.user, search_terms, search_type, search_keywords
-        )
-        # List apps for which no results were found
-        context['not_found'] = self._get_not_found(
-            search_type,
-            context.get('project_results') or [],
-            context['app_results'],
-        )
-        return context
 
     def get(self, request, *args, **kwargs):
         return self._handle_context(request, *args, *kwargs)
@@ -1013,7 +915,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             'title': project.title,
             'parent': project.parent,
             'description': project.description,
-            'readme': project.readme.raw,
+            'readme': project.readme,
             'owner': project.get_owner().user,
             'public_access': project.public_access,
         }
@@ -1111,8 +1013,8 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['description'] != project.description:
             extra_data['description'] = project.description
             upd_fields.append('description')
-        if old_data['readme'] != project.readme.raw:
-            extra_data['readme'] = project.readme.raw
+        if old_data['readme'] != project.readme:
+            extra_data['readme'] = project.readme
             upd_fields.append('readme')
         if old_data['public_access'] != project.public_access:
             extra_data['public_access'] = project.get_public_access_name()
@@ -1239,7 +1141,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 'title': project.title,
                 'owner': owner.username,
                 'description': project.description,
-                'readme': project.readme.raw,
+                'readme': project.readme,
             }
             # Add settings to extra data
             for k, v in project_settings.items():
@@ -1652,7 +1554,7 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             'type': project.type,
             'parent': parent,
             'description': project.description,
-            'readme': project.readme.raw,
+            'readme': project.readme,
             'public_access': project.get_public_access_name(),
             'archive': project.archive,
             'full_title': project.full_title,
@@ -1670,16 +1572,6 @@ class ProjectDeleteMixin(ProjectModifyPluginViewMixin):
             classified=True,
             status_type=timeline.TL_STATUS_OK,
         )
-
-    @classmethod
-    def get_redirect_url(cls, project: Project) -> str:
-        if project.parent:
-            return reverse(
-                'projectroles:detail',
-                kwargs={'project': project.parent.sodar_uuid},
-            )
-        else:
-            return reverse('home')
 
     def handle_delete(self, project: Project, request: HttpRequest):
         """
@@ -1970,14 +1862,59 @@ class ProjectArchiveView(
         return redirect(redirect_url)
 
 
-class ProjectDeleteView(
+class HostConfirmDeleteView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
+    HTTPRefererMixin,
+    DeleteView,
+):
+    """Specialized deletion view with confirmation form asking for host name."""
+
+    #: Custom override for this view's template
+    template_name = 'projectroles/confirm_delete_host.html'
+
+    #: URL for redirection after a successful deletion
+    success_url = reverse_lazy('home')
+
+    def get_object_display_name(self) -> str:
+        """Define a display name for the type of object"""
+        object = self.get_object()
+        return object.__class__.__name__
+
+    def get_context_data(self, *args, **kwargs):
+        """Override get_context_data()"""
+        context = super().get_context_data(*args, **kwargs)
+        context['object_display_name'] = self.get_object_display_name()
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        """Override dispatch() to check for correct host name before POST"""
+        if request.method == 'POST':
+            # Don't allow deletion unless user has input the host name
+            host_confirm = request.POST.get('delete_host_confirm')
+            actual_host = request.get_host().split(':')[0]
+            if not host_confirm or host_confirm != actual_host:
+                display_name = self.get_object_display_name()
+                msg = (
+                    f'Incorrect host name for confirming {display_name} '
+                    f'deletion: "{host_confirm}"'
+                )
+                logger.error(msg + f' (correct={actual_host})')
+                messages.error(
+                    request,
+                    f'Failed to delete {display_name}: Host name input '
+                    'incorrect.',
+                )
+                return redirect(request.path)
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ProjectDeleteView(
     ProjectContextMixin,
     ProjectDeleteMixin,
     ProjectDeleteAccessMixin,
     ProjectModifyPluginViewMixin,
-    DeleteView,
+    HostConfirmDeleteView,
 ):
     """Project deletion view"""
 
@@ -1985,8 +1922,15 @@ class ProjectDeleteView(
     permission_required = 'projectroles.delete_project'
     slug_field = 'sodar_uuid'
     slug_url_kwarg = 'project'
+    template_name = 'projectroles/project_confirm_delete_host.html'
+
+    def get_object_display_name(self) -> str:
+        """Override the display name for project or category objects"""
+        project = self.get_object()
+        return get_display_name(project.type)
 
     def dispatch(self, request, *args, **kwargs):
+        """Override dispatch()"""
         if not request.user.is_authenticated:
             return self.handle_no_permission()
         project = self.get_object()
@@ -1994,42 +1938,34 @@ class ProjectDeleteView(
         access, msg = self.check_delete_permission(project)
         if not access:
             messages.error(self.request, msg)
-            return redirect('home')
+            return redirect(reverse('home'))
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, *args, **kwargs):
+        """Delete the project and redirect the user"""
         project = self.get_object()
-        redirect_url = reverse(
-            'projectroles:update', kwargs={'project': project.sodar_uuid}
-        )
-
-        # Don't allow deletion unless user has input the host name
-        host_confirm = self.request.POST.get('delete_host_confirm')
-        actual_host = self.request.get_host().split(':')[0]
-        if not host_confirm or host_confirm != actual_host:
-            msg = (
-                f'Incorrect host name for confirming sheet deletion: '
-                f'"{host_confirm}"'
-            )
-            logger.error(msg + f' (correct={actual_host})')
-            messages.error(
-                self.request, 'Host name input incorrect, deletion cancelled.'
-            )
-            return redirect(redirect_url)
-
-        # Proceed with deletion
+        display_name = self.get_object_display_name()
         try:
             with transaction.atomic():
                 self.handle_delete(project, self.request)
-            p_type = get_display_name(project.type, title=True)
-            messages.success(self.request, f'{p_type} deleted.')
-            redirect_url = self.get_redirect_url(project)
+            messages.success(self.request, f'{display_name} deleted.')
+            # We cannot put the following in self.get_success_url() since
+            # we need access to the object which has just been deleted
+            if project.parent:
+                redirect_url = reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.parent.sodar_uuid},
+                )
+            else:
+                redirect_url = reverse('home')
+            return redirect(redirect_url)
         except Exception as ex:
             if settings.DEBUG:
                 raise ex
-            p_type = get_display_name(project.type, title=False)
-            messages.error(self.request, f'Failed to delete {p_type}: {ex}')
-        return redirect(redirect_url)
+            messages.error(
+                self.request, f'Failed to delete {display_name}: {ex}'
+            )
+            return redirect(reverse('home'))
 
 
 # RoleAssignment Views ---------------------------------------------------------
@@ -2061,10 +1997,11 @@ class ProjectRoleView(
             [r.role.rank >= owner_rank for r in context['roles']]
         )
         if project.is_remote():
-            context[
-                'remote_roles_url'
-            ] = project.get_source_site().url + reverse(
-                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+            context['remote_roles_url'] = (
+                project.get_source_site().url
+                + reverse(
+                    'projectroles:roles', kwargs={'project': project.sodar_uuid}
+                )
             )
         context['finder_info'] = ROLE_FINDER_INFO.format(
             categories=get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
@@ -2111,10 +2048,11 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
     def modify_assignment(
         self,
         data: dict,
-        request: HttpRequest,
         project: Project,
+        request: Optional[HttpRequest] = None,
         instance: Optional[RoleAssignment] = None,
         promote: bool = False,
+        notify: bool = True,
     ) -> RoleAssignment:
         """
         Create or update a RoleAssignment. This method should be called either
@@ -2123,10 +2061,11 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         in your plugin.
 
         :param data: Cleaned data from a form or serializer
-        :param request: Request initiating the action
         :param project: Project object
+        :param request: Request initiating the action or None
         :param instance: Existing RoleAssignment object or None
         :param promote: Promoting an inherited user (boolean, default=False)
+        :param notify: Add app alerts and send email if True (default=True)
         :return: Created or updated RoleAssignment object
         """
         app_alerts = plugin_api.get_backend_api('appalerts_backend')
@@ -2147,7 +2086,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
-                user=request.user,
+                user=request.user if request else None,
                 event_name=f'role_{action.lower()}',
                 description=tl_desc,
             )
@@ -2157,7 +2096,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             role_as = RoleAssignment(project=project, user=user, role=role)
             old_role = None
         else:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
+            role_as = instance
             old_role = role_as.role
             role_as.role = role
         role_as.save()
@@ -2172,7 +2111,7 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
         if tl_event:
             tl_event.set_status('OK')
 
-        if request.user != user:
+        if notify and request and request.user != user:
             if app_alerts and app_settings.get(
                 APP_NAME, 'notify_alert_role', user=user
             ):
@@ -2238,8 +2177,8 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         try:
             self.object = self.modify_assignment(
                 data=form.cleaned_data,
-                request=self.request,
                 project=project,
+                request=self.request,
                 instance=form.instance if instance else None,
                 promote=True if form.cleaned_data.get('promote') else False,
             )
@@ -2503,6 +2442,17 @@ class RoleAssignmentCreateView(
                 sodar_uuid=self.kwargs['promote_as']
             ).first()
 
+            # Check for delegate promotion perm
+            if self.promote_as.role.rank == ROLE_RANKING[
+                PROJECT_ROLE_CONTRIBUTOR
+            ] and not request.user.has_perm(
+                'projectroles.update_project_delegate', project
+            ):
+                messages.error(
+                    request, 'User lacks permissions for delegate promotion.'
+                )
+                return redirect(redirect_url)
+
             # Check for reached delegate limit
             del_count = RoleAssignment.objects.filter(
                 project=project, role__name=PROJECT_ROLE_DELEGATE
@@ -2512,7 +2462,7 @@ class RoleAssignmentCreateView(
                 self.promote_as
                 and self.promote_as.role.rank
                 == ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR]
-                and del_count >= del_limit
+                and 0 < del_limit <= del_count
             ):
                 messages.warning(
                     request,
@@ -2829,6 +2779,7 @@ class RoleAssignmentOwnerTransferMixin(
         old_owner_role: Optional[Role] = None,
         request: Optional[HttpRequest] = None,
         notify_old: bool = True,
+        notify_new: bool = True,
     ):
         """
         Transfer project ownership to a new user and assign a new role to the
@@ -2840,6 +2791,7 @@ class RoleAssignmentOwnerTransferMixin(
         :param old_owner_role: Role object for old owner's new role or None
         :param request: HttpRequest object or None
         :param notify_old: Notify old owner (boolean, default=True)
+        :param notify_new: Notify new owner (boolean, default=True)
         """
         app_alerts = plugin_api.get_backend_api('appalerts_backend')
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
@@ -2924,7 +2876,7 @@ class RoleAssignmentOwnerTransferMixin(
                     request,
                 )
         # Notify new owner
-        if not new_inh_owner and issuer != new_owner:
+        if notify_new and not new_inh_owner and issuer != new_owner:
             if app_alerts and app_settings.get(
                 APP_NAME, 'notify_alert_role', user=new_owner
             ):
@@ -3379,7 +3331,7 @@ class ProjectInviteProcessMixin(ProjectModifyPluginViewMixin):
 
 
 class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
-    """View to handle accepting a project invite"""
+    """View for handle the accepting of a project invite"""
 
     def _redirect_process(self, login: bool = True) -> HttpResponseRedirect:
         """Redirect to the proper process view"""
@@ -3603,7 +3555,7 @@ class ProjectInviteProcessNewUserView(ProjectInviteProcessMixin, FormView):
 class ProjectInviteResendView(
     LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectInviteMixin, View
 ):
-    """View to handle resending a project invite"""
+    """View for handling the resending of a project invite"""
 
     permission_required = 'projectroles.invite_users'
 
@@ -3639,7 +3591,7 @@ class ProjectInviteRevokeView(
     ProjectInviteMixin,
     TemplateView,
 ):
-    """Batch delete/move confirm view"""
+    """View for revoking a project invite"""
 
     template_name = 'projectroles/invite_revoke_confirm.html'
     permission_required = 'projectroles.invite_users'
@@ -3766,8 +3718,7 @@ class RemoteSiteListView(
         if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
             messages.warning(
                 request,
-                '{} {} and nesting disabled, '
-                'remote {} sync disabled.'.format(
+                '{} {} and nesting disabled, remote {} sync disabled.'.format(
                     get_display_name(PROJECT_TYPE_PROJECT, title=True),
                     get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
                     get_display_name(PROJECT_TYPE_PROJECT),

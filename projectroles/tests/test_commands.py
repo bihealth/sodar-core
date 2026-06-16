@@ -1,6 +1,7 @@
 """Tests for management commands in the projectroles app"""
 
 import os
+import random
 
 from tempfile import NamedTemporaryFile
 from typing import Union
@@ -324,7 +325,7 @@ class TestBatchUpdateRoles(
         super().tearDown()
 
     def test_invite(self):
-        """Test inviting a single user via email to project"""
+        """Test inviting single user via email"""
         email = 'new@example.com'
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
@@ -342,7 +343,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 1)
 
     def test_invite_existing(self):
-        """Test inviting a user when they already have an active invite"""
+        """Test inviting user with active invite"""
         email = 'new@example.com'
         self.make_invite(email, self.project, self.role_guest, self.user_owner)
         self.assertEqual(ProjectInvite.objects.count(), 1)
@@ -397,7 +398,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 2)
 
     def test_invite_owner(self):
-        """Test inviting an owner (should fail)"""
+        """Test inviting owner (should fail)"""
         self.write_file(
             [self.project_uuid, 'new@example.com', PROJECT_ROLE_OWNER]
         )
@@ -408,7 +409,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 0)
 
     def test_invite_delegate(self):
-        """Test inviting a delegate"""
+        """Test inviting delegate"""
         self.write_file(
             [self.project_uuid, 'new@example.com', PROJECT_ROLE_DELEGATE]
         )
@@ -420,7 +421,7 @@ class TestBatchUpdateRoles(
 
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
     def test_invite_delegate_no_perms(self):
-        """Test inviting a delegate without perms (should fail)"""
+        """Test inviting delegate without perms (should fail)"""
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
         self.write_file(
@@ -433,7 +434,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 0)
 
     def test_invite_delegate_limit(self):
-        """Test inviting a delegate with limit reached (should fail)"""
+        """Test inviting delegate with limit reached (should fail)"""
         user_delegate = self.make_user('delegate')
         self.make_assignment(self.project, user_delegate, self.role_delegate)
         self.write_file(
@@ -466,7 +467,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 1)
 
     def test_role_update(self):
-        """Test updating an existing role for user"""
+        """Test updating  existing role for user"""
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -490,7 +491,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 1)
 
     def test_role_update_owner(self):
-        """Test updating the role of current owner (should fail)"""
+        """Test updating role of current owner (should fail)"""
         email = 'owner@example.com'
         self.user_owner.email = email
         self.user_owner.save()
@@ -513,7 +514,7 @@ class TestBatchUpdateRoles(
 
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
     def test_role_update_delegate_no_perms(self):
-        """Test updating a delegate role without perms (should fail)"""
+        """Test updating delegate role without perms (should fail)"""
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -533,7 +534,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(len(mail.outbox), 0)
 
     def test_role_update_delegate_limit(self):
-        """Test updating a delegate role with limit reached (should fail)"""
+        """Test updating delegate role with limit reached (should fail)"""
         email = 'new@example.com'
         user_new = self.make_user('user_new')
         user_new.email = email
@@ -598,7 +599,7 @@ class TestBatchUpdateRoles(
             ).count(),
             0,
         )
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_role_add_inherited_equal(self):
         """Test adding role with inherited role of equal rank (should fail)"""
@@ -1166,6 +1167,10 @@ class TestRemoveRoles(
         self.user_owner_cat = self.make_user('user_owner_cat')
         self.user_owner = self.make_user('user_owner')
         self.user = self.make_user('user')
+        self.user.first_name = 'Max'
+        self.user.last_name = 'Mustermann'
+        self.user.name = 'Max Mustermann'
+        self.user.save()
         # Init projects
         self.category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
@@ -1237,6 +1242,39 @@ class TestRemoveRoles(
         self.user.refresh_from_db()
         self.assertEqual(self.user.is_active, False)
 
+    def test_command_pseudonymize(self):
+        """Test user deactivation with pseudonymization"""
+        self.assertTrue(self.user.is_active)
+        call_command(
+            self.cmd_name, user=self.user, deactivate=True, pseudonymize=True
+        )
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertEqual(self.user.name, '')
+        self.assertEqual(self.user.first_name, '')
+        self.assertEqual(self.user.last_name, '')
+        self.assertEqual(self.user.email, '')
+        self.assertTrue(self.user.username.startswith('deactivated'))
+
+    def test_command_pseudonymize_dupe_username(self):
+        """Test username pseudonymization with duplicates"""
+        random.seed(13)
+        call_command(
+            self.cmd_name, user=self.user, deactivate=True, pseudonymize=True
+        )
+        random.seed(13)
+        call_command(
+            self.cmd_name,
+            user=self.user_owner,
+            deactivate=True,
+            pseudonymize=True,
+        )
+        self.user.refresh_from_db()
+        self.user_owner.refresh_from_db()
+        self.assertTrue(self.user.username.startswith('deactivated'))
+        self.assertTrue(self.user_owner.username.startswith('deactivated'))
+        self.assertNotEqual(self.user.username, self.user_owner.username)
+
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_command_remote(self):
         """Test removing roles from remote project"""
@@ -1306,6 +1344,29 @@ class TestRemoveRoles(
         self.assertEqual(self.project.has_role(self.user), True)
         self.user.refresh_from_db()
         self.assertEqual(self.user.is_active, True)
+
+    def test_command_check_pseudonymize(self):
+        """Test command with check mode and pseudonymization"""
+        self.make_assignment(self.category, self.user, self.role_contributor)
+        self.make_assignment(self.project, self.user, self.role_guest)
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.assertEqual(self.user.is_active, True)
+        call_command(
+            self.cmd_name,
+            user=self.user,
+            check=True,
+            deactivate=True,
+            pseudonymize=True,
+        )
+        self.assertEqual(self.category.has_role(self.user), True)
+        self.assertEqual(self.project.has_role(self.user), True)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.is_active, True)
+        self.assertNotEqual(self.user.first_name, '')
+        self.assertNotEqual(self.user.last_name, '')
+        self.assertNotEqual(self.user.name, '')
+        self.assertNotEqual(self.user.email, '')
 
     def test_command_owner_unset(self):
         """Test removing owner with unset new owner"""
@@ -1493,6 +1554,309 @@ class TestSyncGroups(TestCase):
         group = user.groups.first()
         self.assertIsNotNone(group)
         self.assertEqual(group.name, LDAP_DOMAIN.lower())
+
+
+class TestTransferRolesCommand(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestCase,
+):
+    """Tests for transferroles command"""
+
+    def setUp(self):
+        self.cmd_name = 'transferroles'
+        self.init_roles()
+        # Init users
+        self.user_owner_cat = self.make_user('user_owner_cat')
+        self.user_owner = self.make_user('user_owner')
+        self.user_contributor = self.make_user('user_contributor')
+        self.user_contributor_cat = self.make_user('user_contributor_cat')
+        self.user = self.make_user('user')
+        # Init projects
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.cat_owner_as = self.make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.cat_contributor_as = self.make_assignment(
+            self.category, self.user_contributor_cat, self.role_contributor
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        self.contributor_as = self.make_assignment(
+            self.project, self.user_contributor, self.role_contributor
+        )
+        # user_contributor_cat is also a viewer in the project
+        self.cat_viewer = self.make_assignment(
+            self.project, self.user_contributor_cat, self.role_viewer
+        )
+
+    def test_create_non_owner(self):
+        """Test transfer non-owner roles"""
+        self.assertTrue(self.category.has_role(self.user_contributor_cat))
+        self.assertTrue(self.project.has_role(self.user_contributor_cat))
+        self.assertFalse(self.category.has_role(self.user))
+        self.assertFalse(self.project.has_role(self.user))
+        old_role_count = RoleAssignment.objects.count()
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_contributor_cat,
+            new_user=self.user,
+        )
+        self.assertFalse(self.category.has_role(self.user_contributor_cat))
+        self.assertFalse(self.project.has_role(self.user_contributor_cat))
+        self.assertTrue(self.category.has_role(self.user))
+        self.assertTrue(self.project.has_role(self.user))
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                user=self.user_contributor_cat
+            ).count(),
+            0,
+        )
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user).count(), 2
+        )
+
+        # Assert roles are neither created nor destroyed during the transfer
+        self.assertEqual(RoleAssignment.objects.count(), old_role_count)
+
+        # Assert both users are still active
+        self.user.refresh_from_db()
+        self.user_contributor_cat.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+        self.assertTrue(self.user_contributor_cat.is_active)
+
+    def test_promote_non_owner(self):
+        """Test promotion to non-owner role"""
+        self.assertTrue(self.project.has_role(self.user_contributor))
+        old_user_role = self.project.local_roles.filter(
+            user=self.user_contributor
+        ).first()
+        self.assertEqual(old_user_role.role, self.role_contributor)
+
+        self.assertTrue(self.project.has_role(self.user_contributor_cat))
+        new_user_role = self.project.local_roles.filter(
+            user=self.user_contributor_cat
+        ).first()
+        self.assertEqual(new_user_role.role, self.role_viewer)
+        self.assertTrue(old_user_role.role.rank < new_user_role.role.rank)
+
+        # In this test we also ensure timeline events are created,
+        # and app alerts are NOT created, and email is NOT sent
+        self.assertEqual(TimelineEvent.objects.count(), 0)
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_contributor,
+            new_user=self.user_contributor_cat,
+        )
+        self.assertFalse(self.project.has_role(self.user_contributor))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_contributor).count(), 0
+        )
+        new_user_new_role = self.project.local_roles.filter(
+            user=self.user_contributor_cat
+        ).first()
+        self.assertEqual(new_user_new_role.role, old_user_role.role)
+
+        self.assertEqual(TimelineEvent.objects.count(), 2)
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_delete').count(), 1
+        )
+        self.assertEqual(
+            TimelineEvent.objects.filter(event_name='role_update').count(), 1
+        )
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_demote_non_owner(self):
+        """Test demotion to lower role (should fail)"""
+        self.assertTrue(self.project.has_role(self.user_contributor_cat))
+        old_user_role = self.project.local_roles.filter(
+            user=self.user_contributor_cat
+        ).first()
+        self.assertEqual(old_user_role.role, self.role_viewer)
+
+        self.assertTrue(self.project.has_role(self.user_contributor))
+        new_user_role = self.project.local_roles.filter(
+            user=self.user_contributor
+        ).first()
+        self.assertEqual(new_user_role.role, self.role_contributor)
+        self.assertTrue(old_user_role.role.rank > new_user_role.role.rank)
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_contributor_cat,
+            new_user=self.user_contributor,
+        )
+        self.assertFalse(self.project.has_role(self.user_contributor_cat))
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                user=self.user_contributor_cat
+            ).count(),
+            0,
+        )
+        new_user_new_role = self.project.local_roles.filter(
+            user=self.user_contributor
+        ).first()
+        self.assertEqual(new_user_new_role.role, new_user_role.role)
+
+        # Besides not being demoted to viewer, user_contributor is also assigned
+        # "contributor" role to the category
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_contributor).count(), 2
+        )
+        self.assertTrue(self.category.has_role(self.user_contributor))
+
+    def test_create_owner(self):
+        """Test ownership transfer with no existing role for new user"""
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        self.assertFalse(self.project.has_role(self.user))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user).count(), 0
+        )
+
+        call_command(
+            self.cmd_name, old_user=self.user_owner, new_user=self.user
+        )
+        self.assertFalse(self.project.has_role(self.user_owner))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_owner).count(), 0
+        )
+        self.assertEqual(self.project.get_owner().user, self.user)
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user).count(), 1
+        )
+
+        # Test timeline event for owner transfer
+        self.assertEqual(TimelineEvent.objects.count(), 1)
+        self.assertEqual(
+            TimelineEvent.objects.filter(
+                event_name='role_owner_transfer'
+            ).count(),
+            1,
+        )
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_promote_owner(self):
+        """Test ownership transfer with pre-existing role for new user"""
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        self.assertTrue(self.category.has_role(self.user_contributor_cat))
+        self.assertEqual(
+            self.category.local_roles.filter(user=self.user_contributor_cat)
+            .first()
+            .role,
+            self.role_contributor,
+        )
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_owner_cat,
+            new_user=self.user_contributor_cat,
+        )
+        self.assertFalse(self.category.has_role(self.user_owner_cat))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_owner_cat).count(), 0
+        )
+        self.assertEqual(
+            self.category.get_owner().user, self.user_contributor_cat
+        )
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                user=self.user_contributor_cat
+            ).count(),
+            2,
+        )
+
+    def test_demote_owner(self):
+        """Test demotion to non-owner (should fail)"""
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        self.assertTrue(self.project.has_role(self.user_contributor))
+        owner_role = self.project.local_roles.filter(
+            user=self.user_owner
+        ).first()
+        contributor_role = self.project.local_roles.filter(
+            user=self.user_contributor
+        ).first()
+        self.assertTrue(owner_role.role.rank < contributor_role.role.rank)
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_contributor,
+            new_user=self.user_owner,
+        )
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+        self.assertFalse(self.project.has_role(self.user_contributor))
+
+    def test_transfer_from_nonexistent_user(self):
+        """Test transfer with nonexistent old_user (should fail)"""
+        old_roles = RoleAssignment.objects.all()
+        with self.assertRaises(SystemExit):
+            call_command(
+                self.cmd_name, old_user='INVALID-NAME', new_user=self.user
+            )
+        new_roles = RoleAssignment.objects.all()
+        self.assertEqual(list(old_roles), list(new_roles))
+
+    def test_transfer_to_nonexistent_user(self):
+        """Test transfer with nonexistent new_user (should fail)"""
+        old_roles = RoleAssignment.objects.all()
+        with self.assertRaises(SystemExit):
+            call_command(
+                self.cmd_name, old_user=self.user_owner, new_user='INVALID-NAME'
+            )
+        new_roles = RoleAssignment.objects.all()
+        self.assertEqual(list(old_roles), list(new_roles))
+
+    def test_transfer_to_self(self):
+        """Test transfer with old_user==new_user (should fail)"""
+        with self.assertRaises(SystemExit):
+            call_command(
+                self.cmd_name,
+                old_user=self.user_owner,
+                new_user=self.user_owner,
+            )
+
+    def test_deactivate_user(self):
+        """Test ownership transfer with no existing role for new user"""
+        self.assertEqual(self.category.get_owner().user, self.user_owner_cat)
+        self.assertFalse(self.category.has_role(self.user_contributor))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_contributor).count(), 1
+        )
+
+        call_command(
+            self.cmd_name,
+            old_user=self.user_owner_cat,
+            new_user=self.user_contributor,
+            deactivate=True,
+        )
+        self.assertFalse(self.category.has_role(self.user_owner_cat))
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_owner_cat).count(), 0
+        )
+        self.assertEqual(
+            RoleAssignment.objects.filter(user=self.user_contributor).count(), 2
+        )
+        self.assertEqual(self.category.get_owner().user, self.user_contributor)
+
+        # Test that old_user is deactivated (but not new_user)
+        self.user_owner_cat.refresh_from_db()
+        self.assertFalse(self.user_owner_cat.is_active)
+        self.user_contributor.refresh_from_db()
+        self.assertTrue(self.user_contributor.is_active)
 
 
 @override_settings(DEBUG=True)

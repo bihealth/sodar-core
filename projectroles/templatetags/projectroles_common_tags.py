@@ -3,6 +3,7 @@
 import mistune
 
 from importlib import import_module
+import logging
 from typing import Any, Optional, Union
 from uuid import UUID
 
@@ -30,6 +31,7 @@ from projectroles.utils import get_display_name as _get_display_name
 
 
 app_settings = AppSettingAPI()
+logger = logging.getLogger(__name__)
 plugin_api = PluginAPI()
 site = import_module(settings.SITE_PACKAGE)
 User = get_user_model()
@@ -188,7 +190,7 @@ def get_project_link(
     """Return link to project with a simple or full title"""
     remote_icon = ''
     if request:
-        remote_icon = get_remote_icon(project, request)
+        remote_icon = get_remote_icon(project, request.user)
     return (
         '<a href="{}" title="{}" data-toggle="tooltip" '
         'data-placement="top">{}</a>{}'.format(
@@ -209,8 +211,7 @@ def get_user_superuser_icon(tooltip: bool = True) -> str:
     if tooltip:
         ret += '<span title="Superuser" data-toggle="tooltip">'
     ret += (
-        '<i class="iconify text-info ml-1" '
-        'data-icon="mdi:shield-account"></i>'
+        '<i class="iconify text-info ml-1" data-icon="mdi:shield-account"></i>'
     )
     if tooltip:
         ret += '</span>'
@@ -230,6 +231,18 @@ def get_user_inactive_icon(tooltip: bool = True) -> str:
     if tooltip:
         ret += '</span>'
     return ret
+
+
+@register.simple_tag
+def get_user_icon(user: User) -> str:
+    """Return icon element based on superuser/authenticated/anonymous status"""
+    if user.is_superuser:
+        icon = 'mdi:shield-account'
+    elif user.is_authenticated:
+        icon = 'mdi:user'
+    else:
+        icon = 'mdi:incognito'
+    return f'<i class="iconify" data-icon="{icon}"></i>'
 
 
 @register.simple_tag
@@ -435,9 +448,9 @@ def get_info_link(content: str, html: bool = False) -> str:
 
 
 @register.simple_tag
-def get_remote_icon(project: Project, request: HttpRequest) -> str:
+def get_remote_icon(project: Project, user: User) -> str:
     """Get remote project icon HTML"""
-    if project.is_remote() and request.user.is_superuser:
+    if project.is_remote() and user.is_superuser:
         remote_project = RemoteProject.objects.filter(
             project=project, site__mode=SITE_MODE_SOURCE
         ).first()
@@ -457,8 +470,13 @@ def get_remote_icon(project: Project, request: HttpRequest) -> str:
 
 
 @register.simple_tag
-def render_markdown(raw_markdown: str) -> str:
+def render_markdown(raw_markdown: str) -> str | list | dict:
     """Markdown field rendering helper"""
+    logger.warning(
+        'The render_markdown template tag is deprecated and will be removed '
+        'in v1.5. Please use the safe_markdown filter from the martor package '
+        'instead.'
+    )
     return mistune.html(raw_markdown)
 
 
@@ -487,3 +505,8 @@ def get_class(obj: Any, lower: bool = False) -> str:
 def split(s: str, sep: str) -> list:
     """Split string by separator"""
     return s.split(sep)
+
+
+@register.filter
+def get_value(data: dict, key: str) -> Any:
+    return data.get(key)

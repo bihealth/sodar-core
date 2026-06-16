@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import exceptions, serializers
 from drf_keyed_list import KeyedListSerializer
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     Role,
@@ -30,6 +31,7 @@ from projectroles.views import (
 )
 
 
+app_settings = AppSettingAPI()
 User = get_user_model()
 
 
@@ -301,8 +303,8 @@ class RoleAssignmentSerializer(
         self.instance = self.post_save(
             self.modify_assignment(
                 data=self.validated_data,
-                request=self.context['request'],
                 project=self.context['project'],
+                request=self.context['request'],
                 instance=self.instance,
             )
         )
@@ -469,7 +471,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         ):
             raise serializers.ValidationError(CAT_DELIMITER_ERROR_MSG)
         if parent and title == parent.title:
-            raise serializers.ValidationError('Title can\'t match with parent')
+            raise serializers.ValidationError("Title can't match with parent")
         if (
             title
             and not self.instance
@@ -642,9 +644,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Validate and update public_access
         self._validate_public_access(attrs)
 
-        # Set readme
-        if 'readme' in attrs and 'raw' in attrs['readme']:
-            attrs['readme'] = attrs['readme']['raw']
         return attrs
 
     def save(self, **kwargs):
@@ -690,7 +689,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
         # Else return full serialization
         # Proper rendering of readme
-        ret['readme'] = project.readme.raw or ''
+        ret['readme'] = project.readme or ''
         # Force project UUID
         if not ret.get('sodar_uuid'):
             ret['sodar_uuid'] = str(project.sodar_uuid)
@@ -736,7 +735,6 @@ class AppSettingSerializer(SODARProjectModelSerializer):
             'name',
             'type',
             'value',
-            'user_modifiable',
         ]
         read_only_fields = [*fields]
 
@@ -753,4 +751,10 @@ class AppSettingSerializer(SODARProjectModelSerializer):
             and parse_version(self.context['request'].version) >= VERSION_2_0
         ):
             ret['user'] = ret['user']['sodar_uuid']
+        # Return user_modifiable from definition since it is no longer in model
+        # TODO: Remove this in projectroles API v3.0
+        s_def = app_settings.get_definition(
+            instance.name, plugin_name=ret['plugin_name']
+        )
+        ret['user_modifiable'] = s_def.user_modifiable
         return ret

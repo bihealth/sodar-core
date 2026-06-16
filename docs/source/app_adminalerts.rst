@@ -11,14 +11,15 @@ messages to all users with an expiration date.
 Basics
 ======
 
-The app displays un-dismissible small alerts on the top of page content to all
-users. They can be used to e.g. warn users of upcoming downtime or highlight
-recently deployed changes.
+The app displays small alerts on the top of page content to all users. They can
+be used to e.g. warn users of upcoming downtime or highlight recently deployed
+changes.
 
-Upon creation, an expiration date is set for each alert. Alerts can also be
-freely enabled, disabled or deleted by superuser on the app UI. Additional
-information regarding an alert can be provided with Markdown syntax and viewed
-on a separate details page.
+Upon creation, a global expiration date is set for each alert, but individual
+users can dismiss alerts before the expiration date. Alerts can also be freely
+enabled, disabled or deleted by superuser on the app UI. Additional information
+regarding an alert can be provided with Markdown syntax and viewed on a separate
+details page.
 
 
 Installation
@@ -28,8 +29,7 @@ Installation
 
     To install this app you **must** have the ``django-sodar-core`` package
     installed and the ``projectroles`` app integrated into your Django site.
-    See the :ref:`projectroles integration document <app_projectroles_integration>`
-    for instructions.
+    See the :ref:`Getting Started document <getting_started>` for instructions.
 
 Django Settings
 ---------------
@@ -92,14 +92,17 @@ output:
 Usage
 =====
 
-When logged in as a superuser, you can find the :guilabel:`Admin Alerts` option
-in your user dropdown menu in the top right corner of the site. This application
-is only available for users with superuser status.
+You can find the :guilabel:`Admin Alerts` option in your user dropdown menu
+in the top right corner of the site. This application is available for all
+authenticated users, but only users with superuser status can create and
+modify alerts. The initial view displays a list of alerts along with their
+active/inactive status. You can come back to this page to find alerts that you
+have previously dismissed.
 
-The initial view displays a list of alerts along with their active/inactive
-status. For each alert there is a dropdown for updating or deleting the alert.
-The :guilabel:`Status` column active/inactive badge doubles as a button for
-toggling the alert status. Inactive alerts will not be shown to users.
+If you have superuser status, for each alert you will see a dropdown for
+updating or deleting the alert. The :guilabel:`Status` column active/inactive
+badge doubles as a button for toggling the alert status. Inactive alerts will
+not be shown to users.
 
 .. figure:: _static/app_adminalerts/admin_alerts.png
     :align: center

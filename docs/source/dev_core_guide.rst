@@ -43,8 +43,8 @@ Before submitting a pull request for review, ensure the following:
 - You have updated documentation if your pull requests adds or modifies features
   (see :ref:`dev_core_guide_doc`).
 - All tests pass with ``make test``.
-- ``make black`` has been run for the latest commit.
-- ``make flake8`` produces no errors.
+- ``make format`` has been run for the latest commit.
+- ``make lint`` produces no errors.
 - ``make js-beautify arg=$filename`` has been run for any updated JQuery files.
 
 Your pull request should work on the Python versions currently supported by the
@@ -77,7 +77,7 @@ The following conventions should be adhered to in SODAR Core development:
     * Exception: Documentation syntax where this can not be avoided, e.g. long
       references in RST.
 - Use single quotes instead of double quotes for variables.
-    * Black does not enforce this, so they have to be ensured manually.
+    * Ruff formatting will enforce this.
 - Do not use RST syntax in docstrings or comments.
     * Exception: Docstrings for REST API endpoint methods.
 - Provide type hints for functions you declare.

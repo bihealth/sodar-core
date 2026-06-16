@@ -33,11 +33,9 @@ from projectroles.plugins import PluginAPI
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.base import (
     UIViewTestBase,
-    SerializedObjectMixin as MovedSerializedObjectMixin,
-    SODARAPIViewTestMixin as MovedSODARAPIViewTestMixin,
-    APIViewTestBase as MovedAPIViewTestBase,
+    APIViewTestBase,
+    SODARAPIViewTestMixin,
     TEST_SERVER_URL,
-    TEST_BASE_CLASS_DEPRECATE_MSG,
 )
 from projectroles.tests.test_app_settings import AppSettingInitMixin
 from projectroles.tests.test_models import (
@@ -101,43 +99,7 @@ LDAP_DOMAIN = 'EXAMPLE'
 # Base Classes -----------------------------------------------------------------
 
 
-# TODO: Remove in v1.4 (see #1830)
-class SerializedObjectMixin(MovedSerializedObjectMixin):
-    """
-    Mixin for helpers with serialized objects.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.SerializedObjectMixin instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class SODARAPIViewTestMixin(MovedSODARAPIViewTestMixin):
-    """
-    Mixin for SODAR and SODAR Core API views with accept headers, knox token
-    authorization and general helper methods.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.SODARAPIViewTestMixin instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class APIViewTestBase(MovedAPIViewTestBase):
-    """
-    Base API test view with knox authentication.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.SODARAPIViewTestMixin instead.
-    """
-
-    def setUp(self):
-        super().setUp()
-        c = 'APIViewTestBase'
-        print(TEST_BASE_CLASS_DEPRECATE_MSG.format(old=c, new=c))
-
-
-class ProjectrolesAPIViewTestBase(MovedAPIViewTestBase):
+class ProjectrolesAPIViewTestBase(APIViewTestBase):
     """Override of APIViewTestBase to be used with Projectroles API views"""
 
     media_type = views_api.PROJECTROLES_API_MEDIA_TYPE
@@ -589,14 +551,13 @@ class TestProjectCreateAPIView(
         # Assert object content
         new_category = Project.objects.get(title=NEW_CATEGORY_TITLE)
         model_dict = model_to_dict(new_category)
-        model_dict['readme'] = model_dict['readme'].raw
         expected = {
             'id': new_category.pk,
             'title': new_category.title,
             'type': new_category.type,
             'parent': None,
             'description': new_category.description,
-            'readme': new_category.readme.raw,
+            'readme': new_category.readme,
             'public_access': None,
             'archive': False,
             'full_title': new_category.title,
@@ -617,7 +578,7 @@ class TestProjectCreateAPIView(
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
             'description': new_category.description,
-            'readme': new_category.readme.raw,
+            'readme': new_category.readme,
             'public_access': None,
             'full_title': new_category.full_title,
             'sodar_uuid': str(new_category.sodar_uuid),
@@ -642,14 +603,13 @@ class TestProjectCreateAPIView(
         self.assertEqual(Project.objects.count(), 3)
         new_category = Project.objects.get(title=NEW_CATEGORY_TITLE)
         model_dict = model_to_dict(new_category)
-        model_dict['readme'] = model_dict['readme'].raw
         expected = {
             'id': new_category.pk,
             'title': new_category.title,
             'type': new_category.type,
             'parent': self.category.pk,
             'description': new_category.description,
-            'readme': new_category.readme.raw,
+            'readme': new_category.readme,
             'public_access': None,
             'archive': False,
             'full_title': self.category.title
@@ -670,7 +630,7 @@ class TestProjectCreateAPIView(
             'type': PROJECT_TYPE_CATEGORY,
             'parent': str(self.category.sodar_uuid),
             'description': new_category.description,
-            'readme': new_category.readme.raw,
+            'readme': new_category.readme,
             'public_access': None,
             'full_title': new_category.full_title,
             'sodar_uuid': str(new_category.sodar_uuid),
@@ -712,14 +672,13 @@ class TestProjectCreateAPIView(
         self.assertEqual(Project.objects.count(), 3)
         new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
         model_dict = model_to_dict(new_project)
-        model_dict['readme'] = model_dict['readme'].raw
         expected = {
             'id': new_project.pk,
             'title': new_project.title,
             'type': new_project.type,
             'parent': self.category.pk,
             'description': new_project.description,
-            'readme': new_project.readme.raw,
+            'readme': new_project.readme,
             'public_access': None,
             'archive': False,
             'full_title': self.category.title
@@ -740,7 +699,7 @@ class TestProjectCreateAPIView(
             'type': PROJECT_TYPE_PROJECT,
             'parent': str(self.category.sodar_uuid),
             'description': new_project.description,
-            'readme': new_project.readme.raw,
+            'readme': new_project.readme,
             'public_access': None,
             'full_title': new_project.full_title,
             'sodar_uuid': str(new_project.sodar_uuid),
@@ -1046,7 +1005,6 @@ class TestProjectUpdateAPIView(
 
         self.category.refresh_from_db()
         model_dict = model_to_dict(self.category)
-        model_dict['readme'] = model_dict['readme'].raw
         expected = {
             'id': self.category.pk,
             'title': UPDATED_TITLE,
@@ -1115,7 +1073,7 @@ class TestProjectUpdateAPIView(
 
         self.project.refresh_from_db()
         model_dict = model_to_dict(self.project)
-        model_dict['readme'] = model_dict['readme'].raw
+        model_dict['readme'] = model_dict['readme']
         expected = {
             'id': self.project.pk,
             'title': UPDATED_TITLE,
@@ -1175,7 +1133,7 @@ class TestProjectUpdateAPIView(
 
         self.category.refresh_from_db()
         model_dict = model_to_dict(self.category)
-        model_dict['readme'] = model_dict['readme'].raw
+        model_dict['readme'] = model_dict['readme']
         expected = {
             'id': self.category.pk,
             'title': UPDATED_TITLE,
@@ -1230,7 +1188,7 @@ class TestProjectUpdateAPIView(
 
         self.project.refresh_from_db()
         model_dict = model_to_dict(self.project)
-        model_dict['readme'] = model_dict['readme'].raw
+        model_dict['readme'] = model_dict['readme']
         expected = {
             'id': self.project.pk,
             'title': UPDATED_TITLE,
@@ -1428,7 +1386,6 @@ class TestProjectUpdateAPIView(
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.project.refresh_from_db()
         model_dict = model_to_dict(self.project)
-        model_dict['readme'] = model_dict['readme'].raw
         expected = {
             'id': self.project.pk,
             'title': UPDATED_TITLE,
@@ -3184,7 +3141,7 @@ class TestProjectSettingRetrieveAPIView(
             'name': setting_name,
             'type': APP_SETTING_TYPE_STRING,
             'value': self.project_user_str_setting['value'],
-            'user_modifiable': True,
+            'user_modifiable': False,
         }
         self.assertEqual(response_data, expected)
 
@@ -3303,7 +3260,7 @@ class TestProjectSettingRetrieveAPIView(
             'name': setting_name,
             'type': APP_SETTING_TYPE_STRING,
             'value': self.project_user_str_setting['value'],
-            'user_modifiable': True,
+            'user_modifiable': False,
         }
         self.assertEqual(response_data, expected)
 

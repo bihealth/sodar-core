@@ -5,6 +5,92 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.4.0 (2026-06-16)
+===================
+
+Added
+-----
+
+- **General**
+    - Example production configuration (#1886)
+- **Adminalerts**
+    - Alert dismissal (#1917)
+- **Projectroles**
+    - ``ServiceUnavailable`` API exception class for ``HTTP 503`` (#1513)
+    - Optional user name display in user dropdown (#1853)
+    - ``user_dropdown_name_display`` user app setting (#1853)
+    - ``HostConfirmDeleteView`` for delete views with host confirmation (#1550)
+    - ``transferroles`` management command (#1869)
+    - Remote sync user ``active`` status (#1882)
+    - Project limiting in search via ``project`` keyword (#1191, #1898)
+    - Plugin search API ``projects`` queryset kwarg (#1899)
+    - Site app message custom dismissal URL support (#1918)
+    - ``removeroles`` management command pseudonymization option (#1923)
+    - ``get_value()`` common template tag (#1854)
+    - ``SeleniumSetupMixin`` init retry CI workaround (#1936)
+    - Plugin search API result column filtering and ordering controls (#1927)
+- **Siteinfo**
+    - Client-side statistics retrieval (#1848)
+
+Changed
+-------
+
+- **General**
+    - Replace ``unique_together`` options with ``UniqueConstraint`` (#1434)
+    - Upgrade to Django v5.2.12 (#1878)
+    - Upgrade general Python dependencies (#1878)
+    - Replace markupfield and pagedown with martor (#1861)
+    - General documentation updates (#1884)
+    - Replace black and flake8 with ruff for linting and formatting (#1881, #1909)
+    - Update ``Makefile`` for new check, format and lint commands (#1881, #1934)
+    - Reformat with ruff (#1881)
+    - Move tests after formatting and docs checks in CI (#1907)
+    - Move plugin search API ``search_type`` in keywords (#1901)
+    - Replace plugin search API ``keywords`` kwarg with ``**kwargs`` (#1902)
+    - Upgrade GitHub Actions in CI (#1913)
+    - Update ``AXES_LOCKOUT_PARAMETERS`` setting default value (#1878)
+- **Adminalerts**
+    - Enable ``AdminAlertListView`` viewing for authenticated non-superusers (#1916)
+- **Projectroles**
+    - Make ``modify_assignment()`` ``request`` arg optional (#1875)
+    - Update default single sign-on button legend (#1883)
+    - Update UI tests to work with Selenium v4.44 ``get_attribute()`` (#1938)
+    - Update search with client-side implementation (#22)
+    - Rename ``get_extra_data_link()`` args (#837)
+    - Deprecate ``render_markdown()`` template tag (#1861)
+
+Fixed
+-----
+
+- **General**
+    - Example site Django admin user creation (#1876)
+    - ``Makefile`` runs first command by default (#1911)
+- **Projectroles**
+    - ``batchupdateroles`` role promoting invalid role rank check (#1874)
+    - ``search()`` keyword type hints and docstrings (#1894)
+    - ``AppSettingAPI.get()`` ``PROJECT_USER`` scope exception raising (#1873)
+    - Header button padding rendering incorrectly in Firefox (#1885)
+    - Secondary content title CSS padding (#1904)
+    - Search results template inconsistent header size (#1904)
+    - ``RoleAssignmentCreateView`` delegate limit check with ``PROJECTROLES_DELEGATE_LIMIT=0`` (#1921)
+    - ``RoleAssignmentCreateView`` missing role promotion permission check (#1935)
+- **Timeline**
+    - Search result descriptions not capitalized (#1926)
+
+Removed
+-------
+
+- **General**
+    - Black and flake8 dependencies (#1881)
+    - Legacy flake8 and pycodestyle configuration (#1881)
+- **Bgjobs**
+    - ``keyvalue()`` template tag (#1854)
+- **Projectroles**
+    - ``AppSetting.user_modifiable`` field (#1721)
+    - Deprecated base test classes and mixins (#1830)
+    - ``ProjectAppPluginPoint.search_template`` attribute support (#1861)
+
+
 v1.3.2 (2026-01-12)
 ===================
 

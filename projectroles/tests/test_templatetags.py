@@ -6,6 +6,7 @@ import uuid
 from importlib import import_module
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.test import override_settings, RequestFactory
 from django.urls import reverse, resolve
 
@@ -293,6 +294,21 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             'data-icon="mdi:account-off"></i>'
         )
         self.assertEqual(c_tags.get_user_inactive_icon(False), expected)
+
+    def test_get_user_icon_superuser(self):
+        """Test get_user_icon() with superuser"""
+        expected = '<i class="iconify" data-icon="mdi:shield-account"></i>'
+        self.assertEqual(c_tags.get_user_icon(self.superuser), expected)
+
+    def test_get_user_icon_authenticated_user(self):
+        """Test get_user_icon() with regular autheticated user"""
+        expected = '<i class="iconify" data-icon="mdi:user"></i>'
+        self.assertEqual(c_tags.get_user_icon(self.user), expected)
+
+    def test_get_user_icon_anonymous_user(self):
+        """Test get_user_icon() with anonymous user"""
+        expected = '<i class="iconify" data-icon="mdi:incognito"></i>'
+        self.assertEqual(c_tags.get_user_icon(AnonymousUser()), expected)
 
     def test_get_user_html(self):
         """Test get_user_html()"""
@@ -617,12 +633,12 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         # TODO: Replace with get_app_plugin once implemented for backend plugins
         backend_plugin = plugin_api.get_active_plugins('backend')[0]
 
-        type(backend_plugin).javascript_url = (
-            'example_backend_app/js/NOT_EXISTING_JS.js'
-        )
-        type(backend_plugin).css_url = (
-            'example_backend_app/css/NOT_EXISTING_CSS.css'
-        )
+        type(
+            backend_plugin
+        ).javascript_url = 'example_backend_app/js/NOT_EXISTING_JS.js'
+        type(
+            backend_plugin
+        ).css_url = 'example_backend_app/css/NOT_EXISTING_CSS.css'
 
         self.assertEqual(
             c_tags.get_backend_include(backend_plugin.name, 'js'), ''
@@ -636,9 +652,9 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         # TODO: Replace with get_app_plugin once implemented for backend plugins
         backend_plugin = plugin_api.get_active_plugins('backend')[0]
 
-        type(backend_plugin).javascript_url = (
-            'example_backend_app/js/greeting.js'
-        )
+        type(
+            backend_plugin
+        ).javascript_url = 'example_backend_app/js/greeting.js'
         type(backend_plugin).css_url = 'example_backend_app/css/greeting.css'
 
         self.assertEqual(
@@ -656,6 +672,12 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         """Test split()"""
         s = 'xyz'
         self.assertEqual(c_tags.split(s, 'y'), ['x', 'z'])
+
+    def test_get_value(self):
+        """Test get_value()"""
+        d = {'a': 1}
+        self.assertEqual(c_tags.get_value(d, 'a'), 1)
+        self.assertEqual(c_tags.get_value(d, 'b'), None)
 
 
 class TestProjectrolesRoleTags(TemplateTagTestBase):
@@ -973,6 +995,13 @@ class TestProjectrolesTags(TemplateTagTestBase):
         self.assertEqual(
             tags.get_user_links(request),
             [
+                {
+                    'name': 'adminalerts',
+                    'url': reverse('adminalerts:list'),
+                    'label': 'Admin Alerts',
+                    'icon': 'mdi:alert',
+                    'active': False,
+                },
                 {
                     'name': 'appalerts',
                     'url': reverse('appalerts:list'),

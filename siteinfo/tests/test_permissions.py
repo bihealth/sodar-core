@@ -25,3 +25,23 @@ class TestSiteInfoViewPermissions(SiteAppPermissionTestBase):
     def test_site_info_anon(self):
         """Test GET with anonymous access"""
         self.assert_response(self.url, self.anonymous, 302)
+
+
+class TestSiteInfoAjaxViewPermissions(SiteAppPermissionTestBase):
+    """Permission tests for AppAlertStatusAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('siteinfo:ajax_stats')
+
+    def test_get(self):
+        """Test SiteInfoAjaxView GET"""
+        good_users = [self.superuser]
+        bad_users = [self.regular_user, self.anonymous]
+        self.assert_response(self.url, good_users, 200)
+        self.assert_response(self.url, bad_users, 403)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.assert_response(self.url, self.anonymous, 403)

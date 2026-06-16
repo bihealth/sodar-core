@@ -19,7 +19,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from djangoplugins.models import Plugin
-from markupfield.fields import MarkupField
+from martor.models import MartorField
 
 from projectroles.constants import get_sodar_constants
 
@@ -70,7 +70,7 @@ PROJECT_TAG_STARRED = 'STARRED'
 CAT_DELIMITER = ' / '
 CAT_DELIMITER_ERROR_MSG = f'String "{CAT_DELIMITER}" is not allowed in title'
 ROLE_PROJECT_TYPE_ERROR_MSG = (
-    'Invalid project type "{project_type}" for ' 'role "{role_name}"'
+    'Invalid project type "{project_type}" for role "{role_name}"'
 )
 CAT_PUBLIC_ACCESS_MSG = 'Public access is not allowed for categories'
 ADD_EMAIL_ALREADY_SET_MSG = 'Email already set as {email_type} email for user'
@@ -89,6 +89,7 @@ class ProjectManager(models.Manager):
     def find(
         self,
         search_terms: list[str],
+        projects: QuerySet['Project'],
         keywords: Optional[dict] = None,
         project_type: Optional[str] = None,
     ) -> QuerySet:
@@ -98,13 +99,14 @@ class ProjectManager(models.Manager):
         Restrict to project type if project_type is set.
 
         :param search_terms: Search terms (list)
+        :param projects: QuerySet of projects where the terms are searched
         :param keywords: Optional search keywords as key/value pairs (dict)
         :param project_type: Project type or None
         :return: QuerySet of Project objects
         """
-        projects = super().get_queryset().order_by('title')
+        objects = super().get_queryset().filter(pk__in=projects)
         if project_type:
-            projects = projects.filter(type=project_type)
+            objects = objects.filter(type=project_type)
         term_query = Q()
         for t in search_terms:
             term_query.add(Q(full_title__icontains=t), Q.OR)
@@ -115,7 +117,7 @@ class ProjectManager(models.Manager):
                 term_query.add(Q(sodar_uuid=t), Q.OR)
             except ValueError:
                 pass
-        return projects.filter(term_query).order_by('full_title')
+        return objects.filter(term_query).order_by('full_title')
 
 
 class Project(models.Model):
@@ -159,10 +161,9 @@ class Project(models.Model):
     )
 
     #: Project README (optional, supports markdown)
-    readme = MarkupField(
+    readme = MartorField(
         null=True,
         blank=True,
-        markup_type='markdown',
         help_text='Project README (optional, supports markdown)',
     )
 
@@ -207,7 +208,11 @@ class Project(models.Model):
     objects = ProjectManager()
 
     class Meta:
-        unique_together = ('title', 'parent')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'parent'], name='unique_project_path'
+            ),
+        ]
         ordering = ['parent__title', 'title']
 
     def __str__(self):
@@ -1024,11 +1029,6 @@ class AppSetting(models.Model):
         null=True, default=dict, help_text='Optional JSON value for the setting'
     )
 
-    #: Setting visibility in forms
-    user_modifiable = models.BooleanField(
-        default=True, help_text='Setting visibility in forms'
-    )
-
     #: AppSetting SODAR UUID
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4, unique=True, help_text='AppSetting SODAR UUID'
@@ -1039,7 +1039,12 @@ class AppSetting(models.Model):
 
     class Meta:
         ordering = ['project__title', 'app_plugin__name', 'name']
-        unique_together = ['project', 'user', 'app_plugin', 'name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'user', 'app_plugin', 'name'],
+                name='unique_app_setting_name',
+            ),
+        ]
 
     def __str__(self):
         plugin_name = self.app_plugin.name if self.app_plugin else APP_NAME
@@ -1306,7 +1311,11 @@ class RemoteSite(models.Model):
 
     class Meta:
         ordering = ['name']
-        unique_together = ['url', 'mode', 'secret']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['url', 'mode', 'secret'], name='unique_remote_site'
+            ),
+        ]
 
     def __str__(self):
         return f'{self.name} ({self.mode})'
@@ -1657,7 +1666,11 @@ class SODARUserAdditionalEmail(models.Model):
 
     class Meta:
         ordering = ['user__username', 'email']
-        unique_together = ['user', 'email']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'email'], name='unique_user_email'
+            ),
+        ]
 
     def __str__(self):
         return f'{self.user.username}: {self.email}'

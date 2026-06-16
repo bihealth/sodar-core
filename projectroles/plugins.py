@@ -1,5 +1,6 @@
 """Plugin point definitions and plugin API for apps based on projectroles"""
 
+from dataclasses import dataclass, asdict
 import json
 import logging
 
@@ -354,8 +355,8 @@ class ProjectAppPluginPoint(PluginPoint):
     #: List of search object types for the app
     search_types = []
 
-    #: Search results template
-    search_template = None
+    #: CSS file for the search resutls table from this plugin (optional)
+    search_css = None
 
     #: App card template for the project details page
     details_template = None
@@ -418,9 +419,7 @@ class ProjectAppPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(
-        self, _extra_data: dict, _name: str
-    ) -> Optional[str]:
+    def get_extra_data_link(self, extra_data: dict, name: str) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
@@ -428,8 +427,8 @@ class ProjectAppPluginPoint(PluginPoint):
         self,
         search_terms: list[str],
         user: User,
-        search_type: Optional[str] = None,
-        keywords: Optional[list[str]] = None,
+        projects: QuerySet[Project],
+        **kwargs: str,
     ) -> list['PluginSearchResult']:
         """
         Return app items based on one or more search terms, user, optional type
@@ -438,12 +437,10 @@ class ProjectAppPluginPoint(PluginPoint):
         :param search_terms: Search terms to be joined with the OR operator
                              (list of strings)
         :param user: User object for user initiating the search
-        :param search_type: String
-        :param keywords: List (optional)
+        :param projects: QuerySet of projects where the terms are searched
+        :param kwargs: Search options as key/value pairs (optional)
         :return: List of PluginSearchResult objects
         """
-        # TODO: If implemented, also implement display of results in the app's
-        #       search template
         return []
 
     def update_cache(
@@ -575,9 +572,7 @@ class BackendPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(
-        self, _extra_data: dict, _name: str
-    ) -> Optional[str]:
+    def get_extra_data_link(self, extra_data: dict, name: str) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
@@ -639,14 +634,17 @@ class SiteAppPluginPoint(PluginPoint):
         :param user: User object (optional)
         :return: List of dicts or and empty list if no messages
         """
-        '''
+
+        """
         Example of valid return data:
         return [{
             'content': 'Message content in here, can contain html',
             'color': 'info',        # Corresponds to bg-* in Bootstrap
-            'dismissable': True     # False for non-dismissable
+            'dismissable': True,    # False for non-dismissable
+            'require_auth': True,   # False to let anonymous users to see alert
+            'dismiss_url': None,    # (Optional) Call this url to dismiss alert
         }]
-        '''
+        """
         return []
 
     def get_object(self, model: type[Model], uuid: Union[str, UUID]) -> Any:
@@ -679,9 +677,7 @@ class SiteAppPluginPoint(PluginPoint):
             return None
         return None
 
-    def get_extra_data_link(
-        self, _extra_data: dict, _name: str
-    ) -> Optional[str]:
+    def get_extra_data_link(self, extra_data: dict, name: str) -> Optional[str]:
         """Return a link for timeline label starting with 'extra-'"""
         return None
 
@@ -935,37 +931,94 @@ class PluginObjectLink:
         self.blank = blank
 
 
-class PluginSearchResult:
+@dataclass
+class PluginSearchResultCell:
     """
-    Class representing a list of search results from a specific plugin for one
-    or more search types. Expected to be returned from search() implementations.
+    App plugin search result table cell class. Used in PluginSearchResult for
+    its rows attribute.
     """
 
-    #: Category of the result set, used in templates (string)
-    category = None
-    #: Title to be displayed for this set of search results in the UI (string)
-    title = None
+    #: Cell content. Intepreted as HTML if value_html is set True in the
+    #: corresponding PluginSearchResultColumn object.
+    value: str = None
+    #: Optional URL. If used, the cell is rendered as a link. Ignored if
+    #: value_html is set True.
+    value_url: Optional[str] = None
+    #: Optional HTML class to be applied to this cell only.
+    cell_class: Optional[str] = None
+
+
+@dataclass
+class PluginSearchResultColumn:
+    """
+    App plugin search result table column class. Used in PluginSearchResult for
+    its columns attribute.
+    """
+
+    #: The title to be displayed
+    title: str
+    #: Classes to be added to the cells for that column
+    column_class: Optional[str] = None
+    #: Whether to apply highlighting for this column
+    highlight: bool = False
+    #: Interpret the value of corresponding PluginSearchResultCell as HTML
+    value_html: bool = False
+    #: Whether the column content is allowed to overflow
+    overflow: bool = False
+    #: Whether users can order the table by this column's values
+    orderable: bool = True
+    #: Whether the column content is searchable
+    searchable: bool = True
+
+
+class PluginSearchResult:
+    """
+    App plugin search result table class. Expected to be returned from search()
+    implementations. Represents a table of a search result set in a specific
+    category from the plugin implementing search.
+
+    The columns attribute defines the table columns and their attributes. The
+    rows attribute contains table rows. Elements in each row are assumed to
+    correspond to a column of the same index.
+    """
+
+    #: Optional Category of result set, used in rendering
+    category: Optional[str] = None
+    #: Optional title to be displayed for this set of search results
+    title: Optional[str] = None
     #: List of one or more search type keywords for these results
-    search_types = []
-    #: List or QuerySet of result objects
-    items = []
+    search_types: list[str] = []
+    #: List of columns to be shown in the results table
+    columns: list[PluginSearchResultColumn] = []
+    #: List of lists of result objects
+    rows: list[list[PluginSearchResultCell]] = []
+    #: HTML class for the whole results table (optional)
+    table_class: Optional[str] = None
+    #: Limit for the number of items returned (if 0, no limit is applied)
+    result_limit: int = 0
 
     def __init__(
         self,
         category: str,
         title: str,
-        search_types: Optional[list[str]],
-        items: Union[list, QuerySet],
+        search_types: list[str],
+        columns: list[PluginSearchResultColumn],
+        rows: list[list[PluginSearchResultCell]],
+        table_class: Optional[str] = None,
+        result_limit: int = 0,
     ):
         """
         Initialize PluginSearchResult.
 
-        :param category: Category of the result set, used in templates (string)
+        :param category: Category of the result set, used in rendering (string)
         :param title: Title to be displayed for this set of search results in
                       the UI (string)
         :param search_types: List of one or more search type keywords for the
                              results
-        :param items: List or QuerySet of result objects
+        :param rows: List of lists of PluginSearchResultCell objects
+        :param table_class: HTML class for the whole results table (optional)
+        :param result_limit: Limit for the number of items returned (if 0, no
+                             limit is applied)
         """
         self.category = category
         self.title = title
@@ -974,26 +1027,40 @@ class PluginSearchResult:
             raise ValueError(
                 'At least one type keyword must be provided in search_types'
             )
-        self.items = items
+        self.columns = columns
+        self.rows = rows
+        self.table_class = table_class
+        self.result_limit = result_limit
+
+    def to_dict(self):
+        return {
+            'category': self.category,
+            'title': self.title,
+            'search_types': self.search_types,
+            'columns': [asdict(column) for column in self.columns],
+            'rows': [[asdict(cell) for cell in row] for row in self.rows],
+            'table_class': self.table_class,
+            'result_limit': self.result_limit,
+        }
 
 
 class PluginCategoryStatistic:
     """Class representing an item of category statistics"""
 
     #: Plugin from which this item is initialized (None for projectroles)
-    plugin = None
-    #: Title to be displayed (string)
-    title = None
-    #: Value of the statistic (int or float)
-    value = 0
-    #: Optional unit (string or None)
-    unit = None
-    #: Optional description to be displayed as tooltip (string or None)
-    description = None
-    #: Optional icon namespace and ID (string or None)
-    icon = None
-    #: Optional prefix to be displayed (string or None)
-    prefix = None
+    plugin: Optional[ProjectAppPluginPoint] = None
+    #: Title to be displayed
+    title: str = None
+    #: Value of the statistic
+    value: Union[int, float] = 0
+    #: Optional unit
+    unit: Optional[str] = None
+    #: Optional description to be displayed as tooltip
+    description: Optional[str] = None
+    #: Optional icon namespace and ID
+    icon: Optional[str] = None
+    #: Optional prefix to be displayed
+    prefix: Optional[str] = None
 
     def __init__(
         self,

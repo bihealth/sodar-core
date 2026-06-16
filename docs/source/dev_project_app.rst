@@ -46,7 +46,7 @@ This documentation assumes you have a Django site with the ``projectroles``
 app set up, either started with
 `sodar-django-site <https://github.com/bihealth/sodar-django-site>`_ or by
 integrating SODAR Core on an existing site (see
-:ref:`projectroles integration <app_projectroles_integration>`).
+:ref:`getting_started`).
 The instructions can be applied either to modify a previously existing app, or
 to set up a fresh app generated in the standard way with
 ``./manage.py startapp``.
@@ -243,8 +243,10 @@ Implementing the following is **optional**:
     definition for an example.
 ``search_types``
     Implement if searching the data of the app is enabled.
-``search_template``
-    Implement if searching the data of the app is enabled.
+``search_css``
+    Path to CSS file styling the search results for this plugin. Implement if
+    searching the data of the app is enabled and if CSS needs to be customized
+    in the search results.
 ``project_list_columns``
     Optional custom columns do be shown in the project list. See the plugin
     point definition for an example.
@@ -606,23 +608,29 @@ It is expected to have the content in a ``card-body`` container:
    </div>
 
 
-Project Search API and Template
-===============================
+.. _dev_project_app_search:
 
-If you want to implement search in your project app, you need to implement the
-``search()`` method in your plugin, as well as a template for displaying the
-results.
+Search API
+==========
+
+To enable site-wide search in your project app, you need to implement the
+``search()`` method in your plugin. This method is called by SODAR Core to
+render results asynchronously in the UI. The method is expected to return search
+results as well as attributes defining how to render the results in the UI.
 
 .. hint::
 
-   Implementing search *can* be complex. If you have access to the main SODAR
-   repository, apps in that project might prove useful examples.
+    Existing SODAR Core and SODAR Server apps can provide useful examples on how
+    to implement search in your apps.
 
-The search() Function
----------------------
+Plugin search() Method
+----------------------
 
-See the signature of ``search()`` in
-``projectroles.plugins.ProjectAppPluginPoint``. The arguments are as follows:
+For a full list of attributes for ``search()``, the ``PluginSearchResult``
+return data class and related classes, see the
+:ref:`plugin API documentation <app_projectroles_api_django_plugins>`.
+
+The arguments for ``search()`` are as follows:
 
 ``search_terms``
     - One or more terms to be searched for (list of strings). Expected to be
@@ -631,87 +639,82 @@ See the signature of ``search()`` in
       via the Advanced Search view.
 ``user``
     - User object for user initiating search.
-``search_type``
+``projects``
+    - ``QuerySet`` of Project objects within which the search should be
+      restricted.
+``**kwargs``
+    - Special search options as additional key-value pairs.
+
+Currently we support two keyword arguments:
+
+``project``
+    - Used to limit the search to a specific project or category.
+    - The full list of projects is pre-fetched for efficiency and passed in
+      the ``projects`` argument, but apps can optionally also make use of the
+      original user-provided UUID or title.
+``type``
     - The type of object to search for (string, optional).
     - Used to restrict search to specific types of objects.
     - You can specify supported types in the plugin's ``search_types`` list.
     - Examples: ``file``, ``sample``..
-``keywords``
-    - Special search keywords, e.g. "exact".
-    - **NOTE:** Currently not implemented.
 
 .. note::
 
    Within this method, you are expected to verify appropriate access of the
-   searching user yourself!
+   searching user to the returned objects yourself. This can be done with e.g.
+   ``User.has_perm('your_app.your_perm_here')``.
 
 The return data is a list of one or more ``PluginSearchResult`` objects. The
 objects are expected to be split between search categories, of which there can
-be one or multiple. This is useful where e.g. the same type of HTML list isn't
-suitable for all returnable types. If only returning one type of data, you can
-use e.g. ``all`` as your only category. Example of a return data:
+be one or multiple. This is useful where e.g. the same type of list or context
+isn't applicable to all returnable types. If only returning one type of data,
+you can use e.g. ``all`` as your only category.
+
+Example of a results table with two columns and one row:
 
 .. code-block:: python
 
-    from projectroles.plugins import PluginSearchResult
+    from projectroles.plugins import (
+        PluginSearchResult, PluginSearchResultColumn, PluginSearchResultCell
+    )
     # ...
     return [
         PluginSearchResult(
-            category='all',  # Category ID to be used in your search template
+            category='all',  # Category ID
             title='List title',  # Title of the result set
             search_types=[],  # Object types included in this category
-            items=[],  # List or QuerySet of objects returned by search
+            columns=[  # List of column specifictations for the results table
+                PluginSearchResultColumn(title='First field'),
+                PluginSearchResultColumn(title='Second field'),
+            ],
+            rows=[  # List of rows, each row consisting of a list of cells
+                [
+                    PluginSearchResultCell(value='Result name'),
+                    PluginSearchResultCell(value='Result description')
+                ],
+            ],
         )
     ]
 
-.. warning::
+Search Result Customization
+---------------------------
 
-    The earlier search implementation expected a ``dict`` as return data. This
-    has been deprecated and support for it will be removed in SODAR Core v1.1.
+Typically, cells in search result rows contain either plain text or link
+anchors. This type of cell can be specified using the ``value`` and
+``value_url`` attributes. If ``value_url`` is present, the cell will be a
+hyperlink with that URL as the destination.
 
+For more complex cases, e.g. including HTML badges or multiple links, set
+``value_html`` to ``True`` for the corresponding column and place HTML directly
+in the ``value`` attribute of ``PluginSearchResultCell``. In this case, the
+``value_url`` attribute will be ignored. In addition to the CSS class assigned
+to the whole column, an extra class for individual cells can be set with the
+``cell_class`` attribute.
 
-Search Template
----------------
-
-Projectroles will provide your template context the ``search_results`` object,
-which corresponds to the result dict of the aforementioned function. There are
-also includes for formatting the results list, which you are encouraged to use.
-
-Example of a simple results template, in case of a single ``all`` category:
-
-.. code-block:: django
-
-   {% if search_results.all.items|length > 0 %}
-
-     {# Include standard search list header here #}
-     {% include 'projectroles/_search_header.html' with search_title=search_results.all.title result_count=search_results.all.items|length %}
-
-     {# Set up a table with your results #}
-     <table class="table table-striped sodar-card-table sodar-search-table" id="sodar-ff-search-table">
-       <thead>
-         <tr>
-           <th>Name</th>
-           <th>Some Other Field</th>
-         </tr>
-      </thead>
-      <tbody>
-        {% for item in search_results.all.items %}
-          <tr>
-            <td>
-              <a href="#link_to_somewhere_in your_app">{{ item.name }}</a>
-            </td>
-            <td>
-              {{ item.some_other_field }}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    {# Include standard search list footer here #}
-    {% include 'projectroles/_search_footer.html' %}
-
-  {% endif %}
+The style of the app's search results table can be customized by setting the
+path to a CSS file in the plugin's ``search_css`` attribute. Within this file,
+the correct table can be targeted by using the CSS class declared in
+``PluginSearchResult.table_class``.
 
 
 .. _dev_project_app_rest_api:
@@ -768,6 +771,9 @@ mixin to be used in your views. Example:
 The base classes provide permission checks via SODAR Core project objects
 similar to UI view mixins. Base REST API classes without a project context can
 also be used in site apps.
+
+For views which return ``HTTP 503`` errors, we provide a general purpose
+``APIException`` subclass called ``ServiceUnavailable``.
 
 See the
 :ref:`base REST API class documentation <app_projectroles_api_django_rest>` for

@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.template.defaultfilters import truncatechars
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -20,13 +21,7 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project, SODAR_CONSTANTS, CAT_DELIMITER
 from projectroles.plugins import PluginAPI
-from projectroles.tests.base import (
-    SeleniumSetupMixin as MovedSeleniumSetupMixin,
-    LiveUserMixin as MovedLiveUserMixin,
-    UITestMixin as MovedUITestMixin,
-    ProjectUITestBase,
-    TEST_BASE_CLASS_DEPRECATE_MSG,
-)
+from projectroles.tests.base import ProjectUITestBase, SearchUITestMixin
 from projectroles.tests.test_models import (
     ProjectInviteMixin,
     RemoteTargetMixin,
@@ -74,54 +69,6 @@ REMOTE_SITE_ID = f'id_remote_site.{REMOTE_SITE_UUID}'
 CUSTOM_READ_ONLY_MSG = 'This is a custom site read-only mode message.'
 
 
-# TODO: Remove in v1.4 (see #1830)
-class SeleniumSetupMixin(MovedSeleniumSetupMixin):
-    """
-    Mixin for setting up selenium for a test class.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.x instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class LiveUserMixin(MovedLiveUserMixin):
-    """
-    Mixin for creating users to work with LiveServerTestCase.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.x instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class UITestMixin(MovedUITestMixin):
-    """
-    Helper mixin for UI tests.
-
-    DEPRECATED: To be removed in v1.4. Use
-    projectroles.tests.base.x instead.
-    """
-
-
-# TODO: Remove in v1.4 (see #1830)
-class UITestBase(ProjectUITestBase):
-    """
-    Base class for UI tests.
-
-    DEPRECATED: To be removed in v1.4. Use ProjectUITestBase or SiteUITestBase
-    from projectroles.tests.base insteaad.
-    """
-
-    def setUp(self):
-        super().setUp()
-        print(
-            TEST_BASE_CLASS_DEPRECATE_MSG.format(
-                old='UITestBase', new='ProjectUITestBase or SiteUITestBase'
-            )
-        )
-
-
 class TestBaseTemplate(ProjectUITestBase):
     """Tests for the base project template"""
 
@@ -165,6 +112,75 @@ class TestBaseTemplate(ProjectUITestBase):
             )
         )
         self.assertEqual(modal.is_displayed(), True)
+
+    def test_user_dropdown_username_default(self):
+        """Test visibility for user with setting default (False)"""
+        # Username should not be visible
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME, 'user_dropdown_name_display', user=self.user_owner
+            ),
+            False,
+        )
+        self.login_and_redirect(self.user_owner, reverse('home'))
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.ID, 'sodar-navbar-user-dropdown-username'
+            )
+
+    def test_user_dropdown_username_visible(self):
+        """Test visibility for user with setting set True"""
+        # Ensure username is visible
+        user = self.user_contributor
+        app_settings.set(
+            APP_NAME, 'user_dropdown_name_display', True, user=user
+        )
+        self.login_and_redirect(user, reverse('home'))
+        username_element = self.selenium.find_element(
+            By.ID, 'sodar-navbar-user-dropdown-username'
+        )
+        self.assertEqual(username_element.text, str(user))
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_user_dropdown_username_anonymous(self):
+        """Test visibility with anonymous user"""
+        # Username should not be visible
+        self.project.set_public_access(self.role_guest)
+        self.selenium.get(self.build_selenium_url(reverse('home')))
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'sodar-pr-project-list-item')
+            )
+        )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(
+                By.ID, 'sodar-navbar-user-dropdown-username'
+            )
+
+    def test_user_dropdown_username_superuser(self):
+        """Test visibility with superuser"""
+        # Username should be visible
+        app_settings.set(
+            APP_NAME, 'user_dropdown_name_display', True, user=self.superuser
+        )
+        self.login_and_redirect(self.superuser, reverse('home'))
+        username_element = self.selenium.find_element(
+            By.ID, 'sodar-navbar-user-dropdown-username'
+        )
+        self.assertEqual(username_element.text, 'superuser')
+
+    def test_user_dropdown_username_truncated(self):
+        """Test visibility and truncation for user with long name"""
+        long_name_user = self.make_user('long_name_which_should_be_truncated')
+        app_settings.set(
+            APP_NAME, 'user_dropdown_name_display', True, user=long_name_user
+        )
+        self.login_and_redirect(long_name_user, reverse('home'))
+        username_element = self.selenium.find_element(
+            By.ID, 'sodar-navbar-user-dropdown-username'
+        )
+        long_name_user_trunc = truncatechars(str(long_name_user), 32)
+        self.assertEqual(username_element.text, long_name_user_trunc)
 
 
 class TestHomeView(ProjectUITestBase):
@@ -395,14 +411,16 @@ class TestHomeView(ProjectUITestBase):
             ),
             False,
         )
-        app_settings.set(
-            plugin_name=APP_NAME,
-            setting_name='project_star',
-            value=True,
-            project=self.project,
-            user=self.user_owner,
-            validate=False,
-        ),
+        (
+            app_settings.set(
+                plugin_name=APP_NAME,
+                setting_name='project_star',
+                value=True,
+                project=self.project,
+                user=self.user_owner,
+                validate=False,
+            ),
+        )
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
         button = self.selenium.find_element(
@@ -430,14 +448,16 @@ class TestHomeView(ProjectUITestBase):
 
     def test_project_list_filter_star(self):
         """Test toggling star with filter enabled"""
-        app_settings.set(
-            plugin_name=APP_NAME,
-            setting_name='project_star',
-            value=True,
-            project=self.category,
-            user=self.user_owner,
-            validate=False,
-        ),
+        (
+            app_settings.set(
+                plugin_name=APP_NAME,
+                setting_name='project_star',
+                value=True,
+                project=self.category,
+                user=self.user_owner,
+                validate=False,
+            ),
+        )
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
         f_input = self.selenium.find_element(
@@ -1323,12 +1343,86 @@ class TestProjectSidebar(
         )
 
 
-class TestProjectSearchResultsView(ProjectUITestBase):
+class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
     """Tests for ProjectSearchResultsView UI"""
 
     def setUp(self):
         super().setUp()
         self.url = reverse('projectroles:search')
+
+    def test_search_card_layout(self):
+        """Test project search results card layout"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        card = self.selenium.find_element(
+            By.XPATH,
+            '//div[@class="sodar-ajax-search-results" '
+            'and @data-app-name="projectroles"]',
+        )
+        card_title = card.find_element(By.TAG_NAME, 'h4').text
+        self.assertEqual(card_title, 'Projects (1)')
+
+    def test_search_table_layout(self):
+        """Test project search results table layout"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        thead = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table thead th',
+        )
+        self.assertEqual(len(thead), 2)
+        self.assertEqual(
+            [th.text for th in thead],
+            ['Project', 'Description'],
+        )
+        tbody_rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table tbody tr',
+        )
+        self.assertEqual(len(tbody_rows), 1)
+
+    def test_search_highlight(self):
+        """Test project search results highlight"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        name_cell = self.selenium.find_element(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table tbody tr td:nth-child(1)',
+        )
+        name_content = name_cell.find_element(By.TAG_NAME, 'a').get_attribute(
+            'innerHTML'
+        )
+        self.assertEqual(
+            name_content,
+            '<strong class="sodar-search-highlight">Test</strong>Category / '
+            '<strong class="sodar-search-highlight">Test</strong>Project',
+        )
+
+    def test_search_order(self):
+        """Test project search results orderable columns"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        orderable_columns = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table .dt-orderable-desc',
+        )
+        self.assertEqual([col.text for col in orderable_columns], ['Project'])
+
+    def test_search_filter(self):
+        """Test project search results filterable columns"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        pr_args = [url, 'projectroles', 'sodar-pr-search-table']
+        # Filter on Project column
+        self.assert_search_filter_count('test', 1, 1, *pr_args)
+        self.assert_search_filter_count('abcde', 1, 0, *pr_args)
 
     def test_search_results(self):
         """Test project search items visibility according to user permissions"""
@@ -1348,7 +1442,7 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'test'})
-        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+        self.assert_search_count(expected, url, 'sodar-pr-search-table')
 
     def test_search_type_project(self):
         """Test project search items visibility with project type"""
@@ -1368,27 +1462,59 @@ class TestProjectSearchResultsView(ProjectUITestBase):
             (self.user_no_roles, 0),
         ]
         url = self.url + '?' + urlencode({'s': 'test type:project'})
-        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+        self.assert_search_count(expected, url, 'sodar-pr-search-table')
 
-    def test_search_type_nonexisting(self):
-        """Test project search items visibility with a nonexisting type"""
+    def test_search_keywords(self):
+        """Test project search items visibility with project keyword"""
         expected = [
-            (self.superuser, 0),
-            (self.user_owner_cat, 0),
-            (self.user_delegate_cat, 0),
-            (self.user_contributor_cat, 0),
-            (self.user_guest_cat, 0),
-            (self.user_viewer_cat, 0),
-            (self.user_finder_cat, 0),
-            (self.user_owner, 0),
-            (self.user_delegate, 0),
-            (self.user_contributor, 0),
-            (self.user_guest, 0),
-            (self.user_viewer, 0),
+            (self.superuser, 1),
+            (self.user_owner_cat, 1),
+            (self.user_delegate_cat, 1),
+            (self.user_contributor_cat, 1),
+            (self.user_guest_cat, 1),
+            (self.user_viewer_cat, 1),
+            (self.user_finder_cat, 1),
+            (self.user_owner, 1),
+            (self.user_delegate, 1),
+            (self.user_contributor, 1),
+            (self.user_guest, 1),
+            (self.user_viewer, 1),
             (self.user_no_roles, 0),
         ]
+        url = (
+            self.url
+            + '?'
+            + urlencode({'s': f'test project:{self.project.sodar_uuid}'})
+        )
+        self.assert_search_count(expected, url, 'sodar-pr-search-table')
+
+    def test_search_type_nonexisting(self):
+        """Test project search items visibility with nonexisting type"""
+        user_types = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
         url = self.url + '?' + urlencode({'s': 'test type:Jaix1au'})
-        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
+        for user_type in user_types:
+            self.login_and_redirect(user_type, url)
+            alert_elem = self.selenium.find_element(
+                By.CSS_SELECTOR,
+                'div.alert.alert-danger',
+            )
+            self.assertEqual(
+                alert_elem.text, 'Error: Search type "jaix1au" not recognized!'
+            )
 
     def test_search_project_link(self):
         """Test project link visibility according to user permissions"""
@@ -1409,7 +1535,12 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         ]
         url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(
-            expected, url, 'sodar-pr-project-search-link', attribute='class'
+            expected,
+            url,
+            'sodar-pr-project-search-link',
+            attribute='class',
+            wait_elem='sodar-pr-search-table',
+            wait_loc='CLASS_NAME',
         )
 
     def test_search_project_findable_link(self):
@@ -1431,7 +1562,12 @@ class TestProjectSearchResultsView(ProjectUITestBase):
         ]
         url = self.url + '?' + urlencode({'s': 'test'})
         self.assert_element_count(
-            expected, url, 'sodar-pr-project-findable', attribute='class'
+            expected,
+            url,
+            'sodar-pr-project-findable',
+            attribute='class',
+            wait_elem='sodar-pr-search-table',
+            wait_loc='CLASS_NAME',
         )
 
 
@@ -2526,7 +2662,7 @@ class TestProjectRoleView(RemoteTargetMixin, ProjectUITestBase):
             f'//tr[@data-user-uuid="{self.user_contributor.sodar_uuid}"]',
         )
         for td in row.find_elements(By.TAG_NAME, 'td')[:3]:
-            self.assertNotIn('text-secondary', td.get_attribute('class'))
+            self.assertNotIn('text-secondary', td.get_attribute('class') or '')
 
     def test_render_role_row_inactive(self):
         """Test rendering user role row with inactive user"""

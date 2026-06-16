@@ -11,19 +11,26 @@ from test_plus.test import TestCase
 from projectroles.app_links import AppLinkAPI
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import AppSetting, SODAR_CONSTANTS
-from projectroles.tests.base import UIViewTestBase
+from projectroles.plugins import PluginAPI
+from projectroles.tests.base import SerializedObjectMixin, UIViewTestBase
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
 )
-from projectroles.tests.test_views_api import SerializedObjectMixin
+from projectroles.utils import build_secret
 
+from filesfolders.tests.test_models import FileMixin
+
+from timeline.tests.test_models import (
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+)
 
 app_links = AppLinkAPI()
 app_settings = AppSettingAPI()
-
+plugin_api = PluginAPI()
 
 # SODAR constants
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
@@ -1274,3 +1281,356 @@ class TestUserAutocompleteRedirectAjaxView(
                 kwargs={'project': self.project.sodar_uuid},
             ),
         )
+
+
+class TestSearchResultsAjaxView(
+    ProjectMixin,
+    RoleAssignmentMixin,
+    FileMixin,
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    UIViewTestBase,
+):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:ajax_search')
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.project = self.make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user, self.role_owner
+        )
+        self.plugins = [
+            p
+            for p in plugin_api.get_active_plugins(plugin_type='project_app')
+            if p.search_enable
+        ]
+        self.project2 = self.make_project(
+            'AnotherProject',
+            PROJECT_TYPE_PROJECT,
+            self.category,
+            description='xxx',
+        )
+        self.cat_owner_as = self.make_assignment(
+            self.project2, self.user, self.role_owner
+        )
+        self.event = self.make_event(
+            project=self.project2,
+            app=APP_NAME,
+            user=self.user,
+            event_name='test_event',
+            description='description',
+            classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
+        self.make_event_status(
+            event=self.event,
+            status_type='SUBMIT',
+            description='SUBMIT',
+            extra_data={'test_key': 'test_val'},
+        )
+        self.file = self.make_file(
+            name='file.txt',
+            file_name='file.txt',
+            file_content=bytes('content'.encode('utf-8')),
+            project=self.project,
+            folder=None,
+            owner=self.user,
+            description='',
+            public_url=True,
+            secret=build_secret(),
+        )
+        self.other_file = self.make_file(
+            name='other file.txt',
+            file_name='other file.txt',
+            file_content=bytes('My name contains a space'.encode('utf-8')),
+            project=self.project,
+            folder=None,
+            owner=self.user,
+            description='',
+            public_url=True,
+            secret=build_secret(),
+        )
+
+    def _get_app_results(self, user, terms, keywords={}):
+        """Make a POST request to return app search results"""
+        search_apps = [p.name for p in self.plugins if p.search_enable]
+        search_apps.append('projectroles')
+        results = {}
+        for app in search_apps:
+            with self.login(user):
+                response = self.client.post(
+                    self.url,
+                    {
+                        'terms': json.dumps(terms),
+                        'keywords': json.dumps(keywords),
+                        'plugin': app,
+                    },
+                )
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            if data['error'] == (
+                f'The app "{app}" does not support search results '
+                f'of type "{keywords.get("type")}".'
+            ):
+                results[app] = []
+                continue
+            self.assertIsNone(data['error'])
+            results[app] = data['results']
+        return results
+
+    def test_post_projectroles(self):
+        """Test ProjectSearchResultsAjaxView POST with projectroles app"""
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                {
+                    'terms': '["test"]',
+                    'keywords': '{}',
+                    'plugin': 'projectroles',
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNone(data['error'])
+        self.assertEqual(len(data['results']), 1)
+        result = data['results'][0]
+        self.assertEqual(result['category'], 'all')
+        self.assertEqual(result['title'], 'Projects')
+        self.assertEqual(result['search_types'], ['project'])
+        self.assertEqual(
+            [column['title'] for column in result['columns']],
+            ['Project', 'Description'],
+        )
+        self.assertEqual(len(result['rows']), 2)
+        self.assertEqual(result['table_class'], 'sodar-pr-search-table')
+
+    def test_post_missing_fields(self):
+        """Test POST with projectroles app and missing fields"""
+        with self.login(self.user):
+            # Missing "keywords" in POST data
+            response = self.client.post(
+                self.url,
+                {
+                    'terms': '["test"]',
+                    'plugin': 'projectroles',
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNotNone(data['error'])
+        self.assertEqual(data['results'], [])
+
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_post_disabled(self):
+        """Test POST with search disabled"""
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                {
+                    'terms': '["test"]',
+                    'keywords': '{}',
+                    'plugin': 'projectroles',
+                },
+            )
+            data = response.json()
+            self.assertEqual(data['results'], [])
+            self.assertEqual(data['error'], 'Search is not enabled.')
+
+    def test_post_search_type(self):
+        """Test POST with search type"""
+        results = self._get_app_results(self.user, ['test'], {'type': 'file'})
+        self.assertEqual(len(results['filesfolders']), 1)
+        self.assertEqual(len(results['filesfolders'][0]['rows']), 0)
+
+    def test_post_wrong_type(self):
+        """Test POST for plugin and unsupported type"""
+        with self.login(self.user):
+            # The timeline plugin doesn't provide search results of type "file"
+            response = self.client.post(
+                self.url,
+                {
+                    'terms': '["test"]',
+                    'keywords': '{"type": "file"}',
+                    'plugin': 'timeline',
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['results'], [])
+        self.assertEqual(
+            data['error'],
+            'The app "timeline" does not support search results of type "file".',
+        )
+
+    def test_post_wrong_type_projectroles(self):
+        """Test POST for projectroles with unsupported type"""
+        with self.login(self.user):
+            # The projectroles plugin doesn't provide search for type "timeline"
+            response = self.client.post(
+                self.url,
+                {
+                    'terms': '["test"]',
+                    'keywords': '{"type": "timeline"}',
+                    'plugin': 'projectroles',
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['results'], [])
+        self.assertEqual(
+            data['error'],
+            'The app "projectroles" does not support search results '
+            'of type "timeline".',
+        )
+
+    def test_post_keyword_project_uuid(self):
+        """Test POST with project uuid in keywords"""
+        results = self._get_app_results(
+            self.user, ['test'], {'project': str(self.project.sodar_uuid)}
+        )
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 1)
+
+    def test_post_keyword_project_title(self):
+        """Test POST with project title in keywords"""
+        results = self._get_app_results(
+            self.user, ['test'], {'project': self.project.title}
+        )
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 1)
+
+    def test_post_keyword_multiple(self):
+        """Test POST with multiple keywords"""
+        results = self._get_app_results(
+            self.user,
+            ['test'],
+            {'project': self.project2.title, 'type': 'timeline'},
+        )
+        self.assertEqual(results['projectroles'], [])
+        self.assertEqual(results['filesfolders'], [])
+        self.assertEqual(len(results['timeline']), 1)
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)
+
+    def test_post_finder(self):
+        """Test POST as finder"""
+        user_finder = self.make_user('user_finder')
+        finder_cat = self.make_project(
+            'FinderCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(finder_cat, self.user, self.role_owner)
+        self.make_assignment(finder_cat, user_finder, self.role_finder)
+        finder_project = self.make_project(
+            'FinderProject', PROJECT_TYPE_PROJECT, finder_cat
+        )
+        self.make_assignment(finder_project, self.user, self.role_owner)
+        results = self._get_app_results(user_finder, ['FinderProject'])
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 1)
+        results = self._get_app_results(user_finder, ['TestProject'])
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 0)
+
+    def test_post_advanced(self):
+        """Test POST with multiple terms from ProjectAdvancedSearchView"""
+        results = self._get_app_results(self.user, ['testproject', 'xxx'])
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 2)
+
+    def test_post_advanced_project_keyword(self):
+        """Test POST with multiple terms and project keyword"""
+        results = self._get_app_results(
+            self.user,
+            ['testproject', 'xxx'],
+            {'project': str(self.project2.sodar_uuid)},
+        )
+        self.assertEqual(len(results['projectroles']), 1)
+        # Only the project matching 'xxx' should be returned
+        self.assertEqual(len(results['projectroles'][0]['rows']), 1)
+
+    def test_post_advanced_search_type_and_keywords(self):
+        """Test POST with multiple terms and multiple keywords"""
+        results = self._get_app_results(
+            self.user,
+            ['testcategory', 'testproject', 'xxx'],
+            {'type': 'project', 'project': str(self.category.sodar_uuid)},
+        )
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 2)
+
+    def test_post_invalid_project_keyword(self):
+        """Test POST with invalid UUID for project keyword"""
+        results = self._get_app_results(
+            self.user, ['xxx'], {'project': 'NOT_A_UUID'}
+        )
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 0)
+
+    def test_post_results_project(self):
+        """Test POST for results within project by UUID"""
+        results = self._get_app_results(
+            self.user, ['test_event'], {'project': str(self.project.sodar_uuid)}
+        )
+        # Events are not found when search is restricted to self.project
+        self.assertEqual(len(results['timeline'][0]['rows']), 0)
+
+    def test_post_results_project_by_title(self):
+        """Test POST for results within project by title"""
+        results = self._get_app_results(
+            self.user, ['test_event'], {'project': self.project.title}
+        )
+        # Events are not found when search is restricted to self.project
+        self.assertEqual(len(results['timeline'][0]['rows']), 0)
+
+    def test_post_results_project2(self):
+        """Test POST for results within project2"""
+        results = self._get_app_results(
+            self.user,
+            ['test_event'],
+            {'project': str(self.project2.sodar_uuid)},
+        )
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)
+
+    def test_post_results_category(self):
+        """Test POST for results within category"""
+        results = self._get_app_results(
+            self.user,
+            ['test_event'],
+            {'project': str(self.category.sodar_uuid)},
+        )
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)
+
+    def test_post_results_category_by_title(self):
+        """Test POST for app search results within category by title"""
+        results = self._get_app_results(
+            self.user, ['test_event'], {'project': self.category.title}
+        )
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)
+
+    def test_post_terms_with_space(self):
+        """Test POST with multiple space-separated terms"""
+        results = self._get_app_results(self.user, ['other', 'file'])
+        self.assertEqual(len(results['filesfolders']), 1)
+        # Here, "other" and "file" are separate terms, so both file.txt
+        # and "other file.txt" should be found
+        self.assertEqual(len(results['filesfolders'][0]['rows']), 2)
+
+    def test_post_terms_with_space_quoted(self):
+        """Test POST with one quoted term containing spaces"""
+        results = self._get_app_results(self.user, ['other file'])
+        self.assertEqual(len(results['filesfolders']), 1)
+        # Here, only "other file.txt" should be found
+        self.assertEqual(len(results['filesfolders'][0]['rows']), 1)
+
+    def test_post_all_plugins(self):
+        """Test POST with results from all plugins"""
+        results = self._get_app_results(self.user, ['test', 'file'])
+        self.assertEqual(len(results['projectroles']), 1)
+        self.assertEqual(len(results['projectroles'][0]['rows']), 2)
+        self.assertEqual(len(results['filesfolders']), 1)
+        self.assertEqual(len(results['filesfolders'][0]['rows']), 2)
+        self.assertEqual(len(results['timeline']), 1)
+        self.assertEqual(len(results['timeline'][0]['rows']), 1)

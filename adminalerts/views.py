@@ -39,17 +39,17 @@ User = get_user_model()
 APP_NAME = 'adminalerts'
 DEFAULT_PAGINATION = 15
 EMAIL_SUBJECT = '{state} admin alert: {message}'
-EMAIL_BODY = r'''
+EMAIL_BODY = r"""
 An admin alert has been {action}d by {issuer}:
 
 {message}
-'''.lstrip()
-EMAIL_BODY_DESCRIPTION = r'''
+""".lstrip()
+EMAIL_BODY_DESCRIPTION = r"""
 Additional details:
 ----------------------------------------
 {description}
 ----------------------------------------
-'''
+"""
 
 
 # Listing/details views --------------------------------------------------------
@@ -58,7 +58,7 @@ Additional details:
 class AdminAlertListView(LoggedInPermissionMixin, ListView):
     """Alert list view"""
 
-    permission_required = 'adminalerts.create_alert'
+    permission_required = 'adminalerts.view_list'
     template_name = 'adminalerts/alert_list.html'
     model = AdminAlert
     paginate_by = getattr(
@@ -121,9 +121,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
             message=alert.message,
         )
         if alert.description:
-            body += EMAIL_BODY_DESCRIPTION.format(
-                description=alert.description.raw
-            )
+            body += EMAIL_BODY_DESCRIPTION.format(description=alert.description)
         recipients = self._get_email_recipients(alert)
         # NOTE: Recipients go under bcc
         # NOTE: If we have no recipients in bcc we cancel sending

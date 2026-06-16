@@ -106,8 +106,8 @@ PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1', '2.0']
 SYNC_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles.sync+json'
 )
-SYNC_API_DEFAULT_VERSION = '2.0'
-SYNC_API_ALLOWED_VERSIONS = ['1.0', '2.0']
+SYNC_API_DEFAULT_VERSION = '2.1'
+SYNC_API_ALLOWED_VERSIONS = ['1.0', '2.0', '2.1']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -1671,3 +1671,9 @@ class RemoteProjectGetAPIView(RemoteSyncAPIVersioningMixin, APIView):
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())
         return Response(sync_data, status=200)
+
+
+class ServiceUnavailable(APIException):
+    status_code = 503
+    default_detail = 'The service is not available, please try again later.'
+    default_code = 'service_unavailable'

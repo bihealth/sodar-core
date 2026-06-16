@@ -326,7 +326,7 @@ class TestAppSettingAPI(
 
     def test_get_nonexisting(self):
         """Test get() with non-existing setting"""
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             app_settings.get(
                 plugin_name=EXAMPLE_APP_NAME,
                 setting_name='NON-EXISTING SETTING',
@@ -352,6 +352,46 @@ class TestAppSettingAPI(
             post_safe=True,
         )
         self.assertEqual(type(val), str)
+
+    def test_get_scope_project_invalid_args(self):
+        """Test get() with PROJECT scope and invalid args"""
+        with self.assertRaises(ValueError):
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_int_setting',
+                project=None,  # No project
+                user=self.user,
+            )
+
+    def test_get_scope_user_invalid_args(self):
+        """Test get() with USER scope and invalid args"""
+        with self.assertRaises(ValueError):
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'user_str_setting',
+                project=self.project,
+                user=None,  # No user
+            )
+
+    def test_get_scope_project_user_invalid_args(self):
+        """Test get() with PROJECT_USER scope and invalid args"""
+        with self.assertRaises(ValueError):
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'project_user_bool_setting',
+                project=self.project,
+                user=None,  # No user
+            )
+
+    def test_get_scope_site_invalid_args(self):
+        """Test get() with SITE scope and invalid args"""
+        with self.assertRaises(ValueError):
+            app_settings.get(
+                EXAMPLE_APP_NAME,
+                'site_bool_setting',
+                project=self.project,  # Project is passed when it shouldn't be
+                user=None,
+            )
 
     def test_get_all_by_scope_project(self):
         """Test get_all_by_scope() with PROJECT scope"""
@@ -445,7 +485,8 @@ class TestAppSettingAPI(
         """Test get_all_by_scope() with invalid args"""
         with self.assertRaises(ValueError):
             app_settings.get_all_by_scope(
-                APP_SETTING_SCOPE_PROJECT_USER, project=self.project  # No user
+                APP_SETTING_SCOPE_PROJECT_USER,
+                project=self.project,  # No user
             )
 
     def test_is_set_no_object(self):

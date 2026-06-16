@@ -13,8 +13,8 @@ SODAR Core
 .. |b4| image:: https://img.shields.io/badge/License-MIT-green.svg
     :target: https://opensource.org/licenses/MIT
 
-.. |b5| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/ambv/black
+.. |b5| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
 
 .. |b6| image:: https://readthedocs.org/projects/sodar-core/badge/?version=latest
     :target: https://sodar-core.readthedocs.io/en/latest/?badge=latest
@@ -117,7 +117,7 @@ and breaking changes are possible.
 
 .. code-block:: console
 
-    pip install django-sodar-core==1.3.2
+    pip install django-sodar-core==1.4.0
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.

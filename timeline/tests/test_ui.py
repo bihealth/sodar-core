@@ -2,6 +2,8 @@
 
 import json
 
+from datetime import datetime
+
 from django.urls import reverse
 from django.utils.timezone import localtime
 from django.test import override_settings
@@ -14,7 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
-from projectroles.tests.base import ProjectUITestBase
+from projectroles.tests.base import ProjectUITestBase, SearchUITestMixin
 
 from timeline.models import TL_STATUS_OK
 from timeline.tests.test_models import (
@@ -429,7 +431,10 @@ class TestModals(
 
 
 class TestSearch(
-    TimelineEventMixin, TimelineEventStatusMixin, ProjectUITestBase
+    TimelineEventMixin,
+    TimelineEventStatusMixin,
+    SearchUITestMixin,
+    ProjectUITestBase,
 ):
     """Tests for the project search UI functionality"""
 
@@ -500,6 +505,69 @@ class TestSearch(
             extra_data=EXTRA_DATA,
         )
 
+    def test_search_results_table_layout(self):
+        """Test search results table layout"""
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
+        self.login_and_redirect(
+            self.superuser,
+            url,
+            wait_elem='sodar-tl-search-table',
+            wait_loc='CLASS_NAME',
+        )
+        thead = self.selenium.find_elements(
+            By.CSS_SELECTOR, '.sodar-tl-search-table thead th'
+        )
+        self.assertEqual(len(thead), 3)
+        self.assertEqual(
+            [th.text for th in thead],
+            ['Timestamp', 'Description', 'Status'],
+        )
+        tbody_rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-tl-search-table tbody tr',
+        )
+        self.assertEqual(len(tbody_rows), 4)
+
+    def test_search_results_order(self):
+        """Test search results orderable columns"""
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-tl-search-table', 'CLASS_NAME'
+        )
+        orderable_columns = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '.sodar-tl-search-table .dt-orderable-desc',
+        )
+        self.assertEqual(
+            [col.text for col in orderable_columns], ['Timestamp', 'Status']
+        )
+
+    def test_search_results_filter(self):
+        """Test search results filterable columns"""
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
+        tl_args = [url, 'timeline', 'sodar-tl-search-table']
+        # Filter on Timestamp column
+        self.assert_search_filter_count(':', 4, 4, *tl_args)
+        # Filter on Description column
+        self.assert_search_filter_count('description', 4, 4, *tl_args)
+        self.assert_search_filter_count('classified', 4, 2, *tl_args)
+        # Filter on Status column
+        self.assert_search_filter_count('submit', 4, 4, *tl_args)
+        # Failing filter
+        self.assert_search_filter_count('qdrwfu;p', 4, 0, *tl_args)
+
     def test_search_results(self):
         """Test search results"""
         expected = [
@@ -523,23 +591,47 @@ class TestSearch(
             + urlencode({'s': 'description'})
         )
         for user, count in expected:
-            self.login_and_redirect(user, url, wait_elem=None, wait_loc='ID')
-            elements = self.selenium.find_elements(
-                By.CLASS_NAME, 'sodar-pr-project-list-item'
+            self.login_and_redirect(
+                user,
+                url,
+                wait_elem='sodar-tl-search-table',
+                wait_loc='CLASS_NAME',
             )
-            elem_set = set()
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR, '.sodar-tl-search-table tbody tr'
+            )
+            self.assertEqual(len(elements), count)
             for elem in elements:
-                elem_set.add(elem.get_attribute('id'))
-            self.assertEqual(len(elem_set), count)
+                timestamp, description, status = elem.find_elements(
+                    By.TAG_NAME, 'td'
+                )
+                parsed_timestamp = datetime.strptime(
+                    timestamp.get_attribute('innerText'), '%Y-%m-%d %H:%M:%S'
+                )
+                self.assertIsInstance(parsed_timestamp, datetime)
+                self.assertIn(
+                    'Description', description.get_attribute('innerText')
+                )
+                self.assertEqual(status.get_attribute('innerText'), 'SUBMIT')
 
     @override_settings(TIMELINE_SEARCH_LIMIT=2)
     def test_search_limit(self):
         """Test search limit"""
         url = reverse('projectroles:search') + '?' + urlencode({'s': 'event'})
         self.login_and_redirect(
-            self.superuser, url, wait_elem=None, wait_loc='ID'
+            self.superuser,
+            url,
+            wait_elem='sodar-tl-search-table',
+            wait_loc='CLASS_NAME',
         )
-        elements = self.selenium.find_elements(
-            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        result_elements = self.selenium.find_elements(
+            By.CSS_SELECTOR, '.sodar-tl-search-table tbody tr'
         )
-        self.assertEqual(len(elements), 2)
+        self.assertEqual(len(result_elements), 2)
+        warning_element = self.selenium.find_element(
+            By.CSS_SELECTOR, '.sodar-search-card .sodar-card-body-info'
+        )
+        self.assertEqual(
+            warning_element.text,
+            'Some results may be omitted, please narrow down your search.',
+        )

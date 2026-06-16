@@ -179,8 +179,9 @@ def get_login_info() -> str:
         ):
             ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
         ret += (
-            ' account. Enter your user name as <code>username@{}'
-            '</code>'.format(getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', ''))
+            ' account. Enter your user name as <code>username@{}</code>'.format(
+                getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '')
+            )
         )
         if (
             settings.ENABLE_LDAP_SECONDARY

@@ -19,8 +19,7 @@ app of your own.
 
     To install this app you **must** have the ``django-sodar-core`` package
     installed and the ``projectroles`` app integrated into your Django site.
-    See the :ref:`projectroles integration document <app_projectroles_integration>`
-    for instructions.
+    See the :ref:`Getting Started document <getting_started>` for instructions.
 
 Django Settings
 ---------------
@@ -112,6 +111,9 @@ Project list title highlight
     Highlight project title in paths displayed in the project list.
 Project list page size
     Amount of projects per page in the project list.
+Display user name in user dropdown
+    Display the user name of the currently logged in user in the title bar
+    user dropdown link. Useful for users with mulitple accounts.
 
 In the development setup, the SODAR Core example site apps also provide
 additional settings for demonstrating settings features.

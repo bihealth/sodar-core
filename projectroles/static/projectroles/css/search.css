@@ -1,0 +1,48 @@
+div.sodar-search-card-body {
+  padding: 0;
+  overflow-x: hidden; /* Fix possible overflow when resizing window */
+}
+table.sodar-search-table {
+  display: inline-table;
+  min-width: 100%;
+  max-width: 100%;
+  width: 100%;
+  border-bottom: 0 !important;
+  margin: 0 !important;
+}
+table.sodar-search-table thead tr th {
+  padding: 12px !important;
+  padding-right: 22px !important; /* Avoid covering sort icons */
+  max-width: 250px !important;
+}
+table.sodar-search-table tbody tr td {
+  padding: 12px !important;
+  max-width: 250px !important;
+}
+.sodar-header-input-group-search {
+  max-width: 380px;
+}
+select.sodar-search-page-length {
+  max-width: 110px;
+  height: 30px;
+  padding-top: 4px;
+}
+
+/* DataTables modifications */
+th.sorting {
+  padding-left: 10px !important;
+  border-bottom: 0 !important;
+}
+th.sorting::after {
+  padding-top: 7px !important;
+}
+.previous::before, .next::after {
+    display: none !important;
+}
+
+/* Responsive modifications */
+@media screen and (max-width: 1000px) {
+  .sodar-header-input-group-search {
+    display: none;
+  }
+}

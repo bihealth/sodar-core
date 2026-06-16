@@ -2,7 +2,7 @@
 
 import base64
 import socket
-
+import time
 
 from datetime import datetime
 from typing import Optional, Union
@@ -29,6 +29,7 @@ from rest_framework.test import APIClient
 from selenium import webdriver
 from selenium.common.exceptions import (
     NoSuchElementException,
+    SessionNotCreatedException,
     StaleElementReferenceException,
 )
 from selenium.webdriver.common.by import By
@@ -72,10 +73,6 @@ AXES_LOCK_MSG = 'Account locked: too many login attempts.'
 EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
 TEST_SERVER_URL = 'http://testserver'
 DEFAULT_WAIT_LOC = 'ID'
-TEST_BASE_CLASS_DEPRECATE_MSG = (
-    '\nWARNING: {old} has been deprecated and will be removed in v1.4. Use '
-    'projectroles.tests.base.{new} instead.'
-)  # TODO: Remove in v1.4 (see #1830)
 
 
 # UI View Test Base Classes ----------------------------------------------------
@@ -701,7 +698,19 @@ class SeleniumSetupMixin:
         options.add_experimental_option(
             'prefs', {'profile.password_manager_leak_detection': False}
         )
-        self.selenium = webdriver.Chrome(options=options)
+        # Initialize selenium with Chrome
+        # Workaround for init randomly failing in SlopHub CI (see #1936)
+        self.selenium = None
+        for i in range(5):
+            try:
+                self.selenium = webdriver.Chrome(options=options)
+                break
+            except SessionNotCreatedException:
+                if i < 4:
+                    print('Selenium session creation failed, retrying..')
+                    time.sleep(2)
+        if not self.selenium:
+            self.fail('Selenium initialization failed, maximum retries reached')
 
 
 class LiveUserMixin:
@@ -1027,6 +1036,78 @@ class UITestMixin:
         """
         elem = self.selenium.find_element(by, value)
         self.assertEqual(elem.is_displayed(), expected)
+
+
+class SearchUITestMixin:
+    """Helper mixin for search results UI tests"""
+
+    def assert_search_count(
+        self, expected: list[tuple[str, int]], url: str, table_class: str
+    ):
+        """Test that the number of search results matches expectations.
+
+        :param expected: List of (user, expected_count) tuples.
+        :param url: URL with the search query (str)
+        :param table_class: class name of the search results HTML table (str)
+        """
+        for expected_user, expected_count in expected:
+            self.login_and_redirect(
+                expected_user, url, table_class, 'CLASS_NAME'
+            )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                f'.{table_class} tbody tr',
+            )
+            self.assertEqual(len(elements), expected_count)
+
+    def assert_search_filter_count(
+        self,
+        filter: str,
+        before: int,
+        after: int,
+        url: str,
+        app_name: str,
+        table_class: str,
+    ):
+        """
+        Utility function to test search result table filtering.
+
+        :param filter: The string to search (str)
+        :param before: Expected number of results before filtering (int)
+        :param after: Expected number of results after filtering (int)
+        :param url: URL with the search query (str)
+        :param app_name: name of the app performing the search (str)
+        :param table_class: class name of the search results HTML table (str)
+        """
+        self.login_and_redirect(self.superuser, url, table_class, 'CLASS_NAME')
+        elements = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            f'.{table_class} tbody tr',
+        )
+        self.assertEqual(len(elements), before)
+        f_input = self.selenium.find_element(
+            By.XPATH,
+            f'//div[@data-app-name="{app_name}"]'
+            '//input[contains(@class, "sodar-search-filter")]',
+        )
+        f_input.send_keys(filter)
+        if after == 0:
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                f'.{table_class} tbody tr',
+            )
+            self.assertEqual(len(elements), 1)
+            self.assertEqual(elements[0].text, 'No matching records found')
+        else:
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element(
+                    By.CSS_SELECTOR, f'.{table_class} tbody tr .dt-empty'
+                )
+            elements = self.selenium.find_elements(
+                By.CSS_SELECTOR,
+                f'.{table_class} tbody tr',
+            )
+            self.assertEqual(len(elements), after)
 
 
 class UITestBase(

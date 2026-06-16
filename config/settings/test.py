@@ -48,6 +48,10 @@ CACHES = {
     }
 }
 
+# MARTOR CONFIGURATION FOR MARKDOWN
+# ------------------------------------------------------------------------------
+MARTOR_MARKDOWNIFY_TIMEOUT = 0  # Instant updates
+
 # TESTING
 # ------------------------------------------------------------------------------
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
@@ -105,7 +109,7 @@ AXES_ENABLED = False  # Enable by override when testing
 AXES_FAILURE_LIMIT = 3
 AXES_LOCK_OUT_AT_FAILURE = True
 AXES_COOLOFF_TIME = None
-AXES_LOCKOUT_PARAMETERS = ['username']
+AXES_LOCKOUT_PARAMETERS = ['ip_address', 'username']
 AXES_ONLY_ADMIN_SITE = False
 AXES_CLIENT_IP_CALLABLE = lambda x: None  # noqa: E731
 

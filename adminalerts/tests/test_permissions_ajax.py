@@ -39,3 +39,41 @@ class TestAdminAlertActiveToggleAjaxView(
     def test_post_anon(self):
         """Test POST with anonymous access"""
         self.assert_response(self.url, self.anonymous, 403, method='POST')
+
+
+class TestAdminAlertDismissAjaxView(AdminAlertMixin, SiteAppPermissionTestBase):
+    """Permission tests for AdminAlertDismissAjaxView"""
+
+    def setUp(self):
+        super().setUp()
+        # Create alert
+        self.alert = self.make_alert(
+            message='alert',
+            user=self.superuser,
+            description='description',
+            active=True,
+        )
+        self.url = reverse(
+            'adminalerts:ajax_dismiss',
+            kwargs={'adminalert': self.alert.sodar_uuid},
+        )
+
+    def test_get(self):
+        """Test AdminAlertDismissAjaxView GET"""
+        self.assert_response(
+            self.url,
+            [self.superuser, self.regular_user],
+            200,
+            method='GET',
+        )
+        self.assert_response(
+            self.url,
+            self.anonymous,
+            403,
+            method='GET',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        self.assert_response(self.url, self.anonymous, 403, method='GET')

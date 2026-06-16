@@ -35,11 +35,11 @@ jobs:
           sudo apt-get install -qq build-essential zlib1g-dev libtiff5-dev libjpeg8-dev libfreetype6-dev
           sudo apt-get install -qq liblcms2-dev libwebp-dev libpq-dev graphviz-dev
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Fetch all history for all tags and branches
         run: git fetch --prune --unshallow
       - name: Install project Python dependencies
@@ -53,21 +53,21 @@ jobs:
         run: python manage.py geticons --settings=config.settings.test
       - name: Run collectstatic
         run: python manage.py collectstatic --noinput --settings=config.settings.test
-      - name: Run tests
-        run: |
-          coverage run --rcfile=.coveragerc manage.py test -v 2 --settings=config.settings.test
-          coverage lcov
-          coverage report
-      - name: Check linting
-        run: flake8 .
-        if: ${{ matrix.python-version == '3.13' }}
       - name: Check formatting
-        run: make black arg=--check
+        run: make format-check
+        if: ${{ matrix.python-version == '3.13' }}
+      - name: Check linting
+        run: make lint
         if: ${{ matrix.python-version == '3.13' }}
       - name: Check docs building
         working-directory: ./docs
         run: make html
         if: ${{ matrix.python-version == '3.13' }}
+      - name: Run tests
+        run: |
+          coverage run --rcfile=.coveragerc manage.py test -v 2 --settings=config.settings.test
+          coverage lcov
+          coverage report
       - name: Report coverage with Coveralls
         uses: coverallsapp/github-action@v2
         with:

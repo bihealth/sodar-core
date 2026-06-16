@@ -25,8 +25,7 @@ Apps in a SODAR Core based site are separated into :term:`project<Project App>`,
 :term:`site<Site App>` and :term:`backend<Backend App>` apps, depending on their
 scope and purpose. The SODAR Core package includes optional general purpose apps
 of each type, which the user may enable on their site if needed. These apps all
-depend on projectroles. More on the general purpose apps can be found in the
-:ref:`getting_started` document.
+depend on projectroles. More on the general purpose apps can be found below.
 
 To build their own web based system with SODAR Core, the user will develop
 required functionality and UIs as one or more Django apps, using and extending
@@ -45,6 +44,28 @@ to SODAR Core features.
     Structure of a SODAR Core based web site
 
 
+.. _overview_sodar_core_apps:
+
+SODAR Core Apps
+===============
+
+The following Django apps are part of SODAR Core and will be installed when installing the
+``django-sodar-core`` package:
+
+- **projectroles**: Base app for project access management and dynamic app
+  content management. All other apps require the integration of projectroles.
+- **adminalerts**: Site app for displaying site-wide messages to all users.
+- **appalerts**: Site app and backend for raising alerts to users from apps.
+- **bgjobs**: Project app for managing background jobs.
+- **siteinfo**: Site app for displaying site information and statistics for
+  administrators.
+- **sodarcache**: Generic caching and aggregation of data referring to external
+  services.
+- **timeline**: Project app for logging and viewing project-related activity.
+- **tokens**: Token management for API access.
+- **userprofile**: Site app for viewing user profiles.
+
+
 Example Use Case
 ================
 
@@ -60,7 +81,7 @@ Site Setup
 ----------
 
 First the developer will
-:ref:`set up a SODAR Core based Django site<app_projectroles_integration>`.
+:ref:`set up a SODAR Core based Django site<getting_started>`.
 This can be created from a SODAR Core site template or by integrating the
 ``django-sodar-core`` package on an existing site. The Django site must be
 configured according to organization requirements, e.g. setting up user access
@@ -112,5 +133,6 @@ organization.
 Next Steps
 ==========
 
-See the :ref:`getting_started` document for instructions on installing SODAR
-Core and how to proceed with developing your own SODAR Core based site.
+See the :ref:`for_the_impatient` or :ref:`getting_started` documents for
+instructions on installing SODAR Core and how to proceed with developing
+your own SODAR Core based site.
