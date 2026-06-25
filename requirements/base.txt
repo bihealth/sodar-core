@@ -83,7 +83,7 @@ redis>=8.0.0
 celery>=5.6.3, <5.7
 
 # Django autocomplete light (DAL)
-django-autocomplete-light==4.0.1
+django-autocomplete-light>=5.0.0, <5.1
 
 # DRF-spectacular for OpenAPI schema generation
 drf-spectacular>=0.29.0, <0.30

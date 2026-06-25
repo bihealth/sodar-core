@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.4.1 (WIP)
+============
+
+Fixed
+-----
+
+- **General**
+    - ``django-autocomplete-light`` dependency pinned to yanked release (#1949, #1951)
+
+
 v1.4.0 (2026-06-16)
 ===================
 

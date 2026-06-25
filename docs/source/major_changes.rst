@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.4.1 (WIP)
+************
+
+Release Highlights
+==================
+
+- Fix django-autocomplete-light dependency pinning to yanked release
+
+
 v1.4.0 (2026-06-16)
 *******************
 
