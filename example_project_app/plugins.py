@@ -12,7 +12,7 @@ from projectroles.app_settings import (
     get_example_setting_default,
     get_example_setting_options,
 )
-from projectroles.models import Project, SODAR_CONSTANTS
+from projectroles.models import Project, Role, RoleAssignment, SODAR_CONSTANTS
 from projectroles.plugins import (
     ProjectAppPluginPoint,
     ProjectModifyPluginMixin,
@@ -41,8 +41,11 @@ APP_SETTING_TYPE_JSON = SODAR_CONSTANTS['APP_SETTING_TYPE_JSON']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
 # Local constants
-EXAMPLE_MODIFY_API_MSG = (
+EXAMPLE_PROJECT_MODIFY_API_MSG = (
     'Example project app plugin API called from {project_type} {action}.'
+)
+EXAMPLE_ROLE_MODIFY_API_MSG = (
+    '{action} role from {old_role} to {new_role} for {user} in {project}.'
 )
 # Invalid app setting value for testing custom validation
 INVALID_SETTING_VALUE = 'INVALID VALUE'
@@ -350,7 +353,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
     details_title = 'Example Project App Overview'
 
     #: Position in plugin ordering
-    plugin_ordering = 100
+    plugin_ordering = 110
 
     def get_statistics(self) -> dict:
         return {
@@ -379,10 +382,31 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
         if request:
             messages.info(
                 request,
-                EXAMPLE_MODIFY_API_MSG.format(
+                EXAMPLE_PROJECT_MODIFY_API_MSG.format(
                     project_type=get_display_name(project.type),
                     action=action.lower(),
                 ),
+            )
+
+    def perform_role_modify(
+        self,
+        role_as: RoleAssignment,
+        action: str,
+        old_role: Optional[Role] = None,
+        request: Optional[HttpRequest] = None,
+    ):
+        """Example implementation for role assignment modifying plugin API"""
+        if request:
+            messages.info(
+                request,
+                EXAMPLE_ROLE_MODIFY_API_MSG.format(
+                    action=action.lower(),
+                    old_role=old_role,
+                    new_role=role_as.role,
+                    user=role_as.user,
+                    project=role_as.project,
+                ),
+                fail_silently=True,
             )
 
     def validate_form_app_settings(

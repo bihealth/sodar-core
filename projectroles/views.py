@@ -2096,7 +2096,10 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             role_as = RoleAssignment(project=project, user=user, role=role)
             old_role = None
         else:
-            role_as = instance
+            try:
+                role_as = RoleAssignment.objects.get(project=project, user=user)
+            except RoleAssignment.DoesNotExist:
+                role_as = project.get_role(user)
             old_role = role_as.role
             role_as.role = role
         role_as.save()
