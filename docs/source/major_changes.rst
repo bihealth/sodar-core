@@ -9,6 +9,24 @@ releases. It is recommended to review these notes whenever upgrading from an
 older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
+v1.4.2 (WIP)
+************
+
+Release Highlights
+==================
+
+- Fix siteinfo statistics rendering with missing info link
+- Upgrade critical dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.16.
+
 
 v1.4.1 (2026-06-25)
 *******************

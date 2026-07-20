@@ -5,6 +5,23 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v5.2.16 (#1957)
+    - Upgrade critical dependencies (#1957)
+
+Fixed
+-----
+
+- **Siteinfo**
+    - Statistics rendering with missing ``info_link`` (#1959)
+
+
 v1.4.1 (2026-06-25)
 ===================
 
