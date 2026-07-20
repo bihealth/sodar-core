@@ -18,6 +18,10 @@ $(document).ready(function () {
       let cardBody = $('<div>').attr('class', 'card-body')
       if ('stats' in pluginData) {
         for (const [_, stat] of Object.entries(pluginData.stats)) {
+          let statLabel = stat.label
+          if (stat?.info_link !== undefined) {
+            statLabel += ' ' + stat.info_link
+          }
           let statValue = ''
           if ('url' in stat) {
             statValue = $('<dd>').attr('class', 'col-md-9').append(
@@ -31,7 +35,7 @@ $(document).ready(function () {
           cardBody.append(
             $('<dl>').attr('class', 'row').append([
               $('<dt>').attr('class', 'col-md-3').append(
-                `${ stat.label } ${ stat?.info_link }`
+                statLabel
               ),
               statValue,
             ])
