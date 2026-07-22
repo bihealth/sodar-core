@@ -4457,9 +4457,9 @@ class TestRoleAssignmentUpdateView(
         )
 
     def test_post_old_role(self):
-        """Test POST and check that old role is correct"""
+        """Test POST with old role"""
         data = {
-            'project': self.role_as.project.sodar_uuid,
+            'project': self.project.sodar_uuid,
             'user': self.role_as.user.sodar_uuid,
             'role': self.role_contributor.pk,
         }

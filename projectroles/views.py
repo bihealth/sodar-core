@@ -1868,7 +1868,12 @@ class HostConfirmDeleteView(
     HTTPRefererMixin,
     DeleteView,
 ):
-    """Specialized deletion view with confirmation form asking for host name."""
+    """
+    Specialized deletion view with confirmation form asking for host name.
+
+    Set allow_delete=False in context data to display form but prohibit
+    deletion.
+    """
 
     #: Custom override for this view's template
     template_name = 'projectroles/confirm_delete_host.html'

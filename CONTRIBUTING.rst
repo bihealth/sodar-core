@@ -3,7 +3,7 @@
 Contributing
 ^^^^^^^^^^^^
 
-Contributions to the SODAR Core package are welcome and they are greatly
+Human contributions to the SODAR Core package are welcome and they are greatly
 appreciated! Every little bit helps and credit will always be given.
 
 Further details and guidelines for contributions can be found in the
