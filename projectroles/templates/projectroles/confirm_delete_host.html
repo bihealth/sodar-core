@@ -24,7 +24,7 @@
   <form method="post">
     {% csrf_token %}
     <div class="row">
-      {% if allow_delete is None or allow_delete is True %}
+      {% if allow_delete is not False %}
         <input class="form-control mb-3"
                name="delete_host_confirm"
                autocomplete="off"
@@ -36,7 +36,7 @@
            href="{{ request.session.real_referer }}">
           <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
         </a>
-        {% if allow_delete is None or allow_delete is True %}
+        {% if allow_delete is not False %}
           <button type="submit" class="btn btn-danger sodar-btn-submit-once"
                   id="sodar-pr-btn-confirm-delete">
             <i class="iconify" data-icon="mdi:close-thick"></i> Delete
