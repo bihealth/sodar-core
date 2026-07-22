@@ -400,7 +400,7 @@ class ProjectAppPlugin(ProjectModifyPluginMixin, ProjectAppPluginPoint):
             messages.info(
                 request,
                 EXAMPLE_ROLE_MODIFY_API_MSG.format(
-                    action=action.lower(),
+                    action=action,
                     old_role=old_role,
                     new_role=role_as.role,
                     user=role_as.user,

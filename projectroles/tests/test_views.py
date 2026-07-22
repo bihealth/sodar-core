@@ -90,6 +90,7 @@ from projectroles.views import (
     PROJECT_DELETE_CAT_ERR_MSG,
     PROJECT_DELETE_SOURCE_ERR_MSG,
     PROJECT_DELETE_TARGET_ERR_MSG,
+    PROJECT_ACTION_UPDATE,
 )
 from projectroles.context_processors import (
     SIDEBAR_ICON_MIN_SIZE,
@@ -4475,7 +4476,7 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
             EXAMPLE_ROLE_MODIFY_API_MSG.format(
-                action='update',
+                action=PROJECT_ACTION_UPDATE,
                 old_role=old_role,
                 new_role=self.role_contributor,
                 user=self.role_as.user,
