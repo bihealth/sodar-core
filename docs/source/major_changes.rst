@@ -10,6 +10,29 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.4.2 (2026-07-23)
+*******************
+
+Release Highlights
+==================
+
+- Add host name delete confirmation form optional permission check
+- Fix project modify API role update with inherited role
+- Fix siteinfo statistics rendering with missing info link
+- Upgrade critical dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.16.
+Critical Dependencies
+    Mistune was upgraded to v3.3.
+
+
 v1.4.1 (2026-06-25)
 *******************
 

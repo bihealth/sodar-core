@@ -7,10 +7,14 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.shortcuts import render
 from django.template.defaultfilters import truncatechars
 from django.test import override_settings
+from django.test.client import RequestFactory
 from django.urls import reverse
 from django.utils import timezone
+
+from bs4 import BeautifulSoup
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
@@ -2621,6 +2625,32 @@ class TestProjectDeleteView(ProjectUITestBase):
         self.assertIsNotNone(
             self.selenium.find_element(By.NAME, 'delete_host_confirm')
         )
+
+    def test_render_no_permission(self):
+        """Test rendering without permission"""
+        request = RequestFactory().get(
+            reverse(
+                'projectroles:delete',
+                kwargs={'project': self.project.sodar_uuid},
+            )
+        )
+        request.user = self.superuser
+        response = render(
+            request,
+            'projectroles/confirm_delete_host.html',
+            {
+                'allow_delete': False,
+                'object_display_name': 'Test object',
+                'project': self.project,
+            },
+        )
+        soup = BeautifulSoup(response.content, 'html.parser')
+        host_confirm_input = soup.find(
+            'input', attrs={'name': 'delete_host_confirm'}
+        )
+        delete_button = soup.find('button', id='sodar-pr-btn-confirm-delete')
+        self.assertIsNone(host_confirm_input)
+        self.assertIsNone(delete_button)
 
 
 class TestProjectRoleView(RemoteTargetMixin, ProjectUITestBase):

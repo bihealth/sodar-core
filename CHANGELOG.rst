@@ -5,6 +5,31 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.4.2 (2026-07-23)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``HostConfirmDeleteView`` ``allow_delete`` context variable check (#1958)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v5.2.16 (#1957)
+    - Upgrade critical dependencies (#1957)
+
+Fixed
+-----
+
+- **Projectroles**
+    - ``modify_assignment()`` not providing inherited role to modify API on update (#1955)
+- **Siteinfo**
+    - Statistics rendering with missing ``info_link`` (#1959)
+
+
 v1.4.1 (2026-06-25)
 ===================
 

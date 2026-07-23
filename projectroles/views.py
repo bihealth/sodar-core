@@ -1868,7 +1868,12 @@ class HostConfirmDeleteView(
     HTTPRefererMixin,
     DeleteView,
 ):
-    """Specialized deletion view with confirmation form asking for host name."""
+    """
+    Specialized deletion view with confirmation form asking for host name.
+
+    Set allow_delete=False in context data to display form but prohibit
+    deletion.
+    """
 
     #: Custom override for this view's template
     template_name = 'projectroles/confirm_delete_host.html'
@@ -2097,7 +2102,11 @@ class RoleAssignmentModifyMixin(ProjectModifyPluginViewMixin):
             old_role = None
         else:
             role_as = instance
-            old_role = role_as.role
+            old_as = project.get_role(user)
+            if old_as and old_as.role != role_as.role:
+                old_role = old_as.role
+            else:
+                old_role = role_as.role
             role_as.role = role
         role_as.save()
 

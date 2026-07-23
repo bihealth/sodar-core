@@ -22,6 +22,8 @@ from test_plus.test import TestCase
 # Timeline dependency
 from timeline.models import TimelineEvent
 
+from example_project_app.plugins import EXAMPLE_ROLE_MODIFY_API_MSG
+
 from projectroles.app_settings import AppSettingAPI
 from projectroles.email import (
     get_email_user,
@@ -88,6 +90,7 @@ from projectroles.views import (
     PROJECT_DELETE_CAT_ERR_MSG,
     PROJECT_DELETE_SOURCE_ERR_MSG,
     PROJECT_DELETE_TARGET_ERR_MSG,
+    PROJECT_ACTION_UPDATE,
 )
 from projectroles.context_processors import (
     SIDEBAR_ICON_MIN_SIZE,
@@ -4453,6 +4456,34 @@ class TestRoleAssignmentUpdateView(
             mail.outbox[0].subject,
         )
 
+    def test_post_old_role(self):
+        """Test POST with old role"""
+        data = {
+            'project': self.project.sodar_uuid,
+            'user': self.role_as.user.sodar_uuid,
+            'role': self.role_contributor.pk,
+        }
+        old_role = self.role_as.role
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:roles',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            EXAMPLE_ROLE_MODIFY_API_MSG.format(
+                action=PROJECT_ACTION_UPDATE,
+                old_role=old_role,
+                new_role=self.role_contributor,
+                user=self.role_as.user,
+                project=self.role_as.project,
+            ),
+        )
+
     def test_post_disable_alerts(self):
         """Test POST with disabled alert notifications"""
         app_settings.set(
@@ -5941,7 +5972,7 @@ class TestProjectInviteAcceptView(
             [(self.url_process_login, 302), (self.url_project, 302)],
         )
         self.assertEqual(
-            list(get_messages(response.wsgi_request))[0].message,
+            list(get_messages(response.wsgi_request))[1].message,
             PROJECT_WELCOME_MSG.format(
                 project_type='project',
                 project_title='TestProject',
@@ -6358,7 +6389,7 @@ class TestProjectInviteProcessNewUserView(
             response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, self.url_project)
         self.assertEqual(
-            list(get_messages(response.wsgi_request))[0].message,
+            list(get_messages(response.wsgi_request))[1].message,
             PROJECT_WELCOME_MSG.format(
                 project_type='project',
                 project_title='TestProject',
@@ -6395,7 +6426,7 @@ class TestProjectInviteProcessNewUserView(
             ],
         )
         self.assertEqual(
-            list(get_messages(response.wsgi_request))[1].message, LOGIN_MSG
+            list(get_messages(response.wsgi_request))[2].message, LOGIN_MSG
         )
         user = User.objects.get(username='test')
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)

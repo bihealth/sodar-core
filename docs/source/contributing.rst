@@ -3,7 +3,7 @@
 Contributing
 ^^^^^^^^^^^^
 
-Contributions to the SODAR Core package are welcome and they are greatly
+Human contributions to the SODAR Core package are welcome and they are greatly
 appreciated! Every little bit helps, and credit will always be given. You can
 contribute in many ways detailed in the following subsection.
 
@@ -100,6 +100,22 @@ Ready to contribute code to SODAR Core? Here are the steps to get started.
     $ git push origin 123-branch-name
 
 7. Submit a pull request through the GitHub website.
+
+
+LLM Policy
+==========
+
+Regarding the use of tools based on large language models (LLM) or "AI", please
+note the following:
+
+- Pull requests containing obvious LLM slop in code, comments, documentation,
+  pull request descriptions or commit messages will not be reviewed or merged.
+- Issues or pull requests generated using bots or "agents" will be deleted.
+- Repeat offenders will be blocked.
+
+
+Guidelines
+==========
 
 For specific requirements and recommendations on work branches, commits and pull
 requirements, see :ref:`dev_core_guide`.
