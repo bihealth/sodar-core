@@ -1,5 +1,5 @@
 # Setuptools
-setuptools>=82.0.1, <83.0
+setuptools>=83.0.0, <84.0
 
 # Packaging
 packaging>=26.2, <27.0
