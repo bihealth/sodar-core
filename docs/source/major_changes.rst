@@ -18,6 +18,19 @@ Release Highlights
 
 - Upgrade critical dependencies
 
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.17.
+Critical Dependencies
+    Setuptools was upgraded to v83.
+Other Dependencies
+    Selenium was upgraded to v4.46.
+
 
 v1.4.2 (2026-07-23)
 *******************
