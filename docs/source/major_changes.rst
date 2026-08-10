@@ -16,6 +16,7 @@ v1.4.3 (WIP)
 Release Highlights
 ==================
 
+- Update markdown preview layout
 - Upgrade critical dependencies
 
 Breaking Changes

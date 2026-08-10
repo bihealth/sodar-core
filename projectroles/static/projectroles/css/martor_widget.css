@@ -89,3 +89,6 @@ div.martor-preview.sodar-markdown-content table thead tr th,
 div.martor-preview.sodar-markdown-content table tbody tr td {
   border-color: black !important;
 }
+div.martor-preview.sodar-markdown-content p:last-child {
+  margin-bottom: 0 !important;
+}

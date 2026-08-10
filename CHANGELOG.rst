@@ -15,6 +15,8 @@ Changed
     - Upgrade to Django v5.2.16 (#1965)
     - Upgrade critical dependencies (#1965)
     - Upgrade to Selenium v4.46 (#1965)
+- **Projectroles**
+    - Update markdown preview layout bottom margin (#1968)
 
 
 v1.4.2 (2026-07-23)
