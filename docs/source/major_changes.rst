@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Update markdown preview layout
+- Fix user dropdown layout issues
 - Upgrade critical dependencies
 
 Breaking Changes
