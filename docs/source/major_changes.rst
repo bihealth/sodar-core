@@ -18,6 +18,7 @@ Release Highlights
 
 - Update markdown preview layout
 - Fix user dropdown layout issues
+- Fix top header and sidebar layout issues on Firefox
 - Upgrade critical dependencies
 
 Breaking Changes

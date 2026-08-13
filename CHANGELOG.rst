@@ -24,6 +24,7 @@ Fixed
 - **Projectroles**
     - User dropdown link username alignment on Blink browsers (#1967)
     - User dropdown dropdown hint alignment (#1967)
+    - Base template top header and sidebar visual artifacts on Firefox (#1942)
 
 
 v1.4.2 (2026-07-23)
