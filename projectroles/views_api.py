@@ -407,6 +407,8 @@ class ProjectListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     """
     List all projects and categories for which the requesting user has access.
 
+    Results are ordered by full project title including parent categories.
+
     Supports optional pagination by providing the ``page`` query string. This
     will return results in the Django Rest Framework ``PageNumberPagination``
     format.
@@ -850,6 +852,8 @@ class ProjectInviteListAPIView(
 ):
     """
     List user invites for a project.
+
+    Results are ordered by time of creation from oldest to newest.
 
     Supports optional pagination by providing the ``page`` query string. This
     will return results in the Django Rest Framework ``PageNumberPagination``
@@ -1500,6 +1504,8 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     """
     Return a list of all users on the site. Excludes system users, unless called
     with superuser access.
+
+    Results are ordered by time of creation from oldest to newest.
 
     Supports optional pagination by providing the ``page`` query string. This
     will return results in the Django Rest Framework ``PageNumberPagination``

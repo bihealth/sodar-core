@@ -15,6 +15,7 @@ Changed
     - Upgrade to Django v5.2.16 (#1965)
     - Upgrade critical dependencies (#1965)
     - Upgrade to Selenium v4.46 (#1965)
+    - Update REST API list view docs with result ordering (#1973)
 - **Projectroles**
     - Update markdown preview layout bottom margin (#1968)
 
@@ -25,6 +26,7 @@ Fixed
     - User dropdown link username alignment on Blink browsers (#1967)
     - User dropdown dropdown hint alignment (#1967)
     - Base template top header and sidebar visual artifacts on Firefox (#1942)
+    - Search result highlights not working with pagination (#1972)
 
 
 v1.4.2 (2026-07-23)

@@ -46,6 +46,8 @@ class ProjectTimelineEventListAPIView(
     List ``TimelineEvent`` objects belonging in a category or project. Events
     are ordered from newest to oldest.
 
+    Results are ordered by time of creation from newest to oldest.
+
     Supports optional pagination by providing the ``page`` query string. This
     will return results in the Django Rest Framework PageNumberPagination
     format.
@@ -78,6 +80,8 @@ class SiteTimelineEventListAPIView(TimelineAPIVersioningMixin, ListAPIView):
     """
     List site-wide ``TimelineEvent`` objects. Events are ordered from newest to
     oldest.
+
+    Results are ordered by time of creation from newest to oldest.
 
     Supports optional pagination by providing the ``page`` query string. This
     will return results in the Django Rest Framework ``PageNumberPagination``
