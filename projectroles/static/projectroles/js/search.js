@@ -161,6 +161,24 @@ function renderSearchResults(parentContainer, result, searchTerms) {
   const table = makeSearchResultsTable(result)
   cardBody.append(table)
 
+  /*********************
+   Cosmetic Improvements
+   *********************/
+
+  /* NOTE: these changes must be done before the DataTable is initialized,
+   * otherwise the table will be paginated and some rows may be removed from
+   * the DOM. Those rows will not be findable by these functions.
+   */
+
+  // Overflow status
+  modifyCellOverflow()
+  // Highlight search terms
+  highlightSearchResults(
+    table,
+    result.columns,
+    JSON.parse(searchTerms),
+  )
+
   /************************
    DataTable Initialization
    ************************/
@@ -176,7 +194,6 @@ function renderSearchResults(parentContainer, result, searchTerms) {
       unsearchableColumns.push(i)
     }
   }
-  console.log(unorderableColumns)
   const tableDT = $(table).DataTable({
     order: [], // Disable default ordering
     scrollX: false,
@@ -200,23 +217,11 @@ function renderSearchResults(parentContainer, result, searchTerms) {
     dom: 'tp',
   })
 
-  /*********************
-   Cosmetic Improvements
-   *********************/
-
-  // Overflow status
-  modifyCellOverflow()
   // Hide pagination and disable page dropdown if only one page
   if (tableDT.page.info().pages === 1) {
     card.find('.sodar-search-page-length').prop('disabled', 'disabled')
     $(table).next('.dt-paging').hide()
   }
-  // Highlight search terms
-  highlightSearchResults(
-    table,
-    result.columns,
-    JSON.parse(searchTerms),
-  )
 }
 
 function highlightSearchResults(table, columns, searchTerms) {
