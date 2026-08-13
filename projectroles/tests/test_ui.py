@@ -1408,6 +1408,34 @@ class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
             '<strong class="sodar-search-highlight">Test</strong>Project',
         )
 
+    @override_settings(PROJECTROLES_SEARCH_PAGINATION=1)
+    def test_search_highlight_with_pagination(self):
+        """Test project search results highlight with pagination"""
+        url = self.url + '?' + urlencode({'s': 'test'})
+        self.make_project('TestProject2', PROJECT_TYPE_PROJECT, self.category)
+        self.login_and_redirect(
+            self.superuser, url, 'sodar-pr-search-table', 'CLASS_NAME'
+        )
+        # Go to the next page and check for highlight
+        next_page_button = self.selenium.find_element(
+            By.XPATH,
+            '//div[@class="sodar-ajax-search-results" and '
+            '@data-app-name="projectroles"]//a[@class="page-link next"]',
+        )
+        next_page_button.click()
+        name_cell = self.selenium.find_element(
+            By.CSS_SELECTOR,
+            '.sodar-pr-search-table tbody tr td:nth-child(1)',
+        )
+        name_content = name_cell.find_element(By.TAG_NAME, 'a').get_attribute(
+            'innerHTML'
+        )
+        self.assertEqual(
+            name_content,
+            '<strong class="sodar-search-highlight">Test</strong>Category / '
+            '<strong class="sodar-search-highlight">Test</strong>Project2',
+        )
+
     def test_search_order(self):
         """Test project search results orderable columns"""
         url = self.url + '?' + urlencode({'s': 'test'})
