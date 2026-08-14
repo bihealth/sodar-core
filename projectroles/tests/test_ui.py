@@ -1409,7 +1409,7 @@ class TestProjectSearchResultsView(SearchUITestMixin, ProjectUITestBase):
         )
 
     @override_settings(PROJECTROLES_SEARCH_PAGINATION=1)
-    def test_search_highlight_with_pagination(self):
+    def test_search_highlight_pagination(self):
         """Test project search results highlight with pagination"""
         url = self.url + '?' + urlencode({'s': 'test'})
         self.make_project('TestProject2', PROJECT_TYPE_PROJECT, self.category)

@@ -35,7 +35,8 @@ function makeSearchResultCardHeader(appIcon, cardTitle, resLength) {
       resTitleElement,
       resLengthElement,
       $('<div>', {
-        class: 'input-group sodar-header-input-group sodar-header-input-group-search pull-right'
+        class: 'input-group sodar-header-input-group ' +
+          'sodar-header-input-group-search pull-right'
       }).append(
         $('<select>', {
           class: 'form-control sodar-search-page-length'
@@ -161,14 +162,9 @@ function renderSearchResults(parentContainer, result, searchTerms) {
   const table = makeSearchResultsTable(result)
   cardBody.append(table)
 
-  /*********************
-   Cosmetic Improvements
-   *********************/
-
-  /* NOTE: these changes must be done before the DataTable is initialized,
-   * otherwise the table will be paginated and some rows may be removed from
-   * the DOM. Those rows will not be findable by these functions.
-   */
+  // NOTE: these changes must be done before the DataTable is initialized,
+  // otherwise the table will be paginated and some rows may be removed from
+  // the DOM. Those rows will not be findable by these functions.
 
   // Overflow status
   modifyCellOverflow()
@@ -227,7 +223,7 @@ function renderSearchResults(parentContainer, result, searchTerms) {
 function highlightSearchResults(table, columns, searchTerms) {
   const re = new RegExp(searchTerms.join('|'), 'ig')
   for (let fieldIdx in columns) {
-    if (columns[fieldIdx].highlight == true) {
+    if (columns[fieldIdx].highlight === true) {
       table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
         const walker = document.createTreeWalker(this, 0x4)
         let node = walker.nextNode()
@@ -252,8 +248,10 @@ $(document).ready(function () {
   const resultCalls = $('.sodar-ajax-search-results').map(function () {
     const url = $(this).data('url')
     const appName = $(this).data('app-name')
-    const searchTerms = document.getElementById('search-terms').textContent
-    const searchKeywords = document.getElementById('search-keywords').textContent
+    const searchTerms = document.getElementById('search-terms')
+      .textContent
+    const searchKeywords = document.getElementById('search-keywords')
+      .textContent
     return $.post(url, {
       'plugin': appName,
       'terms': searchTerms,
