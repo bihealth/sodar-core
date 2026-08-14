@@ -170,6 +170,8 @@ class FolderListCreateAPIView(
     """
     List folders or create a folder.
 
+    List results are ordered by time of creation from oldest to newest.
+
     Supports optional pagination for listing by providing the ``page`` query
     string. This will return results in the Django Rest Framework
     ``PageNumberPagination`` format.
@@ -235,6 +237,8 @@ class FileListCreateAPIView(
     """
     List files or upload a file. For uploads, the request must be made in the
     ``multipart`` format.
+
+    List results are ordered by time of creation from oldest to newest.
 
     Supports optional pagination for listing by providing the ``page`` query
     string. This will return results in the Django Rest Framework
@@ -324,6 +328,8 @@ class HyperLinkListCreateAPIView(
 ):
     """
     List hyperlinks or create a hyperlink.
+
+    List results are ordered by time of creation from oldest to newest.
 
     Supports optional pagination for listing by providing the ``page`` query
     string. This will return results in the Django Rest Framework

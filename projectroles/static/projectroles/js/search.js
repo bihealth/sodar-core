@@ -35,7 +35,8 @@ function makeSearchResultCardHeader(appIcon, cardTitle, resLength) {
       resTitleElement,
       resLengthElement,
       $('<div>', {
-        class: 'input-group sodar-header-input-group sodar-header-input-group-search pull-right'
+        class: 'input-group sodar-header-input-group ' +
+          'sodar-header-input-group-search pull-right'
       }).append(
         $('<select>', {
           class: 'form-control sodar-search-page-length'
@@ -161,6 +162,19 @@ function renderSearchResults(parentContainer, result, searchTerms) {
   const table = makeSearchResultsTable(result)
   cardBody.append(table)
 
+  // NOTE: these changes must be done before the DataTable is initialized,
+  // otherwise the table will be paginated and some rows may be removed from
+  // the DOM. Those rows will not be findable by these functions.
+
+  // Overflow status
+  modifyCellOverflow()
+  // Highlight search terms
+  highlightSearchResults(
+    table,
+    result.columns,
+    JSON.parse(searchTerms),
+  )
+
   /************************
    DataTable Initialization
    ************************/
@@ -176,7 +190,6 @@ function renderSearchResults(parentContainer, result, searchTerms) {
       unsearchableColumns.push(i)
     }
   }
-  console.log(unorderableColumns)
   const tableDT = $(table).DataTable({
     order: [], // Disable default ordering
     scrollX: false,
@@ -200,29 +213,17 @@ function renderSearchResults(parentContainer, result, searchTerms) {
     dom: 'tp',
   })
 
-  /*********************
-   Cosmetic Improvements
-   *********************/
-
-  // Overflow status
-  modifyCellOverflow()
   // Hide pagination and disable page dropdown if only one page
   if (tableDT.page.info().pages === 1) {
     card.find('.sodar-search-page-length').prop('disabled', 'disabled')
     $(table).next('.dt-paging').hide()
   }
-  // Highlight search terms
-  highlightSearchResults(
-    table,
-    result.columns,
-    JSON.parse(searchTerms),
-  )
 }
 
 function highlightSearchResults(table, columns, searchTerms) {
   const re = new RegExp(searchTerms.join('|'), 'ig')
   for (let fieldIdx in columns) {
-    if (columns[fieldIdx].highlight == true) {
+    if (columns[fieldIdx].highlight === true) {
       table.find(`tr td:nth-child(${fieldIdx+1})`).each(function () {
         const walker = document.createTreeWalker(this, 0x4)
         let node = walker.nextNode()
@@ -247,8 +248,10 @@ $(document).ready(function () {
   const resultCalls = $('.sodar-ajax-search-results').map(function () {
     const url = $(this).data('url')
     const appName = $(this).data('app-name')
-    const searchTerms = document.getElementById('search-terms').textContent
-    const searchKeywords = document.getElementById('search-keywords').textContent
+    const searchTerms = document.getElementById('search-terms')
+      .textContent
+    const searchKeywords = document.getElementById('search-keywords')
+      .textContent
     return $.post(url, {
       'plugin': appName,
       'terms': searchTerms,

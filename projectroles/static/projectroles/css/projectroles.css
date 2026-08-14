@@ -107,10 +107,6 @@ nav.sodar-base-navbar ul li.nav-item {
   white-space: nowrap;
 }
 
-.sodar-navbar-user-dropdown {
-  z-index: 1100;
-}
-
 div.sodar-alert-container {
   margin-bottom: 0;
 }
@@ -593,11 +589,22 @@ a.sodar-pr-btn-copy-secret i {
   50% { opacity: 0 }
 }
 
-/* User dropdown username */
+/* User dropdown */
+.sodar-navbar-user-dropdown {
+  z-index: 1100;
+}
+.sodar-navbar-user-dropdown .dropdown-toggle {
+  padding-top: 8px;
+}
+.sodar-navbar-user-dropdown .dropdown-toggle::after {
+  vertical-align: middle;
+}
 #sodar-navbar-user-dropdown-username {
+  height: 17px;
   background-color: rgba(255,255,255,.5);
   color: black;
-  vertical-align: text-top;
+  vertical-align: middle;
+  margin-bottom: 0.2em;
   transition: none;
 }
 #sodar-navbar-user-dropdown:hover #sodar-navbar-user-dropdown-username {

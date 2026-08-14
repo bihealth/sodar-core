@@ -10,6 +10,32 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.4.3 (2026-08-14)
+*******************
+
+Release Highlights
+==================
+
+- Update markdown preview layout
+- Fix search result highlights with result pagination
+- Fix user dropdown layout issues
+- Fix top header and sidebar layout issues on Firefox
+- Upgrade critical dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Django Version
+    The minimum Django version has been bumped to v5.2.17.
+Critical Dependencies
+    Setuptools was upgraded to v83.
+Other Dependencies
+    Selenium was upgraded to v4.46.
+
+
 v1.4.2 (2026-07-23)
 *******************
 
