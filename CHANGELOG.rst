@@ -12,7 +12,7 @@ Changed
 -------
 
 - **General**
-    - Upgrade to Django v5.2.16 (#1965)
+    - Upgrade to Django v5.2.17 (#1965)
     - Upgrade critical dependencies (#1965)
     - Upgrade to Selenium v4.46 (#1965)
     - Update REST API list view docs with result ordering (#1973)
