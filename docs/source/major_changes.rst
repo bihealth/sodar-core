@@ -15,6 +15,7 @@ v1.4.4 (WIP)
 Release Highlights
 ==================
 
+- Add security settings in siteinfo
 - Add ProjectCreateViewMixin test helper
 - General bug fixes and minor updates
 

@@ -13,6 +13,14 @@ Added
 
 - **Projectroles**
     - ``ProjectCreateViewMixin`` test helper (#1980)
+- **Siteinfo**
+    - Security configuration in ``CORE_SETTINGS`` (#1977)
+
+Changed
+-------
+
+- **Siteinfo**
+    - Move ``CORE_SETTINGS`` in ``constants.py`` (#1977)
 
 Fixed
 -----
