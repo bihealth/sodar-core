@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **General**
+    - ``CSRF_COOKIE_HTTPONLY=True`` breaking Markdown previews (#1976)
+
+
 v1.4.3 (2026-08-14)
 ===================
 
