@@ -9,6 +9,15 @@ releases. It is recommended to review these notes whenever upgrading from an
 older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
+v1.4.4 (WIP)
+************
+
+Release Highlights
+==================
+
+- Add ProjectCreateViewMixin test helper
+- General bug fixes and minor updates
+
 
 v1.4.3 (2026-08-14)
 *******************

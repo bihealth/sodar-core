@@ -8,6 +8,12 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``ProjectCreateViewMixin`` test helper (#1980)
+
 Fixed
 -----
 

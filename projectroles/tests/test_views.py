@@ -219,6 +219,45 @@ EX_PROJECT_UI_SETTINGS = [
 ]
 
 
+# View test mixins -------------------------------------------------------------
+
+
+class ProjectCreateViewMixin:
+    """Helpers for ProjectCreateView testing"""
+
+    @classmethod
+    def get_project_create_data(
+        cls,
+        title: str,
+        project_type: str,
+        parent: Optional[Project],
+        owner: User,
+    ) -> dict:
+        """
+        Return POST data for project creation.
+
+        :param title: Project title (string)
+        :param project_type: Project type (string)
+        :param parent: Parent category (Project or None)
+        :param owner: Owner user (User)
+        :return: dict
+        """
+        ret = {
+            'title': title,
+            'type': project_type,
+            'parent': parent.sodar_uuid if parent else '',
+            'owner': owner.sodar_uuid,
+            'description': 'description',
+            'public_access': '',
+            REMOTE_SITE_FIELD: False,
+        }
+        # Add settings values
+        ret.update(
+            app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT, post_safe=True)
+        )
+        return ret
+
+
 # General view tests -----------------------------------------------------------
 
 
@@ -1011,33 +1050,13 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
 
 
 class TestProjectCreateView(
-    ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, UIViewTestBase
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    ProjectCreateViewMixin,
+    UIViewTestBase,
 ):
     """Tests for ProjectCreateView"""
-
-    @classmethod
-    def _get_post_data(
-        cls,
-        title: str,
-        project_type: str,
-        parent: Optional[Project],
-        owner: User,
-    ) -> dict:
-        """Return POST data for project creation"""
-        ret = {
-            'title': title,
-            'type': project_type,
-            'parent': parent.sodar_uuid if parent else '',
-            'owner': owner.sodar_uuid,
-            'description': 'description',
-            'public_access': '',
-            REMOTE_SITE_FIELD: False,
-        }
-        # Add settings values
-        ret.update(
-            app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT, post_safe=True)
-        )
-        return ret
 
     def setUp(self):
         super().setUp()
@@ -1223,7 +1242,7 @@ class TestProjectCreateView(
         """Test POST for top level category"""
         self.assertEqual(Project.objects.count(), 1)
         self.assertEqual(RemoteProject.objects.count(), 0)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=NEW_CAT_TITLE,
             project_type=PROJECT_TYPE_CATEGORY,
             parent=None,
@@ -1288,7 +1307,7 @@ class TestProjectCreateView(
 
     def test_post_project(self):
         """Test POST for project creation"""
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1358,7 +1377,7 @@ class TestProjectCreateView(
         """Test POST for project with different owner"""
         user_new = self.make_user('user_new')
         self.make_assignment(self.category, user_new, self.role_contributor)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1402,7 +1421,7 @@ class TestProjectCreateView(
         self.make_assignment(self.category, user_new, self.role_contributor)
         app_settings.set(APP_NAME, 'notify_alert_role', False, user=user_new)
         app_settings.set(APP_NAME, 'notify_alert_project', False, user=user_new)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1429,7 +1448,7 @@ class TestProjectCreateView(
         self.make_assignment(self.category, user_new, self.role_contributor)
         app_settings.set(APP_NAME, 'notify_email_role', False, user=user_new)
         app_settings.set(APP_NAME, 'notify_email_project', False, user=user_new)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1459,7 +1478,7 @@ class TestProjectCreateView(
         user_new.save()
         # NOTE: Yes, we can technically still set roles for inactive user
         self.make_assignment(self.category, user_new, self.role_contributor)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1479,7 +1498,7 @@ class TestProjectCreateView(
         """Test POST for project as category member"""
         user_new = self.make_user('user_new')
         self.make_assignment(self.category, user_new, self.role_contributor)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1511,7 +1530,7 @@ class TestProjectCreateView(
         app_settings.set(
             APP_NAME, 'notify_alert_project', False, user=self.user
         )
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1532,7 +1551,7 @@ class TestProjectCreateView(
         app_settings.set(
             APP_NAME, 'notify_email_project', False, user=self.user
         )
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1550,7 +1569,7 @@ class TestProjectCreateView(
     def test_post_project_title_delimiter(self):
         """Test POST with category delimiter in title (should fail)"""
         self.assertEqual(Project.objects.all().count(), 1)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=f'Test{CAT_DELIMITER}Project',
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1563,7 +1582,7 @@ class TestProjectCreateView(
 
     def test_post_project_empty_title(self):
         """Test POST with empty title (should fail)"""
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title='',
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1577,7 +1596,7 @@ class TestProjectCreateView(
     def test_post_top_category_public_stats(self):
         """Test POST for top level category with category_public_stats"""
         self.assertEqual(Project.objects.count(), 1)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=NEW_CAT_TITLE,
             project_type=PROJECT_TYPE_CATEGORY,
             parent=None,
@@ -1597,7 +1616,7 @@ class TestProjectCreateView(
     def test_post_sub_category_public_stats(self):
         """Test POST for subcategory with category_public_stats (should fail)"""
         self.assertEqual(Project.objects.count(), 1)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=NEW_CAT_TITLE,
             project_type=PROJECT_TYPE_CATEGORY,
             parent=self.category,
@@ -1612,7 +1631,7 @@ class TestProjectCreateView(
     def test_post_project_public_stats(self):
         """Test POST for project with category_public_stats (should fail)"""
         self.assertEqual(Project.objects.count(), 1)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1627,7 +1646,7 @@ class TestProjectCreateView(
     def test_post_remote(self):
         """Test POST with added remote project"""
         self.assertEqual(RemoteProject.objects.count(), 0)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1651,7 +1670,7 @@ class TestProjectCreateView(
     def test_post_project_target(self):
         """Test POST with project as target site"""
         self.assertEqual(Project.objects.count(), 1)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
@@ -1667,7 +1686,7 @@ class TestProjectCreateView(
     def test_post_project_target_disabled(self):
         """Test POST with project as target with target creation disabled"""
         self.assertEqual(Project.objects.count(), 1)
-        data = self._get_post_data(
+        data = self.get_project_create_data(
             title=PROJECT_TITLE,
             project_type=PROJECT_TYPE_PROJECT,
             parent=self.category,
