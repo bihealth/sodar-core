@@ -99,7 +99,9 @@ class SiteAppPlugin(SiteAppPluginPoint):
 
         for a in alerts:
             content = '<i class="iconify" data-icon="mdi:alert"></i> '
-            if a.description and user and user.is_authenticated:
+            if a.description and (
+                not a.require_auth or (user and user.is_authenticated)
+            ):
                 url = reverse(
                     'adminalerts:detail',
                     kwargs={'adminalert': a.sodar_uuid},
@@ -128,5 +130,4 @@ class SiteAppPlugin(SiteAppPluginPoint):
                     ),
                 }
             )
-
         return messages

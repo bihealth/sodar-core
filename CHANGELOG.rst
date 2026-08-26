@@ -19,6 +19,9 @@ Added
 Changed
 -------
 
+- **Adminalerts**
+    - Allow ``AlertDetailView`` unauthenticated access if ``require_auth==False`` (#1979)
+    - Display alert detail link for all users if ``require_auth==False`` (#1979)
 - **Siteinfo**
     - Move ``CORE_SETTINGS`` in ``constants.py`` (#1977)
 

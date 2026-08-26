@@ -17,6 +17,7 @@ Release Highlights
 
 - Add security settings in siteinfo
 - Add ProjectCreateViewMixin test helper
+- Update admin alert detail viewing permissions for unauthenticated users
 - General bug fixes and minor updates
 
 
