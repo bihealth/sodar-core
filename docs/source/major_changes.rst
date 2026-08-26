@@ -9,8 +9,9 @@ releases. It is recommended to review these notes whenever upgrading from an
 older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
-v1.4.4 (WIP)
-************
+
+v1.4.4 (2026-08-26)
+*******************
 
 Release Highlights
 ==================
