@@ -10,6 +10,18 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.4.4 (2026-08-26)
+*******************
+
+Release Highlights
+==================
+
+- Add security settings in siteinfo
+- Add ProjectCreateViewMixin test helper
+- Update admin alert detail viewing permissions for unauthenticated users
+- General bug fixes and minor updates
+
+
 v1.4.3 (2026-08-14)
 *******************
 

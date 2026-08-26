@@ -70,6 +70,14 @@ class TestAdminAlertDetailView(AdminalertsPermissionTestBase):
         self.assert_response(self.url, good_users, 200)
         self.assert_response(self.url, bad_users, 302)
 
+    def test_get_require_auth_false(self):
+        """Test GET with require_auth=False"""
+        # NOTE: No anonymous access required
+        self.alert.require_auth = False
+        self.alert.save()
+        good_users = [self.superuser, self.regular_user, self.anonymous]
+        self.assert_response(self.url, good_users, 200)
+
 
 class TestAdminAlertCreateView(AdminalertsPermissionTestBase):
     """Permission tests for AdminAlertCreateView"""

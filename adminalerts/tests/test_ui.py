@@ -94,6 +94,9 @@ class TestAlertMessage(AdminAlertUITestBase):
         self.assertIsNotNone(
             self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-site-app')
         )
+        self.assertIsNotNone(
+            self.selenium.find_element(By.CLASS_NAME, 'sodar-alert-detail-link')
+        )
 
     def test_message_dismissal(self):
         """Test dismissal of alert for authenticated users"""

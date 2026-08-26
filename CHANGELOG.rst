@@ -5,6 +5,33 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.4.4 (2026-08-26)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``ProjectCreateViewMixin`` test helper (#1980)
+- **Siteinfo**
+    - Security configuration in ``CORE_SETTINGS`` (#1977)
+
+Changed
+-------
+
+- **Adminalerts**
+    - Allow ``AlertDetailView`` unauthenticated access if ``require_auth==False`` (#1979)
+    - Display alert detail link for all users if ``require_auth==False`` (#1979)
+- **Siteinfo**
+    - Move ``CORE_SETTINGS`` in ``constants.py`` (#1977)
+
+Fixed
+-----
+
+- **General**
+    - ``CSRF_COOKIE_HTTPONLY=True`` breaking Markdown previews (#1976)
+
+
 v1.4.3 (2026-08-14)
 ===================
 

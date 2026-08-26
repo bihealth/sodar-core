@@ -58,14 +58,14 @@ Additional details:
 class AdminAlertListView(LoggedInPermissionMixin, ListView):
     """Alert list view"""
 
-    permission_required = 'adminalerts.view_list'
-    template_name = 'adminalerts/alert_list.html'
     model = AdminAlert
     paginate_by = getattr(
         settings, 'ADMINALERTS_PAGINATION', DEFAULT_PAGINATION
     )
-    slug_url_kwarg = 'adminalert'
+    permission_required = 'adminalerts.view_list'
     slug_field = 'sodar_uuid'
+    slug_url_kwarg = 'adminalert'
+    template_name = 'adminalerts/alert_list.html'
 
     def get_queryset(self):
         return AdminAlert.objects.all().order_by('-pk')
@@ -76,11 +76,16 @@ class AdminAlertDetailView(
 ):
     """Alert detail view"""
 
-    permission_required = 'adminalerts.view_alert'
-    template_name = 'adminalerts/alert_detail.html'
     model = AdminAlert
-    slug_url_kwarg = 'adminalert'
+    permission_required = 'adminalerts.view_alert'
     slug_field = 'sodar_uuid'
+    slug_url_kwarg = 'adminalert'
+    template_name = 'adminalerts/alert_detail.html'
+
+    def has_permission(self):
+        if not self.get_object().require_auth:
+            return True  # Everyone should access this
+        return super().has_permission()
 
 
 # Modification views -----------------------------------------------------------
@@ -165,8 +170,8 @@ class AdminAlertCreateView(
 ):
     """AdminAlert creation view"""
 
-    model = AdminAlert
     form_class = AdminAlertForm
+    model = AdminAlert
     permission_required = 'adminalerts.create_alert'
 
 
@@ -180,11 +185,11 @@ class AdminAlertUpdateView(
 ):
     """AdminAlert updating view"""
 
-    model = AdminAlert
     form_class = AdminAlertForm
+    model = AdminAlert
     permission_required = 'adminalerts.update_alert'
-    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
+    slug_url_kwarg = 'adminalert'
 
 
 class AdminAlertDeleteView(
@@ -194,8 +199,8 @@ class AdminAlertDeleteView(
 
     model = AdminAlert
     permission_required = 'adminalerts.update_alert'
-    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
+    slug_url_kwarg = 'adminalert'
 
     def get_success_url(self):
         """Override for redirecting alert list view with message"""
