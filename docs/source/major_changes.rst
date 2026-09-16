@@ -10,6 +10,16 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.4.5 (2026-09-16)
+*******************
+
+Release Highlights
+==================
+
+- Update login template layout
+- Move ProjectCreateViewMixin into base test module
+
+
 v1.4.4 (2026-08-26)
 *******************
 

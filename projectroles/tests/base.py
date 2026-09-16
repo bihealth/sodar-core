@@ -3,6 +3,7 @@
 import base64
 import socket
 import time
+import uuid
 
 from datetime import datetime
 from typing import Optional, Union
@@ -61,6 +62,7 @@ User = get_user_model()
 # SODAR constants
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 APP_SETTING_TYPE_STRING = SODAR_CONSTANTS['APP_SETTING_TYPE_STRING']
 
@@ -71,6 +73,8 @@ AUTHENTICATION_BACKENDS_AXES = [
 ] + settings.AUTHENTICATION_BACKENDS
 AXES_LOCK_MSG = 'Account locked: too many login attempts.'
 EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
+REMOTE_SITE_UUID = uuid.uuid4()
+REMOTE_SITE_FIELD = f'remote_site.{REMOTE_SITE_UUID}'
 TEST_SERVER_URL = 'http://testserver'
 DEFAULT_WAIT_LOC = 'ID'
 
@@ -1202,3 +1206,42 @@ class ProjectUITestBase(
         self.viewer_as = self.make_assignment(
             self.category, self.user_viewer, self.role_viewer
         )
+
+
+# View test mixins -------------------------------------------------------------
+
+
+class ProjectCreateViewMixin:
+    """Helpers for ProjectCreateView testing"""
+
+    @classmethod
+    def get_project_create_data(
+        cls,
+        title: str,
+        project_type: str,
+        parent: Optional[Project],
+        owner: User,
+    ) -> dict:
+        """
+        Return POST data for project creation.
+
+        :param title: Project title (string)
+        :param project_type: Project type (string)
+        :param parent: Parent category (Project or None)
+        :param owner: Owner user (User)
+        :return: dict
+        """
+        ret = {
+            'title': title,
+            'type': project_type,
+            'parent': parent.sodar_uuid if parent else '',
+            'owner': owner.sodar_uuid,
+            'description': 'description',
+            'public_access': '',
+            REMOTE_SITE_FIELD: False,
+        }
+        # Add settings values
+        ret.update(
+            app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT, post_safe=True)
+        )
+        return ret
