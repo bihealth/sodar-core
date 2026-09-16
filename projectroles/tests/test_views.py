@@ -3,7 +3,6 @@
 import json
 import uuid
 
-from typing import Optional
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -57,6 +56,7 @@ from projectroles.models import (
 from projectroles.plugins import PluginAppSettingDef, PluginAPI
 from projectroles.utils import build_secret, get_display_name
 from projectroles.tests.base import (
+    ProjectCreateViewMixin,
     UIViewTestBase,
     AUTHENTICATION_BACKENDS_AXES,
     AXES_LOCK_MSG,
@@ -217,45 +217,6 @@ EX_PROJECT_UI_SETTINGS = [
     'project_callable_setting',
     'project_callable_setting_options',
 ]
-
-
-# View test mixins -------------------------------------------------------------
-
-
-class ProjectCreateViewMixin:
-    """Helpers for ProjectCreateView testing"""
-
-    @classmethod
-    def get_project_create_data(
-        cls,
-        title: str,
-        project_type: str,
-        parent: Optional[Project],
-        owner: User,
-    ) -> dict:
-        """
-        Return POST data for project creation.
-
-        :param title: Project title (string)
-        :param project_type: Project type (string)
-        :param parent: Parent category (Project or None)
-        :param owner: Owner user (User)
-        :return: dict
-        """
-        ret = {
-            'title': title,
-            'type': project_type,
-            'parent': parent.sodar_uuid if parent else '',
-            'owner': owner.sodar_uuid,
-            'description': 'description',
-            'public_access': '',
-            REMOTE_SITE_FIELD: False,
-        }
-        # Add settings values
-        ret.update(
-            app_settings.get_defaults(APP_SETTING_SCOPE_PROJECT, post_safe=True)
-        )
-        return ret
 
 
 # General view tests -----------------------------------------------------------

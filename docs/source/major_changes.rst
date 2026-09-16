@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Update login template layout
+- Move ProjectCreateViewMixin into base test module
 
 
 v1.4.4 (2026-08-26)

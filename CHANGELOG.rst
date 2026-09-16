@@ -13,6 +13,7 @@ Changed
 
 - **Projectroles**
     - Update ``login.html`` layout (#1988)
+    - Move ``ProjectCreateViewMixin`` into ``base`` (#1983)
 
 v1.4.4 (2026-08-26)
 ===================
