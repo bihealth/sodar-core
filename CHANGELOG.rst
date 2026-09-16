@@ -5,6 +5,15 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **Projectroles**
+    - Update ``login.html`` layout (#1988)
+
 v1.4.4 (2026-08-26)
 ===================
 
