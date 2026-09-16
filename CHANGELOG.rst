@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.4.5 (2026-09-16)
+===================
 
 Changed
 -------
@@ -14,6 +14,7 @@ Changed
 - **Projectroles**
     - Update ``login.html`` layout (#1988)
     - Move ``ProjectCreateViewMixin`` into ``base`` (#1983)
+
 
 v1.4.4 (2026-08-26)
 ===================
