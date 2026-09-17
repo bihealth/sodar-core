@@ -18,9 +18,19 @@ Release Highlights
 
 - Add Python v3.14 support
 - Remove kiosk mode support
+- Remove Python v3.11 support
 
 Breaking Changes
 ================
+
+System Prerequisites
+--------------------
+
+Python v3.14 Support Added
+    Python v3.14 support has been officially added in this version. 3.14 is now
+    the recommended Python version.
+Python v3.11 Support Dropped
+    This release no longer supports Python <v3.12.
 
 Kiosk Mode Removed
 ------------------

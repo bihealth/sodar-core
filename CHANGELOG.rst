@@ -23,6 +23,8 @@ Changed
 Removed
 -------
 
+- **General**
+    - Python v3.11 support (#1994)
 - **Projectroles**
     - Kiosk mode support (#1775)
     - ``PROJECTROLES_KIOSK_MODE`` env var (#1775)
