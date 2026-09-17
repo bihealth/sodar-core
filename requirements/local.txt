@@ -4,7 +4,7 @@
 django-extensions==4.1
 Werkzeug>=3.1.8, <3.2
 
-django-debug-toolbar>=6.3.0, <6.4
+django-debug-toolbar>=8.0.0, <8.1
 
 # improved REPL
 ipdb>=0.13.13, <0.14
@@ -15,5 +15,5 @@ pyyaml>=6.0.3, <6.1
 uritemplate>=4.2.0, <4.3
 
 # PyPI building
-pkginfo==1.12.1.2
-twine==6.2.0
+pkginfo==1.13
+twine==7.0.0

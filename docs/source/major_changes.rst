@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add Python v3.14 support
+- Upgrade general dependencies
 - Remove kiosk mode support
 - Remove Python v3.11 support
 
@@ -31,6 +32,10 @@ Python v3.14 Support Added
     the recommended Python version.
 Python v3.11 Support Dropped
     This release no longer supports Python <v3.12.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project.
 
 Kiosk Mode Removed
 ------------------
