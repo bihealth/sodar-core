@@ -383,7 +383,9 @@ $(document).ready(function () {
       lengthChange: true,
       scrollCollapse: true,
       info: false,
-      language: {paginate: sodarDataTablesPaginate},
+      language: {
+        paginate: sodarDataTablesPaginate
+      },
       dom: 'tp'
     })
     // Hide pagination if only one page

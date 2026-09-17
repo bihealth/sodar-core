@@ -20,7 +20,7 @@ tblib==3.2.2
 beautifulsoup4==4.15.0
 
 # Ruff for linting and formatting (replaces black and flake8)
-ruff==0.15.17
+ruff==0.16.8
 
 # JQuery beautifying
-jsbeautifier==1.15.4
+jsbeautifier==2.0.3
