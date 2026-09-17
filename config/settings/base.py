@@ -62,7 +62,6 @@ THIRD_PARTY_APPS = [
     'knox',  # For token auth
     'social_django',  # For OIDC authentication
     'axes',  # Django-axes for login security
-    'docs',  # For the online user documentation/manual
     'db_file_storage',  # For filesfolders
     'dal',  # For user search combo box
     'dal_select2',

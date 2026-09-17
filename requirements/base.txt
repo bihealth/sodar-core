@@ -40,7 +40,6 @@ django-axes[ipware]>=8.3.1, <8.4
 # NOTE: Sphinx requires docutils<0.23
 docutils==0.22.4
 Sphinx==9.1.0
-django-docs==0.3.3
 sphinx-rtd-theme==3.1.0
 
 # Versioning
