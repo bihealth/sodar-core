@@ -9,7 +9,6 @@
 {% get_django_setting 'SITE_TITLE' as site_title %}
 {% get_django_setting 'SITE_SUBTITLE' as site_subtitle %}
 {% get_django_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
-{% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 {% get_django_setting 'PROJECTROLES_ALLOW_ANONYMOUS' as allow_anon %}
 {% get_django_setting 'PROJECTROLES_TEMPLATE_INCLUDE_PATH' as template_include_path %}
 {% get_app_setting 'projectroles' 'site_read_only' as site_read_only %}
@@ -117,9 +116,7 @@
         </li>
 
         {# User dropdown menu #}
-        {% if not kiosk_mode %}
-          {% include 'projectroles/_site_titlebar_dropdown.html' %}
-        {% endif %}
+        {% include 'projectroles/_site_titlebar_dropdown.html' %}
       </ul>
     </div>
 

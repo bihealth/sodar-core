@@ -163,14 +163,11 @@ SITE_SETTING_UPDATE_MSG = 'Site app settings updated.'
 
 class LoginRequiredMixin(AccessMixin):
     """
-    Override of Django LoginRequiredMixin to handle anonymous access and kiosk
-    mode.
+    Override of Django LoginRequiredMixin to handle anonymous access.
     """
 
     def is_login_required(self) -> bool:
-        if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False) or getattr(
-            settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
-        ):
+        if getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False):
             return False
         return True
 
@@ -197,8 +194,6 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         Override for this mixin also to work with admin users without a
         permission object.
         """
-        if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False):
-            return True
         try:
             return super().has_permission()
         except AttributeError:
@@ -446,9 +441,7 @@ class ProjectContextMixin(
         else:
             context['project'] = self.get_project()
         # Project tagging/starring
-        if context.get('project') and not getattr(
-            settings, 'PROJECTROLES_KIOSK_MODE', False
-        ):
+        if context.get('project'):
             context['project_starred'] = app_settings.get(
                 APP_NAME,
                 'project_star',

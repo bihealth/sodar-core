@@ -10,6 +10,33 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.5.0 (WIP)
+************
+
+Release Highlights
+==================
+
+- Remove kiosk mode support
+
+Breaking Changes
+================
+
+Kiosk Mode Removed
+------------------
+
+Support for "kiosk mode" via ``PROJECTROLES_KIOSK_MODE`` has been removed. The
+setting no longer takes effect. This mode was experimental and not fully
+developed or tested and to our knowledge, it is not currently used by any SODAR
+Core based project.
+
+To set up public demonstration data, we recommend setting
+``PROJECTROLES_ALLOW_ANONYMOUS=1`` and enabling public guest access to desired
+demo project(s).
+
+If there is need for functionality similar to the original kiosk mode, we
+recommend opening a ticket in the issue tracker describing your use case.
+
+
 v1.4.5 (2026-09-16)
 *******************
 

@@ -5,6 +5,17 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Removed
+-------
+
+- **Projectroles**
+    - Kiosk mode support (#1775)
+    - ``PROJECTROLES_KIOSK_MODE`` env var (#1775)
+
+
 v1.4.5 (2026-09-16)
 ===================
 

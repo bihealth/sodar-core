@@ -6,13 +6,10 @@
 
 {% get_app_setting 'userprofile' 'enable_project_uuid_copy' user=request.user as enable_uuid_copy %}
 {% get_app_setting 'projectroles' 'site_read_only' as site_read_only %}
-{% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 
 <div class="row sodar-pr-content-title">
   {# Project menu dropdown, only visible if browser width < X and sidebar is hidden #}
-  {% if not kiosk_mode %}
-    {% include 'projectroles/_project_menu_btn.html' %}
-  {% endif %}
+  {% include 'projectroles/_project_menu_btn.html' %}
 
   <h2 class="sodar-pr-content-title mr-1">{{ project.title }}</h2>
 

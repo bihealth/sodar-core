@@ -574,12 +574,6 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         self.assertEqual(len(links), 1)
         self.assertEqual(links[0]['name'], 'login')
 
-    @override_settings(PROJECTROLES_KIOSK_MODE=True)
-    def test_get_user_links_anon_kiosk_mode(self):
-        """Test get_user_links() as anonymous user and kiosk mode"""
-        links = app_links.get_user_links(AnonymousUser())
-        self.assertEqual(len(links), 0)
-
     def test_get_user_links_read_only(self):
         """Test get_user_links() with site read-only mode as regular user"""
         app_settings.set(APP_NAME, 'site_read_only', True)

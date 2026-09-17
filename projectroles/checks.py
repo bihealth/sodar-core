@@ -14,7 +14,6 @@ W001_SETTINGS = [
     'ENABLE_OIDC',
     'PROJECTROLES_ALLOW_ANONYMOUS',
     'PROJECTROLES_ALLOW_LOCAL_USERS',
-    'PROJECTROLES_KIOSK_MODE',
 ]
 W001_MSG = (
     'No authentication methods enabled, only superusers can access the site. '
