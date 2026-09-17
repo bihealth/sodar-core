@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add Python v3.14 support
+- Replace versioneer with setuptools-scm
 - Upgrade general dependencies
 - Remove kiosk mode support
 - Remove Python v3.11 support

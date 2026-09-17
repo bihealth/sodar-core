@@ -13,6 +13,7 @@ Added
 
 - **General**
     - Python v3.14 support (#1948)
+    - setuptools-scm dependency (#1995)
 
 Changed
 -------
@@ -20,6 +21,7 @@ Changed
 - **General**
     - Upgrade general Python dependencies (#1993)
     - Set Python v3.14 as default version (#1948)
+    - Replace versioneer with setuptools-scm (#1995)
 
 Removed
 -------
@@ -27,6 +29,7 @@ Removed
 - **General**
     - Python v3.11 support (#1994)
     - django-docs dependency (#1996)
+    - versioneer dependency (#1995)
 - **Projectroles**
     - Kiosk mode support (#1775)
     - ``PROJECTROLES_KIOSK_MODE`` env var (#1775)
