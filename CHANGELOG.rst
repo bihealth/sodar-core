@@ -8,6 +8,18 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **General**
+    - Python v3.14 support (#1948)
+
+Changed
+-------
+
+- **General**
+    - Set Python v3.14 as default version (#1948)
+
 Removed
 -------
 

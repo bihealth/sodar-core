@@ -16,6 +16,7 @@ v1.5.0 (WIP)
 Release Highlights
 ==================
 
+- Add Python v3.14 support
 - Remove kiosk mode support
 
 Breaking Changes

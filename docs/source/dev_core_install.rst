@@ -99,7 +99,7 @@ environment configuration file.
 
 For development, you are expected to run the Django server and possible Celery
 worker locally. To get started, install the OS dependencies and Python >=3.11
-(3.13 recommended).
+(3.14 recommended).
 
 .. code-block:: console
 
