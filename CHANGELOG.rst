@@ -14,6 +14,9 @@ Added
 - **General**
     - Python v3.14 support (#1948)
     - setuptools-scm dependency (#1995)
+- **Projectroles**
+    - ``Project.title_slug`` field (#1931)
+    - ``PROJECTROLES_TITLE_SLUG_MAX_LEN`` Django setting (#1931)
 
 Changed
 -------

@@ -3,6 +3,7 @@
 import uuid
 
 from datetime import datetime
+from slugify import slugify
 from typing import Any, Optional, Union
 from uuid import UUID
 
@@ -72,6 +73,9 @@ REMOTE_SITE_USER_DISPLAY = True
 ADD_EMAIL = 'additional@example.com'
 ADD_EMAIL_SECRET = build_secret()
 LDAP_DOMAIN = 'EXAMPLE'
+
+
+# Mixins -----------------------------------------------------------------------
 
 
 class ProjectMixin:
@@ -344,6 +348,9 @@ class SODARUserAdditionalEmailMixin:
         return SODARUserAdditionalEmail.objects.create(**values)
 
 
+# Tests ------------------------------------------------------------------------
+
+
 class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
     """Tests for Project"""
 
@@ -379,6 +386,7 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
             'type': PROJECT_TYPE_PROJECT,
             'parent': self.category.pk,
             'full_title': 'TestCategory / TestProject',
+            'title_slug': slugify('TestProject'),
             'sodar_uuid': self.project.sodar_uuid,
             'description': '',
             'public_access': None,
@@ -822,6 +830,71 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
         """Test has_role() public access and public=False"""
         self.project.set_public_access(self.role_guest)
         self.assertFalse(self.project.has_role(self.user_bob, public=False))
+
+    def test_title_slug_update(self):
+        """Test title_slug update on object saving"""
+        self.project.title_slug = 'Update This'
+        self.project.save()
+        self.project.refresh_from_db()
+        # We should end up with normalized version
+        self.assertEqual(self.project.title_slug, 'update-this')
+
+    def test_title_slug_update_empty(self):
+        """Test title_slug empty value update on object saving"""
+        self.project.title_slug = ''
+        self.project.save()
+        self.project.refresh_from_db()
+        # Slug should not be regenerated on further save() calls
+        self.assertEqual(self.project.title_slug, '')
+
+    def test_get_title_slug_spaces(self):
+        """Test _get_title_slug() with spaces in title"""
+        self.assertEqual(
+            self.project._get_title_slug('Test Project'), 'test-project'
+        )
+
+    @override_settings(PROJECTROLES_TITLE_SLUG_MAX_LEN=20)
+    def test_get_title_slug_max_len_spaces(self):
+        """Test _get_title_slug() with max length and spaces"""
+        self.assertEqual(
+            self.project._get_title_slug('Test Project Exceeds Max Len'),
+            'test-project-exceeds',
+        )
+
+    @override_settings(PROJECTROLES_TITLE_SLUG_MAX_LEN=20)
+    def test_get_title_slug_max_len_no_spaces(self):
+        """Test _get_title_slug() with max length and no spaces"""
+        self.assertEqual(
+            self.project._get_title_slug('TestProjectExceedsMaxLen'),
+            'testprojectexceedsma',
+        )
+
+    def test_get_title_slug_min_len(self):
+        """Test _get_title_slug() with minimum length"""
+        self.assertEqual(
+            self.project._get_title_slug('Test'),
+            f'test-{str(self.project.sodar_uuid)[:8]}',
+        )
+
+    def test_get_title_slug_dupe(self):
+        """Test _get_title_slug() with duplicate slug"""
+        project2 = self.make_project('Test Project', PROJECT_TYPE_PROJECT, None)
+        self.assertEqual(project2.title_slug, 'test-project')
+        self.assertEqual(
+            self.project._get_title_slug('Test Project'),
+            f'test-project-{str(self.project.sodar_uuid)[:8]}',
+        )
+
+    @override_settings(PROJECTROLES_TITLE_SLUG_MAX_LEN=20)
+    def test_get_title_slug_dupe_max_len(self):
+        """Test _get_title_slug() with duplicate and max length reached"""
+        title_str = 'Test Project Exceeds Max Len'
+        project2 = self.make_project(title_str, PROJECT_TYPE_PROJECT, None)
+        self.assertEqual(project2.title_slug, 'test-project-exceeds')
+        self.assertEqual(
+            self.project._get_title_slug(title_str),
+            f'test-projec-{str(self.project.sodar_uuid)[:8]}',
+        )  # The word gets intentionally cut off
 
 
 class TestRole(RoleMixin, TestCase):

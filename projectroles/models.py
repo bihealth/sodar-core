@@ -1,9 +1,12 @@
 """Models for the projectroles app"""
 
 import logging
+import random
+import string
 import uuid
 
 from datetime import datetime
+from slugify import slugify
 from typing import Any, Optional, Union
 
 from django.apps import apps
@@ -78,6 +81,7 @@ REMOTE_PROJECT_UNIQUE_MSG = (
     'RemoteProject with the same project UUID and site anready exists'
 )
 AUTH_PROVIDER_OIDC = 'oidc'
+PROJECT_TITLE_SLUG_MIN_LEN = 5
 
 
 # Project ----------------------------------------------------------------------
@@ -192,6 +196,13 @@ class Project(models.Model):
         help_text='Full project title with parent path (auto-generated)',
     )
 
+    #: Title slug used as a human-friendly alias
+    title_slug = models.CharField(
+        max_length=4096,
+        blank=True,
+        help_text='Title slug used as a human-friendly alias',
+    )
+
     #: Whether project has children with public access (auto-generated)
     has_public_children = models.BooleanField(
         default=False,
@@ -212,6 +223,11 @@ class Project(models.Model):
             models.UniqueConstraint(
                 fields=['title', 'parent'], name='unique_project_path'
             ),
+            models.UniqueConstraint(
+                fields=['title_slug'],
+                condition=~Q(title_slug=''),
+                name='unique_title_slug',
+            ),  # Enforce unique title_slug if the value is set
         ]
         ordering = ['parent__title', 'title']
 
@@ -289,8 +305,16 @@ class Project(models.Model):
         self._validate_parent_type()
         self._validate_public_access()
         self._validate_archive()
+
         # Update full title of self and children
         self.full_title = self._get_full_title()
+        # Create/normalize title slug
+        slug_input = self.title if not self.pk else self.title_slug
+        try:  # Try/catch just in case, we don't want saving to fail here
+            self.title_slug = self._get_title_slug(slug_input)
+        except Exception:
+            self.title_slug = ''
+
         # TODO: Save with commit=False with other args to avoid double save()?
         super().save(*args, **kwargs)
         if self.is_category():
@@ -318,6 +342,50 @@ class Project(models.Model):
             else ''
         )
         return ret + self.title
+
+    def _get_title_slug(self, title: str) -> str:
+        """Return default title slug for project"""
+        max_len = max(
+            min(4096, getattr(settings, 'PROJECTROLES_TITLE_SLUG_MAX_LEN', 80)),
+            15,
+        )
+        # TBD: Also support splitting CamelCase titles with dashes?
+        ret = slugify(title, algorithm='modern', backend='text-unidecode')
+
+        # Shorten to max length
+        if len(ret) > max_len:
+            if '-' in ret:  # Shorten by word
+                r_split = ret.split('-')
+                s_len = len(r_split)
+                while len(ret) > max_len and s_len > 1:
+                    s_len -= 1
+                    ret = '-'.join(r_split[:s_len])
+                # If we still end up with too many characters, shorten
+                if len(ret) > max_len:
+                    ret = ret[:max_len]
+            else:  # If not slugified into words, shorten by force
+                ret = ret[:max_len]
+
+        # Check for uniqueness and min length, update if necessary
+        if ret and (
+            Project.objects.filter(title_slug=ret).exists()
+            or len(ret) < PROJECT_TITLE_SLUG_MIN_LEN
+        ):
+            # Shorten to fit maximum length if needed
+            if len(ret) > max_len - 9:
+                ret = ret[: max_len - 9]
+            og_ret = ret
+            ret += f'-{str(self.sodar_uuid)[:8]}'
+            # In the unlikely case this still is not unique..
+            while Project.objects.filter(title_slug=ret).exists():
+                rand_id = ''.join(
+                    random.SystemRandom().choice(
+                        string.ascii_lowercase + string.digits
+                    )
+                    for _ in range(8)
+                )
+                ret = og_ret + f'-{rand_id}'
+        return ret
 
     def _has_public_children(self) -> bool:
         """
