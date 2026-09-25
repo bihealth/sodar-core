@@ -885,6 +885,22 @@ class TestProject(ProjectMixin, RoleMixin, RoleAssignmentMixin, TestCase):
             f'test-project-{str(self.project.sodar_uuid)[:8]}',
         )
 
+    def test_get_title_slug_dupe_normalize(self):
+        """Test _get_title_slug() with duplicate and normalization"""
+        project2 = self.make_project('Test Project', PROJECT_TYPE_PROJECT, None)
+        self.assertEqual(project2.title_slug, 'test-project')
+        slug = self.project._get_title_slug('Test Project')
+        self.assertEqual(
+            slug, f'test-project-{str(self.project.sodar_uuid)[:8]}'
+        )
+        self.project.title_slug = slug
+        self.project.save()
+        self.project.refresh_from_db()
+        self.assertEqual(
+            self.project._get_title_slug(self.project.title_slug),
+            f'test-project-{str(self.project.sodar_uuid)[:8]}',
+        )  # No new alterations should be made
+
     @override_settings(PROJECTROLES_TITLE_SLUG_MAX_LEN=20)
     def test_get_title_slug_dupe_max_len(self):
         """Test _get_title_slug() with duplicate and max length reached"""

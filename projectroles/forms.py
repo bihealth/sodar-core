@@ -536,6 +536,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             'readme',
             'public_access',
         ]
+        # TODO: Add title_slug field
 
     @classmethod
     def _get_parent_choices(cls, instance: Project, user: User) -> list[tuple]:
@@ -706,6 +707,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
 
         # Updating an existing project
         if self.instance.pk:
+            # TODO: Set up title_slug widget
             # Set readme value as raw markdown
             self.initial['readme'] = self.instance.readme
             # Hide project type selection
@@ -736,6 +738,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
 
         # Project creation
         else:
+            # TODO: Set hidden title_slug widget
             # Set hidden project field for autocomplete
             self.initial['project'] = None
             # Hide parent selection

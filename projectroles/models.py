@@ -368,7 +368,9 @@ class Project(models.Model):
 
         # Check for uniqueness and min length, update if necessary
         if ret and (
-            Project.objects.filter(title_slug=ret).exists()
+            Project.objects.filter(title_slug=ret)
+            .exclude(sodar_uuid=self.sodar_uuid)
+            .exists()
             or len(ret) < PROJECT_TITLE_SLUG_MIN_LEN
         ):
             # Shorten to fit maximum length if needed
@@ -377,7 +379,11 @@ class Project(models.Model):
             og_ret = ret
             ret += f'-{str(self.sodar_uuid)[:8]}'
             # In the unlikely case this still is not unique..
-            while Project.objects.filter(title_slug=ret).exists():
+            while (
+                Project.objects.filter(title_slug=ret)
+                .exclude(sodar_uuid=self.sodar_uuid)
+                .exists()
+            ):
                 rand_id = ''.join(
                     random.SystemRandom().choice(
                         string.ascii_lowercase + string.digits
