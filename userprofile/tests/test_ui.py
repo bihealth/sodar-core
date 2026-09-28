@@ -95,7 +95,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
     def test_update_button_public(self):
         """Test update button in other user's public profile"""
         expected = [
-            (self.superuser, 1),
+            (self.superuser, 0),
             (self.local_user, 1),
             (self.ldap_user, 0),
         ]

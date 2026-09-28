@@ -190,8 +190,8 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.context['site_read_only'], False)
         self.assertEqual(response.context['send_email'], True)
         self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
+        self.assertEqual(response.context['can_update_user'], False)
         self.assertNotIn('add_emails', response.context)
-        self.assertNotIn('can_update_user', response.context)
         self.assertNotIn('can_update_settings', response.context)
 
     def test_get_public_as_superuser(self):
@@ -204,7 +204,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.context['send_email'], True)
         self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
         self.assertEqual(response.context['add_emails'].count(), 0)
-        self.assertEqual(response.context['can_update_user'], True)
+        self.assertEqual(response.context['can_update_user'], False)
         self.assertEqual(response.context['can_update_settings'], True)
 
     def test_get_public_as_superuser_read_only(self):
@@ -218,7 +218,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.context['send_email'], True)
         self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
         self.assertEqual(response.context['add_emails'].count(), 0)
-        self.assertEqual(response.context['can_update_user'], True)
+        self.assertEqual(response.context['can_update_user'], False)
         self.assertEqual(response.context['can_update_settings'], True)
 
     def test_get_public_invalid_uuid(self):
