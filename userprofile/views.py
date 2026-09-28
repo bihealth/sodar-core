@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
@@ -78,7 +79,10 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if 'user' in kwargs:
-            user = User.objects.get(sodar_uuid=kwargs['user'])
+            try:
+                user = User.objects.get(sodar_uuid=kwargs['user'])
+            except User.DoesNotExist:
+                raise Http404
         else:
             user = self.request.user
         site_read_only = app_settings.get(APP_NAME_PR, 'site_read_only')

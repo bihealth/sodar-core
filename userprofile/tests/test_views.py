@@ -221,6 +221,17 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.context['can_update_user'], True)
         self.assertEqual(response.context['can_update_settings'], True)
 
+    def test_get_public_invalid_uuid(self):
+        """Test GET public profile with wrong user UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'userprofile:detail_public',
+                    kwargs={'user': uuid.uuid4()},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
+
 
 class TestUserAppSettingsView(AppSettingMixin, UserViewTestBase):
     """Tests for UserAppSettingsView"""
