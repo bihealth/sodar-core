@@ -37,6 +37,10 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
         self.local_user = self.make_user('local_user', False)
         self.ldap_user = self.make_user('user@EXAMPLE', False)
         self.url = reverse('userprofile:detail')
+        self.url_public = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.local_user.sodar_uuid},
+        )
 
     def test_update_button(self):
         """Test existence of user update button"""
@@ -88,6 +92,15 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
         ]
         self.assert_element_count(expected, self.url, UPDATE_BTN_ID)
 
+    def test_update_button_public(self):
+        """Test update button in other user's public profile"""
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 1),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(expected, self.url_public, UPDATE_BTN_ID)
+
     def test_settings_button(self):
         """Test existence of settings update button"""
         expected = [
@@ -107,6 +120,15 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
         ]
         self.assert_element_count(expected, self.url, SETTING_BTN_ID)
 
+    def test_settings_button_public(self):
+        """Test settings update button in other user's public profile"""
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 1),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(expected, self.url_public, SETTING_BTN_ID)
+
     def test_add_email_button(self):
         """Test existence of add email button"""
         expected = [
@@ -125,6 +147,15 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
             (self.ldap_user, 0),
         ]
         self.assert_element_count(expected, self.url, EMAIL_ADD_BTN_ID)
+
+    def test_add_email_button_public(self):
+        """Test add email button in other user's public profile"""
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 1),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(expected, self.url_public, EMAIL_ADD_BTN_ID)
 
     def test_additional_email_unset(self):
         """Test additional email elements without email"""
@@ -246,6 +277,29 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
             self.url,
             'sodar-user-email-table-not-found',
             False,
+        )
+
+    def test_additional_email_public(self):
+        """Test additional email elements in other user's public profile"""
+        expected = [
+            (self.superuser, 1),
+            (self.local_user, 1),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(
+            expected, self.url_public, 'sodar-user-email-card'
+        )
+
+    @override_settings(PROJECTROLES_SEND_EMAIL=False)
+    def test_additional_email_public_disabled(self):
+        """Test additional email in public profile with send_email disabled"""
+        expected = [
+            (self.superuser, 0),
+            (self.local_user, 0),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(
+            expected, self.url_public, 'sodar-user-email-card'
         )
 
 

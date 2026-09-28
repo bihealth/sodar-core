@@ -6,6 +6,8 @@ Userprofile App
 
 The ``userprofile`` app is a site app which provides a user profile view for
 projectroles compatible Django users and management of user specific settings.
+It allows viewing and updating a user's personal account and settings, as well
+as viewing the public profile of another user.
 
 
 Installation
