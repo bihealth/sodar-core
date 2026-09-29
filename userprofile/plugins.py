@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
 
-from userprofile.urls import urlpatterns
+from userprofile.urls import urls_detail, urls_list
 
 
 User = get_user_model()
@@ -29,7 +29,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     title = 'User Profile'
 
     #: UI URLs
-    urls = urlpatterns
+    urls = urls_detail
 
     #: Iconify icon
     icon = 'mdi:account-details'
@@ -64,3 +64,30 @@ class SiteAppPlugin(SiteAppPluginPoint):
         """
         messages = []
         return messages
+
+
+class UserListSiteAppPlugin(SiteAppPluginPoint):
+    """Projectroles plugin for registering the app"""
+
+    #: Name (used as plugin ID)
+    name = 'userprofile_list'
+
+    #: Title (used in templates)
+    title = 'User Profile List'
+
+    #: UI URLs
+    urls = urls_list
+
+    #: Iconify icon
+    # icon = 'mdi:account-group'
+    # icon = 'mdi:account-filter'
+    icon = 'mdi:account-search'
+
+    #: Description string
+    description = 'List of users on the site'
+
+    #: Entry point URL ID
+    entry_point_url_id = 'userprofile:list'
+
+    #: Required permission for displaying the app
+    app_permission = 'userprofile.view_list'
