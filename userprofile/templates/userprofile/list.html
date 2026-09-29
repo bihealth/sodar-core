@@ -1,0 +1,99 @@
+{% extends 'projectroles/base.html' %}
+
+{% load static %}
+{% load projectroles_common_tags %}
+
+{% get_django_setting 'SITE_TITLE' as site_title %}
+
+{% block title %}Users{% endblock %}
+
+{% block css %}
+  {{ block.super }}
+
+  <!-- DataTables -->
+  {% include 'projectroles/_datatables_css.html' %}
+
+  <!-- General CSS for user profile elements styling -->
+  <link rel="stylesheet" type="text/css" href="{% static 'userprofile/css/userprofile.css' %}">
+
+{% endblock %}
+
+{% block projectroles %}
+
+<div class="row sodar-pr-content-title pt-2">
+  <h2 class="sodar-pr-content-title">Users</h2>
+  <div class="sodar-pr-content-title-secondary text-muted">
+    of {{ site_title }}
+  </div>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  <div id="sodar-up-ajax-user-list"
+       class="card sodar-card"
+       data-url="{% url 'userprofile:ajax_list' %}"
+       data-link-prefix="{% url 'userprofile:detail' %}">
+    <div class="card-header">
+      <h4>
+        <i class="iconify" data-icon="mdi:account-search"></i>
+        User Profiles
+        <div class="input-group sodar-header-input-group pull-right">
+          <select class="form-control" id="sodar-up-user-list-page-length">
+            <option selected value="10">Page</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="-1">All</option>
+          </select>
+          <input class="form-control"
+                 type="text"
+                 placeholder="Filter"
+                 aria-label="Filter users"
+                 id="sodar-up-user-list-filter" />
+        </div>
+      </h4>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-striped sodar-card-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Active</th>
+            <th>Date Joined</th>
+            <th>UUID</th>
+          </tr>
+        </thead>
+        <tbody id="sodar-up-ajax-user-list-table">
+        </tbody>
+      </table>
+      <div id="sodar-up-user-list-spinner" class="w-100 text-center">
+        <i class="iconify spin text-secondary"
+           data-icon="mdi:loading" data-height="42">
+        </i>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock projectroles %}
+
+{% block javascript %}
+  {{ block.super }}
+  <!-- DataTables -->
+  {% include 'projectroles/_datatables_js.html' %}
+  <!-- User list table creation -->
+  <script type="text/javascript" src="{% static 'userprofile/js/list.js' %}"></script>
+  <!-- Tour content -->
+  <script type="text/javascript">
+    tourEnabled = true
+    tour.addStep('user_list', {
+      title: 'User List',
+      text: 'In this app you can browse the profile of all users.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+  </script>
+{% endblock javascript %}
