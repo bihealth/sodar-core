@@ -123,7 +123,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
     def test_settings_button_public(self):
         """Test settings update button in other user's public profile"""
         expected = [
-            (self.superuser, 1),
+            (self.superuser, 0),
             (self.local_user, 1),
             (self.ldap_user, 0),
         ]
@@ -151,7 +151,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
     def test_add_email_button_public(self):
         """Test add email button in other user's public profile"""
         expected = [
-            (self.superuser, 1),
+            (self.superuser, 0),
             (self.local_user, 1),
             (self.ldap_user, 0),
         ]
@@ -300,6 +300,18 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
         ]
         self.assert_element_count(
             expected, self.url_public, 'sodar-user-email-card'
+        )
+
+    def test_add_email_dropdown_public(self):
+        """Test add email dropdown in other user's public profile"""
+        self.make_email(self.local_user, 'add2@example.com', verified=False)
+        expected = [
+            (self.superuser, 0),
+            (self.local_user, 1),
+            (self.ldap_user, 0),
+        ]
+        self.assert_element_count(
+            expected, self.url_public, 'sodar-user-email-dropdown', 'class'
         )
 
 

@@ -90,18 +90,18 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         context['site_read_only'] = site_read_only
         context['send_email'] = settings.PROJECTROLES_SEND_EMAIL
         context['site_mode'] = settings.PROJECTROLES_SITE_MODE
-        context['can_update_user'] = (
+        context['can_update_user'] = self.request.user == user and (
+            self.request.user.has_perm('projectroles.update_local_user')
+            or self.request.user.is_superuser
+        )
+        context['can_update_settings'] = (
             self.request.user == user
-            and user.has_perm('projectroles.update_local_user')
+            and user.has_perm('userprofile.update_settings')
         )
         if self.request.user.is_superuser or self.request.user == user:
             context['add_emails'] = SODARUserAdditionalEmail.objects.filter(
                 user=user
             ).order_by('email')
-            context['can_update_settings'] = (
-                self.request.user.is_superuser
-                or user.has_perm('userprofile.update_settings')
-            )
         return context
 
 
