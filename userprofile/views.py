@@ -85,14 +85,15 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
                 raise Http404
         else:
             user = self.request.user
-        site_read_only = app_settings.get(APP_NAME_PR, 'site_read_only')
         context['user'] = user
-        context['site_read_only'] = site_read_only
+        context['site_read_only'] = app_settings.get(
+            APP_NAME_PR, 'site_read_only'
+        )
         context['send_email'] = settings.PROJECTROLES_SEND_EMAIL
         context['site_mode'] = settings.PROJECTROLES_SITE_MODE
-        context['can_update_user'] = self.request.user == user and (
-            self.request.user.has_perm('projectroles.update_local_user')
-            or self.request.user.is_superuser
+        context['can_update_user'] = (
+            self.request.user == user
+            and self.request.user.has_perm('projectroles.update_local_user')
         )
         context['can_update_settings'] = (
             self.request.user == user

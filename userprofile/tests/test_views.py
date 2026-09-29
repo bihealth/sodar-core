@@ -108,6 +108,16 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.context['can_update_user'], False)
         self.assertEqual(response.context['can_update_settings'], False)
 
+    def test_get_read_only_as_superuser(self):
+        """Test GET with site read only mode as superuser"""
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['site_read_only'], True)
+        self.assertEqual(response.context['can_update_user'], True)
+        self.assertEqual(response.context['can_update_settings'], True)
+
     @override_settings(PROJECTROLES_SEND_EMAIL=False)
     def test_get_send_email_disabled(self):
         """Test GET with disabled email sending"""
