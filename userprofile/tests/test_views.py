@@ -78,18 +78,25 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
     def setUp(self):
         super().setUp()
         self.regular_user = self.make_user('regular_user')
+        self.other_user = self.make_user('other_user')
         self.url = reverse('userprofile:detail')
+        self.url_public = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.regular_user.sodar_uuid},
+        )
 
     def test_get(self):
         """Test UserDetailView GET"""
         with self.login(self.regular_user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.regular_user)
         self.assertEqual(response.context['add_emails'].count(), 0)
         self.assertEqual(response.context['site_read_only'], False)
         self.assertEqual(response.context['send_email'], True)
         self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
         self.assertEqual(response.context['can_update_user'], True)
+        self.assertEqual(response.context['can_update_settings'], True)
 
     def test_get_read_only(self):
         """Test GET with site read only mode"""
@@ -99,6 +106,17 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['site_read_only'], True)
         self.assertEqual(response.context['can_update_user'], False)
+        self.assertEqual(response.context['can_update_settings'], False)
+
+    def test_get_read_only_as_superuser(self):
+        """Test GET with site read only mode as superuser"""
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['site_read_only'], True)
+        self.assertEqual(response.context['can_update_user'], True)
+        self.assertEqual(response.context['can_update_settings'], True)
 
     @override_settings(PROJECTROLES_SEND_EMAIL=False)
     def test_get_send_email_disabled(self):
@@ -116,6 +134,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['site_mode'], SITE_MODE_TARGET)
         self.assertEqual(response.context['can_update_user'], True)
+        self.assertEqual(response.context['can_update_settings'], True)
 
     @override_settings(PROJECTROLES_LOCAL_USER_UPDATE=False)
     def test_get_local_user_update_disabled_site(self):
@@ -124,6 +143,8 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['can_update_user'], False)
+        # Settings can still be modified
+        self.assertEqual(response.context['can_update_settings'], True)
 
     def test_get_local_user_update_disabled_user(self):
         """Test GET with disabled user level local user updating"""
@@ -133,6 +154,8 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['can_update_user'], False)
+        # Settings can still be modified
+        self.assertEqual(response.context['can_update_settings'], True)
 
     @override_settings(PROJECTROLES_LOCAL_USER_UPDATE=False)
     def test_get_local_user_update_disabled_site_superuser(self):
@@ -140,7 +163,9 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
         with self.login(self.user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.user)
         self.assertEqual(response.context['can_update_user'], True)
+        self.assertEqual(response.context['can_update_settings'], True)
 
     def test_get_additional_email(self):
         """Test GET with additional email"""
@@ -152,6 +177,70 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, UserViewTestBase):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['add_emails'].count(), 2)
+
+    def test_get_public_as_owner(self):
+        """Test GET public profile as owner"""
+        with self.login(self.regular_user):
+            response = self.client.get(self.url_public)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.regular_user)
+        self.assertEqual(response.context['site_read_only'], False)
+        self.assertEqual(response.context['send_email'], True)
+        self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
+        self.assertEqual(response.context['add_emails'].count(), 0)
+        self.assertEqual(response.context['can_update_user'], True)
+        self.assertEqual(response.context['can_update_settings'], True)
+
+    def test_get_public_as_other(self):
+        """Test GET public profile as other user"""
+        with self.login(self.other_user):
+            response = self.client.get(self.url_public)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.regular_user)
+        self.assertEqual(response.context['site_read_only'], False)
+        self.assertEqual(response.context['send_email'], True)
+        self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
+        self.assertEqual(response.context['can_update_user'], False)
+        self.assertEqual(response.context['can_update_settings'], False)
+        self.assertNotIn('add_emails', response.context)
+
+    def test_get_public_as_superuser(self):
+        """Test GET public profile as superuser"""
+        with self.login(self.user):
+            response = self.client.get(self.url_public)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.regular_user)
+        self.assertEqual(response.context['site_read_only'], False)
+        self.assertEqual(response.context['send_email'], True)
+        self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
+        self.assertEqual(response.context['add_emails'].count(), 0)
+        self.assertEqual(response.context['can_update_user'], False)
+        self.assertEqual(response.context['can_update_settings'], False)
+
+    def test_get_public_as_superuser_read_only(self):
+        """Test GET public profile as superuser in read only mode"""
+        app_settings.set(APP_NAME_PR, 'site_read_only', True)
+        with self.login(self.user):
+            response = self.client.get(self.url_public)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.regular_user)
+        self.assertEqual(response.context['site_read_only'], True)
+        self.assertEqual(response.context['send_email'], True)
+        self.assertEqual(response.context['site_mode'], SITE_MODE_SOURCE)
+        self.assertEqual(response.context['add_emails'].count(), 0)
+        self.assertEqual(response.context['can_update_user'], False)
+        self.assertEqual(response.context['can_update_settings'], False)
+
+    def test_get_public_invalid_uuid(self):
+        """Test GET public profile with wrong user UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'userprofile:detail_public',
+                    kwargs={'user': uuid.uuid4()},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
 
 class TestUserAppSettingsView(AppSettingMixin, UserViewTestBase):

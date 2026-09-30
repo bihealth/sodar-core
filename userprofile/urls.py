@@ -11,6 +11,11 @@ urlpatterns = [
         name='detail',
     ),
     path(
+        route='profile/<uuid:user>',
+        view=views.UserDetailView.as_view(),
+        name='detail_public',
+    ),
+    path(
         route='settings/update',
         view=views.UserAppSettingsView.as_view(),
         name='settings_update',

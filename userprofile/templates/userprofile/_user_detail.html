@@ -11,7 +11,7 @@
             <i class="iconify" data-icon="mdi:account-edit"></i> Update User
           </a>
         {% endif %}
-        {% if request.user.is_superuser or not site_read_only %}
+        {% if can_update_settings %}
           <a role="button"
              class="btn btn-primary"
              href="{% url 'userprofile:settings_update' %}"
@@ -24,24 +24,24 @@
   </div>
   <div class="card-body">
     <dl class="row">
-      {% if request.user.get_full_name != request.user.username %}
+      {% if user.get_full_name != user.username %}
         <dt class="col-md-2">Full Name</dt>
-        <dd class="col-md-10">{{ request.user.get_full_name }}</dd>
+        <dd class="col-md-10">{{ user.get_full_name }}</dd>
       {% endif %}
       <dt class="col-md-2">Username</dt>
-      <dd class="col-md-10">{{ request.user.username }}</dd>
-      {% if request.user.email %}
+      <dd class="col-md-10">{{ user.username }}</dd>
+      {% if user.email %}
         <dt class="col-md-2">Email</dt>
         <dd class="col-md-10">
-          <a href="mailto:{{ request.user.email }}">{{ request.user.email }}</a>
+          <a href="mailto:{{ user.email }}">{{ user.email }}</a>
         </dd>
       {% endif %}
       <dt class="col-md-2">UUID</dt>
-      <dd class="col-md-10"><code>{{ request.user.sodar_uuid }}</code></dd>
+      <dd class="col-md-10"><code>{{ user.sodar_uuid }}</code></dd>
       <dt class="col-md-2">Date Joined</dt>
-      <dd class="col-md-10">{{ request.user.date_joined | date:'Y-m-d H:i' }}</dd>
+      <dd class="col-md-10">{{ user.date_joined | date:'Y-m-d H:i' }}</dd>
       <dt class="col-md-2">Authentication</dt>
-      <dd class="col-md-10">{{ request.user.get_auth_type }}</dd>
+      <dd class="col-md-10">{{ user.get_auth_type }}</dd>
     </dl>
   </div>
 </div>

@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
@@ -65,25 +66,43 @@ EMAIL_VERIFY_RESEND_MSG = 'Verification message to "{email}" resent.'
 
 
 class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
-    """Display the user profile view including the user settings"""
+    """Display the user profile view including the user settings
+
+    This view can be accessed by other users than the profile owner, in which
+    case editing is disabled, settings are not shown, and additional emails are
+    not shown.
+    """
 
     template_name = 'userprofile/detail.html'
     permission_required = 'userprofile.view_detail'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
-        context['add_emails'] = SODARUserAdditionalEmail.objects.filter(
-            user=self.request.user
-        ).order_by('email')
+        if 'user' in kwargs:
+            try:
+                user = User.objects.get(sodar_uuid=kwargs['user'])
+            except User.DoesNotExist:
+                raise Http404
+        else:
+            user = self.request.user
+        context['user'] = user
         context['site_read_only'] = app_settings.get(
             APP_NAME_PR, 'site_read_only'
         )
         context['send_email'] = settings.PROJECTROLES_SEND_EMAIL
         context['site_mode'] = settings.PROJECTROLES_SITE_MODE
-        context['can_update_user'] = user.has_perm(
-            'projectroles.update_local_user'
+        context['can_update_user'] = (
+            self.request.user == user
+            and self.request.user.has_perm('projectroles.update_local_user')
         )
+        context['can_update_settings'] = (
+            self.request.user == user
+            and user.has_perm('userprofile.update_settings')
+        )
+        if self.request.user.is_superuser or self.request.user == user:
+            context['add_emails'] = SODARUserAdditionalEmail.objects.filter(
+                user=user
+            ).order_by('email')
         return context
 
 

@@ -2,7 +2,7 @@
 
 {% load projectroles_common_tags %}
 
-{% block title %}User Profile for {{ request.user.get_full_name }}{% endblock %}
+{% block title %}User Profile for {{ user.get_full_name }}{% endblock %}
 
 {% block css %}
   {{ block.super }}
@@ -32,7 +32,7 @@
 {% block projectroles %}
 
 <div class="row sodar-pr-content-title pt-2">
-  <h2 class="sodar-pr-content-title">{{ request.user.get_full_name }}</h2>
+  <h2 class="sodar-pr-content-title">{{ user.get_full_name }}</h2>
   <div class="sodar-pr-content-title-secondary text-muted">
     User Profile
   </div>
@@ -43,7 +43,9 @@
   {% include 'userprofile/_user_detail.html' %}
   {# User additional emails card #}
   {% if send_email %}
-    {% include 'userprofile/_user_email.html' %}
+    {% if request.user.is_superuser or request.user == user %}
+      {% include 'userprofile/_user_email.html' %}
+    {% endif %}
   {% endif %}
 </div>
 
