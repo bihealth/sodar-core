@@ -16,7 +16,12 @@ v1.5.0 (WIP)
 Release Highlights
 ==================
 
+- Add project title slug field
+- Add title slug redirect UI view
+- Add project UUID retrieval REST API view for title slugs
+- Add updatetitleslugs management command
 - Add Python v3.14 support
+- Update user profile view access for other users
 - Replace versioneer with setuptools-scm
 - Upgrade general dependencies
 - Remove kiosk mode support
@@ -24,6 +29,27 @@ Release Highlights
 
 Breaking Changes
 ================
+
+REST API View Changes
+---------------------
+
+- Projectroles API
+    * Current version: ``2.1`` (non-breaking changes)
+    * Allowed versions: ``1.0``, ``1.1``, ``2.0``, ``2.1``
+    * ``ProjectCreateAPIView``
+        + Add ``title_slug`` field (optional)
+    * ``ProjectRetrieveAPIView``
+        + Add ``title_slug`` field
+    * ``ProjectUpdateAPIView``
+        + Add ``title_slug`` field (optional)
+    * ``ProjectUUIDRetrieveAPIView``
+        + Add view
+- Projectroles sync API
+    * Current version: ``2.2`` (non-breaking changes)
+    * Allowed versions: ``1.0``, ``2.0``, ``2.1``, ``2.2``
+    * Add ``Project.title_slug`` field synchronization
+    * **NOTE:** If called with API version ``<2.2``, title slugs will not be
+      synced to target sites.
 
 System Prerequisites
 --------------------
@@ -252,7 +278,8 @@ REST API View Changes
     * Current version: ``2.1`` (non-breaking changes)
     * Allowed versions: ``1.0``, ``2.0``, ``2.1``
     * Add synchonization of ``is_active`` field for users
-    * **NOTE:** If called with API version ``1.0`` or ``2.0``, user activity status will not be synced to target sites.
+    * **NOTE:** If called with API version ``1.0`` or ``2.0``, user activity
+      status will not be synced to target sites.
     * **NOTE:** The activity status for superusers is not synced.
 
 System Prerequisites

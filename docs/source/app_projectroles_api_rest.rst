@@ -15,9 +15,9 @@ Projectroles REST API Versioning
 Media Type
     ``application/vnd.bihealth.sodar-core.projectroles+json``
 Current Version
-    ``2.0``
+    ``2.1``
 Accepted Versions
-    ``1.0``, ``1.1``, ``2.0``
+    ``1.0``, ``1.1``, ``2.0``, ``2.1``
 Header Example
     ``Accept: application/vnd.bihealth.sodar-core.projectroles+json; version=x.y``
 
@@ -36,6 +36,8 @@ Projectroles REST API Views
 .. autoclass:: ProjectUpdateAPIView
 
 .. autoclass:: ProjectDestroyAPIView
+
+.. autoclass:: ProjectUUIDRetrieveAPIView
 
 .. autoclass:: RoleAssignmentCreateAPIView
 
@@ -72,6 +74,18 @@ Projectroles REST API Views
 
 Projectroles REST API Version Changes
 =====================================
+
+v2.1
+----
+
+- ``ProjectCreateAPIView``
+    * Add ``title_slug`` field (optional)
+- ``ProjectRetrieveAPIView``
+    * Add ``title_slug`` field
+- ``ProjectUpdateAPIView``
+    * Add ``title_slug`` field (optional)
+- ``ProjectUUIDRetrieveAPIView``
+    * Add view
 
 v2.0
 ----

@@ -17,6 +17,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import (
     APIException,
     NotAcceptable,
+    NotAuthenticated,
     NotFound,
     PermissionDenied,
 )
@@ -101,13 +102,13 @@ APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
 PROJECTROLES_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles+json'
 )
-PROJECTROLES_API_DEFAULT_VERSION = '2.0'
-PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1', '2.0']
+PROJECTROLES_API_DEFAULT_VERSION = '2.1'
+PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1', '2.0', '2.1']
 SYNC_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles.sync+json'
 )
-SYNC_API_DEFAULT_VERSION = '2.1'
-SYNC_API_ALLOWED_VERSIONS = ['1.0', '2.0', '2.1']
+SYNC_API_DEFAULT_VERSION = '2.2'
+SYNC_API_ALLOWED_VERSIONS = ['1.0', '2.0', '2.1', '2.2']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -133,6 +134,7 @@ CAT_PUBLIC_STATS_API_MSG = (
 )
 VERSION_1_1 = parse_version('1.1')
 VERSION_2_0 = parse_version('2.0')
+VERSION_2_1 = parse_version('2.1')
 
 
 # Permission / Versioning / Renderer Classes -----------------------------------
@@ -486,10 +488,13 @@ class ProjectRetrieveAPIView(
     - ``roles``: Project role assignments (dict, assignment UUID as key)
     - ``sodar_uuid``: Project UUID (string)
     - ``title``: Project title (string)
+    - ``title_slug``: Optional slugified project title alias (string)
     - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
 
     **Version Changes:**
 
+    - ``2.1``
+        * Add ``title_slug`` field
     - ``2.0``
         * Replace ``roles`` field user serializer with user UUID
         * Replace ``public_guest_access`` field with ``public_access``
@@ -516,16 +521,19 @@ class ProjectCreateAPIView(
 
     **Parameters:**
 
-    - ``title``: Project title (string)
-    - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
-    - ``parent``: Parent category UUID (string)
     - ``description``: Project description (string, optional)
-    - ``readme``: Project readme (string, optional, supports markdown)
-    - ``public_access``: Public read-only access for all users (string or None)
     - ``owner``: User UUID of the project owner (string)
+    - ``parent``: Parent category UUID (string)
+    - ``public_access``: Public read-only access for all users (string or None)
+    - ``readme``: Project readme (string, optional, supports markdown)
+    - ``title``: Project title (string)
+    - ``title_slug``: Optional slugified project title alias (string)
+    - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
 
     **Version Changes:**
 
+    - ``2.1``
+        * Add ``title_slug`` field
     - ``2.0``
         * Replace ``public_guest_access`` field with ``public_access``
     """
@@ -558,13 +566,17 @@ class ProjectUpdateAPIView(
 
     **Parameters:**
 
+    - ``description``: Project description (string, optional)
+    - ``parent``: Parent category UUID (string)
+    - ``public_access``: Public read-only access for all users (string or None)
+    - ``readme``: Project readme (string, optional, supports markdown)
     - ``title``: Project title (string)
     - ``type``: Project type (string, can not be modified)
-    - ``parent``: Parent category UUID (string)
-    - ``description``: Project description (string, optional)
-    - ``readme``: Project readme (string, optional, supports markdown)
-    - ``public_access``: Public read-only access for all users (string or None)
 
+    **Version Changes:**
+
+    - ``2.1``
+        * Add ``title_slug`` field
     - ``2.0``
         * Replace ``public_guest_access`` field with ``public_access``
     """
@@ -620,6 +632,57 @@ class ProjectDestroyAPIView(
             raise PermissionDenied(msg)
         with transaction.atomic():
             self.handle_delete(instance, self.request)
+
+
+class ProjectUUIDRetrieveAPIView(ProjectrolesAPIVersioningMixin, APIView):
+    """
+    Retrieve a project or category UUID by its title slug.
+
+    Returns 403 if user is not authorized to access the project or if a project
+    with the given title slug is not found.
+
+    **URL:** ``/project/api/project-uuid/retrieve/{Project.title_slug}``
+
+    **Methods:** ``GET``
+
+    **Returns:**
+
+    - ``sodar_uuid``: Project UUID (string)
+
+    **Version Changes:**
+
+    - ``2.1``
+        * Add view
+    """
+
+    http_method_names = ['get']
+
+    def get(self, request, *args, **kwargs):
+        if parse_version(request.version) < VERSION_2_1:
+            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION_MSG)
+        slug_kw = self.kwargs.get('slug', '').strip()
+        if not slug_kw:
+            raise PermissionDenied()
+        project = Project.objects.filter(title_slug=slug_kw).first()
+        if project and (
+            (
+                project.public_access
+                and (
+                    request.user.is_authenticated
+                    or getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)
+                )
+            )
+            or (
+                request.user
+                and request.user.is_authenticated
+                and request.user.has_perm('projectroles.view_project', project)
+            )
+        ):
+            return Response({'sodar_uuid': str(project.sodar_uuid)}, status=200)
+        # Return 403 instead of 404 to avoid revealing project titles
+        if not request.user or not request.user.is_authenticated:
+            raise NotAuthenticated()
+        raise PermissionDenied()
 
 
 class RoleAssignmentCreateAPIView(

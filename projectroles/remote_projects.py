@@ -67,6 +67,7 @@ APP_NAME = 'projectroles'
 NO_LOCAL_USERS_MSG = 'Local users not allowed'
 VERSION_2_0 = parse_version('2.0')
 VERSION_2_1 = parse_version('2.1')
+VERSION_2_2 = parse_version('2.2')
 
 
 class RemoteProjectAPI:
@@ -125,6 +126,9 @@ class RemoteProjectAPI:
                 'description': category.description,
                 'readme': category.readme,
             }
+            # Add title_slug if on v2.2+
+            if not req_version or parse_version(req_version) >= VERSION_2_2:
+                cat_data['title_slug'] = category.title_slug
             if project_level == REMOTE_LEVEL_READ_ROLES:
                 cat_data['roles'] = {}
                 cat_data['level'] = REMOTE_LEVEL_READ_ROLES
@@ -345,6 +349,9 @@ class RemoteProjectAPI:
                 'type': PROJECT_TYPE_PROJECT,
                 'remote_sites': [str(site.sodar_uuid) for site in remote_sites],
             }
+            # Add title_slug if on v2.2+
+            if not req_version or parse_version(req_version) >= VERSION_2_2:
+                project_data['title_slug'] = project.title_slug
             # View available projects
             if rp.level == REMOTE_LEVEL_VIEW_AVAIL:
                 project_data['available'] = True if project else False
@@ -742,7 +749,7 @@ class RemoteProjectAPI:
             self._handle_project_error(error_msg, uuid, project_data, 'create')
             return
 
-        create_fields = ['title', 'description', 'readme']
+        create_fields = ['title', 'description', 'readme', 'title_slug']
         create_values = {
             k: v for k, v in project_data.items() if k in create_fields
         }

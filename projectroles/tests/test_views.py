@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.core import mail
 from django.db.models import QuerySet
-from django.forms import CheckboxInput, HiddenInput
+from django.forms import CheckboxInput, HiddenInput, TextInput
 from django.forms.models import model_to_dict
 from django.test import override_settings
 from django.urls import reverse
@@ -144,6 +144,7 @@ INVALID_SETTING_VALUE = 'INVALID VALUE'
 LDAP_DOMAIN = 'EXAMPLE'
 NEW_CAT_TITLE = 'NewCategory'
 PROJECT_TITLE = 'TestProject'
+PROJECT_TITLE_SLUG = 'test-project'
 
 LOGIN_PASSWORD = 'loginpassword'
 INVALID_PASSWORD = 'INVALID_PASSWORD'
@@ -1042,6 +1043,7 @@ class TestProjectCreateView(
         self.url = reverse(
             'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
 
     def test_get_top(self):
         """Test ProjectCreateView GET with top level category creation form"""
@@ -1058,6 +1060,7 @@ class TestProjectCreateView(
         self.assertIsInstance(
             form.fields[CAT_PUBLIC_STATS_FIELD].widget, CheckboxInput
         )
+        self.assertIsInstance(form.fields['title_slug'].widget, HiddenInput)
 
     @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
     def test_get_top_disable_categories(self):
@@ -1118,6 +1121,7 @@ class TestProjectCreateView(
         self.assertIsInstance(
             form.fields[CAT_PUBLIC_STATS_FIELD].widget, HiddenInput
         )
+        self.assertIsInstance(form.fields['title_slug'].widget, HiddenInput)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_get_sub_target_remote(self):
@@ -1136,6 +1140,7 @@ class TestProjectCreateView(
         form = response.context['form']
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
         self.assertNotIn(f'remote_site.{peer_site.sodar_uuid}', form.fields)
+        self.assertIsInstance(form.fields['title_slug'].widget, HiddenInput)
 
     @override_settings(PROJECTROLES_SITE_MODE='TARGET')
     @override_settings(PROJECTROLES_TARGET_CREATE=False)
@@ -1231,6 +1236,7 @@ class TestProjectCreateView(
             'public_access': None,
             'archive': False,
             'full_title': NEW_CAT_TITLE,
+            'title_slug': 'newcategory',
             'has_public_children': False,
             'sodar_uuid': category.sodar_uuid,
         }
@@ -1290,6 +1296,7 @@ class TestProjectCreateView(
             'public_access': None,
             'archive': False,
             'full_title': 'TestCategory / TestProject',
+            'title_slug': 'testproject',
             'has_public_children': False,
             'sodar_uuid': project.sodar_uuid,
         }
@@ -1333,6 +1340,42 @@ class TestProjectCreateView(
         self.assertEqual(model_to_dict(owner_as), expected)
         self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_project_tl_event(self):
+        """Test POST for project creation timeline event"""
+        data = self.get_project_create_data(
+            title=PROJECT_TITLE,
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 2)
+        project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
+
+        tl_event = (
+            self.timeline.get_project_events(project).order_by('-pk').first()
+        )
+        self.assertEqual(tl_event.event_name, 'project_create')
+        expected = {
+            'title': project.title,
+            'owner': self.user.username,
+            'description': project.description,
+            'readme': project.readme,
+            'title_slug': project.title_slug,
+        }
+        expected.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=project
+            )
+        )
+        # HACK: Pop unexpected settings from get_all_by_scope() (see #2009)
+        expected.pop('settings.example_project_app.category_bool_setting', None)
+        expected.pop('settings.projectroles.category_public_stats', None)
+        self.assertEqual(tl_event.extra_data, expected)
 
     def test_post_project_different_owner(self):
         """Test POST for project with different owner"""
@@ -1751,24 +1794,26 @@ class TestProjectUpdateView(
         self.post_data = model_to_dict(self.project)
         self.post_data.update(
             {
-                'title': 'updated title',
+                'title': 'Updated Title',
                 'description': 'updated description',
                 'owner': self.user.sodar_uuid,  # NOTE: Must add owner
                 'parent': self.category.sodar_uuid,  # NOTE: Must add parent
                 'public_access': '',  # NOTE: Must set to empty instead of None
                 'readme': '',  # NOTE: must set to empty instead of None
+                'title_slug': 'Updated Title',
                 REMOTE_SITE_FIELD: False,
             }
         )
         self.post_data_cat = model_to_dict(self.category)
         self.post_data_cat.update(
             {
-                'title': 'updated title',
+                'title': 'Updated Title',
                 'description': 'updated description',
                 'owner': self.user.sodar_uuid,
                 'parent': '',
                 'public_access': '',  # This gets passed in POST for category
                 'readme': '',
+                'title_slug': 'Updated Title',
             }
         )
         # NOTE: Set manually in tests instead if we need to test category with
@@ -1792,6 +1837,8 @@ class TestProjectUpdateView(
         self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
         self.assertEqual(form.fields[REMOTE_SITE_FIELD].initial, None)
+        # Title slug should be visible for updating
+        self.assertIsInstance(form.fields['title_slug'].widget, TextInput)
 
     def test_get_remote_site_user_display_disabled(self):
         """Test GET with user_display disabled on remote site"""
@@ -1831,6 +1878,7 @@ class TestProjectUpdateView(
         )
         form = response.context['form']
         self.assertEqual(form.fields[REMOTE_SITE_FIELD].initial, True)
+        self.assertIsInstance(form.fields['title_slug'].widget, TextInput)
 
     def test_get_remote_revoked(self):
         """Test GET with remote target project and REVOKED perm"""
@@ -1897,6 +1945,7 @@ class TestProjectUpdateView(
         self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
+        self.assertIsInstance(form.fields['title_slug'].widget, TextInput)
 
     def test_get_category_no_children(self):
         """Test GET with category and no children"""
@@ -1925,6 +1974,7 @@ class TestProjectUpdateView(
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['description'].widget, HiddenInput)
         self.assertIsInstance(form.fields['readme'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['title_slug'].widget, HiddenInput)
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
         self.assertNotIsInstance(
             form.fields[
@@ -2006,13 +2056,14 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         expected = {
             'id': self.project.pk,
-            'title': 'updated title',
+            'title': 'Updated Title',
             'type': PROJECT_TYPE_PROJECT,
             'parent': category_new.pk,
             'description': 'updated description',
             'public_access': None,
             'archive': False,
-            'full_title': category_new.title + CAT_DELIMITER + 'updated title',
+            'full_title': category_new.title + CAT_DELIMITER + 'Updated Title',
+            'title_slug': 'updated-title',
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
@@ -2053,6 +2104,7 @@ class TestProjectUpdateView(
         self.assertIn('title', tl_event.extra_data)
         self.assertIn('description', tl_event.extra_data)
         self.assertIn('parent', tl_event.extra_data)
+        self.assertNotIn('title_sug', tl_event.extra_data)
         self.assertNotIn('remote_sites', tl_event.description)
         self.assertNotIn('remote_sites', tl_event.extra_data)
         # No alert or mail, because the owner has not changed
@@ -2095,13 +2147,14 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         expected = {
             'id': self.project.pk,
-            'title': 'updated title',
+            'title': 'Updated Title',
             'type': PROJECT_TYPE_PROJECT,
             'parent': category_new.pk,
             'description': 'updated description',
             'public_access': None,
             'archive': False,
-            'full_title': category_new.title + CAT_DELIMITER + 'updated title',
+            'full_title': category_new.title + CAT_DELIMITER + 'Updated Title',
+            'title_slug': 'updated-title',
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
@@ -2192,13 +2245,25 @@ class TestProjectUpdateView(
 
     def test_post_project_public_stats(self):
         """Test POST for project with category_public_stats (should fail)"""
-        # Add settings values
         ps = self._get_post_app_settings(self.project, self.user)
         self.post_data.update(ps)
         self.post_data[CAT_PUBLIC_STATS_FIELD] = True
         with self.login(self.user):
             response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 200)
+
+    def test_post_project_title_slug_empty(self):
+        """Test POST with empty title_slug"""
+        self.project.title_slug = 'test-project'
+        self.project.save()
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = ''
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, '')
 
     def test_post_category(self):
         """Test POST with category"""
@@ -2216,13 +2281,14 @@ class TestProjectUpdateView(
 
         expected = {
             'id': self.category.pk,
-            'title': 'updated title',
+            'title': 'Updated Title',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
             'description': 'updated description',
             'public_access': None,
             'archive': False,
-            'full_title': 'updated title',
+            'full_title': 'Updated Title',
+            'title_slug': 'updated-title',
             'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
         }
@@ -2863,14 +2929,12 @@ class TestProjectFormTarget(
             'settings.example_project_app.'
             'project_callable_setting_options': str(self.project.sodar_uuid),
             'owner': self.user.sodar_uuid,
-            'title': 'TestProject',
+            'title': 'Test Project',
             'type': PROJECT_TYPE_PROJECT,
+            'title_slug': 'test-project',
         }
         with self.login(self.user):
             response = self.client.post(self.url, data)
-
-        # Assert redirect
-        with self.login(self.user):
             self.assertRedirects(
                 response,
                 reverse(
@@ -3574,6 +3638,69 @@ class TestProjectDeleteView(
                 ),
             )
         self.assertEqual(Project.objects.count(), 2)
+
+
+class TestProjectTitleSlugRedirectView(
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
+):
+    """Tests for ProjectTitleSlugRedirectView"""
+
+    def setUp(self):
+        super().setUp()
+        self.user_owner = self.make_user('user_owner')
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject',
+            PROJECT_TYPE_PROJECT,
+            self.category,
+            title_slug=PROJECT_TITLE_SLUG,
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        self.url = reverse(
+            'projectroles:title_slug_redirect',
+            kwargs={'slug': self.project.title_slug},
+        )
+
+    def test_get(self):
+        """Test ProjectTitleSlugRedirectView GET as user with access"""
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+    def test_get_not_found(self):
+        """Test GET with slug not found in projects"""
+        url = reverse(
+            'projectroles:title_slug_redirect',
+            kwargs={'slug': 'this-is-not-a-valid-slug'},
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(url)
+            # We redirect to home with a 403 instead of a 404 to avoid revealing
+            # project titles
+            self.assertRedirects(response, reverse('home'))
+
+    def test_get_empty_slug(self):
+        """Test GET with empty slug"""
+        url = reverse(
+            'projectroles:title_slug_redirect',
+            kwargs={'slug': ' '},
+        )  # Trying to pass whitespace as empty value
+        with self.login(self.user_owner):
+            response = self.client.get(url)
+            self.assertRedirects(response, reverse('home'))
 
 
 class TestProjectRoleView(

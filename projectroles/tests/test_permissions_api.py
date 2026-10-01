@@ -38,6 +38,8 @@ NEW_PROJECT_TITLE = 'New Project'
 REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_SECRET = build_secret()
+PROJECT_TITLE_SLUG = 'test-project'
+CAT_TITLE_SLUG = 'test-category'
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -859,6 +861,89 @@ class TestProjectDestroyAPIView(
         )
         self.assert_response_api(self.url, self.bad_users, 403, method='DELETE')
         self.assert_response_api(self.url, self.anonymous, 401, method='DELETE')
+
+
+class TestProjectUUIDRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
+    """Tests for ProjectUUIDRetrieveAPIView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.project.title_slug = PROJECT_TITLE_SLUG
+        self.project.save()
+        self.category.title_slug = CAT_TITLE_SLUG
+        self.category.save()
+        self.url = reverse(
+            'projectroles:api_project_uuid_retrieve',
+            kwargs={'slug': self.project.title_slug},
+        )
+        self.url_cat = reverse(
+            'projectroles:api_project_uuid_retrieve',
+            kwargs={'slug': self.category.title_slug},
+        )
+
+        self.good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.good_users_cat = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_finder_cat,
+        ]
+        self.bad_users_cat = [self.user_no_roles]
+
+    def test_get(self):
+        """Test ProjectUUIDRetrieveAPIView GET"""
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+        self.assert_response_api(self.url, self.good_users, 200, knox=True)
+        self.assert_response_api(self.url, self.bad_users, 403, knox=True)
+        for role in self.guest_roles:
+            self.project.set_public_access(role)
+            self.assert_response_api(self.url, self.user_no_roles, 200)
+            self.assert_response_api(self.url, self.anonymous, 401)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        for role in self.guest_roles:
+            self.project.set_public_access(role)
+            self.assert_response_api(self.url, self.no_role_users, 200)
+
+    def test_get_archive(self):
+        """Test GET with archived project"""
+        self.project.set_archive()
+        self.assert_response_api(self.url, self.good_users, 200)
+        self.assert_response_api(self.url, self.bad_users, 403)
+        self.assert_response_api(self.url, self.anonymous, 401)
+        for role in self.guest_roles:
+            self.project.set_public_access(role)
+            self.assert_response_api(self.url, self.user_no_roles, 200)
+            self.assert_response_api(self.url, self.anonymous, 401)
+
+    def test_get_category(self):
+        """Test GET with category"""
+        self.assert_response_api(self.url_cat, self.good_users_cat, 200)
+        self.assert_response_api(self.url_cat, self.bad_users_cat, 403)
+        self.assert_response_api(self.url_cat, self.anonymous, 401)
 
 
 class TestRoleAssignmentCreateAPIView(ProjectrolesAPIPermissionTestBase):

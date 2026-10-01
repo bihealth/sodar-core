@@ -707,6 +707,10 @@ PROJECTROLES_HIDE_PROJECT_APPS = env.list(
 # Set limit for delegate roles per project (if 0, no limit is applied)
 PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)
 
+# Maximum length for project title slugs, used as human-friendly alias
+# NOTE: Supports values between 15 and 4096
+PROJECTROLES_TITLE_SLUG_MAX_LEN = env.int('PROJECTROLES_TITLE_SLUG_MAX_LEN', 80)
+
 # Warn about unsupported browsers (IE)
 PROJECTROLES_BROWSER_WARNING = env.bool('PROJECTROLES_BROWSER_WARNING', True)
 

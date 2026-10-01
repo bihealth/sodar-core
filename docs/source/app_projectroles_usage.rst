@@ -234,6 +234,22 @@ enabled by administrators. The sites will appear as checkboxes as
 
 For more information, see :ref:`app_projectroles_usage_remote`.
 
+Title Slug
+----------
+
+A unique human-readable string for the project title is generated on project
+creation. This title can be used in providing users human-readable project URLs,
+which will redirect to the project detail view with the actual project UUID.
+
+It is possible to update this string afterwards via the
+:guilabel:`Title slug` field. The formatting will be normalized into a slugified
+format on posting the update form.
+
+.. warning::
+
+    Updating existing title slugs will break any previously shared
+    human-friendly URLs for the project.
+
 App Settings
 ------------
 

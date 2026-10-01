@@ -86,6 +86,10 @@ INVITE_EXISTS_MSG = (
 CAT_PUBLIC_STATS_FIELD = 'settings.projectroles.category_public_stats'
 CAT_PUBLIC_STATS_ERR_MSG = 'This field can only be set for top level categories'
 IP_ALLOW_LIST_FIELD = 'settings.projectroles.ip_allow_list'
+TITLE_SLUG_HELP_TEXT = (
+    '{project_type} title slug used as a human-friendly alias. WARNING: '
+    'updating the value may break any previously shared URLs.'
+)
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -535,6 +539,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             'description',
             'readme',
             'public_access',
+            'title_slug',
         ]
 
     @classmethod
@@ -718,6 +723,10 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             self.fields['owner'].widget = forms.HiddenInput()
             # Set initial public access value
             self.initial['public_access'] = self.instance.public_access
+            # Set title slug help text
+            self.fields['title_slug'].help_text = TITLE_SLUG_HELP_TEXT.format(
+                project_type=get_display_name(self.instance.type, title=True)
+            )
 
             # Set valid choices for parent
             if not disable_categories:
@@ -754,6 +763,8 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 self.fields['owner'].widget = forms.HiddenInput()
             # Set initial public access value
             self.initial['public_access'] = None
+            # Hide title slug field
+            self.fields['title_slug'].widget = forms.HiddenInput()
 
             # Creating a subproject
             if parent_cat:
@@ -779,6 +790,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             self.fields['parent'].widget = forms.HiddenInput()
             self.fields['description'].widget = forms.HiddenInput()
             self.fields['readme'].widget = forms.HiddenInput()
+            self.fields['title_slug'].widget = forms.HiddenInput()
 
     def clean(self):
         """Function for custom form validation and cleanup"""
@@ -859,6 +871,10 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 'public_access',
                 f'Public access is not allowed for {categories_title}',
             )
+
+        # Set title_slug on creation (will be normalized on save())
+        if not self.instance.pk:
+            self.cleaned_data['title_slug'] = title
 
         # Clean and validate app settings
         cleaned_data, errors = self.clean_app_settings(

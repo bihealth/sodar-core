@@ -320,6 +320,9 @@ The following projectroles settings are **optional**:
     The number of delegate roles allowed per project. The amount is limited to 1
     per project if not set, unlimited if set to 0. Will be ignored for remote
     projects synchronized from a source site (int)
+``PROJECTROLES_TITLE_SLUG_MAX_LEN``
+    Maximum length for the project title slug, used as human-friendly alias to
+    access a project. Supports values between 15 and 4096.
 ``PROJECTROLES_BROWSER_WARNING``
     If true, display a warning to users using Internet Explorer (bool)
 ``PROJECTROLES_ALLOW_LOCAL_USERS``

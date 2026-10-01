@@ -34,6 +34,8 @@ APP_NAME = 'projectroles'
 REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_SECRET = build_secret()
+CAT_TITLE_SLUG = 'test-category'
+PROJECT_TITLE_SLUG = 'test-project'
 
 
 class TestGeneralViews(ProjectPermissionTestBase):
@@ -902,6 +904,125 @@ class TestProjectDeleteView(
         for role in self.guest_roles:
             self.project.set_public_access(role)
             self.assert_response(self.url, self.no_role_users, 302)
+
+
+class TestProjectTitleSlugRedirectView(ProjectPermissionTestBase):
+    """Tests for ProjectTitleSlugRedirectView permissions"""
+
+    def setUp(self):
+        super().setUp()
+        self.project.title_slug = PROJECT_TITLE_SLUG
+        self.project.save()
+        self.category.title_slug = CAT_TITLE_SLUG
+        self.category.save()
+
+        self.url = reverse(
+            'projectroles:title_slug_redirect',
+            kwargs={'slug': self.project.title_slug},
+        )
+        self.url_cat = reverse(
+            'projectroles:title_slug_redirect',
+            kwargs={'slug': self.category.title_slug},
+        )
+
+        self.url_redirect_good = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.url_redirect_good_cat = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        self.url_redirect_bad = reverse('home')
+
+        self.good_users = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+        ]
+        self.bad_users = [
+            self.user_finder_cat,
+            self.user_no_roles,
+            self.anonymous,
+        ]
+        self.good_users_cat = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+            self.user_viewer,
+        ]
+        self.bad_users_cat = self.no_role_users
+
+    def test_get(self):
+        """Test ProjectTitleSlugRedirectView GET"""
+        self.assert_response(
+            self.url,
+            self.good_users,
+            302,
+            redirect_user=self.url_redirect_good,
+        )
+        self.assert_response(
+            self.url, self.bad_users, 302, redirect_user=self.url_redirect_bad
+        )
+
+        for role in self.guest_roles:
+            self.project.set_public_access(role)
+            self.assert_response(
+                self.url,
+                self.user_no_roles,
+                302,
+                redirect_user=self.url_redirect_good,
+            )
+            self.assert_response(
+                self.url,
+                self.anonymous,
+                302,
+                redirect_user=self.url_redirect_bad,
+            )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_anon(self):
+        """Test GET with anonymous access"""
+        for role in self.guest_roles:
+            self.project.set_public_access(role)
+            self.assert_response(
+                self.url,
+                self.no_role_users,
+                302,
+                redirect_user=self.url_redirect_good,
+                redirect_anon=self.url_redirect_good,
+            )
+
+    def test_get_category(self):
+        """Test GET with category"""
+        self.assert_response(
+            self.url_cat,
+            self.good_users_cat,
+            302,
+            redirect_user=self.url_redirect_good_cat,
+        )
+        self.assert_response(
+            self.url_cat,
+            self.bad_users_cat,
+            302,
+            redirect_user=self.url_redirect_bad,
+        )
 
 
 class TestProjectRoleView(ProjectPermissionTestBase):

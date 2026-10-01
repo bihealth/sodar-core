@@ -911,6 +911,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             'readme': project.readme,
             'owner': project.get_owner().user,
             'public_access': project.public_access,
+            'title_slug': project.title_slug,
         }
 
     @classmethod
@@ -997,6 +998,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         """
         extra_data = {}
         upd_fields = []
+        # TODO: Refactor
         if old_data['title'] != project.title:
             extra_data['title'] = project.title
             upd_fields.append('title')
@@ -1012,6 +1014,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['public_access'] != project.public_access:
             extra_data['public_access'] = project.get_public_access_name()
             upd_fields.append('public_access')
+        if old_data['title_slug'] != project.title_slug:
+            extra_data['title_slug'] = project.title_slug
+            upd_fields.append('title_slug')
 
         # Remote projects
         if (
@@ -1135,6 +1140,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 'owner': owner.username,
                 'description': project.description,
                 'readme': project.readme,
+                'title_slug': project.title_slug,
             }
             # Add settings to extra data
             for k, v in project_settings.items():
@@ -1319,6 +1325,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 data['parent'] if 'parent' in data else old_project.parent
             )
             project.public_access = data.get('public_access')
+            project.title_slug = data.get('title_slug', '')
         else:
             project = Project(
                 title=data.get('title'),
@@ -1327,6 +1334,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 readme=data.get('readme'),
                 parent=data.get('parent'),
                 public_access=data.get('public_access'),
+                title_slug=data.get('title_slug', ''),
             )
             project.save()
 
@@ -1964,6 +1972,41 @@ class ProjectDeleteView(
                 self.request, f'Failed to delete {display_name}: {ex}'
             )
             return redirect(reverse('home'))
+
+
+class ProjectTitleSlugRedirectView(
+    LoginRequiredMixin, LoggedInPermissionMixin, View
+):
+    """
+    View to redirect user from human-readable project title slug into
+    ProjectDetailView.
+    """
+
+    http_method_names = ['get']
+    permission_required = 'projectroles.view_project'
+    project = None
+
+    def get_permission_object(self):
+        return self.project
+
+    def has_permission(self):
+        slug_kw = self.kwargs.get('slug', '').strip()
+        if not slug_kw:
+            return False
+        try:
+            self.project = Project.objects.get(title_slug=slug_kw)
+        except Project.DoesNotExist:
+            # Return 403 instead of 404 to avoid revealing project titles
+            return False
+        return super().has_permission()
+
+    def get(self, request, *args, **kwargs):
+        return redirect(
+            reverse(
+                'projectroles:detail',
+                kwargs={'project': self.project.sodar_uuid},
+            )
+        )
 
 
 # RoleAssignment Views ---------------------------------------------------------

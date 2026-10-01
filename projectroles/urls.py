@@ -36,6 +36,11 @@ urls_ui = [
         view=views.ProjectDeleteView.as_view(),
         name='delete',
     ),
+    path(
+        route='go/<str:slug>',
+        view=views.ProjectTitleSlugRedirectView.as_view(),
+        name='title_slug_redirect',
+    ),
     # Search views
     path(
         route='search/results/',
@@ -280,6 +285,11 @@ urls_api = [
         route='api/destroy/<uuid:project>',
         view=views_api.ProjectDestroyAPIView.as_view(),
         name='api_project_destroy',
+    ),
+    path(
+        route='api/project-uuid/retrieve/<str:slug>',
+        view=views_api.ProjectUUIDRetrieveAPIView.as_view(),
+        name='api_project_uuid_retrieve',
     ),
     path(
         route='api/roles/create/<uuid:project>',

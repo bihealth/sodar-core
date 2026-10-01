@@ -14,6 +14,13 @@ Added
 - **General**
     - Python v3.14 support (#1948)
     - setuptools-scm dependency (#1995)
+- **Projectroles**
+    - ``Project.title_slug`` field (#1931)
+    - ``PROJECTROLES_TITLE_SLUG_MAX_LEN`` Django setting (#1931)
+    - ``ProjectSerializer`` ``title_slug`` field support (#1931)
+    - ``ProjectTitleSlugRedirectView`` view (#1931)
+    - ``ProjectUUIDRetrieveAPIView`` REST API view (#1931)
+    - ``updatetitleslugs`` management command (#1931)
 
 Changed
 -------
@@ -22,6 +29,11 @@ Changed
     - Upgrade general Python dependencies (#1993)
     - Set Python v3.14 as default version (#1948)
     - Replace versioneer with setuptools-scm (#1995, #1997)
+- **Projectroles**
+    - Upgrade projectroles REST API version to v2.1 (#1931)
+    - Upgrade projectroles sync REST API version to v2.2 (#1931)
+- **Userprofile**
+    - Update ``UserDetailView`` access for other users (#1855)
 
 Removed
 -------
