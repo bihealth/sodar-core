@@ -526,7 +526,12 @@ class AppSettingAPI:
         ret = {}
         all_defs = cls.get_all_defs()
         for plugin_name, s_defs in all_defs.items():
-            for s_def in [d for d in s_defs.values() if d.scope == scope]:
+            for s_def in [
+                d
+                for d in s_defs.values()
+                if d.scope == scope
+                and (not project or project.type in d.project_types)
+            ]:
                 ret[f'settings.{plugin_name}.{s_def.name}'] = cls.get(
                     plugin_name, s_def.name, project, user, post_safe
                 )
@@ -556,23 +561,25 @@ class AppSettingAPI:
         for plugin in app_plugins:
             p_defs = cls.get_definitions(scope, plugin=plugin)
             for s_key in p_defs:
-                ret[f'settings.{plugin.name}.{s_key}'] = cls.get_default(
-                    plugin.name,
+                if not project or project.type in p_defs[s_key].project_types:
+                    ret[f'settings.{plugin.name}.{s_key}'] = cls.get_default(
+                        plugin.name,
+                        s_key,
+                        project=project,
+                        user=user,
+                        post_safe=post_safe,
+                    )
+
+        p_defs = cls.get_definitions(scope, plugin_name=APP_NAME)
+        for s_key in p_defs:
+            if not project or project.type in p_defs[s_key].project_types:
+                ret[f'settings.{APP_NAME}.{s_key}'] = cls.get_default(
+                    APP_NAME,
                     s_key,
                     project=project,
                     user=user,
                     post_safe=post_safe,
                 )
-
-        p_defs = cls.get_definitions(scope, plugin_name=APP_NAME)
-        for s_key in p_defs:
-            ret[f'settings.{APP_NAME}.{s_key}'] = cls.get_default(
-                APP_NAME,
-                s_key,
-                project=project,
-                user=user,
-                post_safe=post_safe,
-            )
         return ret
 
     @classmethod

@@ -24,6 +24,7 @@ Release Highlights
 - Update user profile view access for other users
 - Replace versioneer with setuptools-scm
 - Upgrade general dependencies
+- Fix missing project type checks in app settings API
 - Remove kiosk mode support
 - Remove Python v3.11 support
 
@@ -63,6 +64,20 @@ General Python Dependencies
     Third party Python package dependencies have been upgraded. See the
     ``requirements`` directory for up-to-date package versions and upgrade your
     project.
+
+App Settings API Project Type Checks Fixed
+------------------------------------------
+
+The ``project_types`` parameter of app settings definitions was not correctly
+checked for in multiple ``AppSettingAPI`` methods. This has now been fixed and
+the API works as expected. However, returned results may differ from previous
+implementations if used incorrectly. Please verify your API calls work as
+expected.
+
+Affected methods:
+
+- ``get_all_by_scope()``
+- ``get_defaults()``
 
 Kiosk Mode Removed
 ------------------
