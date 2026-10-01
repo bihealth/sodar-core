@@ -101,6 +101,19 @@ class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
             self.user_guest,
         ]
         self.bad_users = [self.user_finder_cat, self.user_no_roles]
+        self.good_users_cat = [
+            self.superuser,
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
 
     def test_get(self):
         """Test ProjectRetrieveAPIView GET"""
@@ -152,23 +165,21 @@ class TestProjectRetrieveAPIView(ProjectrolesAPIPermissionTestBase):
 
     def test_get_category(self):
         """Test GET with category"""
-        self.assert_response_api(self.url, self.good_users, 200)
-        self.assert_response_api(self.url, self.bad_users, 403)
-        self.assert_response_api(self.url, self.anonymous, 401)
+        self.assert_response_api(self.url_cat, self.good_users_cat, 200)
+        self.assert_response_api(self.url_cat, self.anonymous, 401)
 
     def test_get_category_public_stats(self):
         """Test GET with category and public stats"""
         self.set_category_public_stats(self.category)
-        self.assert_response_api(self.url, self.good_users, 200)
-        self.assert_response_api(self.url, self.bad_users, 403)
-        self.assert_response_api(self.url, self.anonymous, 401)
+        self.assert_response_api(self.url_cat, self.good_users_cat, 200)
+        self.assert_response_api(self.url_cat, self.anonymous, 401)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_category_public_stats_anon(self):
         """Test GET with category and public stats and anonymous access"""
         self.set_category_public_stats(self.category)
-        self.assert_response_api(self.url, self.user_no_roles, 403)
-        self.assert_response_api(self.url, self.anonymous, 401)
+        self.assert_response_api(self.url_cat, self.user_no_roles, 200)
+        self.assert_response_api(self.url_cat, self.anonymous, 200)
 
 
 class TestProjectCreateAPIView(ProjectrolesAPIPermissionTestBase):
@@ -720,7 +731,7 @@ class TestProjectDestroyAPIView(
                 self.url_cat, self.user_no_roles, 403, method='DELETE'
             )
             self.assert_response_api(
-                self.url, self.anonymous, 401, method='DELETE'
+                self.url_cat, self.anonymous, 401, method='DELETE'
             )
 
     def test_delete_category_without_children(self):
@@ -774,7 +785,7 @@ class TestProjectDestroyAPIView(
                 self.url_cat, self.user_no_roles, 403, method='DELETE'
             )
             self.assert_response_api(
-                self.url, self.anonymous, 401, method='DELETE'
+                self.url_cat, self.anonymous, 401, method='DELETE'
             )
 
     def test_delete_remote_revoked(self):

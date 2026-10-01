@@ -35,6 +35,12 @@ Changed
 - **Userprofile**
     - Update ``UserDetailView`` access for other users (#1855)
 
+Fixed
+-----
+
+- **Projectroles**
+    - Incorrect URLs and user checks in category permission tests (#2014)
+
 Removed
 -------
 
