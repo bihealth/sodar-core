@@ -2252,6 +2252,64 @@ class TestProjectUpdateView(
             response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, 200)
 
+    def test_post_project_title_slug_unchanged(self):
+        """Test POST with unchanged title_slug"""
+        self.project.title_slug = 'test-project'
+        self.project.save()
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = 'test-project'
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, 'test-project')
+
+    def test_post_project_title_slug_dupe(self):
+        """Test POST with duplicate title_slug"""
+        self.category.title_slug = 'test-slug'
+        self.category.save()
+        self.assertEqual(self.project.title_slug, '')
+
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = 'test-slug'
+
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 200)  # Update should fail
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, '')
+
+    @override_settings(PROJECTROLES_TITLE_SLUG_MAX_LEN=10)
+    def test_post_project_title_slug_max_length(self):
+        """Test POST with title_slug longer than minimum length"""
+        self.assertEqual(self.project.title_slug, '')
+
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = 'this-will-be-too-long-now'
+
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 200)  # Update should fail
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, '')
+
+    def test_post_project_title_slug_min_length(self):
+        """Test POST with title_slug shorter than minimum length"""
+        self.assertEqual(self.project.title_slug, '')
+
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = 'test'
+
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+        self.assertEqual(response.status_code, 200)  # Update should fail
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, '')
+
     def test_post_project_title_slug_empty(self):
         """Test POST with empty title_slug"""
         self.project.title_slug = 'test-project'

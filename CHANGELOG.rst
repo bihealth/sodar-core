@@ -18,6 +18,7 @@ Added
     - ``Project.title_slug`` field (#1931)
     - ``PROJECTROLES_TITLE_SLUG_MAX_LEN`` Django setting (#1931)
     - ``ProjectSerializer`` ``title_slug`` field support (#1931)
+    - ``ProjectForm`` ``title_slug`` field support (#1931, #2015)
     - ``ProjectTitleSlugRedirectView`` view (#1931)
     - ``ProjectUUIDRetrieveAPIView`` REST API view (#1931)
     - ``updatetitleslugs`` management command (#1931)

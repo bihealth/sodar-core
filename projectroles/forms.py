@@ -29,6 +29,7 @@ from projectroles.models import (
     ROLE_RANKING,
     CAT_DELIMITER,
     CAT_DELIMITER_ERROR_MSG,
+    PROJECT_TITLE_SLUG_MIN_LEN,
 )
 
 from projectroles.plugins import PluginAppSettingDef, PluginAPI
@@ -89,6 +90,14 @@ IP_ALLOW_LIST_FIELD = 'settings.projectroles.ip_allow_list'
 TITLE_SLUG_HELP_TEXT = (
     '{project_type} title slug used as a human-friendly alias. WARNING: '
     'updating the value may break any previously shared URLs.'
+)
+TITLE_SLUG_UNIQUE_MSG = 'Title slug must be unique'
+TITLE_SLUG_MAX_LEN_MSG = (
+    'Title slug is too long, maximum length is {max_len} characters'
+)
+TITLE_SLUG_MIN_LEN_MSG = (
+    f'Title slug is too short, must be at least {PROJECT_TITLE_SLUG_MIN_LEN} '
+    f'characters'
 )
 
 
@@ -875,6 +884,24 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
         # Set title_slug on creation (will be normalized on save())
         if not self.instance.pk:
             self.cleaned_data['title_slug'] = title
+        # Enforce uniqueness on update
+        elif self.cleaned_data.get('title_slug'):
+            slug_len = len(self.cleaned_data['title_slug'])
+            max_len = settings.PROJECTROLES_TITLE_SLUG_MAX_LEN
+            if slug_len < PROJECT_TITLE_SLUG_MIN_LEN:
+                self.add_error('title_slug', TITLE_SLUG_MIN_LEN_MSG)
+            elif slug_len > max_len:
+                self.add_error(
+                    'title_slug', TITLE_SLUG_MAX_LEN_MSG.format(max_len=max_len)
+                )
+            elif (
+                Project.objects.filter(
+                    title_slug=self.cleaned_data['title_slug']
+                )
+                .exclude(sodar_uuid=self.instance.sodar_uuid)
+                .exists()
+            ):
+                self.add_error('title_slug', TITLE_SLUG_UNIQUE_MSG)
 
         # Clean and validate app settings
         cleaned_data, errors = self.clean_app_settings(
