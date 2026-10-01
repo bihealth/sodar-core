@@ -59,6 +59,9 @@ GLOBAL_PROJECT_ERR_MSG = (
 GLOBAL_USER_ERR_MSG = (
     'Overriding global user settings on target site not allowed'
 )
+PROJECT_TYPE_ERR_MSG = (
+    'Project type {project_type} not allowed for setting {setting_name}'
+)
 
 
 # Define App Settings for projectroles app
@@ -312,6 +315,25 @@ class AppSettingAPI:
                 )
 
     @classmethod
+    def _validate_project_type(
+        cls, s_def: PluginAppSettingDef, project: Optional[Project]
+    ):
+        """
+        Ensure project type is allowed for setting.
+        """
+        if (
+            project
+            and s_def.scope
+            in [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER]
+            and project.type not in s_def.project_types
+        ):
+            raise ValueError(
+                PROJECT_TYPE_ERR_MSG.format(
+                    project_type=project.type, setting_name=s_def.name
+                )
+            )
+
+    @classmethod
     def _get_app_plugin(cls, plugin_name: str) -> Plugin:
         """
         Return app plugin by name.
@@ -476,6 +498,7 @@ class AppSettingAPI:
                 name=setting_name, plugin_name=plugin_name
             )
             cls._validate_project_and_user(s_def.scope, project, user)
+
         if not user or user.is_authenticated:
             try:
                 val = AppSetting.objects.get_setting_value(
@@ -609,13 +632,10 @@ class AppSettingAPI:
         :raise: ValueError if setting name is not found in plugin specification
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
+        # Run mandatory validations
         cls._validate_project_and_user(s_def.scope, project, user)
-        # Check project type
-        if project and project.type not in s_def.project_types:
-            raise ValueError(
-                f'Project type {project.type} not allowed for setting '
-                f'{setting_name}'
-            )
+        cls._validate_project_type(s_def, project)
+
         # Prevent updating global setting on target site
         if s_def.global_edit:
             if project and project.is_remote():
