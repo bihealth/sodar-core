@@ -698,6 +698,11 @@ PROJECTROLES_API_USER_DETAIL_RESTRICT = env.bool(
 )
 # Support contact to be displayed for users, overrides ADMINS. Set as name:email
 PROJECTROLES_SUPPORT_CONTACT = env.str('PROJECTROLES_SUPPORT_CONTACT', None)
+# Enable user HTML and badge user profile linking. Only applicable if the
+# userprofile app is enabled.
+PROJECTROLES_USER_PROFILE_LINK = env.bool(
+    'PROJECTROLES_USER_PROFILE_LINK', True
+)
 
 # Hide project apps from the UI (sidebar, dropdown menus and project details)
 PROJECTROLES_HIDE_PROJECT_APPS = env.list(

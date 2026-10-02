@@ -78,7 +78,7 @@
                   {{ a.message }}
                 </a>
               </td>
-              <td>{% get_user_html a.user as user_html %}{{ user_html|safe }}</td>
+              <td>{% get_user_html a.user request as user_html %}{{ user_html|safe }}</td>
               <td>{{ a.date_created | date:'Y-m-d H:i:s' }}</td>
               <td>{{ a.date_expire | date:'Y-m-d' }}</td>
               <td>

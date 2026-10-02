@@ -1,5 +1,6 @@
 """Ajax API view tests for the userprofile app"""
 
+from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.timezone import localtime
 
@@ -18,9 +19,11 @@ class TestUserListAjaxView(UserViewTestBase):
         self.other_user.is_active = False
         self.other_user.save()
         self.url = reverse('userprofile:ajax_list')
+        request = RequestFactory(user=self.regular_user).get(reverse('home'))
+        request.user = self.regular_user
         self.expected = [
             {
-                'user_html': get_user_html(self.other_user),
+                'user_html': get_user_html(self.other_user, request),
                 'first_name': '',
                 'last_name': '',
                 'email': 'other_user@example.com',
@@ -29,7 +32,7 @@ class TestUserListAjaxView(UserViewTestBase):
                 ),
             },
             {
-                'user_html': get_user_html(self.regular_user),
+                'user_html': get_user_html(self.regular_user, request),
                 'first_name': 'Roger',
                 'last_name': 'Larsen',
                 'email': 'regular_user@example.com',
@@ -38,7 +41,7 @@ class TestUserListAjaxView(UserViewTestBase):
                 ).strftime('%Y-%m-%d'),
             },
             {
-                'user_html': get_user_html(self.user),
+                'user_html': get_user_html(self.user, request),
                 'first_name': '',
                 'last_name': '',
                 'email': 'superuser@example.com',

@@ -18,7 +18,7 @@ class UserListAjaxView(SODARBasePermissionAjaxView):
         queryset = User.objects.all()
         res = [
             {
-                'user_html': get_user_html(obj),
+                'user_html': get_user_html(obj, request),
                 'first_name': obj.first_name,
                 'last_name': obj.last_name,
                 'email': obj.email,
