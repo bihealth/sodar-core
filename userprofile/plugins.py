@@ -73,14 +73,12 @@ class UserListSiteAppPlugin(SiteAppPluginPoint):
     name = 'userprofile_list'
 
     #: Title (used in templates)
-    title = 'User Profile List'
+    title = 'User List'
 
     #: UI URLs
     urls = urls_list
 
     #: Iconify icon
-    # icon = 'mdi:account-group'
-    # icon = 'mdi:account-filter'
     icon = 'mdi:account-search'
 
     #: Description string
