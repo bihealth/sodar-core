@@ -9,12 +9,16 @@ $.get(userList.data('url')).done(data => {
   for (let user of data) {
     tr = $('<tr>')
     $('<td>').html(
-      $('<a>', {href: userList.data('link-prefix') + '/' + user.sodar_uuid}).text(user.username)
+      $('<a>', {
+        href: userList.data('link-prefix') + '/' + user.sodar_uuid
+      }).text(user.username)
     ).appendTo(tr)
     $('<td>').text(user.first_name).appendTo(tr)
     $('<td>').text(user.last_name).appendTo(tr)
     $('<td>').html(
-      $('<a>', {href: 'mailto:' + user.email}).text(user.email)
+      $('<a>', {
+        href: 'mailto:' + user.email
+      }).text(user.email)
     ).appendTo(tr)
     $('<td>').text(user.is_active).appendTo(tr)
     $('<td>').text(user.date_joined).appendTo(tr)
@@ -30,13 +34,6 @@ $.get(userList.data('url')).done(data => {
     pageLength: 10,
     lengthChange: true,
     scrollCollapse: true,
-    /* columnDefs: [{
-      orderable: false,
-      targets: unorderableColumns,
-    }, {
-      searchable: false,
-      targets: unsearchableColumns,
-    }, ], */
     info: false,
     language: {
       paginate: sodarDataTablesPaginate
