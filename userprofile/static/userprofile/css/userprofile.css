@@ -1,0 +1,9 @@
+/* CSS for userprofile elements */
+
+#sodar-up-user-list-page-length {
+  height: 30px;
+}
+
+#sodar-up-user-list-filter {
+  width: 150px;
+}
