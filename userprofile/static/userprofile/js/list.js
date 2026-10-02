@@ -44,7 +44,6 @@ $.get(userList.data('url')).done(data => {
   /**********
    Pagination
    **********/
-
   $('#sodar-up-user-list-page-length').change(function () {
     const dt = userList.find('table').DataTable()
     const value = parseInt($(this).val())
@@ -54,7 +53,6 @@ $.get(userList.data('url')).done(data => {
   /*********
    Filtering
    *********/
-
   $('#sodar-up-user-list-filter').keyup(function () {
     const dt = userList.find('table').dataTable().api()
     const v = $(this).val()

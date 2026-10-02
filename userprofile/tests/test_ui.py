@@ -1,7 +1,10 @@
 """UI tests for the userprofile app"""
 
+from urllib.parse import urlsplit
+
 from django.test import override_settings
 from django.urls import reverse
+from django.utils.timezone import localtime
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -387,3 +390,142 @@ class TestUserAppSettingsView(SiteUITestBase):
             'div[id="div_id_settings.projectroles.notify_email_project"] label',
         )
         self.assertIn(APP_SETTING_DISABLE_LABEL, label.text)
+
+
+class TestUserListView(SiteUITestBase):
+    def setUp(self):
+        super().setUp()
+        self.regular_user.first_name = 'Roger'
+        self.regular_user.last_name = 'Larsen'
+        self.regular_user.save()
+        self.other_user = self.make_user('other_user')
+        self.other_user.is_active = False
+        self.other_user.save()
+        self.url = reverse('userprofile:list')
+
+    def assert_user_row_fields(self, row, user):
+        user_profile_path = reverse(
+            'userprofile:detail_public', kwargs={'user': user.sodar_uuid}
+        )
+        user_profile_href = (
+            row.find_element(By.CSS_SELECTOR, 'td:nth-child(1)')
+            .find_element(By.TAG_NAME, 'a')
+            .get_attribute('href')
+        )
+        self.assertEqual(
+            row.find_element(By.CSS_SELECTOR, 'td:nth-child(1)').text,
+            user.username,
+        )
+        self.assertEqual(
+            urlsplit(user_profile_href).path,
+            user_profile_path,
+        )
+        self.assertEqual(
+            row.find_element(By.CSS_SELECTOR, 'td:nth-child(2)').text,
+            user.first_name,
+        )
+        self.assertEqual(
+            row.find_element(By.CSS_SELECTOR, 'td:nth-child(3)').text,
+            user.last_name,
+        )
+        self.assertEqual(
+            row.find_element(By.CSS_SELECTOR, 'td:nth-child(4)').text,
+            user.email,
+        )
+        self.assertEqual(
+            f'mailto:{user.email}',
+            row.find_element(
+                By.CSS_SELECTOR, 'td:nth-child(4) a'
+            ).get_attribute('href'),
+        )
+        self.assertEqual(
+            row.find_element(By.CSS_SELECTOR, 'td:nth-child(5)').text,
+            str(user.is_active).lower(),
+        )
+        self.assertEqual(
+            row.find_element(By.CSS_SELECTOR, 'td:nth-child(6)').text,
+            localtime(user.date_joined).strftime('%Y-%m-%d %H:%M:%S'),
+        )
+        self.assertEqual(
+            row.find_element(By.CSS_SELECTOR, 'td:nth-child(7)').text,
+            str(user.sodar_uuid),
+        )
+
+    def test_table_content(self):
+        """Test UserListView table content"""
+        self.login_and_redirect(
+            self.regular_user,
+            self.url,
+            '#sodar-up-ajax-user-list-table tr',
+            'CSS_SELECTOR',
+        )
+        rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '#sodar-up-ajax-user-list-table tr',
+        )
+        self.assertEqual(len(rows), 3)
+        self.assert_user_row_fields(
+            rows[0],
+            self.other_user,
+        )
+        self.assert_user_row_fields(
+            rows[1],
+            self.regular_user,
+        )
+        self.assert_user_row_fields(
+            rows[2],
+            self.superuser,
+        )
+
+    def test_table_pagination(self):
+        """Test UserListView table pagination"""
+        for i in range(10):
+            self.make_user(f'temp_user{i}')
+        self.login_and_redirect(
+            self.regular_user,
+            self.url,
+            '#sodar-up-ajax-user-list-table tr',
+            'CSS_SELECTOR',
+        )
+        rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '#sodar-up-ajax-user-list-table tr',
+        )
+        self.assertEqual(len(rows), 10)
+        select_input = self.selenium.find_element(
+            By.ID,
+            'sodar-up-user-list-page-length',
+        )
+        select_input.click()
+        select_input.find_element(
+            By.CSS_SELECTOR,
+            'option:nth-child(3)',
+        ).click()
+        rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '#sodar-up-ajax-user-list-table tr',
+        )
+        self.assertEqual(len(rows), 13)
+
+    def test_table_filtering(self):
+        """Test UserListView table filtering"""
+        self.login_and_redirect(
+            self.regular_user,
+            self.url,
+            '#sodar-up-ajax-user-list-table tr',
+            'CSS_SELECTOR',
+        )
+        filter_input = self.selenium.find_element(
+            By.ID,
+            'sodar-up-user-list-filter',
+        )
+        filter_input.send_keys('other_u')
+        rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '#sodar-up-ajax-user-list-table tr',
+        )
+        self.assertEqual(len(rows), 1)
+        self.assert_user_row_fields(
+            rows[0],
+            self.other_user,
+        )

@@ -713,7 +713,12 @@ class TestUserListView(UserViewTestBase):
         self.url = reverse('userprofile:list')
 
     def test_get(self):
+        """Test UserListView GET"""
         with self.login(self.user):
             response = self.client.get(self.url)
-        self.assertEqual(response.context['object_list'].count(), 3)
-        print(response.context['object_list'])
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_anonymous(self):
+        """Test UserListView GET as anonymous user"""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
