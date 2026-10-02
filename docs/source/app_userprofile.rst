@@ -7,7 +7,7 @@ Userprofile App
 The ``userprofile`` app is a site app which provides a user profile view for
 projectroles compatible Django users and management of user specific settings.
 It allows viewing and updating a user's personal account and settings, as well
-as viewing the public profile of another user.
+as viewing and searching for the public profile of another user.
 
 
 Installation
@@ -62,15 +62,23 @@ You should see the following output:
 
 .. code-block:: console
 
-    Registering Plugin for userprofile.plugins.ProjectAppPlugin
+    Registering Plugin for userprofile.plugins.SiteAppPlugin
+    Registering Plugin for userprofile.plugins.UserListSiteAppPlugin
 
 
 Usage
 =====
 
-After successful installation, the link for "User Profile" should be available
-in the user dropdown menu in the top-right corner of the website UI after you
-have logged in.
+After successful installation, two additional links should be available in the
+user dropdown menu in the top-rgiht corner of the website UI after you have
+logged in:
+
+- The "User Profile" link, which directs you to your own profile;
+- The "User List" link, which brings you to a list of all users.
+
+
+User Profile
+------------
 
 The user detail view displays user account details and additional emails, along
 with links to update user settings, add additional email addresses or update
@@ -84,7 +92,7 @@ user details. The last option is only available for local Django user accounts.
 
 
 User Settings
-=============
+"""""""""""""
 
 User settings are configured in the ``app_settings`` dictionary in your project
 app plugins.
@@ -122,7 +130,7 @@ additional settings for demonstrating settings features.
 
 
 Additional Emails
-=================
+"""""""""""""""""
 
 The user can configure additional emails for their user account in case they
 want to receive automated emails to addresses other than their primary address.
@@ -142,3 +150,16 @@ receive automated emails from the site.
 
 For each email address displayed in the list, there are controls to re-send the
 verification email (in case of an unverified email) and deleting the address.
+
+
+User List
+---------
+
+The User List view shows a table with basic information for all the users in
+the site. Each username links to the profile of the corresponding user.
+
+.. figure:: _static/app_userprofile/sodar_user_list.png
+    :align: center
+    :scale: 60%
+
+    User list view
