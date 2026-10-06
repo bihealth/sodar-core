@@ -850,7 +850,7 @@ class TestAppSettingAPI(
             'user_modifiable': True,
             'global_edit': False,
             'options': [],
-            'project_types': [PROJECT_TYPE_PROJECT],
+            'project_types': [],  # No project type for USER scope setting
             'widget_attrs': {},
         }
         s_def = app_settings.get_definition(
