@@ -197,9 +197,11 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
             )
 
         owner_or_delegate = project.is_owner_or_delegate(request.user)
-        if not (
-            request.user.is_superuser or owner_or_delegate
-        ) and app_settings.get(APP_NAME, 'ip_restrict', project):
+        if (
+            not (request.user.is_superuser or owner_or_delegate)
+            and project.is_project()
+            and app_settings.get(APP_NAME, 'ip_restrict', project)
+        ):
             for k in (
                 'HTTP_X_FORWARDED_FOR',
                 'X_FORWARDED_FOR',

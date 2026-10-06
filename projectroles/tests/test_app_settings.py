@@ -402,7 +402,10 @@ class TestAppSettingAPI(
         for k, v in all_defs.items():
             p_vals = [v for v in vals if v.startswith(S_PREFIX.format(k))]
             s_defs = [
-                d for d in v.values() if d.scope == APP_SETTING_SCOPE_PROJECT
+                d
+                for d in v.values()
+                if d.scope == APP_SETTING_SCOPE_PROJECT
+                and PROJECT_TYPE_PROJECT in d.project_types
             ]
             self.assertEqual(len(p_vals), len(s_defs))
             for s_def in s_defs:

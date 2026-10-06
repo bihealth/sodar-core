@@ -334,8 +334,10 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             self.request.user.is_superuser
             or project.is_owner_or_delegate(self.request.user)
         )
-        if not perm_override and app_settings.get(
-            APP_NAME, 'ip_restrict', project
+        if (
+            not perm_override
+            and project.is_project()
+            and app_settings.get(APP_NAME, 'ip_restrict', project)
         ):
             for k in (
                 'HTTP_X_FORWARDED_FOR',

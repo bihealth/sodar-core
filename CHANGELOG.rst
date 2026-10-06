@@ -41,6 +41,7 @@ Fixed
 
 - **Projectroles**
     - Incorrect URLs and user checks in category permission tests (#2014)
+    - ``AppSettingAPI`` missing ``project_types`` checks (#2009)
 
 Removed
 -------

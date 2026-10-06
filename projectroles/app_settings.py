@@ -59,6 +59,9 @@ GLOBAL_PROJECT_ERR_MSG = (
 GLOBAL_USER_ERR_MSG = (
     'Overriding global user settings on target site not allowed'
 )
+PROJECT_TYPE_ERR_MSG = (
+    'Project type {project_type} not allowed for setting {setting_name}'
+)
 
 
 # Define App Settings for projectroles app
@@ -312,6 +315,25 @@ class AppSettingAPI:
                 )
 
     @classmethod
+    def _validate_project_type(
+        cls, s_def: PluginAppSettingDef, project: Optional[Project]
+    ):
+        """
+        Ensure project type is allowed for setting.
+        """
+        if (
+            project
+            and s_def.scope
+            in [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER]
+            and project.type not in s_def.project_types
+        ):
+            raise ValueError(
+                PROJECT_TYPE_ERR_MSG.format(
+                    project_type=project.type, setting_name=s_def.name
+                )
+            )
+
+    @classmethod
     def _get_app_plugin(cls, plugin_name: str) -> Plugin:
         """
         Return app plugin by name.
@@ -470,12 +492,15 @@ class AppSettingAPI:
         :return: Value
         :raise: ValueError if nothing is found with setting_name
         :raise: ValueError if neither project nor user are set
+        :raise: ValueError if project type does not match definition
         """
         if validate:
             s_def = cls.get_definition(
                 name=setting_name, plugin_name=plugin_name
             )
             cls._validate_project_and_user(s_def.scope, project, user)
+            cls._validate_project_type(s_def, project)
+
         if not user or user.is_authenticated:
             try:
                 val = AppSetting.objects.get_setting_value(
@@ -526,7 +551,12 @@ class AppSettingAPI:
         ret = {}
         all_defs = cls.get_all_defs()
         for plugin_name, s_defs in all_defs.items():
-            for s_def in [d for d in s_defs.values() if d.scope == scope]:
+            for s_def in [
+                d
+                for d in s_defs.values()
+                if d.scope == scope
+                and (not project or project.type in d.project_types)
+            ]:
                 ret[f'settings.{plugin_name}.{s_def.name}'] = cls.get(
                     plugin_name, s_def.name, project, user, post_safe
                 )
@@ -556,23 +586,25 @@ class AppSettingAPI:
         for plugin in app_plugins:
             p_defs = cls.get_definitions(scope, plugin=plugin)
             for s_key in p_defs:
-                ret[f'settings.{plugin.name}.{s_key}'] = cls.get_default(
-                    plugin.name,
+                if not project or project.type in p_defs[s_key].project_types:
+                    ret[f'settings.{plugin.name}.{s_key}'] = cls.get_default(
+                        plugin.name,
+                        s_key,
+                        project=project,
+                        user=user,
+                        post_safe=post_safe,
+                    )
+
+        p_defs = cls.get_definitions(scope, plugin_name=APP_NAME)
+        for s_key in p_defs:
+            if not project or project.type in p_defs[s_key].project_types:
+                ret[f'settings.{APP_NAME}.{s_key}'] = cls.get_default(
+                    APP_NAME,
                     s_key,
                     project=project,
                     user=user,
                     post_safe=post_safe,
                 )
-
-        p_defs = cls.get_definitions(scope, plugin_name=APP_NAME)
-        for s_key in p_defs:
-            ret[f'settings.{APP_NAME}.{s_key}'] = cls.get_default(
-                APP_NAME,
-                s_key,
-                project=project,
-                user=user,
-                post_safe=post_safe,
-            )
         return ret
 
     @classmethod
@@ -602,13 +634,10 @@ class AppSettingAPI:
         :raise: ValueError if setting name is not found in plugin specification
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
+        # Run mandatory validations
         cls._validate_project_and_user(s_def.scope, project, user)
-        # Check project type
-        if project and project.type not in s_def.project_types:
-            raise ValueError(
-                f'Project type {project.type} not allowed for setting '
-                f'{setting_name}'
-            )
+        cls._validate_project_type(s_def, project)
+
         # Prevent updating global setting on target site
         if s_def.global_edit:
             if project and project.is_remote():
@@ -700,6 +729,7 @@ class AppSettingAPI:
         """
         s_def = cls.get_definition(name=setting_name, plugin_name=plugin_name)
         cls._validate_project_and_user(s_def.scope, project, user)
+        cls._validate_project_type(s_def, project)
         q_kwargs = {'name': setting_name, 'project': project, 'user': user}
         if not plugin_name == APP_NAME:
             q_kwargs['app_plugin__name'] = plugin_name

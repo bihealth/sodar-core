@@ -1633,7 +1633,7 @@ class TestProjectCreateView(
         self.assertEqual(Project.objects.count(), 1)
 
     def test_post_project_public_stats(self):
-        """Test POST for project with category_public_stats (should fail)"""
+        """Test POST for project with category_public_stats"""
         self.assertEqual(Project.objects.count(), 1)
         data = self.get_project_create_data(
             title=PROJECT_TITLE,
@@ -1644,8 +1644,16 @@ class TestProjectCreateView(
         data[CAT_PUBLIC_STATS_FIELD] = True
         with self.login(self.user):
             response = self.client.post(reverse('projectroles:create'), data)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(Project.objects.count(), 1)
+        # Submit succeeds, but object should not be created
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 2)
+        self.assertEqual(
+            AppSetting.objects.filter(
+                name='category_public_stats',
+                project=Project.objects.get(type=PROJECT_TYPE_PROJECT),
+            ).exists(),
+            False,
+        )
 
     def test_post_remote(self):
         """Test POST with added remote project"""
@@ -2244,13 +2252,20 @@ class TestProjectUpdateView(
         self.assertEqual(self.category.has_public_children, True)
 
     def test_post_project_public_stats(self):
-        """Test POST for project with category_public_stats (should fail)"""
+        """Test POST for project with category_public_stats"""
         ps = self._get_post_app_settings(self.project, self.user)
         self.post_data.update(ps)
         self.post_data[CAT_PUBLIC_STATS_FIELD] = True
         with self.login(self.user):
             response = self.client.post(self.url, self.post_data)
-        self.assertEqual(response.status_code, 200)
+        # Submit succeeds, but object should not be created
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            AppSetting.objects.filter(
+                name='category_public_stats', project=self.project
+            ).exists(),
+            False,
+        )
 
     def test_post_project_title_slug_unchanged(self):
         """Test POST with unchanged title_slug"""

@@ -331,7 +331,17 @@ class SODARAppSettingFormMixin:
             p_settings = {}
 
             for s_def in s_defs.values():
+                # Skip and/or pop invalid settings
                 s_field = '.'.join(['settings', p_name, s_def.name])
+                if s_field not in cleaned_data:
+                    continue
+                elif (
+                    s_def.scope == APP_SETTING_SCOPE_PROJECT
+                    and cleaned_data['type'] not in s_def.project_types
+                ):
+                    # Remove and skip settings which should not be included
+                    cleaned_data.pop(s_field, None)
+                    continue
                 p_settings[s_def.name] = cleaned_data.get(s_field)
 
                 if s_def.type == APP_SETTING_TYPE_JSON:
