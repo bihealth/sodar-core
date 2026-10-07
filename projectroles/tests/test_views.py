@@ -2271,11 +2271,13 @@ class TestProjectUpdateView(
         """Test POST with unchanged title_slug"""
         self.project.title_slug = 'test-project'
         self.project.save()
+
         ps = self._get_post_app_settings(self.project, self.user)
         self.post_data.update(ps)
         self.post_data['title_slug'] = 'test-project'
         with self.login(self.user):
             response = self.client.post(self.url, self.post_data)
+
         self.assertEqual(response.status_code, 302)
         self.project.refresh_from_db()
         self.assertEqual(self.project.title_slug, 'test-project')
@@ -2289,9 +2291,9 @@ class TestProjectUpdateView(
         ps = self._get_post_app_settings(self.project, self.user)
         self.post_data.update(ps)
         self.post_data['title_slug'] = 'test-slug'
-
         with self.login(self.user):
             response = self.client.post(self.url, self.post_data)
+
         self.assertEqual(response.status_code, 200)  # Update should fail
         self.project.refresh_from_db()
         self.assertEqual(self.project.title_slug, '')
@@ -2304,9 +2306,9 @@ class TestProjectUpdateView(
         ps = self._get_post_app_settings(self.project, self.user)
         self.post_data.update(ps)
         self.post_data['title_slug'] = 'this-will-be-too-long-now'
-
         with self.login(self.user):
             response = self.client.post(self.url, self.post_data)
+
         self.assertEqual(response.status_code, 200)  # Update should fail
         self.project.refresh_from_db()
         self.assertEqual(self.project.title_slug, '')
@@ -2318,9 +2320,9 @@ class TestProjectUpdateView(
         ps = self._get_post_app_settings(self.project, self.user)
         self.post_data.update(ps)
         self.post_data['title_slug'] = 'test'
-
         with self.login(self.user):
             response = self.client.post(self.url, self.post_data)
+
         self.assertEqual(response.status_code, 200)  # Update should fail
         self.project.refresh_from_db()
         self.assertEqual(self.project.title_slug, '')
@@ -2329,14 +2331,31 @@ class TestProjectUpdateView(
         """Test POST with empty title_slug"""
         self.project.title_slug = 'test-project'
         self.project.save()
+
         ps = self._get_post_app_settings(self.project, self.user)
         self.post_data.update(ps)
         self.post_data['title_slug'] = ''
         with self.login(self.user):
             response = self.client.post(self.url, self.post_data)
+
         self.assertEqual(response.status_code, 302)
         self.project.refresh_from_db()
         self.assertEqual(self.project.title_slug, '')
+
+    def test_post_project_readme_empty(self):
+        """Test POST with empty readme"""
+        self.project.readme = 'readme'
+        self.project.save()
+
+        self.post_data['readme'] = ''
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.readme, '')
 
     def test_post_category(self):
         """Test POST with category"""

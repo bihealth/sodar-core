@@ -1321,7 +1321,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 data.get('description') or old_project.description
             )
             project.type = data.get('type') or old_project.type
-            project.readme = data.get('readme') or old_project.readme
+            project.readme = data.get('readme', '')
             # NOTE: Must do this as parent can exist but be None
             project.parent = (
                 data['parent'] if 'parent' in data else old_project.parent

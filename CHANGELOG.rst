@@ -45,6 +45,7 @@ Fixed
     - Incorrect URLs and user checks in category permission tests (#2014)
     - ``AppSettingAPI`` missing ``project_types`` checks (#2009)
     - ``PluginAppSettingDef`` ``project_types`` set without project scope (#2017)
+    - ``Project.readme`` update fails with empty value (#2019)
 
 Removed
 -------

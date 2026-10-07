@@ -1482,6 +1482,17 @@ class TestProjectUpdateAPIView(
         self.project.refresh_from_db()
         self.assertEqual(self.project.title_slug, 'custom-slug')
 
+    def test_patch_project_readme_empty(self):
+        """Test PATCH with readme and empty value"""
+        self.project.readme = 'readme'
+        self.project.save()
+        patch_data = {'readme': ''}
+        response = self.request_knox(self.url, method='PATCH', data=patch_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(Project.objects.count(), 2)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.readme, '')
+
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_patch_project_remote(self):
         """Test PATCH with remote project (should fail)"""
