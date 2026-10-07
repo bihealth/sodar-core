@@ -23,8 +23,9 @@
 
 <div class="row sodar-pr-content-title">
   {% if can_create_project %}
-    {# Project menu dropdown, only visible if browser width < X and sidebar is hidden #}
-    {% include 'projectroles/_project_menu_btn.html' %}
+    {# Project navigation dropdown #}
+    {# Only visible if browser width < X and sidebar is hidden #}
+    {% include 'projectroles/_project_nav_btn.html' %}
   {% endif %}
   <h2 class="sodar-pr-content-title pt-2">Home</h2>
 </div>

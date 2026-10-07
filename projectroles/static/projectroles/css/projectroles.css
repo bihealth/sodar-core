@@ -81,6 +81,7 @@ html,
 
 .sodar-app-content-project {
   padding: 28px;
+  padding-top: 22px;
   flex: auto;
 }
 
@@ -112,7 +113,7 @@ div.sodar-alert-container {
 }
 
 div.sodar-subtitle-container {
-  padding-top: 10px;
+  padding-top: 15px;
   padding-bottom: 8px;
   border-bottom: 1px solid #dfdfdf;
 }
@@ -154,7 +155,7 @@ div.sodar-subtitle-shadow {
 
 div.sodar-pr-content-title {
   vertical-align: bottom;
-  margin-bottom: 6px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #dfdfdf;
   word-break: break-word;
 }
@@ -524,15 +525,26 @@ a.sodar-pr-btn-copy-secret i {
   word-break: break-word;
 }
 
-.sodar-pr-sidebar-alt-btn {
-  height: 100%;
-  margin-right: 12px;
+.sodar-pr-project-header-btn {
+  height: 30px;
   font-size: 100%;
+}
+
+.sodar-pr-project-header-btn a {
+  line-height: 22px;
+}
+
+.sodar-pr-project-header-btn button svg {
+  margin-top: 2px !important;
+}
+
+#sodar-pr-sidebar-alt-btn {
+  margin-right: 12px;
   z-index: 1100;
 }
 
-.sodar-pr-sidebar-alt-btn a {
-  line-height: 24px;
+#sodar-pr-project-ops-btn {
+  z-index: 1030; /* Needs to be over 1020 to get past sticky-top */
 }
 
 .sodar-list-dropdown {
@@ -930,6 +942,9 @@ pre#sodar-email-body {
   border: none !important;
   padding: 10px !important;
   border-radius: 3px !important;
+}
+.sodar-markdown-content p:last-child {
+  margin-bottom: 12px !important;
 }
 
 /* Style for json input elements */

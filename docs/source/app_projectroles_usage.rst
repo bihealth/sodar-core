@@ -98,18 +98,31 @@ For categories, the view also displays the :guilabel:`Category Statistics` card.
 This card contains statistics from site apps regarding data in projects within
 the category and its possible subcategories.
 
-For each page in a project app which extends the default projectroles template
-layout, the **project title bar** is displayed on the top of the page. This
-contains the project title and description and a link to "star" the project into
-your favourites. Below this, the **project app title bar** with possible
-app-specific controls is usually displayed.
-
 .. figure:: _static/app_projectroles/sodar_project_detail.png
     :align: center
     :scale: 60%
 
     Project detail view
 
+For each page in a project app which extends the default projectroles template
+layout, the *project header* is displayed on the top of the page. The header
+contains the project title, a link to "star" the project to add it to your
+favourites as well as a dropdown for project operations. Special statuses for
+the project may be displayed using icons next to the project title.
+
+The :guilabel:`Project Operations` dropdown allows you to view the project
+description and copy the project UUID or URL into your clipboard. If a title
+slug is set for the project, you can also copy a human-readable version of the
+URL for easier access.
+
+.. figure:: _static/app_projectroles/sodar_project_ops.png
+    :align: center
+    :scale: 70%
+
+    Project operations dropdown
+
+Below the project header, the *project app title bar* with possible
+app-specific controls is usually displayed.
 
 Category and Project Management
 ===============================

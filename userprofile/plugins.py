@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
+from projectroles.plugins import SiteAppPluginPoint
 
 from userprofile.urls import urlpatterns
 
@@ -44,17 +44,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     app_permission = 'userprofile.view_detail'
 
     #: App setting definitions
-    app_settings = [
-        PluginAppSettingDef(
-            name='enable_project_uuid_copy',
-            scope=APP_SETTING_SCOPE_USER,
-            type=APP_SETTING_TYPE_BOOLEAN,
-            label='Display project UUID copying link',
-            description='Display link in project header to copy project UUID '
-            'into the clipboard.',
-            default=False,
-        )
-    ]
+    app_settings = []
 
     def get_messages(self, user: Optional[User] = None) -> list[dict]:
         """

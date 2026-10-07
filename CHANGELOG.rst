@@ -22,6 +22,7 @@ Added
     - ``ProjectTitleSlugRedirectView`` view (#1931)
     - ``ProjectUUIDRetrieveAPIView`` REST API view (#1931)
     - ``updatetitleslugs`` management command (#1931)
+    - Project operations dropdown in project header (#2012, #2013)
 
 Changed
 -------
@@ -33,6 +34,7 @@ Changed
 - **Projectroles**
     - Upgrade projectroles REST API version to v2.1 (#1931)
     - Upgrade projectroles sync REST API version to v2.2 (#1931)
+    - Update project header layout (#2012)
 - **Userprofile**
     - Update ``UserDetailView`` access for other users (#1855)
 
@@ -55,6 +57,8 @@ Removed
 - **Projectroles**
     - Kiosk mode support (#1775)
     - ``PROJECTROLES_KIOSK_MODE`` env var (#1775)
+- **Userprofile**
+    - ``enable_project_uuid_copy`` app setting (#2013)
 
 
 v1.4.5 (2026-09-16)

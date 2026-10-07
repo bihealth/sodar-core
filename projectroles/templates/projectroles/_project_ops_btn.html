@@ -1,0 +1,58 @@
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+{% load rules %}
+
+{% get_display_name project.type title=True as p_title %}
+{% get_full_url request '' as base_url %}
+
+<div class="btn-group sodar-pr-project-header-btn ml-1"
+     role="group"
+     id="sodar-pr-project-ops-btn"
+     title="{{ p_title }} Operations">
+  <button class="btn btn-secondary dropdown-toggle btn-sm"
+          type="button"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false">
+    <i class="iconify mt-1"
+       data-icon="{% if project.is_project %}mdi:cube{% else %}mdi:rhombus-split{% endif %}"
+       data-height="16"></i>
+  </button>
+  <div class="dropdown-menu dropdown-menu-right">
+    <a class="dropdown-item {% if not project.description %}disabled{% endif %}"
+       role="submit"
+       id="sodar-pr-project-op-link-desc"
+       title=""
+       data-desc-title="{{ p_title }} Description"
+       data-desc-content="{{ project.description }}">
+      <i class="iconify" data-icon="mdi:information-circle"></i>
+      View Description
+    </a>
+    <a class="dropdown-item sodar-copy-link"
+       role="submit"
+       id="sodar-pr-project-op-link-uuid"
+       title=""
+       data-clipboard-text="{{ project.sodar_uuid }}">
+      <i class="iconify" data-icon="mdi:identifier"></i>
+      Copy {{ p_title }} UUID
+    </a>
+    <a class="dropdown-item sodar-copy-link"
+       role="submit"
+       id="sodar-pr-project-op-link-url"
+       title=""
+       data-clipboard-text="{{ base_url }}{% url 'projectroles:detail' project=project.sodar_uuid %}">
+      <i class="iconify" data-icon="mdi:link-variant"></i>
+      Copy {{ p_title }} URL
+    </a>
+    <a class="dropdown-item sodar-copy-link {% if not project.title_slug %}disabled{% endif %}"
+       role="submit"
+       id="sodar-pr-project-op-link-slug"
+       title=""
+       {% if project.title_slug %}
+         data-clipboard-text="{{ base_url }}{% url 'projectroles:title_slug_redirect' slug=project.title_slug %}"
+       {% endif %} >
+      <i class="iconify" data-icon="mdi:file-link-outline"></i>
+      Copy Human-Readable URL
+    </a>
+  </div>
+</div>

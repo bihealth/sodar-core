@@ -4,62 +4,23 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
-{% get_app_setting 'userprofile' 'enable_project_uuid_copy' user=request.user as enable_uuid_copy %}
 {% get_app_setting 'projectroles' 'site_read_only' as site_read_only %}
 
 <div class="row sodar-pr-content-title">
-  {# Project menu dropdown, only visible if browser width < X and sidebar is hidden #}
-  {% include 'projectroles/_project_menu_btn.html' %}
+  {# Project navigation dropdown #}
+  {# Only visible if browser width < X and sidebar is hidden #}
+  {% include 'projectroles/_project_nav_btn.html' %}
 
-  <h2 class="sodar-pr-content-title mr-1">{{ project.title }}</h2>
-
-  <span class="sodar-pr-content-title-controls mr-2">
-    {# Project starring/unstarring #}
-    {% if request.user.is_authenticated and not site_read_only %}
-      <a role="link"
-         class="btn btn-link ml-1 mr-0 sodar-pr-btn-title sodar-pr-btn-star"
-         id="sodar-pr-link-project-star"
-         star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
-         title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
-         data-toggle="tooltip" data-placement="top">
-        {% if project_starred %}
-          <i class="iconify text-warning" data-icon="mdi:star" data-height="30"></i>
-        {% else %}
-          <i class="iconify text-muted" data-icon="mdi:star-outline" data-height="30"></i>
-        {% endif %}
-      </a>
-    {% endif %}
-
-    {# Project copy uuid #}
-    {% if enable_uuid_copy %}
-      <a role="submit"
-         class="btn btn-link ml-2 mr-0 sodar-pr-btn-title sodar-copy-btn"
-         id="sodar-pr-btn-copy-uuid"
-         data-clipboard-text="{{ project.sodar_uuid }}"
-         title="Copy UUID to clipboard" data-toggle="tooltip" data-placement="top">
-        <i class="iconify text-muted"
-           data-icon="mdi:clipboard-text-multiple-outline" data-height="30">
-        </i>
-      </a>
-    {% endif %}
-  </span>
-
-  {# Secondary title #}
-  {% if project.description %}
-    <div class="sodar-pr-content-title-secondary text-muted">
-      {{ project.description }}
-    </div>
-  {% endif %}
+  <h2 class="sodar-pr-content-title mr-2">{{ project.title }}</h2>
 
   {# Header icons #}
-  <div class="ml-auto">
+  <div class="mr-2">
     {# Remote status #}
     {% if project.is_remote and request.user.is_superuser %}
       <span class="sodar-pr-header-icon"
             title="{% if project.is_revoked %}REVOKED remote{% else %}Remote{% endif %}
                    {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
-            id="sodar-pr-header-icon-remote"
-            data-toggle="tooltip" data-placement="left">
+            id="sodar-pr-header-icon-remote">
         <i class="iconify {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
            data-icon="mdi:cloud" data-height="30">
         </i>
@@ -67,21 +28,45 @@
     {% endif %}
     {# Public access status #}
     {% if project.is_project and project.public_access %}
-      <span class="ml-2 sodar-pr-header-icon" title="Public read-only access"
-            id="sodar-pr-header-icon-public"
-            data-toggle="tooltip" data-placement="left">
+      <span class="sodar-pr-header-icon" title="Public read-only access"
+            id="sodar-pr-header-icon-public">
         <i class="iconify text-info" data-icon="mdi:earth" data-height="30"></i>
       </span>
     {% endif %}
     {# Archive status #}
     {% if project.is_project and project.archive %}
-      <span class="ml-2 sodar-pr-header-icon" title="Archived"
-            id="sodar-pr-header-icon-archive"
-            data-toggle="tooltip" data-placement="left">
-        <i class="iconify text-info" data-icon="mdi:archive" data-height="30"></i>
+      <span class="sodar-pr-header-icon" title="Archived"
+            id="sodar-pr-header-icon-archive">
+        <i class="iconify text-info"
+           data-icon="mdi:archive"
+           data-height="30"></i>
       </span>
     {% endif %}
   </div>
+
+  <span class="sodar-pr-content-title-controls ml-auto mr-2">
+    {# Project starring/unstarring #}
+    {% if request.user.is_authenticated and not site_read_only %}
+      <a role="link"
+         class="btn btn-link sodar-pr-btn-title sodar-pr-btn-star"
+         id="sodar-pr-link-project-star"
+         data-star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
+         title="{% if project_starred %}Unstar{% else %}Star{% endif %}">
+        {% if project_starred %}
+          <i class="iconify text-warning"
+             data-icon="mdi:star"
+             data-height="30"></i>
+        {% else %}
+          <i class="iconify text-muted"
+             data-icon="mdi:star-outline"
+             data-height="30"></i>
+        {% endif %}
+      </a>
+    {% endif %}
+  </span>
+
+  {# Project operations dropdown #}
+  {% include 'projectroles/_project_ops_btn.html' %}
 </div>
 
 {% get_display_name project.type as project_display %}

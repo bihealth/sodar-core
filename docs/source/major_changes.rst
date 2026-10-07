@@ -16,12 +16,14 @@ v1.5.0 (WIP)
 Release Highlights
 ==================
 
+- Add project operations dropdown in project header
 - Add project title slug field
 - Add title slug redirect UI view
 - Add project UUID retrieval REST API view for title slugs
 - Add updatetitleslugs management command
 - Add Python v3.14 support
 - Update user profile view access for other users
+- Update project header layout
 - Replace versioneer with setuptools-scm
 - Upgrade general dependencies
 - Fix missing project type checks in app settings API

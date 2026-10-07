@@ -1741,8 +1741,8 @@ class TestProjectDetailView(
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-details-card-stats')
 
-    def test_copy_uuid_visibility_default(self):
-        """Test default UUID copy button visibility (should not be visible)"""
+    def test_ops_dropdown_visibility(self):
+        """Test project ops dropdown visibility"""
         users = [
             self.superuser,
             self.user_owner_cat,
@@ -1750,29 +1750,54 @@ class TestProjectDetailView(
             self.user_contributor_cat,
             self.user_guest_cat,
             self.user_viewer_cat,
-            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
             self.user_viewer,
         ]
-        for user in users:
-            self.login_and_redirect(user, self.url)
-            with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element(By.ID, 'sodar-pr-btn-copy-uuid')
-
-    def test_copy_uuid_visibility_enabled(self):
-        """Test UUID copy button visibility with setting enabled"""
-        app_settings.set(
-            plugin_name='userprofile',
-            setting_name='enable_project_uuid_copy',
-            value=True,
-            user=self.user_owner,
-        )
         self.assert_element_exists(
-            [self.user_owner], self.url, 'sodar-pr-btn-copy-uuid', True
+            users, self.url, 'sodar-pr-project-ops-btn', True
         )
+
+    def test_ops_dropdown_content(self):
+        """Test project ops dropdown content"""
+        self.assertEqual(self.project.description, '')
+        self.assertEqual(self.project.title_slug, '')
+        self.login_and_redirect(self.user_owner, self.url)
+        dd = self.selenium.find_element(By.ID, 'sodar-pr-project-ops-btn')
+        desc_link = dd.find_element(By.ID, 'sodar-pr-project-op-link-desc')
+        # Empty description = link should be disabled
+        self.assertIn('disabled', desc_link.get_attribute('class'))
+        self.assertIsNotNone(
+            dd.find_element(By.ID, 'sodar-pr-project-op-link-uuid')
+        )
+        self.assertIsNotNone(
+            dd.find_element(By.ID, 'sodar-pr-project-op-link-url')
+        )
+        slug_link = dd.find_element(By.ID, 'sodar-pr-project-op-link-slug')
+        # No title slug = link should be disabled
+        self.assertIn('disabled', slug_link.get_attribute('class'))
+
+    def test_ops_dropdown_content_desc(self):
+        """Test project ops dropdown content with description set"""
+        self.project.description = 'description'
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url)
+        dd = self.selenium.find_element(By.ID, 'sodar-pr-project-ops-btn')
+        desc_link = dd.find_element(By.ID, 'sodar-pr-project-op-link-desc')
+        # Link should be enabled
+        self.assertNotIn('disabled', desc_link.get_attribute('class'))
+
+    def test_ops_dropdown_content_slug(self):
+        """Test project ops dropdown content with title slug set"""
+        self.project.title_slug = 'test-project'
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url)
+        dd = self.selenium.find_element(By.ID, 'sodar-pr-project-ops-btn')
+        slug_link = dd.find_element(By.ID, 'sodar-pr-project-op-link-slug')
+        # Link should be enabled
+        self.assertNotIn('disabled', slug_link.get_attribute('class'))
 
     def test_plugin_links(self):
         """Test visibility of app plugin links"""

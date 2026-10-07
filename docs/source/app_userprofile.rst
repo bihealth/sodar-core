@@ -94,9 +94,6 @@ using sites:
 
 Receive email for admin alerts
     Receive email for :ref:`admin alerts <app_adminalerts>`.
-Display project UUID copying link
-    If set true, display a link in the project title bar for copying the project
-    UUID into the clipboard.
 Receive alerts for project updates
     Receive app alerts in the SODAR UI for project or category creation,
     updating, moving and archiving.
