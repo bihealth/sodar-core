@@ -137,3 +137,30 @@ class TestUserProfilePermissions(
         self.assert_response(
             url, [self.regular_user, self.regular_user2, self.anonymous], 302
         )
+
+    def test_get_list_view(self):
+        """Test UserListView GET"""
+        url = reverse('userprofile:list')
+        self.assert_response(url, [self.superuser, self.regular_user], 200)
+        self.assert_response(url, self.anonymous, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_get_list_view_anon(self):
+        """Test UserListView GET with anonymous access"""
+        url = reverse('userprofile:list')
+        self.assert_response(url, [self.superuser, self.regular_user], 200)
+        self.assert_response(url, self.anonymous, 302)
+
+    def test_get_list_view_read_only(self):
+        """Test UserListView GET with site read-only mode"""
+        self.set_site_read_only()
+        url = reverse('userprofile:list')
+        self.assert_response(url, [self.superuser, self.regular_user], 200)
+        self.assert_response(url, self.anonymous, 302)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_get_list_view_target(self):
+        """Test UserListView GET as target site"""
+        url = reverse('userprofile:list')
+        self.assert_response(url, [self.superuser, self.regular_user], 200)
+        self.assert_response(url, self.anonymous, 302)
