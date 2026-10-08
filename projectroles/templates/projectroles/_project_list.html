@@ -7,9 +7,17 @@
       {% if not parent %}
         <i class="iconify" data-icon="mdi:earth"></i>
         {% if request.user.is_superuser %}
-           All
+          {% if other_user %}
+            {{ other_user.username }}'s
+          {% else %}
+            All
+          {% endif %}
         {% elif request.user.is_authenticated %}
-          Your
+          {% if other_user %}
+            Common
+          {% else %}
+            Your
+          {% endif %}
         {% else %}
           Public
         {% endif %}
@@ -61,11 +69,17 @@
   <div class="card-body p-0">
     <table class="table table-striped sodar-card-table sodar-pr-project-list-table"
            id="sodar-pr-project-list-table"
-           data-list-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
+           {% if other_user %}
+             {% url 'projectroles:ajax_project_list_public' user=other_user.sodar_uuid as list_url %}
+           {% else %}
+             {% url 'projectroles:ajax_project_list' as list_url %}
+           {% endif %}
+           data-list-url="{{ list_url }}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
            data-custom-col-url="{% url 'projectroles:ajax_project_list_columns' %}"
            data-role-url="{% url 'projectroles:ajax_project_list_roles' %}"
            data-user-setting-set-url="{% url 'projectroles:api_user_setting_set' %}"
            data-parent="{% if parent %}{{ parent.sodar_uuid }}{% endif %}"
+           data-other-user="{% if other_user %}{{ other_user.sodar_uuid }}{% endif %}"
            data-starred-default="{{ project_list_starred_default|yesno:'1,0' }}">
       <thead id="sodar-pr-project-list-header">
         <tr class="sodar-pr-project-list-header">
