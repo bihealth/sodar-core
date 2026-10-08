@@ -1,14 +1,17 @@
 """Model tests for the timeline app"""
 
+from importlib import import_module
 from typing import Any, Optional, Union
 from uuid import UUID, uuid4
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 
 from test_plus.test import TestCase
 
 # Projectroles dependency
+from projectroles import __version__ as pr_version
 from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -26,6 +29,7 @@ from timeline.models import (
 )
 
 
+site = import_module(settings.SITE_PACKAGE)
 User = get_user_model()
 
 
@@ -56,6 +60,8 @@ class TimelineEventMixin:
         classified: bool = False,
         extra_data: Union[dict, list] = {'test': 'test'},
         plugin: Optional[str] = None,
+        site_version: str = site.__version__,
+        core_version: str = pr_version,
     ) -> TimelineEvent:
         """Create TimelineEvent object"""
         values = {
@@ -67,6 +73,8 @@ class TimelineEventMixin:
             'classified': classified,
             'extra_data': extra_data or {},
             'plugin': plugin,
+            'site_version': site_version,
+            'core_version': core_version,
         }
         return TimelineEvent.objects.create(**values)
 
@@ -151,7 +159,6 @@ class TestTimelineEvent(
             classified=False,
             extra_data=EXTRA_DATA,
         )
-
         self.obj_ref = self.make_object_ref(
             event=self.event,
             obj=self.assignment_owner,
@@ -160,11 +167,9 @@ class TestTimelineEvent(
             uuid=self.assignment_owner.sodar_uuid,
             extra_data=EXTRA_DATA,
         )
-
         self.project2 = self.make_project(
             'Other Project', PROJECT_TYPE_PROJECT, None
         )
-
         self.event2 = self.make_event(
             project=self.project2,
             app=APP_NAME_PR,
@@ -187,6 +192,8 @@ class TestTimelineEvent(
             'description': 'description',
             'classified': False,
             'extra_data': EXTRA_DATA,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
@@ -212,6 +219,8 @@ class TestTimelineEvent(
             'description': 'description',
             'classified': False,
             'extra_data': EXTRA_DATA,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
@@ -237,6 +246,8 @@ class TestTimelineEvent(
             'description': 'description',
             'classified': False,
             'extra_data': EXTRA_DATA,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
@@ -263,6 +274,8 @@ class TestTimelineEvent(
             'description': 'description',
             'classified': False,
             'extra_data': EXTRA_DATA,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'sodar_uuid': self.event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.event), expected)
@@ -475,6 +488,22 @@ class TestTimelineEvent(
             keywords={'project': uuid4()},
         )
         self.assertEqual(len(objects), 0)
+
+    def test_save_update(self):
+        """Test save() to update existing event"""
+        self.event.description = 'updated description'
+        self.event.core_version = ''
+        self.event.site_version = ''
+        self.event.save()
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.core_version, '')
+        self.assertEqual(self.event.site_version, '')
+
+        # Save one more time, ensure versions are not filled
+        self.event.save()
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.core_version, '')
+        self.assertEqual(self.event.site_version, '')
 
 
 class TestTimelineEventObjectRef(

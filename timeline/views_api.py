@@ -18,8 +18,8 @@ from timeline.serializers import TimelineEventSerializer
 
 # Local constants
 TIMELINE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core.timeline+json'
-TIMELINE_API_DEFAULT_VERSION = '2.0'
-TIMELINE_API_ALLOWED_VERSIONS = ['2.0']
+TIMELINE_API_DEFAULT_VERSION = '2.1'
+TIMELINE_API_ALLOWED_VERSIONS = ['2.0', '2.1']
 
 
 class TimelineAPIVersioningMixin:
@@ -123,31 +123,34 @@ class TimelineEventRetrieveAPIView(TimelineAPIVersioningMixin, RetrieveAPIView):
 
     **Returns:**
 
-    - ``project``: Project UUID (string or None)
     - ``app``: App name (string)
-    - ``user``: UUID of user who created the event (string or None)
-    - ``event_name``: Event name (string)
-    - ``description``: Event description (string)
-    - ``extra_data``: Event extra data (JSON or None)
     - ``classified``: Whether event is classified (boolean)
-    - ``status_changes``: List of TimelineEventStatus objects (JSON)
-        - ``event``: TimelineEvent UUID (string)
-        - ``timestamp``: Status datetime (YYYY-MM-DDThh:mm:ssZ)
-        - ``status_type``: Status type (string)
-        - ``description``: Status description (string)
-        - ``extra_data``: Status extra data (JSON or None)
-        - ``sodar_uuid``: Status UUID (string)
+    - ``core_version``: SODAR Core version on event creation (string or empty)
+    - ``description``: Event description (string)
+    - ``event_name``: Event name (string)
     - ``event_objects``: List of TimelineEventObjectRef objects (JSON)
         - ``event``: TimelineEvent UUID (string)
+        - ``extra_data``: Object reference extra data (JSON or None)
         - ``label``: Object label as given in event description (string)
         - ``name``: Name for identifying the object (string)
         - ``object_uuid``: UUID of the referred object (string)
-        - ``extra_data``: Object reference extra data (JSON or None)
         - ``sodar_uuid``: Object reference UUID (string)
+    - ``extra_data``: Event extra data (JSON or None)
+    - ``project``: Project UUID (string or None)
+    - ``site_version``: Site version on event creation (string or empty)
     - ``sodar_uuid``: TimelineEvent UUID (string)
+    - ``status_changes``: List of TimelineEventStatus objects (JSON)
+        - ``description``: Status description (string)
+        - ``event``: TimelineEvent UUID (string)
+        - ``extra_data``: Status extra data (JSON or None)
+        - ``sodar_uuid``: Status UUID (string)
+        - ``status_type``: Status type (string)
+        - ``timestamp``: Status datetime (YYYY-MM-DDThh:mm:ssZ)
+    - ``user``: UUID of user who created the event (string or None)
 
     **Version Changes:**
 
+    - ``2.1``: Add ``core_version`` and ``site_version`` fields
     - ``2.0``: Return ``user`` as UUID instead of ``SODARUserSerializer`` dict
     """
 

@@ -3,11 +3,15 @@
 import json
 import uuid
 
+from importlib import import_module
+
+from django.conf import settings
 from django.urls import reverse
 
 from test_plus.test import APITestCase
 
 # Projectroles dependency
+from projectroles import __version__ as pr_version
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.base import SODARAPIViewTestMixin, TEST_SERVER_URL
 from projectroles.tests.test_models import (
@@ -26,6 +30,9 @@ from timeline.views_api import (
     TIMELINE_API_MEDIA_TYPE,
     TIMELINE_API_DEFAULT_VERSION,
 )
+
+
+site = import_module(settings.SITE_PACKAGE)
 
 
 # SODAR constants
@@ -137,6 +144,8 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
             'description': EVENT_DESC,
             'extra_data': EXTRA_DATA,
             'classified': False,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'status_changes': [],
             'event_objects': [],
             'sodar_uuid': str(self.event.sodar_uuid),
@@ -151,6 +160,8 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
             'description': EVENT_DESC,
             'extra_data': EXTRA_DATA,
             'classified': True,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'status_changes': [],
             'event_objects': [],
             'sodar_uuid': str(self.event_classified.sodar_uuid),
@@ -176,6 +187,8 @@ class TestProjectTimelineEventListAPIView(TimelineAPIViewTestBase):
                     'description': EVENT_DESC,
                     'extra_data': EXTRA_DATA,
                     'classified': True,
+                    'site_version': site.__version__,
+                    'core_version': pr_version,
                     'status_changes': [],
                     'event_objects': [],
                     'sodar_uuid': str(self.event_classified.sodar_uuid),
@@ -435,14 +448,16 @@ class TestTimelineEventRetrieveAPIView(TimelineAPIViewTestBase):
             classified=False,
             extra_data=EXTRA_DATA,
         )
-
-    def test_get(self):
-        """Test TimelineEventRetrieveAPIView GET"""
-        url = reverse(
+        self.url = reverse(
             'timeline:api_retrieve',
             kwargs={'timelineevent': self.event.sodar_uuid},
         )
-        response = self.request_knox(url, token=self.get_token(self.superuser))
+
+    def test_get(self):
+        """Test TimelineEventRetrieveAPIView GET"""
+        response = self.request_knox(
+            self.url, token=self.get_token(self.superuser)
+        )
         self.assertEqual(response.status_code, 200)
         expected = {
             'project': str(self.project.sodar_uuid),
@@ -453,6 +468,8 @@ class TestTimelineEventRetrieveAPIView(TimelineAPIViewTestBase):
             'description': EVENT_DESC,
             'extra_data': EXTRA_DATA,
             'classified': False,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'status_changes': [],
             'event_objects': [],
             'sodar_uuid': str(self.event.sodar_uuid),
@@ -468,3 +485,13 @@ class TestTimelineEventRetrieveAPIView(TimelineAPIViewTestBase):
         )
         response = self.request_knox(url, token=self.get_token(self.superuser))
         self.assertEqual(response.status_code, 404)
+
+    def test_get_v2_0(self):
+        """Test GET with API v2.0"""
+        response = self.request_knox(
+            self.url, token=self.get_token(self.superuser), version='2.0'
+        )
+        self.assertEqual(response.status_code, 200)
+        res = json.loads(response.content)
+        self.assertNotIn('core_version', res)
+        self.assertNotIn('site_version', res)

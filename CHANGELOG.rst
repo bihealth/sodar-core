@@ -23,6 +23,8 @@ Added
     - ``ProjectUUIDRetrieveAPIView`` REST API view (#1931)
     - ``updatetitleslugs`` management command (#1931)
     - Project operations dropdown in project header (#2012, #2013)
+- **Timeline**
+    - ``TimelineEvent`` ``core_version`` and ``site_version`` fields (#1963)
 
 Changed
 -------
@@ -35,6 +37,8 @@ Changed
     - Upgrade projectroles REST API version to v2.1 (#1931)
     - Upgrade projectroles sync REST API version to v2.2 (#1931)
     - Update project header layout (#2012)
+- **Timeline**
+    - Upgrade timeline REST API version to v2.1 (#1963)
 - **Userprofile**
     - Update ``UserDetailView`` access for other users (#1855)
 

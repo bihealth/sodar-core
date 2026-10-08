@@ -20,6 +20,7 @@ Release Highlights
 - Add project title slug field
 - Add title slug redirect UI view
 - Add project UUID retrieval REST API view for title slugs
+- Add timeline event version fields
 - Add updatetitleslugs management command
 - Add Python v3.14 support
 - Update user profile view access for other users
@@ -53,6 +54,11 @@ REST API View Changes
     * Add ``Project.title_slug`` field synchronization
     * **NOTE:** If called with API version ``<2.2``, title slugs will not be
       synced to target sites.
+- Timeline API
+    * Current version: ``2.1`` (non-breaking changes)
+    * Allowed versions: ``2.0``, ``2.1``
+    * ``TimelineEventRetrieveAPIView``
+        + Add ``core_version`` and ``site_version`` fields
 
 System Prerequisites
 --------------------
