@@ -27,6 +27,7 @@ app_settings = AppSettingAPI()
 # SODAR constants
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 APP_NAME_PR = 'projectroles'
@@ -329,6 +330,51 @@ class TestUserDetailView(
             expected, self.url_public, 'sodar-user-email-dropdown', 'class'
         )
 
+    def test_project_list_absence(self):
+        """Test absence of project list in private profile"""
+        self.login_and_redirect(self.local_user, self.url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-project-list-table')
+
+    def test_project_list(self):
+        """Test project list in public profile"""
+        category = self.make_project('category', PROJECT_TYPE_CATEGORY, None)
+        project = self.make_project('project', PROJECT_TYPE_PROJECT, category)
+        self.make_assignment(category, self.local_user, self.role_owner)
+        self.login_and_redirect(self.superuser, self.url_public)
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: x.find_element(
+                By.CLASS_NAME, 'sodar-pr-project-list-item'
+            )
+        )
+        project_rows = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        self.assertEqual(len(project_rows), 2)
+        self.selenium.find_element(
+            By.CLASS_NAME, f'sodar-pr-project-list-item-{category.uuid}'
+        )
+        self.selenium.find_element(
+            By.CLASS_NAME, f'sodar-pr-project-list-item-{project.uuid}'
+        )
+
+    def test_project_list_empty(self):
+        """Test empty project list in public profile"""
+        self.login_and_redirect(self.ldap_user, self.url_public)
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: x.find_element(By.ID, 'sodar-pr-project-list-message')
+        )
+        project_list_msg = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-message'
+        )
+        self.assertTrue(project_list_msg.text != '')
+        self.assertEqual(
+            self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-project-list-item'
+            ),
+            [],
+        )
+
     def test_back_button_from_user_list_view(self):
         """Test "Back" button in public profile from user list view"""
         url = reverse('userprofile:list')
@@ -379,8 +425,7 @@ class TestUserDetailView(
 
     def test_back_button_absence_in_private_profile(self):
         """Test "Back" button absence when viewing a private profile"""
-        url = reverse('userprofile:detail')
-        self.login_and_redirect(self.local_user, url)
+        self.login_and_redirect(self.local_user, self.url)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-up-public-view-back-btn')
 

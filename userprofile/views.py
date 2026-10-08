@@ -24,6 +24,7 @@ from projectroles.views import (
     HTTPRefererMixin,
     InvalidFormMixin,
     CurrentUserFormMixin,
+    ProjectListContextMixin,
 )
 
 from userprofile.forms import UserAppSettingsForm, UserEmailForm
@@ -65,7 +66,12 @@ EMAIL_VERIFY_SEND_MSG = (
 EMAIL_VERIFY_RESEND_MSG = 'Verification message to "{email}" resent.'
 
 
-class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+class UserDetailView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectListContextMixin,
+    TemplateView,
+):
     """Display the user profile view including the user settings
 
     This view can be accessed by other users than the profile owner, in which
