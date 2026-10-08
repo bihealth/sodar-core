@@ -33,7 +33,7 @@ Changed
     - Upgrade to Django v5.2.18 (#1993)
     - Upgrade general Python dependencies (#1993)
     - Set Python v3.14 as default version (#1948)
-    - Replace versioneer with setuptools-scm (#1995, #1997)
+    - Replace versioneer with setuptools-scm (#1995, #1997, #2022)
 - **Projectroles**
     - Upgrade projectroles REST API version to v2.1 (#1931)
     - Upgrade projectroles sync REST API version to v2.2 (#1931)
