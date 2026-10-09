@@ -209,6 +209,7 @@ $(document).ready(function () {
           .text(data['messages']['no_projects'])
         )
       )
+      $('#sodar-pr-project-list-page-length').prop('disabled', true)
       return
     }
 
@@ -398,6 +399,8 @@ $(document).ready(function () {
         }
       }
     }
+
+    console.log('projectCount=' + projectCount)
 
     // Enable controls
     if (publicCount > 0 && publicCount < projectCount) {

@@ -40,6 +40,7 @@ Changed
     - Upgrade projectroles REST API version to v2.1 (#1931)
     - Upgrade projectroles sync REST API version to v2.2 (#1931)
     - Update project header layout (#2012)
+    - Disable project list page control if list is empty (#2023)
 - **Timeline**
     - Upgrade timeline REST API version to v2.1 (#1963)
 - **Userprofile**

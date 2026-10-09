@@ -2312,6 +2312,43 @@ class TestProjectDetailView(
             f'<strong>{self.project.title}</strong>',
         )
 
+    def test_category_project_list_empty(self):
+        """Test rendering of project list in empty category"""
+        self.project.delete()
+        self.login_and_redirect(self.user_owner, self.url_cat)
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.ID, 'sodar-pr-project-list-message')
+            )
+        )
+        # No rows present
+        self.assertEqual(self._get_pr_item_vis_count(), 0)
+        # Controls should be disabled
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-link-public'
+            ).is_enabled(),
+            False,
+        )
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-link-star'
+            ).is_enabled(),
+            False,
+        )
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-page-length'
+            ).is_enabled(),
+            False,
+        )
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-filter'
+            ).is_enabled(),
+            False,
+        )
+
     def test_category_project_list_no_highlight(self):
         """Test rendering of project list in category with no highlight"""
         app_settings.set(
