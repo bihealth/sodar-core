@@ -585,23 +585,25 @@ class ProjectListContextMixin:
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['project_custom_cols'] = self._get_custom_cols(
-            self.request.user
-        )
-        base_col_count = 1 if self.request.user.is_superuser else 2
+        user = self.request.user
+        context['project_custom_cols'] = self._get_custom_cols(user)
+        base_col_count = 1 if user.is_superuser else 2
         context['project_col_count'] = base_col_count + len(
             context['project_custom_cols']
         )
         context['page_options_default'] = app_settings.get(
-            APP_NAME, 'project_list_pagination', user=self.request.user
+            APP_NAME, 'project_list_pagination', user=user
         )
         if not self.kwargs.get('project'):
             starred_default = app_settings.get(
-                APP_NAME, 'project_list_home_starred', user=self.request.user
+                APP_NAME, 'project_list_home_starred', user=user
             )
         else:
             starred_default = False
         context['project_list_starred_default'] = starred_default
+        context['project_list_public_default'] = app_settings.get(
+            APP_NAME, 'project_list_public_display', user=user
+        )
         return context
 
 

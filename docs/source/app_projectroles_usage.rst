@@ -74,9 +74,20 @@ Home View
 ---------
 
 As content within a SODAR Core based site is by default sorted into projects,
-the home view displays a tree view of categories and projects to choose from.
-You can filter the list with a search term or restrict display to your starred
-projects.
+the home view displays a list of categories and projects to which you have
+access. The list may be paginated if enough projects are available. The title
+bar of the project list card displays controls for viewing the list:
+
+:guilabel:`Public`
+    Toggle displaying of public access projects to which you have no explicitly
+    set role.
+:guilabel:`Starred`
+    Toggle displaying all categories and projects, or only those you have added
+    to your favourites by using the star icon link in project views.
+:guilabel:`Page`
+    Amount of categories and projects to include per page in the list.
+:guilabel:`Filter`
+    Search for categories or projects by name by typing into this field.
 
 .. hint::
 

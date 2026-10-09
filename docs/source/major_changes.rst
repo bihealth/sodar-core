@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add project operations dropdown in project header
+- Add project list public access project toggling
 - Add project title slug field
 - Add title slug redirect UI view
 - Add project UUID retrieval REST API view for title slugs

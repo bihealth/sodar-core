@@ -192,6 +192,14 @@ APP_SETTINGS_TEST = [
         global_edit=False,
     ),
     PluginAppSettingDef(
+        name='project_list_public_display',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
+        user_modifiable=True,
+        global_edit=False,
+    ),
+    PluginAppSettingDef(
         name='user_dropdown_name_display',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_BOOLEAN,
@@ -258,6 +266,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         # User settings
         self.assertEqual(rc['page_options_default'], 10)
         self.assertEqual(rc['project_list_starred_default'], False)
+        self.assertEqual(rc['project_list_public_default'], True)
         # Sidebar defaults
         self.assertEqual(rc['sidebar_icon_size'], 36)
         self.assertEqual(rc['sidebar_notch_pos'], 12)
@@ -289,6 +298,16 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['project_list_starred_default'], True)
+
+    def test_get_public_default_update(self):
+        """Test GET with project_list_public_display=False"""
+        app_settings.set(
+            APP_NAME, 'project_list_public_display', False, user=self.user_owner
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_list_public_default'], False)
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE - 2)
     def test_get_sidebar_icon_size_min(self):

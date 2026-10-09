@@ -70,6 +70,7 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 # Local constants
 APP_NAME = 'projectroles'
 CAT_STAT_ATTRS = ['title', 'value', 'unit', 'description', 'icon', 'prefix']
+PROJECT_QUERY_MSG = 'Querying for a project list under a project is not allowed'
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -267,71 +268,156 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             return False
         return True
 
-    def get(self, request, *args, **kwargs):
-        parent_uuid = request.GET.get('parent', None)
-        parent = (
-            Project.objects.get(sodar_uuid=parent_uuid) if parent_uuid else None
-        )
-        if parent and parent.is_project():
-            return Response(
-                {
-                    'detail': 'Querying for a project list under a project is '
-                    'not allowed'
-                },
-                status=400,
-            )
-        public_stat_cats = [
+    @classmethod
+    def _get_public_stat_cats(cls) -> list[Project]:
+        """
+        Return categories with public statistics enabled.
+
+        :return: List of Project objects
+        """
+        return [
             s.project
             for s in AppSetting.objects.filter(
                 app_plugin=None, name='category_public_stats', value='1'
             )
         ]
 
-        projects = self._get_projects(request.user, public_stat_cats, parent)
+    @classmethod
+    def _get_blocked_projects(cls) -> list[Project]:
+        """
+        Return projects with blocked status.
+
+        :return: List of Project objects
+        """
         # NOTE: Generally, manipulating AppSetting objects directly is not
         #       advised, but in this case it's pertinent for optimization :)
-        blocked_projects = [
+        return [
             s.project
             for s in AppSetting.objects.filter(
-                app_plugin=None,
-                name='project_access_block',
-                value='1',
+                app_plugin=None, name='project_access_block', value='1'
             )
         ]
-        starred_projects = []
-        finder_cats = []
-        if request.user.is_authenticated:
-            starred_projects = [
-                s.project
-                for s in AppSetting.objects.filter(
-                    app_plugin=None,
-                    name='project_star',
-                    user=request.user,
-                    value='1',
+
+    @classmethod
+    def _get_public_only_projects(cls, user: User) -> QuerySet:
+        """
+        Return projects with public access status and no local role for user.
+
+        :param user: User making the request
+        :return: QuerySet of Project objects
+        """
+        if not user.is_authenticated:
+            return Project.objects.none()
+        return Project.objects.filter(public_access__isnull=False).exclude(
+            local_roles__user=user
+        )
+
+    @classmethod
+    def _get_starred_projects(cls, user: User) -> list[Project]:
+        """
+        Return projects starred by user.
+
+        :param user: User making the request
+        :return: List of Project objects
+        """
+        if not user.is_authenticated:
+            return []
+        return [
+            s.project
+            for s in AppSetting.objects.filter(
+                app_plugin=None, name='project_star', user=user, value='1'
+            )
+        ]
+
+    @classmethod
+    def _get_finder_cat_titles(cls, user: User) -> list[str]:
+        """
+        Return category full titles in which the user has a finder role.
+
+        :param user: User making the request
+        :return: List of strings
+        """
+        if not user.is_authenticated:
+            return []
+        return [
+            a.project.full_title
+            for a in RoleAssignment.objects.filter(
+                project__type=PROJECT_TYPE_CATEGORY,
+                role__rank=ROLE_RANKING[PROJECT_ROLE_FINDER],
+                user=user,
+            )
+        ]
+
+    @classmethod
+    def _get_return_data(
+        cls, projects: list[dict], parent: Optional[Project], user: User
+    ) -> dict:
+        ret = {
+            'projects': projects,
+            'parent_depth': parent.get_depth() + 1 if parent else 0,
+            'messages': {},
+            'user': {
+                'superuser': user.is_superuser,
+                'highlight': app_settings.get(
+                    APP_NAME, 'project_list_highlight', user=user
+                ),
+            },
+        }
+
+        if not ret['projects']:
+            np_prefix = 'No {} '.format(
+                get_display_name(PROJECT_TYPE_PROJECT, plural=True)
+            )
+            if parent:
+                np_msg = 'or {} available under this {}.'.format(
+                    get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
+                    get_display_name(PROJECT_TYPE_CATEGORY),
                 )
-            ]
-            finder_cats = [
-                a.project.full_title
-                for a in RoleAssignment.objects.filter(
-                    project__type=PROJECT_TYPE_CATEGORY,
-                    role__rank=ROLE_RANKING[PROJECT_ROLE_FINDER],
-                    user=request.user,
+            elif not user.is_superuser:
+                np_msg = (
+                    'available: access must be granted by {} personnel or a '
+                    'superuser.'.format(get_display_name(PROJECT_TYPE_PROJECT))
                 )
-            ]
+            else:
+                np_msg = 'have been created.'
+            ret['messages']['no_projects'] = np_prefix + np_msg
+        return ret
+
+    def get(self, request, *args, **kwargs):
+        parent_uuid = request.GET.get('parent', None)
+        parent = (
+            Project.objects.get(sodar_uuid=parent_uuid) if parent_uuid else None
+        )
+        if parent and parent.is_project():
+            return Response({'detail': PROJECT_QUERY_MSG}, status=400)
+
+        user = request.user
+        # Categories with public statistics enabled
+        pub_stat_cats = self._get_public_stat_cats()
+        # Projects the requesting user can access
+        projects = self._get_projects(user, pub_stat_cats, parent)
+        # Blocked projects
+        blocked_projects = self._get_blocked_projects()
+        # Projects with public only access for user, no local role
+        pub_only_projects = self._get_public_only_projects(user)
+        # Projects starred by user
+        starred_projects = self._get_starred_projects(user)
+        # Titles of categories to which the user has a finder role
+        finder_cats = self._get_finder_cat_titles(user)
+
+        cat_lookup = {}
+        child_in_cat = False
         full_title_idx = (
             len(parent.full_title) + len(CAT_DELIMITER) if parent else 0
         )
-
+        p_idx = 0
+        prev_cat = None
         ret_projects = []
+
         for p in projects:
             p_depth = p.get_depth()
             p_access = self._get_access(
-                p,
-                request.user,
-                finder_cats,
-                p_depth,
-                blocked_projects,
-                public_stat_cats,
+                p, user, finder_cats, p_depth, blocked_projects, pub_stat_cats
             )
             p_finder_url = None
             if not p_access and p.parent:
@@ -339,7 +425,36 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     'projectroles:roles',
                     kwargs={'project': p.parent.sodar_uuid},
                 )
-            p_stats = p.is_category() and p in public_stat_cats
+            p_stats = p.is_category() and p in pub_stat_cats
+
+            # Set public_only for project and parents to enable filtering
+            # It's Friday; got a smarter algo for this? PRs are welcome ;)
+            if prev_cat and p.parent == prev_cat:
+                child_in_cat = True
+            if p.is_category():
+                cat_lookup[p.full_title] = p_idx  # Store category index
+                if prev_cat and not child_in_cat:
+                    pt = prev_cat.full_title
+                    if pt in cat_lookup:
+                        # Update previous cat if empty
+                        ret_projects[cat_lookup[pt]]['public_only'] = False
+                # If current cat is last in list, set visible
+                if p_idx == len(projects) - 1:
+                    pub_only = False
+                # Else set to true by default and reset cat stats
+                else:
+                    pub_only = True  # Initially true for cats except last
+                    prev_cat = p
+                    child_in_cat = False
+            else:  # Project
+                pub_only = True if p in pub_only_projects else False
+                if not pub_only:  # Update parents if we have a role
+                    ts = p.full_title.split(CAT_DELIMITER)
+                    for i in range(1, len(ts)):
+                        tj = CAT_DELIMITER.join(ts[:i])
+                        if tj in cat_lookup:
+                            ret_projects[cat_lookup[tj]]['public_only'] = False
+
             rp = {
                 'type': p.type,
                 'full_title': p.full_title[full_title_idx:],
@@ -351,40 +466,16 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 'starred': p in starred_projects,
                 'access': p_access,
                 'finder_url': p_finder_url,
+                'public_only': pub_only,
                 'uuid': str(p.sodar_uuid),
             }
             if p.is_project():
                 rp['blocked'] = p in blocked_projects
-            ret_projects.append(rp)
-        ret = {
-            'projects': ret_projects,
-            'parent_depth': parent.get_depth() + 1 if parent else 0,
-            'messages': {},
-            'user': {
-                'superuser': request.user.is_superuser,
-                'highlight': app_settings.get(
-                    APP_NAME, 'project_list_highlight', user=request.user
-                ),
-            },
-        }
 
-        if len(ret['projects']) == 0:
-            np_prefix = 'No {} '.format(
-                get_display_name(PROJECT_TYPE_PROJECT, plural=True)
-            )
-            if parent:
-                np_msg = 'or {} available under this {}.'.format(
-                    get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
-                    get_display_name(PROJECT_TYPE_CATEGORY),
-                )
-            elif not request.user.is_superuser:
-                np_msg = (
-                    'available: access must be granted by {} personnel or a '
-                    'superuser.'.format(get_display_name(PROJECT_TYPE_PROJECT))
-                )
-            else:
-                np_msg = 'have been created.'
-            ret['messages']['no_projects'] = np_prefix + np_msg
+            ret_projects.append(rp)
+            p_idx += 1
+
+        ret = self._get_return_data(ret_projects, parent, user)
         return Response(ret, status=200)
 
 

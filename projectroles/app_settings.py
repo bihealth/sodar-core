@@ -200,6 +200,18 @@ PROJECTROLES_APP_SETTINGS = [
         global_edit=False,
     ),
     PluginAppSettingDef(
+        name='project_list_public_display',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
+        label='Display public access projects in project list',
+        description='Display public access projects in the project list. '
+        'Public projects with a local role set for you will always be '
+        'displayed.',
+        user_modifiable=True,
+        global_edit=False,
+    ),
+    PluginAppSettingDef(
         name='user_dropdown_name_display',
         scope=APP_SETTING_SCOPE_USER,
         type=APP_SETTING_TYPE_BOOLEAN,

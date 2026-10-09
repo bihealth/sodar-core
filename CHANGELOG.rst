@@ -23,6 +23,8 @@ Added
     - ``ProjectUUIDRetrieveAPIView`` REST API view (#1931)
     - ``updatetitleslugs`` management command (#1931)
     - Project operations dropdown in project header (#2012, #2013)
+    - Project list public access project toggling (#2007)
+    - ``project_list_public_display`` app setting (#2007)
 - **Timeline**
     - ``TimelineEvent`` ``core_version`` and ``site_version`` fields (#1963)
 

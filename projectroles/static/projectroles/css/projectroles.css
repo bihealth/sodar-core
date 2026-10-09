@@ -328,7 +328,7 @@ table.sodar-card-table-bordered tbody tr:last-child td {
 
 
 .sodar-pr-project-list-input-group {
-  max-width: 450px !important;
+  max-width: 500px !important;
 }
 
 button#sodar-pr-project-list-link-star {

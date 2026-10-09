@@ -97,6 +97,7 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 
 # API constants for projectroles APIs
 PROJECTROLES_API_MEDIA_TYPE = (
@@ -1548,7 +1549,11 @@ class UserSettingSetAPIView(
         )
         if not s_def.user_modifiable:
             raise PermissionDenied(USER_MODIFIABLE_MSG)
+
         value = self.get_request_value(request)
+        # HACK for boolean type, to be fixed properly (see #2024)
+        if s_def.type == APP_SETTING_TYPE_BOOLEAN:
+            value = bool(int(value))
 
         try:
             app_settings.set(

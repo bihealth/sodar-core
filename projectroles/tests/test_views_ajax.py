@@ -89,6 +89,7 @@ class TestProjectListAjaxView(
                     'revoked': False,
                     'starred': False,
                     'access': True,
+                    'public_only': False,
                     'finder_url': None,
                     'uuid': str(self.category.sodar_uuid),
                 },
@@ -103,6 +104,7 @@ class TestProjectListAjaxView(
                     'blocked': False,
                     'starred': False,
                     'access': True,
+                    'public_only': False,
                     'finder_url': None,
                     'uuid': str(self.project.sodar_uuid),
                 },
@@ -133,6 +135,7 @@ class TestProjectListAjaxView(
                     'blocked': False,
                     'starred': False,
                     'access': True,
+                    'public_only': False,
                     'finder_url': None,
                     'uuid': str(self.project.sodar_uuid),
                 },
@@ -325,7 +328,7 @@ class TestProjectListAjaxView(
         self.assertEqual(response.data['projects'][1]['archive'], True)
 
     def test_get_public_access(self):
-        """Test GET with public read-only access"""
+        """Test GET with public read-only access and no local role"""
         self.project.public_access = self.role_guest
         self.project.save()
         with self.login(self.user):
@@ -335,6 +338,144 @@ class TestProjectListAjaxView(
         self.assertEqual(len(pd), 2)
         self.assertEqual(pd[1]['public_access'], True)
         self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[1]['public_only'], True)
+
+    def test_get_public_access_superuser(self):
+        """Test GET with public read-only access and superuser"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['public_only'], True)  # Category
+        self.assertEqual(pd[1]['public_access'], True)
+        self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[1]['public_only'], True)  # Project
+
+    def test_get_public_access_no_role(self):
+        """Test GET with public read-only access and user with no roles"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        with self.login(self.user_no_roles):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['public_only'], True)
+        self.assertEqual(pd[1]['public_access'], True)
+        self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[1]['public_only'], True)  # Public only for project
+
+    def test_get_public_access_role(self):
+        """Test GET with public read-only access and user with role"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        user_contributor = self.make_user('user_contributor')
+        self.make_assignment(
+            self.project, user_contributor, self.role_contributor
+        )
+        with self.login(user_contributor):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['public_only'], False)  # Access in category
+        self.assertEqual(pd[1]['public_access'], True)
+        self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[1]['public_only'], False)  # Also local access
+
+    def test_get_public_access_role_inherit(self):
+        """Test GET with public read-only access and user with inherited role"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        with self.login(self.user_contributor_cat):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['public_only'], False)
+        self.assertEqual(pd[1]['public_access'], True)
+        self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[1]['public_only'], False)
+
+    def test_get_public_only_mixed_projects(self):
+        """Test GET category public_only status and multiple projects"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        # Create user and project, grant user role
+        user_new = self.make_user('user_new')
+        project2 = self.make_project(
+            'TestProject2', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.make_assignment(project2, user_new, self.role_guest)
+
+        with self.login(user_new):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 3)
+        # Category public_only should be false
+        self.assertEqual(pd[0]['public_only'], False)
+        self.assertEqual(pd[1]['public_only'], True)
+        self.assertEqual(pd[2]['public_only'], False)
+
+    def test_get_public_only_empty_category(self):
+        """Test GET category public_only status and empty category"""
+        # Create user and project, grant user role
+        user_new = self.make_user('user_new')
+        category2 = self.make_project(
+            'TestCategory2', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category2, user_new, self.role_guest)
+
+        with self.login(user_new):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 1)
+        # Empty category should be visible with public_only=False
+        self.assertEqual(pd[0]['full_title'], category2.full_title)
+        self.assertEqual(pd[0]['public_only'], False)
+
+    def test_get_public_only_nested_categories(self):
+        """Test GET category public_only status and nested caegories"""
+        sub_cat = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.project.parent = sub_cat  # Move project into subcaterogry
+        self.project.public_access = self.role_guest
+        self.project.save()
+
+        with self.login(self.user_no_roles):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 3)
+        self.assertEqual(pd[0]['public_only'], True)
+        self.assertEqual(pd[1]['public_only'], True)
+        self.assertEqual(pd[2]['public_only'], True)
+
+    def test_get_public_only_nested_categories_role(self):
+        """Test GET public_only status with nested caegories and role"""
+        user_new = self.make_user('user_new')
+        sub_cat = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self.make_assignment(self.project, user_new, self.role_guest)
+        self.project.parent = sub_cat
+        self.project.public_access = self.role_guest
+        self.project.save()
+
+        with self.login(user_new):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 3)
+        self.assertEqual(pd[0]['public_only'], False)
+        self.assertEqual(pd[1]['public_only'], False)
+        self.assertEqual(pd[2]['public_only'], False)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_public_access_anon(self):

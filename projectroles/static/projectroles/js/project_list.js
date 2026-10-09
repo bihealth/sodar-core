@@ -109,6 +109,41 @@ function updateRoleColumn(uuids) {
   }
 }
 
+// Method for toggling public-only
+function togglePublic(initial) {
+  let link = $('#sodar-pr-project-list-link-public')
+  let dt = $('#sodar-pr-project-list-table').dataTable().api()
+  // $('#sodar-pr-project-list-filter').val('')
+  if (!initial && link.attr('data-public-enabled') === '0') {
+    link.attr('data-public-enabled', '1')
+    $('#sodar-pr-project-list-link-public').html(
+      '<i class="iconify" data-icon="mdi:earth"></i> Public')
+  } else if (!initial) {
+    link.attr('data-public-enabled', '0')
+    $('#sodar-pr-project-list-link-public').html(
+      '<i class="iconify" data-icon="mdi:earth-off"></i> Public')
+  }
+  dt.search('').draw()
+  // Set user default public setting
+  if (!initial) {
+    let url = $('#sodar-pr-project-list-table').attr(
+      'data-user-setting-set-url')
+    let val = link.attr('data-public-enabled')
+    $.ajax({
+      url: url,
+      method: 'POST',
+      dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        plugin_name: 'projectroles',
+        setting_name: 'project_list_public_display',
+        value: link.attr('data-public-enabled')
+      })
+    })
+  }
+}
+
+
 // Method for toggling starred
 function toggleStarring(initial) {
   let link = $('#sodar-pr-project-list-link-star')
@@ -146,6 +181,8 @@ $(document).ready(function () {
 
   let listUrl = table.attr('data-list-url')
   let parent = table.attr('data-parent')
+  let publicEnabled = $('#sodar-pr-project-list-link-public').attr(
+    'data-public-enabled')
   let starredDefault = table.attr('data-starred-default')
   let customColAlign = []
   $('.sodar-pr-project-list-custom-header').each(function () {
@@ -177,6 +214,7 @@ $(document).ready(function () {
 
     // Display rows
     let projectCount = data['projects'].length
+    let publicCount = 0
     let starredCount = 0
     const catDelim = ' / '
 
@@ -201,7 +239,9 @@ $(document).ready(function () {
         .attr('data-uuid', p['uuid'])
         .attr('data-full-title', p['full_title'])
         .attr('data-starred', +p['starred'])
+        .attr('data-public-only', +p['public_only'])
       )
+      if (p['public_only']) publicCount += 1
       if (p['starred']) starredCount += 1
       let row = tableBody.find('tr:last')
 
@@ -359,7 +399,10 @@ $(document).ready(function () {
       }
     }
 
-    // Enable starred button and filter
+    // Enable controls
+    if (publicCount > 0 && publicCount < projectCount) {
+      $('#sodar-pr-project-list-link-public').prop('disabled', false)
+    }
     let starringEnabled = false
     if (starredCount > 0 && starredCount < projectCount) {
       $('#sodar-pr-project-list-link-star').prop('disabled', false)
@@ -388,21 +431,30 @@ $(document).ready(function () {
       },
       dom: 'tp'
     })
+
     // Hide pagination if only one page
     if (dt.page.info().pages === 1) {
       $('.dt-paging').hide()
     }
-    // Add star filter
+
+    // Add star/public-only filter
     $.fn.dataTable.ext.search.push(
       function (settings, data, dataIndex, rowObj, counter) {
         let api = new $.fn.dataTable.Api(
           '#sodar-pr-project-list-table')
-        let filterEnabled = $('#sodar-pr-project-list-link-star')
+        let publicEnabled = $('#sodar-pr-project-list-link-public')
+          .attr('data-public-enabled')
+        let pub = true
+        if (publicEnabled === '0') {
+          pub = !$(api.row(dataIndex).node()).data('public-only')
+        }
+        let starEnabled = $('#sodar-pr-project-list-link-star')
           .attr('data-star-enabled')
-        if (filterEnabled === '1') {
-          return $(api.row(dataIndex).node()).data('starred')
-        } else return true
+        if (starEnabled === '1') {
+          return pub && $(api.row(dataIndex).node()).data('starred')
+        } else return pub
       })
+
     // Handle page length change
     $('#sodar-pr-project-list-page-length').change(function () {
       let dt = $(this).closest(
@@ -429,11 +481,12 @@ $(document).ready(function () {
       })
     })
 
+    // Toggle public filter
+    togglePublic(true)
     // Toggle star filter
     if (starredDefault === '1' && starringEnabled) {
       toggleStarring(true)
     }
-
     if (projectUuids.length > 0) {
       // Update custom columns
       updateCustomColumns(projectUuids)
@@ -460,6 +513,12 @@ $(document).ready(function () {
     let v = $(this).val()
     dt.column(0).search(v) // Limit filter to title column
     dt.draw()
+  })
+
+  // Show/hide public-only
+  $('#sodar-pr-project-list-link-public').click(function () {
+    $('#sodar-pr-project-list-link-public').value = ''
+    togglePublic(false)
   })
 
   // Filter by starred

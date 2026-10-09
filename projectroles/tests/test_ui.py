@@ -431,6 +431,7 @@ class TestHomeView(ProjectUITestBase):
             By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
+        time.sleep(0.5)  # TODO: Better delay here
         self.assertEqual(self._get_item_vis_count(), 1)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-project-list-message')
@@ -483,6 +484,101 @@ class TestHomeView(ProjectUITestBase):
             self._get_list_item(self.category).is_displayed(), True
         )
         self.assertEqual(f_input.get_attribute('value'), '')
+
+    def test_project_list_public_no_public(self):
+        """Test project list public access button with no public projects"""
+        self.assertEqual(
+            Project.objects.filter(public_access__isnull=False).count(), 0
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.assertEqual(self._get_item_vis_count(), 2)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        self.assertEqual(button.is_enabled(), False)  # Should be disabled
+
+    def test_project_list_public_access(self):
+        """Test project list public access button with public project and access"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        self.assertEqual(
+            Project.objects.filter(public_access__isnull=False).count(), 1
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.assertEqual(self._get_item_vis_count(), 2)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        self.assertEqual(button.is_enabled(), False)  # Should still be disabled
+
+    def test_project_list_public_no_access(self):
+        """Test project list public access button with public project and no explicit access"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        self.assertEqual(
+            Project.objects.filter(public_access__isnull=False).count(), 1
+        )
+        self.login_and_redirect(
+            self.user_no_roles, self.url, **self.wait_kwargs
+        )
+        self.assertEqual(self._get_item_vis_count(), 2)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        # Nothing but public-only access projects, should still be disabled
+        self.assertEqual(button.is_enabled(), False)
+
+    def test_project_list_public_mixed_access(self):
+        """Test project list public access button with public project and mixed access"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        category2 = self.make_project(
+            'TestCategory2', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category2, self.user_no_roles, self.role_guest)
+
+        self.login_and_redirect(
+            self.user_no_roles, self.url, **self.wait_kwargs
+        )
+        self.assertEqual(self._get_item_vis_count(), 3)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        # Access and public-only projects, button should be enabled
+        self.assertEqual(button.is_enabled(), True)
+
+    def test_project_list_public_toggle(self):
+        """Test project list public access toggling"""
+        self.assertTrue(
+            app_settings.get(
+                APP_NAME, 'project_list_public_display', user=self.user_no_roles
+            )
+        )
+        self.project.public_access = self.role_guest
+        self.project.save()
+        category2 = self.make_project(
+            'TestCategory2', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category2, self.user_no_roles, self.role_guest)
+
+        self.login_and_redirect(
+            self.user_no_roles, self.url, **self.wait_kwargs
+        )
+        self.assertEqual(self._get_item_vis_count(), 3)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        button.click()
+        time.sleep(0.5)  # TODO: Better way to delay?
+
+        # Only new category should be visible
+        self.assertEqual(self._get_item_vis_count(), 1)
+        # Setting should be updated
+        self.assertFalse(
+            app_settings.get(
+                APP_NAME, 'project_list_public_display', user=self.user_no_roles
+            )
+        )
 
     def test_project_list_title(self):
         """Test project list title rendering"""

@@ -108,11 +108,14 @@ Receive email for project membership updates
     invitation activity.
 Project list title highlight
     Highlight project title in paths displayed in the project list.
-Project list page size
-    Amount of projects per page in the project list.
+Display public access projects in project list
+    Display public access projects in the project list. Public projects with
+    a local role set for you will always be displayed.
 Display user name in user dropdown
     Display the user name of the currently logged in user in the title bar
     user dropdown link. Useful for users with mulitple accounts.
+Project list page size
+    Amount of projects per page in the project list.
 
 In the development setup, the SODAR Core example site apps also provide
 additional settings for demonstrating settings features.
