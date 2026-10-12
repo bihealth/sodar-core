@@ -54,6 +54,7 @@ Fixed
     - ``AppSettingAPI`` missing ``project_types`` checks (#2009)
     - ``PluginAppSettingDef`` ``project_types`` set without project scope (#2017)
     - ``Project.readme`` update fails with empty value (#2019)
+    - App setting update REST API views fail with boolean string values (#2024)
 
 Removed
 -------

@@ -1371,6 +1371,11 @@ class ProjectSettingSetAPIView(
             raise PermissionDenied(USER_MODIFIABLE_MSG)
         # Get value
         value = self.get_request_value(request)
+        if s_def.type == APP_SETTING_TYPE_BOOLEAN and isinstance(value, str):
+            try:
+                value = bool(int(value))
+            except Exception as ex:
+                raise serializers.ValidationError(ex)
 
         # Get project and user, check perms
         project = self.get_project()
@@ -1551,9 +1556,11 @@ class UserSettingSetAPIView(
             raise PermissionDenied(USER_MODIFIABLE_MSG)
 
         value = self.get_request_value(request)
-        # HACK for boolean type, to be fixed properly (see #2024)
-        if s_def.type == APP_SETTING_TYPE_BOOLEAN:
-            value = bool(int(value))
+        if s_def.type == APP_SETTING_TYPE_BOOLEAN and isinstance(value, str):
+            try:
+                value = bool(int(value))
+            except Exception as ex:
+                raise serializers.ValidationError(ex)
 
         try:
             app_settings.set(

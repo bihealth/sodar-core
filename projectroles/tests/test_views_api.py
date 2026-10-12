@@ -3621,6 +3621,35 @@ class TestProjectSettingSetAPIView(ProjectrolesAPIViewTestBase):
         obj = AppSetting.objects.get(name=setting_name, project=self.project)
         self.assertEqual(obj.get_value(), True)
 
+    def test_post_boolean_string(self):
+        """Test POST with boolean value as string"""
+        setting_name = 'project_bool_setting'
+        post_data = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': setting_name,
+            'value': '1',
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        obj = AppSetting.objects.get(name=setting_name, project=self.project)
+        self.assertEqual(obj.get_value(), True)
+
+    def test_post_boolean_string_invalid(self):
+        """Test POST with boolean value as invalid string"""
+        setting_name = 'project_bool_setting'
+        post_data = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': setting_name,
+            'value': 'abc',
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertIsNone(
+            AppSetting.objects.filter(
+                name=setting_name, project=self.project
+            ).first()
+        )
+
     def test_post_json(self):
         """Test POST with JSON value"""
         setting_name = 'project_json_setting'
@@ -3950,6 +3979,50 @@ class TestUserSettingSetAPIView(ProjectrolesAPIViewTestBase):
         post_data = {
             'plugin_name': APP_NAME_EX,
             'setting_name': 'user_str_setting',
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 0)
+
+    def test_post_boolean(self):
+        """Test POST with boolean value"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+        post_data = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'user_bool_setting',
+            'value': True,
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 1)
+        self.assertEqual(
+            AppSetting.objects.filter(name='user_bool_setting').first().value,
+            '1',
+        )
+
+    def test_post_boolean_string(self):
+        """Test POST with boolean value input as string"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+        post_data = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'user_bool_setting',
+            'value': '1',
+        }
+        response = self.request_knox(self.url, method='POST', data=post_data)
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(AppSetting.objects.count(), 1)
+        self.assertEqual(
+            AppSetting.objects.filter(name='user_bool_setting').first().value,
+            '1',
+        )
+
+    def test_post_boolean_string_invalid(self):
+        """Test POST with boolean value input as invalid string"""
+        self.assertEqual(AppSetting.objects.count(), 0)
+        post_data = {
+            'plugin_name': APP_NAME_EX,
+            'setting_name': 'user_bool_setting',
+            'value': 'abc',
         }
         response = self.request_knox(self.url, method='POST', data=post_data)
         self.assertEqual(response.status_code, 400, msg=response.content)
