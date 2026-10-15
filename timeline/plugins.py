@@ -112,6 +112,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     @classmethod
     def _get_description_html(
         cls,
+        user: User,
         event: TimelineEvent,
         plugin_lookup: dict,
         extra_class: str = 'mr-1',
@@ -119,6 +120,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         """
         Return HTML-decorated description of a timeline event.
 
+        :param user: User object for user initiating the search
         :param event: TimelineEvent object
         :param plugin_lookup: Dict of app plugins with app name as key
         :param extra_class: String for CSS classes to add to badges
@@ -126,7 +128,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         """
         ret = [get_app_badge(event, plugin_lookup, extra_class=extra_class)]
         if event.user:
-            ret.append(get_user_badge(event.user, extra_class=extra_class))
+            ret.append(
+                get_user_badge(user, event.user, extra_class=extra_class)
+            )
         if event.project:
             ret.append(
                 get_project_badge(event.project, extra_class=extra_class)
@@ -188,7 +192,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                     PluginSearchResultCell(value=get_timestamp(item)),
                     # Description
                     PluginSearchResultCell(
-                        value=self._get_description_html(item, plugin_lookup)
+                        value=self._get_description_html(
+                            user, item, plugin_lookup
+                        )
                     ),
                     # Status
                     PluginSearchResultCell(

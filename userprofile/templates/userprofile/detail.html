@@ -36,6 +36,12 @@
   <div class="sodar-pr-content-title-secondary text-muted">
     User Profile
   </div>
+  {% if request.GET.source == 'UserListView' %}
+    <a role="button" class="btn btn-secondary ml-auto pull-right" id="sodar-up-list-view-back-btn"
+       href="{% url 'userprofile:list' %}">
+      <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back
+    </a>
+  {% endif %}
 </div>
 
 <div class="container-fluid sodar-page-container">

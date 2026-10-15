@@ -315,6 +315,23 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
             expected, self.url_public, 'sodar-user-email-dropdown', 'class'
         )
 
+    def test_back_button_from_user_list_view(self):
+        """Test "Back" button when coming from the UserListView"""
+        user_list_view_url = reverse('userprofile:list')
+        self.login_and_redirect(self.regular_user, user_list_view_url)
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: x.find_element(
+                By.CSS_SELECTOR, '#sodar-up-ajax-user-list-table a:nth-child(1)'
+            )
+        )
+        self.selenium.find_element(
+            By.CSS_SELECTOR, '#sodar-up-ajax-user-list-table a:nth-child(1)'
+        ).click()
+        back_btn = self.selenium.find_element(
+            By.ID, 'sodar-up-list-view-back-btn'
+        )
+        self.assertEqual(back_btn.text, 'Back')
+
 
 class TestUserAppSettingsView(SiteUITestBase):
     """Tests for UserAppSettingsView"""
@@ -421,13 +438,7 @@ class TestUserListView(SiteUITestBase):
                 .get_attribute('data-icon')
             )
             self.assertEqual(user_icon, 'mdi:shield-account')
-        if user.is_active:
-            table_href = (
-                cells[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
-            )
-            user_profile_link = f'mailto:{user.email}'
-            self.assertEqual(table_href, user_profile_link)
-        else:
+        if not user.is_active:
             # Wait before icon is rendered
             WebDriverWait(cells[0], 15).until(
                 lambda x: x.find_element(By.TAG_NAME, 'svg')
@@ -438,6 +449,15 @@ class TestUserListView(SiteUITestBase):
                 .get_attribute('data-icon')
             )
             self.assertEqual(user_icon, 'mdi:account-off')
+        table_href = (
+            cells[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
+        )
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': user.sodar_uuid},
+            query={'source': 'UserListView'},
+        )
+        self.assertTrue(table_href.endswith(user_profile_link))
         self.assertEqual(cells[0].text, user.username)
         self.assertEqual(cells[1].text, user.first_name)
         self.assertEqual(cells[2].text, user.last_name)

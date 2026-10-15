@@ -246,9 +246,18 @@ def get_user_icon(user: User) -> str:
 
 
 @register.simple_tag
-def get_user_html(user: User) -> str:
-    """Return HTML representation of a User object"""
-    email_link = True if user.is_active and user.email else False
+def get_user_html(user: User, request: Optional[HttpRequest] = None) -> str:
+    """Return HTML representation of a User object
+
+    :param user: SODARUser object
+    :param request: Request object from the view using this tag
+    :return: String (contains HTML)
+    """
+    profile_link = (
+        request is not None
+        and request.user.is_authenticated
+        and settings.PROJECTROLES_USER_PROFILE_LINK
+    )
     title = user.get_full_name()
     if not user.is_active:
         title += ' (inactive)'
@@ -260,10 +269,14 @@ def get_user_html(user: User) -> str:
             ' text-secondary' if not user.is_active else '', title
         )
     )
-    if email_link:
-        ret += f'<a href="mailto:{user.email}">'
+    if profile_link:
+        profile_link_url = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': user.sodar_uuid},
+        )
+        ret += f'<a href="{profile_link_url}">'
     ret += user.username
-    if email_link:
+    if profile_link:
         ret += '</a>'
     if user.is_superuser:
         ret += get_user_superuser_icon(False)
@@ -274,10 +287,13 @@ def get_user_html(user: User) -> str:
 
 
 @register.simple_tag
-def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
+def get_user_badge(
+    request_user: SODARUser, user: SODARUser, extra_class: Optional[str] = None
+) -> str:
     """
     Return badge HTML for a User object.
 
+    :param request_user: SODARUser object for user making the request
     :param user: SODARUser object
     :param extra_class: Extra classes to add to element (string, optional)
     :return: String (contains HTML)
@@ -294,7 +310,10 @@ def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
         icon = 'mdi:account'
         variant = 'primary'
         user_class = 'active'
-    email = True if user.is_active and user.email else False
+    profile_link = (
+        request_user.is_authenticated
+        and settings.PROJECTROLES_USER_PROFILE_LINK
+    )
     if extra_class and not extra_class.startswith(' '):
         extra_class = ' ' + extra_class
     elif not extra_class:
@@ -306,10 +325,13 @@ def get_user_badge(user: SODARUser, extra_class: Optional[str] = None) -> str:
         f'data-uuid="{user.sodar_uuid}">'
         f'<i class="iconify" data-icon="{icon}"></i> '
     )
-    if email:
-        ret += f'<a class="text-white" href="mailto:{user.email}">'
+    if profile_link:
+        profile_link_url = reverse(
+            'userprofile:detail_public', kwargs={'user': user.sodar_uuid}
+        )
+        ret += f'<a class="text-white" href="{profile_link_url}">'
     ret += user.username
-    if email:
+    if profile_link:
         ret += '</a>'
     ret += '</span>'
     return ret

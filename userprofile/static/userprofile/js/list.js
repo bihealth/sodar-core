@@ -8,7 +8,14 @@ $.get(userList.data('url')).done(data => {
   spinner.remove()
   for (let user of data) {
     const tr = $('<tr>')
-    $('<td>').html(user.user_html).appendTo(tr)
+    const userHtml = $(user.user_html)
+    const userProfileLink = userHtml.find('a')
+    if (userProfileLink) {
+      userProfileLink.attr('href', function(_, href) {
+        return href + '?source=UserListView'
+      })
+    }
+    $('<td>').html(userHtml).appendTo(tr)
     $('<td>').text(user.first_name).appendTo(tr)
     $('<td>').text(user.last_name).appendTo(tr)
     $('<td>').html(
