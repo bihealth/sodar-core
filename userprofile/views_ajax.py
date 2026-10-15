@@ -23,9 +23,8 @@ class UserListAjaxView(SODARBasePermissionAjaxView):
                 'email': obj['email'],
                 'is_active': obj['is_active'],
                 'date_joined': localtime(obj['date_joined']).strftime(
-                    '%Y-%m-%d %H:%M:%S'
+                    '%Y-%m-%d'
                 ),
-                'sodar_uuid': str(obj['sodar_uuid']),
             }
             for obj in queryset
         ]

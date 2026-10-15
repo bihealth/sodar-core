@@ -5,7 +5,7 @@
 
 {% get_django_setting 'SITE_TITLE' as site_title %}
 
-{% block title %}Users{% endblock %}
+{% block title %}User List{% endblock %}
 
 {% block css %}
   {{ block.super }}
@@ -21,10 +21,7 @@
 {% block projectroles %}
 
 <div class="row sodar-pr-content-title pt-2">
-  <h2 class="sodar-pr-content-title">Users</h2>
-  <div class="sodar-pr-content-title-secondary text-muted">
-    of {{ site_title }}
-  </div>
+  <h2 class="sodar-pr-content-title">User List</h2>
 </div>
 
 <div class="container-fluid sodar-page-container">
@@ -35,7 +32,7 @@
     <div class="card-header">
       <h4>
         <i class="iconify" data-icon="mdi:account-search"></i>
-        User Profiles
+        Site Users
         <div class="input-group sodar-header-input-group pull-right">
           <select class="form-control" id="sodar-up-user-list-page-length">
             <option selected value="10">Page</option>
@@ -61,9 +58,7 @@
             <th>First Name</th>
             <th>Last Name</th>
             <th>Email</th>
-            <th>Active</th>
             <th>Date Joined</th>
-            <th>UUID</th>
           </tr>
         </thead>
         <tbody id="sodar-up-ajax-user-list-table">
@@ -91,7 +86,14 @@
     tourEnabled = true
     tour.addStep('user_list', {
       title: 'User List',
-      text: 'In this app you can browse the profile of all users.',
+      text: 'In this view you can browse the profile of all users on this site.',
+      advanceOn: '.docs-link click',
+      showCancelLink: true
+    })
+    tour.addStep('user_name', {
+      title: 'User Profile Link',
+      text: "Clicking on a username will bring you to that user's public profile.",
+      attachTo: '#sodar-up-ajax-user-list-table tr:nth-child(1) td:nth-child(1) left',
       advanceOn: '.docs-link click',
       showCancelLink: true
     })

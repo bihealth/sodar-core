@@ -57,7 +57,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
 
 
 class UserListSiteAppPlugin(SiteAppPluginPoint):
-    """Projectroles plugin for registering the app"""
+    """Projectroles plugin for registering the user list site app entry point"""
 
     #: Name (used as plugin ID)
     name = 'userprofile_list'

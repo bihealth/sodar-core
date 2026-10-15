@@ -404,51 +404,32 @@ class TestUserListView(SiteUITestBase):
         self.url = reverse('userprofile:list')
 
     def assert_user_row_fields(self, row, user):
+        """
+        Assert UserListView table fields.
+
+        :param row: selenium element for a table row
+        :param user: User object corresponding to that row
+        :raise: AssertionError if row fields are not as expected
+        """
+        cells = row.find_elements(By.TAG_NAME, 'td')
+        user_profile_href = (
+            cells[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
+        )
         user_profile_path = reverse(
             'userprofile:detail_public', kwargs={'user': user.sodar_uuid}
         )
-        user_profile_href = (
-            row.find_element(By.CSS_SELECTOR, 'td:nth-child(1)')
-            .find_element(By.TAG_NAME, 'a')
-            .get_attribute('href')
-        )
+        self.assertEqual(cells[0].text, user.username)
+        self.assertEqual(urlsplit(user_profile_href).path, user_profile_path)
+        self.assertEqual(cells[1].text, user.first_name)
+        self.assertEqual(cells[2].text, user.last_name)
+        self.assertEqual(cells[3].text, user.email)
         self.assertEqual(
-            row.find_element(By.CSS_SELECTOR, 'td:nth-child(1)').text,
-            user.username,
-        )
-        self.assertEqual(
-            urlsplit(user_profile_href).path,
-            user_profile_path,
-        )
-        self.assertEqual(
-            row.find_element(By.CSS_SELECTOR, 'td:nth-child(2)').text,
-            user.first_name,
-        )
-        self.assertEqual(
-            row.find_element(By.CSS_SELECTOR, 'td:nth-child(3)').text,
-            user.last_name,
-        )
-        self.assertEqual(
-            row.find_element(By.CSS_SELECTOR, 'td:nth-child(4)').text,
-            user.email,
-        )
-        self.assertEqual(
+            cells[3].find_element(By.TAG_NAME('a')).get_attribute('href'),
             f'mailto:{user.email}',
-            row.find_element(
-                By.CSS_SELECTOR, 'td:nth-child(4) a'
-            ).get_attribute('href'),
         )
         self.assertEqual(
-            row.find_element(By.CSS_SELECTOR, 'td:nth-child(5)').text,
-            str(user.is_active).lower(),
-        )
-        self.assertEqual(
-            row.find_element(By.CSS_SELECTOR, 'td:nth-child(6)').text,
-            localtime(user.date_joined).strftime('%Y-%m-%d %H:%M:%S'),
-        )
-        self.assertEqual(
-            row.find_element(By.CSS_SELECTOR, 'td:nth-child(7)').text,
-            str(user.sodar_uuid),
+            cells[4].text,
+            localtime(user.date_joined).strftime('%Y-%m-%d'),
         )
 
     def test_table_content(self):
@@ -464,18 +445,9 @@ class TestUserListView(SiteUITestBase):
             '#sodar-up-ajax-user-list-table tr',
         )
         self.assertEqual(len(rows), 3)
-        self.assert_user_row_fields(
-            rows[0],
-            self.other_user,
-        )
-        self.assert_user_row_fields(
-            rows[1],
-            self.regular_user,
-        )
-        self.assert_user_row_fields(
-            rows[2],
-            self.superuser,
-        )
+        self.assert_user_row_fields(rows[0], self.other_user)
+        self.assert_user_row_fields(rows[1], self.regular_user)
+        self.assert_user_row_fields(rows[2], self.superuser)
 
     def test_table_pagination(self):
         """Test UserListView table pagination"""
@@ -525,7 +497,4 @@ class TestUserListView(SiteUITestBase):
             '#sodar-up-ajax-user-list-table tr',
         )
         self.assertEqual(len(rows), 1)
-        self.assert_user_row_fields(
-            rows[0],
-            self.other_user,
-        )
+        self.assert_user_row_fields(rows[0], self.other_user)

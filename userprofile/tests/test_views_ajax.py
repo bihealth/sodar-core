@@ -25,9 +25,8 @@ class TestUserListAjaxView(UserViewTestBase):
                 'email': 'other_user@example.com',
                 'is_active': False,
                 'date_joined': localtime(self.other_user.date_joined).strftime(
-                    '%Y-%m-%d %H:%M:%S'
+                    '%Y-%m-%d'
                 ),
-                'sodar_uuid': str(self.other_user.sodar_uuid),
             },
             {
                 'username': 'regular_user',
@@ -37,8 +36,7 @@ class TestUserListAjaxView(UserViewTestBase):
                 'is_active': True,
                 'date_joined': localtime(
                     self.regular_user.date_joined
-                ).strftime('%Y-%m-%d %H:%M:%S'),
-                'sodar_uuid': str(self.regular_user.sodar_uuid),
+                ).strftime('%Y-%m-%d'),
             },
             {
                 'username': 'superuser',
@@ -47,9 +45,8 @@ class TestUserListAjaxView(UserViewTestBase):
                 'email': 'superuser@example.com',
                 'is_active': True,
                 'date_joined': localtime(self.user.date_joined).strftime(
-                    '%Y-%m-%d %H:%M:%S'
+                    '%Y-%m-%d'
                 ),
-                'sodar_uuid': str(self.user.sodar_uuid),
             },
         ]
 

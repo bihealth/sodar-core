@@ -7,10 +7,11 @@ const spinner = $('#sodar-up-user-list-spinner')
 $.get(userList.data('url')).done(data => {
   spinner.remove()
   for (let user of data) {
-    tr = $('<tr>')
+    const userEmailLink = userList.data('link-prefix') + '/' + user.sodar_uuid
+    const tr = $('<tr>')
     $('<td>').html(
       $('<a>', {
-        href: userList.data('link-prefix') + '/' + user.sodar_uuid
+        href: userEmailLink + '?source=UserListView'
       }).text(user.username)
     ).appendTo(tr)
     $('<td>').text(user.first_name).appendTo(tr)
@@ -20,9 +21,7 @@ $.get(userList.data('url')).done(data => {
         href: 'mailto:' + user.email
       }).text(user.email)
     ).appendTo(tr)
-    $('<td>').text(user.is_active).appendTo(tr)
     $('<td>').text(user.date_joined).appendTo(tr)
-    $('<td>').html($('<code>').text(user.sodar_uuid)).appendTo(tr)
     userListTable.append(tr)
   }
   new DataTable(userListTable.parent('table'), {

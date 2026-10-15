@@ -6,8 +6,8 @@ Userprofile App
 
 The ``userprofile`` app is a site app which provides a user profile view for
 projectroles compatible Django users and management of user specific settings.
-It allows viewing and updating a user's personal account and settings, as well
-as viewing and searching for the public profile of another user.
+The app allows viewing an updating a user's account and settings, as well as
+listing and viewing of profiles of other users on the site.
 
 
 Installation
@@ -70,11 +70,11 @@ Usage
 =====
 
 After successful installation, two additional links should be available in the
-user dropdown menu in the top-rgiht corner of the website UI after you have
+user dropdown menu in the top-right corner of the website UI after you have
 logged in:
 
-- The "User Profile" link, which directs you to your own profile;
-- The "User List" link, which brings you to a list of all users.
+- The :guilabel:`User Profile` link, which directs you to your own profile;
+- The :guilabel:`User List` link, which brings you to a list of all users.
 
 
 User Profile
