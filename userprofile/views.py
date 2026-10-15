@@ -274,3 +274,10 @@ class UserEmailDeleteView(
     def get_success_url(self):
         messages.success(self.request, 'Email address deleted.')
         return reverse('userprofile:detail')
+
+
+class UserListView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """View for listing all users on the site"""
+
+    permission_required = 'userprofile.view_list'
+    template_name = 'userprofile/list.html'

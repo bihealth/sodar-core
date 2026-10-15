@@ -1038,6 +1038,13 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'active': False,
                 },
                 {
+                    'name': 'userprofile_list',
+                    'url': reverse('userprofile:list'),
+                    'label': 'User List',
+                    'icon': 'mdi:account-search',
+                    'active': False,
+                },
+                {
                     'name': 'logout',
                     'url': reverse('logout'),
                     'label': 'Logout',
@@ -1132,6 +1139,13 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'url': reverse('userprofile:detail'),
                     'label': 'User Profile',
                     'icon': 'mdi:account-details',
+                    'active': False,
+                },
+                {
+                    'name': 'userprofile_list',
+                    'url': reverse('userprofile:list'),
+                    'label': 'User List',
+                    'icon': 'mdi:account-search',
                     'active': False,
                 },
                 {

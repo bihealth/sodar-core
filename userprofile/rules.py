@@ -43,3 +43,6 @@ rules.add_perm(
     'userprofile.delete_email',
     pr_rules.is_source_site & can_delete_email & pr_rules.is_site_writable,
 )
+
+# Allow viewing user list
+rules.add_perm('userprofile.view_list', rules.is_authenticated)

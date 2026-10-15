@@ -2,6 +2,7 @@
 
 from django.test import override_settings
 from django.urls import reverse
+from django.utils.timezone import localtime
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -387,3 +388,132 @@ class TestUserAppSettingsView(SiteUITestBase):
             'div[id="div_id_settings.projectroles.notify_email_project"] label',
         )
         self.assertIn(APP_SETTING_DISABLE_LABEL, label.text)
+
+
+class TestUserListView(SiteUITestBase):
+    def setUp(self):
+        super().setUp()
+        self.regular_user.first_name = 'Roger'
+        self.regular_user.last_name = 'Larsen'
+        self.regular_user.save()
+        self.other_user = self.make_user('other_user')
+        self.other_user.is_active = False
+        self.other_user.save()
+        self.url = reverse('userprofile:list')
+
+    def assert_user_row_fields(self, row, user):
+        """
+        Assert UserListView table fields.
+
+        :param row: selenium element for a table row
+        :param user: User object corresponding to that row
+        :raise: AssertionError if row fields are not as expected
+        """
+        cells = row.find_elements(By.TAG_NAME, 'td')
+        if user.is_superuser:
+            # Wait before icon is rendered
+            WebDriverWait(cells[0], 15).until(
+                lambda x: x.find_element(By.TAG_NAME, 'svg')
+            )
+            user_icon = (
+                cells[0]
+                .find_element(By.TAG_NAME, 'svg')
+                .get_attribute('data-icon')
+            )
+            self.assertEqual(user_icon, 'mdi:shield-account')
+        if user.is_active:
+            table_href = (
+                cells[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
+            )
+            user_profile_link = f'mailto:{user.email}'
+            self.assertEqual(table_href, user_profile_link)
+        else:
+            # Wait before icon is rendered
+            WebDriverWait(cells[0], 15).until(
+                lambda x: x.find_element(By.TAG_NAME, 'svg')
+            )
+            user_icon = (
+                cells[0]
+                .find_element(By.TAG_NAME, 'svg')
+                .get_attribute('data-icon')
+            )
+            self.assertEqual(user_icon, 'mdi:account-off')
+        self.assertEqual(cells[0].text, user.username)
+        self.assertEqual(cells[1].text, user.first_name)
+        self.assertEqual(cells[2].text, user.last_name)
+        self.assertEqual(cells[3].text, user.email)
+        self.assertEqual(
+            cells[3].find_element(By.TAG_NAME, 'a').get_attribute('href'),
+            f'mailto:{user.email}',
+        )
+        self.assertEqual(
+            cells[4].text,
+            localtime(user.date_joined).strftime('%Y-%m-%d'),
+        )
+
+    def test_table_content(self):
+        """Test UserListView table content"""
+        self.login_and_redirect(
+            self.regular_user,
+            self.url,
+            '#sodar-up-ajax-user-list-table tr',
+            'CSS_SELECTOR',
+        )
+        rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '#sodar-up-ajax-user-list-table tr',
+        )
+        self.assertEqual(len(rows), 3)
+        self.assert_user_row_fields(rows[0], self.other_user)
+        self.assert_user_row_fields(rows[1], self.regular_user)
+        self.assert_user_row_fields(rows[2], self.superuser)
+
+    def test_table_pagination(self):
+        """Test UserListView table pagination"""
+        for i in range(10):
+            self.make_user(f'temp_user{i}')
+        self.login_and_redirect(
+            self.regular_user,
+            self.url,
+            '#sodar-up-ajax-user-list-table tr',
+            'CSS_SELECTOR',
+        )
+        rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '#sodar-up-ajax-user-list-table tr',
+        )
+        self.assertEqual(len(rows), 10)
+        select_input = self.selenium.find_element(
+            By.ID,
+            'sodar-up-user-list-page-length',
+        )
+        select_input.click()
+        select_input.find_element(
+            By.CSS_SELECTOR,
+            'option:nth-child(3)',
+        ).click()
+        rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '#sodar-up-ajax-user-list-table tr',
+        )
+        self.assertEqual(len(rows), 13)
+
+    def test_table_filtering(self):
+        """Test UserListView table filtering"""
+        self.login_and_redirect(
+            self.regular_user,
+            self.url,
+            '#sodar-up-ajax-user-list-table tr',
+            'CSS_SELECTOR',
+        )
+        filter_input = self.selenium.find_element(
+            By.ID,
+            'sodar-up-user-list-filter',
+        )
+        filter_input.send_keys('other_u')
+        rows = self.selenium.find_elements(
+            By.CSS_SELECTOR,
+            '#sodar-up-ajax-user-list-table tr',
+        )
+        self.assertEqual(len(rows), 1)
+        self.assert_user_row_fields(rows[0], self.other_user)

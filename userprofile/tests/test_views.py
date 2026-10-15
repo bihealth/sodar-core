@@ -703,3 +703,22 @@ class TestUserEmailDeleteView(SODARUserAdditionalEmailMixin, UserViewTestBase):
             response = self.client.post(self.url)
             self.assertRedirects(response, self.url_redirect)
         self.assertEqual(SODARUserAdditionalEmail.objects.count(), 0)
+
+
+class TestUserListView(UserViewTestBase):
+    def setUp(self):
+        super().setUp()
+        self.regular_user = self.make_user('regular_user')
+        self.other_user = self.make_user('other_user')
+        self.url = reverse('userprofile:list')
+
+    def test_get(self):
+        """Test UserListView GET"""
+        with self.login(self.user):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_anonymous(self):
+        """Test UserListView GET as anonymous user"""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
