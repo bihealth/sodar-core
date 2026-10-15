@@ -7,13 +7,8 @@ const spinner = $('#sodar-up-user-list-spinner')
 $.get(userList.data('url')).done(data => {
   spinner.remove()
   for (let user of data) {
-    const userEmailLink = userList.data('link-prefix') + '/' + user.sodar_uuid
     const tr = $('<tr>')
-    $('<td>').html(
-      $('<a>', {
-        href: userEmailLink + '?source=UserListView'
-      }).text(user.username)
-    ).appendTo(tr)
+    $('<td>').html(user.user_html).appendTo(tr)
     $('<td>').text(user.first_name).appendTo(tr)
     $('<td>').text(user.last_name).appendTo(tr)
     $('<td>').html(

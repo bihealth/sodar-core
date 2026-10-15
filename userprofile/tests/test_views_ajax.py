@@ -3,6 +3,7 @@
 from django.urls import reverse
 from django.utils.timezone import localtime
 
+from projectroles.templatetags.projectroles_common_tags import get_user_html
 from userprofile.tests.test_views import UserViewTestBase
 
 
@@ -19,31 +20,28 @@ class TestUserListAjaxView(UserViewTestBase):
         self.url = reverse('userprofile:ajax_list')
         self.expected = [
             {
-                'username': 'other_user',
+                'user_html': get_user_html(self.other_user),
                 'first_name': '',
                 'last_name': '',
                 'email': 'other_user@example.com',
-                'is_active': False,
                 'date_joined': localtime(self.other_user.date_joined).strftime(
                     '%Y-%m-%d'
                 ),
             },
             {
-                'username': 'regular_user',
+                'user_html': get_user_html(self.regular_user),
                 'first_name': 'Roger',
                 'last_name': 'Larsen',
                 'email': 'regular_user@example.com',
-                'is_active': True,
                 'date_joined': localtime(
                     self.regular_user.date_joined
                 ).strftime('%Y-%m-%d'),
             },
             {
-                'username': 'superuser',
+                'user_html': get_user_html(self.user),
                 'first_name': '',
                 'last_name': '',
                 'email': 'superuser@example.com',
-                'is_active': True,
                 'date_joined': localtime(self.user.date_joined).strftime(
                     '%Y-%m-%d'
                 ),
@@ -56,7 +54,7 @@ class TestUserListAjaxView(UserViewTestBase):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            sorted(response.data, key=lambda x: x['username']), self.expected
+            sorted(response.data, key=lambda x: x['email']), self.expected
         )
 
     def test_get_as_regular_user(self):
@@ -65,7 +63,7 @@ class TestUserListAjaxView(UserViewTestBase):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            sorted(response.data, key=lambda x: x['username']), self.expected
+            sorted(response.data, key=lambda x: x['email']), self.expected
         )
 
     def test_get_as_anonymous_user(self):

@@ -1,7 +1,5 @@
 """UI tests for the userprofile app"""
 
-from urllib.parse import urlsplit
-
 from django.test import override_settings
 from django.urls import reverse
 from django.utils.timezone import localtime
@@ -412,19 +410,40 @@ class TestUserListView(SiteUITestBase):
         :raise: AssertionError if row fields are not as expected
         """
         cells = row.find_elements(By.TAG_NAME, 'td')
-        user_profile_href = (
-            cells[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
-        )
-        user_profile_path = reverse(
-            'userprofile:detail_public', kwargs={'user': user.sodar_uuid}
-        )
+        if user.is_superuser:
+            # Wait before icon is rendered
+            WebDriverWait(cells[0], 15).until(
+                lambda x: x.find_element(By.TAG_NAME, 'svg')
+            )
+            user_icon = (
+                cells[0]
+                .find_element(By.TAG_NAME, 'svg')
+                .get_attribute('data-icon')
+            )
+            self.assertEqual(user_icon, 'mdi:shield-account')
+        if user.is_active:
+            table_href = (
+                cells[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
+            )
+            user_profile_link = f'mailto:{user.email}'
+            self.assertEqual(table_href, user_profile_link)
+        else:
+            # Wait before icon is rendered
+            WebDriverWait(cells[0], 15).until(
+                lambda x: x.find_element(By.TAG_NAME, 'svg')
+            )
+            user_icon = (
+                cells[0]
+                .find_element(By.TAG_NAME, 'svg')
+                .get_attribute('data-icon')
+            )
+            self.assertEqual(user_icon, 'mdi:account-off')
         self.assertEqual(cells[0].text, user.username)
-        self.assertEqual(urlsplit(user_profile_href).path, user_profile_path)
         self.assertEqual(cells[1].text, user.first_name)
         self.assertEqual(cells[2].text, user.last_name)
         self.assertEqual(cells[3].text, user.email)
         self.assertEqual(
-            cells[3].find_element(By.TAG_NAME('a')).get_attribute('href'),
+            cells[3].find_element(By.TAG_NAME, 'a').get_attribute('href'),
             f'mailto:{user.email}',
         )
         self.assertEqual(
