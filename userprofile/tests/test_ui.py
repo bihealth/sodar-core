@@ -315,22 +315,23 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
             expected, self.url_public, 'sodar-user-email-dropdown', 'class'
         )
 
-    def test_back_button_from_user_list_view(self):
-        """Test "Back" button when coming from the UserListView"""
-        user_list_view_url = reverse('userprofile:list')
-        self.login_and_redirect(self.regular_user, user_list_view_url)
-        WebDriverWait(self.selenium, 15).until(
-            lambda x: x.find_element(
-                By.CSS_SELECTOR, '#sodar-up-ajax-user-list-table a:nth-child(1)'
-            )
+    def test_back_button_in_public_profile(self):
+        """Test "Back" button when viewing a public profile"""
+        url = reverse(
+            'userprofile:detail_public', kwargs={'user': other_user.sodar_uuid}
         )
-        self.selenium.find_element(
-            By.CSS_SELECTOR, '#sodar-up-ajax-user-list-table a:nth-child(1)'
-        ).click()
+        self.login_and_redirect(self.regular_user, url)
         back_btn = self.selenium.find_element(
-            By.ID, 'sodar-up-list-view-back-btn'
+            By.ID, 'sodar-up-public-view-back-btn'
         )
         self.assertEqual(back_btn.text, 'Back')
+
+    def test_back_button_absence_in_private_profile(self):
+        """Test "Back" button when viewing a public profile"""
+        url = reverse('userprofile:detail')
+        self.login_and_redirect(self.regular_user, url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-up-public-view-back-btn')
 
 
 class TestUserAppSettingsView(SiteUITestBase):

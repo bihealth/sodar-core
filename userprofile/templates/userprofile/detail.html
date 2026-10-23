@@ -36,8 +36,8 @@
   <div class="sodar-pr-content-title-secondary text-muted">
     User Profile
   </div>
-  {% if request.GET.source == 'UserListView' %}
-    <a role="button" class="btn btn-secondary ml-auto pull-right" id="sodar-up-list-view-back-btn"
+  {% if view.kwargs.user %}
+    <a role="button" class="btn btn-secondary ml-auto pull-right" id="sodar-up-public-view-back-btn"
        href="{% url 'userprofile:list' %}">
       <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back
     </a>
@@ -62,16 +62,25 @@
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true
-    tour.addStep('user_profile', {
-      title: 'User Profile',
-      text: 'In this app you can see your user profile and alter user ' +
-            'settings.',
-      advanceOn: '.docs-link click',
-      showCancelLink: true
-    })
+    if ($('#sodar-user-btn-update').length) {
+      tour.addStep('user_profile', {
+        title: 'User Profile',
+        text: 'In this app you can see your user profile and alter user ' +
+              'settings.',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    } else {
+      tour.addStep('user_profile', {
+        title: 'User Profile',
+        text: 'In this page you can view the public profile of another user.',
+        advanceOn: '.docs-link click',
+        showCancelLink: true
+      })
+    }
     tour.addStep('user_details', {
       title: 'User Details Card',
-      text: 'This card displays details of your user account.',
+      text: 'This card displays details of the user account.',
       attachTo: '#sodar-user-details-card top',
       advanceOn: '.docs-link click',
       showCancelLink: true
