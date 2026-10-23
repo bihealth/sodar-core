@@ -36,6 +36,15 @@ The userprofile app is available for your Django site after installing
         'userprofile.apps.UserprofileConfig',
     ]
 
+Optional Settings
+-----------------
+
+When a user is mentioned on the site, for example in timeline events
+or in project members views, the user's name links to their public
+profile. If you don't want this behaviour, you can disable it by setting
+``PROJECTROLES_USER_PROFILE_LINK = False``, as documented in the
+:ref:`projectroles settings <app_projectroles_settings>` page.
+
 URL Configuration
 -----------------
 
@@ -49,10 +58,10 @@ In the Django URL configuration file, add the following line under
         url(r'^user/', include('userprofile.urls')),
     ]
 
-Register Plugin
----------------
+Register Plugins
+----------------
 
-To register the app plugin, run the following management command:
+To register the app plugins, run the following management command:
 
 .. code-block:: console
 
@@ -155,8 +164,8 @@ verification email (in case of an unverified email) and deleting the address.
 User List
 ---------
 
-The User List view shows a table with basic information for all the users in
-the site. Each username links to the profile of the corresponding user.
+The User List view shows a table with basic information for all the users in the
+site. By default, each username links to the profile of the corresponding user.
 
 .. figure:: _static/app_userprofile/sodar_user_list.png
     :align: center

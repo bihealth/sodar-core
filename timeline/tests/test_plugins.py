@@ -194,7 +194,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         )
         self.assertEqual(
             ret[0].rows[0][1].value,
-            TimelinePlugin._get_description_html(event2, self.plugin_lookup),
+            TimelinePlugin._get_description_html(
+                self.user_owner, event2, self.plugin_lookup
+            ),
         )
         self.assertEqual(
             ret[0].rows[0][2].value,
@@ -206,7 +208,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         )
         self.assertEqual(
             ret[0].rows[1][1].value,
-            TimelinePlugin._get_description_html(event, self.plugin_lookup),
+            TimelinePlugin._get_description_html(
+                self.user_owner, event, self.plugin_lookup
+            ),
         )
         self.assertEqual(
             ret[0].rows[0][2].value,
@@ -221,7 +225,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].rows), 1)
         self.assertEqual(
             ret[0].rows[0][1].value,
-            TimelinePlugin._get_description_html(event, self.plugin_lookup),
+            TimelinePlugin._get_description_html(
+                self.user, event, self.plugin_lookup
+            ),
         )
 
     def test_search_event_name_display(self):
@@ -234,7 +240,9 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(len(ret[0].rows), 1)
         self.assertEqual(
             ret[0].rows[0][1].value,
-            TimelinePlugin._get_description_html(event, self.plugin_lookup),
+            TimelinePlugin._get_description_html(
+                self.user, event, self.plugin_lookup
+            ),
         )
 
     def test_search_invalid_terms(self):
@@ -282,7 +290,7 @@ class TestProjectAppPlugin(TimelinePluginTestBase):
         self.assertEqual(
             ret[0].rows[0][1].value,
             TimelinePlugin._get_description_html(
-                project_event_new, plugin_lookup
+                user_new, project_event_new, plugin_lookup
             ),
         )
         ret = self.plugin.search(

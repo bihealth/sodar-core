@@ -4,6 +4,7 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils.timezone import localtime
 
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -11,7 +12,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import APP_SETTING_DISABLE_LABEL
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.tests.test_models import SODARUserAdditionalEmailMixin
+from projectroles.tests.test_models import (
+    SODARUserAdditionalEmailMixin,
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RoleMixin,
+)
 from projectroles.tests.base import SiteUITestBase
 
 
@@ -20,6 +26,7 @@ app_settings = AppSettingAPI()
 
 # SODAR constants
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 # Local constants
 APP_NAME_PR = 'projectroles'
@@ -29,11 +36,18 @@ EMAIL_ADD_BTN_ID = 'sodar-user-btn-email-add'
 
 
 @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
-class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
+class TestUserDetailView(
+    SODARUserAdditionalEmailMixin,
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    SiteUITestBase,
+):
     """Tests for UserDetailView"""
 
     def setUp(self):
         super().setUp()
+        super().init_roles()
         # Create users
         self.local_user = self.make_user('local_user', False)
         self.ldap_user = self.make_user('user@EXAMPLE', False)
@@ -315,6 +329,61 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
             expected, self.url_public, 'sodar-user-email-dropdown', 'class'
         )
 
+    def test_back_button_from_user_list_view(self):
+        """Test "Back" button in public profile from user list view"""
+        url = reverse('userprofile:list')
+        self.login_and_redirect(self.regular_user, url)
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: x.find_element(
+                By.CSS_SELECTOR, '#sodar-up-ajax-user-list-table a:nth-child(1)'
+            )
+        )
+        self.selenium.find_element(
+            By.CSS_SELECTOR, '#sodar-up-ajax-user-list-table a:nth-child(1)'
+        ).click()
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: x.find_element(By.ID, 'sodar-up-public-view-back-btn')
+        )
+        back_btn = self.selenium.find_element(
+            By.ID, 'sodar-up-public-view-back-btn'
+        )
+        self.assertEqual(back_btn.text, 'Back')
+        self.assertTrue(back_btn.get_attribute('href').endswith(url))
+
+    def test_back_button_from_project_members_view(self):
+        """Test "Back" button in public profile from project members view"""
+        category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category, self.regular_user, self.role_owner)
+        url = reverse(
+            'projectroles:roles', kwargs={'project': category.sodar_uuid}
+        )
+        self.login_and_redirect(self.regular_user, url)
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: x.find_element(
+                By.CSS_SELECTOR, '#sodar-pr-role-list-table a:nth-child(1)'
+            )
+        )
+        self.selenium.find_element(
+            By.CSS_SELECTOR, '#sodar-pr-role-list-table a:nth-child(1)'
+        ).click()
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: x.find_element(By.ID, 'sodar-up-public-view-back-btn')
+        )
+        back_btn = self.selenium.find_element(
+            By.ID, 'sodar-up-public-view-back-btn'
+        )
+        self.assertEqual(back_btn.text, 'Back')
+        self.assertTrue(back_btn.get_attribute('href').endswith(url))
+
+    def test_back_button_absence_in_private_profile(self):
+        """Test "Back" button absence when viewing a private profile"""
+        url = reverse('userprofile:detail')
+        self.login_and_redirect(self.local_user, url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-up-public-view-back-btn')
+
 
 class TestUserAppSettingsView(SiteUITestBase):
     """Tests for UserAppSettingsView"""
@@ -421,13 +490,7 @@ class TestUserListView(SiteUITestBase):
                 .get_attribute('data-icon')
             )
             self.assertEqual(user_icon, 'mdi:shield-account')
-        if user.is_active:
-            table_href = (
-                cells[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
-            )
-            user_profile_link = f'mailto:{user.email}'
-            self.assertEqual(table_href, user_profile_link)
-        else:
+        if not user.is_active:
             # Wait before icon is rendered
             WebDriverWait(cells[0], 15).until(
                 lambda x: x.find_element(By.TAG_NAME, 'svg')
@@ -438,6 +501,14 @@ class TestUserListView(SiteUITestBase):
                 .get_attribute('data-icon')
             )
             self.assertEqual(user_icon, 'mdi:account-off')
+        table_href = (
+            cells[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
+        )
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': user.sodar_uuid},
+        )
+        self.assertTrue(table_href.endswith(user_profile_link))
         self.assertEqual(cells[0].text, user.username)
         self.assertEqual(cells[1].text, user.first_name)
         self.assertEqual(cells[2].text, user.last_name)

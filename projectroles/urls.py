@@ -59,11 +59,6 @@ urls_ui = [
         name='roles',
     ),
     path(
-        route='members/<uuid:project>',
-        view=views.ProjectRoleView.as_view(),
-        name='roles',
-    ),
-    path(
         route='members/create/<uuid:project>',
         view=views.RoleAssignmentCreateView.as_view(),
         name='role_create',
