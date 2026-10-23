@@ -360,6 +360,11 @@ The following projectroles settings are **optional**:
 ``PROJECTROLES_SUPPORT_CONTACT``
     Support contact to be displayed for users, overrides ``ADMINS``. Input as
     "name:email" (string)
+``PROJECTROLES_USER_PROFILE_LINK``
+    Whether user mentions, such as in timeline events and in project members
+    views, are links to the user's public profile. This settings only makes
+    sense if the ``userprofile`` app is enabled and is ignored otherwise. (bool,
+    default=True, see also the :ref:`userprofile app docs <app_userprofile>`)
 
 Example:
 

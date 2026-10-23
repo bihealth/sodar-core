@@ -4,6 +4,7 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils.timezone import localtime
 
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -318,7 +319,8 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
     def test_back_button_in_public_profile(self):
         """Test "Back" button when viewing a public profile"""
         url = reverse(
-            'userprofile:detail_public', kwargs={'user': other_user.sodar_uuid}
+            'userprofile:detail_public',
+            kwargs={'user': self.local_user.sodar_uuid},
         )
         self.login_and_redirect(self.regular_user, url)
         back_btn = self.selenium.find_element(
@@ -329,7 +331,7 @@ class TestUserDetailView(SODARUserAdditionalEmailMixin, SiteUITestBase):
     def test_back_button_absence_in_private_profile(self):
         """Test "Back" button when viewing a public profile"""
         url = reverse('userprofile:detail')
-        self.login_and_redirect(self.regular_user, url)
+        self.login_and_redirect(self.local_user, url)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-up-public-view-back-btn')
 
@@ -456,7 +458,6 @@ class TestUserListView(SiteUITestBase):
         user_profile_link = reverse(
             'userprofile:detail_public',
             kwargs={'user': user.sodar_uuid},
-            query={'source': 'UserListView'},
         )
         self.assertTrue(table_href.endswith(user_profile_link))
         self.assertEqual(cells[0].text, user.username)
