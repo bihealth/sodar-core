@@ -25,8 +25,13 @@ Added
     - Project operations dropdown in project header (#2012, #2013)
     - Project list public access project toggling (#2007)
     - ``project_list_public_display`` app setting (#2007)
+    - ``get_user_html()`` and ``get_user_badge()`` user profile linking (#1999)
+    - ``PROJECTROLES_USER_PROFILE_LINK`` Django setting (#1999)
 - **Timeline**
     - ``TimelineEvent`` ``core_version`` and ``site_version`` fields (#1963)
+- **Userprofile**
+    - ``UserListView`` view for user browsing (#1984)
+    - ``UserListSiteAppPlugin`` plugin (#1984)
 
 Changed
 -------
@@ -55,6 +60,8 @@ Fixed
     - ``PluginAppSettingDef`` ``project_types`` set without project scope (#2017)
     - ``Project.readme`` update fails with empty value (#2019)
     - App setting update REST API views fail with boolean string values (#2024)
+    - ``confirm_delete_host.html`` button alignment (#2028)
+    - ``ProjectDeleteView`` success message capitalization (#2029)
 
 Removed
 -------

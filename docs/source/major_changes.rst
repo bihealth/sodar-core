@@ -16,6 +16,7 @@ v1.5.0 (WIP)
 Release Highlights
 ==================
 
+- Add user list view
 - Add project operations dropdown in project header
 - Add project list public access project toggling
 - Add project title slug field

@@ -1954,11 +1954,11 @@ class ProjectDeleteView(
     def post(self, *args, **kwargs):
         """Delete the project and redirect the user"""
         project = self.get_object()
-        display_name = self.get_object_display_name()
+        p_name = self.get_object_display_name()
         try:
             with transaction.atomic():
                 self.handle_delete(project, self.request)
-            messages.success(self.request, f'{display_name} deleted.')
+            messages.success(self.request, f'{p_name.capitalize()} deleted.')
             # We cannot put the following in self.get_success_url() since
             # we need access to the object which has just been deleted
             if project.parent:
@@ -1972,9 +1972,7 @@ class ProjectDeleteView(
         except Exception as ex:
             if settings.DEBUG:
                 raise ex
-            messages.error(
-                self.request, f'Failed to delete {display_name}: {ex}'
-            )
+            messages.error(self.request, f'Failed to delete {p_name}: {ex}')
             return redirect(reverse('home'))
 
 
