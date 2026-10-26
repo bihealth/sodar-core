@@ -19,7 +19,8 @@
         {% get_display_name 'PROJECT' title=True plural=True %}
       {% endif %}
       <div class="input-group sodar-header-input-group
-                  sodar-pr-project-list-input-group pull-right">
+                  sodar-pr-project-list-input-group{% if not user.is_authenticated %}-anon{% endif %}
+                  pull-right">
         {% if request.user.is_authenticated %}
           <div class="input-group-prepend">
             <button class="btn btn-secondary"

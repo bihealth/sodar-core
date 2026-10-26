@@ -331,6 +331,18 @@ table.sodar-card-table-bordered tbody tr:last-child td {
   max-width: 500px !important;
 }
 
+.sodar-pr-project-list-input-group-anon {
+  max-width: 320px !important;
+}
+
+#sodar-pr-project-list-page-length {
+  width: 50px;
+}
+
+#sodar-pr-project-list-filter {
+  width: 185px !important;
+}
+
 button#sodar-pr-project-list-link-star {
   padding-top: 2px;
 }
