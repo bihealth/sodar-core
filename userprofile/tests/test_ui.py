@@ -375,6 +375,53 @@ class TestUserDetailView(
             [],
         )
 
+    def test_project_list_star(self):
+        """Test project list star default not saved"""
+        category = self.make_project('category', PROJECT_TYPE_CATEGORY, None)
+        project = self.make_project('project', PROJECT_TYPE_PROJECT, category)
+        self.make_assignment(category, self.local_user, self.role_owner)
+        self.make_assignment(category, self.ldap_user, self.role_delegate)
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME_PR, 'project_list_home_starred', user=self.ldap_user
+            ),
+            False,
+        )
+        app_settings.set(
+            plugin_name=APP_NAME_PR,
+            setting_name='project_star',
+            value=True,
+            project=project,
+            user=self.ldap_user,
+            validate=False,
+        )
+
+        def _project_rows_count(driver):
+            project_rows = driver.find_elements(
+                By.CLASS_NAME, 'sodar-pr-project-list-item'
+            )
+            return len(project_rows)
+
+        self.login_and_redirect(self.ldap_user, self.url_public)
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: _project_rows_count(x) == 2
+        )
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-star'
+        )
+        button.click()
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: _project_rows_count(x) == 1
+        )
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element(By.ID, 'sodar-pr-project-list-message')
+        self.assertEqual(
+            app_settings.get(
+                APP_NAME_PR, 'project_list_home_starred', user=self.ldap_user
+            ),
+            False,
+        )
+
     def test_back_button_from_user_list_view(self):
         """Test "Back" button in public profile from user list view"""
         url = reverse('userprofile:list')
