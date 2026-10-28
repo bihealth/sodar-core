@@ -442,7 +442,6 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         )
         p_idx = 0
         prev_cat = None
-
         ret_projects = []
 
         for p in projects:
