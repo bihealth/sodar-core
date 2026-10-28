@@ -72,6 +72,10 @@ class TestProjectListAjaxView(
             self.project, self.user_contributor_cat, self.role_contributor
         )
         self.url = reverse('projectroles:ajax_project_list')
+        self.url_mutual_user_owner = reverse(
+            'projectroles:ajax_project_list_mutual',
+            kwargs={'user': self.user_owner.sodar_uuid},
+        )
 
     def test_get(self):
         """Test TestProjectListAjaxView GET"""
@@ -533,14 +537,10 @@ class TestProjectListAjaxView(
         self.assertEqual(pd[0]['access'], True)
         self.assertEqual(pd[0]['public_stats'], True)
 
-    def test_get_user_owner(self):
-        """Test GET project list for user_owner as superuser"""
-        url = reverse(
-            'projectroles:ajax_project_list_public',
-            kwargs={'user': self.user_owner.sodar_uuid},
-        )
+    def test_get_mutual_projects_list_superuser(self):
+        """Test GET mutual projects list as superuser"""
         with self.login(self.user):
-            response = self.client.get(url)
+            response = self.client.get(self.url_mutual_user_owner)
         self.assertEqual(response.status_code, 200)
         expected = {
             'projects': [
@@ -580,34 +580,29 @@ class TestProjectListAjaxView(
         }
         self.assertEqual(response.data, expected)
 
-    def test_get_user_owner_as_regular_user(self):
-        """Test GET project list for user_owner as regular user"""
+    def test_get_mutual_as_regular_user(self):
+        """Test GET mutual as regular user"""
         user_new = self.make_user('user_new')
         project2 = self.make_project(
             'TestProject2', PROJECT_TYPE_PROJECT, self.category
         )
         self.make_assignment(project2, user_new, self.role_guest)
         self.make_assignment(self.project, user_new, self.role_guest)
-        url = reverse(
-            'projectroles:ajax_project_list_public',
-            kwargs={'user': self.user_owner.sodar_uuid},
-        )
         with self.login(user_new):
-            response = self.client.get(url)
-        data = response.data
+            response = self.client.get(self.url_mutual_user_owner)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['projects']), 2)
+        data = response.data
+        pd = data['projects']
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['uuid'], str(self.category.sodar_uuid))
+        self.assertEqual(pd[1]['uuid'], str(self.project.sodar_uuid))
+        self.assertEqual(response.data['messages'], {})
         self.assertEqual(
-            data['projects'][0]['uuid'], str(self.category.sodar_uuid)
+            response.data['user'], {'highlight': True, 'superuser': False}
         )
-        self.assertEqual(
-            data['projects'][1]['uuid'], str(self.project.sodar_uuid)
-        )
-        self.assertEqual(data['messages'], {})
-        self.assertEqual(data['user'], {'highlight': True, 'superuser': False})
-        # Test the symmetric query (should be identical)
+        # Test the reciprocal request (should be identical)
         url = reverse(
-            'projectroles:ajax_project_list_public',
+            'projectroles:ajax_project_list_mutual',
             kwargs={'user': user_new.sodar_uuid},
         )
         with self.login(self.user_owner):
@@ -615,48 +610,33 @@ class TestProjectListAjaxView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, data)
 
-    def test_get_user_owner_starred(self):
-        """Test GET project list for user_owner with star from regular user"""
+    def test_get_mutual_starring(self):
+        """Test GET mutual with project star from other user"""
         app_settings.set(
             APP_NAME, 'project_star', True, project=self.project, user=self.user
         )
-        url = reverse(
-            'projectroles:ajax_project_list_public',
-            kwargs={'user': self.user_owner.sodar_uuid},
-        )
         with self.login(self.user):
-            response = self.client.get(url)
-        data = response.data
+            response = self.client.get(self.url_mutual_user_owner)
+        pd = response.data['projects']
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['projects']), 2)
-        self.assertEqual(
-            data['projects'][0]['uuid'], str(self.category.sodar_uuid)
-        )
-        self.assertEqual(
-            data['projects'][1]['uuid'], str(self.project.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][1]['starred'], True)
-        self.assertEqual(data['messages'], {})
-        self.assertEqual(data['user'], {'highlight': True, 'superuser': True})
-        # Test the symmetric query (project should not be starred)
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[1]['uuid'], str(self.project.sodar_uuid))
+        self.assertEqual(pd[1]['starred'], True)
+        # Test the reciprocal query (project should not be starred)
         url = reverse(
-            'projectroles:ajax_project_list_public',
+            'projectroles:ajax_project_list_mutual',
             kwargs={'user': self.user.sodar_uuid},
         )
         with self.login(self.user_owner):
             response = self.client.get(url)
-        data = response.data
+        pd = response.data['projects']
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['projects']), 2)
-        self.assertEqual(
-            data['projects'][1]['uuid'], str(self.project.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][1]['starred'], False)
-        self.assertEqual(data['messages'], {})
-        self.assertEqual(data['user'], {'highlight': True, 'superuser': False})
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[1]['uuid'], str(self.project.sodar_uuid))
+        self.assertEqual(pd[1]['starred'], False)
 
-    def test_get_user_owner_with_pub_only(self):
-        """Test GET project list with pub_only project"""
+    def test_get_mutual_public_only(self):
+        """Test GET mutual with public only project"""
         user_new = self.make_user('user_new')
         project2 = self.make_project(
             'TestProject2', PROJECT_TYPE_PROJECT, self.category
@@ -664,187 +644,146 @@ class TestProjectListAjaxView(
         project2.public_access = self.role_guest
         project2.save()
         url = reverse(
-            'projectroles:ajax_project_list_public',
+            'projectroles:ajax_project_list_mutual',
             kwargs={'user': user_new.sodar_uuid},
         )
         with self.login(self.user):
             response = self.client.get(url)
-        data = response.data
+        pd = response.data['projects']
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['projects']), 2)
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['uuid'], str(self.category.sodar_uuid))
+        self.assertEqual(pd[0]['public_only'], True)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[1]['uuid'], str(project2.sodar_uuid))
+        self.assertEqual(pd[1]['public_only'], True)
+        self.assertEqual(pd[1]['access'], True)
         self.assertEqual(
-            data['projects'][0]['uuid'], str(self.category.sodar_uuid)
+            response.data['user'], {'highlight': True, 'superuser': True}
         )
-        self.assertEqual(data['projects'][0]['public_only'], True)
-        self.assertEqual(data['projects'][0]['access'], True)
-        self.assertEqual(data['projects'][1]['uuid'], str(project2.sodar_uuid))
-        self.assertEqual(data['projects'][1]['public_only'], True)
-        self.assertEqual(data['projects'][1]['access'], True)
-        self.assertEqual(data['messages'], {})
-        self.assertEqual(data['user'], {'highlight': True, 'superuser': True})
         # Test the symmetric query (project should not be starred)
         url = reverse(
-            'projectroles:ajax_project_list_public',
+            'projectroles:ajax_project_list_mutual',
             kwargs={'user': self.user.sodar_uuid},
         )
         with self.login(user_new):
             response = self.client.get(url)
-        data = response.data
+        pd = response.data['projects']
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['projects']), 2)
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['uuid'], str(self.category.sodar_uuid))
+        self.assertEqual(pd[0]['public_only'], True)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[1]['uuid'], str(project2.sodar_uuid))
+        self.assertEqual(pd[1]['public_only'], True)
+        self.assertEqual(pd[1]['access'], True)
         self.assertEqual(
-            data['projects'][0]['uuid'], str(self.category.sodar_uuid)
+            response.data['user'], {'highlight': True, 'superuser': False}
         )
-        self.assertEqual(data['projects'][0]['public_only'], True)
-        self.assertEqual(data['projects'][0]['access'], True)
-        self.assertEqual(data['projects'][1]['uuid'], str(project2.sodar_uuid))
-        self.assertEqual(data['projects'][1]['public_only'], True)
-        self.assertEqual(data['projects'][1]['access'], True)
-        self.assertEqual(data['messages'], {})
-        self.assertEqual(data['user'], {'highlight': True, 'superuser': False})
 
-    def test_get_user_owner_with_asymmetric_pub_only(self):
-        """Test GET project list with pub_only projects for user_owner"""
+    def test_get_mutual_asymmetric_pub_only(self):
+        """Test GET mutual with pub_only projects only for other user"""
         user_new = self.make_user('user_new')
         self.project.public_access = self.role_guest
         self.project.save()
         url = reverse(
-            'projectroles:ajax_project_list_public',
+            'projectroles:ajax_project_list_mutual',
             kwargs={'user': user_new.sodar_uuid},
         )
         with self.login(self.user_owner):
             response = self.client.get(url)
-        data = response.data
+        pd = response.data['projects']
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['projects']), 2)
-        self.assertEqual(
-            data['projects'][0]['uuid'], str(self.category.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][0]['public_only'], False)
-        self.assertEqual(data['projects'][0]['access'], True)
-        self.assertEqual(
-            data['projects'][1]['uuid'], str(self.project.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][1]['public_only'], False)
-        self.assertEqual(data['projects'][1]['access'], True)
-        self.assertEqual(data['messages'], {})
-        self.assertEqual(data['user'], {'highlight': True, 'superuser': False})
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['uuid'], str(self.category.sodar_uuid))
+        self.assertEqual(pd[0]['public_only'], False)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[1]['uuid'], str(self.project.sodar_uuid))
+        self.assertEqual(pd[1]['public_only'], False)
+        self.assertEqual(pd[1]['access'], True)
         # Test the symmetric query (project should not be starred)
-        url = reverse(
-            'projectroles:ajax_project_list_public',
-            kwargs={'user': self.user_owner.sodar_uuid},
-        )
         with self.login(user_new):
-            response = self.client.get(url)
-        data = response.data
+            response = self.client.get(self.url_mutual_user_owner)
+        pd = response.data['projects']
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['projects']), 2)
-        self.assertEqual(
-            data['projects'][0]['uuid'], str(self.category.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][0]['public_only'], True)
-        self.assertEqual(data['projects'][0]['access'], True)
-        self.assertEqual(
-            data['projects'][1]['uuid'], str(self.project.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][1]['public_only'], True)
-        self.assertEqual(data['projects'][1]['access'], True)
-        self.assertEqual(data['messages'], {})
-        self.assertEqual(data['user'], {'highlight': True, 'superuser': False})
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['uuid'], str(self.category.sodar_uuid))
+        self.assertEqual(pd[0]['public_only'], True)
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[1]['uuid'], str(self.project.sodar_uuid))
+        self.assertEqual(pd[1]['public_only'], True)
+        self.assertEqual(pd[1]['access'], True)
 
-    def test_get_user_owner_with_finder_cats(self):
+    def test_get_mutual_finder_cats(self):
+        """Test GET mutual with finder role"""
         user_new = self.make_user('user_new')
-        subcategory = self.make_project(
-            'subcategory', PROJECT_TYPE_CATEGORY, self.category
+        sub_cat = self.make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, self.category
         )
-        subproject = self.make_project(
-            'subproject', PROJECT_TYPE_PROJECT, subcategory
+        sub_proj = self.make_project(
+            'SubProject', PROJECT_TYPE_PROJECT, sub_cat
         )
-        self.make_assignment(subcategory, user_new, self.role_finder)
-        self.make_assignment(subproject, self.user_owner, self.role_owner)
-        url = reverse(
-            'projectroles:ajax_project_list_public',
-            kwargs={'user': self.user_owner.sodar_uuid},
-        )
+        self.make_assignment(sub_cat, user_new, self.role_finder)
+        self.make_assignment(sub_proj, self.user_owner, self.role_owner)
         with self.login(user_new):
-            response = self.client.get(url)
-        data = response.data
+            response = self.client.get(self.url_mutual_user_owner)
+        pd = response.data['projects']
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['projects']), 3)
+        self.assertEqual(len(pd), 3)
+        self.assertEqual(pd[0]['uuid'], str(self.category.sodar_uuid))
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[0]['finder_url'], None)
+        self.assertEqual(pd[1]['uuid'], str(sub_cat.sodar_uuid))
+        self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[1]['finder_url'], None)
+        self.assertEqual(pd[2]['uuid'], str(sub_proj.sodar_uuid))
+        self.assertEqual(pd[2]['access'], False)
         self.assertEqual(
-            data['projects'][0]['uuid'], str(self.category.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][0]['access'], True)
-        self.assertEqual(data['projects'][0]['finder_url'], None)
-        self.assertEqual(
-            data['projects'][1]['uuid'], str(subcategory.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][1]['access'], True)
-        self.assertEqual(data['projects'][1]['finder_url'], None)
-        self.assertEqual(
-            data['projects'][2]['uuid'], str(subproject.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][2]['access'], False)
-        self.assertEqual(
-            data['projects'][2]['finder_url'],
+            pd[2]['finder_url'],
             reverse(
                 'projectroles:roles',
-                kwargs={'project': subcategory.sodar_uuid},
+                kwargs={'project': sub_cat.sodar_uuid},
             ),
         )
-        self.assertEqual(data['messages'], {})
-        self.assertEqual(data['user'], {'highlight': True, 'superuser': False})
         url = reverse(
-            'projectroles:ajax_project_list_public',
+            'projectroles:ajax_project_list_mutual',
             kwargs={'user': user_new.sodar_uuid},
         )
         with self.login(self.user_owner):
             response = self.client.get(url)
-        data = response.data
-        self.assertEqual(len(data['projects']), 3)
-        self.assertEqual(
-            data['projects'][0]['uuid'], str(self.category.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][0]['access'], True)
-        self.assertEqual(data['projects'][0]['finder_url'], None)
-        self.assertEqual(
-            data['projects'][1]['uuid'], str(subcategory.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][1]['access'], True)
-        self.assertEqual(data['projects'][1]['finder_url'], None)
-        self.assertEqual(
-            data['projects'][2]['uuid'], str(subproject.sodar_uuid)
-        )
-        self.assertEqual(data['projects'][2]['access'], True)
-        self.assertEqual(data['projects'][2]['finder_url'], None)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 3)
+        self.assertEqual(pd[0]['uuid'], str(self.category.sodar_uuid))
+        self.assertEqual(pd[0]['access'], True)
+        self.assertEqual(pd[0]['finder_url'], None)
+        self.assertEqual(pd[1]['uuid'], str(sub_cat.sodar_uuid))
+        self.assertEqual(pd[1]['access'], True)
+        self.assertEqual(pd[1]['finder_url'], None)
+        self.assertEqual(pd[2]['uuid'], str(sub_proj.sodar_uuid))
+        self.assertEqual(pd[2]['access'], True)
+        self.assertEqual(pd[2]['finder_url'], None)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_get_other_user_as_anonymous(self):
-        url = reverse(
-            'projectroles:ajax_project_list_public',
-            kwargs={'user': self.user_owner.sodar_uuid},
-        )
-        response = self.client.get(url)
+    def test_get_mutual_anonymous(self):
+        """Test GET mutual as anonymous"""
+        response = self.client.get(self.url_mutual_user_owner)
         self.assertEqual(len(response.data['projects']), 0)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_get_other_user_as_anonymous_with_category_public_stats(self):
+    def test_get_mutual_anonymous_pub_cat_stats(self):
+        """Test GET mutual as anonymous with category public stats"""
         app_settings.set(
             APP_NAME, 'category_public_stats', True, project=self.category
         )
-        url = reverse(
-            'projectroles:ajax_project_list_public',
-            kwargs={'user': self.user_owner.sodar_uuid},
-        )
-        response = self.client.get(url)
-        self.assertEqual(len(response.data['projects']), 1)
-        self.assertEqual(
-            response.data['projects'][0]['uuid'], str(self.category.sodar_uuid)
-        )
+        response = self.client.get(self.url_mutual_user_owner)
+        pd = response.data['projects']
+        self.assertEqual(len(pd), 1)
+        self.assertEqual(pd[0]['uuid'], str(self.category.sodar_uuid))
 
-    def test_get_other_user_invalid(self):
+    def test_get_mutual_invalid_user(self):
+        """Test GET mutual for invalid user"""
         url = reverse(
-            'projectroles:ajax_project_list_public',
+            'projectroles:ajax_project_list_mutual',
             kwargs={'user': INVALID_UUID},
         )
         with self.login(self.user_owner):
@@ -852,30 +791,30 @@ class TestProjectListAjaxView(
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.data['detail'], USER_INVALID_MSG)
 
-    def test_get_no_public_project_messages_superuser(self):
+    def test_get_no_mutual_projects_messages_superuser(self):
+        """Test GET messages for empty mutual projects list as superuser"""
         url = reverse(
-            'projectroles:ajax_project_list_public',
+            'projectroles:ajax_project_list_mutual',
             kwargs={'user': self.user_no_roles.sodar_uuid},
         )
         with self.login(self.user):
             response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEndsWith(
-            response.data['messages']['no_projects'],
-            f'available for {self.user_no_roles.username}',
+        self.assertTrue(
+            response.data['messages']['no_projects'].endswith(
+                f'available for {self.user_no_roles.username}'
+            ),
         )
 
-    def test_get_no_public_project_messages_regular_user(self):
-        url = reverse(
-            'projectroles:ajax_project_list_public',
-            kwargs={'user': self.user_owner.sodar_uuid},
-        )
+    def test_get_no_mutual_projects_messages_regular_user(self):
+        """Test GET messages for empty mutual projects list as regular user"""
         with self.login(self.user_no_roles):
-            response = self.client.get(url)
+            response = self.client.get(self.url_mutual_user_owner)
         self.assertEqual(response.status_code, 200)
-        self.assertEndsWith(
-            response.data['messages']['no_projects'],
-            f'in common between you and {self.user_owner.username}',
+        self.assertTrue(
+            response.data['messages']['no_projects'].endswith(
+                f'in common between you and {self.user_owner.username}'
+            ),
         )
 
 
