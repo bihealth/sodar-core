@@ -70,7 +70,7 @@
     <table class="table table-striped sodar-card-table sodar-pr-project-list-table"
            id="sodar-pr-project-list-table"
            {% if other_user %}
-             {% url 'projectroles:ajax_project_list_public' user=other_user.sodar_uuid as list_url %}
+             {% url 'projectroles:ajax_project_list_mutual' user=other_user.sodar_uuid as list_url %}
            {% else %}
              {% url 'projectroles:ajax_project_list' as list_url %}
            {% endif %}

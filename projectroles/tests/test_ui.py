@@ -415,15 +415,13 @@ class TestHomeView(ProjectUITestBase):
             ),
             False,
         )
-        (
-            app_settings.set(
-                plugin_name=APP_NAME,
-                setting_name='project_star',
-                value=True,
-                project=self.project,
-                user=self.user_owner,
-                validate=False,
-            ),
+        app_settings.set(
+            plugin_name=APP_NAME,
+            setting_name='project_star',
+            value=True,
+            project=self.project,
+            user=self.user_owner,
+            validate=False,
         )
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)

@@ -188,7 +188,7 @@ urls_ajax = [
     path(
         route='ajax/list/<uuid:user>',
         view=views_ajax.ProjectListAjaxView.as_view(),
-        name='ajax_project_list_public',
+        name='ajax_project_list_mutual',
     ),
     path(
         route='ajax/list/columns',
