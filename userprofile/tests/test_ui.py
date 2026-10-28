@@ -352,10 +352,10 @@ class TestUserDetailView(
         )
         self.assertEqual(len(project_rows), 2)
         self.selenium.find_element(
-            By.CLASS_NAME, f'sodar-pr-project-list-item-{category.uuid}'
+            By.ID, f'sodar-pr-project-list-item-{category.sodar_uuid}'
         )
         self.selenium.find_element(
-            By.CLASS_NAME, f'sodar-pr-project-list-item-{project.uuid}'
+            By.ID, f'sodar-pr-project-list-item-{project.sodar_uuid}'
         )
 
     def test_project_list_empty(self):
