@@ -309,9 +309,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         """
         if not user.is_authenticated:
             return Project.objects.none()
-        return Project.objects.filter(public_access__isnull=False).exclude(
-            local_roles__user=user
-        )
+        return Project.objects.filter(
+            Q(public_access__isnull=False) | Q(has_public_children=True)
+        ).exclude(local_roles__user=user)
 
     @classmethod
     def _get_starred_projects(cls, user: User) -> list[Project]:
@@ -357,6 +357,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         other_user: Optional[User],
         user: User,
     ) -> dict:
+        if other_user and other_user != user:
+            projects = [p for p in projects if not p['public_only']]
+
         ret = {
             'projects': projects,
             'parent_depth': parent.get_depth() + 1 if parent else 0,
@@ -378,7 +381,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
                     get_display_name(PROJECT_TYPE_CATEGORY),
                 )
-            elif other_user:
+            elif other_user and other_user != user:
                 if user.is_superuser:
                     np_msg = 'available for {}'.format(other_user.username)
                 else:
@@ -416,12 +419,15 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         # Categories with public statistics enabled
         pub_stat_cats = self._get_public_stat_cats()
         if other_user and other_user != user:
-            user_projects = set(self._get_projects(user, pub_stat_cats, parent))
+            other_projects = set(
+                self._get_projects(other_user, pub_stat_cats, parent)
+            )
+            other_pub_only_projects = self._get_public_only_projects(other_user)
             # Projects both the requesting user and the queried user can access
             projects = [
                 p
-                for p in self._get_projects(other_user, pub_stat_cats, parent)
-                if p in user_projects
+                for p in self._get_projects(user, pub_stat_cats, parent)
+                if p in other_projects and p not in other_pub_only_projects
             ]
         else:
             # Projects the requesting user can access
