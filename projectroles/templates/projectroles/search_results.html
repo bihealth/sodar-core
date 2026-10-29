@@ -38,17 +38,22 @@
 
 <div class="row sodar-pr-content-title pt-2">
   <h2 class="sodar-pr-content-title pt-auto">Search Results</h2>
-    <div class="sodar-pr-content-title-secondary text-muted">
-      for
-      {% if search_terms|length <= 5 %}
-        "{{ search_terms|join:'; ' }}"
-      {% else %}
-        multiple terms
-      {% endif %}
-      {% if 'type' in search_keywords %}
-        (type:{{ search_keywords.type }})
-      {% endif %}
-    </div>
+  <div class="sodar-pr-content-title-secondary text-muted">
+    for
+    {% if search_terms|length <= 5 %}
+      "{{ search_terms|join:'; ' }}"
+    {% else %}
+      multiple terms
+    {% endif %}
+    {% if 'type' in search_keywords %}
+      (type:{{ search_keywords.type }})
+    {% endif %}
+  </div>
+  <div id="sodar-search-results-spinner" class="align-self-center ml-3">
+    <i class="iconify spin text-secondary"
+       data-icon="mdi:loading" data-height="25">
+    </i>
+  </div>
 </div>
 
 <div class="container-fluid sodar-page-container">
@@ -67,11 +72,6 @@
            data-app-icon="{{ app.icon }}">
       </div>
     {% endfor %}
-    <div id="sodar-search-results-spinner" class="w-100 text-center">
-      <i class="iconify spin text-secondary"
-         data-icon="mdi:loading" data-height="42">
-      </i>
-    </div>
   {% endif %}
 </div>
 
