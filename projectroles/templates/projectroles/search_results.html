@@ -45,8 +45,8 @@
     {% else %}
       multiple terms
     {% endif %}
-    {% if 'type' in search_keywords %}
-      (type:{{ search_keywords.type }})
+    {% if keyword_input %}
+      ({{ keyword_input }})
     {% endif %}
   </div>
   <div id="sodar-search-results-spinner" class="align-self-center ml-3">
