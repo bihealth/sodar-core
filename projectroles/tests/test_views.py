@@ -744,7 +744,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             self.assertRedirects(response, reverse('home'))
 
     def test_post(self):
-        """Test POST"""
+        """Test POST ProjectAdvancedSearchView"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
@@ -764,7 +764,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             self.assertRedirects(response, reverse('home'))
 
     def test_post_with_search_type_and_keywords(self):
-        """Test POST from ProjectAdvancedSearchView with keywords"""
+        """Test POST with keywords"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
