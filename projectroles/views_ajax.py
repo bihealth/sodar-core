@@ -780,7 +780,7 @@ class PluginSearchResultsAjaxView(SODARBaseAjaxView):
                     'results': [],
                 }
             )
-        search_terms = json.loads(data['terms'])
+        search_terms = [term.lower() for term in json.loads(data['terms'])]
         search_keywords = json.loads(data['keywords'])
         if 'project' in search_keywords:
             try:

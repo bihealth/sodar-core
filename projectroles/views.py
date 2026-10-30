@@ -731,9 +731,10 @@ class ProjectSearchMixin:
         search_keywords = {}
 
         if self.request.POST.get('m'):  # Multi search
+            search_input = self.request.POST['m'].strip()
             search_terms = [
                 t.strip().strip('\'"')
-                for t in self.request.POST['m'].strip().split('\r\n')
+                for t in search_input.split('\r\n')
                 if len(t.strip().strip('\'"')) >= 3
             ]
             if self.request.POST.get('k'):
@@ -745,18 +746,25 @@ class ProjectSearchMixin:
                 if ':' in token:
                     keyword_input.append(token)
                 else:
-                    search_terms.append(token.lower())
+                    search_terms.append(token)
 
         search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
+        invalid_keywords = []
         for s in keyword_input:
-            kw = s.split(':')[0].lower().strip()
-            val = s.split(':')[1].lower().strip()
+            if ':' not in s:
+                invalid_keywords.append(s)
+                continue
+            kw, val = s.rsplit(':', 1)
+            kw = kw.strip().lower()
+            val = val.strip().lower()
             search_keywords[kw] = val
 
         context['search_input'] = search_input
+        context['keyword_input'] = '; '.join(keyword_input)
         context['search_terms'] = search_terms
         context['search_keywords'] = search_keywords
+        context['invalid_keywords'] = invalid_keywords
 
         plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
@@ -819,6 +827,13 @@ class ProjectSearchResultsView(
         context = self.get_context_data(*args, **kwargs)
         if not context['search_terms']:
             messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        if invalid_keywords := context['invalid_keywords']:
+            messages.error(
+                request,
+                'Invalid search keywords provided: '
+                f'{", ".join(invalid_keywords)}.',
+            )
             return redirect(reverse('home'))
         return super().render_to_response(context)
 

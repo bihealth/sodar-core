@@ -457,6 +457,7 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {'type': 'file'})
+        self.assertEqual(response.context['keyword_input'], 'type:file')
         self.assertEqual(response.context['search_input'], 'test type:file')
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
@@ -480,6 +481,10 @@ class TestProjectSearchResultsView(
         self.assertEqual(
             response.context['search_keywords'],
             {'project': str(self.project.sodar_uuid)},
+        )
+        self.assertEqual(
+            response.context['keyword_input'],
+            f'project:{self.project.sodar_uuid}',
         )
         self.assertEqual(
             response.context['search_input'],
@@ -508,6 +513,10 @@ class TestProjectSearchResultsView(
             {'project': 'white space'},
         )
         self.assertEqual(
+            response.context['keyword_input'],
+            'project:white space',
+        )
+        self.assertEqual(
             response.context['search_input'],
             'test "test quoted" project:"white space"',
         )
@@ -532,6 +541,10 @@ class TestProjectSearchResultsView(
             {'project': self.project.title.lower()},
         )
         self.assertEqual(
+            response.context['keyword_input'],
+            f'project:{self.project.title}',
+        )
+        self.assertEqual(
             response.context['search_input'],
             f'test project:"{self.project.title}"',
         )
@@ -554,6 +567,10 @@ class TestProjectSearchResultsView(
         self.assertEqual(
             response.context['search_keywords'],
             {'project': self.category.title.lower()},
+        )
+        self.assertEqual(
+            response.context['keyword_input'],
+            f'project:{self.category.title}',
         )
         self.assertEqual(
             response.context['search_input'],
@@ -589,6 +606,10 @@ class TestProjectSearchResultsView(
             {'key1': 'value1', 'key2': 'value2 with spaces', 'key3': 'value3'},
         )
         self.assertEqual(
+            response.context['keyword_input'],
+            'key1:value1; key2:value2 with spaces; key3:value3',
+        )
+        self.assertEqual(
             response.context['search_input'],
             (
                 'key1:value1  "term with spaces"\t'
@@ -612,7 +633,30 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {'project': ''})
+        self.assertEqual(response.context['keyword_input'], 'project:')
         self.assertEqual(response.context['search_input'], 'test project:')
+
+    def test_get_upper_case_terms(self):
+        """Test GET with incomplete keyword missing the value"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'s': f'Test Project:{self.project.title}'})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['Test'])
+        self.assertEqual(
+            response.context['search_keywords'],
+            {'project': self.project.title.lower()},
+        )
+        self.assertEqual(
+            response.context['keyword_input'], f'Project:{self.project.title}'
+        )
+        self.assertEqual(
+            response.context['search_input'],
+            f'Test Project:{self.project.title}',
+        )
 
     def test_get_non_text_input(self):
         """Test GET with non-text input from standard search (should redirect)"""
@@ -700,7 +744,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             self.assertRedirects(response, reverse('home'))
 
     def test_post(self):
-        """Test POST"""
+        """Test POST ProjectAdvancedSearchView"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
@@ -720,7 +764,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             self.assertRedirects(response, reverse('home'))
 
     def test_post_with_search_type_and_keywords(self):
-        """Test POST from ProjectAdvancedSearchView with keywords"""
+        """Test POST with keywords"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
@@ -737,6 +781,9 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         self.assertEqual(
             response.context['search_keywords'],
             {'project': 'title', 'type': 'project'},
+        )
+        self.assertEqual(
+            response.context['keyword_input'], 'type:project; project:title'
         )
 
     def test_post_advanced_short_input(self):
@@ -787,6 +834,9 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             response.context['search_keywords'],
             {'project': 'uuid2'},
         )
+        self.assertEqual(
+            response.context['keyword_input'], 'project:UUID1; project:UUID2'
+        )
 
     def test_post_advanced_invalid_project_keyword(self):
         """Test POST with invalid UUID for project keyword"""
@@ -800,9 +850,12 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         self.assertEqual(
             response.context['search_keywords'], {'project': 'not_a_uuid'}
         )
+        self.assertEqual(
+            response.context['keyword_input'], 'project:NOT_A_UUID'
+        )
 
     def test_post_advanced_search_string_parsing(self):
-        """Test POST from ProjectAdvancedSearchView with a challenging string"""
+        """Test POST with a challenging string"""
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:search_advanced'),
@@ -814,7 +867,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_input'],
-            '',
+            'test with spaces\r\ntestproject\r\nxxx',
         )
         self.assertEqual(
             response.context['search_terms'],
@@ -823,6 +876,10 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         self.assertEqual(
             response.context['search_keywords'],
             {'project': 'project with spaces', 'type': 'project'},
+        )
+        self.assertEqual(
+            response.context['keyword_input'],
+            'type:project; project:project with spaces',
         )
 
     def test_post_advanced_search_quoted_string_parsing(self):
@@ -839,6 +896,21 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         self.assertEqual(
             response.context['search_terms'],
             ['alert test'],
+        )
+
+    def test_post_advanced_search_keyword_without_colon(self):
+        """Test POST with invalid keyword input (missing colon)"""
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('projectroles:search_advanced'),
+                data={
+                    'm': 'test',
+                    'k': 'type:project project',
+                },
+            )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Invalid search keywords provided: project.',
         )
 
 
