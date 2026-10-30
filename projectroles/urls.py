@@ -186,6 +186,11 @@ urls_ajax = [
         name='ajax_project_list',
     ),
     path(
+        route='ajax/list/<uuid:user>',
+        view=views_ajax.ProjectListAjaxView.as_view(),
+        name='ajax_project_list_mutual',
+    ),
+    path(
         route='ajax/list/columns',
         view=views_ajax.ProjectListColumnAjaxView.as_view(),
         name='ajax_project_list_columns',

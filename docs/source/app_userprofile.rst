@@ -99,6 +99,13 @@ user details. The last option is only available for local Django user accounts.
 
     User details view
 
+If you are viewing the public profile of another user, the same view will
+be shown, except for the button to update settings and the additional email
+addresses. Additionally, a list of the projects you have in common will be
+displayed. When the superuser views a user's public profile, the additional
+email addresses are still shown, and the project list contains all the projects
+to which the user has access.
+
 
 User Settings
 """""""""""""

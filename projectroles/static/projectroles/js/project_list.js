@@ -159,9 +159,12 @@ function toggleStarring(initial) {
       '<i class="iconify" data-icon="mdi:star-outline"></i> Starred')
   }
   dt.search('').draw()
-  // Set user default starring setting if no parent
-  let parent = $('#sodar-pr-project-list-table').attr('data-parent')
-  if (!parent && !initial) {
+  // Set user default starring setting if no parent and not viewing the list
+  // for another user
+  let table = $('#sodar-pr-project-list-table')
+  let parent = table.attr('data-parent')
+  let otherUser = table.attr('data-other-user')
+  if (!parent && !initial && !otherUser) {
     $.ajax({
       url: 'project/ajax/star/home',
       method: 'POST',
@@ -181,8 +184,6 @@ $(document).ready(function () {
 
   let listUrl = table.attr('data-list-url')
   let parent = table.attr('data-parent')
-  let publicEnabled = $('#sodar-pr-project-list-link-public').attr(
-    'data-public-enabled')
   let starredDefault = table.attr('data-starred-default')
   let customColAlign = []
   $('.sodar-pr-project-list-custom-header').each(function () {

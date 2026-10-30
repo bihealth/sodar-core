@@ -1,5 +1,6 @@
 {% extends 'projectroles/base.html' %}
 
+{% load static %}
 {% load projectroles_common_tags %}
 
 {% block title %}User Profile for {{ user.get_full_name }}{% endblock %}
@@ -53,12 +54,21 @@
       {% include 'userprofile/_user_email.html' %}
     {% endif %}
   {% endif %}
+  {# List of common projects when viewed as different user #}
+  {# Only show if user has role or public access is set (hide for stats-only) #}
+  {% if request.user != user and not user.is_superuser %}
+    {% include 'projectroles/_project_list.html' with other_user=user %}
+  {% endif %}
 </div>
 
 {% endblock projectroles %}
 
 {% block javascript %}
   {{ block.super }}
+  <!-- DataTables -->
+  {% include 'projectroles/_datatables_js.html' %}
+  <!-- Project list -->
+  <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true
@@ -124,5 +134,18 @@
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
+    if ($('#sodar-pr-project-list').length) {
+      tour.addStep('project_list', {
+        title: '{% get_display_name 'PROJECT' title=True %} List',
+        text: 'The list of {% get_display_name 'CATEGORY' plural=True %} ' +
+              'and {% get_display_name 'PROJECT' plural=True %} under this ' +
+              '{% get_display_name 'CATEGORY' %} in common between you and ' +
+              'the profile user is presented here. It works ' +
+              'similarly to the list in your home view.',
+        advanceOn: '.docs-link click',
+        attachTo: '#sodar-pr-project-list top',
+        showCancelLink: true
+      })
+    }
   </script>
 {% endblock javascript %}

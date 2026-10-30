@@ -71,6 +71,7 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 APP_NAME = 'projectroles'
 CAT_STAT_ATTRS = ['title', 'value', 'unit', 'description', 'icon', 'prefix']
 PROJECT_QUERY_MSG = 'Querying for a project list under a project is not allowed'
+USER_INVALID_MSG = 'The requested user UUID does not exist'
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -308,9 +309,9 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         """
         if not user.is_authenticated:
             return Project.objects.none()
-        return Project.objects.filter(public_access__isnull=False).exclude(
-            local_roles__user=user
-        )
+        return Project.objects.filter(
+            Q(public_access__isnull=False) | Q(has_public_children=True)
+        ).exclude(local_roles__user=user)
 
     @classmethod
     def _get_starred_projects(cls, user: User) -> list[Project]:
@@ -350,8 +351,15 @@ class ProjectListAjaxView(SODARBaseAjaxView):
 
     @classmethod
     def _get_return_data(
-        cls, projects: list[dict], parent: Optional[Project], user: User
+        cls,
+        projects: list[dict],
+        parent: Optional[Project],
+        other_user: Optional[User],
+        user: User,
     ) -> dict:
+        if other_user and other_user != user:
+            projects = [p for p in projects if not p['public_only']]
+
         ret = {
             'projects': projects,
             'parent_depth': parent.get_depth() + 1 if parent else 0,
@@ -373,6 +381,13 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
                     get_display_name(PROJECT_TYPE_CATEGORY),
                 )
+            elif other_user and other_user != user:
+                if user.is_superuser:
+                    np_msg = 'available for {}'.format(other_user.username)
+                else:
+                    np_msg = 'in common between you and {}'.format(
+                        other_user.username
+                    )
             elif not user.is_superuser:
                 np_msg = (
                     'available: access must be granted by {} personnel or a '
@@ -388,14 +403,35 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         parent = (
             Project.objects.get(sodar_uuid=parent_uuid) if parent_uuid else None
         )
+        other_user_uuid = kwargs.get('user', None)
+        try:
+            other_user = (
+                User.objects.get(sodar_uuid=other_user_uuid)
+                if other_user_uuid
+                else None
+            )
+        except User.DoesNotExist:
+            return Response({'detail': USER_INVALID_MSG}, status=404)
         if parent and parent.is_project():
             return Response({'detail': PROJECT_QUERY_MSG}, status=400)
 
         user = request.user
         # Categories with public statistics enabled
         pub_stat_cats = self._get_public_stat_cats()
-        # Projects the requesting user can access
-        projects = self._get_projects(user, pub_stat_cats, parent)
+        if other_user and other_user != user:
+            other_projects = set(
+                self._get_projects(other_user, pub_stat_cats, parent)
+            )
+            other_pub_only_projects = self._get_public_only_projects(other_user)
+            # Projects both the requesting user and the queried user can access
+            projects = [
+                p
+                for p in self._get_projects(user, pub_stat_cats, parent)
+                if p in other_projects and p not in other_pub_only_projects
+            ]
+        else:
+            # Projects the requesting user can access
+            projects = self._get_projects(user, pub_stat_cats, parent)
         # Blocked projects
         blocked_projects = self._get_blocked_projects()
         # Projects with public only access for user, no local role
@@ -475,7 +511,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             ret_projects.append(rp)
             p_idx += 1
 
-        ret = self._get_return_data(ret_projects, parent, user)
+        ret = self._get_return_data(ret_projects, parent, other_user, user)
         return Response(ret, status=200)
 
 
