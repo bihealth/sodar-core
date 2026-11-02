@@ -354,10 +354,10 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         cls,
         projects: list[dict],
         parent: Optional[Project],
-        other_user: Optional[User],
+        target_user: Optional[User],
         user: User,
     ) -> dict:
-        if other_user and other_user != user:
+        if target_user and target_user != user:
             projects = [p for p in projects if not p['public_only']]
 
         ret = {
@@ -381,13 +381,11 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
                     get_display_name(PROJECT_TYPE_CATEGORY),
                 )
-            elif other_user and other_user != user:
+            elif target_user and target_user != user:
                 if user.is_superuser:
-                    np_msg = 'available for {}'.format(other_user.username)
+                    np_msg = f'available for {target_user.username}'
                 else:
-                    np_msg = 'in common between you and {}'.format(
-                        other_user.username
-                    )
+                    np_msg = f'in common between you and {target_user.username}'
             elif not user.is_superuser:
                 np_msg = (
                     'available: access must be granted by {} personnel or a '
@@ -403,11 +401,11 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         parent = (
             Project.objects.get(sodar_uuid=parent_uuid) if parent_uuid else None
         )
-        other_user_uuid = kwargs.get('user', None)
+        target_user_uuid = kwargs.get('user', None)
         try:
-            other_user = (
-                User.objects.get(sodar_uuid=other_user_uuid)
-                if other_user_uuid
+            target_user = (
+                User.objects.get(sodar_uuid=target_user_uuid)
+                if target_user_uuid
                 else None
             )
         except User.DoesNotExist:
@@ -418,18 +416,18 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         user = request.user
         # Categories with public statistics enabled
         pub_stat_cats = self._get_public_stat_cats()
-        if other_user and other_user != user:
+        if target_user and target_user != user:
             other_projects = set(
-                self._get_projects(other_user, pub_stat_cats, parent)
+                self._get_projects(target_user, pub_stat_cats, None)
             )
             pub_only_projects = set(
-                self._get_public_only_projects(other_user)
+                self._get_public_only_projects(target_user)
                 | self._get_public_only_projects(user)
             )
             # Projects both the requesting user and the queried user can access
             projects = [
                 p
-                for p in self._get_projects(user, pub_stat_cats, parent)
+                for p in self._get_projects(user, pub_stat_cats, None)
                 if p in other_projects and p not in pub_only_projects
             ]
         else:
@@ -514,7 +512,7 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             ret_projects.append(rp)
             p_idx += 1
 
-        ret = self._get_return_data(ret_projects, parent, other_user, user)
+        ret = self._get_return_data(ret_projects, parent, target_user, user)
         return Response(ret, status=200)
 
 

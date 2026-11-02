@@ -58,6 +58,14 @@ class TestUserDetailView(
             kwargs={'user': self.local_user.sodar_uuid},
         )
 
+    @classmethod
+    def _project_list_rows_count(cls, driver):
+        """Count the number of rows in the projects list table"""
+        project_rows = driver.find_elements(
+            By.CLASS_NAME, 'sodar-pr-project-list-item'
+        )
+        return len(project_rows)
+
     def test_update_button(self):
         """Test existence of user update button"""
         expected = [
@@ -347,10 +355,7 @@ class TestUserDetailView(
                 By.CLASS_NAME, 'sodar-pr-project-list-item'
             )
         )
-        project_rows = self.selenium.find_elements(
-            By.CLASS_NAME, 'sodar-pr-project-list-item'
-        )
-        self.assertEqual(len(project_rows), 2)
+        self.assertEqual(self._project_list_rows_count(self.selenium), 2)
         self.selenium.find_element(
             By.ID, f'sodar-pr-project-list-item-{category.sodar_uuid}'
         )
@@ -368,15 +373,10 @@ class TestUserDetailView(
             By.ID, 'sodar-pr-project-list-message'
         )
         self.assertTrue(project_list_msg.text != '')
-        self.assertEqual(
-            self.selenium.find_elements(
-                By.CLASS_NAME, 'sodar-pr-project-list-item'
-            ),
-            [],
-        )
+        self.assertEqual(self._project_list_rows_count(self.selenium), 0)
 
-    def test_project_list_star(self):
-        """Test project list star default not saved"""
+    def test_project_list_star_toggle(self):
+        """Test project list star toggle does not change default"""
         category = self.make_project('category', PROJECT_TYPE_CATEGORY, None)
         project = self.make_project('project', PROJECT_TYPE_PROJECT, category)
         self.make_assignment(category, self.local_user, self.role_owner)
@@ -396,22 +396,16 @@ class TestUserDetailView(
             validate=False,
         )
 
-        def _project_rows_count(driver):
-            project_rows = driver.find_elements(
-                By.CLASS_NAME, 'sodar-pr-project-list-item'
-            )
-            return len(project_rows)
-
         self.login_and_redirect(self.ldap_user, self.url_public)
         WebDriverWait(self.selenium, 15).until(
-            lambda x: _project_rows_count(x) == 2
+            lambda x: self._project_list_rows_count(x) == 2
         )
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
         WebDriverWait(self.selenium, 15).until(
-            lambda x: _project_rows_count(x) == 1
+            lambda x: self._project_list_rows_count(x) == 1
         )
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-project-list-message')
@@ -420,6 +414,32 @@ class TestUserDetailView(
                 APP_NAME_PR, 'project_list_home_starred', user=self.ldap_user
             ),
             False,
+        )
+
+    def test_project_list_star_initial(self):
+        """Test project list star is initially false"""
+        category = self.make_project('category', PROJECT_TYPE_CATEGORY, None)
+        project = self.make_project('project', PROJECT_TYPE_PROJECT, category)
+        self.make_assignment(category, self.local_user, self.role_owner)
+        self.make_assignment(category, self.ldap_user, self.role_delegate)
+        app_settings.set(
+            plugin_name=APP_NAME_PR,
+            setting_name='project_star',
+            value=True,
+            project=project,
+            user=self.ldap_user,
+            validate=False,
+        )
+        app_settings.set(
+            APP_NAME_PR,
+            'project_list_home_starred',
+            user=self.ldap_user,
+            value=True,
+        )
+
+        self.login_and_redirect(self.ldap_user, self.url_public)
+        WebDriverWait(self.selenium, 15).until(
+            lambda x: self._project_list_rows_count(x) == 2
         )
 
     def test_back_button_from_user_list_view(self):
